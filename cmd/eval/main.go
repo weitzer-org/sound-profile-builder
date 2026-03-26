@@ -140,8 +140,8 @@ func main() {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
-			totalMultiInput += usage.InputTokens
-			totalMultiOutput += usage.OutputTokens
+			totalMultiInput += int(usage.InputTokens)
+			totalMultiOutput += int(usage.OutputTokens)
 			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
