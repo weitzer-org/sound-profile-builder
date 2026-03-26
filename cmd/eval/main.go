@@ -89,7 +89,7 @@ func main() {
 	ctx := context.Background()
 
 	// The 12-Point Blues Evaluation Suite
-	evalQueries := []string{
+	evalQueries := map[string]string{
 		"01_SRV_Clean":     "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
 		"02_Albert_King":   "Albert King 'Born Under A Bad Sign'. Medium humbuckers. Needs solid-state Acoustic amp replication.",
 		"03_John_Mayer":    "John Mayer 'Gravity'. Low-output strat pickups. Dumble amp + Klon Centaur.",
