@@ -116,6 +116,8 @@ func main() {
 		log.Fatalf("Failed to fetch API key: %v", err)
 	}
 
+	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput int
+
 	for name, query := range evalQueries {
 		log.Printf("\n=============================================")
 		log.Printf("▶ EXECUTING EVAL: %s", name)
@@ -138,6 +140,8 @@ func main() {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
+			totalMultiInput += usage.InputTokens
+			totalMultiOutput += usage.OutputTokens
 			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
@@ -161,7 +165,10 @@ func main() {
 		} else {
 			monolithicResult := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
 			usageMono := resp.UsageMetadata
+			
 			log.Printf("✅ MONO SUCCESS | Tokens: In %d, Out %d", usageMono.PromptTokenCount, usageMono.CandidatesTokenCount)
+			totalMonoInput += int(usageMono.PromptTokenCount)
+			totalMonoOutput += int(usageMono.CandidatesTokenCount)
 			
 			err = os.WriteFile(fmt.Sprintf("%s_mono.md", name), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
@@ -172,5 +179,7 @@ func main() {
 	log.Println("\n=============================================")
 	log.Println("🏁 EVALUATION SUITE COMPLETE")
 	log.Println("Wrote 24 resulting HTML and MD files to workspace.")
+	log.Printf("📊 MULTI-AGENT TOTAL TOKENS: Input: %d, Output: %d", totalMultiInput, totalMultiOutput)
+	log.Printf("📊 MONOLITHIC  TOTAL TOKENS: Input: %d, Output: %d", totalMonoInput, totalMonoOutput)
 	log.Println("=============================================")
 }
