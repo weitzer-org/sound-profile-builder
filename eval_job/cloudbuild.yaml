@@ -1,0 +1,9 @@
+steps:
+  - name: 'golang:1.23'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        go run cmd/eval/main.go
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', 'multi_agent_output.html', 'monolithic_output.md', 'gs://weitzer-sound-builder/eval-logs/']
