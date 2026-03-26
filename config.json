@@ -1,4 +1,9 @@
 {
-  "single_amp": true,
-  "cloud_captures": false
+  "single_amp_mode": true,
+  "allow_cloud_captures": false,
+  "guitars": [
+    "Gibson ES-339",
+    "Fender Telecaster American Pro II",
+    "Fender Player Plus HSS Strat"
+  ]
 }
