@@ -87,7 +87,22 @@ Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].`
 
 func main() {
 	ctx := context.Background()
-	query := "I want a B.B. King tone, specifically using a Telecaster. Help me dial it in."
+
+	// The 12-Point Blues Evaluation Suite
+	evalQueries := []string{
+		"01_SRV_Clean":     "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
+		"02_Albert_King":   "Albert King 'Born Under A Bad Sign'. Medium humbuckers. Needs solid-state Acoustic amp replication.",
+		"03_John_Mayer":    "John Mayer 'Gravity'. Low-output strat pickups. Dumble amp + Klon Centaur.",
+		"04_Muddy_Waters":  "Muddy Waters edge-of-fuzz. Telecaster middle position. Needs a pushed 5E3 equivalent without flub.",
+		"05_Howlin_Wolf":   "Howlin' Wolf / Hubert Sumlin tone. Les Paul with P90s. Filter the noise and map high-mid compensation.",
+		"06_Gary_Moore":    "Gary Moore 'Still Got The Blues'. High output humbuckers. Marshall JTM45 driven heavily by a Guv'nor.",
+		"07_Buddy_Guy":     "Buddy Guy 'Sweet Home Chicago'. Vintage Strat single coils. Needs Bassman with extreme treble control.",
+		"08_Joe_Bonamassa": "Joe Bonamassa 'Sloe Gin'. ES-335 humbuckers. Multi-amp blend synthesis constraint.",
+		"09_Robben_Ford":   "Robben Ford 'Talk To Your Daughter'. Fender Esprit humbuckers. Dumble ODS clean-to-overdrive morphing.",
+		"10_Freddie_King":  "Freddie King 'Hideaway'. ES-345. Muted acoustic snap simulation (fast slapback) and Varitone filter.",
+		"11_Jimi_Hendrix":  "Jimi Hendrix 'Red House'. Strat neck pickup. Fuzz Face padded front end to simulate rolled-off volume.",
+		"12_Derek_Trucks":  "Derek Trucks 'Midnight in Harlem'. SG open E slide. Zero pedals, cranked Super Reverb tube sag.",
+	}
 
 	// 1. Fetch Secure Credentials
 	smClient, err := storage.NewSecretManagerClient(ctx)
@@ -101,70 +116,61 @@ func main() {
 		log.Fatalf("Failed to fetch API key: %v", err)
 	}
 
-	// 2. RUN A: The Multi-Agent Orchestrator Pipeline
-	log.Println("\n=============================================")
-	log.Println("▶ RUN A: EXECUTING 12-AGENT GCS PIPELINE ...")
-	log.Println("=============================================")
-	
-	orch, err := agents.NewOrchestrator(ctx, apiKey)
-	if err != nil {
-		log.Fatalf("Failed to init orchestrator: %v", err)
-	}
-	defer orch.Close()
+	for name, query := range evalQueries {
+		log.Printf("\n=============================================")
+		log.Printf("▶ EXECUTING EVAL: %s", name)
+		log.Printf("=============================================")
 
-	constraints := map[string]interface{}{
-		"single_amp_mode":      true,
-		"allow_cloud_captures": false,
-		"guitars":              []string{"Telecaster (Single Coils)"},
-	}
+		// 2. RUN A: The Multi-Agent Orchestrator Pipeline
+		log.Println(" -> Phase 1: 12-Agent Orchestrator...")
+		orch, err := agents.NewOrchestrator(ctx, apiKey)
+		if err != nil {
+			log.Fatalf("Failed to init orchestrator: %v", err)
+		}
 
-	multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints)
-	if err != nil {
-		log.Fatalf("Multi-Agent Pipeline failed: %v", err)
-	}
+		constraints := map[string]interface{}{
+			"single_amp_mode":      true,
+			"allow_cloud_captures": false,
+		}
 
-	log.Printf("✅ MULTI-AGENT PIPELINE SUCCESS | Tokens Used: Input %d, Output %d", usage.InputTokens, usage.OutputTokens)
+		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints)
+		if err != nil {
+			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
+		} else {
+			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
+			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
+			if err != nil { log.Printf("File err: %v", err) }
+		}
+		orch.Close()
 
-	// 3. RUN B: The Single Monolithic QC-2 Prompt
-	log.Println("\n=============================================")
-	log.Println("▶ RUN B: EXECUTING MONOLITHIC QC-2 LLM ...")
-	log.Println("=============================================")
-	
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		log.Fatalf("Failed to create direct genai client: %v", err)
-	}
-	defer client.Close()
+		// 3. RUN B: The Single Monolithic QC-2 Prompt
+		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
+		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+		if err != nil {
+			log.Fatalf("Failed to create direct genai client: %v", err)
+		}
 
-	model := client.GenerativeModel("gemini-3.1-pro-preview")
-	model.SystemInstruction = &genai.Content{
-		Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
-	}
+		model := client.GenerativeModel("gemini-3.1-pro-preview")
+		model.SystemInstruction = &genai.Content{
+			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
+		}
 
-	resp, err := model.GenerateContent(ctx, genai.Text(query))
-	if err != nil {
-		log.Fatalf("Monolithic generation failed: %v", err)
-	}
-
-	monolithicResult := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
-	usageMono := resp.UsageMetadata
-	log.Printf("✅ MONOLITHIC LLM SUCCESS | Tokens Used: Input %d, Output %d", usageMono.PromptTokenCount, usageMono.CandidatesTokenCount)
-
-	// 4. Output Data Dump for Comparison
-	err = os.WriteFile("multi_agent_output.html", []byte(multiAgentResult), 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = os.WriteFile("monolithic_output.md", []byte(monolithicResult), 0644)
-	if err != nil {
-		log.Fatal(err)
+		resp, err := model.GenerateContent(ctx, genai.Text(query))
+		if err != nil {
+			log.Printf("❌ Monolithic generation failed for %s: %v", name, err)
+		} else {
+			monolithicResult := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+			usageMono := resp.UsageMetadata
+			log.Printf("✅ MONO SUCCESS | Tokens: In %d, Out %d", usageMono.PromptTokenCount, usageMono.CandidatesTokenCount)
+			
+			err = os.WriteFile(fmt.Sprintf("%s_mono.md", name), []byte(monolithicResult), 0644)
+			if err != nil { log.Printf("File err: %v", err) }
+		}
+		client.Close()
 	}
 
 	log.Println("\n=============================================")
-	log.Println("🏁 EVALUATION COMPLETE")
-	log.Println("Wrote results to:")
-	log.Println(" -> multi_agent_output.html (12-Agent Matrix)")
-	log.Println(" -> monolithic_output.md (Single Prompt Text)")
-	log.Println("Compare the two files locally to see the behavioral differences!")
+	log.Println("🏁 EVALUATION SUITE COMPLETE")
+	log.Println("Wrote 24 resulting HTML and MD files to workspace.")
 	log.Println("=============================================")
 }
