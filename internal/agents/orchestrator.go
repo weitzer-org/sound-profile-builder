@@ -12,9 +12,18 @@ import (
 	"google.golang.org/api/option"
 )
 
+// TokenUsage rigidly aggregates exact API volume metadata
+type TokenUsage struct {
+	InputTokens  int32
+	OutputTokens int32
+	ModelsUsed   map[string]int
+	mu           sync.Mutex
+}
+
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
 	client *genai.Client
+	Usage  *TokenUsage
 }
 
 // NewOrchestrator initializes the Gemini ADK client
@@ -23,11 +32,16 @@ func NewOrchestrator(ctx context.Context, apiKey string) (*Orchestrator, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &Orchestrator{client: client}, nil
+	// Initialize concurrency-safe Token Tracker
+	usage := &TokenUsage{
+		ModelsUsed: make(map[string]int),
+	}
+
+	return &Orchestrator{client: client, Usage: usage}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
-func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, error) {
+func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
 	// Apply global application architecture limits dynamically into the root user prompt stream
 	singleAmpMode, ok := constraints["single_amp_mode"].(bool)
 	if ok && singleAmpMode {
@@ -84,7 +98,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	wg1.Wait()
 
 	if err1 != nil || err2 != nil || err3 != nil {
-		return "", fmt.Errorf("Phase 1 failures: Historian=%v, Profiler=%v, Scraper=%v", err1, err2, err3)
+		return "", o.Usage, fmt.Errorf("Phase 1 failures: Historian=%v, Profiler=%v, Scraper=%v", err1, err2, err3)
 	}
 
 	log.Printf("Phase 1 Complete.")
@@ -104,7 +118,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s", sysPrompt4, toneResult, scrapeResult, dictJSON)
 	librarianResult, err4 := o.RunAgent(ctx, "CorOS Librarian", context4)
 	if err4 != nil {
-		return "", fmt.Errorf("Phase 2 Librarian failure: %v", err4)
+		return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
 	}
 	logToGCS("4_coros_librarian", librarianResult)
 
@@ -122,7 +136,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		context5 := fmt.Sprintf("%s\n\nLibrarian Output: %s", sysPrompt5, librarianResult)
 		navigatorResult, err5 = o.RunAgent(ctx, "Cloud Navigator", context5)
 		if err5 != nil {
-			return "", fmt.Errorf("Phase 2 Navigator failure: %v", err5)
+			return "", o.Usage, fmt.Errorf("Phase 2 Navigator failure: %v", err5)
 		}
 		logToGCS("5_cloud_navigator", navigatorResult)
 	}
@@ -156,7 +170,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	wg3.Wait()
 
 	if err6 != nil || err7 != nil || err8 != nil {
-		return "", fmt.Errorf("Phase 3 failures: %v, %v, %v", err6, err7, err8)
+		return "", o.Usage, fmt.Errorf("Phase 3 failures: %v, %v, %v", err6, err7, err8)
 	}
 	log.Printf("Phase 3 Complete.")
 
@@ -187,7 +201,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	wg4.Wait()
 
 	if err9 != nil || err10 != nil || err11 != nil {
-		return "", fmt.Errorf("Phase 4 failures: %v, %v, %v", err9, err10, err11)
+		return "", o.Usage, fmt.Errorf("Phase 4 failures: %v, %v, %v", err9, err10, err11)
 	}
 	log.Printf("Phase 4 Complete.")
 
@@ -199,24 +213,26 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	sysPrompt12, _ := LoadPrompt("12_architect")
 	finalResult, err12 := o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
 	if err12 != nil {
-		return "", fmt.Errorf("Architect failure: %v", err12)
+		return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
 	}
 	logToGCS("12_architect", finalResult)
 
-	return finalResult, nil
+	return finalResult, o.Usage, nil
 }
 
 // RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
-	model := o.client.GenerativeModel("gemini-3.1-pro-preview")
+	modelName := "gemini-3.1-pro-preview"
+	model := o.client.GenerativeModel(modelName)
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		log.Printf("[%s] Gemini 3.1 Pro Preview failed or rate-limited: %v. Falling back to Gemini 2.5 Pro.", agentRole, err)
 		
 		// 2. Fallback to Gemini 2.5 Pro
-		fallbackModel := o.client.GenerativeModel("gemini-2.5-pro")
+		modelName = "gemini-2.5-pro"
+		fallbackModel := o.client.GenerativeModel(modelName)
 		resp, err = fallbackModel.GenerateContent(ctx, genai.Text(prompt))
 		if err != nil {
 			return "", fmt.Errorf("[%s] Fallback model also failed: %v", agentRole, err)
@@ -225,6 +241,15 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 
 	if len(resp.Candidates) == 0 {
 		return "", fmt.Errorf("[%s] No response candidates from LLM", agentRole)
+	}
+
+	// Safely extract and accumulate generated API metrics natively 
+	if resp.UsageMetadata != nil {
+		o.Usage.mu.Lock()
+		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
+		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
+		o.Usage.ModelsUsed[modelName]++
+		o.Usage.mu.Unlock()
 	}
 
 	return fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0]), nil

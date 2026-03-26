@@ -108,7 +108,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		// 4. Trigger the multi-agent generation pipeline
 		w.Header().Set("Content-Type", "text/html")
 
-		htmlPayload, err := orch.RunPipeline(ctx, prompt, constraints)
+		htmlPayload, tokenUsage, err := orch.RunPipeline(ctx, prompt, constraints)
 		if err != nil {
 			log.Printf("Orchestrator generation failure: %v", err)
 			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444; border-color: #ef4444;">Pipeline Execution Error: %v</div>`, err)))
@@ -141,6 +141,19 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 		impactsHtml += "</ul>"
 
+		modelsList := ""
+		for m, count := range tokenUsage.ModelsUsed {
+			modelsList += fmt.Sprintf("%s (%d), ", m, count)
+		}
+		
+		tokenStatsHtml := ""
+		if tokenUsage != nil {
+			tokenStatsHtml = fmt.Sprintf(`
+			<div class="card" style="margin-top: 1rem; font-family: monospace; color: #a1a1aa;">
+				<strong>Pipeline AI Processing Tokens:</strong> Input: %d | Output: %d | Models: %s
+			</div>`, tokenUsage.InputTokens, tokenUsage.OutputTokens, strings.TrimSuffix(modelsList, ", "))
+		}
+
 		finalDOM := fmt.Sprintf(`
 			<div class="card">
 				%s
@@ -149,7 +162,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				<h2>Agent Architecture Log</h2>
 				%s
 			</div>
-		`, archResp.FinalHtmlPayload, impactsHtml)
+			%s
+		`, archResp.FinalHtmlPayload, impactsHtml, tokenStatsHtml)
 
 		// 5. Output pure DOM back directly to the #result target!
 		w.Write([]byte(finalDOM))
