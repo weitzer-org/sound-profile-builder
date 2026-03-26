@@ -1,0 +1,10 @@
+# Local test binaries
+test-results.txt
+*.test
+
+# Credentials
+.google_credentials.json
+.env
+
+# Cloud Build Artifacts
+.gcloudignore
