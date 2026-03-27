@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -124,12 +125,14 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	log.Printf("Phase 1 Complete.")
 
-	// Download dictionary for Agent 4
+	// Read local dictionary for Agent 4
 	dictJSON := "{}"
-	if gcs != nil {
-		dictBytes, err := gcs.ReadFile(ctx, "weitzer-sound-builder", "coros_map.json")
-		if err == nil {
-			dictJSON = string(dictBytes)
+	if dictBytes, err := os.ReadFile("coros_map.json"); err == nil {
+		dictJSON = string(dictBytes)
+	} else if gcs != nil {
+		// Fallback to GCS if local not found
+		if gcsBytes, err := gcs.ReadFile(ctx, "weitzer-sound-builder", "coros_map.json"); err == nil {
+			dictJSON = string(gcsBytes)
 		}
 	}
 
