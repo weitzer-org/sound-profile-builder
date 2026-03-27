@@ -1,65 +1,76 @@
-**System: Quad Cortex Systems Engineer (QC-2)**
-**Target Initialization:** John Mayer - "Gravity"
-**Hardware Constraint Profile:** QSC CP12 (Active FRFR) | Input: Low-Output Stratocaster (Single Coils).
+Greetings. I am QC-2, your Quad Cortex Systems Engineer. 
 
-Welcome to the Cortex Control matrix. Designing a "Gravity" tone requires replicating John Mayer's massive headroom, glass-like top end, and thick low-mids, famously achieved by running a Stratocaster into a Dumble Overdrive Special (Clean Channel) and boosting it with a Klon Centaur. 
+To capture the John Mayer "Gravity" tone, we are targeting a high-headroom, mid-scooped analog clean tone that serves as a pristine pedal platform, driven into smooth, singing saturation for the solo. 
 
-### Physics First: Pickup Compensation Strategy
-Because your Stratocaster has **low-output pickups**, we must prevent the Dumble amp model from sounding thin or "pingy." 
-1. **Global Input Block:** I recommend setting your Global Input Gain to **+2.5dB**. This hits the Dumble's virtual preamp tubes harder, recovering the missing low-mid frequency weight without adding distortion.
-2. **The Klon Mid-Hump:** The Klon is highly dependent on incoming signal voltage. We will use the QC's **Myth Drive** as a clean-to-edge-of-breakup line driver to push the midrange during your solos, perfectly counteracting the natural "scoop" of single coils.
+Per the **Pseudonym Rule**, the Quad Cortex does not use the names "Dumble" or "Klon." We will be utilizing verified CorOS models:
+*   **Amp:** `D-Cell Custom Clean` (Modeled after the Dumble Overdrive Special - Clean Channel)
+*   **Overdrive:** `Myth Drive` (Modeled after the Klon Centaur)
+*   **Cab:** `212 D-Cell Custom` (Capturing the classic G12-65 speaker response Mayer favors).
 
-Here is your exact build via Cortex Control.
+Per System Protocols, I must adapt your low-output single-coil request into our **Multi-Guitar Matrix**. Below are strictly separated, physics-accurate configurations for **Fender Telecaster (Single Coils)** and **Gibson ES-339 (Humbuckers)** monitoring through your **QSC CP12 Active PA Speaker**.
 
 ---
 
-### Table A: Main Signal Chain
-*Note: To assign Scene variations, Right-Click the parameter in Cortex Control and select "Assign to Scene".*
+### GUITAR 1: Fender Telecaster (Low-Output Single Coils)
+**Target Bank:** Row 1 (Scenes A-D)
+**Physics Goal:** Compensate for low-output pickups by pushing the Input Gain and Amp Volume. We use the Parametric-8 EQ to add "Strat-like" neck pickup body to the Telecaster and roll off the ice-pick bridge frequencies for the solo.
+
+#### Table A: Main Signal Chain (Fender Telecaster)
+*Mark Scene-Specific changes clearly with (Right-Click > Assign).*
 
 | Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Noise Red: 40%<br>Thresh: -60dB | Noise Red: 55%<br>Thresh: -55dB | Using % reduction directly on the grid tames 60-cycle hum from your Strat without choking the delicate sustain. Higher reduction on Lead to quiet the Klon. |
-| **Pre-FX** | Myth Drive | *Bypassed* | Engaged<br>Gain: 2.5<br>Tone: 4.5<br>Level: 7.5 | Klon Centaur topology. High level/low gain pushes the amp's front end. Tone at 4.5 rolls off ice-pick frequencies before they hit the amp. |
-| **Amp** | D-Cell Custom Clean | Vol: 5.5<br>Bass: 5.0<br>Mid: 4.5<br>Treble: 6.0<br>Master: 8.0 | Vol: 5.5 *(Keep same)*<br>*(Right-Click Lane Output Level +1.5dB)* | Dumble ODS Clean. Pushing the Master to 8.0 maximizes power-amp headroom. We boost Lane Output Level (not Amp Vol) for the lead to keep it clean but louder. |
-| **EQ** | Parametric-8 | Band 1 (Peak): 150Hz (+2.0dB)<br>Band 8 (LPF): 6000Hz | Band 1: 150Hz (+2.0dB)<br>Band 8: 6000Hz | Band 1 adds "Body" to low-output single coils. The LPF at 6kHz removes digital fizz, which is crucial when playing through an FRFR like the QSC CP12. |
-| **Cab** | 212 D-Cell | Mic A: Ribbon 121 (Center, 1.0")<br>Mic B: Dyn 57 (Edge, 2.0") | Mic A: 0.0dB<br>Mic B: -3.0dB | Emulates Celestion G12-65s. The Ribbon 121 handles the "glassy" highs smoothly, while the off-axis 57 provides upper-mid attack. |
-| **Post-FX 1** | Analog Delay | *Bypassed* | Engaged<br>Mix: 12%<br>Time: 340ms | Subtle bucket-brigade slap/trail to add 3D depth to the solo, typical of Mayer's lead tone. |
-| **Post-FX 2** | Plate Reverb | Mix: 25%<br>Decay: 1.8s<br>Pre-Delay: 15ms | Mix: 30%<br>Decay: 2.2s<br>Pre-Delay: 15ms | Emulates the EMT-140 plate reverbs at Capitol Studios. Massive, lush spatial spread without muddying the fundamental note. |
+| **Input/Gate** | Adaptive Gate | Thresh/Red: 35% | Thresh/Red: 50% | Single coils hum. Higher reduction needed when Myth Drive is engaged. |
+| **Pre-FX (Drive)** | Myth Drive | *Bypassed* | Gain: 5.0, Treb: 6.0, Out: 7.5 | Klon engaged for solo. Pushes the D-Cell preamp into smooth compression. |
+| **Pre-FX (EQ)** | Parametric-8 | B1 (Peak): +3.0dB @ 200Hz | B1: +3.0dB, B8 (LPF): 4.5kHz | B1 adds neck-pickup "tubiness". B8 tames pick-attack when driven. |
+| **Amp** | D-Cell Custom Clean | Vol: 6.5, Bass: 6.0, Mid: 3.5, Treb: 6.5 | Vol: 6.5 (Same) | Mayer's tone is notoriously mid-scooped. High volume compensates for low-output pickups. |
+| **Cab** | 212 D-Cell Custom | Mic A: Dyn 57 (Pos 1.0, Dist 1.0") | Mic B: Rib 121 (Pos 1.5, Dist 3.0") | 57 adds glass. Ribbon 121 adds low-end girth. Mix A at 0dB, B at -2dB. |
+| **Post-FX (Delay)** | Tape Delay | *Bypassed* | Mix: 18%, Time: 350ms, Fdbk: 20% | Adds sustain and depth to the solo without muddying the mix. |
+| **Post-FX (Rev)** | Plate Reverb | Mix: 25%, Decay: 2.2s | Mix: 35%, Decay: 2.8s | Replicates the lush studio plate used on the Continuum album. |
 
 ---
 
-### Row/Scene Matrix (Standard Organization)
-*   **Row 1 (Single Coils - Active):**
-    *   **Scene A (Rhythm):** Massive clean. Use Neck or Neck/Middle pickup (Position 4 or 5).
-    *   **Scene B (Lead):** Myth Drive engaged, Delay on, +1.5dB volume jump. Use Neck pickup.
-    *   **Scene C (Dry):** Reverb down to 5%, Delay bypassed. For dry chord comping.
-    *   **Scene D (Ambient):** Plate Reverb Mix to 45%, Decay to 4.0s for swells.
-*   **Row 2 (Humbuckers - Dormant):** *(If you plug in a humbucker guitar, copy Row 1 to Row 2, but drop Input Gain to -3.0dB and lower the Parametric EQ Band 1 body boost to 0.0dB).*
+### GUITAR 2: Gibson ES-339 (Medium/High-Output Humbuckers)
+**Target Bank:** Row 2 (Scenes E-H)
+**Physics Goal:** Prevent the ES-339's higher output from collapsing the D-Cell's clean headroom. We must heavily scoop the lower-mids (mud zone) and pad the input stage to simulate the clarity of single-coil pickups.
+
+#### Table B: Main Signal Chain (Gibson ES-339)
+*Mark Scene-Specific changes clearly with (Right-Click > Assign).*
+
+| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Input Pad + Gate | Gain: -4.5dB, Thresh/Red: 15% | Gain: -4.5dB, Thresh/Red: 25% | **Crucial:** Padding input restores clean headroom. Humbuckers need less noise reduction. |
+| **Pre-FX (Drive)** | Myth Drive | *Bypassed* | Gain: 3.0, Treb: 7.5, Out: 6.0 | Lower gain/output than Tele to prevent clipping. Higher treble for bite. |
+| **Pre-FX (EQ)** | Parametric-8 | B2: -4.0dB @ 300Hz, B6: +3.0dB @ 3kHz | *Same as Rhythm* | Clears humbucker mud (300Hz) and mimics single-coil glass (3kHz). |
+| **Amp** | D-Cell Custom Clean | Vol: 4.5, Bass: 4.5, Mid: 3.5, Treb: 7.0 | Vol: 4.5 (Same) | Amp Vol and Bass reduced by 2.0 to prevent early tube saturation and low-end flub. |
+| **Cab** | 212 D-Cell Custom | Mic A: Dyn 57 (Pos 0.5, Dist 1.0") | Mic B: Rib 121 (Pos 2.0, Dist 4.0") | 57 moved closer to center (0.5) to maximize high-end articulation for humbuckers. |
+| **Post-FX (Delay)** | Tape Delay | *Bypassed* | Mix: 15%, Time: 350ms, Fdbk: 15% | Lower mix for humbuckers to prevent spatial clutter. |
+| **Post-FX (Rev)** | Plate Reverb | Mix: 20%, Decay: 2.2s | Mix: 30%, Decay: 2.8s | Slightly lower mix than single coils to maintain note definition. |
 
 ---
 
 ### Troubleshooting & Refinement Tree
-If the QSC CP12 produces a tone that feels...
-1. **"Too Distorted" or "Harsh" on Lead:** 
-   * *Action:* Your low-output strat might have spikes in the upper midrange. Lower the **Tone** knob on the Myth Drive to 3.5. Do *not* lower the amp's Master volume (you will lose headroom).
-2. **"Too Thin" or "Plinky" on Rhythm:**
-   * *Action:* Your pickups lack voltage. Go to the Global Input Block (Circle 1) and raise the input gain to **+4.0dB**. If it's still thin, raise the Amp Block's **Bass** parameter to 6.0.
-3. **"Too Boomy" through the PA:**
-   * *Action:* Active PA speakers placed on the floor generate bass coupling. Engage the **HPF (High Pass Filter)** in the Cab Block and set it to **85Hz** to clean up the sub-frequencies.
+If monitoring through your QSC CP12 and the tone feels "Too Distorted" or "Too Fuzzy" during the Lead Scenes (B/F):
+1. **Input Pad:** Ensure the ES-339 input is strictly padded to -4.5dB or even -6.0dB. 
+2. **Amp Gain:** Drop the `Myth Drive` output by 1.5 increments. Do not touch the Amp Volume first, as it dictates your base clean tone.
+3. **Tube Sag/Flub:** If the neck pickup on the ES-339 sounds "farty" when the Klon is engaged, lower the `D-Cell Custom Clean` Bass parameter to 3.5. 
+4. **Output Compensation:** If adjustments cause a volume drop, increase the **Lane Output Level** (far right output block on the grid) by +2.0dB.
 
 ---
 
 ### Session Library (Active Presets)
+*Logging configuration to session memory for strict recall.*
 
-**2. Preset Name: "Gravity - Strat/Dumble"**
-*   **Target:** John Mayer (Live/Studio Hybrid).
-*   **Guitar:** Stratocaster (Low-Output Single Coils).
-*   **Physics Goal:** Massive headroom clean, glassy top-end without FRFR harshness, mid-pushed lead.
-*   **Full Configuration:**
-    *   **Block 1 (Adaptive Gate):** Noise Red [Rhy: 40% / Lead: 55%], Thresh [-60dB / -55dB].
-    *   **Block 2 (Myth Drive):** Bypass [Sc A], On [Sc B], Gain [2.5], Treble [4.5], Output [7.5].
-    *   **Block 3 (Amp - D-Cell Custom Clean):** Vol [5.5], Bass [5.0], Mid [4.5], Treble [6.0], Presence [5.0], Master [8.0], Output Level [Rhy: 0.0dB / Lead: +1.5dB].
-    *   **Block 4 (EQ-8):** Peak Band 1 [150Hz, +2.0dB], LPF Band 8 [6000Hz].
-    *   **Block 5 (Cab - 212 D-Cell):** Mic A (Ribbon 121, Pos 0.0, Dist 1.0"), Mic B (Dyn 57, Pos 0.8, Dist 2.0"), Mix [A: 0dB, B: -3dB], HPF [85Hz].
-    *   **Block 6 (Analog Delay):** Mix [12%], Time [340ms], Fdbk [20%], Trails [On].
-    *   **Block 7 (Plate Reverb):** Mix [25% / 30%], Decay [1.8s / 2.2s], Pre-Delay [15ms], HP [120Hz], LP [4000Hz].
+**2. Preset Name: "Gravity - Dual Profile"**
+*   **Target:** John Mayer (2006, Continuum era).
+*   **Guitar 1:** Fender Telecaster (Single Coils).
+*   **Guitar 2:** Gibson ES-339 (Humbuckers).
+*   **Physics Goal:** Massive clean headroom, mid-scooped preamp, transparent overdrive boost.
+*   **Full Configuration (Telecaster / ES-339):**
+    *   **Block 1 (Input/Gate):** Input Gain [0.0dB / -4.5dB], Noise Red [Rhy: 35%, Lead: 50% / Rhy: 15%, Lead: 25%].
+    *   **Block 2 (Myth Drive):** Gain [5.0 / 3.0], Treble [6.0 / 7.5], Output [7.5 / 6.0]. Bypassed on Rhy.
+    *   **Block 3 (EQ-8):** B1 [200Hz: +3dB / 0dB], B2 [300Hz: 0dB / -4.0dB], B6 [3kHz: 0dB / +3.0dB], LPF [Lead: 4.5kHz / Off].
+    *   **Block 4 (Amp - D-Cell Custom Clean):** Vol [6.5 / 4.5], Bass [6.0 / 4.5], Mid [3.5 / 3.5], Treble [6.5 / 7.0], Presence [5.0], Master [7.0].
+    *   **Block 5 (Cab - 212 D-Cell Custom):** Mic A (Dyn 57, Pos [1.0 / 0.5], Dist 1.0"), Mic B (Ribbon 121, Pos [1.5 / 2.0], Dist [3.0" / 4.0"]), Mix [A: 0dB, B: -2dB].
+    *   **Block 6 (Tape Delay):** Mix [18% / 15%], Time [350ms], Fdbk [20% / 15%]. Bypassed on Rhy.
+    *   **Block 7 (Plate Reverb):** Mix [Rhy: 25%, Lead: 35% / Rhy: 20%, Lead: 30%], Decay [2.2s / 2.8s].

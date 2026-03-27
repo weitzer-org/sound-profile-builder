@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -24,16 +26,24 @@ func renderPresetList(presets []*storage.Preset) string {
 	for _, p := range presets {
 		html += fmt.Sprintf(`
 			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
-				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%s</h3>
-				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %s</span>
+				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
+				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
 				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-					<button hx-post="/api/preset/copy" hx-vals='{"id":"%s"}' hx-target="#preset-list-container" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border);">Copy</button>
-					<button hx-post="/api/preset/delete" hx-vals='{"id":"%s"}' hx-confirm="Are you sure you want to delete this save?" hx-target="#preset-list-container" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c;">Delete</button>
+					<div id="copy-container-%[3]s" style="flex: 1; display: flex;">
+						<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='flex'; this.style.display='none';" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">Copy</button>
+						<form id="copy-form-%[3]s" hx-post="/api/preset/copy" hx-target="#preset-list-container" style="display: none; width: 100%%; gap: 0.25rem; align-items: stretch; margin: 0;" autocomplete="off">
+							<input type="hidden" name="id" value="%[3]s">
+							<input type="text" name="new_name" placeholder="Name..." required style="flex: 1; min-width: 0; padding: 0.3rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; box-sizing: border-box;">
+							<button type="submit" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--success); border: none; color: white; cursor: pointer;">✔</button>
+							<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='none'; document.getElementById('copy-form-%[3]s').previousElementSibling.style.display='block';" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">✖</button>
+						</form>
+					</div>
+					<button hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
 				</div>
 				<div style="margin-top: 0.5rem;">
-					<button hx-get="/api/preset/view?id=%s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success);">Adjust preset</button>
+					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
 				</div>
-			</li>`, p.Name, p.UpdatedAt, p.ID, p.ID, p.ID)
+			</li>`, p.Name, p.UpdatedAt, p.ID)
 	}
 	html += `</ul>`
 	return html
@@ -135,9 +145,14 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 			return
 		}
 
+		newName := r.Header.Get("HX-Prompt")
+		if newName == "" {
+			newName = p.Name + " (Copy)"
+		}
+
 		// Save a stripped copy
 		pCopy := &storage.Preset{
-			Name:    p.Name + " (Copy)",
+			Name:    newName,
 			Payload: p.Payload,
 		}
 		
@@ -265,10 +280,18 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 	} else {
 		headerHtml = fmt.Sprintf(`
 			<div style="display: flex; justify-content: space-between; align-items: center; width: 100%%;">
-				<h2 style="font-size: 1.25rem; margin: 0; color: var(--text-sub);">Preset: <span style="color:white;">%s</span></h2>
+				<h2 style="font-size: 1.25rem; margin: 0; color: var(--text-sub);">Preset: <span style="color:white;">%[1]s</span></h2>
 				<div style="display: flex; gap: 0.5rem;">
-					<button hx-post="/api/preset/rename" hx-vals='{"id":"%s"}' hx-prompt="Enter new name for the preset:" hx-target="#main-workspace" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent); border: 1px solid var(--border); border-radius: 8px; color: white;">Rename</button>
-					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px;">Back / Exit</button>
+					<div id="rename-container-%[2]s" style="display: flex;">
+						<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.style.display='none';" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Rename</button>
+						<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0;" autocomplete="off">
+							<input type="hidden" name="id" value="%[2]s">
+							<input type="text" name="preset_name" placeholder="Rename..." required style="width: 150px; padding: 0.5rem; font-size: 0.9rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white; box-sizing: border-box;">
+							<button type="submit" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
+							<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='none'; document.getElementById('rename-form-%[2]s').previousElementSibling.style.display='block';" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
+						</form>
+					</div>
+					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Back / Exit</button>
 				</div>
 			</div>
 		`, html.EscapeString(p.Name), p.ID)
@@ -344,10 +367,12 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 		
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
-			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off">
+			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
+			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%s">
 				<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="flex: 1; resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
 				<button type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
+					<!-- TODO: Implement a multi-phase progress indicator (e.g. SSE streaming) to show real-time progress through ADK orchestration phases -->
 					<span class="htmx-indicator spinner-small"></span><span class="btn-text">Adjust</span>
 				</button>
 			</form>
@@ -356,6 +381,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
 				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
+				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
 				<div id="live-matrix-container" style="zoom: 0.8;">
 					%s
 				</div>
@@ -400,7 +426,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
-		ctx := r.Context()
+		ctx := context.WithoutCancel(r.Context())
 		p, err := s.store.Get(ctx, id)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %v</div>`, err)))
@@ -419,6 +445,10 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 		defer orch.Close()
+
+		if r.FormValue("mock") == "true" {
+			ctx = context.WithValue(ctx, agents.MockModeKey, true)
+		}
 
 		// Run the chat refinement loop
 		jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage)

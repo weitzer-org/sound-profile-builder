@@ -74,7 +74,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		ctx := r.Context()
+		ctx := context.WithoutCancel(r.Context())
 
 		// 1. Explicitly fetch the exact Gemini API Key from GCP Secret Manager
 		apiKey, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
@@ -98,6 +98,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			log.Printf("Failed to parse ADK form: %v", err)
 			http.Error(w, "Failed to parse generation request form", http.StatusBadRequest)
 			return
+		}
+
+		if r.FormValue("mock") == "true" {
+			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 
 		// Load config file globally

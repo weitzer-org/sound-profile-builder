@@ -32,5 +32,5 @@ This document outlines the core architectural choices and UI paradigms used in t
 ## 4. HTMX Integration & Agent Outputs
 - **Safety First:** Agent output containing HTML (e.g., Markdown formatting, lists) should NOT be aggressively escaped (`html.EscapeString`) if injected safely by the backend template. We use `strings.ReplaceAll("\n", "<br>")` for safe plaintext ingestion.
 - **Asynchronous Loaders:** Features requiring LLM generation time must instantly replace their trigger button with an `htmx-indicator` (typically a CSS spinner) to prevent duplicate submissions.
-- **Destructive Confirmations:** All destructive routes (Delete Preset, Discard Draft) must use the native `hx-confirm="..."` attribute to protect against accidental user actions.
+- **Destructive Confirmations & Prompts:** NEVER use browser-native popups (`hx-confirm="..."` or `hx-prompt="..."`). All destructive routes (Delete Preset, Discard Draft) or prompts for renaming must be built using inline UI components (e.g. state-toggling buttons or hidden inline forms) to ensure a seamless, native app-like experience.
 - **Accessibility:** All dynamically rendered regions into which ADK output natively swaps must be wrapped within an `aria-live="polite"` or `aria-live="assertive"` property.

@@ -4,13 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 	"google.golang.org/api/option"
+)
+
+// ContextKey establishes standard context keys for the agents package
+type ContextKey string
+
+const (
+	MockModeKey ContextKey = "mock_mode"
 )
 
 // TokenUsage rigidly aggregates exact API volume metadata
@@ -51,7 +57,7 @@ func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOp
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
 func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
-	if os.Getenv("USE_MOCKS") == "true" {
+	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
 			return mockOutput, o.Usage, nil
 		}
@@ -239,6 +245,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
+	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)
 	
@@ -288,7 +295,7 @@ func (o *Orchestrator) Close() {
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error) {
-	if os.Getenv("USE_MOCKS") == "true" {
+	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
 			return mockOutput, o.Usage, nil
 		}

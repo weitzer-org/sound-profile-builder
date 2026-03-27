@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: '**/*.spec.js',
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:8082',
     headless: true, // Mirrors the headless style running from gsr
     video: 'on',    // Automatically captures verification videos of the HTMX dashboard rendering
   },

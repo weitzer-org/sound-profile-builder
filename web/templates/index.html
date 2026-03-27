@@ -427,7 +427,7 @@
             <p class="subtitle">AI-Driven Physics & Preset Orchestration Pipeline</p>
 
             <div class="card">
-                <form hx-post="/api/preset/generate" hx-target="#result" hx-indicator="#submit-btn">
+                <form hx-post="/api/preset/generate" hx-target="#result" hx-indicator="#submit-btn" hx-sync="this:drop" hx-disabled-elt="this, #submit-btn, input[name='prompt']">
                     
 
                     <div class="form-group">
@@ -436,6 +436,7 @@
                     </div>
 
                     <button type="submit" id="submit-btn" style="padding: 1rem; width: 100%;">
+                        <!-- TODO: Implement a multi-phase progress indicator (e.g. SSE streaming) to show real-time progress through ADK orchestration phases -->
                         <span class="spinner"></span>
                         <span class="btn-text">Spin Up ADK & Generate Preset</span>
                     </button>
@@ -484,6 +485,14 @@
             const activeModal = document.querySelector('.modal-overlay.active');
             if (activeModal) {
                 activeModal.classList.remove('active');
+            }
+        });
+    </script>
+    <script>
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mock") === "true") {
+                evt.detail.parameters['mock'] = 'true';
             }
         });
     </script>

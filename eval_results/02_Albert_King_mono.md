@@ -1,54 +1,88 @@
-Here is your gig-ready Cortex Control build. 
+**System Initialization: Quad Cortex Systems Engineer (QC-2)**
+**Target Acknowledged:** Albert King - "Born Under A Bad Sign" (1967 Stax Sessions / Acoustic 260 Solid State Amp Replication).
+**Speaker Profile:** QSC CP12 (Active PA).
 
-### Analog Research & Physics Translation: Albert King 
-Albert King famously played a Gibson Flying V (humbuckers) plugged into **solid-state Acoustic Control Corp amplifiers** (like the Acoustic 260/270). These amps featured massive headroom, a built-in aggressive fuzz/clipping circuit, and 15-inch speakers with high-frequency horns. Furthermore, Albert picked with his bare thumb and index finger, creating a tone that was simultaneously round (flesh attack) and searingly bright (solid-state amp + intense string bending). 
+### Physics & Tone Logic: The "Acoustic" Solid-State Emulation
+Albert King’s signature tone on this record is defined by a Flying V (medium humbuckers) played bare-fingered into a loud, high-headroom amplifier. While he later popularized the Acoustic 270, early tones were derived from the Acoustic 260 (which featured a built-in fuzz circuit) or extremely clean Stax studio amps driven to their absolute limit. 
 
-To recreate this on the Quad Cortex for a QSC CP12 without sounding "digital," we will use the highest-headroom solid-state amp in the QC (**Jazz Rivet 120**) combined with a hard-clipping solid-state preamp pedal (**OD250**) to mimic the Acoustic's built-in drive. We will also utilize an EQ block to emulate his bare-finger attack.
+Because solid-state amps lack tube sag (compression), transients are massive, stiff, and immediate. We will use the QC's **Jazz 120** (Roland JC-120) model to guarantee that unyielding, stiff, high-headroom solid-state foundation. To emulate the aggressive finger attack and the famous Acoustic amp "splat," we will deploy an Optical Compressor (for finger dynamics/sustain on big bends) and a heavily gated Fuzz Face with the gain rolled *almost completely off* to replicate the Acoustic amp's harsh clipping.
 
-Since you are using **Medium Humbuckers**, we will build this on **Row 2 (Scenes E-H)** of the standard split-bank matrix.
+*Per Protocol 9, the build is divided into two distinct profiles for your Gibson ES-339 and Fender Telecaster.*
 
 ---
 
-### Table A: Main Signal Chain (Row 2 - Humbucker Profile)
-*Note: Parameters marked with "(Sc E/F)" require Scene Assignment (Right-Click > Assign).*
+### GLOBAL GAIN STAGING & PICKUP COMPENSATION
+**DO NOT skip this step before building.**
 
-| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+**Guitar 1: Gibson ES-339 (Medium Humbuckers)**
+*   **Target:** Closest match to Albert’s Flying V.
+*   **Input Block:** Set Gain to **0.0dB**. 
+*   **Strategy:** Humbuckers will naturally push the compressor and fuzz. We will rely on EQ to emphasize the 2.5kHz "bite" while cutting muddy low-mids.
+
+**Guitar 2: Fender Telecaster (Single Coils)**
+*   **Target:** Requires massive body compensation to emulate the Flying V humbuckers, plus high-frequency taming to simulate Albert's bare-thumb attack.
+*   **Input Block:** Set Gain to **+3.0dB** (pushes the solid-state preamp similarly to the humbuckers).
+*   **Strategy:** Heavy EQ-8 compensation (Band 2: 200Hz Peak boost) and a darker Low-Pass Filter (LPF) to kill single-coil "ice-pick."
+
+---
+
+### THE SPLIT-BANK MATRIX
+*   **Row 1 (Scenes A–D):** Telecaster Single Coil Profile
+*   **Row 2 (Scenes E–H):** ES-339 Humbucker Profile
+
+#### Table A: Main Signal Chain (Build this left-to-right on the QC Grid)
+*Note: Parameters marked with `(Assign)` require Right-Click > Assign to Scenes.*
+
+| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input** | Global Gate | Thresh: -62dB | Thresh: -62dB | Low threshold to capture the extreme dynamic range of bare-finger/hybrid picking. |
-| **Pre-FX (Drive)** | OD250 | Gain: 1.5 <br>Level: 6.0 | Gain: 4.5 <br>Level: 7.5 | Replicates the hard-clipping solid-state preamp/fuzz circuit of the Acoustic 260. |
-| **Amp** | Jazz Rivet 120 | Vol: 6.5 <br>Mid: 8.5 <br>Treb: 6.0 <br>Bass: 4.5 | Vol: 6.5 <br>Mid: 8.5 <br>Treb: 6.0 <br>Bass: 4.5 | JC-120 is the best solid-state QC model. Bright switch OFF. Mids cranked for Albert's honky, vocal-like sustain. |
-| **Cab** | Dual Cab: <br>1x 212 Jazz Rivet <br>1x 115 US Tweed | **Mic A (212):** Dyn 57 (Dist 1.0") <br>**Mic B (115):** Ribbon 121 (Dist 3.0") | Mix: 0dB (A) <br>Mix: -2dB (B) | The 15" speaker replicates the Acoustic 260's massive low-mid footprint. The 2x12 gives the harsh solid-state bite. |
-| **Post-EQ** | Parametric-8 | Band 5: +2.5dB @ 800Hz <br>Band 8 (LPF): 4.8kHz | Band 5: +3.5dB @ 800Hz <br>Band 8 (LPF): 4.5kHz | **Chameleon Strategy:** LPF simulates the duller attack of a bare thumb. 800Hz bump mimics the Acoustic 260's high-mid horn. |
-| **Post-FX** | Spring Reverb | Mix: 8% <br>Decay: 1.2s | Mix: 8% <br>Decay: 1.2s | Kept extremely dry to replicate the dead, tight "Stax Records" studio room sound. |
-| **Output** | Lane Output | Level: 0.0dB | Level: +1.5dB | Overall loudness boost for solos without adding more saturation to the amp block. |
+| **Input/Gate** | Adaptive Gate | Noise Red: 35% | Noise Red: 50% | Tames single-coil hum / high-gain fuzz noise floor. |
+| **Pre-FX 1** | Optical Comp | Comp: 4.0, Level: 0dB | Comp: 6.5, Level: +1.5dB `(Assign)` | Emulates the natural transient squash of bare fingers; adds sustain for 2-step bends. |
+| **Pre-FX 2** | Facial Fuzz | Bypass | Fuzz: 8%, Vol: 6.5 `(Assign)` | Replicates the Acoustic 260's built-in solid-state clipping. Very low fuzz = harsh overdrive. |
+| **Amp** | Jazz 120 | Vol: 6.0, Treb: 7.5, Mid: 5.5, Bass: 3.5, Bright: ON | Vol: 7.5 `(Assign)`, Treb: 7.0, Mid: 6.5 `(Assign)` | **NMV Amp**: Zero tube sag. Stiff, unyielding solid-state response. Mid pushed for solo cut. |
+| **EQ** | Parametric-8 | *See specific Guitar EQ specs below* | *See specific Guitar EQ specs below* | Customizes the pickup output to match the Flying V / Thumb attack physics. |
+| **Cab** | 212 Jazz 120 | Mic A: Dyn 57 (Pos 0.0, Dist 1.0") | Mic A: Dyn 57 (Pos 0.0, Dist 1.0") | Center-cap 57 captures the biting transient. |
+| **Cab (Mic B)** | (Dual Mic Setup) | Mic B: Ribbon 121 (Pos 1.5, Dist 3.0") | Mic B: Ribbon 121 (Pos 1.5, Dist 3.0") | Ribbon mic adds body and subdues PA speaker harshness. Mix B at -3.0dB. |
+| **Post-FX** | Spring Reverb | Mix: 15%, Decay: 1.5s | Mix: 20% `(Assign)`, Decay: 1.5s | Stax studios had natural slap/verb. Warms up the sterile solid-state tone. |
 
 ---
 
-### Troubleshooting & Refinement Tree
-If the preset isn't interacting perfectly with your specific humbuckers and the QSC CP12:
+### SCENE-SPECIFIC EQ-8 ROUTING (The "Chameleon" Strategy)
+Place the EQ-8 Block *after* the Amp but *before* the Cab. Assign these parameters to switch depending on the active Scene row.
 
-1. **If the tone is too "Fuzzy" or "Harsh" on Lead:** 
-   * *Physics:* Solid-state clipping (OD250) can easily overload if your humbuckers have a high resonant peak.
-   * *Fix:* Go to the **Input Block** and lower the Gain to `-3.0dB`. This acts like rolling back your guitar's volume pot just enough to sweeten the hard-clipping diode simulation.
-2. **If the tone lacks Albert's "Bite" (Sounds too muffled):**
-   * *Physics:* Your humbuckers might be darker than average. 
-   * *Fix:* Go to the **EQ-8 Block** and raise the LPF (Band 8) from `4.5kHz` up to `6.0kHz`. Do *not* turn on the Amp's Bright switch, as solid-state bright switches introduce a "shatter" artifact through PA speakers like the CP12.
-3. **If the low strings "Fart out" during bends:**
-   * *Fix:* Lower the Amp Bass parameter to `3.0` and increase the EQ-8 HPF (Band 1) to `110Hz`. 
+**For ES-339 Humbucker Scenes (E & F):**
+*   **HPF:** 90Hz (Tightens humbucker low-end).
+*   **Band 3:** -2.0dB at 400Hz (Removes boxiness).
+*   **Band 6:** +3.0dB at 2500Hz (Albert's famous vocal bite).
+*   **LPF:** 5500Hz (Tames the QSC CP12 high-end response from the fuzz).
+
+**For Telecaster Single Coil Scenes (A & B):**
+*   **HPF:** 70Hz.
+*   **Band 2:** +4.5dB at 200Hz (Crucial: Emulates the physical mass of the ES-339/Flying V mahogany body).
+*   **Band 4:** +3.0dB at 800Hz (Adds humbucker midrange punch).
+*   **LPF:** 4200Hz (Drastically rolls off high frequencies to mimic Albert's bare thumb, removing pick attack/single-coil harshness).
+
+---
+
+### ⚠️ TROUBLESHOOTING & REFINEMENT TREE
+If the tone played through the QSC CP12 sounds incorrect, follow this strict diagnostic order:
+1.  **Too "Splatty" or Broken on Lead:** The Facial Fuzz is reacting poorly to your exact pickup height. Reduce the Fuzz parameter to **2%** or **0%**, and increase the Fuzz Vol to **8.0** to act as a pure, harsh solid-state boost.
+2.  **Not Enough Volume (SPL):** The Jazz 120 has no Master Volume. **DO NOT** raise the Amp Vol, as this will introduce digital clipping on this specific model. Instead, swipe down and raise the **Lane Output Level** to `+3.0dB` or `+6.0dB`.
+3.  **Too Muddy (ES-339):** Lower Amp Block Bass to `2.0`. Solid-state amps get extremely flubby if low-end frequencies hit the preamp too hard.
 
 ---
 
 ### Session Library (Active Presets)
-
-**2. Preset Name: "Bad Sign - Albert SolidState"**
-*   **Target:** Albert King / Stax Records (Solid State Acoustic 260 replication).
-*   **Guitar:** Medium Humbuckers (Simulating Bare Thumb/Finger picking).
-*   **Physics Goal:** Massive solid-state headroom + aggressive hard-clipping overdrive, mimicking a 15-inch speaker with a high-frequency horn.
-*   **Full Configuration:**
-    *   *Block 1 (Global Input Gate):* Threshold [-62dB].
-    *   *Block 2 (OD250):* Gain [Rhy: 1.5 / Lead: 4.5], Level [Rhy: 6.0 / Lead: 7.5].
-    *   *Block 3 (Amp - Jazz Rivet 120):* Bright [OFF], Vol [6.5], Bass [4.5], Mid [8.5], Treble [6.0].
-    *   *Block 4 (Dual Cab):* Cab A [212 Jazz Rivet, Mic: Dyn 57, Pos 0.5, Dist 1.0", Level 0dB], Cab B [115 US Tweed, Mic: Ribbon 121, Pos 0.0, Dist 3.0", Level -2.0dB].
-    *   *Block 5 (EQ-8):* HPF [90Hz], Band 5 Peak [+2.5dB Rhy / +3.5dB Lead @ 800Hz, Q: 1.5], LPF [4800Hz Rhy / 4500Hz Lead]. 
-    *   *Block 6 (Spring Reverb):* Mix [8%], Decay [1.2s], Tone [4.0].
-    *   *Lane Output:* Level [Rhy: 0.0dB / Lead: +1.5dB].
+**2. Preset Name:** "Bad Sign SS Emulation"
+**Target:** Albert King (1967) / Acoustic 260 Solid State Emulation.
+**Guitars:** ES-339 (Humbuckers) / Telecaster (Single Coil).
+**Physics Goal:** Unyielding solid-state transient response, thumb-attack EQ curve, and low-gain fuzz to replicate solid-state clipping on an active PA speaker.
+**Full Configuration:**
+*   **Block 1 (Adaptive Gate):** Noise Red [Tele: 50% / 339: 35%].
+*   **Block 2 (Optical Comp):** Comp [Rhy: 4.0 / Lead: 6.5], Level [Rhy: 0dB / Lead: +1.5dB].
+*   **Block 3 (Facial Fuzz):** State [Rhy: Bypass / Lead: Active], Fuzz [8%], Vol [6.5].
+*   **Block 4 (Amp - Jazz 120):** Vol [Rhy: 6.0 / Lead: 7.5], Bass [3.5], Mid [Rhy: 5.5 / Lead: 6.5], Treble [Rhy: 7.5 / Lead: 7.0], Bright [ON].
+*   **Block 5 (EQ-8):** 
+    *   *Tele:* HPF [70Hz], B2 [200Hz, +4.5dB], B4 [800Hz, +3.0dB], LPF [4200Hz].
+    *   *339:* HPF [90Hz], B3 [400Hz, -2.0dB], B6 [2500Hz, +3.0dB], LPF [5500Hz].
+*   **Block 6 (Cab - 212 Jazz 120):** Mic A (Dyn 57, Pos 0.0, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 3.0"), Mix [A: 0dB, B: -3dB].
+*   **Block 7 (Spring Reverb):** Mix [Rhy: 15% / Lead: 20%], Decay [1.5s], Tone [6.0].

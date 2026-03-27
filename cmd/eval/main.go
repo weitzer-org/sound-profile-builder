@@ -85,16 +85,17 @@ Block 2 (EQ-8): HPF [90Hz], Band 6 [0.0dB], LPF [Rhy: 4200Hz / Lead: 4500Hz] (Si
 Block 3 (Amp - US Tweed Basslad Jumped): Vol Norm [2.0 / 2.2], Vol Bright [2.5 / 3.2], Bass [2.5], Mid [6.0 / 7.0], Treble [7.0 / 6.5], Presence [6.0], Output Level [+7.0dB / +8.5dB].
 Block 4 (Cab - 410 Basslad PR10): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 0.8, Dist 5.0"), Mix [A: 0dB, B: -4dB].
 Block 5 (Tape Delay): Mix [15% / 22%], Time [110ms], Fdbk [15%], Drive [35%], HP [150Hz], LP [2500Hz].
-Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].`
+Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].
+
+9. Multi-Guitar Target Output
+Note: You MUST provide distinct configuration settings and gain staging instructions for TWO separate guitars: 'Gibson ES-339 Humbuckers' and 'Fender Telecaster Single Coil'. Clearly separate them in your output.`
 
 func main() {
 	ctx := context.Background()
 
-	// The 12-Point Blues Evaluation Suite (Filtered to 1-3 for testing)
+	// The 12-Point Evaluation Suite
 	evalQueries := map[string]string{
 		"01_SRV_Clean":   "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
-		"02_Albert_King": "Albert King 'Born Under A Bad Sign'. Medium humbuckers. Needs solid-state Acoustic amp replication.",
-		"03_John_Mayer":  "John Mayer 'Gravity'. Low-output strat pickups. Dumble amp + Klon Centaur.",
 	}
 
 	// Ensure our results directory exists
@@ -145,6 +146,7 @@ func main() {
 		constraints := map[string]interface{}{
 			"single_amp_mode":      true,
 			"allow_cloud_captures": false,
+			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 		}
 
 		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints)
