@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
+	"sync/atomic"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
@@ -116,9 +118,19 @@ func main() {
 		log.Fatalf("Failed to fetch API key: %v", err)
 	}
 
-	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput int
+	var wg sync.WaitGroup
+	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
+	
+	// Max 3 concurrent execution pipelines to avoid immediate quota bans 
+	sem := make(chan struct{}, 3)
 
 	for name, query := range evalQueries {
+		wg.Add(1)
+		sem <- struct{}{}
+		
+		go func(name, query string) {
+			defer wg.Done()
+			defer func() { <-sem }()
 		log.Printf("\n=============================================")
 		log.Printf("▶ EXECUTING EVAL: %s", name)
 		log.Printf("=============================================")
@@ -140,8 +152,8 @@ func main() {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
-			totalMultiInput += int(usage.InputTokens)
-			totalMultiOutput += int(usage.OutputTokens)
+			totalMultiInput.Add(int64(usage.InputTokens))
+			totalMultiOutput.Add(int64(usage.OutputTokens))
 			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
@@ -167,19 +179,22 @@ func main() {
 			usageMono := resp.UsageMetadata
 			
 			log.Printf("✅ MONO SUCCESS | Tokens: In %d, Out %d", usageMono.PromptTokenCount, usageMono.CandidatesTokenCount)
-			totalMonoInput += int(usageMono.PromptTokenCount)
-			totalMonoOutput += int(usageMono.CandidatesTokenCount)
+			totalMonoInput.Add(int64(usageMono.PromptTokenCount))
+			totalMonoOutput.Add(int64(usageMono.CandidatesTokenCount))
 			
 			err = os.WriteFile(fmt.Sprintf("%s_mono.md", name), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
 		client.Close()
+		}(name, query)
 	}
+
+	wg.Wait()
 
 	log.Println("\n=============================================")
 	log.Println("🏁 EVALUATION SUITE COMPLETE")
 	log.Println("Wrote 24 resulting HTML and MD files to workspace.")
-	log.Printf("📊 MULTI-AGENT TOTAL TOKENS: Input: %d, Output: %d", totalMultiInput, totalMultiOutput)
-	log.Printf("📊 MONOLITHIC  TOTAL TOKENS: Input: %d, Output: %d", totalMonoInput, totalMonoOutput)
+	log.Printf("📊 MULTI-AGENT TOTAL TOKENS: Input: %d, Output: %d", totalMultiInput.Load(), totalMultiOutput.Load())
+	log.Printf("📊 MONOLITHIC  TOTAL TOKENS: Input: %d, Output: %d", totalMonoInput.Load(), totalMonoOutput.Load())
 	log.Println("=============================================")
 }

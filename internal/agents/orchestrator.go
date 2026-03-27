@@ -226,14 +226,22 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	
+	ctx1, cancel1 := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel1()
+
+	resp, err := model.GenerateContent(ctx1, genai.Text(prompt))
 	if err != nil {
 		log.Printf("[%s] Gemini 3.1 Pro Preview failed or rate-limited: %v. Falling back to Gemini 2.5 Pro.", agentRole, err)
 		
 		// 2. Fallback to Gemini 2.5 Pro
 		modelName = "gemini-2.5-pro"
 		fallbackModel := o.client.GenerativeModel(modelName)
-		resp, err = fallbackModel.GenerateContent(ctx, genai.Text(prompt))
+		
+		ctx2, cancel2 := context.WithTimeout(ctx, 45*time.Second)
+		defer cancel2()
+		
+		resp, err = fallbackModel.GenerateContent(ctx2, genai.Text(prompt))
 		if err != nil {
 			return "", fmt.Errorf("[%s] Fallback model also failed: %v", agentRole, err)
 		}
@@ -260,4 +268,30 @@ func (o *Orchestrator) Close() {
 	if o.client != nil {
 		o.client.Close()
 	}
+}
+
+// RefinePreset bypasses the 12-agent pipeline and submits the user's feedback directly to the Architect equivalent using the existing HTML payload
+func (o *Orchestrator) RefinePreset(ctx context.Context, existingHTMLPayload string, userFeedback string) (string, *TokenUsage, error) {
+	log.Printf("Starting ADK Refinement logic for feedback: %s\n", userFeedback)
+
+	sysPrompt, _ := LoadPrompt("12_architect")
+	
+	refinementPrompt := fmt.Sprintf(`
+You are being called in REFINEMENT mode. The user wants to edit an existing generated preset based on their feedback.
+You MUST output the exact same JSON schema as your original instructions. Ensure the 'final_html_payload' contains the *entire* updated HTML table matrix, incorporating these changes.
+For 'agent_impact', provide a single bullet explicitly stating what was modified based on the feedback.
+
+USER FEEDBACK / INSTRUCTION:
+%s
+
+EXISTING HTML PAYLOAD:
+%s
+`, userFeedback, existingHTMLPayload)
+
+	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt)
+	if err != nil {
+		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
+	}
+
+	return finalResult, o.Usage, nil
 }
