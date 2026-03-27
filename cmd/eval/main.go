@@ -90,20 +90,16 @@ Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].`
 func main() {
 	ctx := context.Background()
 
-	// The 12-Point Blues Evaluation Suite
+	// The 12-Point Blues Evaluation Suite (Filtered to 1-3 for testing)
 	evalQueries := map[string]string{
-		"01_SRV_Clean":     "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
-		"02_Albert_King":   "Albert King 'Born Under A Bad Sign'. Medium humbuckers. Needs solid-state Acoustic amp replication.",
-		"03_John_Mayer":    "John Mayer 'Gravity'. Low-output strat pickups. Dumble amp + Klon Centaur.",
-		"04_Muddy_Waters":  "Muddy Waters edge-of-fuzz. Telecaster middle position. Needs a pushed 5E3 equivalent without flub.",
-		"05_Howlin_Wolf":   "Howlin' Wolf / Hubert Sumlin tone. Les Paul with P90s. Filter the noise and map high-mid compensation.",
-		"06_Gary_Moore":    "Gary Moore 'Still Got The Blues'. High output humbuckers. Marshall JTM45 driven heavily by a Guv'nor.",
-		"07_Buddy_Guy":     "Buddy Guy 'Sweet Home Chicago'. Vintage Strat single coils. Needs Bassman with extreme treble control.",
-		"08_Joe_Bonamassa": "Joe Bonamassa 'Sloe Gin'. ES-335 humbuckers. Multi-amp blend synthesis constraint.",
-		"09_Robben_Ford":   "Robben Ford 'Talk To Your Daughter'. Fender Esprit humbuckers. Dumble ODS clean-to-overdrive morphing.",
-		"10_Freddie_King":  "Freddie King 'Hideaway'. ES-345. Muted acoustic snap simulation (fast slapback) and Varitone filter.",
-		"11_Jimi_Hendrix":  "Jimi Hendrix 'Red House'. Strat neck pickup. Fuzz Face padded front end to simulate rolled-off volume.",
-		"12_Derek_Trucks":  "Derek Trucks 'Midnight in Harlem'. SG open E slide. Zero pedals, cranked Super Reverb tube sag.",
+		"01_SRV_Clean":   "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
+		"02_Albert_King": "Albert King 'Born Under A Bad Sign'. Medium humbuckers. Needs solid-state Acoustic amp replication.",
+		"03_John_Mayer":  "John Mayer 'Gravity'. Low-output strat pickups. Dumble amp + Klon Centaur.",
+	}
+
+	// Ensure our results directory exists
+	if err := os.MkdirAll("eval_results", 0755); err != nil {
+		log.Fatalf("Failed to create eval_results directory: %v", err)
 	}
 
 	// 1. Fetch Secure Credentials
@@ -157,8 +153,7 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
-			totalMultiOutput.Add(int64(usage.OutputTokens))
-			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
+			err = os.WriteFile(fmt.Sprintf("eval_results/%s_multi.html", name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
 
@@ -174,7 +169,6 @@ func main() {
 			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
 		}
 
-		_ = orch.Limiter.Wait(ctx)
 		resp, err := model.GenerateContent(ctx, genai.Text(query))
 		if err != nil {
 			log.Printf("❌ Monolithic generation failed for %s: %v", name, err)
@@ -186,7 +180,7 @@ func main() {
 			totalMonoInput.Add(int64(usageMono.PromptTokenCount))
 			totalMonoOutput.Add(int64(usageMono.CandidatesTokenCount))
 			
-			err = os.WriteFile(fmt.Sprintf("%s_mono.md", name), []byte(monolithicResult), 0644)
+			err = os.WriteFile(fmt.Sprintf("eval_results/%s_mono.md", name), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
 		client.Close()

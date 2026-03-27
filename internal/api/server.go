@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,13 +15,21 @@ import (
 
 // Server holds the dependencies for our HTTP server.
 type Server struct {
-	mux *http.ServeMux
+	mux        *http.ServeMux
+	store      *storage.PresetStore
+	client     storage.Client
+	smFetcher  storage.SecretFetcher
+	orchMaker  func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
 }
 
 // NewServer initializes a new Server and its routes.
-func NewServer() *Server {
+func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)) *Server {
 	s := &Server{
-		mux: http.NewServeMux(),
+		mux:       http.NewServeMux(),
+		store:     store,
+		client:    client,
+		smFetcher: smFetcher,
+		orchMaker: orchMaker,
 	}
 	s.routes()
 	return s
@@ -39,7 +48,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/api/preset/save", s.handleSavePreset())
 	s.mux.HandleFunc("/api/preset/delete", s.handleDeletePreset())
 	s.mux.HandleFunc("/api/preset/copy", s.handleCopyPreset())
-	s.mux.HandleFunc("/api/preset/edit", s.handleEditPreset())
+	s.mux.HandleFunc("/api/preset/view", s.handleViewPreset())
+	s.mux.HandleFunc("/api/preset/chat", s.handleChatPreset())
+	s.mux.HandleFunc("/api/preset/rename", s.handleRenamePreset())
+	s.mux.HandleFunc("/api/preset/delete_draft", s.handleDeleteDraftPreset())
 }
 
 // Start begins listening on the specified address.
@@ -65,15 +77,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		ctx := r.Context()
 
 		// 1. Explicitly fetch the exact Gemini API Key from GCP Secret Manager
-		smClient, err := storage.NewSecretManagerClient(ctx)
-		if err != nil {
-			log.Printf("Failed to init Secret Manager: %v", err)
-			http.Error(w, "Failed to initialize Secret Manager", http.StatusInternalServerError)
-			return
-		}
-		defer smClient.Close()
-
-		apiKey, err := smClient.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+		apiKey, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
 		if err != nil {
 			log.Printf("Failed to fetch API key: %v", err)
 			http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
@@ -81,7 +85,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		// 2. Initialize the Orchestrator with the fetched API Key
-		orch, err := agents.NewOrchestrator(ctx, apiKey)
+		orch, err := s.orchMaker(ctx, apiKey)
 		if err != nil {
 			log.Printf("Failed to initialize Orchestrator: %v", err)
 			http.Error(w, "Failed to initialize ADK", http.StatusInternalServerError)
@@ -161,42 +165,36 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			</div>`, tokenUsage.InputTokens, tokenUsage.OutputTokens, strings.TrimSuffix(modelsList, ", "))
 		}
 
-		finalDOM := fmt.Sprintf(`
-			<div class="card">
-				%s
-				
-				<!-- Trigger Button -->
-				<button type="button" onclick="document.getElementById('saveModal').classList.add('active')" style="display:block; width:100%%; margin-top:2rem; padding:1rem; background:var(--success); font-size:1.1rem; border-radius:8px; cursor:pointer; color:white; border:none; font-weight:bold;">Save Custom Preset</button>
-				
-				<!-- Modal Overlay -->
-				<div id="saveModal" class="modal-overlay">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h3>Save Custom Preset</h3>
-							<button type="button" class="modal-close" onclick="document.getElementById('saveModal').classList.remove('active')">&times;</button>
-						</div>
-						<form hx-post="/api/preset/save" hx-target="#preset-list-container" onsubmit="document.getElementById('saveModal').classList.remove('active')">
-							<div class="form-group" style="text-align: left; margin-bottom: 0;">
-								<label style="color:#cbd5e1; margin-bottom:0.5rem; font-size:0.9rem;">Preset Name</label>
-								<input type="text" name="preset_name" placeholder="Enter preset name..." autocomplete="off" required style="width:100%%; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.2);">
-							</div>
-							<input type="hidden" name="payload" value='%s'>
-							<div class="modal-actions">
-								<button type="button" class="btn-cancel" onclick="document.getElementById('saveModal').classList.remove('active')" style="padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-weight:600;">Cancel</button>
-								<button type="submit" class="btn-save" style="padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-weight:600;">Save to Cloud</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-			<div class="card">
-				<h2>Agent Architecture Log</h2>
-				%s
-			</div>
-			%s
-		`, archResp.FinalHtmlPayload, archResp.FinalHtmlPayload, impactsHtml, tokenStatsHtml)
+		initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
-		// 5. Output pure DOM back directly to the #result target!
+		draftPreset := &storage.Preset{
+			Name: "Draft Preset",
+			Payload: archResp.FinalHtmlPayload,
+			ChatHistory: []storage.ChatMessage{
+				{Role: "user", Content: prompt},
+				{Role: "model", Content: "Preset structure successfully laid out based on your requirements.\n" + initialAgentIntro},
+			},
+		}
+
+		if err := s.store.Save(ctx, draftPreset); err != nil {
+			log.Printf("Failed to save draft preset: %v", err)
+			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444;">Storage Error: %v</div>`, err)))
+			return
+		}
+
+		// Reload the list to trigger the newly added Draft Preset display (optional, but good for UI consistency)
+		presets, _ := s.store.List(ctx)
+		
+		// Return pure DOM swapping the MAIN workspace alongside updating the sidebar
+		finalDOM := fmt.Sprintf(`
+			<div id="preset-list-container" hx-swap-oob="true">
+				%s
+			</div>
+			<div id="main-workspace" hx-swap-oob="true">
+				%s
+			</div>
+		`, renderPresetList(presets), renderTweakingWorkspaceHTML(draftPreset))
+
 		w.Write([]byte(finalDOM))
 	}
 }

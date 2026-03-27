@@ -1,6 +1,10 @@
 # Local test binaries
 test-results.txt
 *.test
+sound-builder-server
+coverage.html
+coverage.out
+startup_test_logs.txt
 
 # Credentials
 .google_credentials.json

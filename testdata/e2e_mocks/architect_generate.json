@@ -1,0 +1,19 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"final_html_payload\": \"<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead><tbody><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Fender Twin Reverb</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 4.0<br/>Bass: 5.5<br/>Mid: 6.0<br/>Treble: 6.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 6.0<br/>Bass: 5.5<br/>Mid: 6.5<br/>Treble: 7.0</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cab: 2x12 Open Back</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic: Shure SM57<br/>Position: Center</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic: Shure SM57<br/>Position: Center</td></tr></tbody></table>\",\n  \"agent_impact\": [\n    \"<strong>Agent 1 (Tone Historian):</strong> Identified Fender Twin as the target amp for clean blues.\",\n    \"<strong>Agent 2 (Sonic Profiler):</strong> Selected 2x12 Open Back cab for matching frequency response.\",\n    \"<strong>Agent 3 (Amplifier AI):</strong> Dialed proper volume gain staging between Rhythm and Lead scenes for headroom.\"\n  ]\n}"
+          }
+        ],
+        "role": "model"
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 120,
+    "candidatesTokenCount": 420,
+    "totalTokenCount": 540
+  }
+}

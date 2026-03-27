@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/weitzer-org/sound-builder/internal/storage"
-	"golang.org/x/time/rate"
 	"google.golang.org/api/option"
 )
 
@@ -21,16 +20,23 @@ type TokenUsage struct {
 	mu           sync.Mutex
 }
 
+// OrchestratorService defines the methods available on the ADK Orchestrator
+type OrchestratorService interface {
+	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error)
+	RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error)
+	Close()
+}
+
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
-	client  *genai.Client
-	Usage   *TokenUsage
-	Limiter *rate.Limiter
+	client *genai.Client
+	Usage  *TokenUsage
 }
 
 // NewOrchestrator initializes the Gemini ADK client
-func NewOrchestrator(ctx context.Context, apiKey string) (*Orchestrator, error) {
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOption) (*Orchestrator, error) {
+	allOpts := append([]option.ClientOption{option.WithAPIKey(apiKey)}, opts...)
+	client, err := genai.NewClient(ctx, allOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +45,7 @@ func NewOrchestrator(ctx context.Context, apiKey string) (*Orchestrator, error) 
 		ModelsUsed: make(map[string]int),
 	}
 
-	// TODO: The user is artificially capping the LLM concurrency to 14 Requests Per Minute to align
-	// with the strict Generative AI limits. This should be natively bumped upward (or decoupled)
-	// when the Cloud APIs & Services Quota matches standard high-volume tiers (e.g. 360 RPM).
-	limiter := rate.NewLimiter(rate.Every(time.Minute/360), 10)
-
-	return &Orchestrator{client: client, Usage: usage, Limiter: limiter}, nil
+	return &Orchestrator{client: client, Usage: usage}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
@@ -122,7 +123,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian
 	sysPrompt4, _ := LoadPrompt("4_coros_librarian")
-	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s", sysPrompt4, toneResult, scrapeResult, dictJSON)
+	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, constraints)
 	librarianResult, err4 := o.RunAgent(ctx, "CorOS Librarian", context4)
 	if err4 != nil {
 		return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
@@ -214,8 +215,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	// Agent 12: Architect & Evaluator formats the final breakdown
 	architectPrompt := "Evaluate the impact of the pipeline and format the final HTML table based strictly on the following aggregated data payload:\n\n"
-	architectPrompt += fmt.Sprintf("Tone: %s\nSonic: %s\nScraper: %s\nLibrarian: %s\nNavigator: %s\nAcoustician: %s\nTransducer: %s\nFOH: %s\nMix: %s\nMap: %s\nDSP: %s",
-		toneResult, sonicResult, scrapeResult, librarianResult, navigatorResult, acousticianResult, techResult, fohResult, mixResult, mapResult, dspResult)
+	architectPrompt += fmt.Sprintf("Constraints: %v\n\nTone: %s\nSonic: %s\nScraper: %s\nLibrarian: %s\nNavigator: %s\nAcoustician: %s\nTransducer: %s\nFOH: %s\nMix: %s\nMap: %s\nDSP: %s",
+		constraints, toneResult, sonicResult, scrapeResult, librarianResult, navigatorResult, acousticianResult, techResult, fohResult, mixResult, mapResult, dspResult)
 
 	sysPrompt12, _ := LoadPrompt("12_architect")
 	finalResult, err12 := o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
@@ -230,12 +231,6 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 // RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
-	// Physically gate the API burst request directly over the global rate limiter (14 RPM)
-	err := o.Limiter.Wait(ctx)
-	if err != nil {
-		return "", fmt.Errorf("[%s] Rate limiter context expired before execution: %v", agentRole, err)
-	}
-
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)
@@ -266,6 +261,7 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 
 	// Safely extract and accumulate generated API metrics natively 
 	if resp.UsageMetadata != nil {
+		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount)
 		o.Usage.mu.Lock()
 		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
 		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
@@ -283,25 +279,38 @@ func (o *Orchestrator) Close() {
 	}
 }
 
-// RefinePreset bypasses the 12-agent pipeline and submits the user's feedback directly to the Architect equivalent using the existing HTML payload
-func (o *Orchestrator) RefinePreset(ctx context.Context, existingHTMLPayload string, userFeedback string) (string, *TokenUsage, error) {
-	log.Printf("Starting ADK Refinement logic for feedback: %s\n", userFeedback)
+// RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
+func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error) {
+	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
 	sysPrompt, _ := LoadPrompt("12_architect")
 	
 	refinementPrompt := fmt.Sprintf(`
-You are being called in REFINEMENT mode. The user wants to edit an existing generated preset based on their feedback.
-You MUST output the exact same JSON schema as your original instructions. Ensure the 'final_html_payload' contains the *entire* updated HTML table matrix, incorporating these changes.
-For 'agent_impact', provide a single bullet explicitly stating what was modified based on the feedback.
+You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
+You MUST output the following exact JSON schema:
 
-USER FEEDBACK / INSTRUCTION:
-%s
+{
+  "conversational_response": "Your conversational answer to the user. Describe what you changed, or answer their question.",
+  "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
+  "final_html_payload": "YOUR_FULL_HTML_TABLE_HERE", /* The *entire* updated HTML table matrix (only if dsp_matrix_updated is true) */
+  "agent_impact": ["Bullet point describing impact"]
+}
 
 EXISTING HTML PAYLOAD:
 %s
-`, userFeedback, existingHTMLPayload)
+`, p.Payload)
 
-	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt)
+	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
+	for _, msg := range p.ChatHistory {
+		if msg.Role == "user" {
+			historyText += "USER: " + msg.Content + "\n"
+		} else {
+			historyText += "ARCHITECT: " + msg.Content + "\n"
+		}
+	}
+	historyText += "USER: " + userMessage + "\n"
+
+	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
 	}

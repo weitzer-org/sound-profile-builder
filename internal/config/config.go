@@ -6,8 +6,8 @@ import (
 )
 
 type AppConfig struct {
-	SingleAmpMode      bool `json:"single_amp"`
-	AllowCloudCaptures bool `json:"cloud_captures"`
+	SingleAmpMode      bool `json:"single_amp_mode"`
+	AllowCloudCaptures bool `json:"allow_cloud_captures"`
 }
 
 func LoadConfig(path string) (*AppConfig, error) {

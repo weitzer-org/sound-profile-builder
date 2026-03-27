@@ -9,14 +9,20 @@ import (
 	"google.golang.org/api/option"
 )
 
+// SecretFetcher defines the required methods for accessing secure tokens
+type SecretFetcher interface {
+	GetPassword(ctx context.Context, projectID, secretName string) (string, error)
+	Close()
+}
+
 // SecretManagerClient wraps the GCP Secret Manager logic
 type SecretManagerClient struct {
 	client *secretmanager.Client
 }
 
-// NewSecretManagerClient initializes the SM client connection
+// NewSecretManagerClient initializes the SM client connection using REST
 func NewSecretManagerClient(ctx context.Context, opts ...option.ClientOption) (*SecretManagerClient, error) {
-	client, err := secretmanager.NewClient(ctx, opts...)
+	client, err := secretmanager.NewRESTClient(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -70,7 +70,7 @@ func (g *GCSClient) DeleteFile(ctx context.Context, bucket, object string) error
 
 // Close gracefully closes the client
 func (g *GCSClient) Close() {
-	if g.client != nil {
+	if g != nil && g.client != nil {
 		g.client.Close()
 	}
 }
