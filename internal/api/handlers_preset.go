@@ -272,29 +272,31 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 	if p.Name == "Draft Preset" {
 		headerHtml = fmt.Sprintf(`
 			<div style="display: flex; gap: 0.5rem; align-items: center; width: 100%%; justify-content: space-between;">
-				<form hx-post="/api/preset/rename" hx-target="#main-workspace" style="display:flex; gap:0.5rem; margin:0; flex: 1;" autocomplete="off">
-					<input type="hidden" name="id" value="%s">
-					<input type="text" name="preset_name" placeholder="Enter custom name..." required style="padding: 0.5rem 1rem; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 1rem; width: 300px;">
-					<button type="submit" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--success); border-radius: 8px;">Finalize Save</button>
+				<form hx-post="/api/preset/rename" hx-target="#main-workspace" style="display:flex; gap:0.5rem; margin:0; flex: 1; align-items: center;" autocomplete="off">
+					<input type="hidden" name="id" value="%[1]s">
+					<input type="text" name="preset_name" placeholder="Enter custom name..." required style="flex: 1; min-width: 300px; padding: 0.75rem 1rem; background: rgba(15,23,42,0.8); border: 1px solid var(--accent); border-radius: 8px; font-size: 1.25rem; color: white; font-weight: 500; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
+					<button type="submit" style="width: auto; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; background: var(--success); border-radius: 8px; border: none; color: white; cursor: pointer; transition: opacity 0.2s;" onhover="this.style.opacity='0.9'">Finalize Save</button>
 				</form>
-				<button hx-post="/api/preset/delete_draft" hx-confirm="Are you sure you want to discard this draft?" hx-vals='{"id":"%s"}' hx-target="body" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px;">Discard / Exit</button>
+				<button id="discard-btn-%[1]s" hx-post="/api/preset/delete_draft" hx-vals='{"id":"%[1]s"}' hx-trigger="confirmed" hx-target="body" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm Discard?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Discard / Exit'; this.style.background = '#ef4444'; }, 3000); }" style="width: auto; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Discard / Exit</button>
 			</div>
-		`, p.ID, p.ID)
+		`, p.ID)
 	} else {
 		headerHtml = fmt.Sprintf(`
-			<div style="display: flex; justify-content: space-between; align-items: center; width: 100%%;">
-				<h2 style="font-size: 1.25rem; margin: 0; color: var(--text-sub);">Preset: <span style="color:white;">%[1]s</span></h2>
-				<div style="display: flex; gap: 0.5rem;">
-					<div id="rename-container-%[2]s" style="display: flex;">
-						<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.style.display='none';" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Rename</button>
-						<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0;" autocomplete="off">
-							<input type="hidden" name="id" value="%[2]s">
-							<input type="text" name="preset_name" placeholder="Rename..." required style="width: 300px; padding: 0.5rem; font-size: 0.9rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white; box-sizing: border-box;">
-							<button type="submit" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
-							<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='none'; document.getElementById('rename-form-%[2]s').previousElementSibling.style.display='block';" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
-						</form>
-					</div>
-					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Back / Exit</button>
+			<div style="display: flex; justify-content: space-between; align-items: center; width: 100%%; gap: 1rem;">
+				<div style="flex: 1; display: flex; align-items: center;">
+					<h2 id="preset-title-%[2]s" style="font-size: 1.5rem; font-weight: 600; margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
+						%[1]s
+					</h2>
+					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
+						<input type="hidden" name="id" value="%[2]s">
+						<input type="text" name="preset_name" placeholder="Rename..." required style="flex: 1; min-width: 300px; padding: 0.5rem 1rem; font-size: 1.25rem; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
+						<button type="submit" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
+						<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='none'; document.getElementById('title-actions-%[2]s').style.display='flex';" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
+					</form>
+				</div>
+				<div id="title-actions-%[2]s" style="display: flex; gap: 0.5rem; align-items: center;">
+					<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.parentElement.style.display='none'; document.querySelector('#rename-form-%[2]s input[name=preset_name]').value = '%[1]s';" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--accent); border: none; border-radius: 8px; color: white; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Rename</button>
+					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Back / Exit</button>
 				</div>
 			</div>
 		`, html.EscapeString(p.Name), p.ID)
@@ -336,7 +338,6 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 	
 	tabsHtml += `</div>`
 	contentHtml += `</div>`
-
 	tabScript := `
 		<script>
 			function switchTab(btn, paneId) {
@@ -362,6 +363,22 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 	`
 	matrixContainerHtml := tabsHtml + contentHtml + tabScript
 
+	refinementSummaryHtml := ""
+	if len(p.ChatHistory) > 0 {
+		lastMsg := p.ChatHistory[len(p.ChatHistory)-1]
+		if lastMsg.Role == "architect" {
+			summaryText := html.EscapeString(lastMsg.Content)
+			summaryText = strings.ReplaceAll(summaryText, "\n", "<br>")
+			summaryText = strings.ReplaceAll(summaryText, "**Impact:**", "<strong style='display:inline-block; margin-top: 0.5rem;'>Impact:</strong>")
+			refinementSummaryHtml = fmt.Sprintf(`
+				<div style="padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #e2e8f0; line-height: 1.5;">
+					<strong style="color: var(--success); display: block; margin-bottom: 0.5rem;">Latest Refinement Result:</strong>
+					%s
+				</div>
+			`, summaryText)
+		}
+	}
+
 	return fmt.Sprintf(`
 	<div id="workspace-wrapper" class="workspace-wrapper">
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
@@ -370,6 +387,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 		
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
+			%s
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
 			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%s">
@@ -397,7 +415,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 			</div>
 		</div>
 	</div>
-	`, headerHtml, p.ID, matrixContainerHtml, historyHtml)
+	`, headerHtml, refinementSummaryHtml, p.ID, matrixContainerHtml, historyHtml)
 }
 
 func (s *Server) handleViewPreset() http.HandlerFunc {

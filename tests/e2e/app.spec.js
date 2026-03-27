@@ -51,7 +51,7 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   await page.click('form[hx-post="/api/preset/rename"] button[type="submit"]');
 
   // Wait for title update
-  await expect(page.locator('h2', { hasText: 'Preset: Brighter Hendrix Tone' })).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('h2', { hasText: 'Brighter Hendrix Tone' })).toBeVisible({ timeout: 10000 });
 
   // 4. Copy Preset in sidebar
   // Using locator for Copy to avoid multiple copies conflict
