@@ -81,7 +81,7 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 			return
 		}
 
-		name := r.FormValue("name")
+		name := r.FormValue("preset_name")
 		payload := r.FormValue("payload")
 		if name == "" {
 			name = "Unnamed Preset"

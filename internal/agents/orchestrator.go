@@ -42,7 +42,7 @@ func NewOrchestrator(ctx context.Context, apiKey string) (*Orchestrator, error) 
 	// TODO: The user is artificially capping the LLM concurrency to 14 Requests Per Minute to align
 	// with the strict Generative AI limits. This should be natively bumped upward (or decoupled)
 	// when the Cloud APIs & Services Quota matches standard high-volume tiers (e.g. 360 RPM).
-	limiter := rate.NewLimiter(rate.Every(time.Minute/14), 1)
+	limiter := rate.NewLimiter(rate.Every(time.Minute/360), 10)
 
 	return &Orchestrator{client: client, Usage: usage, Limiter: limiter}, nil
 }
@@ -240,7 +240,7 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)
 	
-	ctx1, cancel1 := context.WithTimeout(ctx, 45*time.Second)
+	ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel1()
 
 	resp, err := model.GenerateContent(ctx1, genai.Text(prompt))
@@ -251,7 +251,7 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 		modelName = "gemini-2.5-pro"
 		fallbackModel := o.client.GenerativeModel(modelName)
 		
-		ctx2, cancel2 := context.WithTimeout(ctx, 45*time.Second)
+		ctx2, cancel2 := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancel2()
 		
 		resp, err = fallbackModel.GenerateContent(ctx2, genai.Text(prompt))

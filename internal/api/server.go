@@ -165,11 +165,29 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			<div class="card">
 				%s
 				
-				<form hx-post="/api/preset/save" hx-target="#preset-list-container" style="margin-top:2rem; display:flex; gap:1rem;">
-					<input type="text" name="name" placeholder="Save as..." required style="flex:2; padding:0.5rem;">
-					<input type="hidden" name="payload" value='%s'>
-					<button type="submit" style="flex:1; padding:0.5rem; background:var(--success);">Save Preset</button>
-				</form>
+				<!-- Trigger Button -->
+				<button type="button" onclick="document.getElementById('saveModal').classList.add('active')" style="display:block; width:100%%; margin-top:2rem; padding:1rem; background:var(--success); font-size:1.1rem; border-radius:8px; cursor:pointer; color:white; border:none; font-weight:bold;">Save Custom Preset</button>
+				
+				<!-- Modal Overlay -->
+				<div id="saveModal" class="modal-overlay">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h3>Save Custom Preset</h3>
+							<button type="button" class="modal-close" onclick="document.getElementById('saveModal').classList.remove('active')">&times;</button>
+						</div>
+						<form hx-post="/api/preset/save" hx-target="#preset-list-container" onsubmit="document.getElementById('saveModal').classList.remove('active')">
+							<div class="form-group" style="text-align: left; margin-bottom: 0;">
+								<label style="color:#cbd5e1; margin-bottom:0.5rem; font-size:0.9rem;">Preset Name</label>
+								<input type="text" name="preset_name" placeholder="Enter preset name..." autocomplete="off" required style="width:100%%; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.2);">
+							</div>
+							<input type="hidden" name="payload" value='%s'>
+							<div class="modal-actions">
+								<button type="button" class="btn-cancel" onclick="document.getElementById('saveModal').classList.remove('active')" style="padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-weight:600;">Cancel</button>
+								<button type="submit" class="btn-save" style="padding:0.75rem; border-radius:8px; border:none; cursor:pointer; font-weight:600;">Save to Cloud</button>
+							</div>
+						</form>
+					</div>
+				</div>
 			</div>
 			<div class="card">
 				<h2>Agent Architecture Log</h2>
