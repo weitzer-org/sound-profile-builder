@@ -20,7 +20,7 @@ var mockGeminiResponse = `{
       "content": {
         "parts": [
           {
-            "text": "{\"final_html_payload\": \"<p>test</p>\", \"agent_impact\": [\"done\"]}"
+            "text": "{\"final_html_payload\": {\"Gibson ES-339 Humbuckers\": \"<p>test</p>\"}, \"agent_impact\": [\"done\"]}"
           }
         ],
         "role": "model"

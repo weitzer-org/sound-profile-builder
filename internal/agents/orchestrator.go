@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -50,6 +51,12 @@ func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOp
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
 func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
+	if os.Getenv("USE_MOCKS") == "true" {
+		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
+			return mockOutput, o.Usage, nil
+		}
+	}
+
 	// Apply global application architecture limits dynamically into the root user prompt stream
 	singleAmpMode, ok := constraints["single_amp_mode"].(bool)
 	if ok && singleAmpMode {
@@ -281,6 +288,11 @@ func (o *Orchestrator) Close() {
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error) {
+	if os.Getenv("USE_MOCKS") == "true" {
+		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
+			return mockOutput, o.Usage, nil
+		}
+	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
 	sysPrompt, _ := LoadPrompt("12_architect")

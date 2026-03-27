@@ -111,9 +111,137 @@ type mockOrchestratorSuccessComplex struct {
 	err error
 }
 func (m *mockOrchestratorSuccessComplex) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *agents.TokenUsage, error) {
-	return `{"final_html_payload":"mock","agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestratorSuccessComplex) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
-	return `{"conversational_response": "done", "final_html_payload":"mock","agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
+	return `{"conversational_response": "done", "final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestratorSuccessComplex) Close() {}
+
+func TestHandleRenamePreset(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+
+	// Save dummy
+	store.Save(context.Background(), &storage.Preset{ID: "testing_id_rename", Name: "name", Payload: "none"})
+
+	// Parse form error
+	badReq, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(""))
+	badReq.URL.RawQuery = "%;"
+	rrBadReq := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrBadReq, badReq)
+	if rrBadReq.Code != http.StatusBadRequest {
+		t.Errorf("Expected ParseForm error")
+	}
+
+	// Missing ID or name
+	formData := url.Values{}
+	formData.Set("id", "testing_id_rename") // no name
+	reqMiss, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(formData.Encode()))
+	reqMiss.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrMiss := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrMiss, reqMiss)
+	if rrMiss.Code != http.StatusBadRequest {
+		t.Errorf("Expected missing name error")
+	}
+
+	// Valid Rename via FormValue
+	formDataValid := url.Values{}
+	formDataValid.Set("id", "testing_id_rename")
+	formDataValid.Set("preset_name", "new_name_form")
+	reqValid, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(formDataValid.Encode()))
+	reqValid.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrValid := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrValid, reqValid)
+	if rrValid.Code != http.StatusOK {
+		t.Errorf("Expected OK for valid rename")
+	}
+
+	// Valid Rename via HX-Prompt
+	formDataPrompt := url.Values{}
+	formDataPrompt.Set("id", "testing_id_rename")
+	reqPrompt, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(formDataPrompt.Encode()))
+	reqPrompt.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqPrompt.Header.Set("HX-Prompt", "new_name_prompt")
+	rrPrompt := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrPrompt, reqPrompt)
+	if rrPrompt.Code != http.StatusOK {
+		t.Errorf("Expected OK for valid prompt rename")
+	}
+
+	// Preset not found
+	formDataMissing := url.Values{}
+	formDataMissing.Set("id", "nonexistent")
+	formDataMissing.Set("preset_name", "new_name")
+	reqNotFound, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(formDataMissing.Encode()))
+	reqNotFound.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrNotFound := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrNotFound, reqNotFound)
+	if rrNotFound.Code != http.StatusNotFound {
+		t.Errorf("Expected 404 for missing preset")
+	}
+
+	// Save error
+	mockStorage.failWrite = true
+	reqWriteFail, _ := http.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(formDataValid.Encode()))
+	reqWriteFail.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrWriteFail := httptest.NewRecorder()
+	s.handleRenamePreset().ServeHTTP(rrWriteFail, reqWriteFail)
+	if rrWriteFail.Code != http.StatusInternalServerError {
+		t.Errorf("Expected 500 for write error")
+	}
+	mockStorage.failWrite = false
+}
+
+func TestHandleDeleteDraftPreset(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+
+	// Save dummy
+	store.Save(context.Background(), &storage.Preset{ID: "testing_id_draft", Name: "name", Payload: "none"})
+
+	// Parse form error
+	badReq, _ := http.NewRequest(http.MethodPost, "/api/preset/delete_draft", strings.NewReader(""))
+	badReq.URL.RawQuery = "%;"
+	rrBadReq := httptest.NewRecorder()
+	s.handleDeleteDraftPreset().ServeHTTP(rrBadReq, badReq)
+	if rrBadReq.Code != http.StatusBadRequest {
+		t.Errorf("Expected ParseForm error")
+	}
+
+	// Missing ID
+	reqMiss, _ := http.NewRequest(http.MethodPost, "/api/preset/delete_draft", strings.NewReader(url.Values{}.Encode()))
+	reqMiss.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrMiss := httptest.NewRecorder()
+	s.handleDeleteDraftPreset().ServeHTTP(rrMiss, reqMiss)
+	if rrMiss.Code != http.StatusBadRequest {
+		t.Errorf("Expected missing ID error")
+	}
+
+	// Delete error
+	mockStorage.failDelete = true
+	formDataValid := url.Values{}
+	formDataValid.Set("id", "testing_id_draft")
+	reqDelFail, _ := http.NewRequest(http.MethodPost, "/api/preset/delete_draft", strings.NewReader(formDataValid.Encode()))
+	reqDelFail.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrDelFail := httptest.NewRecorder()
+	s.handleDeleteDraftPreset().ServeHTTP(rrDelFail, reqDelFail)
+	if rrDelFail.Code != http.StatusInternalServerError {
+		t.Errorf("Expected 500 for delete error")
+	}
+	mockStorage.failDelete = false
+
+	// Success
+	reqOk, _ := http.NewRequest(http.MethodPost, "/api/preset/delete_draft", strings.NewReader(formDataValid.Encode()))
+	reqOk.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rrOk := httptest.NewRecorder()
+	s.handleDeleteDraftPreset().ServeHTTP(rrOk, reqOk)
+	if rrOk.Code != http.StatusOK {
+		t.Errorf("Expected 200 for successful draft deletion")
+	}
+	if rrOk.Header().Get("HX-Redirect") != "/" {
+		t.Errorf("Expected HX-Redirect to /")
+	}
+}

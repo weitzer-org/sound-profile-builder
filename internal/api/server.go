@@ -108,7 +108,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		prompt := r.FormValue("prompt")
-		guitars := r.Form["guitar"]
+		guitars := []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"}
 		
 		constraints := map[string]interface{}{
 			"guitars": guitars,
@@ -135,8 +135,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		// Unmarshal the Architect's JSON block
 		var archResp struct {
-			FinalHtmlPayload string   `json:"final_html_payload"`
-			AgentImpact      []string `json:"agent_impact"`
+			FinalHtmlPayload map[string]string `json:"final_html_payload"`
+			AgentImpact      []string          `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
@@ -167,9 +167,16 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
+		payloadBytes, err := json.Marshal(archResp.FinalHtmlPayload)
+		if err != nil {
+			log.Printf("Failed to marshal final html payload map: %v", err)
+			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444;">Payload Serialization Error: %v</div>`, err)))
+			return
+		}
+
 		draftPreset := &storage.Preset{
 			Name: "Draft Preset",
-			Payload: archResp.FinalHtmlPayload,
+			Payload: string(payloadBytes),
 			ChatHistory: []storage.ChatMessage{
 				{Role: "user", Content: prompt},
 				{Role: "model", Content: "Preset structure successfully laid out based on your requirements.\n" + initialAgentIntro},

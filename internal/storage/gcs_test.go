@@ -75,7 +75,7 @@ func TestGCSAgentLogging_LocalMock(t *testing.T) {
 	
 	bucket := "weitzer-sound-builder"
 	objectName := "logs/test/unit_test_agent_12.json"
-	payload := `{"final_html_payload": "test", "agent_impact": ["unit test logging successful"]}`
+	payload := `{"final_html_payload": {"test_guitar": "test"}, "agent_impact": ["unit test logging successful"]}`
 
 	// Write payload to the mock bucket
 	err := mockClient.WriteFile(ctx, bucket, objectName, []byte(payload))

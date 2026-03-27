@@ -88,13 +88,13 @@ func (m *mockOrchestrator) RunPipeline(ctx context.Context, prompt string, const
 	if m.err != nil {
 		return "", nil, m.err
 	}
-	return `{"final_html_payload":"mock","agent_impact":[]}`, &agents.TokenUsage{}, nil
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
 	if m.err != nil {
 		return "", nil, m.err
 	}
-	return `{"final_html_payload":"mock","agent_impact":[]}`, &agents.TokenUsage{}, nil
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestrator) Close() {}
 
