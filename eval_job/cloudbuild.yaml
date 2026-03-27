@@ -6,4 +6,8 @@ steps:
       - |
         go run cmd/eval/main.go
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'multi_agent_output.html', 'monolithic_output.md', 'gs://weitzer-sound-builder/eval-logs/']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gsutil cp *_multi.html *_mono.md gs://weitzer-sound-builder/eval-logs/

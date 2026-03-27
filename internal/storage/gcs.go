@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"cloud.google.com/go/storage"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -40,6 +41,31 @@ func (g *GCSClient) WriteFile(ctx context.Context, bucket, object string, data [
 
 	_, err := writer.Write(data)
 	return err
+}
+
+// ListFiles lists object names in a bucket with a specific prefix
+func (g *GCSClient) ListFiles(ctx context.Context, bucket, prefix string) ([]string, error) {
+	var files []string
+	it := g.client.Bucket(bucket).Objects(ctx, &storage.Query{Prefix: prefix})
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		// Assuming we only care about objects, not synthetic directories
+		if attrs.Name != prefix {
+			files = append(files, attrs.Name)
+		}
+	}
+	return files, nil
+}
+
+// DeleteFile deletes an object from a GCS bucket
+func (g *GCSClient) DeleteFile(ctx context.Context, bucket, object string) error {
+	return g.client.Bucket(bucket).Object(object).Delete(ctx)
 }
 
 // Close gracefully closes the client

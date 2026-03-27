@@ -1,17 +1,17 @@
 steps:
-# 0a. Execute Go Unit Tests (Do not fail immediately on error so we can extract logs)
+# 0a. Execute Go Unit Tests and Generate Coverage (Do not fail immediately on error)
 - name: 'golang:latest'
   entrypoint: 'bash'
   args:
   - '-c'
-  - 'go test -v ./... > /workspace/test-results.txt || echo "FAIL_MARKER" >> /workspace/test-results.txt'
+  - 'go build ./... > /workspace/build-errors.txt 2>&1 || true && go test -coverprofile=/workspace/coverage.out -v ./... > /workspace/test-results.txt 2>&1 && go tool cover -func=/workspace/coverage.out > /workspace/coverage.txt 2>&1 || echo "FAIL_MARKER" >> /workspace/test-results.txt'
 
-# 0b. Upload Test Logs to Cloud Storage & Fail pipeline if tests failed
+# 0b. Upload Test Logs & Coverage to Cloud Storage & Fail pipeline if tests failed
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: 'bash'
   args:
   - '-c'
-  - 'gcloud storage cp /workspace/test-results.txt gs://weitzer-sound-builder/test-results.txt && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
+  - 'gcloud storage cp /workspace/build-errors.txt gs://weitzer-sound-builder/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://weitzer-sound-builder/test-results.txt && gcloud storage cp /workspace/coverage.txt gs://weitzer-sound-builder/coverage.txt || true && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
 
 # 1. Base Docker Build 
 - name: 'gcr.io/cloud-builders/docker'

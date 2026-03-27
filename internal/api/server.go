@@ -33,6 +33,13 @@ func (s *Server) routes() {
 
 	// API Routes (to be protected by Secret Manager Password)
 	s.mux.HandleFunc("/api/preset/generate", s.handleGeneratePreset())
+	
+	// Preset Management Routes
+	s.mux.HandleFunc("/api/presets", s.handleGetPresets())
+	s.mux.HandleFunc("/api/preset/save", s.handleSavePreset())
+	s.mux.HandleFunc("/api/preset/delete", s.handleDeletePreset())
+	s.mux.HandleFunc("/api/preset/copy", s.handleCopyPreset())
+	s.mux.HandleFunc("/api/preset/edit", s.handleEditPreset())
 }
 
 // Start begins listening on the specified address.
@@ -157,13 +164,19 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		finalDOM := fmt.Sprintf(`
 			<div class="card">
 				%s
+				
+				<form hx-post="/api/preset/save" hx-target="#preset-list-container" style="margin-top:2rem; display:flex; gap:1rem;">
+					<input type="text" name="name" placeholder="Save as..." required style="flex:2; padding:0.5rem;">
+					<input type="hidden" name="payload" value='%s'>
+					<button type="submit" style="flex:1; padding:0.5rem; background:var(--success);">Save Preset</button>
+				</form>
 			</div>
 			<div class="card">
 				<h2>Agent Architecture Log</h2>
 				%s
 			</div>
 			%s
-		`, archResp.FinalHtmlPayload, impactsHtml, tokenStatsHtml)
+		`, archResp.FinalHtmlPayload, archResp.FinalHtmlPayload, impactsHtml, tokenStatsHtml)
 
 		// 5. Output pure DOM back directly to the #result target!
 		w.Write([]byte(finalDOM))

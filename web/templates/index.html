@@ -31,8 +31,12 @@
 
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1400px;
             padding: 3rem 1.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: start;
         }
 
         h1 {
@@ -138,33 +142,47 @@
 </head>
 <body>
     <div class="container">
-        <h1>QC-2 Modeler</h1>
-        <p class="subtitle">AI-Driven Physics & Preset Orchestration Pipeline</p>
+        <!-- LEFT COLUMN: Main ADK Generator Workspace -->
+        <div>
+            <h1>QC-2 Modeler</h1>
+            <p class="subtitle">AI-Driven Physics & Preset Orchestration Pipeline</p>
 
-        <div class="card">
-            <form hx-post="/api/preset/generate" hx-target="#result" hx-indicator="#submit-btn">
-                
-                <div class="form-group">
-                    <label>Target Guitar Hardware</label>
-                    <select name="guitar" multiple required style="height: 100px;">
-                        <option value="Gibson ES-339 Humbuckers" selected>Gibson ES-339 (Humbuckers) - Bass Roll Off</option>
-                        <option value="Fender Telecaster Single Coil">Fender Telecaster (American Pro II)</option>
-                        <option value="Fender Stratocaster Single Coil">Fender Stratocaster</option>
-                    </select>
+            <div class="card">
+                <form hx-post="/api/preset/generate" hx-target="#result" hx-indicator="#submit-btn">
+                    
+                    <div class="form-group">
+                        <label>Target Guitar Hardware</label>
+                        <select name="guitar" multiple required style="height: 100px;">
+                            <option value="Gibson ES-339 Humbuckers" selected>Gibson ES-339 (Humbuckers) - Bass Roll Off</option>
+                            <option value="Fender Telecaster Single Coil">Fender Telecaster (American Pro II)</option>
+                            <option value="Fender Stratocaster Single Coil">Fender Stratocaster</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tonal Prompt</label>
+                        <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
+                    </div>
+
+                    <button type="submit" id="submit-btn" style="padding: 1rem; width: 100%;">Spin Up ADK & Generate Preset</button>
+                </form>
+            </div>
+
+            <div id="result-container">
+                <div id="result">
+                    <!-- HTMX Fragment will inject the Matrix Table and Agent Impact here -->
                 </div>
-
-                <div class="form-group">
-                    <label>Tonal Prompt</label>
-                    <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
-                </div>
-
-                <button type="submit" id="submit-btn">Spin Up ADK & Generate Preset</button>
-            </form>
+            </div>
         </div>
 
-        <div id="result-container">
-            <div id="result">
-                <!-- HTMX Fragment will inject the Matrix Table and Agent Impact here -->
+        <!-- RIGHT COLUMN: Saved Presets Sidebar -->
+        <div>
+            <div class="card" style="position: sticky; top: 2rem;">
+                <h2 style="margin-top:0;">Saved Presets</h2>
+                <div id="preset-list-container" hx-get="/api/presets" hx-trigger="load">
+                    <!-- HTMX will load the presets here -->
+                    <p class="subtitle" style="font-size:0.9rem;">Loading presets from GCS...</p>
+                </div>
             </div>
         </div>
     </div>
