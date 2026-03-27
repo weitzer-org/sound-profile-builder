@@ -30,15 +30,15 @@ func renderPresetList(presets []*storage.Preset) string {
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
 				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
 					<div id="copy-container-%[3]s" style="flex: 1; display: flex;">
-						<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='flex'; this.style.display='none';" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">Copy</button>
+						<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='flex'; this.style.display='none'; document.getElementById('delete-btn-%[3]s').style.display='none';" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">Copy</button>
 						<form id="copy-form-%[3]s" hx-post="/api/preset/copy" hx-target="#preset-list-container" style="display: none; width: 100%%; gap: 0.25rem; align-items: stretch; margin: 0;" autocomplete="off">
 							<input type="hidden" name="id" value="%[3]s">
-							<input type="text" name="new_name" placeholder="Name..." required style="flex: 1; min-width: 0; padding: 0.3rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; box-sizing: border-box;">
+							<input type="text" name="new_name" placeholder="Copy Name..." required style="flex: 1; min-width: 0; padding: 0.3rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; box-sizing: border-box;">
 							<button type="submit" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--success); border: none; color: white; cursor: pointer;">✔</button>
-							<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='none'; document.getElementById('copy-form-%[3]s').previousElementSibling.style.display='block';" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">✖</button>
+							<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='none'; document.getElementById('copy-form-%[3]s').previousElementSibling.style.display='block'; document.getElementById('delete-btn-%[3]s').style.display='block';" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">✖</button>
 						</form>
 					</div>
-					<button hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
 				</div>
 				<div style="margin-top: 0.5rem;">
 					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
@@ -145,7 +145,10 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 			return
 		}
 
-		newName := r.Header.Get("HX-Prompt")
+		newName := r.FormValue("new_name")
+		if newName == "" {
+			newName = r.Header.Get("HX-Prompt")
+		}
 		if newName == "" {
 			newName = p.Name + " (Copy)"
 		}
@@ -286,7 +289,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 						<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.style.display='none';" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem; background: var(--accent); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Rename</button>
 						<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0;" autocomplete="off">
 							<input type="hidden" name="id" value="%[2]s">
-							<input type="text" name="preset_name" placeholder="Rename..." required style="width: 150px; padding: 0.5rem; font-size: 0.9rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white; box-sizing: border-box;">
+							<input type="text" name="preset_name" placeholder="Rename..." required style="width: 300px; padding: 0.5rem; font-size: 0.9rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: white; box-sizing: border-box;">
 							<button type="submit" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
 							<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='none'; document.getElementById('rename-form-%[2]s').previousElementSibling.style.display='block';" style="padding: 0 0.75rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
 						</form>
@@ -370,10 +373,15 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
 			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%s">
-				<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="flex: 1; resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
-				<button type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
-					<!-- TODO: Implement a multi-phase progress indicator (e.g. SSE streaming) to show real-time progress through ADK orchestration phases -->
-					<span class="htmx-indicator spinner-small"></span><span class="btn-text">Adjust</span>
+				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
+					<div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+						<span style="color: var(--accent);">Refinement Mode:</span> Bypasses the 11-agent scraping pipeline. A single <b>Architect Subagent</b> directly ingests your feedback and rewrites the live Matrix in ~15s.
+					</div>
+				</div>
+				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
+					<span class="spinner"></span>
+					<span class="btn-text">Adjust</span>
 				</button>
 			</form>
 		</div>

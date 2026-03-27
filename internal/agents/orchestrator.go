@@ -249,6 +249,7 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
+	// TODO: Test gemini-2.5-flash specifically for the "Refinement Architect" agent to drastically reduce the ~80s latency of matrix generation.
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)
 	
@@ -314,7 +315,7 @@ You MUST output the following exact JSON schema:
 {
   "conversational_response": "Your conversational answer to the user. Describe what you changed, or answer their question.",
   "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
-  "final_html_payload": "YOUR_FULL_HTML_TABLE_HERE", /* The *entire* updated HTML table matrix (only if dsp_matrix_updated is true) */
+  "final_html_payload": { "guitar_name": "YOUR_FULL_HTML_TABLE_HERE" }, /* The *entire* updated HTML table matrix map for ALL guitars explicitly (only if dsp_matrix_updated is true) */
   "agent_impact": ["Bullet point describing impact"]
 }
 
@@ -332,6 +333,8 @@ EXISTING HTML PAYLOAD:
 	}
 	historyText += "USER: " + userMessage + "\n"
 
+	// TODO: Test which agents should additionally be invoked for the refinement flow for optimal results.
+	// Currently we rely entirely on the standalone Refinement Architect editor agent, but pulling in context from the Mix Engineer or Librarian may yield higher fidelity modifications.
 	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
