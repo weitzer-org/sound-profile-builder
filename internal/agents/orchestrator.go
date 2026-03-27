@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/weitzer-org/sound-builder/internal/storage"
+	"golang.org/x/time/rate"
 	"google.golang.org/api/option"
 )
 
@@ -22,8 +23,9 @@ type TokenUsage struct {
 
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
-	client *genai.Client
-	Usage  *TokenUsage
+	client  *genai.Client
+	Usage   *TokenUsage
+	Limiter *rate.Limiter
 }
 
 // NewOrchestrator initializes the Gemini ADK client
@@ -37,7 +39,12 @@ func NewOrchestrator(ctx context.Context, apiKey string) (*Orchestrator, error) 
 		ModelsUsed: make(map[string]int),
 	}
 
-	return &Orchestrator{client: client, Usage: usage}, nil
+	// TODO: The user is artificially capping the LLM concurrency to 14 Requests Per Minute to align
+	// with the strict Generative AI limits. This should be natively bumped upward (or decoupled)
+	// when the Cloud APIs & Services Quota matches standard high-volume tiers (e.g. 360 RPM).
+	limiter := rate.NewLimiter(rate.Every(time.Minute/14), 1)
+
+	return &Orchestrator{client: client, Usage: usage, Limiter: limiter}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
@@ -50,7 +57,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
-	execID := fmt.Sprintf("%d", time.Now().Unix())
+	execID := fmt.Sprintf("%d", time.Now().UnixNano())
 	gcs, err := storage.NewGCSClient(ctx)
 	if err != nil {
 		log.Printf("Warning: failed to init GCS client for logging: %v", err)
@@ -223,6 +230,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 // RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
+	// Physically gate the API burst request directly over the global rate limiter (14 RPM)
+	err := o.Limiter.Wait(ctx)
+	if err != nil {
+		return "", fmt.Errorf("[%s] Rate limiter context expired before execution: %v", agentRole, err)
+	}
+
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	modelName := "gemini-3.1-pro-preview"
 	model := o.client.GenerativeModel(modelName)

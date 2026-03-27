@@ -121,6 +121,14 @@ func main() {
 	var wg sync.WaitGroup
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
 	
+	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
+	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
+	orch, err := agents.NewOrchestrator(ctx, apiKey)
+	if err != nil {
+		log.Fatalf("Failed to init orchestrator: %v", err)
+	}
+	defer orch.Close()
+
 	// Max 3 concurrent execution pipelines to avoid immediate quota bans 
 	sem := make(chan struct{}, 3)
 
@@ -136,11 +144,7 @@ func main() {
 		log.Printf("=============================================")
 
 		// 2. RUN A: The Multi-Agent Orchestrator Pipeline
-		log.Println(" -> Phase 1: 12-Agent Orchestrator...")
-		orch, err := agents.NewOrchestrator(ctx, apiKey)
-		if err != nil {
-			log.Fatalf("Failed to init orchestrator: %v", err)
-		}
+		log.Println(" -> Executing 12-Agent Orchestrator...")
 
 		constraints := map[string]interface{}{
 			"single_amp_mode":      true,
@@ -157,7 +161,6 @@ func main() {
 			err = os.WriteFile(fmt.Sprintf("%s_multi.html", name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
-		orch.Close()
 
 		// 3. RUN B: The Single Monolithic QC-2 Prompt
 		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
@@ -171,6 +174,7 @@ func main() {
 			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
 		}
 
+		_ = orch.Limiter.Wait(ctx)
 		resp, err := model.GenerateContent(ctx, genai.Text(query))
 		if err != nil {
 			log.Printf("❌ Monolithic generation failed for %s: %v", name, err)
