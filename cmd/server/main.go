@@ -10,6 +10,19 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
+type localSecretFetcher struct {
+	uiPassword string
+}
+
+func (l *localSecretFetcher) GetPassword(ctx context.Context, projectID, secretName string) (string, error) {
+	if secretName == "spb-login-pw" {
+		return l.uiPassword, nil
+	}
+	return "mock-api-key", nil
+}
+
+func (l *localSecretFetcher) Close() {}
+
 func main() {
 	log.Println("Starting QC-2 Multi-Agent Modeler Backend...")
 
@@ -20,11 +33,19 @@ func main() {
 	}
 	defer gcsClient.Close()
 
-	smClient, err := storage.NewSecretManagerClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to initialize Secret Manager client: %v", err)
+	var smFetcher storage.SecretFetcher
+	mockPassword := os.Getenv("MOCK_PASSWORD")
+	if mockPassword != "" {
+		log.Println("Using Local Secret Fetcher for UI Authentication")
+		smFetcher = &localSecretFetcher{uiPassword: mockPassword}
+	} else {
+		smClient, err := storage.NewSecretManagerClient(ctx)
+		if err != nil {
+			log.Fatalf("Failed to initialize Secret Manager client: %v", err)
+		}
+		defer smClient.Close()
+		smFetcher = smClient
 	}
-	defer smClient.Close()
 
 	store := storage.NewPresetStore(gcsClient, "weitzer-sound-builder")
 
@@ -33,7 +54,7 @@ func main() {
 	}
 
 	// Initialize Server
-	server := api.NewServer(store, gcsClient, smClient, orchMaker)
+	server := api.NewServer(store, gcsClient, smFetcher, orchMaker)
 
 	port := os.Getenv("PORT")
 	if port == "" {

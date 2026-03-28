@@ -1,5 +1,5 @@
 #!/bin/bash
-# startup.sh - Local development startup script
+# startup_mock.sh - Local development startup script with mock testing data enabled
 
 echo "===================================================="
 echo "          Running Pre-flight Unit Tests             "
@@ -22,8 +22,9 @@ else
     echo ""
 fi
 
-# Set default development port if unmapped
 export PORT=${PORT:-8082}
+export MOCK_PASSWORD="bluesmusic"
+export MOCK_MODE="true"
 
 if [ -f .local_config ]; then
     source .local_config
@@ -40,6 +41,6 @@ fi
 
 echo "===================================================="
 echo "    Starting QC-2 Backend Server on Port $PORT      "
-echo "    Running at: http://localhost:$PORT              "
+echo "    Running at: http://localhost:$PORT/?mock=true   "
 echo "===================================================="
 go run cmd/server/main.go

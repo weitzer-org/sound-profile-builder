@@ -7,6 +7,7 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
@@ -516,7 +517,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		}
 		defer orch.Close()
 
-		if r.FormValue("mock") == "true" {
+		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 

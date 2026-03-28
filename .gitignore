@@ -9,6 +9,7 @@ startup_test_logs.txt
 # Credentials
 .google_credentials.json
 .env
+.local_config
 
 # Cloud Build Artifacts
 .gcloudignore
