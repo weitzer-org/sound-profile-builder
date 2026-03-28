@@ -25,6 +25,7 @@ func TestServer_Start(t *testing.T) {
 func TestServer_HandleIndex(t *testing.T) {
 	s, _, _, _ := setupTestServer()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rr := httptest.NewRecorder()
 	s.mux.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK && rr.Code != http.StatusNotFound {
@@ -38,6 +39,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 
 	// 1. Method Not Allowed
 	reqGet, _ := http.NewRequest(http.MethodGet, "/api/preset/generate", nil)
+	reqGet.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrGet := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrGet, reqGet)
 	if rrGet.Code != http.StatusMethodNotAllowed {
@@ -49,6 +51,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	formData.Set("prompt", "Make it sound huge")
 	reqPost, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqPost.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqPost.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 
 	rrSuccess := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrSuccess, reqPost)
@@ -64,6 +67,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockSM.err = fmt.Errorf("sm error")
 	reqErr, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqErr.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqErr.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrErr := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrErr, reqErr)
 	if rrErr.Code != http.StatusInternalServerError {
@@ -75,6 +79,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockOrch.err = fmt.Errorf("orch factory error")
 	reqOrchGen, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqOrchGen.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqOrchGen.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrOrchGen := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrOrchGen, reqOrchGen)
 	if rrOrchGen.Code != http.StatusInternalServerError {
@@ -85,6 +90,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockOrch.err = fmt.Errorf("pipeline execution fail") // Caught internally, rendered as grid-matrix
 	reqPipe, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqPipe.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqPipe.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrPipe := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrPipe, reqPipe)
 	if !strings.Contains(rrPipe.Body.String(), `pipeline execution fail`) {
@@ -100,6 +106,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	}
 	reqBadJson, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqBadJson.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	reqBadJson.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrBadJson := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrBadJson, reqBadJson)
 	if !strings.Contains(rrBadJson.Body.String(), `Serialization Error`) {

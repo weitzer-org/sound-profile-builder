@@ -4,26 +4,13 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
-func runStartupTests() {
-	log.Println("Starting automated unit tests...")
-	cmd := exec.Command("go", "test", "-v", "./...")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("⚠️ Unit tests completed with failures or errors:\n%s", output)
-	} else {
-		log.Printf("✅ Unit tests passed successfully!\n%s", output)
-	}
-}
-
 func main() {
-	runStartupTests()
 	log.Println("Starting QC-2 Multi-Agent Modeler Backend...")
 
 	ctx := context.Background()

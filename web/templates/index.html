@@ -463,7 +463,7 @@
             <div class="card" style="position: sticky; top: 2rem;">
                 <h2 style="margin-top:0;">Saved Presets</h2>
                 <input type="text" id="preset-search" placeholder="Search presets..." style="margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" onkeyup="filterPresets()">
-                <div id="preset-list-container" hx-get="/api/presets" hx-trigger="load">
+                <div id="preset-list-container" hx-get="/api/presets" hx-trigger="load, presetCopied from:body">
                     <!-- HTMX will load the presets here -->
                     <p class="subtitle" style="font-size:0.9rem;">Loading presets from GCS...</p>
                 </div>

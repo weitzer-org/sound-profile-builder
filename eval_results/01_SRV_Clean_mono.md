@@ -1,79 +1,65 @@
-**QUAD CORTEX SYSTEMS ENGINEER (QC-2)**
-**INITIALIZATION...**
-**TARGET IDENTIFIED:** Stevie Ray Vaughan — "Texas Flood" Tone. 
-**ANALOG RESEARCH:** 
-*   **Original Hardware:** Fender Super Reverb (4x10) / Vibroverb (1x15) driven by an Ibanez TS808 Tube Screamer. No master volume. 
-*   **Physics:** SRV used massive string gauges (0.13s) tuned to Eb, delivering unusually high mechanical output and bass response to low-output vintage single-coils (~5.8k ohms).
-*   **QC Mapping:** We will utilize the **US TWN 65 Vibrato** for high-headroom blackface cleans, pushed into compression by the **Green 808**. The **410 US Basslad PR10** cab perfectly replicates the punchy, rapid transient response of a Super Reverb.
+**SYSTEM IDENTIFICATION:** QC-2 (Quad Cortex Systems Engineer)
+**TARGET VERIFIED:** "Texas Flood" - Stevie Ray Vaughan (1983).
+**ANALOG SPECS:** High-headroom 6L6 Fender Blackface circuits (Vibroverb/Super Reverb), 4x10/1x15 Jensen speakers, heavy string gauge (.013s), Ibanez TS808 Tube Screamer used strictly as a clean, mid-boosting line driver.
+**FRFR PROFILE:** QSC CP12 (Active 12"). High-Pass Filter (HPF) required at ~90Hz to prevent low-end mud from 4x10 cabinet resonance in a PA speaker.
 
-To satisfy the **Multi-Guitar Target Output** protocol, this preset is engineered with a split-bank routing matrix. We will use a pre-drive **Parametric-8 EQ** block to digitally simulate switching between vintage low-output single coils and higher-output humbuckers without needing to completely rebuild the amplifier block.
+Per **Rule 9** and **Rule 3**, the Quad Cortex reacts drastically differently to Single Coils vs. Humbuckers. SRV’s tone relies on extreme input voltage hitting a high-headroom preamp. To achieve this correctly, we must split the physical build into two distinct profiles.
 
 ---
 
-### 4. ORGANIZATION STANDARD (SPLIT-BANK MATRIX)
-Assign these parameters to your QC Scenes (A-H) to seamlessly switch between your single coils and humbuckers while maintaining the identical core amp tone.
+### GAIN STAGING & PICKUP COMPENSATION
+Before touching the grid, configure your Input Block (Circle 1):
 
-*   **Row 1 (Single Coil Strat/Tele Profile)**
-    *   **Scene A (Rhythm):** Edge of breakup. Tube Screamer ON, but set clean.
-    *   **Scene B (Lead):** TS808 Level cranked, Amp pushed into saturation. +1.5dB output.
-    *   **Scene C (Dry):** Rhythm with Spring Reverb bypassed.
-    *   **Scene D (Vibe):** Adds NuVibe (Chorus/Vibrato) for "Cold Shot" textures.
-*   **Row 2 (Gibson ES-339 Humbucker Profile)**
-    *   **Scene E (Rhythm):** Humbucker-padded clean rhythm.
-    *   **Scene F (Lead):** Humbucker-padded lead tone. +1.5dB output.
-    *   **Scene G (Dry):** Same as E, Reverb off.
-    *   **Scene H (Vibe):** Same as F, NuVibe engaged.
+*   **Guitar 1: Fender Single Coil (Strat/Tele) - ROW 1**
+    *   **Input Gain:** +0.0dB.
+    *   **Global Gate Threshold:** -62.0dB (Strat single coils need a relaxed gate to allow for dynamic, uncompressed picking).
+*   **Guitar 2: Gibson ES-339 (Humbuckers) - ROW 2**
+    *   **Input Gain:** -4.5dB. (Crucial. Humbuckers will inherently clip the *Green 808* diode stage. Dropping input gain simulates the output of vintage underwound Strat pickups).
+    *   **Global Gate Threshold:** -55.0dB.
 
 ---
 
-### 9. MULTI-GUITAR GAIN STAGING & PICKUP COMPENSATION
-Before hitting the Amp block, place a **Parametric-8 EQ** in Grid Block 1. Assign its parameters to Scenes A-D vs. Scenes E-H.
-
-**Guitar 1: Fender Strat/Tele Single Coil (Scenes A, B, C, D)**
-*   **EQ Block Output Level:** +2.5dB (Simulates the output push of SRV's heavy 0.13 strings).
-*   **Band 1 (Low Shelf):** 180Hz at +2.5dB (Adds the physical "thump" of a heavy low-E string).
-*   **Band 8 (High Pass):** OFF (Retain maximum top-end glass).
-
-**Guitar 2: Gibson ES-339 Humbuckers (Scenes E, F, G, H)**
-*   **EQ Block Output Level:** -5.0dB (CRITICAL: Pads the high-output humbuckers so they don't instantly fuzz out the Blackface preamp).
-*   **Band 1 (Low Shelf):** 200Hz at -3.0dB (Removes humbucker low-mid mud).
-*   **Band 6 (Peak):** 3500Hz at +3.0dB (Injects single-coil-style "bite" and pick attack).
-*   **Band 8 (Low Pass):** 6000Hz (Tames any harsh humbucker fizz when hitting the Tube Screamer).
+### ORGANIZATION STANDARD: SPLIT-BANK MATRIX
+*   **Row 1 (Scenes A-D): Fender Single Coil Profile.** EQ focused on adding body (250Hz) to mimic .013 gauge strings.
+*   **Row 2 (Scenes E-H): Gibson ES-339 Profile.** EQ focused on removing low-mid mud (300Hz) and tightening the attack to simulate single-coil articulation.
 
 ---
 
-### 5. EXECUTION PROTOCOL: MAIN SIGNAL CHAIN (Table A)
-*Note: Parameters marked with *(Right-Click > Assign)* must be assigned to Scenes.*
+### TABLE A: MAIN SIGNAL CHAIN (Texas Flood)
+*Mark Scene-Specific changes clearly by Right-Clicking the parameter and choosing "Assign".*
 
 | Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global In 1 | Thresh: -65dB | Thresh: -65dB | SRV rigs are notoriously noisy. Keep threshold low to allow natural decay without chopping the trailing spring reverb. |
-| **Pre-FX** | Green 808 | Drive: 1.0 <br>Tone: 6.5 <br>Level: 7.5 *(Assign)* | Drive: 3.5 <br>Tone: 7.0 <br>Level: 10.0 *(Assign)* | **The "Clean Edge":** Maxing the TS level while keeping drive low physically slams the amp's V1 preamp tube, creating dynamic, uncompressed overdrive. |
-| **Amp** | US TWN 65 Vibrato | Vol: 5.5 *(Assign)* <br>Bass: 3.5 <br>Mid: 6.0 <br>Treble: 6.5 | Vol: 7.5 *(Assign)* <br>Bass: 3.0 <br>Mid: 6.5 <br>Treble: 6.5 | **Tube Taper Logic:** Fender circuits have NO Master Volume. Adjust Vol to push tubes; use Lane Output Level for actual room loudness. Bass is reduced on Lead to prevent "farting out". |
-| **Cab** | 410 US Basslad PR10 | Mic A: Dyn 57 (Pos 0.5) <br>Mic B: Rib 121 (Pos 0.8) | Mic A: Dyn 57 (Pos 0.5) <br>Mic B: Rib 121 (Pos 0.8) | **Speaker Physics:** 4x10s have a tight, fast transient response. The SM57 captures the bite; the Ribbon 121 pushed slightly back captures the air/body. |
-| **Post-FX** | Spring | Mix: 15% *(Assign)* <br>Decay: 2.0s | Mix: 22% *(Assign)* <br>Decay: 2.5s | **Spatial Goal:** Authentic vintage Fender outboard spring splash. Increased mix on leads for sustained vocal quality. |
+| **Input/Gate** | Global Input Gate | Thresh: -62dB (SC) / -55dB (HB) | Thresh: -62dB (SC) / -55dB (HB) | Preserves SRV's extreme picking dynamic range. |
+| **Pre-FX 1** | Green 808 | Drive: 0.0, Tone: 6.0, Level: 6.5 | Drive: 1.5, Tone: 7.0, Level: 10.0 | **The SRV Secret:** Maxing pedal Level with minimal Drive pushes the Amp's 12AX7 preamp block into organic compression. |
+| **Pre-FX 2** | Parametric-8 EQ | Band 2: +2.5dB at 250Hz (SC) | Band 2: -3.0dB at 300Hz (HB) | *Chameleon Strategy:* SC gets string "girth". HB gets "de-mudded" to mimic hollowed-out Strat neck pickup. |
+| **Amp** | US Twin 65 Normal | Vol: 6.0, Bass: 4.0, Mid: 6.5, Treb: 5.5 | Vol: 6.0, Bass: 4.0, Mid: 6.5, Treb: 5.5 | Bright Switch OFF. High headroom 6L6 platform. Mids boosted higher than standard "scooped" Fender settings. |
+| **Cab** | 410 US Basslad PR10 | Mic A: Dyn 57 (Pos 0.5, Dist 1.0") | Mic A: Dyn 57 (Pos 0.5, Dist 1.0") | Captures the punchy 4x10 Super Reverb physics. HPF set to 90Hz internally to tame QSC CP12 boominess. |
+| **Post-FX 1** | Spring Reverb | Mix: 12%, Decay: 2.0s, Tone: 5.5 | Mix: 15%, Decay: 2.2s, Tone: 6.0 | Analog spring tank replication. Extended decay on lead scenes for Texas blues trailing notes. |
 
 ---
 
-### 6. TROUBLESHOOTING & REFINEMENT TREE
-If playing through your **QSC CP12 PA Speaker** and the tone feels inaccurate:
-1.  **"It sounds too distorted/fuzzy with my Strat"**: Lower the Output Level on your Grid 1 EQ block by another -2.0dB. Your specific single coils may be wound hotter than vintage spec. 
-2.  **"The low-end is farting out/flubby on the ES-339"**: Reduce the Bass parameter on the **US TWN 65 Vibrato** block down to 2.5 or 2.0. Vintage Fender circuits famously cannot handle heavy bass frequencies when the volume knob passes 5. 
-3.  **"It's not loud enough"**: DO NOT touch the Amp Volume or Green 808 Drive. Increase the overall **Lane Output Level** on the right side of the Cortex Control app.
+### TROUBLESHOOTING & REFINEMENT TREE
+If the tone sounds "Too Distorted", "Fuzzy", or "Harsh" through your QSC CP12:
+1.  **Input Pad:** Lower the Input Block Gain an additional -3.0dB (especially if your ES-339 has high-output PAFs).
+2.  **Amp Gain:** The `US Twin 65` should remain clean. If it's crunching too hard on Rhythm, lower Amp Vol from 6.0 to 4.5.
+3.  **Harsh Pick Attack:** If the TS808 sounds like an ice-pick on the Strat bridge pickup, go to the EQ-8 Block and lower **Band 8 (LPF)** to `4500Hz`.
+4.  **Output Compensation:** If adjustments cause a drop in gigging SPL, *do not touch the amp volume*. Raise the Lane Output Level (far right circle) by +2.0dB to push the QSC CP12 harder.
 
 ---
 
-### 8. PRESET REGISTRY PROTOCOL (SESSION MEMORY)
+### SESSION REGISTRY PROTOCOL
+Updating Active Presets Session Library.
 
 **Session Library (Active Presets)**
-**2. Preset Name:** "Texas Flood - Dual Rig"
-**Target:** Stevie Ray Vaughan (1983).
-**Guitars:** Fender Single Coil (Scenes A-D) / Gibson ES-339 (Scenes E-H).
-**Physics Goal:** Massive headroom clean-edge driven entirely by preamp tube slamming via a clean-boosted Tube Screamer. 
-**Full Configuration:**
-*   **Block 1 (EQ-8):** Out Level [A-D: +2.5dB / E-H: -5.0dB]. Band 1 Low Shelf [A-D: 180Hz +2.5dB / E-H: 200Hz -3.0dB]. Band 6 Peak [E-H: 3500Hz +3.0dB]. LPF [E-H: 6000Hz]. 
-*   **Block 2 (Green 808):** Drive [Rhy: 1.0 / Lead: 3.5], Tone [Rhy: 6.5 / Lead: 7.0], Level [Rhy: 7.5 / Lead: 10.0].
-*   **Block 3 (NuVibe - Optional on Scene D/H):** Mix [45%], Intensity [60%], Speed [4.5Hz], Chorus Mode.
-*   **Block 4 (Amp - US TWN 65 Vibrato):** Vol [Rhy: 5.5 / Lead: 7.5], Bright [OFF], Treble [6.5], Mid [Rhy: 6.0 / Lead: 6.5], Bass [Rhy: 3.5 / Lead: 3.0]. Output Level [+2.0dB]. *Note: No Master Volume parameter exists for this hardware.*
-*   **Block 5 (Cab - 410 US Basslad PR10):** Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 0.8, Dist 3.0"), Mix [A: 0dB, B: -3dB].
-*   **Block 6 (Spring Reverb):** Mix [Rhy: 15% / Lead: 22%], Decay [Rhy: 2.0s / Lead: 2.5s], Low-Cut [150Hz], High-Cut [4000Hz].
+1. **Preset Name:** "Spoonful - ES339" | Target: Howlin' Wolf (1960) | Configuration: [Stored in previous memory state].
+2. **Preset Name:** "Texas Flood - Split Matrix"
+   Target: Stevie Ray Vaughan (1983).
+   Guitars: Fender Stratocaster (Row 1) & Gibson ES-339 (Row 2) w/ Heavy Pick.
+   Physics Goal: Extreme clean headroom pushed entirely by line-level voltage from a diode-clipping overdrive pedal.
+   Full Configuration:
+   *Block 1 (EQ-8):* HPF [85Hz], SC Profile Band 2 [+2.5dB @ 250Hz], HB Profile Band 2 [-3.0dB @ 300Hz], LPF [6500Hz].
+   *Block 2 (Green 808):* Drive [Rhy: 0.0 / Lead: 1.5], Tone [Rhy: 6.0 / Lead: 7.0], Level [Rhy: 6.5 / Lead: 10.0].
+   *Block 3 (Amp - US Twin 65 Normal):* Bright [OFF], Vol [6.0], Bass [4.0], Mid [6.5], Treble [5.5], Output Level [+2.0dB].
+   *Block 4 (Cab - 410 US Basslad PR10):* Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Dyn 421, Pos 0.8, Dist 2.5"), Mix [A: 0dB, B: -3dB], HPF [90Hz], LPF [8000Hz].
+   *Block 5 (Spring Reverb):* Mix [Rhy: 12% / Lead: 15%], Decay [Rhy: 2.0s / Lead: 2.2s], Tone [5.5].

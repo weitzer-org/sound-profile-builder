@@ -13,3 +13,14 @@ startup_test_logs.txt
 # Cloud Build Artifacts
 .gcloudignore
 build_metadata.json
+
+# Local Dev Documentation
+devsetup.md
+
+.gemini/
+.scratch/
+tests/e2e/node_modules/
+tests/e2e/test-results/
+main
+server
+ 

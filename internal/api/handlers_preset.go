@@ -29,16 +29,8 @@ func renderPresetList(presets []*storage.Preset) string {
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
 				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-					<div id="copy-container-%[3]s" style="flex: 1; display: flex;">
-						<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='flex'; this.style.display='none'; document.getElementById('delete-btn-%[3]s').style.display='none';" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">Copy</button>
-						<form id="copy-form-%[3]s" hx-post="/api/preset/copy" hx-target="#preset-list-container" style="display: none; width: 100%%; gap: 0.25rem; align-items: stretch; margin: 0;" autocomplete="off">
-							<input type="hidden" name="id" value="%[3]s">
-							<input type="text" name="new_name" placeholder="Copy Name..." required style="flex: 1; min-width: 0; padding: 0.3rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; box-sizing: border-box;">
-							<button type="submit" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--success); border: none; color: white; cursor: pointer;">✔</button>
-							<button type="button" onclick="document.getElementById('copy-form-%[3]s').style.display='none'; document.getElementById('copy-form-%[3]s').previousElementSibling.style.display='block'; document.getElementById('delete-btn-%[3]s').style.display='block';" style="padding: 0 0.5rem; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--border); color: white; cursor: pointer;">✖</button>
-						</form>
-					</div>
-					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+					<button hx-get="/api/preset/copy_ui?id=%[3]s" hx-target="#main-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
+					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
 				</div>
 				<div style="margin-top: 0.5rem;">
 					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
@@ -131,6 +123,26 @@ func (s *Server) handleDeletePreset() http.HandlerFunc {
 	}
 }
 
+func (s *Server) handleCopyPresetUI() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "Missing ID", http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		p, err := s.store.Get(ctx, id)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix">Lookup Error: %v</div>`, err)))
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, true)))
+	}
+}
+
 func (s *Server) handleCopyPreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
@@ -139,35 +151,38 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 		}
 
 		id := r.FormValue("id")
-		p, err := s.store.Get(r.Context(), id)
+		ctx := r.Context()
+		p, err := s.store.Get(ctx, id)
 		if err != nil {
 			http.Error(w, "Preset not found", http.StatusNotFound)
 			return
 		}
 
-		newName := r.FormValue("new_name")
-		if newName == "" {
-			newName = r.Header.Get("HX-Prompt")
-		}
+		newName := strings.TrimSpace(r.FormValue("new_name"))
 		if newName == "" {
 			newName = p.Name + " (Copy)"
 		}
 
-		// Save a stripped copy
+		// Save an exact replica
 		pCopy := &storage.Preset{
-			Name:    newName,
-			Payload: p.Payload,
+			Name:             newName,
+			Payload:          p.Payload,
+			BuilderStatement: p.BuilderStatement,
 		}
 		
-		if err := s.store.Save(r.Context(), pCopy); err != nil {
+		if len(p.ChatHistory) > 0 {
+			pCopy.ChatHistory = append([]storage.ChatMessage{}, p.ChatHistory...)
+		}
+		
+		if err := s.store.Save(ctx, pCopy); err != nil {
 			http.Error(w, "Failed to duplicate", http.StatusInternalServerError)
 			return
 		}
 
-		// Reload the list
-		presets, _ := s.store.List(r.Context())
+		// Return the cloned workspace and command sidebar to refresh
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderPresetList(presets)))
+		w.Header().Set("HX-Trigger", "presetCopied")
+		w.Write([]byte(renderTweakingWorkspaceHTML(pCopy, false)))
 	}
 }
 
@@ -237,7 +252,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets), name, renderTweakingWorkspaceHTML(p))
+		`, renderPresetList(presets), name, renderTweakingWorkspaceHTML(p, false))
 		
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
@@ -245,7 +260,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 }
 
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
-func renderTweakingWorkspaceHTML(p *storage.Preset) string {
+func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 	// Render chat history logs as a collapsible accordion
 	historyHtml := ""
 	if len(p.ChatHistory) > 0 {
@@ -379,12 +394,27 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 		}
 	}
 
-	return fmt.Sprintf(`
-	<div id="workspace-wrapper" class="workspace-wrapper">
-		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
-			%s
+	controlPanelHtml := ""
+	if isCopyMode {
+		controlPanelHtml = fmt.Sprintf(`
+		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; border: 2px solid var(--accent);">
+			<h3 style="margin: 0; font-size: 1.25rem; color: var(--text-main);">Duplicate Preset</h3>
+			<form hx-post="/api/preset/copy" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-start;" autocomplete="off">
+				<input type="hidden" name="id" value="%[1]s">
+				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+					<input type="text" name="new_name" placeholder="Enter name for the duplicate..." required style="flex: 1; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 1.25rem; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
+					<div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+						Creates an exact replica of this routing matrix and chat history.
+					</div>
+				</div>
+				<button type="submit" style="width: auto; height: 50px; padding: 0 1.5rem; border-radius: 8px; font-weight: 600; font-size: 1rem; background: var(--success); border: none; color: white; cursor: pointer;">
+					Confirm Duplicate
+				</button>
+			</form>
 		</div>
-		
+		`, p.ID)
+	} else {
+		controlPanelHtml = fmt.Sprintf(`
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			%s
@@ -393,16 +423,27 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 				<input type="hidden" name="id" value="%s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
-					<div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">
-						<span style="color: var(--accent);">Refinement Mode:</span> Bypasses the 11-agent scraping pipeline. A single <b>Architect Subagent</b> directly ingests your feedback and rewrites the live Matrix in ~15s.
+					<div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4; padding-top: 0.25rem;">
+						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
 					</div>
 				</div>
+				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
 				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
 					<span class="spinner"></span>
 					<span class="btn-text">Adjust</span>
 				</button>
 			</form>
 		</div>
+		`, refinementSummaryHtml, p.ID, html.EscapeString(p.BuilderStatement))
+	}
+
+	return fmt.Sprintf(`
+	<div id="workspace-wrapper" class="workspace-wrapper">
+		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
+			%s
+		</div>
+		
+		%s
 
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
@@ -415,7 +456,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset) string {
 			</div>
 		</div>
 	</div>
-	`, headerHtml, refinementSummaryHtml, p.ID, matrixContainerHtml, historyHtml)
+	`, headerHtml, controlPanelHtml, matrixContainerHtml, historyHtml)
 }
 
 func (s *Server) handleViewPreset() http.HandlerFunc {
@@ -434,7 +475,7 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false)))
 	}
 }
 
@@ -492,6 +533,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 
 		var archResp struct {
 			ConversationalResponse string            `json:"conversational_response"`
+			BuilderStatement       string            `json:"builder_statement"`
 			DSPMatrixUpdated       bool              `json:"dsp_matrix_updated"`
 			FinalHTMLPayload       map[string]string `json:"final_html_payload"`
 			AgentImpact            []string          `json:"agent_impact"`
@@ -517,6 +559,10 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 
 		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "model", Content: assistantContent})
 
+		if archResp.DSPMatrixUpdated && archResp.BuilderStatement != "" {
+			p.BuilderStatement = archResp.BuilderStatement
+		}
+
 		if archResp.DSPMatrixUpdated {
 			payloadBytes, err := json.Marshal(archResp.FinalHTMLPayload)
 			if err != nil {
@@ -529,7 +575,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		// Save the state
 		s.store.Save(ctx, p)
 
-		finalDOM := renderTweakingWorkspaceHTML(p)
+		finalDOM := renderTweakingWorkspaceHTML(p, false)
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))

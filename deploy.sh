@@ -1,11 +1,11 @@
 #!/bin/bash
 
 echo "🚀 Submitting Cloud Build to Private Worker Pool (us-central1)..."
-if gcloud beta builds submit --region=us-central1 --config cloudbuild.yaml .; then
+if gcloud beta builds submit --project="quacktastic-waffle" --region=us-central1 --config cloudbuild.yaml .; then
     echo ""
     echo "✅ Build Completed Successfully!"
     echo -n "🌐 YOUR LIVE DASHBOARD URL IS: "
-    gcloud run services describe sound-builder-dev --region us-central1 --format="value(status.url)"
+    gcloud run services describe sound-builder-dev --project="quacktastic-waffle" --region us-central1 --format="value(status.url)"
     echo ""
 else
     echo ""

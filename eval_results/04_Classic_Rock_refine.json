@@ -1,0 +1,10 @@
+```json
+{
+  "conversational_response": "The aggressive -2.5dB cut at 200Hz on the Pre-EQ for the Gibson ES-339 was intentionally designed to manage the natural low-mid heaviness of humbucking pickups. Because humbuckers output a much thicker and hotter signal than single coils (like your Telecaster), feeding all that raw low-end directly into the front of a Plexi-style amplifier can easily cause the distortion to become 'flubby' or muddy. By applying this cut *before* the amplifier (Pre-EQ), we tighten the bass frequencies before they hit the gain stages. This ensures your overdrive remains punchy, clear, and articulate without losing the inherent warmth and character of the Gibson.",
+  "builder_statement": "Answered user inquiry regarding Pre-EQ acoustic divergence for humbucker-equipped guitars. No changes were made to the underlying DSP matrix.",
+  "dsp_matrix_updated": false,
+  "agent_impact": [
+    "<strong>Agent 11 (Architect & Evaluator):</strong> Detailed the acoustic divergence reasoning behind the humbucker-specific Pre-EQ low shelf attenuation."
+  ]
+}
+```

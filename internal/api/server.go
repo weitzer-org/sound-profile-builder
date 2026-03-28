@@ -37,21 +37,33 @@ func NewServer(store *storage.PresetStore, client storage.Client, smFetcher stor
 
 // routes registers all the HTTP handlers for the application.
 func (s *Server) routes() {
+	// Public Routes
+	s.mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			s.handleServeLogin()(w, r)
+		} else if r.Method == http.MethodPost {
+			s.handleProcessLogin()(w, r)
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	// HTMX Frontend Routes
-	s.mux.HandleFunc("/", s.handleIndex())
+	s.mux.Handle("/", s.authMiddleware(s.handleIndex()))
 
 	// API Routes (to be protected by Secret Manager Password)
-	s.mux.HandleFunc("/api/preset/generate", s.handleGeneratePreset())
+	s.mux.Handle("/api/preset/generate", s.authMiddleware(s.handleGeneratePreset()))
 	
 	// Preset Management Routes
-	s.mux.HandleFunc("/api/presets", s.handleGetPresets())
-	s.mux.HandleFunc("/api/preset/save", s.handleSavePreset())
-	s.mux.HandleFunc("/api/preset/delete", s.handleDeletePreset())
-	s.mux.HandleFunc("/api/preset/copy", s.handleCopyPreset())
-	s.mux.HandleFunc("/api/preset/view", s.handleViewPreset())
-	s.mux.HandleFunc("/api/preset/chat", s.handleChatPreset())
-	s.mux.HandleFunc("/api/preset/rename", s.handleRenamePreset())
-	s.mux.HandleFunc("/api/preset/delete_draft", s.handleDeleteDraftPreset())
+	s.mux.Handle("/api/presets", s.authMiddleware(s.handleGetPresets()))
+	s.mux.Handle("/api/preset/save", s.authMiddleware(s.handleSavePreset()))
+	s.mux.Handle("/api/preset/delete", s.authMiddleware(s.handleDeletePreset()))
+	s.mux.Handle("/api/preset/copy_ui", s.authMiddleware(s.handleCopyPresetUI()))
+	s.mux.Handle("/api/preset/copy", s.authMiddleware(s.handleCopyPreset()))
+	s.mux.Handle("/api/preset/view", s.authMiddleware(s.handleViewPreset()))
+	s.mux.Handle("/api/preset/chat", s.authMiddleware(s.handleChatPreset()))
+	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
+	s.mux.Handle("/api/preset/delete_draft", s.authMiddleware(s.handleDeleteDraftPreset()))
 }
 
 // Start begins listening on the specified address.
@@ -139,6 +151,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		// Unmarshal the Architect's JSON block
 		var archResp struct {
+			BuilderStatement string            `json:"builder_statement"`
 			FinalHtmlPayload map[string]string `json:"final_html_payload"`
 			AgentImpact      []string          `json:"agent_impact"`
 		}
@@ -179,8 +192,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		draftPreset := &storage.Preset{
-			Name: "Draft Preset",
-			Payload: string(payloadBytes),
+			Name:             "Draft Preset",
+			Payload:          string(payloadBytes),
+			BuilderStatement: archResp.BuilderStatement,
 			ChatHistory: []storage.ChatMessage{
 				{Role: "user", Content: prompt},
 				{Role: "model", Content: "Preset structure successfully laid out based on your requirements.\n" + initialAgentIntro},
@@ -204,7 +218,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			<div id="main-workspace" hx-swap-oob="true">
 				%s
 			</div>
-		`, renderPresetList(presets), renderTweakingWorkspaceHTML(draftPreset))
+		`, renderPresetList(presets), renderTweakingWorkspaceHTML(draftPreset, false))
 
 		w.Write([]byte(finalDOM))
 	}

@@ -96,6 +96,9 @@ func main() {
 	// The 12-Point Evaluation Suite
 	evalQueries := map[string]string{
 		"01_SRV_Clean":   "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
+		"02_Metal_Rhythm": "Modern high-gain metal rhythm. Tight low end, scooped mids, like a Peavey 5150.",
+		"03_Ambient_Lead": "Ambient, spacey lead tone with lots of modulated delay and plate reverb. Think David Gilmour.",
+		"04_Classic_Rock": "Classic 70s rock crunch. Marshall Plexi style, humbuckers, warm and punchy.",
 	}
 
 	// Ensure our results directory exists

@@ -53,17 +53,21 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   // Wait for title update
   await expect(page.locator('h2', { hasText: 'Brighter Hendrix Tone' })).toBeVisible({ timeout: 10000 });
 
-  // 4. Copy Preset in sidebar
-  // Using locator for Copy to avoid multiple copies conflict
+  // 4. Copy Preset into Workspace
   const uniqueDuplicateName = `Hendrix Duplicate ${Date.now()}`;
   const awesomeToneListItem = presetList.filter({ hasText: 'Brighter Hendrix Tone' }).first();
   await awesomeToneListItem.locator('button:has-text("Copy")').click();
-  const copyForm = awesomeToneListItem.locator('form[hx-post="/api/preset/copy"]');
-  await copyForm.locator('input[name="new_name"]').fill(uniqueDuplicateName);
-  await copyForm.locator('button[type="submit"]').click();
+  
+  // Wait for workspace to shift into Copy mode
+  await expect(page.locator('h3', { hasText: 'Duplicate Preset' })).toBeVisible({ timeout: 10000 });
+  const workspaceCopyForm = page.locator('form[hx-post="/api/preset/copy"]');
+  await workspaceCopyForm.locator('input[name="new_name"]').fill(uniqueDuplicateName);
+  await workspaceCopyForm.locator('button:has-text("Confirm Duplicate")').click();
 
-  // Wait for duplicate to appear
+  // Wait for duplicate to appear in sidebar
   await expect(presetList.filter({ hasText: uniqueDuplicateName }).first()).toBeVisible({ timeout: 10000 });
+  // Ensure the workspace also loads the new duplicate via the HX-Target replacement
+  await expect(page.locator('h2', { hasText: uniqueDuplicateName }).first()).toBeVisible({ timeout: 10000 });
 
   // 5. Delete Preset in sidebar
   const duplicateToneListItem = presetList.filter({ hasText: uniqueDuplicateName }).first();

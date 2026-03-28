@@ -314,6 +314,7 @@ You MUST output the following exact JSON schema:
 
 {
   "conversational_response": "Your conversational answer to the user. Describe what you changed, or answer their question.",
+  "builder_statement": "Provide a short and concise statement on what you did during this refinement. Focus on the core tone and gear choices. Do NOT explain the differences between the guitars. IMPORTANT: If you do NOT make changes to the matrix (i.e. you are just answering a question), leave this field completely empty.",
   "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
   "final_html_payload": { "guitar_name": "YOUR_FULL_HTML_TABLE_HERE" }, /* The *entire* updated HTML table matrix map for ALL guitars explicitly (only if dsp_matrix_updated is true) */
   "agent_impact": ["Bullet point describing impact"]
