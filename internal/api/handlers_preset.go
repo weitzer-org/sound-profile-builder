@@ -261,7 +261,9 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
 func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
-	// Render chat history logs as a collapsible accordion
+	// TODO: Make the conversational response from the agent more visible in the UI. 
+	// Currently, it gets hidden inside the "View ADK Processing Log" accordion. We should explore
+	// showing the latest message prominently, especially if the matrix wasn't updated.
 	historyHtml := ""
 	if len(p.ChatHistory) > 0 {
 		var logItems string
@@ -427,6 +429,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
 					</div>
 				</div>
+				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
 				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
 				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
 					<span class="spinner"></span>
