@@ -1,0 +1,13 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"builder_statement\":\"The primary objective...\",\"final_html_payload\":{\"Fender Telecaster Single Coil\":\"\\u003ctable class='grid-matrix' style='width: 100%; border-collapse: collapse;'\\u003e\\n\\u003cthead\\u003e\\n\\u003ctr\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eEffect Type \\u0026 Name\\u003c/th\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eScene A (Rhythm)\\u003c/th\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eScene B (Lead)\\u003c/th\\u003e\\u003c/tr\\u003e\\n\\u003c/thead\\u003e\\n\\u003ctbody\\u003e\\n\\u003ctr\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eInput: Global Impedance\\u003c/td\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eGain: -1.0dB\\u003cbr/\\u003eImpedance: 1M\\u003c/td\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eGain: -1.0dB\\u003cbr/\\u003eImpedance: 1M\\u003c/td\\u003e\\u003c/tr\\u003e\\n\\u003c/tbody\\u003e\\n\\u003c/table\\u003e\",\"Gibson ES-339 Humbuckers\":\"\\u003ctable class='grid-matrix' style='width: 100%; border-collapse: collapse;'\\u003e\\n\\u003cthead\\u003e\\n\\u003ctr\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eEffect Type \\u0026 Name\\u003c/th\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eScene A (Rhythm)\\u003c/th\\u003e\\u003cth style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'\\u003eScene B (Lead)\\u003c/th\\u003e\\u003c/tr\\u003e\\n\\u003c/thead\\u003e\\n\\u003ctbody\\u003e\\n\\u003ctr\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eInput: Global Impedance\\u003c/td\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eGain: -1.0dB\\u003cbr/\\u003eImpedance: 1M\\u003c/td\\u003e\\u003ctd style='padding: 12px; border-bottom: 1px solid #3f3f46;'\\u003eGain: -1.0dB\\u003cbr/\\u003eImpedance: 1M\\u003c/td\\u003e\\u003c/tr\\u003e\\n\\u003c/tbody\\u003e\\n\\u003c/table\\u003e\"},\"agent_impact\":[\"Agent 1 (Tone Historian): Did stuff\"]}"
+          }
+        ]
+      }
+    }
+  ]
+}

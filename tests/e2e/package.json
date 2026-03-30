@@ -1,0 +1,11 @@
+{
+  "name": "sound-builder-e2e",
+  "version": "1.0.0",
+  "description": "Playwright End-to-End browser tests with video capture for QC-2 Modeler HTMX dashboard.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

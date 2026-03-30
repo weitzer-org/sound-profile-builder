@@ -1,0 +1,9 @@
+steps:
+- name: 'golang:latest'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - 'go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out'
+options:
+  pool:
+    name: 'projects/$PROJECT_ID/locations/us-central1/workerPools/faster-machine'

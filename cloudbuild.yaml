@@ -1,0 +1,51 @@
+steps:
+# 0a. Execute Go Unit Tests and Generate Coverage (Do not fail immediately on error)
+- name: 'golang:latest'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - 'go build ./... > /workspace/build-errors.txt 2>&1 || true && go test -coverprofile=/workspace/coverage.out -v ./... > /workspace/test-results.txt 2>&1 && go tool cover -func=/workspace/coverage.out > /workspace/coverage.txt 2>&1 || echo "FAIL_MARKER" >> /workspace/test-results.txt'
+
+# 0b. Upload Test Logs & Coverage to Cloud Storage & Fail pipeline if tests failed
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - 'gcloud storage cp /workspace/build-errors.txt gs://weitzer-sound-builder/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://weitzer-sound-builder/test-results.txt && gcloud storage cp /workspace/coverage.txt gs://weitzer-sound-builder/coverage.txt || true && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
+
+# 1. Base Docker Build 
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/sound-builder-dev', '.']
+
+# 2. Push generated image artifact into private project Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/sound-builder-dev']
+
+# 3. Spin up fully-managed Google Cloud Run container targeting us-central1
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'sound-builder-dev'
+  - '--image'
+  - 'gcr.io/$PROJECT_ID/sound-builder-dev'
+  - '--region'
+  - 'us-central1'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
+
+# 4. Explicitly echo the live generated HTTPS URL back to the Cloud Build terminal logs
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - 'echo "🚀 YOUR LIVE DASHBOARD URL IS: " && gcloud run services describe sound-builder-dev --region us-central1 --format "value(status.url)"'
+
+options:
+  # Route the build to execute on your pre-created private worker pool with faster machines!
+  pool:
+    name: 'projects/$PROJECT_ID/locations/us-central1/workerPools/faster-machine'
+  # Bypass VPC-SC restrictions on default Cloud Storage logs buckets
+  logging: CLOUD_LOGGING_ONLY

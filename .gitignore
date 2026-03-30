@@ -1,0 +1,27 @@
+# Local test binaries
+test-results.txt
+*.test
+sound-builder-server
+coverage.html
+coverage.out
+startup_test_logs.txt
+
+# Credentials
+.google_credentials.json
+.env
+.local_config
+
+# Cloud Build Artifacts
+.gcloudignore
+build_metadata.json
+
+# Local Dev Documentation
+devsetup.md
+
+.gemini/
+.scratch/
+tests/e2e/node_modules/
+tests/e2e/test-results/
+main
+server
+ 

@@ -1,0 +1,11 @@
+{
+  "single_amp_mode": true,
+  "allow_cloud_captures": false,
+  "guitars": [
+    "Gibson ES-339",
+    "Fender Telecaster American Pro II",
+    "Fender Player Plus HSS Strat"
+  ],
+  "project_id": "710019748844",
+  "bucket_name": "weitzer-sound-builder"
+}
