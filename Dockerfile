@@ -4,6 +4,8 @@ WORKDIR /app
 
 # Cached dependency installation
 COPY go.mod go.sum ./
+RUN go mod download
+
 # Because local macOS Santa limits killed our go mod tidy execution, 
 # we explicitly force the Linux container to download and wire the dependencies natively.
 COPY . .

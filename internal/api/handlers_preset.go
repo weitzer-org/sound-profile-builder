@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -22,6 +24,15 @@ func renderPresetList(presets []*storage.Preset) string {
 	if len(presets) == 0 {
 		return `<p class="subtitle" style="font-size:0.9rem;">No presets saved yet.</p>`
 	}
+
+	sort.Slice(presets, func(i, j int) bool {
+		ti, errI := time.Parse(time.RFC3339, presets[i].UpdatedAt)
+		tj, errJ := time.Parse(time.RFC3339, presets[j].UpdatedAt)
+		if errI != nil || errJ != nil {
+			return presets[i].Name < presets[j].Name
+		}
+		return ti.After(tj)
+	})
 
 	html := `<ul style="list-style-type: none; padding: 0;">`
 	for _, p := range presets {
@@ -180,10 +191,29 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 			return
 		}
 
-		// Return the cloned workspace and command sidebar to refresh
+		presets, _ := s.store.List(ctx)
+
+		// Bypass GCS eventual consistency by manually injecting the newly saved preset if not yet listed
+		found := false
+		for _, v := range presets {
+			if v.ID == pCopy.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			presets = append([]*storage.Preset{pCopy}, presets...)
+		}
+
+		finalDOM := fmt.Sprintf(`
+			<div id="preset-list-container" hx-swap-oob="true">
+				%s
+			</div>
+			%s
+		`, renderPresetList(presets), renderTweakingWorkspaceHTML(pCopy, false))
+
 		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("HX-Trigger", "presetCopied")
-		w.Write([]byte(renderTweakingWorkspaceHTML(pCopy, false)))
+		w.Write([]byte(finalDOM))
 	}
 }
 
@@ -402,7 +432,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		controlPanelHtml = fmt.Sprintf(`
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; border: 2px solid var(--accent);">
 			<h3 style="margin: 0; font-size: 1.25rem; color: var(--text-main);">Duplicate Preset</h3>
-			<form hx-post="/api/preset/copy" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-start;" autocomplete="off">
+			<form hx-post="/api/preset/copy" hx-target="#main-workspace" style="display: flex; gap: 0.75rem; align-items: flex-start;" autocomplete="off">
 				<input type="hidden" name="id" value="%[1]s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<input type="text" name="new_name" placeholder="Enter name for the duplicate..." required style="flex: 1; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 1.25rem; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">

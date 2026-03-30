@@ -68,8 +68,8 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := r.Context()
-		projectID := "710019748844"
 		cfg, err := config.LoadConfig("config.json")
+		projectID := ""
 		if err == nil && cfg.ProjectID != "" {
 			projectID = cfg.ProjectID
 		}
@@ -121,8 +121,8 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 		submittedPassword := r.FormValue("password")
 
 		ctx := r.Context()
-		projectID := "710019748844"
 		cfg, err := config.LoadConfig("config.json")
+		projectID := ""
 		if err == nil && cfg.ProjectID != "" {
 			projectID = cfg.ProjectID
 		}

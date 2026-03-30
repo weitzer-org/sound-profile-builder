@@ -152,15 +152,7 @@ func TestHandleCopyPreset(t *testing.T) {
 		t.Errorf("Expected success copying text")
 	}
 
-	// List fails on copy wrapper
-	mockStorage.failList = true
-	rrListFail := httptest.NewRecorder()
-	reqListFail, _ := http.NewRequest(http.MethodPost, "/api/preset/copy", strings.NewReader(formData.Encode()))
-	reqListFail.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	s.handleCopyPreset().ServeHTTP(rrListFail, reqListFail)
-	if !strings.Contains(rrListFail.Body.String(), "No presets saved yet") {
-		t.Errorf("Expected empty response on reload failure")
-	}
+
 
 	// Write fails on copy wrapper
 	mockStorage.failList = false

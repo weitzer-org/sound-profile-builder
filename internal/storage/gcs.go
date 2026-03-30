@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
@@ -30,8 +30,7 @@ func (g *GCSClient) ReadFile(ctx context.Context, bucket, object string) ([]byte
 		return nil, err
 	}
 	defer reader.Close()
-
-	return ioutil.ReadAll(reader)
+	return io.ReadAll(reader)
 }
 
 // WriteFile writes JSON data to an object in a GCS bucket

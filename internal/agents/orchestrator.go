@@ -2,9 +2,9 @@ package agents
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 
@@ -19,6 +19,9 @@ type ContextKey string
 const (
 	MockModeKey ContextKey = "mock_mode"
 )
+
+//go:embed coros_map.json
+var embeddedCorosMap []byte
 
 // TokenUsage rigidly aggregates exact API volume metadata
 type TokenUsage struct {
@@ -125,16 +128,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	log.Printf("Phase 1 Complete.")
 
-	// Read local dictionary for Agent 4
-	dictJSON := "{}"
-	if dictBytes, err := os.ReadFile("coros_map.json"); err == nil {
-		dictJSON = string(dictBytes)
-	} else if gcs != nil {
-		// Fallback to GCS if local not found
-		if gcsBytes, err := gcs.ReadFile(ctx, "weitzer-sound-builder", "coros_map.json"); err == nil {
-			dictJSON = string(gcsBytes)
-		}
-	}
+	// Read embedded dictionary for Agent 4
+	dictJSON := string(embeddedCorosMap)
 
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian

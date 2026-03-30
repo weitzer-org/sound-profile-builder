@@ -7,6 +7,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
+	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -47,8 +48,12 @@ func main() {
 		smFetcher = smClient
 	}
 
-	store := storage.NewPresetStore(gcsClient, "weitzer-sound-builder")
+	cfg, err := config.LoadConfig("config.json")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
+	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
 		return agents.NewOrchestrator(ic, key)
 	}

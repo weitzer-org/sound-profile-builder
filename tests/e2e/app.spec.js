@@ -17,7 +17,13 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   });
 
   // Navigate to the local Go server
-  await page.goto('/?mock=true');
+  await page.goto('/login?mock=true');
+  await expect(page).toHaveTitle('Login - QC-2 Modeler');
+  await page.fill('input[name="password"]', 'bluesmusic');
+  await page.click('button[type="submit"]');
+
+  // Wait for redirect to index
+  await expect(page).toHaveTitle('QC-2 Multi-Agent Modeler', { timeout: 10000 });
 
   // Verify HTMX page loading and root constraints
   await expect(page).toHaveTitle('QC-2 Multi-Agent Modeler');
@@ -65,7 +71,7 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   await workspaceCopyForm.locator('button:has-text("Confirm Duplicate")').click();
 
   // Wait for duplicate to appear in sidebar
-  await expect(presetList.filter({ hasText: uniqueDuplicateName }).first()).toBeVisible({ timeout: 10000 });
+  await expect(presetList.filter({ hasText: uniqueDuplicateName }).first()).toBeVisible({ timeout: 30000 });
   // Ensure the workspace also loads the new duplicate via the HX-Target replacement
   await expect(page.locator('h2', { hasText: uniqueDuplicateName }).first()).toBeVisible({ timeout: 10000 });
 

@@ -11,6 +11,7 @@ import (
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -113,7 +114,12 @@ func main() {
 	}
 	defer smClient.Close()
 
-	apiKey, err := smClient.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+	cfg, err := config.LoadConfig("config.json")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	apiKey, err := smClient.GetPassword(ctx, cfg.ProjectID, "gsr-gemini-api-key")
 	if err != nil {
 		log.Fatalf("Failed to fetch API key: %v", err)
 	}
@@ -166,7 +172,8 @@ func main() {
 		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
 		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 		if err != nil {
-			log.Fatalf("Failed to create direct genai client: %v", err)
+			log.Printf("Failed to create direct genai client: %v", err)
+			return
 		}
 
 		model := client.GenerativeModel("gemini-3.1-pro-preview")

@@ -9,6 +9,7 @@ type AppConfig struct {
 	SingleAmpMode      bool   `json:"single_amp_mode"`
 	AllowCloudCaptures bool   `json:"allow_cloud_captures"`
 	ProjectID          string `json:"project_id"`
+	BucketName         string `json:"bucket_name"`
 }
 
 func LoadConfig(path string) (*AppConfig, error) {
