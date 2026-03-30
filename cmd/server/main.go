@@ -19,6 +19,9 @@ func (l *localSecretFetcher) GetPassword(ctx context.Context, projectID, secretN
 	if secretName == "spb-login-pw" {
 		return l.uiPassword, nil
 	}
+	if key := os.Getenv("GEMINI_API_KEY"); key != "" {
+		return key, nil
+	}
 	return "mock-api-key", nil
 }
 
