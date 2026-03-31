@@ -63,9 +63,16 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
 func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
+	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
+		isMock = true
+	}
+
+	if isMock {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
 			return mockOutput, o.Usage, nil
+		} else {
+			log.Printf("Warning: Failed to read mock file testdata/e2e_mocks/architect_generate.json: %v", err)
 		}
 	}
 
@@ -327,10 +334,19 @@ You MUST output the following exact JSON schema:
   "builder_statement": "Provide a short and concise statement on what you did during this refinement. Focus on the core tone and gear choices. Do NOT explain the differences between the guitars. IMPORTANT: If you do NOT make changes to the matrix (i.e. you are just answering a question), leave this field completely empty.",
   "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
   "final_html_payload": { "guitar_name": "YOUR_FULL_HTML_TABLE_HERE" }, /* The *entire* updated HTML table matrix map for ALL guitars explicitly (only if dsp_matrix_updated is true) */
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": {
+        "blocks": [
+          { "type": "Amplifier", "name": "...", "settings": { ... }, "rationale": "...", "position": 0 }
+        ]
+      }
+    }
+  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! */
   "agent_impact": ["Bullet point describing impact"]
 }
 
-EXISTING HTML PAYLOAD:
+EXISTING STRUCTURED AND HTML PAYLOAD:
 %s
 `, p.Payload)
 

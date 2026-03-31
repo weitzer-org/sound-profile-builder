@@ -70,7 +70,7 @@ func main() {
 		port = "8081"
 	}
 
-	// Start server
+	log.Printf("QC-2 Backend listening at: http://localhost:%s\n", port)
 	if err := server.Start(":" + port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

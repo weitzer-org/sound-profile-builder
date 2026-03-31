@@ -59,8 +59,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	if rrSuccess.Code != http.StatusOK {
 		t.Errorf("Expected 200 OK, got: %d", rrSuccess.Code)
 	}
-	if !strings.Contains(rrSuccess.Body.String(), `<div id="main-workspace" hx-swap-oob="true">`) {
-		t.Errorf("Expected DOM response to contain main-workspace oob swap")
+	if !strings.Contains(rrSuccess.Body.String(), "Finalize Save") {
+		t.Errorf("Expected response to contain 'Finalize Save' button")
 	}
 
 	// 3. Secret Fetcher Error

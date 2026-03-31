@@ -1,0 +1,18 @@
+--- cmd/server/main.go
++++ cmd/server/main.go
+@@ -57,6 +57,7 @@
+ 	}
+ 
+ 	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
++	memoryStore := storage.NewMemoryStore(gcsClient, cfg.BucketName)
+ 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
+ 		return agents.NewOrchestrator(ic, key, gcsClient)
+ 	}
+@@ -62,5 +63,6 @@
+ 	}
+ 
+ 	// Initialize Server
+-	server := api.NewServer(store, gcsClient, smFetcher, orchMaker, cfg)
++	server := api.NewServer(store, memoryStore, gcsClient, smFetcher, orchMaker, cfg)
++
+ 

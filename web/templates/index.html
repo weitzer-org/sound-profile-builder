@@ -158,11 +158,11 @@
             transform: translateY(0);
         }
         
-        button.htmx-request .spinner {
+        .htmx-request .spinner {
             display: inline-block;
         }
 
-        button.htmx-request .btn-text {
+        .htmx-request .btn-text {
             display: none;
         }
         #submit-btn.htmx-request::after {
@@ -209,7 +209,7 @@
             vertical-align: top;
             line-height: 1.8;
             color: var(--text-main);
-            white-space: nowrap;
+            white-space: normal !important;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         }
 
@@ -444,7 +444,7 @@
                 <p class="subtitle">Deploy the 12-agent ADK pipeline to synthesize your hardware matrix.</p>
 
                 <div class="card">
-                    <form hx-post="/api/preset/generate" hx-target="#library-editor-workspace" hx-indicator="#submit-btn" hx-sync="this:drop" hx-disabled-elt="this, #submit-btn, input[name='prompt']" onsubmit="switchToLibraryView()">
+                    <form hx-post="/api/preset/generate" hx-target="#generator-workspace" hx-indicator="#submit-btn" hx-sync="this:drop" hx-disabled-elt="this, #submit-btn, input[name='prompt']">
                         <div class="form-group">
                             <label>Tonal Prompt</label>
                             <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
@@ -456,6 +456,9 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Live workspace content will load here -->
+                <div id="generator-workspace" style="margin-top: 2rem;"></div>
             </div>
         </div>
     </div>

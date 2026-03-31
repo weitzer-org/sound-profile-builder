@@ -1,0 +1,45 @@
+--- internal/api/server.go
++++ internal/api/server.go
+@@ -19,6 +19,7 @@
+ type Server struct {
+ 	mux         *http.ServeMux
+ 	store       *storage.PresetStore
++	memoryStore *storage.MemoryStore
+ 	client      storage.Client
+ 	smFetcher   storage.SecretFetcher
+ 	orchMaker   func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
+@@ -27,14 +28,15 @@
+ }
+ 
+ // NewServer initializes a new Server and its routes.
+-func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
++func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
+ 	s := &Server{
+-		mux:       http.NewServeMux(),
+-		store:     store,
+-		client:    client,
+-		smFetcher: smFetcher,
+-		orchMaker: orchMaker,
+-		appConfig: appConfig,
++		mux:         http.NewServeMux(),
++		store:       store,
++		memoryStore: memoryStore,
++		client:      client,
++		smFetcher:   smFetcher,
++		orchMaker:   orchMaker,
++		appConfig:   appConfig,
+ 	}
+ 	s.routes()
+ 	return s
+@@ -73,4 +75,10 @@
+ 	s.mux.Handle("/api/preset/chat", s.authMiddleware(s.handleChatPreset()))
+ 	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
+ 	s.mux.Handle("/api/preset/delete_draft", s.authMiddleware(s.handleDeleteDraftPreset()))
+-}
++
++	// Memory Rules Routes
++	s.mux.Handle("/api/memories", s.authMiddleware(s.handleGetMemories()))
++	s.mux.Handle("/api/memory/delete", s.authMiddleware(s.handleDeleteMemory()))
++	s.mux.Handle("/api/presets_list_view", s.authMiddleware(s.handlePresetsListView()))
++}
++

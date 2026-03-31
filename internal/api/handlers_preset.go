@@ -128,11 +128,11 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
 				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-					<button hx-get="/api/preset/copy_ui?id=%[3]s" hx-target="#main-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
-					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+					<button hx-get="/api/preset/copy_ui?id=%[3]s" hx-target="#library-editor-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
+					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#library-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
 				</div>
 				<div style="margin-top: 0.5rem;">
-					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
+					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#library-editor-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
 				</div>
 			</li>`, p.Name, p.UpdatedAt, p.ID))
 	}
@@ -185,7 +185,7 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 		w.Header().Set("HX-Trigger", "presetSaved")
 		
 		oobResponse := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			<div id="toast-container" hx-swap-oob="beforeend:body">
@@ -408,7 +408,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 	if p.Name == "Draft Preset" {
 		headerHtml = fmt.Sprintf(`
 			<div style="display: flex; gap: 0.5rem; align-items: center; width: 100%%; justify-content: space-between;">
-				<form hx-post="/api/preset/rename" hx-target="#main-workspace" style="display:flex; gap:0.5rem; margin:0; flex: 1; align-items: center;" autocomplete="off">
+				<form hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display:flex; gap:0.5rem; margin:0; flex: 1; align-items: center;" autocomplete="off">
 					<input type="hidden" name="id" value="%[1]s">
 					<input type="text" name="preset_name" placeholder="Enter custom name..." required style="flex: 1; min-width: 300px; padding: 0.75rem 1rem; background: rgba(15,23,42,0.8); border: 1px solid var(--accent); border-radius: 8px; font-size: 1.25rem; color: white; font-weight: 500; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
 					<button type="submit" style="width: auto; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; background: var(--success); border-radius: 8px; border: none; color: white; cursor: pointer; transition: opacity 0.2s;" onhover="this.style.opacity='0.9'">Finalize Save</button>
@@ -423,7 +423,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 					<h2 id="preset-title-%[2]s" style="font-size: 1.5rem; font-weight: 600; margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
 						%[1]s
 					</h2>
-					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
+					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
 						<input type="hidden" name="id" value="%[2]s">
 						<input type="text" name="preset_name" placeholder="Rename..." required style="flex: 1; min-width: 300px; padding: 0.5rem 1rem; font-size: 1.25rem; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
 						<button type="submit" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
@@ -448,10 +448,10 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		LegacyHTML map[string]string         `json:"legacy_html"`
 	}
 
-	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.Structured.Guitars) > 0 {
+	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.LegacyHTML) > 0 {
 		structured = combined.Structured
 		legacyMatrices = combined.LegacyHTML
-		if p.Name == "Draft Preset" && len(legacyMatrices) > 0 {
+		if p.Name == "Draft Preset" {
 			legacyMode = true
 		}
 	} else {
@@ -789,11 +789,28 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		}
 
 		if archResp.DSPMatrixUpdated {
-			payloadBytes, err := json.Marshal(archResp.StructuredPayload)
-			if err != nil {
-				log.Printf("Failed to marshal structured payload: %v", err)
+			if len(archResp.StructuredPayload.Guitars) > 0 {
+				payloadBytes, err := json.Marshal(archResp.StructuredPayload)
+				if err != nil {
+					log.Printf("Failed to marshal structured payload: %v", err)
+				} else {
+					p.Payload = string(payloadBytes)
+				}
+
+				// Auto-Capture Learned Rule
+				m := &storage.Memory{
+					Artist:     p.Name, // Topic context
+					Critique:   userMessage,
+					Action:     strings.Join(archResp.AgentImpact, "; "),
+					BasePreset: p.ID,
+				}
+				if err := s.memoryStore.Save(ctx, m); err != nil {
+					log.Printf("Failed to save learned rule: %v", err)
+				} else {
+					log.Printf("Successfully saved learned rule for %s", p.Name)
+				}
 			} else {
-				p.Payload = string(payloadBytes)
+				log.Printf("Warning: Agent returned empty StructuredPayload despite DSPMatrixUpdated=true. Skipping overwrite.")
 			}
 		}
 

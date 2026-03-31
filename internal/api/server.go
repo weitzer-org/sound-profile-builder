@@ -251,19 +251,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		// Reload the list to trigger the newly added Draft Preset display (optional, but good for UI consistency)
-		presets := cleanUpOldDrafts(ctx, s.store)
-		
-		// Return pure DOM swapping the MAIN workspace alongside updating the sidebar
-		finalDOM := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
-				%s
-			</div>
-			<div id="main-workspace" hx-swap-oob="true">
-				%s
-			</div>
-		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(draftPreset, false))
-
-		w.Write([]byte(finalDOM))
+		// Return the single draft workspace directly in the generator view
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(renderTweakingWorkspaceHTML(draftPreset, false)))
 	}
 }
