@@ -295,5 +295,59 @@ func TestHandleChatPreset(t *testing.T) {
 	if !strings.Contains(rrRunF.Body.String(), "Execution Error") {
 		t.Errorf("Expected Execution Error fail mode")
 	}
+}
 
+func TestHandleCopyPresetUI(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	// Missing ID
+	req, _ := http.NewRequest(http.MethodGet, "/api/preset/copy_ui", nil)
+	rr := httptest.NewRecorder()
+	s.handleCopyPresetUI().ServeHTTP(rr, req)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 for missing ID")
+	}
+
+	// Lookup error
+	reqLookup, _ := http.NewRequest(http.MethodGet, "/api/preset/copy_ui?id=missing", nil)
+	rrLookup := httptest.NewRecorder()
+	s.handleCopyPresetUI().ServeHTTP(rrLookup, reqLookup)
+	if !strings.Contains(rrLookup.Body.String(), "Lookup Error") {
+		t.Errorf("Expected Lookup Error DOM")
+	}
+
+	// Success
+	store.Save(context.Background(), &storage.Preset{ID: "exists_id", Name: "Name", Payload: "none"})
+	reqSuccess, _ := http.NewRequest(http.MethodGet, "/api/preset/copy_ui?id=exists_id", nil)
+	rrSuccess := httptest.NewRecorder()
+	s.handleCopyPresetUI().ServeHTTP(rrSuccess, reqSuccess)
+	if rrSuccess.Code != http.StatusOK {
+		t.Errorf("Expected 200 for valid ID")
+	}
+}
+
+func TestCleanUpOldDrafts(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+
+	// Store errors out
+	mockStorage.failList = true
+	res := cleanUpOldDrafts(context.Background(), store)
+	if len(res) != 0 {
+		t.Errorf("Expected empty result on store list fail")
+	}
+	mockStorage.failList = false
+
+	// Success limits
+	store.Save(context.Background(), &storage.Preset{ID: "1", Name: "Draft Preset", UpdatedAt: "2026-03-31T00:00:00Z"})
+	store.Save(context.Background(), &storage.Preset{ID: "2", Name: "Draft Preset", UpdatedAt: "2026-03-31T01:00:00Z"})
+	store.Save(context.Background(), &storage.Preset{ID: "3", Name: "Draft Preset", UpdatedAt: "2026-03-31T02:00:00Z"})
+	store.Save(context.Background(), &storage.Preset{ID: "4", Name: "Draft Preset", UpdatedAt: "2026-03-31T03:00:00Z"})
+
+	resOk := cleanUpOldDrafts(context.Background(), store)
+	if len(resOk) != 3 {
+		t.Errorf("Expected 3 drafts returned, got %d", len(resOk))
+	}
 }
