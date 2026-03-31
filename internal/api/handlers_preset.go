@@ -443,12 +443,28 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 	legacyMode := false
 	var legacyMatrices map[string]string
 
-	if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
-		if err2 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err2 == nil {
+	var combined struct {
+		Structured storage.StructuredPreset `json:"structured"`
+		LegacyHTML map[string]string         `json:"legacy_html"`
+	}
+
+	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.Structured.Guitars) > 0 {
+		structured = combined.Structured
+		legacyMatrices = combined.LegacyHTML
+		if p.Name == "Draft Preset" && len(legacyMatrices) > 0 {
 			legacyMode = true
+		}
+	} else {
+		// Fallback for isolated StructuredPreset (pure saved presets) or legacy string maps
+		if err2 := json.Unmarshal([]byte(p.Payload), &structured); err2 == nil {
+			// Found pure StructuredPreset
 		} else {
-			legacyMode = true
-			legacyMatrices = map[string]string{"Legacy Format": p.Payload}
+			if err3 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err3 == nil {
+				legacyMode = true
+			} else {
+				legacyMode = true
+				legacyMatrices = map[string]string{"Legacy Format": p.Payload}
+			}
 		}
 	}
 

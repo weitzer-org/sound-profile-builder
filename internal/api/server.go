@@ -189,9 +189,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		// Unmarshal the Architect's JSON block
 		var archResp struct {
-			BuilderStatement string                  `json:"builder_statement"`
+			BuilderStatement  string                  `json:"builder_statement"`
+			FinalHTMLPayload  map[string]string       `json:"final_html_payload"`
 			StructuredPayload storage.StructuredPreset `json:"structured_payload"`
-			AgentImpact      []string                `json:"agent_impact"`
+			AgentImpact       []string                `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
@@ -222,9 +223,14 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
-		payloadBytes, err := json.Marshal(archResp.StructuredPayload)
+		// Use a temporary map to store both structured and legacy html for the draft
+		combinedPayload := map[string]interface{}{
+			"structured": archResp.StructuredPayload,
+			"legacy_html": archResp.FinalHTMLPayload,
+		}
+		payloadBytes, err := json.Marshal(combinedPayload)
 		if err != nil {
-			log.Printf("Failed to marshal structured payload: %v", err)
+			log.Printf("Failed to marshal combined payload: %v", err)
 			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444;">Payload Serialization Error: %v</div>`, err)))
 			return
 		}

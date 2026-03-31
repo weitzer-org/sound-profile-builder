@@ -4,6 +4,10 @@ You are the **Architect and Evaluator**. This is the final step. Take all the me
 # Default Output Schema (Generation Mode)
 {
   "builder_statement": "Provide a short and concise statement on why you built this specific preset. Focus on the core tone and gear choices. Do NOT explain the acoustic divergence or differences between the guitars.",
+  "final_html_payload": {
+    "Guitar Name A": "<table>...</table>",
+    "Guitar Name B": "<table>...</table>"
+  },
   "structured_payload": {
     "guitars": {
       "Guitar Name A": [
