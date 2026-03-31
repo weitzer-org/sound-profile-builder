@@ -69,6 +69,8 @@ func (s *Server) routes() {
 	s.mux.Handle("/api/preset/view", s.authMiddleware(s.handleViewPreset()))
 	s.mux.Handle("/api/preset/chat", s.authMiddleware(s.handleChatPreset()))
 	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
+	s.mux.Handle("/api/preset/update_parameter", s.authMiddleware(s.handleUpdateParameter()))
+	s.mux.Handle("/api/preset/remove_block", s.authMiddleware(s.handleRemoveBlock()))
 	s.mux.Handle("/api/preset/delete_draft", s.authMiddleware(s.handleDeleteDraftPreset()))
 }
 
@@ -102,7 +104,15 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		if apiKey == "" {
 			s.apiKeyMu.Lock()
 			if s.apiKeyCache == "" {
-				key, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+				projectID := s.appConfig.ProjectID
+				if projectID == "" {
+					projectID = "710019748844" // Default fallback
+				}
+				secretName := os.Getenv("GEMINI_API_KEY_NAME")
+				if secretName == "" {
+					secretName = "gsr-gemini-api-key" // Default fallback
+				}
+				key, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
 				if err != nil {
 					s.apiKeyMu.Unlock()
 					log.Printf("Failed to fetch API key: %v", err)
@@ -170,9 +180,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		// Unmarshal the Architect's JSON block
 		var archResp struct {
-			BuilderStatement string            `json:"builder_statement"`
-			FinalHtmlPayload map[string]string `json:"final_html_payload"`
-			AgentImpact      []string          `json:"agent_impact"`
+			BuilderStatement string                  `json:"builder_statement"`
+			StructuredPayload storage.StructuredPreset `json:"structured_payload"`
+			AgentImpact      []string                `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
@@ -203,9 +213,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
-		payloadBytes, err := json.Marshal(archResp.FinalHtmlPayload)
+		payloadBytes, err := json.Marshal(archResp.StructuredPayload)
 		if err != nil {
-			log.Printf("Failed to marshal final html payload map: %v", err)
+			log.Printf("Failed to marshal structured payload: %v", err)
 			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444;">Payload Serialization Error: %v</div>`, err)))
 			return
 		}

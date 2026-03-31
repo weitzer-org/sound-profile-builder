@@ -438,46 +438,126 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		`, html.EscapeString(p.Name), p.ID)
 	}
 
-	// Parse payload into map of guitar variations
-	var matrices map[string]string
-	if err := json.Unmarshal([]byte(p.Payload), &matrices); err != nil {
-		// Fallback for older presets that are just plain HTML strings
-		matrices = map[string]string{"Legacy Format": p.Payload}
+	// Parse payload into structured preset or fallback legacy
+	var structured storage.StructuredPreset
+	legacyMode := false
+	var legacyMatrices map[string]string
+
+	if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
+		if err2 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err2 == nil {
+			legacyMode = true
+		} else {
+			legacyMode = true
+			legacyMatrices = map[string]string{"Legacy Format": p.Payload}
+		}
 	}
 
 	tabsHtml := `<div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">`
 	contentHtml := `<div class="tabs-content">`
-	
-	first := true
-	for guitarName, matrixHTML := range matrices {
-		activeClass := ""
-		displayStyle := "display: none;"
-		if first {
-			activeClass = "active"
-			displayStyle = "display: block;"
-			first = false
-		}
-		
-		safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
-		safeId = strings.ReplaceAll(safeId, "/", "")
 
-		tabsHtml += fmt.Sprintf(`
-			<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
-		`, activeClass, safeId, html.EscapeString(guitarName))
-		
-		contentHtml += fmt.Sprintf(`
-			<div id="tab-%s" class="tab-pane" style="%s">
-				%s
-			</div>
-		`, safeId, displayStyle, matrixHTML)
+	first := true
+
+	if legacyMode {
+		for guitarName, matrixHTML := range legacyMatrices {
+			activeClass := ""
+			displayStyle := "display: none;"
+			if first {
+				activeClass = "active"
+				displayStyle = "display: block;"
+				first = false
+			}
+
+			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
+			safeId = strings.ReplaceAll(safeId, "/", "")
+
+			tabsHtml += fmt.Sprintf(`
+				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
+			`, activeClass, safeId, html.EscapeString(guitarName))
+
+			contentHtml += fmt.Sprintf(`
+				<div id="tab-%s" class="tab-pane" style="%s">
+					%s
+				</div>
+			`, safeId, displayStyle, matrixHTML)
+		}
+	} else {
+		for guitarName, blocks := range structured.Guitars {
+			activeClass := ""
+			displayStyle := "display: none;"
+			if first {
+				activeClass = "active"
+				displayStyle = "display: block;"
+				first = false
+			}
+
+			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
+			safeId = strings.ReplaceAll(safeId, "/", "")
+
+			tabsHtml += fmt.Sprintf(`
+				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
+			`, activeClass, safeId, html.EscapeString(guitarName))
+
+			var blocksHtml strings.Builder
+			for _, block := range blocks {
+				blocksHtml.WriteString(fmt.Sprintf(`
+					<div class="effect-block" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+							<h3 style="margin: 0; font-size: 1.1rem; color: white;">%[1]s: <span style="color: var(--accent);">%[2]s</span></h3>
+							<button hx-post="/api/preset/remove_block" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s"}' hx-target="#library-editor-workspace" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; background: #ef4444; border: none; border-radius: 4px; color: white; cursor: pointer;">Remove</button>
+						</div>
+						<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
+				`, html.EscapeString(block.Type), html.EscapeString(block.Model), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+
+				for _, param := range block.Parameters {
+					safeParamId := strings.ReplaceAll(strings.ToLower(param.Name), " ", "-")
+					if param.Type == "slider" {
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
+									<span>%[1]s</span>
+									<span id="val-%[2]s-%[3]s">%[4]s%[5]s</span>
+								</div>
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[6]s", "guitar":"%[7]s", "block_id":"%[8]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value + '%[5]s'">
+							</div>
+						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, param.Unit, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					} else if param.Type == "toggle" {
+						checked := ""
+						if param.Value == "on" || param.Value == "true" {
+							checked = "checked"
+						}
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-sub); margin-top: 1.5rem;">
+								<input type="checkbox" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' %[2]s style="cursor: pointer;">
+								<span>%[1]s</span>
+							</div>
+						`, html.EscapeString(param.Name), checked, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					} else {
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
+								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
+							</div>
+						`, html.EscapeString(param.Name), html.EscapeString(param.Value), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					}
+				}
+				blocksHtml.WriteString(`</div></div>`)
+			}
+
+			contentHtml += fmt.Sprintf(`
+				<div id="tab-%s" class="tab-pane" style="%s">
+					%s
+				</div>
+			`, safeId, displayStyle, blocksHtml.String())
+		}
 	}
-	
+
 	tabsHtml += `</div>`
 	contentHtml += `</div>`
 	tabScript := `
 		<script>
 			function switchTab(btn, paneId) {
-				const container = btn.closest('.card');
+				const container = btn.closest('.workspace-wrapper') || btn.closest('.card');
+				if (!container) return;
 				container.querySelectorAll('.tab-btn').forEach(b => {
 					b.classList.remove('active');
 					b.style.color = 'var(--text-sub)';
@@ -488,13 +568,9 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 				btn.classList.add('active');
 				btn.style.color = 'var(--text-main)';
 				btn.style.borderColor = 'var(--accent)';
-				container.querySelector('#' + paneId).style.display = 'block';
+				const pane = container.querySelector('#' + paneId);
+				if (pane) pane.style.display = 'block';
 			}
-			// Init active tab
-			document.querySelectorAll('.tab-btn.active').forEach(b => {
-				b.style.color = 'var(--text-main)';
-				b.style.borderColor = 'var(--accent)';
-			});
 		</script>
 	`
 	matrixContainerHtml := tabsHtml + contentHtml + tabScript
@@ -654,11 +730,11 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		jsonResponse = strings.TrimSpace(jsonResponse)
 
 		var archResp struct {
-			ConversationalResponse string            `json:"conversational_response"`
-			BuilderStatement       string            `json:"builder_statement"`
-			DSPMatrixUpdated       bool              `json:"dsp_matrix_updated"`
-			FinalHTMLPayload       map[string]string `json:"final_html_payload"`
-			AgentImpact            []string          `json:"agent_impact"`
+			ConversationalResponse string                  `json:"conversational_response"`
+			BuilderStatement       string                  `json:"builder_statement"`
+			DSPMatrixUpdated       bool                  `json:"dsp_matrix_updated"`
+			StructuredPayload       storage.StructuredPreset `json:"structured_payload"`
+			AgentImpact            []string                `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
@@ -686,9 +762,9 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		}
 
 		if archResp.DSPMatrixUpdated {
-			payloadBytes, err := json.Marshal(archResp.FinalHTMLPayload)
+			payloadBytes, err := json.Marshal(archResp.StructuredPayload)
 			if err != nil {
-				log.Printf("Failed to marshal final html payload map: %v", err)
+				log.Printf("Failed to marshal structured payload: %v", err)
 			} else {
 				p.Payload = string(payloadBytes)
 			}
@@ -703,3 +779,132 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		w.Write([]byte(finalDOM))
 	}
 }
+
+func (s *Server) handleUpdateParameter() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		presetID := r.FormValue("preset_id")
+		guitar := r.FormValue("guitar")
+		blockID := r.FormValue("block_id")
+		paramName := r.FormValue("param_name")
+		value := r.FormValue("value")
+
+		if presetID == "" || guitar == "" || blockID == "" || paramName == "" {
+			http.Error(w, "Missing required parameters", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithoutCancel(r.Context())
+
+		p, err := s.store.Get(ctx, presetID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Preset not found: %v", err), http.StatusNotFound)
+			return
+		}
+
+		var structured storage.StructuredPreset
+		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Update the parameter
+		updated := false
+		if blocks, ok := structured.Guitars[guitar]; ok {
+			for i, block := range blocks {
+				if block.ID == blockID {
+					for j, param := range block.Parameters {
+						if param.Name == paramName {
+							structured.Guitars[guitar][i].Parameters[j].Value = value
+							updated = true
+							break
+						}
+					}
+				}
+			}
+		}
+
+		if !updated {
+			http.Error(w, "Parameter not found", http.StatusNotFound)
+			return
+		}
+
+		// Marshal back
+		payloadBytes, err := json.Marshal(structured)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+		p.Payload = string(payloadBytes)
+
+		// Save
+		if err := s.store.Save(ctx, p); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (s *Server) handleRemoveBlock() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		presetID := r.FormValue("preset_id")
+		guitar := r.FormValue("guitar")
+		blockID := r.FormValue("block_id")
+
+		if presetID == "" || guitar == "" || blockID == "" {
+			http.Error(w, "Missing required parameters", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithoutCancel(r.Context())
+
+		p, err := s.store.Get(ctx, presetID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Preset not found: %v", err), http.StatusNotFound)
+			return
+		}
+
+		var structured storage.StructuredPreset
+		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if blocks, ok := structured.Guitars[guitar]; ok {
+			var newBlocks []storage.EffectBlock
+			for _, b := range blocks {
+				if b.ID != blockID {
+					newBlocks = append(newBlocks, b)
+				}
+			}
+			structured.Guitars[guitar] = newBlocks
+		}
+
+		payloadBytes, err := json.Marshal(structured)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+		p.Payload = string(payloadBytes)
+
+		if err := s.store.Save(ctx, p); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false)))
+	}
+}
+
