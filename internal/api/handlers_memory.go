@@ -34,9 +34,12 @@ func (s *Server) handleGetMemories() http.HandlerFunc {
 						<div>
 							<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: var(--text-main);">%[1]s</h3>
 							<p style="margin: 0 0 0.25rem 0; font-size: 0.9rem; color: var(--text-sub);">Critique: %[2]s</p>
-							<p style="margin: 0; font-size: 0.9rem; color: var(--success);">Action: %[3]s</p>
+							<details style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--success);">
+								<summary style="cursor: pointer; color: var(--text-main); font-weight: 500;">View Applied Actions</summary>
+								<div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; line-height: 1.4;">%[3]s</div>
+							</details>
 						</div>
-						<button hx-delete="/api/memory/delete?id=%[4]s" hx-target="#sidebar-content" style="width: auto; padding: 0.4rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; cursor: pointer;">Delete</button>
+						<button hx-delete="/api/memory/delete?id=%[4]s" hx-target="#rules-list-container" style="width: auto; padding: 0.4rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; cursor: pointer;">Delete</button>
 					</div>
 				</li>`, html.EscapeString(m.Artist), html.EscapeString(m.Critique), html.EscapeString(m.Action), m.ID)
 		}
@@ -86,7 +89,7 @@ func (s *Server) handleDeleteMemory() http.HandlerFunc {
 							<p style="margin: 0 0 0.25rem 0; font-size: 0.9rem; color: var(--text-sub);">Critique: %[2]s</p>
 							<p style="margin: 0; font-size: 0.9rem; color: var(--success);">Action: %[3]s</p>
 						</div>
-						<button hx-delete="/api/memory/delete?id=%[4]s" hx-target="#sidebar-content" style="width: auto; padding: 0.4rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; cursor: pointer;">Delete</button>
+						<button hx-delete="/api/memory/delete?id=%[4]s" hx-target="#rules-list-container" style="width: auto; padding: 0.4rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; cursor: pointer;">Delete</button>
 					</div>
 				</li>`, html.EscapeString(m.Artist), html.EscapeString(m.Critique), html.EscapeString(m.Action), m.ID)
 		}

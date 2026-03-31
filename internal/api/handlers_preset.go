@@ -117,7 +117,7 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 		if !showAll && visibleCount >= 10 {
 			html.WriteString(`
 				<li style="margin-top: 1rem; text-align: center;">
-					<button hx-get="/api/presets?show_all=true" hx-target="#preset-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
+					<button hx-get="/api/presets?show_all=true" hx-target="#library-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
 				</li>`)
 			break
 		}
@@ -294,7 +294,7 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 		}
 
 		finalDOM := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			%s
@@ -364,7 +364,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 		// Reload the list AND replace the workspace header simultaneously
 		presets, _ := s.store.List(ctx)
 		oobResponse := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			<div id="toast-container" hx-swap-oob="beforeend:body">
