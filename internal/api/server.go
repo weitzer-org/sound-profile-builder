@@ -102,7 +102,18 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		if apiKey == "" {
 			s.apiKeyMu.Lock()
 			if s.apiKeyCache == "" {
-				key, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+				var projectID string
+				if s.appConfig != nil {
+					projectID = s.appConfig.ProjectID
+				}
+				if projectID == "" {
+					projectID = "710019748844" // Default fallback
+				}
+				secretName := os.Getenv("GEMINI_API_KEY_NAME")
+				if secretName == "" {
+					secretName = "gsr-gemini-api-key" // Default fallback
+				}
+				key, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
 				if err != nil {
 					s.apiKeyMu.Unlock()
 					log.Printf("Failed to fetch API key: %v", err)
