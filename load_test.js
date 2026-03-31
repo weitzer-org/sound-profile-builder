@@ -24,7 +24,7 @@ export default function () {
     // 1. Authenticate the Virtual User
     // Note: Cookies are automatically managed per-VU by k6 
     const loginRes = http.post(`${BASE_URL}/login`, {
-        password: 'bluesmusic'
+        password: __ENV.APP_PASSWORD || 'bluesmusic'
     });
     
     check(loginRes, {

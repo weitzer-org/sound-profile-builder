@@ -15,4 +15,4 @@
 - **Track Adjustments**: Track user adjustments over time to dynamically inform future preset generation and tweaks.
 - **Capture Toggle**: Add a UI toggle to allow or restrict the multi-agent pipeline from sourcing Factory Captures during preset generation.
 - **Paid Plugin Toggle**: Add a UI configuration to selectively enable/disable routing through Paid Plugin architectures (e.g., Nameless, Cory Wong, Plini).
-- **Cyclic Agent Deliberation**: Explore transitioning the Orchestrator from a linear DAG to a cyclic feedback graph, allowing the Librarian to pass a "Gear Not Found" exception back to the Tone Historian iteratively to select the best historically accurate fallback amp.
+- **YouTube Tone Analysis Agent**: Research integrating an agent to search for YouTube videos representing the prompt and analyze the tone from the video audio/context to inform preset generation.

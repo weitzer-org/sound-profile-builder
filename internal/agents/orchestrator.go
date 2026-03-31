@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -82,7 +83,13 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	logToGCS := func(agentNum string, result string) {
 		if gcs != nil {
 			go func(aNum, res string) {
-				err := gcs.WriteFile(ctx, "weitzer-sound-builder", fmt.Sprintf("logs/%s/%s.json", execID, aNum), []byte(res))
+				// Detach context to ensure logging finishes even if main pipeline is cancelled
+				bgCtx := context.WithoutCancel(ctx)
+				bucket := os.Getenv("GCS_BUCKET_NAME")
+				if bucket == "" {
+					bucket = "weitzer-sound-builder" // Default fallback
+				}
+				err := gcs.WriteFile(bgCtx, bucket, fmt.Sprintf("logs/%s/%s.json", execID, aNum), []byte(res))
 				if err != nil {
 					log.Printf("Failed to log %s to GCS: %v", aNum, err)
 				}

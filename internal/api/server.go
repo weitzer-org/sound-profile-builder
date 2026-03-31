@@ -19,6 +19,7 @@ import (
 type Server struct {
 	mux         *http.ServeMux
 	store       *storage.PresetStore
+	memoryStore *storage.MemoryStore
 	client      storage.Client
 	smFetcher   storage.SecretFetcher
 	orchMaker   func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
@@ -28,14 +29,15 @@ type Server struct {
 }
 
 // NewServer initializes a new Server and its routes.
-func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
+func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
 	s := &Server{
-		mux:       http.NewServeMux(),
-		store:     store,
-		client:    client,
-		smFetcher: smFetcher,
-		orchMaker: orchMaker,
-		appConfig: appConfig,
+		mux:         http.NewServeMux(),
+		store:       store,
+		memoryStore: memoryStore,
+		client:      client,
+		smFetcher:   smFetcher,
+		orchMaker:   orchMaker,
+		appConfig:   appConfig,
 	}
 	s.routes()
 	return s
@@ -72,6 +74,10 @@ func (s *Server) routes() {
 	s.mux.Handle("/api/preset/update_parameter", s.authMiddleware(s.handleUpdateParameter()))
 	s.mux.Handle("/api/preset/remove_block", s.authMiddleware(s.handleRemoveBlock()))
 	s.mux.Handle("/api/preset/delete_draft", s.authMiddleware(s.handleDeleteDraftPreset()))
+
+	// Memory Rules Routes
+	s.mux.Handle("/api/memories", s.authMiddleware(s.handleGetMemories()))
+	s.mux.Handle("/api/memory/delete", s.authMiddleware(s.handleDeleteMemory()))
 }
 
 // Start begins listening on the specified address.
@@ -104,7 +110,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		if apiKey == "" {
 			s.apiKeyMu.Lock()
 			if s.apiKeyCache == "" {
-				projectID := s.appConfig.ProjectID
+				var projectID string
+				if s.appConfig != nil {
+					projectID = s.appConfig.ProjectID
+				}
 				if projectID == "" {
 					projectID = "710019748844" // Default fallback
 				}
