@@ -47,7 +47,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	}{
 		{"US Twin Vibrato", "US Twin Vibrato"},
 		{"us twin vibrato", "US Twin Vibrato"}, // case insensitive match
-		{"US Twin V", "US Prince"},             // snaps to US Prince because distance is 4
+		{"US Twin V", "US Twin V"},             // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
 		{"UK C30 TopBoost", "UK C30 TopBoost"},
 		{"Bypassed", "Bypassed"},
 		{"-3.5dB", "-3.5dB"},

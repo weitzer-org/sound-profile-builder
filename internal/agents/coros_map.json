@@ -794,10 +794,9 @@
     "confidence_score": 1.0
   },
   "Generic Magnetic Tape Echo": {
-    "coros_equivalent": "Love DLX",
+    "coros_equivalent": "Circular Delay",
     "type": "delay",
-    "confidence_score": 1.0,
-    "is_capture": true
+    "confidence_score": 1.0
   },
   "Generic Digital Rack Delay": {
     "coros_equivalent": "Circular Delay",
@@ -865,7 +864,7 @@
     "confidence_score": 1.0
   },
   "Moog Moogerfooger MF-101": {
-    "coros_equivalent": "BDDI",
+    "coros_equivalent": "Foog",
     "type": "filter",
     "confidence_score": 1.0
   },
@@ -2220,17 +2219,17 @@
     "is_capture": true
   },
   "Cory Wong Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "412 CA Stand OS A V30 '01",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Cory Wong Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "212 CA Recto V30 '98",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Cory Wong Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "412 CA Stand OS A V30 '01",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -2256,7 +2255,7 @@
     "confidence_score": 1.0
   },
   "Cory Wong The Amp Snob": {
-    "coros_equivalent": "Crying Clyde Wah",
+    "coros_equivalent": "US Twin Vibrato",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
