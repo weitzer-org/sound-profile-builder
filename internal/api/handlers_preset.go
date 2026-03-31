@@ -16,11 +16,41 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
-// bucketName is the default bucket used for everything right now
 const presetBucketName = "weitzer-sound-builder"
 
+// cleanUpOldDrafts returns the current presets but permanently deletes any "Draft Preset" entries beyond the 3 newest.
+func cleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storage.Preset {
+	presets, err := store.List(ctx)
+	if err != nil {
+		return presets
+	}
+
+	sort.Slice(presets, func(i, j int) bool {
+		ti, errI := time.Parse(time.RFC3339, presets[i].UpdatedAt)
+		tj, errJ := time.Parse(time.RFC3339, presets[j].UpdatedAt)
+		if errI != nil || errJ != nil {
+			return presets[i].Name < presets[j].Name
+		}
+		return ti.After(tj)
+	})
+
+	draftCount := 0
+	var finalPresets []*storage.Preset
+	for _, p := range presets {
+		if p.Name == "Draft Preset" {
+			draftCount++
+			if draftCount > 3 {
+				store.Delete(ctx, p.ID)
+				continue
+			}
+		}
+		finalPresets = append(finalPresets, p)
+	}
+	return finalPresets
+}
+
 // renderPresetList returning HTML fragment for HTMX
-func renderPresetList(presets []*storage.Preset) string {
+func renderPresetList(presets []*storage.Preset, showAll bool) string {
 	if len(presets) == 0 {
 		return `<p class="subtitle" style="font-size:0.9rem;">No presets saved yet.</p>`
 	}
@@ -34,8 +64,27 @@ func renderPresetList(presets []*storage.Preset) string {
 		return ti.After(tj)
 	})
 
+	draftCount := 0
+	visibleCount := 0
+
 	html := `<ul style="list-style-type: none; padding: 0;">`
 	for _, p := range presets {
+		if p.Name == "Draft Preset" {
+			draftCount++
+			if !showAll && draftCount > 3 {
+				continue
+			}
+		}
+
+		if !showAll && visibleCount >= 10 {
+			html += `
+				<li style="margin-top: 1rem; text-align: center;">
+					<button hx-get="/api/presets?show_all=true" hx-target="#preset-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
+				</li>`
+			break
+		}
+		visibleCount++
+
 		html += fmt.Sprintf(`
 			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
@@ -61,8 +110,9 @@ func (s *Server) handleGetPresets() http.HandlerFunc {
 			return
 		}
 
+		showAll := r.URL.Query().Get("show_all") == "true"
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderPresetList(presets)))
+		w.Write([]byte(renderPresetList(presets, showAll)))
 	}
 }
 
@@ -103,7 +153,7 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 			<div id="toast-container" hx-swap-oob="beforeend:body">
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
-		`, renderPresetList(presets), name)
+		`, renderPresetList(presets, false), name)
 		
 		w.Write([]byte(oobResponse))
 	}
@@ -131,7 +181,7 @@ func (s *Server) handleDeletePreset() http.HandlerFunc {
 		// Reload the list
 		presets, _ := s.store.List(r.Context())
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderPresetList(presets)))
+		w.Write([]byte(renderPresetList(presets, false)))
 	}
 }
 
@@ -210,7 +260,7 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 				%s
 			</div>
 			%s
-		`, renderPresetList(presets), renderTweakingWorkspaceHTML(pCopy, false))
+		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false))
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
@@ -283,7 +333,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets), name, renderTweakingWorkspaceHTML(p, false))
+		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false))
 		
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))

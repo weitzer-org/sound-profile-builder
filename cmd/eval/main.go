@@ -129,7 +129,7 @@ func main() {
 	
 	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
 	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
-	orch, err := agents.NewOrchestrator(ctx, apiKey)
+	orch, err := agents.NewOrchestrator(ctx, apiKey, nil)
 	if err != nil {
 		log.Fatalf("Failed to init orchestrator: %v", err)
 	}

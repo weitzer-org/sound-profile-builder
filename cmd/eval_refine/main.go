@@ -33,7 +33,7 @@ func main() {
 		log.Fatalf("Failed to fetch API key: %v", err)
 	}
 
-	orch, err := agents.NewOrchestrator(ctx, apiKey)
+	orch, err := agents.NewOrchestrator(ctx, apiKey, nil)
 	if err != nil {
 		log.Fatalf("Failed to init orchestrator: %v", err)
 	}

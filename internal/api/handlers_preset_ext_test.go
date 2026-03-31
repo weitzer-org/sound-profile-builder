@@ -53,7 +53,7 @@ func (m *mockErrorClient) DeleteFile(ctx context.Context, bucket, object string)
 func TestHandleGetPresets_Errors(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient(), failList: true}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	req, _ := http.NewRequest(http.MethodGet, "/api/presets", nil)
 	rr := httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestHandleGetPresets_Errors(t *testing.T) {
 func TestHandleSavePreset_Errors(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient(), failWrite: true}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	// Form parse error
 	reqParse, _ := http.NewRequest(http.MethodPost, "/api/preset/save", strings.NewReader("%%%"))
@@ -94,7 +94,7 @@ func TestHandleSavePreset_Errors(t *testing.T) {
 func TestHandleDeletePreset_Errors(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	// Save dummy
 	store.Save(context.Background(), &storage.Preset{ID: "testing_id", Name: "name", Payload: "none"})
@@ -126,7 +126,7 @@ func TestHandleDeletePreset_Errors(t *testing.T) {
 func TestHandleCopyPreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	formData := url.Values{}
 	formData.Set("id", "123")
@@ -169,7 +169,7 @@ func TestHandleCopyPreset(t *testing.T) {
 func TestHandleViewPreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	// Missing id
 	reqMissing, _ := http.NewRequest(http.MethodGet, "/api/preset/view", nil)
@@ -203,7 +203,7 @@ func TestHandleChatPreset(t *testing.T) {
 	orchMaker := func(ctx context.Context, key string) (agents.OrchestratorService, error) {
 		return &mockOrchestrator{}, nil
 	}
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, orchMaker)
+	s := NewServer(store, mockStorage, &mockSecretFetcher{}, orchMaker, nil)
 
 	formData := url.Values{}
 	formData.Set("id", "123")

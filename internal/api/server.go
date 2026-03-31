@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
@@ -16,21 +17,25 @@ import (
 
 // Server holds the dependencies for our HTTP server.
 type Server struct {
-	mux        *http.ServeMux
-	store      *storage.PresetStore
-	client     storage.Client
-	smFetcher  storage.SecretFetcher
-	orchMaker  func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
+	mux         *http.ServeMux
+	store       *storage.PresetStore
+	client      storage.Client
+	smFetcher   storage.SecretFetcher
+	orchMaker   func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
+	appConfig   *config.AppConfig
+	apiKeyCache string
+	apiKeyMu    sync.RWMutex
 }
 
 // NewServer initializes a new Server and its routes.
-func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)) *Server {
+func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
 	s := &Server{
 		mux:       http.NewServeMux(),
 		store:     store,
 		client:    client,
 		smFetcher: smFetcher,
 		orchMaker: orchMaker,
+		appConfig: appConfig,
 	}
 	s.routes()
 	return s
@@ -89,12 +94,25 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		ctx := context.WithoutCancel(r.Context())
 
-		// 1. Explicitly fetch the exact Gemini API Key from GCP Secret Manager
-		apiKey, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
-		if err != nil {
-			log.Printf("Failed to fetch API key: %v", err)
-			http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
-			return
+		// 1. Fetch from cache or explicitly fetch the exact Gemini API Key from GCP Secret Manager
+		s.apiKeyMu.RLock()
+		apiKey := s.apiKeyCache
+		s.apiKeyMu.RUnlock()
+
+		if apiKey == "" {
+			s.apiKeyMu.Lock()
+			if s.apiKeyCache == "" {
+				key, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+				if err != nil {
+					s.apiKeyMu.Unlock()
+					log.Printf("Failed to fetch API key: %v", err)
+					http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
+					return
+				}
+				s.apiKeyCache = key
+			}
+			apiKey = s.apiKeyCache
+			s.apiKeyMu.Unlock()
 		}
 
 		// 2. Initialize the Orchestrator with the fetched API Key
@@ -117,10 +135,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 
-		// Load config file globally
-		cfg, err := config.LoadConfig("config.json")
-		if err != nil {
-			log.Printf("Warning: Could not load config.json, using defaults: %v", err)
+		// Use globally loaded config
+		cfg := s.appConfig
+		if cfg == nil {
+			log.Printf("Warning: Global config missing, using defaults")
 			cfg = &config.AppConfig{SingleAmpMode: false, AllowCloudCaptures: true}
 		}
 
@@ -209,7 +227,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		// Reload the list to trigger the newly added Draft Preset display (optional, but good for UI consistency)
-		presets, _ := s.store.List(ctx)
+		presets := cleanUpOldDrafts(ctx, s.store)
 		
 		// Return pure DOM swapping the MAIN workspace alongside updating the sidebar
 		finalDOM := fmt.Sprintf(`
@@ -219,7 +237,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			<div id="main-workspace" hx-swap-oob="true">
 				%s
 			</div>
-		`, renderPresetList(presets), renderTweakingWorkspaceHTML(draftPreset, false))
+		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(draftPreset, false))
 
 		w.Write([]byte(finalDOM))
 	}

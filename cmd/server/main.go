@@ -58,11 +58,11 @@ func main() {
 
 	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
-		return agents.NewOrchestrator(ic, key)
+		return agents.NewOrchestrator(ic, key, gcsClient)
 	}
 
 	// Initialize Server
-	server := api.NewServer(store, gcsClient, smFetcher, orchMaker)
+	server := api.NewServer(store, gcsClient, smFetcher, orchMaker, cfg)
 
 	port := os.Getenv("PORT")
 	if port == "" {

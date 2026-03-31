@@ -42,10 +42,11 @@ type OrchestratorService interface {
 type Orchestrator struct {
 	client *genai.Client
 	Usage  *TokenUsage
+	gcs    storage.Client
 }
 
 // NewOrchestrator initializes the Gemini ADK client
-func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOption) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...option.ClientOption) (*Orchestrator, error) {
 	allOpts := append([]option.ClientOption{option.WithAPIKey(apiKey)}, opts...)
 	client, err := genai.NewClient(ctx, allOpts...)
 	if err != nil {
@@ -56,7 +57,7 @@ func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOp
 		ModelsUsed: make(map[string]int),
 	}
 
-	return &Orchestrator{client: client, Usage: usage}, nil
+	return &Orchestrator{client: client, Usage: usage, gcs: gcs}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
@@ -76,19 +77,16 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())
-	gcs, err := storage.NewGCSClient(ctx)
-	if err != nil {
-		log.Printf("Warning: failed to init GCS client for logging: %v", err)
-	} else {
-		defer gcs.Close()
-	}
+	gcs := o.gcs
 
 	logToGCS := func(agentNum string, result string) {
 		if gcs != nil {
-			err := gcs.WriteFile(ctx, "weitzer-sound-builder", fmt.Sprintf("logs/%s/%s.json", execID, agentNum), []byte(result))
-			if err != nil {
-				log.Printf("Failed to log %s to GCS: %v", agentNum, err)
-			}
+			go func(aNum, res string) {
+				err := gcs.WriteFile(ctx, "weitzer-sound-builder", fmt.Sprintf("logs/%s/%s.json", execID, aNum), []byte(res))
+				if err != nil {
+					log.Printf("Failed to log %s to GCS: %v", aNum, err)
+				}
+			}(agentNum, result)
 		}
 	}
 
@@ -130,11 +128,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	// Read embedded dictionary for Agent 4
 	dictJSON := string(embeddedCorosMap)
+	ampMenu := GetCategorizedAmplifiers()
 
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian
 	sysPrompt4, _ := LoadPrompt("4_coros_librarian")
-	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, constraints)
+	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
 	librarianResult, err4 := o.RunAgent(ctx, "CorOS Librarian", context4)
 	if err4 != nil {
 		return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
@@ -234,6 +233,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	if err12 != nil {
 		return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
 	}
+	
+	validBlocks := GetValidNativeBlocks()
+	if len(validBlocks) > 0 {
+		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
+	}
+	
 	logToGCS("12_architect", finalResult)
 
 	return finalResult, o.Usage, nil
@@ -305,6 +310,9 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
+
+CRITICAL REFINE INSTRUCTION: If your refinement includes swapping a piece of gear (e.g. changing the Amplifier, Cabinet, or an Effect), you MUST meticulously update the actual "Type: [Block Name]" text in the first column of the HTML table. Do NOT just update the Rationale and leave the old block name in the table!
+
 You MUST output the following exact JSON schema:
 
 {
@@ -334,6 +342,11 @@ EXISTING HTML PAYLOAD:
 	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
+	}
+
+	validBlocks := GetValidNativeBlocks()
+	if len(validBlocks) > 0 {
+		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
 	}
 
 	return finalResult, o.Usage, nil

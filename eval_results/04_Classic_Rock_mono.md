@@ -1,92 +1,68 @@
-**Target Identified:** Classic 70s Rock Crunch (Warm & Punchy)
-**QC Hardware Verified:** CorOS Native Models selected. 
-**Speaker Profile Target:** QSC CP12 (Active FRFR). High-frequency roll-offs applied to prevent digital harshness through PA tweeters.
+Greetings. I am **QC-2**, your Quad Cortex Systems Engineer. 
 
-To accurately capture the non-master volume behavior of a vintage Marshall Plexi, we will use the **"Brit Plexi 50 Jumped"** model. Because this model lacks a master volume, **do not look for one**. We will drive the *Volume Normal* and *Volume High Treble* parameters for tone/saturation, and strictly use the Amp Block *Output Level* to control your actual room loudness (SPL) through your QSC CP12.
+To achieve a "warm and punchy" 70s rock crunch, we must rely heavily on physics and proper gain staging. The quintessential 70s Marshall is a 100-watt Plexi Super Lead. In the CorOS, we will use the **"Brit Plexi 100 Jumped"**. 
 
-As requested, here are the completely distinct gain-staging protocols and configurations for both a Telecaster and an ES-339.
+**CRITICAL PLEXI PROTOCOL:** The original Plexi circuit—and therefore our QC model—**does not have a Master Volume**. The "Vol Normal" and "Vol Bright" act as your drive/crunch controls. If you raise these to get more distortion, the amp will get exponentially louder. **You must use the Lane Output Level (far right circle on the grid) to control your actual room/speaker volume.** 
 
----
-
-### GUITAR 1: Fender Telecaster Single Coil (Row 1 / Scenes A-D)
-**Pickup Compensation Strategy:** Vintage single coils lack the low-mid push to naturally overdrive a Plexi's input stage. We must increase the Amp Block's *Volume Normal* to add girth to the bridge pickup, and utilize the Parametric-8 EQ to add physical weight (200Hz) while taming the aggressive pick attack (5kHz LPF) typical of a Telecaster.
-
-* **Scene A:** Rhythm (Crunch, -1.5dB output relative to Lead)
-* **Scene B:** Lead (Chief OD engaged, +1.5dB output, Mid-boosted)
-* **Scene C:** Dry/Comping (Delay/Reverb Bypassed)
-* **Scene D:** Ambient/FX (Higher Delay/Reverb Mix)
-
-**Table A: Telecaster Signal Chain**
-*(Right-Click > Assign to Scenes A-D)*
-
-| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
-| :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input (Circle 1) | Thresh: -55dB | Thresh: -55dB | Standard single-coil noise floor suppression. |
-| **Pre-EQ** | Parametric-8 | Band 1 (Low Shelf): +3.5dB @ 200Hz | Band 1: +3.5dB @ 200Hz. Band 4: +2.0dB @ 800Hz | Simulates humbucker body (200Hz) and boosts midrange for lead projection. LPF at 5000Hz tames Tele ice-pick. |
-| **Pre-FX** | Chief OD | [Bypassed] | Drive: 2.0, Tone: 5.5, Level: 7.5 | Pushes the tube grid for lead saturation without altering the Plexi voicing. |
-| **Amp** | Brit Plexi 50 Jumped | Vol Norm: 5.0, Vol High Treb: 5.5, Bass: 3.5, Mid: 5.5, Treb: 5.0, Output Level: 0.0dB | Vol Norm: 5.0, Vol High Treb: 5.5, Bass: 3.5, Mid: 5.5, Treb: 5.0, Output Level: +1.5dB | Normal Vol is pushed to 5.0 to compensate for single-coil thinness. Output Level drives the SPL jump. |
-| **Cab** | 412 Brit 1960TV | Mic A (Dyn 57): Pos 1.0, Dist 1.0". Mic B (Rib 121): Pos 1.5, Dist 2.0" | *Same as Rhythm* | Greenback speakers. Ribbon mic blended at -3dB to warm up the Tele bridge pickup through the QSC CP12 tweeter. |
-| **Post-FX 1** | Analog Delay | Mix: 12%, Time: 330ms, Fdbk: 25% | Mix: 20%, Time: 330ms, Fdbk: 30% | Bucket-brigade style delay darkens repeats, keeping the mix uncluttered. |
-| **Post-FX 2** | Plate Reverb | Mix: 15%, Decay: 1.2s | Mix: 18%, Decay: 1.5s | Emulates classic 70s studio spatial depth. |
+Per System Protocol 9, I have constructed two completely distinct gain-staging profiles to optimize this tone for both your Humbucker and Single Coil instruments.
 
 ---
 
-### GUITAR 2: Gibson ES-339 Humbuckers (Row 2 / Scenes E-H)
-**Pickup Compensation Strategy:** Medium/High output humbuckers naturally push the Plexi into compression. We must lower the *Volume Normal* parameter significantly to avoid low-end mud (tube sag) and rely heavily on the *Volume High Treble* to maintain clarity. 
+### PART 1: GIBSON ES-339 (HUMBUCKERS) PROFILE
+**Target:** Scenes E (Rhythm), F (Lead), G (Dry), H (Ambient)
+**Physics Goal:** Humbuckers naturally push the front end of a Plexi hard, which can cause low-end "farting" or tube sag. We will roll off the Bass on the amp, push the Bright channel for punch, and use a slight mid-cut to prevent mud.
 
-* **Scene E:** Rhythm (Tight Crunch, -1.5dB output relative to Lead)
-* **Scene F:** Lead (Chief OD engaged, +1.5dB output)
-* **Scene G:** Dry/Comping (Delay/Reverb Bypassed)
-* **Scene H:** Ambient/FX (Higher Delay/Reverb Mix)
-
-**Table B: ES-339 Signal Chain**
-*(Right-Click > Assign to Scenes E-H)*
-
+#### Table 1: ES-339 Main Signal Chain
 | Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input (Circle 1) | Thresh: -65dB | Thresh: -65dB | Humbuckers are quieter; lowering threshold preserves sustain and dynamics. |
-| **Pre-EQ** | Parametric-8 | HPF: 100Hz. Band 1: 0.0dB. LPF: 6500Hz | HPF: 100Hz. Band 4: +1.5dB @ 1kHz. LPF: 6500Hz | HPF removes resonant humbucker mud. Allows the Plexi's natural EQ to shine. |
-| **Pre-FX** | Chief OD | [Bypassed] | Drive: 1.5, Tone: 6.0, Level: 7.0 | Lower drive than the Tele scene, as the ES-339 already hits the amp harder. |
-| **Amp** | Brit Plexi 50 Jumped | Vol Norm: 2.5, Vol High Treb: 6.5, Bass: 3.0, Mid: 6.0, Treb: 5.5, Output Level: 0.0dB | Vol Norm: 2.5, Vol High Treb: 6.5, Bass: 3.0, Mid: 6.0, Treb: 5.5, Output Level: +1.5dB | Normal Vol dropped to 2.5 to prevent humbucker "farting/sag". High Treble raised for bite. |
-| **Cab** | 412 Brit 1960TV | Mic A (Dyn 57): Pos 1.5, Dist 1.0". Mic B (Rib 121): Pos 2.0, Dist 2.5" | *Same as Rhythm* | Dyn 57 moved to Pos 1.5 (closer to cone edge) to tame humbucker harshness when distorted. |
-| **Post-FX 1** | Analog Delay | Mix: 10%, Time: 330ms, Fdbk: 20% | Mix: 18%, Time: 330ms, Fdbk: 25% | Slightly lower mix than Tele to preserve humbucker note definition. |
-| **Post-FX 2** | Plate Reverb | Mix: 12%, Decay: 1.2s | Mix: 15%, Decay: 1.5s | Emulates classic 70s studio spatial depth. |
+| **Input/Gate** | Global In (Circle 1) | Thresh: -55dB | Thresh: -55dB | Humbuckers are quieter; standard threshold prevents gating sustains. |
+| **Pre-FX** | Chief OD | Bypass | Active (Drive: 2, Vol: 7) | Bluesbreaker-style transparent push for Lead sustain without coloring the Plexi. |
+| **Amp** | Brit Plexi 100 Jumped | Normal: 3.5, Bright: 5.5 | Normal: 4.0, Bright: 6.5 | *(Right-Click Assign)*. Low bass (3.0), High Mids (6.5). Bright channel provides the "punch" for humbuckers. |
+| **Cab** | 412 Brit 35B | Dyn 57 (Mix: +2dB) | Dyn 57 (Mix: +2dB) | Greenback speakers. Dyn 57 on Cap Edge (Pos 1.5) provides bite; Ribbon 121 (Cone, Pos 3.5) adds warmth. |
+| **EQ** | Parametric-8 | Band 2: 400Hz (-1.5dB) | Band 2: 400Hz (-1.5dB) | Clears up low-mid mud inherent to Gibson semi-hollow bodies. LPF @ 6kHz removes digital fizz. |
+| **Post-FX** | Analog Delay | Mix: 0% (Bypass) | Mix: 15% (350ms) | Thickens the lead tone. Keep feedback low (20%) to prevent washing out the crunch. |
+| **Post-FX** | Room Reverb | Mix: 12% | Mix: 18% | Simulates a wood-paneled 70s tracking room. |
+| **Output** | Lane 1 Output | Level: 0.0dB | Level: +1.5dB | *(Right-Click Assign)*. Sole control for SPL/Volume boost during solos. |
 
 ---
 
-### Troubleshooting & Refinement Tree
-If the tone sounds **"Too Distorted"**, **"Farty"**, or **"Too Fuzzy"** with your specific guitar through the QSC CP12, execute these steps in strict order:
+### PART 2: FENDER TELECASTER (SINGLE COIL) PROFILE
+**Target:** Scenes A (Rhythm), B (Lead), C (Dry), D (Ambient)
+**Physics Goal:** Single coils lack the output to naturally distort a Plexi into 70s rock territory and can sound thin or "ice-picky." We will increase the Global Input Gain, push the "Normal" (warmth) channel of the Plexi, and use a 200Hz EQ shelf to simulate humbucker body.
 
-1. **Input Pad Verification:** The ES-339 may clip the digital converters depending on pickup height. Lower the Global Input Block Gain (Circle 1) to **-3.0dB** or **-6.0dB**. This effectively simulates rolling your guitar volume back.
-2. **Amp Gain Reduction:** Reduce the Amp's *Volume High Treble* by 1.0 increment.
-3. **Tube Sag Fix:** If the low-end sounds broken/farty on power chords (especially with the ES-339), reduce the Amp Block *Bass* parameter to 2.0. Vintage Plexi circuits phase-invert heavily when fed too much bass signal. 
-4. **Output Compensation:** If steps 1-3 cause a drop in room volume, *do not add compression or turn the amp gain back up*. Raise the Lane Output Level on the right side of the Grid to recover the lost SPL.
+#### Table 2: Telecaster Main Signal Chain
+| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Global In (Circle 1) | Gain: +3.0dB, Thresh: -45dB | Gain: +3.0dB, Thresh: -45dB | Boosted input level hits the tubes harder to compensate for vintage single coils. Tighter gate for 60-cycle hum. |
+| **Pre-FX** | Chief OD | Bypass | Active (Drive: 4, Vol: 6) | Higher drive required to push single coils into singing 70s lead territory. |
+| **Amp** | Brit Plexi 100 Jumped | Normal: 6.0, Bright: 4.0 | Normal: 7.5, Bright: 5.0 | *(Right-Click Assign)*. Bass at 5.0. Driving the Normal channel hard provides the missing low-mid thickness. |
+| **Cab** | 412 Brit 35B | Rib 121 (Mix: +3dB) | Rib 121 (Mix: +3dB) | Ribbon 121 dominant. Rolls off the harsh Tele bridge pickup treble naturally via mic physics. |
+| **EQ** | Parametric-8 | Band 1: 200Hz (+3.0dB) | Band 1: 200Hz (+3.0dB) | *The Chameleon Strategy:* Low Shelf at 200Hz adds physical "weight" to the Tele. LPF @ 4.5kHz to tame pick attack. |
+| **Post-FX** | Analog Delay | Mix: 0% (Bypass) | Mix: 18% (350ms) | Analog BBD decay rolls off highs, keeping the delays warm and out of the Tele's frequency path. |
+| **Post-FX** | Room Reverb | Mix: 15% | Mix: 20% | Slightly higher mix to add perceived dimension to the single coils. |
+| **Output** | Lane 1 Output | Level: -2.0dB | Level: -0.5dB | *(Right-Click Assign)*. Lowered globally because we pushed the Amp Vol knobs so high to achieve distortion. |
 
 ---
 
-### Session Library (Active Presets)
+### 🛠 Troubleshooting & Refinement Tree
+If the tone is **"Too Farty/Loose"** (common with Plexi models):
+1. **Tube Sag Correction:** Lower the Amp Bass parameter down to 2.0 or 1.5. Plexis derive their thickness from Mids, not Bass.
+2. **Pre-Amp Roll-off:** Insert a Parametric EQ *before* the Amp block and set a High-Pass Filter (HPF) to 100Hz. This stops low-end frequencies from ever hitting the distortion stage.
 
-**1. Preset Name: "Spoonful - ES339"**
-Target: Howlin' Wolf / Hubert Sumlin (1960).
-Guitar: ES-339 (Humbuckers) w/ Pick.
-Physics Goal: Clean/Edge-of-breakup rhythm + Fuzz/Sag lead without using pedals.
-Full Configuration:
-Block 1 (Adaptive Gate): Noise Red [Rhy: 40% / Lead: 15%], Thresh [-60dB / -65dB], Decay [100ms / 250ms].
-Block 2 (EQ-8): HPF [90Hz], Band 6 [0.0dB], LPF [Rhy: 4200Hz / Lead: 4500Hz].
-Block 3 (Amp - US Tweed Basslad Jumped): Vol Norm [2.0 / 2.2], Vol Bright [2.5 / 3.2], Bass [2.5], Mid [6.0 / 7.0], Treble [7.0 / 6.5], Presence [6.0], Output Level [+7.0dB / +8.5dB].
-Block 4 (Cab - 410 Basslad PR10): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 0.8, Dist 5.0"), Mix [A: 0dB, B: -4dB].
-Block 5 (Tape Delay): Mix [15% / 22%], Time [110ms], Fdbk [15%], Drive [35%], HP [150Hz], LP [2500Hz].
-Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].
+If the tone is **"Too Distorted/Fuzzy"** (especially on the ES-339):
+1. **Input Pad:** Lower the Input Block Gain to -3.0dB or -6.0dB to simulate rolling off your guitar's volume knob. 
+2. **Amp Volume:** Reduce the Vol Bright and Vol Normal by 1.5 increments. Compensate for the volume loss by raising the Lane Output Level.
 
-**2. Preset Name: "70s Rock Crunch Matrix"**
-Target: Classic 70s Rock / Marshall Plexi.
-Guitar: Multi-Matrix (Telecaster Row 1 / ES-339 Row 2).
-Physics Goal: Non-master volume tube saturation, retaining low-end clarity for humbuckers and adding body to single coils.
-Full Configuration:
-Global Input (Circle 1): Thresh [-55dB Tele / -65dB ES339]. Gain [0.0dB].
-Block 1 (EQ-8): Tele [Band 1: +3.5dB @ 200Hz, LPF: 5kHz] / ES339 [HPF: 100Hz, LPF: 6.5kHz].
-Block 2 (Pre-FX - Chief OD): Drive [Tele Lead: 2.0 / ES339 Lead: 1.5], Tone [5.5 / 6.0], Level [7.5 / 7.0].
-Block 3 (Amp - Brit Plexi 50 Jumped): Tele [Vol Norm 5.0, Vol Treb 5.5, Bass 3.5, Mid 5.5, Treb 5.0] / ES339 [Vol Norm 2.5, Vol Treb 6.5, Bass 3.0, Mid 6.0, Treb 5.5]. Block Output Level [Rhythm: 0.0dB / Lead: +1.5dB].
-Block 4 (Cab - 412 Brit 1960TV): Mic A (Dyn 57), Mic B (Rib 121). Mix [0dB / -3dB].
-Block 5 (Analog Delay): Mix [Tele: 12% / ES339: 10%], Time [330ms].
-Block 6 (Plate Reverb): Mix [12-18% depending on Scene], Decay [1.2s - 1.5s].
+---
+
+### 📁 Session Registry Protocol
+*Session data logged for memory recall.*
+
+**Session Library (Active Presets)**
+1. Preset Name: "Spoonful - ES339" [Previously Stored]
+2. Preset Name: "70s Plexi Crunch - Dual Mod"
+Target: 1970s Classic Rock (Marshall 100w).
+Guitar: ES-339 (Humbuckers) / Telecaster (Single Coils).
+Physics Goal: Plexi jumped blending without Master Volume. Compensating for single-coil thinness and humbucker mud.
+Full Configuration (ES-339): Input [Gain 0dB, Thresh -55dB]. Chief OD [Bypassed / Drv 2, Vol 7]. Amp: Brit Plexi 100 Jumped [Norm 3.5/4.0, Bright 5.5/6.5, Bass 3.0, Mid 6.5, Treb 5.5, Pres 5.0]. Cab: 412 Brit 35B [Mic A 57 CapEdge 1.5, Mic B 121 Cone 3.5, Mix A+2/B-2]. EQ-8 [Band 2 400Hz -1.5dB, LPF 6kHz]. Delay: Analog [Mix 0/15%, 350ms]. Reverb: Room [Mix 12/18%]. Lane Out [0.0 / +1.5dB].
+Full Configuration (Tele): Input [Gain +3.0dB, Thresh -45dB]. Chief OD [Bypassed / Drv 4, Vol 6]. Amp: Brit Plexi 100 Jumped [Norm 6.0/7.5, Bright 4.0/5.0, Bass 5.0, Mid 6.0, Treb 4.5, Pres 4.0]. Cab: 412 Brit 35B [Mix A-2/B+3]. EQ-8 [Band 1 200Hz Shelf +3.0dB, LPF 4.5kHz]. Delay: Analog [Mix 0/18%, 350ms]. Reverb: Room [Mix 15/20%]. Lane Out [-2.0 / -0.5dB].
