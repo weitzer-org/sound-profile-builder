@@ -10,6 +10,7 @@ import (
 )
 
 var validNativeBlocks = make(map[string]bool)
+var validBlocksRunes = make(map[string][]rune)
 var parseBlocksOnce sync.Once
 
 // GetValidNativeBlocks parses the embedded JSON natively, returning a map of [blockName]isCapture.
@@ -21,6 +22,7 @@ func GetValidNativeBlocks() map[string]bool {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
 					validNativeBlocks[equiv] = isCap
+					validBlocksRunes[equiv] = []rune(strings.ToLower(equiv))
 				}
 			}
 		}
@@ -39,7 +41,17 @@ func ApplyFuzzyCorrection(jsonStr string, validBlocks map[string]bool) string {
             
 			// Prevent catching standard 'Setting: Value' cases
 			key := strings.ToLower(strings.TrimSpace(sub[2]))
-			if strings.Contains(key, "setting:") || strings.Contains(key, "mix:") || strings.Contains(key, "gain:") {
+
+			// Only allow fuzzy matching on known gear group categories to prevent parameter corruption
+			validCategories := map[string]bool{
+				"amplifier:": true, "cab:": true, "cabinet:": true,
+				"overdrive:": true, "distortion:": true, "fuzz:": true,
+				"reverb:": true, "delay:": true, "modulation:": true,
+				"pitch:": true, "filter:": true, "eq:": true,
+				"utility:": true, "wah:": true, "volume:": true,
+				"compressor:": true, "preamp:": true,
+			}
+			if !validCategories[key] {
 				return match
 			}
 
@@ -73,10 +85,7 @@ var IgnoreList = map[string]bool{
 }
 
 // LevenshteinDistance calculates the minimum string edits to go from s to t.
-func LevenshteinDistance(s, t string) int {
-	sRunes := []rune(strings.ToLower(s))
-	tRunes := []rune(strings.ToLower(t))
-
+func LevenshteinDistance(sRunes, tRunes []rune) int {
 	m := len(sRunes)
 	n := len(tRunes)
 
@@ -177,24 +186,28 @@ func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 	bestDistance := math.MaxInt32
 	bestMatch := inputStr
 
-	for v := range validBlocks {
+	inputRunes := []rune(strings.ToLower(inputStr))
+
+	for v, vRunes := range validBlocksRunes {
 		if strings.EqualFold(inputStr, v) {
 			return v // Perfect case-insensitive match
 		}
 		
-		dist := LevenshteinDistance(inputStr, v)
+		dist := LevenshteinDistance(inputRunes, vRunes)
 		if dist < bestDistance {
 			bestDistance = dist
 			bestMatch = v
 		}
 	}
 
-	// "Brit Plexi 100" to "Brit Plexi 100 Patch" is 6 edits.
-	// "Plate Reverb" to "Studio Plate 70" is 11 edits.
-	// "Double RVB" to "US Twin Vibrato" is 12 edits.
-	// We'll use 15 to ensure we catch those larger alias hallucinations, 
-	// but the UI won't warp anything shorter than 3 chars anyway.
-	if bestDistance <= 15 {
+	// Code review: Relative threshold based on length to prevent over-aggressive warping on short strings.
+	// Max of 5 edits for short strings, or relative (len / 2) for longer ones.
+	maxAllowedEdits := len(inputRunes) / 2
+	if maxAllowedEdits < 5 {
+		maxAllowedEdits = 5
+	}
+
+	if bestDistance <= maxAllowedEdits {
 		return bestMatch
 	}
 

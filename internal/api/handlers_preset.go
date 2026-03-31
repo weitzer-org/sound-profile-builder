@@ -25,14 +25,31 @@ func cleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storag
 		return presets
 	}
 
-	sort.Slice(presets, func(i, j int) bool {
-		ti, errI := time.Parse(time.RFC3339, presets[i].UpdatedAt)
-		tj, errJ := time.Parse(time.RFC3339, presets[j].UpdatedAt)
-		if errI != nil || errJ != nil {
-			return presets[i].Name < presets[j].Name
+	type timedPreset struct {
+		p *storage.Preset
+		t time.Time
+	}
+	var timed []timedPreset
+	for _, p := range presets {
+		t, err := time.Parse(time.RFC3339, p.UpdatedAt)
+		if err != nil {
+			t = time.Time{}
 		}
-		return ti.After(tj)
+		timed = append(timed, timedPreset{p: p, t: t})
+	}
+
+	sort.Slice(timed, func(i, j int) bool {
+		if timed[i].t.Equal(timed[j].t) {
+			return timed[i].p.Name < timed[j].p.Name
+		}
+		return timed[i].t.After(timed[j].t)
 	})
+
+	var sortedPresets []*storage.Preset
+	for _, tp := range timed {
+		sortedPresets = append(sortedPresets, tp.p)
+	}
+	presets = sortedPresets
 
 	draftCount := 0
 	var finalPresets []*storage.Preset
@@ -40,7 +57,10 @@ func cleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storag
 		if p.Name == "Draft Preset" {
 			draftCount++
 			if draftCount > 3 {
-				store.Delete(ctx, p.ID)
+				// Background deletion to prevent blocking HTTP response
+				go func(id string) {
+					store.Delete(context.Background(), id)
+				}(p.ID)
 				continue
 			}
 		}
@@ -55,19 +75,37 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 		return `<p class="subtitle" style="font-size:0.9rem;">No presets saved yet.</p>`
 	}
 
-	sort.Slice(presets, func(i, j int) bool {
-		ti, errI := time.Parse(time.RFC3339, presets[i].UpdatedAt)
-		tj, errJ := time.Parse(time.RFC3339, presets[j].UpdatedAt)
-		if errI != nil || errJ != nil {
-			return presets[i].Name < presets[j].Name
+	type timedPreset struct {
+		p *storage.Preset
+		t time.Time
+	}
+	var timed []timedPreset
+	for _, p := range presets {
+		t, err := time.Parse(time.RFC3339, p.UpdatedAt)
+		if err != nil {
+			t = time.Time{}
 		}
-		return ti.After(tj)
+		timed = append(timed, timedPreset{p: p, t: t})
+	}
+
+	sort.Slice(timed, func(i, j int) bool {
+		if timed[i].t.Equal(timed[j].t) {
+			return timed[i].p.Name < timed[j].p.Name
+		}
+		return timed[i].t.After(timed[j].t)
 	})
+
+	var sortedPresets []*storage.Preset
+	for _, tp := range timed {
+		sortedPresets = append(sortedPresets, tp.p)
+	}
+	presets = sortedPresets
 
 	draftCount := 0
 	visibleCount := 0
 
-	html := `<ul style="list-style-type: none; padding: 0;">`
+	var html strings.Builder
+	html.WriteString(`<ul style="list-style-type: none; padding: 0;">`)
 	for _, p := range presets {
 		if p.Name == "Draft Preset" {
 			draftCount++
@@ -77,15 +115,15 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 		}
 
 		if !showAll && visibleCount >= 10 {
-			html += `
+			html.WriteString(`
 				<li style="margin-top: 1rem; text-align: center;">
 					<button hx-get="/api/presets?show_all=true" hx-target="#preset-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
-				</li>`
+				</li>`)
 			break
 		}
 		visibleCount++
 
-		html += fmt.Sprintf(`
+		html.WriteString(fmt.Sprintf(`
 			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
@@ -96,10 +134,10 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 				<div style="margin-top: 0.5rem;">
 					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
 				</div>
-			</li>`, p.Name, p.UpdatedAt, p.ID)
+			</li>`, p.Name, p.UpdatedAt, p.ID))
 	}
-	html += `</ul>`
-	return html
+	html.WriteString(`</ul>`)
+	return html.String()
 }
 
 func (s *Server) handleGetPresets() http.HandlerFunc {

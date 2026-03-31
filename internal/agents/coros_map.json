@@ -96,10 +96,10 @@
     "is_capture": true
   },
   "Fender 65 Twin Reverb": {
-    "coros_equivalent": "US Prince",
+    "coros_equivalent": "US Twin Vibrato",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "American Clean & Tweed"
   },
   "Fender Deluxe Reverb 64/65": {
     "coros_equivalent": "US DLX 58",
@@ -134,11 +134,10 @@
     "tonal_archetype": "Other / Unique"
   },
   "Vox AC30 Top Boost": {
-    "coros_equivalent": "CA 400",
+    "coros_equivalent": "UK C30 TopBoost",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "British Crunch"
   },
   "Vox AC15": {
     "coros_equivalent": "UK C15 TopBoost",
@@ -479,12 +478,12 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B w/ Vintage 30": {
-    "coros_equivalent": "412 Brit 60B V30 \u201995",
+    "coros_equivalent": "412 Brit 60B V30 '95",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 1960TV w/ G12M25": {
-    "coros_equivalent": "412 Brit TV GB75Hz \u201969",
+    "coros_equivalent": "412 Brit TV GB75Hz '69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -494,17 +493,17 @@
     "confidence_score": 1.0
   },
   "Mesa Boogie Standard OS V30": {
-    "coros_equivalent": "412 CA Stand OS A V30 \u201901",
+    "coros_equivalent": "412 CA Stand OS A V30 '01",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Boogie Traditional V30": {
-    "coros_equivalent": "412 CA Trad A V30 \u201992",
+    "coros_equivalent": "412 CA Trad A V30 '92",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Rectifier 2x12 V30": {
-    "coros_equivalent": "212 CA Recto V30 \u201998",
+    "coros_equivalent": "212 CA Recto V30 '98",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -529,7 +528,7 @@
     "confidence_score": 1.0
   },
   "Vox AC30 w/ Alnico Silver Bell": {
-    "coros_equivalent": "212 UK C30 \u201965",
+    "coros_equivalent": "212 UK C30 '65",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -544,7 +543,7 @@
     "confidence_score": 1.0
   },
   "Roland JC-120": {
-    "coros_equivalent": "212 Rols Jazz \u201987",
+    "coros_equivalent": "212 Rols Jazz '87",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -559,7 +558,7 @@
     "confidence_score": 1.0
   },
   "Diezel Front Loaded w/ V30": {
-    "coros_equivalent": "412 D-Cell Front V30 \u201904",
+    "coros_equivalent": "412 D-Cell Front V30 '04",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -902,19 +901,17 @@
     "confidence_score": 1.0
   },
   "Standard 3-Band Parametric EQ": {
-    "coros_equivalent": "CA M6Rifle",
+    "coros_equivalent": "Parametric-3",
     "type": "eq",
-    "confidence_score": 1.0,
-    "is_capture": true
+    "confidence_score": 1.0
   },
   "Standard 8-Band Parametric EQ": {
-    "coros_equivalent": "CA M6Rifle",
+    "coros_equivalent": "Parametric-8",
     "type": "eq",
-    "confidence_score": 1.0,
-    "is_capture": true
+    "confidence_score": 1.0
   },
   "Standard 9-Band Graphic EQ": {
-    "coros_equivalent": "US Prince",
+    "coros_equivalent": "Graphic-9",
     "type": "eq",
     "confidence_score": 1.0
   },
@@ -1110,7 +1107,7 @@
     "confidence_score": 1.0
   },
   "Zilla Mini Modern with Celestion G12H150 Redback drivers": {
-    "coros_equivalent": "112 Zila MiniMod RB \u201917",
+    "coros_equivalent": "112 Zila MiniMod RB '17",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1125,7 +1122,7 @@
     "confidence_score": 1.0
   },
   "Fender Tremolux with Oxford Alnico drivers": {
-    "coros_equivalent": "210 US TRMLX Oxf \u201963",
+    "coros_equivalent": "210 US TRMLX Oxf '63",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1140,7 +1137,7 @@
     "confidence_score": 1.0
   },
   "Mesa Rectifier with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "212 CA Recto V30 \u201998",
+    "coros_equivalent": "212 CA Recto V30 '98",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1165,12 +1162,12 @@
     "confidence_score": 1.0
   },
   "VOX AC30 Top Boost with Celestion Alnico \u201cSilver Bell\u201d drivers": {
-    "coros_equivalent": "212 UK C30 \u201965",
+    "coros_equivalent": "212 UK C30 '65",
     "type": "cab",
     "confidence_score": 1.0
   },
   "VOX AC30 with Celestion Pre-Rola Greenback Pulsonic drivers": {
-    "coros_equivalent": "212 UK C30 GB \u201969",
+    "coros_equivalent": "212 UK C30 GB '69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1200,7 +1197,7 @@
     "confidence_score": 1.0
   },
   "Zilla Cab with Celestion Creamback G12H-75 drivers": {
-    "coros_equivalent": "212 Zila CB \u201916",
+    "coros_equivalent": "212 Zila CB '16",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1220,7 +1217,7 @@
     "confidence_score": 1.0
   },
   "Zilla Open with Celestion Alnico Gold drivers": {
-    "coros_equivalent": "212 Zila Open Gold \u201919",
+    "coros_equivalent": "212 Zila Open Gold '19",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1230,7 +1227,7 @@
     "confidence_score": 1.0
   },
   "Fender Bassman with Jensen P10Q drivers": {
-    "coros_equivalent": "410 US Basslad P10Q \u201916",
+    "coros_equivalent": "410 US Basslad P10Q '16",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1250,7 +1247,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1935A with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit 35A GB55Hz \u201975",
+    "coros_equivalent": "412 Brit 35A GB55Hz '75",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1265,7 +1262,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1960A with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit 60A GB75Hz \u201989",
+    "coros_equivalent": "412 Brit 60A GB75Hz '89",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1275,7 +1272,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B with Celestion Pulsonic Greenback drivers": {
-    "coros_equivalent": "412 Brit 60B GB \u201971",
+    "coros_equivalent": "412 Brit 60B GB '71",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1285,17 +1282,17 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B with Celestion Marshall Vintage 30 drivers": {
-    "coros_equivalent": "412 Brit 60B V30 \u201995",
+    "coros_equivalent": "412 Brit 60B V30 '95",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 2551B with Celestion drivers": {
-    "coros_equivalent": "412 Brit Silver B 70w \u201987",
+    "coros_equivalent": "412 Brit Silver B 70w '87",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 1960TV with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit TV GB75Hz \u201969",
+    "coros_equivalent": "412 Brit TV GB75Hz '69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1310,7 +1307,7 @@
     "confidence_score": 1.0
   },
   "Mesa Standard OS Angled with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 CA Stand OS A V30 \u201901",
+    "coros_equivalent": "412 CA Stand OS A V30 '01",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1325,12 +1322,12 @@
     "confidence_score": 1.0
   },
   "Mesa Traditional Angled with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 CA Trad A V30 \u201992",
+    "coros_equivalent": "412 CA Trad A V30 '92",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Traditional Straight with Celestion G12H30 drivers": {
-    "coros_equivalent": "412 CA Trad S H30 \u201915",
+    "coros_equivalent": "412 CA Trad S H30 '15",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1345,7 +1342,7 @@
     "confidence_score": 1.0
   },
   "Diezel Front Loaded with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 D-Cell Front V30 \u201904",
+    "coros_equivalent": "412 D-Cell Front V30 '04",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1360,7 +1357,7 @@
     "confidence_score": 1.0
   },
   "Orange PPC412 with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 Range PPC V30 \u201903",
+    "coros_equivalent": "412 Range PPC V30 '03",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1375,7 +1372,7 @@
     "confidence_score": 1.0
   },
   "Zilla Custom with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 Zila Cust V30 \u201912 V2",
+    "coros_equivalent": "412 Zila Cust V30 '12 V2",
     "type": "cab",
     "confidence_score": 1.0
   },

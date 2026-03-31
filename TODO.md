@@ -12,6 +12,7 @@
 - **Default Preset Name**: Have the preset name defaulted to the tone prompt prior to saving.
 - **Temporary Presets Section**: Include non-saved presets as a separate section in the saved presets for X time.
 - **Preset Library**: Build out a preset library.
+- **Track Adjustments**: Track user adjustments over time to dynamically inform future preset generation and tweaks.
 - **Capture Toggle**: Add a UI toggle to allow or restrict the multi-agent pipeline from sourcing Factory Captures during preset generation.
 - **Paid Plugin Toggle**: Add a UI configuration to selectively enable/disable routing through Paid Plugin architectures (e.g., Nameless, Cory Wong, Plini).
 - **Cyclic Agent Deliberation**: Explore transitioning the Orchestrator from a linear DAG to a cyclic feedback graph, allowing the Librarian to pass a "Gear Not Found" exception back to the Tone Historian iteratively to select the best historically accurate fallback amp.
