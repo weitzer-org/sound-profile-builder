@@ -43,7 +43,7 @@ func TestOrchestrator_RunPipeline_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, err := NewOrchestrator(ctx, "fake-key", option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, err := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
 	if err != nil {
 		t.Fatalf("Failed to init orchestrator: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
 
 	p := &storage.Preset{
 		Payload: "<matrix></matrix>",
@@ -102,7 +102,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 func TestOrchestrator_TimeoutsAndErrors(t *testing.T) {
 	ctx := context.Background()
 
-	orch, _ := NewOrchestrator(ctx, "fake-key", option.WithEndpoint("http://127.0.0.1:0"))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint("http://127.0.0.1:0"))
 
 	// Fast timeout ensures RunAgent errors immediately
 	ctxTimeout, cancel := context.WithTimeout(ctx, 1*time.Millisecond)
@@ -133,7 +133,7 @@ func TestOrchestrator_EmptyCandidates(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
 
 	_, err := orch.RunAgent(ctx, "Agent", "prompt")
 	if err == nil {
@@ -143,7 +143,7 @@ func TestOrchestrator_EmptyCandidates(t *testing.T) {
 
 func TestOrchestrator_NewOrchestrator_Error(t *testing.T) {
 	ctx := context.Background()
-	_, err := NewOrchestrator(ctx, "key", option.WithCredentialsFile("doesnotexist.json"))
+	_, err := NewOrchestrator(ctx, "key", nil, option.WithCredentialsFile("doesnotexist.json"))
 	if err == nil {
 		t.Errorf("Expected GenAI client to fail with nonexistent credentials injection")
 	}
@@ -177,7 +177,7 @@ func TestOrchestrator_RunPipeline_PhaseErrors(t *testing.T) {
 			defer mockServer.Close()
 
 			ctx := context.Background()
-			orch, _ := NewOrchestrator(ctx, "key", option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+			orch, _ := NewOrchestrator(ctx, "key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
 			defer orch.Close()
 
 			_, _, err := orch.RunPipeline(ctx, "test", map[string]interface{}{"allow_cloud_captures": true})

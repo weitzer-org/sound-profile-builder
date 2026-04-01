@@ -109,7 +109,7 @@ func setupTestServer() (*Server, *mockClient, *mockSecretFetcher, *mockOrchestra
 		}
 		return orch, nil
 	}
-	return NewServer(store, client, sf, om), client, sf, orch
+	return NewServer(store, nil, client, sf, om, nil), client, sf, orch
 }
 
 func TestHandleGetPresets_Empty(t *testing.T) {

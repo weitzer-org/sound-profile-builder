@@ -27,7 +27,7 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
 
   // Verify HTMX page loading and root constraints
   await expect(page).toHaveTitle('QC-2 Multi-Agent Modeler');
-  await expect(page.locator('h1')).toHaveText('QC-2 Modeler');
+  await expect(page.locator('h1')).toHaveText('Spin Up a Tone');
 
   // Test Tonal Prompt
   await page.fill('input[name="prompt"]', 'Generate a Hendrix style Fuzz Face matrix.');

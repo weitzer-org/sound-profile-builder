@@ -1,0 +1,40 @@
+--- internal/api/handlers_preset.go
++++ internal/api/handlers_preset.go
+@@ -656,6 +656,12 @@
++		type MemoryRecord struct {
++			Topic    string `json:"topic"`
++			Critique string `json:"critique"`
++			Action   string `json:"action"`
++		}
++
+ 		var archResp struct {
+ 			ConversationalResponse string            `json:"conversational_response"`
+ 			BuilderStatement       string            `json:"builder_statement"`
++			MemoryRecord           *MemoryRecord     `json:"memory_record,omitempty"`
+ 			DSPMatrixUpdated       bool              `json:"dsp_matrix_updated"`
+ 			FinalHTMLPayload       map[string]string `json:"final_html_payload"`
+ 			AgentImpact            []string          `json:"agent_impact"`
+@@ -664,6 +670,20 @@
+ 			if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
+ 				log.Printf("Failed to unmarshal chat architect: %v, raw: %s", err, jsonResponse)
+ 				w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Serialization Error! Check server logs.</div>`)))
+ 				return
+ 			}
+ 
++		// Save memory if present and valid
++		if archResp.MemoryRecord != nil && (archResp.MemoryRecord.Critique != "" || archResp.MemoryRecord.Action != "") {
++			mem := &storage.Memory{
++				Artist:     archResp.MemoryRecord.Topic,
++				Critique:   archResp.MemoryRecord.Critique,
++				Action:     archResp.MemoryRecord.Action,
++				BasePreset: p.ID,
++			}
++			if err := s.memoryStore.Save(ctx, mem); err != nil {
++				log.Printf("Failed to save memory: %v", err)
++			}
++		}
++
++
+ 		// Append user message
+ 		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
+ 

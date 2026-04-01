@@ -16,41 +16,128 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
-// bucketName is the default bucket used for everything right now
 const presetBucketName = "weitzer-sound-builder"
 
+// cleanUpOldDrafts returns the current presets but permanently deletes any "Draft Preset" entries beyond the 3 newest.
+func cleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storage.Preset {
+	presets, err := store.List(ctx)
+	if err != nil {
+		return presets
+	}
+
+	type timedPreset struct {
+		p *storage.Preset
+		t time.Time
+	}
+	var timed []timedPreset
+	for _, p := range presets {
+		t, err := time.Parse(time.RFC3339, p.UpdatedAt)
+		if err != nil {
+			t = time.Time{}
+		}
+		timed = append(timed, timedPreset{p: p, t: t})
+	}
+
+	sort.Slice(timed, func(i, j int) bool {
+		if timed[i].t.Equal(timed[j].t) {
+			return timed[i].p.Name < timed[j].p.Name
+		}
+		return timed[i].t.After(timed[j].t)
+	})
+
+	var sortedPresets []*storage.Preset
+	for _, tp := range timed {
+		sortedPresets = append(sortedPresets, tp.p)
+	}
+	presets = sortedPresets
+
+	draftCount := 0
+	var finalPresets []*storage.Preset
+	for _, p := range presets {
+		if p.Name == "Draft Preset" {
+			draftCount++
+			if draftCount > 3 {
+				// Background deletion to prevent blocking HTTP response
+				go func(id string) {
+					store.Delete(context.Background(), id)
+				}(p.ID)
+				continue
+			}
+		}
+		finalPresets = append(finalPresets, p)
+	}
+	return finalPresets
+}
+
 // renderPresetList returning HTML fragment for HTMX
-func renderPresetList(presets []*storage.Preset) string {
+func renderPresetList(presets []*storage.Preset, showAll bool) string {
 	if len(presets) == 0 {
 		return `<p class="subtitle" style="font-size:0.9rem;">No presets saved yet.</p>`
 	}
 
-	sort.Slice(presets, func(i, j int) bool {
-		ti, errI := time.Parse(time.RFC3339, presets[i].UpdatedAt)
-		tj, errJ := time.Parse(time.RFC3339, presets[j].UpdatedAt)
-		if errI != nil || errJ != nil {
-			return presets[i].Name < presets[j].Name
+	type timedPreset struct {
+		p *storage.Preset
+		t time.Time
+	}
+	var timed []timedPreset
+	for _, p := range presets {
+		t, err := time.Parse(time.RFC3339, p.UpdatedAt)
+		if err != nil {
+			t = time.Time{}
 		}
-		return ti.After(tj)
+		timed = append(timed, timedPreset{p: p, t: t})
+	}
+
+	sort.Slice(timed, func(i, j int) bool {
+		if timed[i].t.Equal(timed[j].t) {
+			return timed[i].p.Name < timed[j].p.Name
+		}
+		return timed[i].t.After(timed[j].t)
 	})
 
-	html := `<ul style="list-style-type: none; padding: 0;">`
+	var sortedPresets []*storage.Preset
+	for _, tp := range timed {
+		sortedPresets = append(sortedPresets, tp.p)
+	}
+	presets = sortedPresets
+
+	draftCount := 0
+	visibleCount := 0
+
+	var sb strings.Builder
+	sb.WriteString(`<ul style="list-style-type: none; padding: 0;">`)
 	for _, p := range presets {
-		html += fmt.Sprintf(`
+		if p.Name == "Draft Preset" {
+			draftCount++
+			if !showAll && draftCount > 3 {
+				continue
+			}
+		}
+
+		if !showAll && visibleCount >= 10 {
+			sb.WriteString(`
+				<li style="margin-top: 1rem; text-align: center;">
+					<button hx-get="/api/presets?show_all=true" hx-target="#library-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
+				</li>`)
+			break
+		}
+		visibleCount++
+
+		sb.WriteString(fmt.Sprintf(`
 			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
 				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-					<button hx-get="/api/preset/copy_ui?id=%[3]s" hx-target="#main-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
-					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#preset-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+					<button hx-get="/api/preset/copy_ui?id=%[3]s" hx-target="#library-editor-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
+					<button id="delete-btn-%[3]s" hx-post="/api/preset/delete" hx-vals='{"id":"%[3]s"}' hx-trigger="confirmed" hx-target="#library-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
 				</div>
 				<div style="margin-top: 0.5rem;">
-					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#main-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
+					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#library-editor-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
 				</div>
-			</li>`, p.Name, p.UpdatedAt, p.ID)
+			</li>`, html.EscapeString(p.Name), p.UpdatedAt, p.ID))
 	}
-	html += `</ul>`
-	return html
+	sb.WriteString(`</ul>`)
+	return sb.String()
 }
 
 func (s *Server) handleGetPresets() http.HandlerFunc {
@@ -61,8 +148,9 @@ func (s *Server) handleGetPresets() http.HandlerFunc {
 			return
 		}
 
+		showAll := r.URL.Query().Get("show_all") == "true"
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderPresetList(presets)))
+		w.Write([]byte(renderPresetList(presets, showAll)))
 	}
 }
 
@@ -97,13 +185,13 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 		w.Header().Set("HX-Trigger", "presetSaved")
 		
 		oobResponse := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			<div id="toast-container" hx-swap-oob="beforeend:body">
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
-		`, renderPresetList(presets), name)
+		`, renderPresetList(presets, false), name)
 		
 		w.Write([]byte(oobResponse))
 	}
@@ -131,7 +219,7 @@ func (s *Server) handleDeletePreset() http.HandlerFunc {
 		// Reload the list
 		presets, _ := s.store.List(r.Context())
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderPresetList(presets)))
+		w.Write([]byte(renderPresetList(presets, false)))
 	}
 }
 
@@ -206,11 +294,11 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 		}
 
 		finalDOM := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			%s
-		`, renderPresetList(presets), renderTweakingWorkspaceHTML(pCopy, false))
+		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false))
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
@@ -276,14 +364,14 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 		// Reload the list AND replace the workspace header simultaneously
 		presets, _ := s.store.List(ctx)
 		oobResponse := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
+			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			<div id="toast-container" hx-swap-oob="beforeend:body">
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets), name, renderTweakingWorkspaceHTML(p, false))
+		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false))
 		
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
@@ -320,7 +408,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 	if p.Name == "Draft Preset" {
 		headerHtml = fmt.Sprintf(`
 			<div style="display: flex; gap: 0.5rem; align-items: center; width: 100%%; justify-content: space-between;">
-				<form hx-post="/api/preset/rename" hx-target="#main-workspace" style="display:flex; gap:0.5rem; margin:0; flex: 1; align-items: center;" autocomplete="off">
+				<form hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display:flex; gap:0.5rem; margin:0; flex: 1; align-items: center;" autocomplete="off">
 					<input type="hidden" name="id" value="%[1]s">
 					<input type="text" name="preset_name" placeholder="Enter custom name..." required style="flex: 1; min-width: 300px; padding: 0.75rem 1rem; background: rgba(15,23,42,0.8); border: 1px solid var(--accent); border-radius: 8px; font-size: 1.25rem; color: white; font-weight: 500; outline: none; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
 					<button type="submit" style="width: auto; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; background: var(--success); border-radius: 8px; border: none; color: white; cursor: pointer; transition: opacity 0.2s;" onhover="this.style.opacity='0.9'">Finalize Save</button>
@@ -335,7 +423,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 					<h2 id="preset-title-%[2]s" style="font-size: 1.5rem; font-weight: 600; margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
 						%[1]s
 					</h2>
-					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="#main-workspace" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
+					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
 						<input type="hidden" name="id" value="%[2]s">
 						<input type="text" name="preset_name" placeholder="Rename..." required style="flex: 1; min-width: 300px; padding: 0.5rem 1rem; font-size: 1.25rem; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
 						<button type="submit" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
@@ -350,46 +438,142 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		`, html.EscapeString(p.Name), p.ID)
 	}
 
-	// Parse payload into map of guitar variations
-	var matrices map[string]string
-	if err := json.Unmarshal([]byte(p.Payload), &matrices); err != nil {
-		// Fallback for older presets that are just plain HTML strings
-		matrices = map[string]string{"Legacy Format": p.Payload}
+	// Parse payload into structured preset or fallback legacy
+	var structured storage.StructuredPreset
+	legacyMode := false
+	var legacyMatrices map[string]string
+
+	var combined struct {
+		Structured storage.StructuredPreset `json:"structured"`
+		LegacyHTML map[string]string         `json:"legacy_html"`
+	}
+
+	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.LegacyHTML) > 0 {
+		structured = combined.Structured
+		legacyMatrices = combined.LegacyHTML
+		if p.Name == "Draft Preset" {
+			legacyMode = true
+		}
+	} else {
+		// Fallback for isolated StructuredPreset (pure saved presets) or legacy string maps
+		if err2 := json.Unmarshal([]byte(p.Payload), &structured); err2 == nil {
+			// Found pure StructuredPreset
+		} else {
+			if err3 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err3 == nil {
+				legacyMode = true
+			} else {
+				legacyMode = true
+				legacyMatrices = map[string]string{"Legacy Format": p.Payload}
+			}
+		}
 	}
 
 	tabsHtml := `<div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">`
 	contentHtml := `<div class="tabs-content">`
-	
-	first := true
-	for guitarName, matrixHTML := range matrices {
-		activeClass := ""
-		displayStyle := "display: none;"
-		if first {
-			activeClass = "active"
-			displayStyle = "display: block;"
-			first = false
-		}
-		
-		safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
-		safeId = strings.ReplaceAll(safeId, "/", "")
 
-		tabsHtml += fmt.Sprintf(`
-			<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
-		`, activeClass, safeId, html.EscapeString(guitarName))
-		
-		contentHtml += fmt.Sprintf(`
-			<div id="tab-%s" class="tab-pane" style="%s">
-				%s
-			</div>
-		`, safeId, displayStyle, matrixHTML)
+	first := true
+
+	if legacyMode {
+		for guitarName, matrixHTML := range legacyMatrices {
+			activeClass := ""
+			displayStyle := "display: none;"
+			if first {
+				activeClass = "active"
+				displayStyle = "display: block;"
+				first = false
+			}
+
+			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
+			safeId = strings.ReplaceAll(safeId, "/", "")
+
+			tabsHtml += fmt.Sprintf(`
+				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
+			`, activeClass, safeId, html.EscapeString(guitarName))
+
+			contentHtml += fmt.Sprintf(`
+				<div id="tab-%s" class="tab-pane" style="%s">
+					%s
+				</div>
+			`, safeId, displayStyle, matrixHTML)
+		}
+	} else {
+		for guitarName, blocks := range structured.Guitars {
+			activeClass := ""
+			displayStyle := "display: none;"
+			if first {
+				activeClass = "active"
+				displayStyle = "display: block;"
+				first = false
+			}
+
+			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
+			safeId = strings.ReplaceAll(safeId, "/", "")
+
+			tabsHtml += fmt.Sprintf(`
+				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
+			`, activeClass, safeId, html.EscapeString(guitarName))
+
+			var blocksHtml strings.Builder
+			for _, block := range blocks {
+				blocksHtml.WriteString(fmt.Sprintf(`
+					<div class="effect-block" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+							<h3 style="margin: 0; font-size: 1.1rem; color: white;">%[1]s: <span style="color: var(--accent);">%[2]s</span></h3>
+							<button hx-post="/api/preset/remove_block" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s"}' hx-target="#library-editor-workspace" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; background: #ef4444; border: none; border-radius: 4px; color: white; cursor: pointer;">Remove</button>
+						</div>
+						<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
+				`, html.EscapeString(block.Type), html.EscapeString(block.Model), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+
+				for _, param := range block.Parameters {
+					safeParamId := strings.ReplaceAll(strings.ToLower(param.Name), " ", "-")
+					if param.Type == "slider" {
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
+									<span>%[1]s</span>
+									<span id="val-%[2]s-%[3]s">%[4]s%[5]s</span>
+								</div>
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[6]s", "guitar":"%[7]s", "block_id":"%[8]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value + '%[5]s'">
+							</div>
+						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, param.Unit, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					} else if param.Type == "toggle" {
+						checked := ""
+						if param.Value == "on" || param.Value == "true" {
+							checked = "checked"
+						}
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-sub); margin-top: 1.5rem;">
+								<input type="checkbox" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' %[2]s style="cursor: pointer;">
+								<span>%[1]s</span>
+							</div>
+						`, html.EscapeString(param.Name), checked, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					} else {
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
+								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
+							</div>
+						`, html.EscapeString(param.Name), html.EscapeString(param.Value), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					}
+				}
+				blocksHtml.WriteString(`</div></div>`)
+			}
+
+			contentHtml += fmt.Sprintf(`
+				<div id="tab-%s" class="tab-pane" style="%s">
+					%s
+				</div>
+			`, safeId, displayStyle, blocksHtml.String())
+		}
 	}
-	
+
 	tabsHtml += `</div>`
 	contentHtml += `</div>`
 	tabScript := `
 		<script>
 			function switchTab(btn, paneId) {
-				const container = btn.closest('.card');
+				const container = btn.closest('.workspace-wrapper') || btn.closest('.card');
+				if (!container) return;
 				container.querySelectorAll('.tab-btn').forEach(b => {
 					b.classList.remove('active');
 					b.style.color = 'var(--text-sub)';
@@ -400,13 +584,9 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 				btn.classList.add('active');
 				btn.style.color = 'var(--text-main)';
 				btn.style.borderColor = 'var(--accent)';
-				container.querySelector('#' + paneId).style.display = 'block';
+				const pane = container.querySelector('#' + paneId);
+				if (pane) pane.style.display = 'block';
 			}
-			// Init active tab
-			document.querySelectorAll('.tab-btn.active').forEach(b => {
-				b.style.color = 'var(--text-main)';
-				b.style.borderColor = 'var(--accent)';
-			});
 		</script>
 	`
 	matrixContainerHtml := tabsHtml + contentHtml + tabScript
@@ -534,7 +714,18 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
-		apiKey, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
+		var projectID string
+		if s.appConfig != nil {
+			projectID = s.appConfig.ProjectID
+		}
+		if projectID == "" {
+			projectID = "710019748844" // Default fallback
+		}
+		secretName := os.Getenv("GEMINI_API_KEY_NAME")
+		if secretName == "" {
+			secretName = "gsr-gemini-api-key" // Default fallback
+		}
+		apiKey, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
 			return
@@ -566,11 +757,11 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		jsonResponse = strings.TrimSpace(jsonResponse)
 
 		var archResp struct {
-			ConversationalResponse string            `json:"conversational_response"`
-			BuilderStatement       string            `json:"builder_statement"`
-			DSPMatrixUpdated       bool              `json:"dsp_matrix_updated"`
-			FinalHTMLPayload       map[string]string `json:"final_html_payload"`
-			AgentImpact            []string          `json:"agent_impact"`
+			ConversationalResponse string                  `json:"conversational_response"`
+			BuilderStatement       string                  `json:"builder_statement"`
+			DSPMatrixUpdated       bool                  `json:"dsp_matrix_updated"`
+			StructuredPayload       storage.StructuredPreset `json:"structured_payload"`
+			AgentImpact            []string                `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
@@ -598,11 +789,28 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		}
 
 		if archResp.DSPMatrixUpdated {
-			payloadBytes, err := json.Marshal(archResp.FinalHTMLPayload)
-			if err != nil {
-				log.Printf("Failed to marshal final html payload map: %v", err)
+			if len(archResp.StructuredPayload.Guitars) > 0 {
+				payloadBytes, err := json.Marshal(archResp.StructuredPayload)
+				if err != nil {
+					log.Printf("Failed to marshal structured payload: %v", err)
+				} else {
+					p.Payload = string(payloadBytes)
+				}
+
+				// Auto-Capture Learned Rule
+				m := &storage.Memory{
+					Artist:     p.Name, // Topic context
+					Critique:   userMessage,
+					Action:     strings.Join(archResp.AgentImpact, "; "),
+					BasePreset: p.ID,
+				}
+				if err := s.memoryStore.Save(ctx, m); err != nil {
+					log.Printf("Failed to save learned rule: %v", err)
+				} else {
+					log.Printf("Successfully saved learned rule for %s", p.Name)
+				}
 			} else {
-				p.Payload = string(payloadBytes)
+				log.Printf("Warning: Agent returned empty StructuredPayload despite DSPMatrixUpdated=true. Skipping overwrite.")
 			}
 		}
 
@@ -615,3 +823,132 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		w.Write([]byte(finalDOM))
 	}
 }
+
+func (s *Server) handleUpdateParameter() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		presetID := r.FormValue("preset_id")
+		guitar := r.FormValue("guitar")
+		blockID := r.FormValue("block_id")
+		paramName := r.FormValue("param_name")
+		value := r.FormValue("value")
+
+		if presetID == "" || guitar == "" || blockID == "" || paramName == "" {
+			http.Error(w, "Missing required parameters", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithoutCancel(r.Context())
+
+		p, err := s.store.Get(ctx, presetID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Preset not found: %v", err), http.StatusNotFound)
+			return
+		}
+
+		var structured storage.StructuredPreset
+		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Update the parameter
+		updated := false
+		if blocks, ok := structured.Guitars[guitar]; ok {
+			for i, block := range blocks {
+				if block.ID == blockID {
+					for j, param := range block.Parameters {
+						if param.Name == paramName {
+							structured.Guitars[guitar][i].Parameters[j].Value = value
+							updated = true
+							break
+						}
+					}
+				}
+			}
+		}
+
+		if !updated {
+			http.Error(w, "Parameter not found", http.StatusNotFound)
+			return
+		}
+
+		// Marshal back
+		payloadBytes, err := json.Marshal(structured)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+		p.Payload = string(payloadBytes)
+
+		// Save
+		if err := s.store.Save(ctx, p); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (s *Server) handleRemoveBlock() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		presetID := r.FormValue("preset_id")
+		guitar := r.FormValue("guitar")
+		blockID := r.FormValue("block_id")
+
+		if presetID == "" || guitar == "" || blockID == "" {
+			http.Error(w, "Missing required parameters", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithoutCancel(r.Context())
+
+		p, err := s.store.Get(ctx, presetID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Preset not found: %v", err), http.StatusNotFound)
+			return
+		}
+
+		var structured storage.StructuredPreset
+		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if blocks, ok := structured.Guitars[guitar]; ok {
+			var newBlocks []storage.EffectBlock
+			for _, b := range blocks {
+				if b.ID != blockID {
+					newBlocks = append(newBlocks, b)
+				}
+			}
+			structured.Guitars[guitar] = newBlocks
+		}
+
+		payloadBytes, err := json.Marshal(structured)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+		p.Payload = string(payloadBytes)
+
+		if err := s.store.Save(ctx, p); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save preset: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false)))
+	}
+}
+

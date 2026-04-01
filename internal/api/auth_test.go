@@ -12,9 +12,9 @@ import (
 
 func TestAuthMiddleware_NoCookie(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/presets", nil)
 	rr := httptest.NewRecorder()
@@ -31,9 +31,9 @@ func TestAuthMiddleware_NoCookie(t *testing.T) {
 
 func TestAuthMiddleware_HTMXRedirect(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/presets", nil)
 	req.Header.Set("HX-Request", "true")
@@ -51,9 +51,9 @@ func TestAuthMiddleware_HTMXRedirect(t *testing.T) {
 
 func TestProcessLogin_Success(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	formData := strings.NewReader("password=mock-secret")
 	req := httptest.NewRequest(http.MethodPost, "/login", formData)
@@ -90,9 +90,9 @@ func TestProcessLogin_Success(t *testing.T) {
 
 func TestProcessLogin_Failure(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	formData := strings.NewReader("password=wrongpassword")
 	req := httptest.NewRequest(http.MethodPost, "/login", formData)
@@ -111,9 +111,9 @@ func TestProcessLogin_Failure(t *testing.T) {
 
 func TestServeLogin_Success(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/login", nil)
 	rr := httptest.NewRecorder()
@@ -128,9 +128,9 @@ func TestServeLogin_Success(t *testing.T) {
 
 func TestAuthMiddleware_InvalidCookie(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/presets", nil)
 	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: "invalid.cookie.value"})
@@ -146,9 +146,9 @@ func TestAuthMiddleware_InvalidCookie(t *testing.T) {
 
 func TestProcessLogin_InvalidMethod(t *testing.T) {
 	mockAuth := &mockSecretFetcher{}
-	server := NewServer(nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
 		return nil, nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/login", nil)
 	rr := httptest.NewRecorder()

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
@@ -16,21 +17,27 @@ import (
 
 // Server holds the dependencies for our HTTP server.
 type Server struct {
-	mux        *http.ServeMux
-	store      *storage.PresetStore
-	client     storage.Client
-	smFetcher  storage.SecretFetcher
-	orchMaker  func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
+	mux         *http.ServeMux
+	store       *storage.PresetStore
+	memoryStore *storage.MemoryStore
+	client      storage.Client
+	smFetcher   storage.SecretFetcher
+	orchMaker   func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
+	appConfig   *config.AppConfig
+	apiKeyCache string
+	apiKeyMu    sync.RWMutex
 }
 
 // NewServer initializes a new Server and its routes.
-func NewServer(store *storage.PresetStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)) *Server {
+func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
 	s := &Server{
-		mux:       http.NewServeMux(),
-		store:     store,
-		client:    client,
-		smFetcher: smFetcher,
-		orchMaker: orchMaker,
+		mux:         http.NewServeMux(),
+		store:       store,
+		memoryStore: memoryStore,
+		client:      client,
+		smFetcher:   smFetcher,
+		orchMaker:   orchMaker,
+		appConfig:   appConfig,
 	}
 	s.routes()
 	return s
@@ -64,7 +71,13 @@ func (s *Server) routes() {
 	s.mux.Handle("/api/preset/view", s.authMiddleware(s.handleViewPreset()))
 	s.mux.Handle("/api/preset/chat", s.authMiddleware(s.handleChatPreset()))
 	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
+	s.mux.Handle("/api/preset/update_parameter", s.authMiddleware(s.handleUpdateParameter()))
+	s.mux.Handle("/api/preset/remove_block", s.authMiddleware(s.handleRemoveBlock()))
 	s.mux.Handle("/api/preset/delete_draft", s.authMiddleware(s.handleDeleteDraftPreset()))
+
+	// Memory Rules Routes
+	s.mux.Handle("/api/memories", s.authMiddleware(s.handleGetMemories()))
+	s.mux.Handle("/api/memory/delete", s.authMiddleware(s.handleDeleteMemory()))
 }
 
 // Start begins listening on the specified address.
@@ -89,12 +102,36 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		ctx := context.WithoutCancel(r.Context())
 
-		// 1. Explicitly fetch the exact Gemini API Key from GCP Secret Manager
-		apiKey, err := s.smFetcher.GetPassword(ctx, "710019748844", "gsr-gemini-api-key")
-		if err != nil {
-			log.Printf("Failed to fetch API key: %v", err)
-			http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
-			return
+		// 1. Fetch from cache or explicitly fetch the exact Gemini API Key from GCP Secret Manager
+		s.apiKeyMu.RLock()
+		apiKey := s.apiKeyCache
+		s.apiKeyMu.RUnlock()
+
+		if apiKey == "" {
+			s.apiKeyMu.Lock()
+			if s.apiKeyCache == "" {
+				var projectID string
+				if s.appConfig != nil {
+					projectID = s.appConfig.ProjectID
+				}
+				if projectID == "" {
+					projectID = "710019748844" // Default fallback
+				}
+				secretName := os.Getenv("GEMINI_API_KEY_NAME")
+				if secretName == "" {
+					secretName = "gsr-gemini-api-key" // Default fallback
+				}
+				key, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
+				if err != nil {
+					s.apiKeyMu.Unlock()
+					log.Printf("Failed to fetch API key: %v", err)
+					http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
+					return
+				}
+				s.apiKeyCache = key
+			}
+			apiKey = s.apiKeyCache
+			s.apiKeyMu.Unlock()
 		}
 
 		// 2. Initialize the Orchestrator with the fetched API Key
@@ -117,10 +154,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 
-		// Load config file globally
-		cfg, err := config.LoadConfig("config.json")
-		if err != nil {
-			log.Printf("Warning: Could not load config.json, using defaults: %v", err)
+		// Use globally loaded config
+		cfg := s.appConfig
+		if cfg == nil {
+			log.Printf("Warning: Global config missing, using defaults")
 			cfg = &config.AppConfig{SingleAmpMode: false, AllowCloudCaptures: true}
 		}
 
@@ -152,9 +189,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		// Unmarshal the Architect's JSON block
 		var archResp struct {
-			BuilderStatement string            `json:"builder_statement"`
-			FinalHtmlPayload map[string]string `json:"final_html_payload"`
-			AgentImpact      []string          `json:"agent_impact"`
+			BuilderStatement  string                  `json:"builder_statement"`
+			FinalHTMLPayload  map[string]string       `json:"final_html_payload"`
+			StructuredPayload storage.StructuredPreset `json:"structured_payload"`
+			AgentImpact       []string                `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
@@ -185,9 +223,14 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 
 		initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
-		payloadBytes, err := json.Marshal(archResp.FinalHtmlPayload)
+		// Use a temporary map to store both structured and legacy html for the draft
+		combinedPayload := map[string]interface{}{
+			"structured": archResp.StructuredPayload,
+			"legacy_html": archResp.FinalHTMLPayload,
+		}
+		payloadBytes, err := json.Marshal(combinedPayload)
 		if err != nil {
-			log.Printf("Failed to marshal final html payload map: %v", err)
+			log.Printf("Failed to marshal combined payload: %v", err)
 			w.Write([]byte(fmt.Sprintf(`<div class="grid-matrix" style="color: #ef4444;">Payload Serialization Error: %v</div>`, err)))
 			return
 		}
@@ -208,19 +251,11 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		// Reload the list to trigger the newly added Draft Preset display (optional, but good for UI consistency)
-		presets, _ := s.store.List(ctx)
-		
-		// Return pure DOM swapping the MAIN workspace alongside updating the sidebar
-		finalDOM := fmt.Sprintf(`
-			<div id="preset-list-container" hx-swap-oob="true">
-				%s
-			</div>
-			<div id="main-workspace" hx-swap-oob="true">
-				%s
-			</div>
-		`, renderPresetList(presets), renderTweakingWorkspaceHTML(draftPreset, false))
+		// Purge old drafts to keep GCS clean (keep only 3 newest)
+		cleanUpOldDrafts(ctx, s.store)
 
-		w.Write([]byte(finalDOM))
+		// Return the single draft workspace directly in the generator view
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(renderTweakingWorkspaceHTML(draftPreset, false)))
 	}
 }

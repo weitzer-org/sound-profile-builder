@@ -57,19 +57,20 @@ func main() {
 	}
 
 	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
+	memoryStore := storage.NewMemoryStore(gcsClient, cfg.BucketName)
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
-		return agents.NewOrchestrator(ic, key)
+		return agents.NewOrchestrator(ic, key, gcsClient)
 	}
 
 	// Initialize Server
-	server := api.NewServer(store, gcsClient, smFetcher, orchMaker)
+	server := api.NewServer(store, memoryStore, gcsClient, smFetcher, orchMaker, cfg)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"
 	}
 
-	// Start server
+	log.Printf("QC-2 Backend listening at: http://localhost:%s\n", port)
 	if err := server.Start(":" + port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

@@ -1,0 +1,7 @@
+
+🚨 --- Hallucination Detections ---
+✅ No hallucinations detected in baseline.
+
+🚨 --- Ordering Violations ---
+File 03_Ambient_Lead_multi.html [Gibson ES-339 Humbuckers]: Gate placed AFTER Delay! (Potential trail cut if on wet signal)
+File 03_Ambient_Lead_multi.html [Fender Telecaster Single Coil]: Gate placed AFTER Delay! (Potential trail cut if on wet signal)

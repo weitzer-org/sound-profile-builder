@@ -9,3 +9,10 @@
 - **Token Optimization**: Optimize overall prompt/API token usage.
 - **Token Monitoring**: Show input and output tokens per agent in the UI.
 - **Gemini Flash Profile Generation**: Test whether using a Gemini Flash call to generate preset metadata (Profile Name, Inspired By / Goal, Core Tone Source, Key Characteristics, Good For) yields better results.
+- **Default Preset Name**: Have the preset name defaulted to the tone prompt prior to saving.
+- **Temporary Presets Section**: Include non-saved presets as a separate section in the saved presets for X time.
+- **Preset Library**: Build out a preset library.
+- **Track Adjustments**: Track user adjustments over time to dynamically inform future preset generation and tweaks.
+- **Capture Toggle**: Add a UI toggle to allow or restrict the multi-agent pipeline from sourcing Factory Captures during preset generation.
+- **Paid Plugin Toggle**: Add a UI configuration to selectively enable/disable routing through Paid Plugin architectures (e.g., Nameless, Cory Wong, Plini).
+- **YouTube Tone Analysis Agent**: Research integrating an agent to search for YouTube videos representing the prompt and analyze the tone from the video audio/context to inform preset generation.

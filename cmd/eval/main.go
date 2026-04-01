@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -114,6 +116,12 @@ func main() {
 	}
 	defer smClient.Close()
 
+	gcsClient, err := storage.NewGCSClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to init GCS client: %v", err)
+	}
+	defer gcsClient.Close()
+
 	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
@@ -128,8 +136,11 @@ func main() {
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
 	
 	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
+	// Initialize GCS Client for Preset Preservation
+	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
+
 	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
-	orch, err := agents.NewOrchestrator(ctx, apiKey)
+	orch, err := agents.NewOrchestrator(ctx, apiKey, gcsClient)
 	if err != nil {
 		log.Fatalf("Failed to init orchestrator: %v", err)
 	}
@@ -164,11 +175,47 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
-			err = os.WriteFile(fmt.Sprintf("eval_results/%s_multi.html", name), []byte(multiAgentResult), 0644)
+			outDir := "eval_results"
+			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
+				outDir = fmt.Sprintf("eval_results/ablation/%s", subDir)
+				os.MkdirAll(outDir, 0755)
+			}
+			err = os.WriteFile(fmt.Sprintf("%s/%s_multi.html", outDir, name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
+
+			// Save to GCS
+			cleanResult := strings.TrimSpace(multiAgentResult)
+			cleanResult = strings.TrimPrefix(cleanResult, "```json")
+			cleanResult = strings.TrimSuffix(cleanResult, "```")
+			cleanResult = strings.TrimSpace(cleanResult)
+
+			var parsed struct {
+				BuilderStatement string            `json:"builder_statement"`
+				FinalHTMLPayload map[string]string `json:"final_html_payload"`
+			}
+
+			if err := json.Unmarshal([]byte(cleanResult), &parsed); err == nil {
+				payloadBytes, _ := json.Marshal(parsed.FinalHTMLPayload)
+				p := &storage.Preset{
+					Name:             strings.ReplaceAll(name, "_", " "),
+					Payload:          string(payloadBytes),
+					BuilderStatement: parsed.BuilderStatement,
+				}
+				if err := store.Save(ctx, p); err != nil {
+					log.Printf("❌ Failed to save preset for %s to GCS: %v", name, err)
+				} else {
+					log.Printf("🎉 Successfully saved %s as GCS preset %s", name, p.ID)
+				}
+			} else {
+				log.Printf("⚠️ Failed to parse JSON for saving to GCS: %s", name)
+			}
 		}
 
 		// 3. RUN B: The Single Monolithic QC-2 Prompt
+		if os.Getenv("SKIP_MONOLITHIC") == "true" {
+			log.Println(" -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)")
+			return
+		}
 		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
 		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 		if err != nil {

@@ -29,7 +29,8 @@
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
         }
 
         .container {
@@ -157,14 +158,14 @@
             transform: translateY(0);
         }
         
-        button.htmx-request .spinner {
+        .htmx-request .spinner {
             display: inline-block;
         }
 
-        button.htmx-request .btn-text {
+        .htmx-request .btn-text {
             display: none;
         }
-        button.htmx-request::after {
+        #submit-btn.htmx-request::after {
             content: "Generating via ADK (~2m)...";
         }
         #chat-submit-btn.htmx-request::after {
@@ -208,7 +209,7 @@
             vertical-align: top;
             line-height: 1.8;
             color: var(--text-main);
-            white-space: nowrap;
+            white-space: normal !important;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         }
 
@@ -423,49 +424,76 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- LEFT COLUMN: Main ADK Generator Workspace -->
-        <div id="main-workspace">
-            <h1>QC-2 Modeler</h1>
-            <p class="subtitle">AI-Driven Physics & Preset Orchestration Pipeline</p>
-
-            <div class="card">
-                <form hx-post="/api/preset/generate" hx-target="#result" hx-indicator="#submit-btn" hx-sync="this:drop" hx-disabled-elt="this, #submit-btn, input[name='prompt']">
-                    
-
-                    <div class="form-group">
-                        <label>Tonal Prompt</label>
-                        <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
-                    </div>
-
-                    <button type="submit" id="submit-btn" style="padding: 1rem; width: 100%;">
-                        <!-- TODO: Implement a multi-phase progress indicator (e.g. SSE streaming) to show real-time progress through ADK orchestration phases -->
-                        <span class="spinner"></span>
-                        <span class="btn-text">Spin Up ADK & Generate Preset</span>
-                    </button>
-                </form>
+    <!-- TOP LEVEL NAVIGATION -->
+    <div class="nav-header" style="width: 100%; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 1.25rem 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem; display: flex; gap: 2rem; align-items: center;">
+            <div style="font-weight: 700; font-size: 1.5rem; color: white; letter-spacing: -0.02em;">QC-2 Modeler</div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="top-nav-btn active" onclick="switchMainTab(this, 'view-generator')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;">Generator</button>
+                <button class="top-nav-btn" onclick="switchMainTab(this, 'view-library')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click once">Preset Library</button>
+                <button class="top-nav-btn" onclick="switchMainTab(this, 'view-rules')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">Learned Rules</button>
             </div>
+        </div>
+    </div>
 
-            <div id="result-container" aria-live="polite">
-                <div id="result">
-                    <!-- Empty state before generation -->
-                    <div class="empty-state">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        <h3>Ready to Dial Your Tone</h3>
-                        <p>Select your hardware, input a tonal reference, and deploy the ADK agents to build your CorOS preset.</p>
+    <!-- MAIN VIEWS -->
+    <div id="view-generator" class="main-view" style="display: block;">
+        <div class="container" style="display: block;"> <!-- Full width -->
+            <div style="max-width: 800px; margin: 0 auto;">
+                <h1>Spin Up a Tone</h1>
+                <p class="subtitle">Deploy the 12-agent ADK pipeline to synthesize your hardware matrix.</p>
+
+                <div class="card">
+                    <form hx-post="/api/preset/generate" hx-target="#generator-workspace" hx-indicator="#submit-btn" hx-sync="this:drop" hx-disabled-elt="this, #submit-btn, input[name='prompt']">
+                        <div class="form-group">
+                            <label>Tonal Prompt</label>
+                            <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
+                        </div>
+
+                        <button type="submit" id="submit-btn">
+                            <span class="spinner"></span>
+                            <span class="btn-text">Spin Up ADK Pipeline</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Live workspace content will load here -->
+                <div id="generator-workspace" style="margin-top: 2rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-library" class="main-view" style="display: none;">
+        <div class="container" style="grid-template-columns: 1fr 2.5fr;"> <!-- List on Left (skinnier), Editor on Right -->
+            <!-- LEFT COLUMN: Preset List -->
+            <div>
+                <div class="card" style="position: sticky; top: 6rem;">
+                    <h2 style="margin-top:0;">Saved Presets</h2>
+                    <input type="text" id="preset-search" placeholder="Search presets..." style="margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" onkeyup="filterPresets()">
+                    <div id="library-list-container" hx-get="/api/presets" hx-trigger="load, presetSaved from:body">
+                        <p class="subtitle" style="font-size:0.9rem;">Loading presets from GCS...</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- RIGHT COLUMN: Saved Presets Sidebar -->
-        <div>
-            <div class="card" style="position: sticky; top: 2rem;">
-                <h2 style="margin-top:0;">Saved Presets</h2>
-                <input type="text" id="preset-search" placeholder="Search presets..." style="margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" onkeyup="filterPresets()">
-                <div id="preset-list-container" hx-get="/api/presets" hx-trigger="load, presetCopied from:body">
-                    <!-- HTMX will load the presets here -->
-                    <p class="subtitle" style="font-size:0.9rem;">Loading presets from GCS...</p>
+            <!-- RIGHT COLUMN: Structured Workspace Editor -->
+            <div id="library-editor-workspace">
+                <div class="card" style="text-align: center; padding: 5rem 2rem;">
+                    <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 2rem;">🎛️</div>
+                    <h2 style="margin-top: 0;">Workspace Dashboard</h2>
+                    <p class="subtitle">Select a preset from the library list or run a generation to view parameters.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-rules" class="main-view" style="display: none;">
+        <div class="container" style="display: block; max-width: 800px; margin: 0 auto;">
+            <div class="card">
+                <h2>Learned Rules</h2>
+                <p class="subtitle">Rules generated by LLM analysis of your alterations.</p>
+                <div id="rules-list-container" hx-get="/api/memories" hx-trigger="load">
+                    <p class="subtitle">Loading rules...</p>
                 </div>
             </div>
         </div>
@@ -475,29 +503,36 @@
     <div id="toast-container"></div>
 
     <script>
+        function switchToLibraryView() {
+            // Wait for HTMX to start the request, then switch view to show progress
+            setTimeout(() => {
+                const btn = document.querySelector('button[hx-get="/api/presets"]');
+                switchMainTab(btn, 'view-library');
+            }, 500);
+        }
+
+        function switchMainTab(btn, viewId) {
+            document.querySelectorAll('.top-nav-btn').forEach(b => {
+                b.style.borderColor = 'var(--border)';
+                b.style.color = 'var(--text-sub)';
+                b.style.fontWeight = '500';
+            });
+            btn.style.borderColor = 'var(--accent)';
+            btn.style.color = 'white';
+            btn.style.fontWeight = '600';
+
+            document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+        }
+
         function filterPresets() {
             let input = document.getElementById('preset-search').value.toLowerCase();
-            let items = document.querySelectorAll('#preset-list-container li');
+            let items = document.querySelectorAll('#library-list-container li');
             items.forEach(item => {
                 let text = item.querySelector('h3').textContent.toLowerCase();
                 item.style.display = text.includes(input) ? '' : 'none';
             });
         }
-
-        document.body.addEventListener('presetSaved', function() {
-            const activeModal = document.querySelector('.modal-overlay.active');
-            if (activeModal) {
-                activeModal.classList.remove('active');
-            }
-        });
-    </script>
-    <script>
-        document.body.addEventListener('htmx:configRequest', function(evt) {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get("mock") === "true") {
-                evt.detail.parameters['mock'] = 'true';
-            }
-        });
     </script>
 </body>
 </html>

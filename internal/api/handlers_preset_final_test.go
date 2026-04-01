@@ -18,7 +18,7 @@ func TestHandlers_FillCoverageGaps(t *testing.T) {
 	orchMaker := func(ctx context.Context, key string) (agents.OrchestratorService, error) {
 		return &mockOrchestrator{}, nil
 	}
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, orchMaker)
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, orchMaker, nil)
 
 	// Save Preset: empty name
 	formEmptyName := url.Values{}
@@ -68,7 +68,7 @@ func TestHandlers_FillCoverageGaps(t *testing.T) {
 		// Mock a response that triggers DSPMatrixUpdated and AgentImpact inclusion
 		return &mockOrchestratorSuccessComplex{}, nil
 	}
-	s2 := NewServer(store, mockStorage, &mockSecretFetcher{}, goodOrchMaker)
+	s2 := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, goodOrchMaker, nil)
 	formChat := url.Values{}
 	formChat.Set("id", "testing_adk")
 	formChat.Set("message", "do something")
@@ -121,7 +121,7 @@ func (m *mockOrchestratorSuccessComplex) Close() {}
 func TestHandleRenamePreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	// Save dummy
 	store.Save(context.Background(), &storage.Preset{ID: "testing_id_rename", Name: "name", Payload: "none"})
@@ -197,7 +197,7 @@ func TestHandleRenamePreset(t *testing.T) {
 func TestHandleDeleteDraftPreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
-	s := NewServer(store, mockStorage, &mockSecretFetcher{}, nil)
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	// Save dummy
 	store.Save(context.Background(), &storage.Preset{ID: "testing_id_draft", Name: "name", Payload: "none"})

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -42,10 +43,11 @@ type OrchestratorService interface {
 type Orchestrator struct {
 	client *genai.Client
 	Usage  *TokenUsage
+	gcs    storage.Client
 }
 
 // NewOrchestrator initializes the Gemini ADK client
-func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOption) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...option.ClientOption) (*Orchestrator, error) {
 	allOpts := append([]option.ClientOption{option.WithAPIKey(apiKey)}, opts...)
 	client, err := genai.NewClient(ctx, allOpts...)
 	if err != nil {
@@ -56,14 +58,21 @@ func NewOrchestrator(ctx context.Context, apiKey string, opts ...option.ClientOp
 		ModelsUsed: make(map[string]int),
 	}
 
-	return &Orchestrator{client: client, Usage: usage}, nil
+	return &Orchestrator{client: client, Usage: usage, gcs: gcs}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
 func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
+	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
+		isMock = true
+	}
+
+	if isMock {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
 			return mockOutput, o.Usage, nil
+		} else {
+			log.Printf("Warning: Failed to read mock file testdata/e2e_mocks/architect_generate.json: %v", err)
 		}
 	}
 
@@ -76,19 +85,22 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())
-	gcs, err := storage.NewGCSClient(ctx)
-	if err != nil {
-		log.Printf("Warning: failed to init GCS client for logging: %v", err)
-	} else {
-		defer gcs.Close()
-	}
+	gcs := o.gcs
 
 	logToGCS := func(agentNum string, result string) {
 		if gcs != nil {
-			err := gcs.WriteFile(ctx, "weitzer-sound-builder", fmt.Sprintf("logs/%s/%s.json", execID, agentNum), []byte(result))
-			if err != nil {
-				log.Printf("Failed to log %s to GCS: %v", agentNum, err)
-			}
+			go func(aNum, res string) {
+				// Detach context to ensure logging finishes even if main pipeline is cancelled
+				bgCtx := context.WithoutCancel(ctx)
+				bucket := os.Getenv("GCS_BUCKET_NAME")
+				if bucket == "" {
+					bucket = "weitzer-sound-builder" // Default fallback
+				}
+				err := gcs.WriteFile(bgCtx, bucket, fmt.Sprintf("logs/%s/%s.json", execID, aNum), []byte(res))
+				if err != nil {
+					log.Printf("Failed to log %s to GCS: %v", aNum, err)
+				}
+			}(agentNum, result)
 		}
 	}
 
@@ -130,11 +142,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	// Read embedded dictionary for Agent 4
 	dictJSON := string(embeddedCorosMap)
+	ampMenu := GetCategorizedAmplifiers()
 
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian
 	sysPrompt4, _ := LoadPrompt("4_coros_librarian")
-	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, constraints)
+	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
 	librarianResult, err4 := o.RunAgent(ctx, "CorOS Librarian", context4)
 	if err4 != nil {
 		return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
@@ -234,6 +247,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	if err12 != nil {
 		return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
 	}
+	
+	validBlocks := GetValidNativeBlocks()
+	if len(validBlocks) > 0 {
+		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
+	}
+	
 	logToGCS("12_architect", finalResult)
 
 	return finalResult, o.Usage, nil
@@ -242,6 +261,27 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 // RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
+	skip := false
+	switch agentRole {
+	case "Tone Historian": skip = os.Getenv("ABLATE_AGENT_1") == "true"
+	case "Sonic Profiler": skip = os.Getenv("ABLATE_AGENT_2") == "true"
+	case "Community Scraper": skip = os.Getenv("ABLATE_AGENT_3") == "true"
+	case "CorOS Librarian": skip = os.Getenv("ABLATE_AGENT_4") == "true"
+	case "Cloud Navigator": skip = os.Getenv("ABLATE_AGENT_5") == "true"
+	case "Acoustician": skip = os.Getenv("ABLATE_AGENT_6") == "true"
+	case "Transducer Tech": skip = os.Getenv("ABLATE_AGENT_7") == "true"
+	case "FOH Optimizer": skip = os.Getenv("ABLATE_AGENT_8") == "true"
+	case "Mix Engineer": skip = os.Getenv("ABLATE_AGENT_9") == "true"
+	case "Control Mapper": skip = os.Getenv("ABLATE_AGENT_10") == "true"
+	case "DSP Dispatcher": skip = os.Getenv("ABLATE_AGENT_11") == "true"
+	case "Architect & Evaluator": skip = os.Getenv("ABLATE_AGENT_12") == "true"
+	}
+
+	if skip {
+		log.Printf("[%s] ABLATION TRIGGERED. Skipping LLM call.", agentRole)
+		return fmt.Sprintf("Ablated Output for %s.", agentRole), nil
+	}
+
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
 	// TODO: Test gemini-2.5-flash specifically for the "Refinement Architect" agent to drastically reduce the ~80s latency of matrix generation.
@@ -305,6 +345,9 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
+
+CRITICAL REFINE INSTRUCTION: If your refinement includes swapping a piece of gear (e.g. changing the Amplifier, Cabinet, or an Effect), you MUST meticulously update the actual "Type: [Block Name]" text in the first column of the HTML table. Do NOT just update the Rationale and leave the old block name in the table!
+
 You MUST output the following exact JSON schema:
 
 {
@@ -312,10 +355,19 @@ You MUST output the following exact JSON schema:
   "builder_statement": "Provide a short and concise statement on what you did during this refinement. Focus on the core tone and gear choices. Do NOT explain the differences between the guitars. IMPORTANT: If you do NOT make changes to the matrix (i.e. you are just answering a question), leave this field completely empty.",
   "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
   "final_html_payload": { "guitar_name": "YOUR_FULL_HTML_TABLE_HERE" }, /* The *entire* updated HTML table matrix map for ALL guitars explicitly (only if dsp_matrix_updated is true) */
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": {
+        "blocks": [
+          { "type": "Amplifier", "name": "...", "settings": { ... }, "rationale": "...", "position": 0 }
+        ]
+      }
+    }
+  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! */
   "agent_impact": ["Bullet point describing impact"]
 }
 
-EXISTING HTML PAYLOAD:
+EXISTING STRUCTURED AND HTML PAYLOAD:
 %s
 `, p.Payload)
 
@@ -334,6 +386,11 @@ EXISTING HTML PAYLOAD:
 	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
+	}
+
+	validBlocks := GetValidNativeBlocks()
+	if len(validBlocks) > 0 {
+		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
 	}
 
 	return finalResult, o.Usage, nil
