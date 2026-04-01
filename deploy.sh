@@ -1,7 +1,12 @@
-#!/bin/bash
+# Check for bucket arguments
+RESULTS_BUCKET=${1:-"REPLACE_WITH_PROD_BUCKET_NAME"}
+DATA_BUCKET=${2:-"REPLACE_WITH_PROD_DATA_BUCKET_NAME"}
 
 echo "🚀 Submitting Cloud Build to Private Worker Pool (us-central1)..."
-if gcloud beta builds submit --project="quacktastic-waffle" --region=us-central1 --config cloudbuild.yaml .; then
+echo "📂 Using Test Results Bucket: $RESULTS_BUCKET"
+echo "📂 Using App Data Bucket:     $DATA_BUCKET"
+
+if gcloud beta builds submit --project="quacktastic-waffle" --region=us-central1 --config cloudbuild.yaml --substitutions=_RESULTS_BUCKET=$RESULTS_BUCKET,_DATA_BUCKET=$DATA_BUCKET .; then
     echo ""
     echo "✅ Build Completed Successfully!"
     echo -n "🌐 YOUR LIVE DASHBOARD URL IS: "

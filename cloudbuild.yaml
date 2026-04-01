@@ -11,15 +11,27 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - 'gcloud storage cp /workspace/build-errors.txt gs://weitzer-sound-builder/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://weitzer-sound-builder/test-results.txt && gcloud storage cp /workspace/coverage.txt gs://weitzer-sound-builder/coverage.txt || true && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
+  - 'gcloud storage cp /workspace/build-errors.txt gs://${_RESULTS_BUCKET}/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://${_RESULTS_BUCKET}/test-results.txt && gcloud storage cp /workspace/coverage.txt gs://${_RESULTS_BUCKET}/coverage.txt || true && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
+
+# 0c. Validate CorOS Mappings
+- name: 'golang:latest'
+  entrypoint: 'go'
+  args: ['run', 'cmd/validate_mappings/main.go']
 
 # 1. Base Docker Build 
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/sound-builder-dev', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev', '.']
 
-# 2. Push generated image artifact into private project Container Registry
+# 2. Push generated image artifact into private project Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/sound-builder-dev']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev']
+
+# 2b. Upload CorOS Map to App Data Bucket (Git as Source of Truth)
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - 'gcloud storage cp internal/agents/coros_map.json gs://${_DATA_BUCKET}/coros_map.json'
 
 # 3. Spin up fully-managed Google Cloud Run container targeting us-central1
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -27,9 +39,9 @@ steps:
   args:
   - 'run'
   - 'deploy'
-  - 'sound-builder-dev'
+  - '${_SERVICE_NAME}'
   - '--image'
-  - 'gcr.io/$PROJECT_ID/sound-builder-dev'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev'
   - '--region'
   - 'us-central1'
   - '--platform'
@@ -41,7 +53,7 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - 'echo "🚀 YOUR LIVE DASHBOARD URL IS: " && gcloud run services describe sound-builder-dev --region us-central1 --format "value(status.url)"'
+  - 'echo "🚀 YOUR LIVE DASHBOARD URL IS: " && gcloud run services describe ${_SERVICE_NAME} --region us-central1 --format "value(status.url)"'
 
 options:
   # Route the build to execute on your pre-created private worker pool with faster machines!
@@ -49,3 +61,8 @@ options:
     name: 'projects/$PROJECT_ID/locations/us-central1/workerPools/faster-machine'
   # Bypass VPC-SC restrictions on default Cloud Storage logs buckets
   logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _RESULTS_BUCKET: 'sound-builder-prod-results'
+  _DATA_BUCKET: 'sound-builder-prod-data'
+  _SERVICE_NAME: 'sound-builder-prod'
