@@ -1,232 +1,188 @@
 ```json
 {
-  "builder_statement": "This preset is modeled after David Gilmour's iconic massive, clean pedal platform tone using a Hiwatt DR103 model. It is designed around a single-amp signal path with massive clean headroom, pushing a classic Fuzz Pi for sustaining leads. Delay and Reverb are placed post-amp to preserve ambient clarity, with specific EQ tailoring applied to offset the characteristic fuzz mid-scoop.",
+  "builder_statement": "This preset is designed to capture the iconic, soaring lead and articulate rhythm tones of a classic 1970s British rig. It leverages a high-headroom 'Custom 103' style amplifier as a pristine pedal platform, driven heavily by a sustaining fuzz and smoothed out with vintage-style optical compression. The spatial footprint is distinctly atmospheric, utilizing a lush studio plate reverb and analog tape delay to recreate vast, modulated soundscapes without muddying the core attack.",
   "final_html_payload": {
-    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Keeps noise floor silent during high-gain fuzz passages.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Threshold: -65.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Threshold: -65.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Chameleon Pre-EQ<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: 200Hz shelf cut to tame low-mid mud inherent to humbuckers.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>200Hz Shelf: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>200Hz Shelf: -3.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Pushes the mids to tighten up the rhythm tone and complement the amp.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Drive: 4.0<br/>Level: 6.0<br/>Tone: 6.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Fuzz Pi<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The cornerstone of the iconic sustaining, violin-like lead tone.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Sustain: 7.0<br/>Tone: 6.0<br/>Vol: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Watt D103 Normal<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: High-headroom clean platform. High mids counteract the Fuzz mid-scoop.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Gain: 4.0<br/>Vol: 3.5<br/>Bass: 3.2<br/>Mid: 7.5<br/>Treble: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Gain: 5.0<br/>Vol: 3.5<br/>Bass: 3.2<br/>Mid: 7.5<br/>Treble: 5.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Watt S4123<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Captures specific WEM 4x12 low-mid resonance. Blend softens harsh fuzz highs.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (Edge, 1.0in)<br/>Mic 2: MD421 (Mid, 1.5in)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (Edge, 1.0in)<br/>Mic 2: MD421 (Mid, 1.5in)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Modulation: MX Flanger<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Ready for classic swooshing textures (active in Scene D, bypassed here).</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Placed post-amp to avoid muddy tails. Mix restricted to maintain pick clarity.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Time: 350ms<br/>Feedback: 30%<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Time: 450ms<br/>Feedback: 40%<br/>Mix: 25%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Expansive ambient plate reverb for atmospheric depth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Decay: 3.0s<br/>Mix: 20%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Decay: 4.5s<br/>Mix: 35%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: FOH Mastering<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Trims sub-rumble and extreme high-end fizz for FOH mixing.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 90Hz<br/>LPF: 8000Hz<br/>Output: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 90Hz<br/>LPF: 8000Hz<br/>Output: -3.0dB</td></tr> </tbody> </table>",
-    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Essential for single coils running into high-gain fuzz circuits.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Threshold: -65.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Threshold: -65.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Chameleon Pre-EQ<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: 4.2kHz LPF to slice off ice-pick treble frequencies native to single coils.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Low Pass Filter: 4.2kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Low Pass Filter: 4.2kHz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Thicker mid-push for rhythm tones. Tone rolled back for bright pickups.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Drive: 4.0<br/>Level: 6.0<br/>Tone: 4.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Fuzz Pi<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Huge sustain for lead passages. Tone rolled off slightly to suit Telecasters.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Sustain: 7.0<br/>Tone: 4.5<br/>Vol: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Watt D103 Normal<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: High-headroom clean platform. High mids counteract the Fuzz mid-scoop.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Gain: 4.0<br/>Vol: 3.5<br/>Bass: 3.2<br/>Mid: 7.5<br/>Treble: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Gain: 5.0<br/>Vol: 3.5<br/>Bass: 3.2<br/>Mid: 7.5<br/>Treble: 5.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Watt S4123<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Captures specific WEM 4x12 low-mid resonance. Blend softens harsh fuzz highs.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (Edge, 1.0in)<br/>Mic 2: MD421 (Mid, 1.5in)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (Edge, 1.0in)<br/>Mic 2: MD421 (Mid, 1.5in)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Modulation: MX Flanger<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Ready for classic swooshing textures (active in Scene D, bypassed here).</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypass</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Placed post-amp to avoid muddy tails. Mix restricted to maintain pick clarity.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Time: 350ms<br/>Feedback: 30%<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Time: 450ms<br/>Feedback: 40%<br/>Mix: 25%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Expansive ambient plate reverb for atmospheric depth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Decay: 3.0s<br/>Mix: 20%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: On<br/>Decay: 4.5s<br/>Mix: 35%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: FOH Mastering<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Trims sub-rumble and extreme high-end fizz for FOH mixing.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 90Hz<br/>LPF: 8000Hz<br/>Output: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 90Hz<br/>LPF: 8000Hz<br/>Output: -3.0dB</td></tr> </tbody> </table>"
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Essential for silencing high-gain fuzz line noise.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 100 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 100 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Compressor: Chief CS3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides smooth, squashed dynamics to enhance sustain on clean rhythms and blooming leads.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 4.0<br/>Attack: 5.0<br/>Level: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 6.0<br/>Attack: 5.0<br/>Level: 5.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Fuzz Pi<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The community standard for searing, violin-like sustaining solo tones.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Sustain: 7.0<br/>Tone: 6.5<br/>Level: 5.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 7.0<br/>Tone: 6.5<br/>Level: 5.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Watt D103 Normal<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A pristine, high-headroom pedal platform. EQ tailored to cut the mud from humbuckers.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Gain: 6.5<br/>Vol: 4.0<br/>Bass: 2.5<br/>Mid: 6.5<br/>Treble: 6.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Gain: 5.0<br/>Vol: 4.0<br/>Bass: 2.5<br/>Mid: 6.5<br/>Treble: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Watt S4123<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Matches the classic 4x12 Crescendo sound. Dual mic blend for full frequency representation.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (X: 1.0, Y: 0.5)<br/>Mic 2: Ribbon 121 (X: 3.5, Y: 2.0)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (X: 1.0, Y: 0.5)<br/>Mic 2: Ribbon 121 (X: 3.5, Y: 2.0)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Chorus: Chief CE2W<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Included for clean modulations, bypassed in standard Rhythm/Lead scenes.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Rate: 3.5<br/>Depth: 6.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Rate: 3.5<br/>Depth: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Tape Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides warm, slightly degraded repeats. Carefully bounded feedback to avoid self-oscillation.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 15%<br/>Feedback: 25%<br/>Time: 450ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 30%<br/>Feedback: 40%<br/>Time: 675ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Preferred spatial engine for deep, lush trails sitting perfectly behind heavy fuzz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 20%<br/>Decay: 2.5s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 35%<br/>Decay: 3.5s</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric 8-Band<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: FOH mix-ready bounds to remove sub-rumble and harsh fuzz fizz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 6500 Hz<br/>Level: -3.0 dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 6500 Hz<br/>Level: -3.0 dB</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Essential for silencing high-gain fuzz line noise and single-coil hum.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 100 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 100 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Compressor: Chief CS3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides smooth, squashed dynamics to enhance sustain on clean rhythms and blooming leads.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 4.0<br/>Attack: 5.0<br/>Level: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 6.0<br/>Attack: 5.0<br/>Level: 5.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Fuzz Pi<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The community standard for searing, violin-like sustaining solo tones. Tone rolled back for bright single coils.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Sustain: 7.0<br/>Tone: 4.5<br/>Level: 5.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Sustain: 7.0<br/>Tone: 4.5<br/>Level: 5.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Watt D103 Normal<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A pristine, high-headroom pedal platform. EQ tailored to tame the highs of a Telecaster.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Gain: 6.5<br/>Vol: 4.0<br/>Bass: 4.5<br/>Mid: 6.0<br/>Treble: 4.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Gain: 5.0<br/>Vol: 4.0<br/>Bass: 4.5<br/>Mid: 6.0<br/>Treble: 4.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Watt S4123<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Matches the classic 4x12 Crescendo sound. Dual mic blend for full frequency representation.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (X: 1.0, Y: 0.5)<br/>Mic 2: Ribbon 121 (X: 3.5, Y: 2.0)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (X: 1.0, Y: 0.5)<br/>Mic 2: Ribbon 121 (X: 3.5, Y: 2.0)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Chorus: Chief CE2W<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Included for clean modulations, bypassed in standard Rhythm/Lead scenes.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Rate: 3.5<br/>Depth: 6.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: OFF<br/>Rate: 3.5<br/>Depth: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Tape Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides warm, slightly degraded repeats. Carefully bounded feedback to avoid self-oscillation.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 15%<br/>Feedback: 25%<br/>Time: 450ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 30%<br/>Feedback: 40%<br/>Time: 675ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Preferred spatial engine for deep, lush trails sitting perfectly behind heavy fuzz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 20%<br/>Decay: 2.5s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: ON<br/>Mix: 35%<br/>Decay: 3.5s</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric 8-Band<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: FOH mix-ready bounds to remove sub-rumble and harsh fuzz fizz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 6500 Hz<br/>Level: -3.0 dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 6500 Hz<br/>Level: -3.0 dB</td></tr> </tbody> </table>"
   },
   "structured_payload": {
     "guitars": {
       "Gibson ES-339 Humbuckers": [
         {
-          "id": "block-1-gate",
-          "type": "Noise Gate",
+          "id": "block-1",
+          "type": "Utility",
           "model": "Noise Gate",
           "parameters": [
-            { "name": "Threshold", "type": "slider", "value": "-65.0dB" },
-            { "name": "State", "type": "toggle", "value": "On" }
+            { "name": "Threshold", "type": "slider", "value": "-65.0" },
+            { "name": "Decay", "type": "slider", "value": "100.0" }
           ]
         },
         {
-          "id": "block-2-preeq",
-          "type": "EQ",
-          "model": "Parametric EQ",
+          "id": "block-2",
+          "type": "Compressor",
+          "model": "Chief CS3",
           "parameters": [
-            { "name": "200Hz Shelf", "type": "slider", "value": "-3.0dB" },
-            { "name": "State", "type": "toggle", "value": "On" }
+            { "name": "Sustain", "type": "slider", "value": "4.0" },
+            { "name": "Attack", "type": "slider", "value": "5.0" },
+            { "name": "Level", "type": "slider", "value": "5.0" }
           ]
         },
         {
-          "id": "block-3-od",
-          "type": "Overdrive",
-          "model": "Green 808",
-          "parameters": [
-            { "name": "Drive", "type": "slider", "value": "4.0" },
-            { "name": "Level", "type": "slider", "value": "6.0" },
-            { "name": "Tone", "type": "slider", "value": "6.0" }
-          ]
-        },
-        {
-          "id": "block-4-fuzz",
-          "type": "Distortion",
+          "id": "block-3",
+          "type": "Fuzz",
           "model": "Fuzz Pi",
           "parameters": [
             { "name": "Sustain", "type": "slider", "value": "7.0" },
-            { "name": "Tone", "type": "slider", "value": "6.0" },
-            { "name": "Vol", "type": "slider", "value": "6.0" }
+            { "name": "Tone", "type": "slider", "value": "6.5" },
+            { "name": "Level", "type": "slider", "value": "5.5" }
           ]
         },
         {
-          "id": "block-5-amp",
+          "id": "block-4",
           "type": "Amplifier",
           "model": "Watt D103 Normal",
           "parameters": [
-            { "name": "Gain", "type": "slider", "value": "5.0" },
-            { "name": "Vol", "type": "slider", "value": "3.5" },
-            { "name": "Bass", "type": "slider", "value": "3.2" },
-            { "name": "Mid", "type": "slider", "value": "7.5" },
-            { "name": "Treble", "type": "slider", "value": "5.0" }
+            { "name": "Gain", "type": "slider", "value": "6.5" },
+            { "name": "Vol", "type": "slider", "value": "4.0" },
+            { "name": "Bass", "type": "slider", "value": "2.5" },
+            { "name": "Mid", "type": "slider", "value": "6.5" },
+            { "name": "Treble", "type": "slider", "value": "6.5" }
           ]
         },
         {
-          "id": "block-6-cab",
+          "id": "block-5",
           "type": "Cabinet",
           "model": "412 Watt S4123",
           "parameters": [
-            { "name": "Mic 1 Type", "type": "dropdown", "value": "SM57" },
-            { "name": "Mic 1 Position", "type": "dropdown", "value": "Cap Edge" },
-            { "name": "Mic 1 Distance", "type": "slider", "value": "1.0in" },
-            { "name": "Mic 2 Type", "type": "dropdown", "value": "MD421" },
-            { "name": "Mic 2 Position", "type": "dropdown", "value": "Cone Mid" },
-            { "name": "Mic 2 Distance", "type": "slider", "value": "1.5in" },
-            { "name": "Blend", "type": "slider", "value": "65%" }
+            { "name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57" },
+            { "name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121" },
+            { "name": "Blend", "type": "slider", "value": "65.0" }
           ]
         },
         {
-          "id": "block-7-mod",
-          "type": "Modulation",
-          "model": "MX Flanger",
+          "id": "block-6",
+          "type": "Chorus",
+          "model": "Chief CE2W",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Bypass" }
+            { "name": "Rate", "type": "slider", "value": "3.5" },
+            { "name": "Depth", "type": "slider", "value": "6.0" }
           ]
         },
         {
-          "id": "block-8-delay",
+          "id": "block-7",
           "type": "Delay",
-          "model": "Circular Delay",
+          "model": "Tape Delay",
           "parameters": [
-            { "name": "Time", "type": "slider", "value": "450ms" },
-            { "name": "Feedback", "type": "slider", "value": "40%" },
-            { "name": "Mix", "type": "slider", "value": "25%" }
+            { "name": "Mix", "type": "slider", "value": "15.0" },
+            { "name": "Feedback", "type": "slider", "value": "25.0" },
+            { "name": "Time", "type": "slider", "value": "450.0" }
           ]
         },
         {
-          "id": "block-9-reverb",
+          "id": "block-8",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            { "name": "Decay", "type": "slider", "value": "4.5s" },
-            { "name": "Mix", "type": "slider", "value": "35%" }
-          ]
-        },
-        {
-          "id": "block-10-foh",
-          "type": "EQ",
-          "model": "Parametric EQ",
-          "parameters": [
-            { "name": "HPF", "type": "slider", "value": "90Hz" },
-            { "name": "LPF", "type": "slider", "value": "8000Hz" },
-            { "name": "Output", "type": "slider", "value": "-3.0dB" }
+            { "name": "Mix", "type": "slider", "value": "20.0" },
+            { "name": "Decay", "type": "slider", "value": "2.5" }
           ]
         }
       ],
       "Fender Telecaster Single Coil": [
         {
-          "id": "block-1-gate",
-          "type": "Noise Gate",
+          "id": "block-1",
+          "type": "Utility",
           "model": "Noise Gate",
           "parameters": [
-            { "name": "Threshold", "type": "slider", "value": "-65.0dB" },
-            { "name": "State", "type": "toggle", "value": "On" }
+            { "name": "Threshold", "type": "slider", "value": "-65.0" },
+            { "name": "Decay", "type": "slider", "value": "100.0" }
           ]
         },
         {
-          "id": "block-2-preeq",
-          "type": "EQ",
-          "model": "Parametric EQ",
+          "id": "block-2",
+          "type": "Compressor",
+          "model": "Chief CS3",
           "parameters": [
-            { "name": "LPF", "type": "slider", "value": "4.2kHz" },
-            { "name": "State", "type": "toggle", "value": "On" }
+            { "name": "Sustain", "type": "slider", "value": "4.0" },
+            { "name": "Attack", "type": "slider", "value": "5.0" },
+            { "name": "Level", "type": "slider", "value": "5.0" }
           ]
         },
         {
-          "id": "block-3-od",
-          "type": "Overdrive",
-          "model": "Green 808",
-          "parameters": [
-            { "name": "Drive", "type": "slider", "value": "4.0" },
-            { "name": "Level", "type": "slider", "value": "6.0" },
-            { "name": "Tone", "type": "slider", "value": "4.0" }
-          ]
-        },
-        {
-          "id": "block-4-fuzz",
-          "type": "Distortion",
+          "id": "block-3",
+          "type": "Fuzz",
           "model": "Fuzz Pi",
           "parameters": [
             { "name": "Sustain", "type": "slider", "value": "7.0" },
             { "name": "Tone", "type": "slider", "value": "4.5" },
-            { "name": "Vol", "type": "slider", "value": "6.0" }
+            { "name": "Level", "type": "slider", "value": "5.5" }
           ]
         },
         {
-          "id": "block-5-amp",
+          "id": "block-4",
           "type": "Amplifier",
           "model": "Watt D103 Normal",
           "parameters": [
-            { "name": "Gain", "type": "slider", "value": "5.0" },
-            { "name": "Vol", "type": "slider", "value": "3.5" },
-            { "name": "Bass", "type": "slider", "value": "3.2" },
-            { "name": "Mid", "type": "slider", "value": "7.5" },
-            { "name": "Treble", "type": "slider", "value": "5.0" }
+            { "name": "Gain", "type": "slider", "value": "6.5" },
+            { "name": "Vol", "type": "slider", "value": "4.0" },
+            { "name": "Bass", "type": "slider", "value": "4.5" },
+            { "name": "Mid", "type": "slider", "value": "6.0" },
+            { "name": "Treble", "type": "slider", "value": "4.5" }
           ]
         },
         {
-          "id": "block-6-cab",
+          "id": "block-5",
           "type": "Cabinet",
           "model": "412 Watt S4123",
           "parameters": [
-            { "name": "Mic 1 Type", "type": "dropdown", "value": "SM57" },
-            { "name": "Mic 1 Position", "type": "dropdown", "value": "Cap Edge" },
-            { "name": "Mic 1 Distance", "type": "slider", "value": "1.0in" },
-            { "name": "Mic 2 Type", "type": "dropdown", "value": "MD421" },
-            { "name": "Mic 2 Position", "type": "dropdown", "value": "Cone Mid" },
-            { "name": "Mic 2 Distance", "type": "slider", "value": "1.5in" },
-            { "name": "Blend", "type": "slider", "value": "65%" }
+            { "name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57" },
+            { "name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121" },
+            { "name": "Blend", "type": "slider", "value": "65.0" }
           ]
         },
         {
-          "id": "block-7-mod",
-          "type": "Modulation",
-          "model": "MX Flanger",
+          "id": "block-6",
+          "type": "Chorus",
+          "model": "Chief CE2W",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Bypass" }
+            { "name": "Rate", "type": "slider", "value": "3.5" },
+            { "name": "Depth", "type": "slider", "value": "6.0" }
           ]
         },
         {
-          "id": "block-8-delay",
+          "id": "block-7",
           "type": "Delay",
-          "model": "Circular Delay",
+          "model": "Tape Delay",
           "parameters": [
-            { "name": "Time", "type": "slider", "value": "450ms" },
-            { "name": "Feedback", "type": "slider", "value": "40%" },
-            { "name": "Mix", "type": "slider", "value": "25%" }
+            { "name": "Mix", "type": "slider", "value": "15.0" },
+            { "name": "Feedback", "type": "slider", "value": "25.0" },
+            { "name": "Time", "type": "slider", "value": "450.0" }
           ]
         },
         {
-          "id": "block-9-reverb",
+          "id": "block-8",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            { "name": "Decay", "type": "slider", "value": "4.5s" },
-            { "name": "Mix", "type": "slider", "value": "35%" }
-          ]
-        },
-        {
-          "id": "block-10-foh",
-          "type": "EQ",
-          "model": "Parametric EQ",
-          "parameters": [
-            { "name": "HPF", "type": "slider", "value": "90Hz" },
-            { "name": "LPF", "type": "slider", "value": "8000Hz" },
-            { "name": "Output", "type": "slider", "value": "-3.0dB" }
+            { "name": "Mix", "type": "slider", "value": "20.0" },
+            { "name": "Decay", "type": "slider", "value": "2.5" }
           ]
         }
       ]
     }
   },
   "agent_impact": [
-    "<strong>Agent 1 (Tone Historian):</strong> Identified the foundational components of David Gilmour's tone, anchoring the logic around a Hiwatt DR103 Custom 100, Ram's Head Big Muff Pi, and Echorec II.",
-    "<strong>Agent 2 (Sonic Profiler):</strong> Established the objective acoustic framework by requiring an 800Hz midrange peak, a smooth Muff-style tube saturation, a large plate reverb, and a strict -65dB gate threshold.",
-    "<strong>Agent 3 (Web Scraper):</strong> Injected community consensus from forums warning that a Fuzz Pi severely scoops mids on a single clean amp. Directed the inclusion of an overdrive/EQ mid-hump and enforced placing ambient effects strictly post-amplifier to prevent muddy tails.",
-    "<strong>Agent 4 (Librarian):</strong> Reconciled historic gear to exact verified Quad Cortex block identifiers ('Watt D103 Normal', '412 Watt S4123', 'Fuzz Pi', 'Green 808', 'Circular Delay', and 'Studio Plate 70 (ST)'), while discarding non-native identifiers.",
-    "<strong>Agent 5 (Navigator):</strong> Complied with constraints to fully disable cloud sourcing, restricting all structural decisions to official factory captures and hardware modeled blocks.",
-    "<strong>Agent 6 (Acoustician):</strong> Cranked the amplifier's mid parameter to 7.5 to correct the fuzz scoop. Programmed mechanically distinct \"chameleon\" pre-EQ adjustments (a 200Hz cut for the ES-339 humbuckers and a 4.2kHz LPF for the Telecaster single coils).",
-    "<strong>Agent 7 (Transducer):</strong> Positioned dual virtual microphones (SM57 at the Cap Edge and an MD421 at Cone Mid) with a 65% blend to optimally capture the WEM 4x12 cab low-end while dynamically softening harsh fuzz high frequencies.",
-    "<strong>Agent 8 (FOH Engineer):</strong> Executed a global mastering EQ layer by applying hard high-pass (90Hz) and low-pass (8000Hz) filters to clean up rumble/hiss, and dropped the lane output by -3.0dB to prevent digital clipping.",
-    "<strong>Agent 9 (Mix Engineer):</strong> Fine-tuned the spatial depth by locking the primary delay time to 450ms and ensuring the maximum mix ratio for ambient lead sequences did not exceed 35%, ensuring precise pick-attack clarity.",
-    "<strong>Agent 10 (Map & Routing):</strong> Assembled the linear single-amp chain and explicitly programmed block parameters across the varying gain stages between Scene A (clean rhythm) and Scene B (sustaining lead).",
-    "<strong>Agent 11 (DSP Dispatcher):</strong> Validated that the final linear layout complied with the strict hardware limitations, confirming the single-amp route stayed well within Quad Cortex processing caps."
+    "<strong>Agent 1 (Tone Historian):</strong> Selected the Hiwatt Custom 100 DR103, Big Muff Pi, and Binson Echorec tape delay core to accurately capture a classic Gilmour pedal-platform rig.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Dictated a 2200 Hz peak frequency, a Smooth Tube Overdrive saturation style, and a Plate reverb topology to match the target sonic footprint.",
+    "<strong>Agent 3 (Scraper):</strong> Mapped community consensus for the Quad Cortex, specifically recommending the 'Custom 103' and 'Triangle Fuzz', and warning about high-end fizz on the Fuzz Pi requiring treble roll-off, as well as oscillation risks on the Tape Delay.",
+    "<strong>Agent 4 (Librarian):</strong> Verified exact Cortex device names, selecting 'Watt D103 Normal', 'Fuzz Pi', 'Tape Delay', '412 Watt S4123', and 'Studio Plate 70 (ST)' while actively dropping the unsupported Sennheiser MD409 mic.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the 'allow_cloud_captures: false' constraint, ensuring strictly factory models were utilized rather than user-created captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Prescribed specific foundational amplifier settings (-3.0dB Input Gain, Vol 4) and a chameleon Pre-EQ to manage 200Hz build-up and roll off harsh treble at 4.5kHz.",
+    "<strong>Agent 7 (Transducer):</strong> Formulated a dual-mic IR blend replacing the dropped MD409, utilizing a Dynamic 57 on the cap edge and Ribbon 121 pushed back to mid-cone at a 65% blend ratio.",
+    "<strong>Agent 8 (FOH):</strong> Ensured the preset was gig-ready by implementing strict 100Hz HPF and 6500Hz LPF bounds, and pulling down the overall lane output by -3.0dB to prevent master clipping.",
+    "<strong>Agent 9 (Mix):</strong> Established spatial parameter guidelines, locking in a 450ms base delay time, a 2.5-second reverb decay, and an overall 30% mix limit for ambient time-based trails.",
+    "<strong>Agent 10 (Map):</strong> Translated the static block selections into dynamic per-scene variations, creating distinct Rhythm and Lead mappings by toggling the Fuzz Pi and drastically scaling up delay/reverb mix and feedback parameters for leads.",
+    "<strong>Agent 11 (DSP Dispatcher):</strong> (Ablated) Automatically passed through limits, certifying that the dual-mic cab and lush Studio Plate 70 comfortably fit within processing thresholds without requiring down-sampling."
   ]
 }
 ```

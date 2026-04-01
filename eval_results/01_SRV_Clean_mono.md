@@ -1,64 +1,64 @@
-**System Engineer QC-2 Initializing...**
-**Protocol:** Physics First | Cortex Control Desktop Verification
-**Speaker Profile Target:** QSC CP12 (Active FRFR)
+As "QC-2," Quad Cortex Systems Engineer, I have initialized the workspace for a high-headroom, Stevie Ray Vaughan-style funk/blues profile. 
 
-To achieve the Stevie Ray Vaughan "Texas Flood" tone, we must replicate the physics of his rig: a vintage Fender Super Reverb pushed to the edge of breakup, slammed into overdrive not by a pedal's clipping diodes, but by the sheer output volume of a Tube Screamer. 
+### Target Physics & Acoustic Rationale
+To achieve the SRV tone, we must rely on a **"Cold Amp / Hot Pedal"** gain-staging philosophy. The core amplifier will be the **US SPR 65** (Fender Super Reverb '65), utilizing its massive headroom and scooped midrange. To execute the SRV lead tone, we will bypass the amp's natural breakup and instead violently push the V1 preamp tube using the **Green 808** (Ibanez TS808 pseudonym), configured with maximum level and minimum drive. 
 
-*Target Verification:* SRV used heavy-gauge strings on a vintage Stratocaster. Per System Rule 9, I have formatted this build to explicitly accommodate both **Fender Telecaster Single Coils** (giving it heavy-string Strat thickness) and **Gibson ES-339 Humbuckers** (stripping out the mud to achieve Texas glass).
-
-***
-
-### 1. Multi-Guitar Gain Staging & Pickup Compensation
-
-**Fender Telecaster (Single Coil) - Row 1 (Scenes A-D)**
-*   **Input Block Gain:** `0.0dB`
-*   **Physics Goal:** Your vintage single coils lack the mass of SRV's heavy strings. We will use the EQ-8 block to add a +3.0dB Low-Shelf at 200Hz to add "Strat body" to the Telecaster, while rolling off the 5kHz "ice pick" so the neck pickup sounds hollow and bell-like.
-
-**Gibson ES-339 (Humbuckers) - Row 2 (Scenes E-H)**
-*   **Input Block Gain:** `-4.5dB` (CRITICAL)
-*   **Physics Goal:** Vintage PAF-style humbuckers output roughly 30-50% more voltage than vintage single coils. If we don't pad the input, the ES-339 will clip the amp model into muddy hard-rock distortion. The EQ-8 block will cut -4.0dB at 250Hz to remove humbucker mud and boost +2.0dB at 3.5kHz for single-coil "snap."
+Because you are alternating between Vintage Single Coils and Medium-Output Humbuckers, the preset is mapped across a Split-Bank Matrix. 
 
 ***
 
-### 2. Main Signal Chain (Table A)
-*Note: Parameters marked with (Right-Click > Assign) are Scene-dependent.*
+### GUITAR 1: Fender Telecaster Single Coil (Row 1: Scenes A–D)
+**Pickup Compensation Strategy:** Vintage single coils lack the low-mid "thump" of SRV's heavy-gauge Stratocaster strings. We will use a +1.0dB input gain, a Parametric-8 EQ to synthesize physical body (200Hz), and a High Cut to tame the ice-pick transients of the Telecaster bridge pickup.
 
-| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
+**Table A: Main Signal Chain (Telecaster - Row 1)**
+| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input Gate | Thresh: -65dB | Thresh: -65dB | High threshold to keep the single coils dead quiet without choking sustain. |
-| **Pre-FX** | Green 808 | Drive: 0.5<br>Tone: 6.5<br>Level: 8.5 *(Right-Click > Assign)* | Drive: 2.0<br>Tone: 7.0<br>Level: 10.0 *(Right-Click > Assign)* | SRV used the TS808 as a clean boost. High level smashes the amp's V1 preamp tube; low drive avoids pedal fizz. |
-| **Amp** | US SR65 (Normal) | Vol: 5.5 *(Right-Click > Assign)*<br>Bass: 3.5<br>Mid: 5.0<br>Treble: 6.5 | Vol: 6.5 *(Right-Click > Assign)*<br>Bass: 3.0<br>Mid: 5.5<br>Treble: 6.5 | Emulates a cranked Fender Super Reverb. Bass must drop as Volume increases to prevent "farty" tube sag on the low E string. |
-| **Cab** | 410 US SR65 | Mic A: Dyn 57 (Pos 0.5, Dist 1")<br>Mic B: Rib 121 (Pos 1.0, Dist 3") | Mic A: Mix +0dB<br>Mic B: Mix -3dB | 4x10 Jensens move fast. The 57 captures the pick attack; the 121 catches the low-end resonance. |
-| **Post-FX 1** | Parametric-8 EQ | Tele (A/B): Band 1 +3.0dB (200Hz), LPF 5.5kHz<br>ES339 (E/F): Band 2 -4.0dB (250Hz) | *Same as Rhythm* | **The Chameleon Block.** Alters guitar physics. HPF set to 90Hz globally to stop the QSC CP12 from rumbling the stage. |
-| **Post-FX 2** | Spring Reverb | Mix: 20%<br>Decay: 1.8s<br>Tone: 6.0 | Mix: 25%<br>Decay: 1.8s<br>Tone: 6.5 | Emulates the analog spring tank. Placed after the cab to prevent muddying the overdrive transients. |
+| **Input/Gate** | Adaptive Gate | Thresh: -65dB / Red: 25% | Thresh: -60dB / Red: 40% | Tele single-coil 60-cycle hum management. |
+| **Pre-FX** | Green 808 | Bypass: OFF | Bypass: ON (Drive: 2.0, Level: 9.0, Tone: 6.5) | Hits the amp's headroom ceiling violently for asymmetrical clipping. |
+| **EQ** | Parametric-8 | Band 1: +2.5dB (200Hz Shelf), High Pass: 80Hz | Band 1: +2.5dB (200Hz Shelf), High Pass: 80Hz | Chameleon Strategy: Simulates thick SRV strings (0.13s) and adds weight. |
+| **Amp** | US SPR 65 | Vol: 4.5, Treb: 6.5, Mid: 4.0, Bass: 3.5, Bright: ON | Vol: 4.5, Treb: 6.5, Mid: 4.0, Bass: 3.5, Bright: ON | Non-Master Vol amp. Scooped mids leave room for the TS808 mid-hump. |
+| **Cab** | 410 US SPR | Mic A: Dyn 57 (Pos 0.2, Dist 1.0"), Mix: 0dB | Mic A: Dyn 57 (Pos 0.2, Dist 1.0"), Mix: 0dB | 10" speakers provide fast transient response for funk strumming. |
+| **Post-FX** | Spring Reverb | Mix: 20%, Decay: 1.5s, Low Cut: 150Hz | Mix: 25%, Decay: 1.5s, Low Cut: 150Hz | Essential Fender tank physics. Low cut prevents QSC CP12 woofer mud. |
+| **Output** | Lane Output | Level: 0.0dB | Level: +1.5dB | Overall SPL push for soloing without altering the gain structure. |
+
+*(Note: Scene C = Dry/Comping, Scene D = Ambient/Vibrato for "Cold Shot" vibes).*
 
 ***
 
-### 3. Troubleshooting & Refinement Tree
-If the tone reacts poorly through your QSC CP12, follow this strict sequence:
+### GUITAR 2: Gibson ES-339 Humbuckers (Row 2: Scenes E–H)
+**Pickup Compensation Strategy:** Humbuckers will immediately collapse the headroom of the US SPR 65, turning a pristine clean tone into a fuzzy, congested overdrive. We must apply a strict **-4.0dB Pad** at the Input Block and utilize the EQ block to carve out the muddy low-mids (300Hz), forcing the ES-339 to mimic a bell-like single coil.
 
-1.  **Too Distorted / Fuzzy (Especially on the ES-339):**
-    *   *Action:* Lower Input Block Gain to `-6.0dB`.
-    *   *Why:* Your humbuckers are hitting the digital input too hard, causing unmusical clipping before the signal even reaches the TS808 block.
-2.  **Too "Farty" or Flubby on the Low E String:**
-    *   *Action:* Lower the Amp Block `Bass` parameter from 3.5 to `2.0`.
-    *   *Why:* Fender Super Reverb circuits have inherently loose low-end. When the power tubes are pushed by a Tube Screamer, bass frequencies cause the phase inverter to collapse.
-3.  **Harsh/Piercing Highs through the FRFR Speaker:**
-    *   *Action:* Lower the Parametric-8 EQ `LPF` (Low Pass Filter) to `4.5kHz`.
-    *   *Why:* Guitar cabs naturally roll off around 5kHz. Active PA speakers like the CP12 reproduce up to 20kHz, which exposes digital fizz.
+**Table B: Main Signal Chain (ES-339 - Row 2)**
+| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Adaptive Gate | Thresh: -70dB / Red: 15% | Thresh: -65dB / Red: 20% | Humbuckers are quieter at baseline; lower Noise Reduction (%) needed. |
+| **Pre-FX** | Green 808 | Bypass: OFF | Bypass: ON (Drive: 1.0, Level: 7.5, Tone: 7.5) | Lower level/drive compared to Tele to prevent humbucker low-end blowout. Tone increased for bite. |
+| **EQ** | Parametric-8 | HPF: 110Hz, Band 2: -3.0dB (300Hz Q:1.5) | HPF: 110Hz, Band 2: -3.0dB (300Hz Q:1.5) | Chameleon Strategy: Carves out Gibson low-mid thickness to restore "spank" and clarity. |
+| **Amp** | US SPR 65 | Vol: 3.8, Treb: 7.0, Mid: 4.5, Bass: 2.0, Bright: OFF | Vol: 3.8, Treb: 7.0, Mid: 4.5, Bass: 2.0, Bright: OFF | Lower Amp Vol preserves headroom. Bright switch OFF to prevent harsh humbucker transients. |
+| **Cab** | 410 US SPR | Mic A: Dyn 57, Mic B: Cond 414 (Mix: -3dB) | Mic A: Dyn 57, Mic B: Cond 414 (Mix: -3dB) | Condenser mic blended in to add "air" and upper-treble sparkle back to the ES-339. |
+| **Post-FX** | Spring Reverb | Mix: 18%, Decay: 1.5s, Low Cut: 200Hz | Mix: 22%, Decay: 1.5s, Low Cut: 200Hz | Slightly reduced mix compared to Tele to maintain rhythmic articulation. |
+| **Output** | Lane Output | Level: +2.0dB | Level: +3.5dB | Compensates for the -4.0dB Input Pad to match the QSC CP12 output levels of the Telecaster. |
+
+***
+
+### Troubleshooting & Refinement Tree (FRFR / CP12 Logic)
+If you audition this preset through your QSC CP12 and encounter issues, follow this exact protocol:
+1. **Tone is "Too Compressed / Farty" on the ES-339 Lead Scene:** The humbuckers are pushing too much low-frequency energy into the TS808. **Fix:** Lower the Input Block Gain to -6.0dB. Do not touch the Amp Bass knob yet. 
+2. **Telecaster sounds "Piercing" or "Ice-Pick" on the Lead Scene:** The QSC CP12 horn tweeter is accurately reproducing the 5kHz peak of the Telecaster. **Fix:** Enter the Parametric-8 EQ block and engage the Low Pass Filter (LPF) at 4500Hz. 
+3. **Not Enough Volume (SPL) on Clean Rhythm:** Because the US SPR 65 lacks a Master Volume, turning up the Amp 'Vol' knob will add grit. **Fix:** Strictly increase the Lane Output Level to raise the physical loudness in the room.
 
 ***
 
 ### Session Library (Active Presets)
-
-**2. Preset Name:** "Texas Flood - Dual Rig"
+**2. Preset Name:** "Texas Flood - Split Matrix"
 **Target:** Stevie Ray Vaughan (1983).
-**Guitar:** Gibson ES-339 (Humbuckers) / Fender Telecaster (Single Coils).
-**Physics Goal:** Clean-boosted Super Reverb, utilizing EQ to match string-gauge and pickup discrepancy.
+**Guitar:** Multi-Target (Fender Telecaster Row 1 / Gibson ES-339 Row 2).
+**Physics Goal:** High-headroom 4x10 cleans violently pushed into asymmetrical clipping via an 808 circuit, mimicking cold-amp/hot-pedal physics. 
 **Full Configuration:**
-*   **Block 1 (Global Gate):** Threshold [-65dB], Range [-80dB].
-*   **Block 2 (Green 808):** Drive [Rhy: 0.5 / Lead: 2.0], Tone [6.5 / 7.0], Level [Rhy: 8.5 / Lead: 10.0].
-*   **Block 3 (Amp - US SR65):** Vol [5.5 / 6.5], Bass [3.5 / 3.0], Mid [5.0 / 5.5], Treble [6.5], Output Level [+2.0dB].
-*   **Block 4 (Cab - 410 US SR65):** Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.0, Dist 3.0"), Mix [A: 0dB, B: -3dB].
-*   **Block 5 (EQ-8):** HPF [90Hz]. Tele Scenes (A-D): LowShelf +3.0dB @ 200Hz, LPF 5500Hz. ES-339 Scenes (E-H): Peak -4.0dB @ 250Hz, Peak +2.0dB @ 3500Hz, LPF 6500Hz.
-*   **Block 6 (Spring Reverb):** Mix [20% / 25%], Decay [1.8s], Tone [6.0].
+*   **Block 1 (Adaptive Gate):** Noise Red [Tele: 25% / 339: 15%], Thresh [-65dB], Decay [150ms].
+*   **Block 2 (Green 808):** Drive [Tele Lead: 2.0 / 339 Lead: 1.0], Level [Tele: 9.0 / 339: 7.5], Tone [Tele: 6.5 / 339: 7.5].
+*   **Block 3 (EQ-8):** Tele [HPF 80Hz, Band 1 +2.5dB @ 200Hz] / 339 [HPF 110Hz, Band 2 -3.0dB @ 300Hz]. 
+*   **Block 4 (Amp - US SPR 65):** Vol [Tele: 4.5 / 339: 3.8], Bass [Tele: 3.5 / 339: 2.0], Mid [4.0 / 4.5], Treble [6.5 / 7.0], Bright [Tele: ON / 339: OFF]. 
+*   **Block 5 (Cab - 410 US SPR):** Mic A (Dyn 57, Pos 0.2, Dist 1.0"). Mic B (339 Only: Cond 414, Pos 0.5, Dist 2.0", Mix -3dB).
+*   **Block 6 (Spring Reverb):** Mix [18-25% Scene Dependent], Decay [1.5s], Low Cut [150Hz].
+*   **Global/Lane Out:** Output Level [+1.5dB Lead Compensation]. Input Gain [Tele: +1.0dB / 339: -4.0dB].

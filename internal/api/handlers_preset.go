@@ -631,14 +631,13 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			%s
-			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
-			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
+			<div style="font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.4; margin-top: 0.5rem;">
+				<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
+			</div>
+			<form hx-post="/api/preset/chat" hx-target="#chat-progress-area" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%s">
-				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
-					<div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4; padding-top: 0.25rem;">
-						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
-					</div>
+				<div style="flex: 1; min-width: 250px;">
+					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="width: 100%%; resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
 				</div>
 				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
 				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
@@ -647,8 +646,9 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 					<span class="btn-text">Adjust</span>
 				</button>
 			</form>
+			<div id="chat-progress-area" style="margin-top: 1rem;"></div>
 		</div>
-		`, refinementSummaryHtml, p.ID, html.EscapeString(p.BuilderStatement))
+		`, refinementSummaryHtml, html.EscapeString(p.BuilderStatement), p.ID)
 	}
 
 	return fmt.Sprintf(`
@@ -695,6 +695,11 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 
 func (s *Server) handleChatPreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form input", http.StatusBadRequest)
 			return
@@ -719,11 +724,11 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			projectID = s.appConfig.ProjectID
 		}
 		if projectID == "" {
-			projectID = "710019748844" // Default fallback
+			projectID = "710019748844"
 		}
 		secretName := os.Getenv("GEMINI_API_KEY_NAME")
 		if secretName == "" {
-			secretName = "gsr-gemini-api-key" // Default fallback
+			secretName = "gsr-gemini-api-key"
 		}
 		apiKey, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
 		if err != nil {
@@ -731,96 +736,112 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
-		orch, err := s.orchMaker(ctx, apiKey)
-		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">ADK Error: %v</div>`, err)))
-			return
+		taskID := fmt.Sprintf("chat-%s-%d", id, time.Now().UnixNano())
+
+		s.tasksMu.Lock()
+		s.tasks[taskID] = &TaskState{
+			Status: "running",
+			Phase:  "Architect Analyzing Request...",
 		}
-		defer orch.Close()
+		s.tasksMu.Unlock()
 
 		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 
-		// Run the chat refinement loop
-		jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage)
-		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %v</div>`, err)))
-			return
-		}
-
-		// Strip markdown if exists
-		jsonResponse = strings.TrimSpace(jsonResponse)
-		jsonResponse = strings.TrimPrefix(jsonResponse, "```json")
-		jsonResponse = strings.TrimPrefix(jsonResponse, "```")
-		jsonResponse = strings.TrimSuffix(jsonResponse, "```")
-		jsonResponse = strings.TrimSpace(jsonResponse)
-
-		var archResp struct {
-			ConversationalResponse string                  `json:"conversational_response"`
-			BuilderStatement       string                  `json:"builder_statement"`
-			DSPMatrixUpdated       bool                  `json:"dsp_matrix_updated"`
-			StructuredPayload       storage.StructuredPreset `json:"structured_payload"`
-			AgentImpact            []string                `json:"agent_impact"`
-		}
-
-		if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
-			log.Printf("Failed to unmarshal chat architect: %v, raw: %s", err, jsonResponse)
-			w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Serialization Error! Check server logs.</div>`)))
-			return
-		}
-
-		// Append user message
-		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
-
-		// Append architect response including impacts
-		assistantContent := archResp.ConversationalResponse
-		if archResp.DSPMatrixUpdated && len(archResp.AgentImpact) > 0 {
-			assistantContent += "\n\n**Impact:**\n"
-			for _, imp := range archResp.AgentImpact {
-				assistantContent += "- " + imp + "\n"
+		go func() {
+			orch, err := s.orchMaker(ctx, apiKey)
+			if err != nil {
+				log.Printf("Failed to initialize Orchestrator: %v", err)
+				s.updateTaskError(taskID, fmt.Sprintf("ADK Error: %v", err))
+				return
 			}
-		}
+			defer orch.Close()
 
-		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "model", Content: assistantContent})
-
-		if archResp.DSPMatrixUpdated && archResp.BuilderStatement != "" {
-			p.BuilderStatement = archResp.BuilderStatement
-		}
-
-		if archResp.DSPMatrixUpdated {
-			if len(archResp.StructuredPayload.Guitars) > 0 {
-				payloadBytes, err := json.Marshal(archResp.StructuredPayload)
-				if err != nil {
-					log.Printf("Failed to marshal structured payload: %v", err)
-				} else {
-					p.Payload = string(payloadBytes)
-				}
-
-				// Auto-Capture Learned Rule
-				m := &storage.Memory{
-					Artist:     p.Name, // Topic context
-					Critique:   userMessage,
-					Action:     strings.Join(archResp.AgentImpact, "; "),
-					BasePreset: p.ID,
-				}
-				if err := s.memoryStore.Save(ctx, m); err != nil {
-					log.Printf("Failed to save learned rule: %v", err)
-				} else {
-					log.Printf("Successfully saved learned rule for %s", p.Name)
-				}
-			} else {
-				log.Printf("Warning: Agent returned empty StructuredPayload despite DSPMatrixUpdated=true. Skipping overwrite.")
+			jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage)
+			if err != nil {
+				log.Printf("RefineChat failure: %v", err)
+				s.updateTaskError(taskID, fmt.Sprintf("Execution Error: %v", err))
+				return
 			}
-		}
 
-		// Save the state
-		s.store.Save(ctx, p)
+			jsonResponse = strings.TrimSpace(jsonResponse)
+			jsonResponse = strings.TrimPrefix(jsonResponse, "```json")
+			jsonResponse = strings.TrimPrefix(jsonResponse, "```")
+			jsonResponse = strings.TrimSuffix(jsonResponse, "```")
+			jsonResponse = strings.TrimSpace(jsonResponse)
 
-		finalDOM := renderTweakingWorkspaceHTML(p, false)
+			var archResp struct {
+				ConversationalResponse string                  `json:"conversational_response"`
+				BuilderStatement       string                  `json:"builder_statement"`
+				DSPMatrixUpdated       bool                  `json:"dsp_matrix_updated"`
+				StructuredPayload       storage.StructuredPreset `json:"structured_payload"`
+				AgentImpact            []string                `json:"agent_impact"`
+			}
+
+			if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
+				log.Printf("Failed to unmarshal chat architect: %v", err)
+				s.updateTaskError(taskID, fmt.Sprintf("Serialization Error: %v", err))
+				return
+			}
+
+			p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
+
+			assistantContent := archResp.ConversationalResponse
+			if archResp.DSPMatrixUpdated && len(archResp.AgentImpact) > 0 {
+				assistantContent += "\n\n**Impact:**\n"
+				for _, imp := range archResp.AgentImpact {
+					assistantContent += "- " + imp + "\n"
+				}
+			}
+
+			p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "model", Content: assistantContent})
+
+			if archResp.DSPMatrixUpdated && archResp.BuilderStatement != "" {
+				p.BuilderStatement = archResp.BuilderStatement
+			}
+
+			if archResp.DSPMatrixUpdated {
+				if len(archResp.StructuredPayload.Guitars) > 0 {
+					payloadBytes, err := json.Marshal(archResp.StructuredPayload)
+					if err != nil {
+						log.Printf("Failed to marshal structured payload: %v", err)
+					} else {
+						p.Payload = string(payloadBytes)
+					}
+
+					m := &storage.Memory{
+						Artist:     p.Name,
+						Critique:   userMessage,
+						Action:     strings.Join(archResp.AgentImpact, "; "),
+						BasePreset: p.ID,
+					}
+					if err := s.memoryStore.Save(ctx, m); err != nil {
+						log.Printf("Failed to save learned rule: %v", err)
+					}
+				}
+			}
+
+			s.store.Save(ctx, p)
+
+			s.tasksMu.Lock()
+			if task, ok := s.tasks[taskID]; ok {
+				task.Status = "complete"
+				task.Result = renderTweakingWorkspaceHTML(p, false)
+			}
+			s.tasksMu.Unlock()
+		}()
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(finalDOM))
+		w.Write([]byte(fmt.Sprintf(`
+			<div id="chat-progress-area" hx-get="/api/preset/status?id=%s" hx-trigger="every 2s" hx-swap="outerHTML">
+				<div class="progress-panel" style="padding: 0.75rem 1rem; display: flex; flex-direction: row; align-items: center; gap: 0.75rem;">
+					<span class="spinner" style="display:inline-block;"></span>
+					<span style="color: white; font-size: 0.95rem;">Current: <span style="color: var(--accent);">Architect Analyzing Request...</span></span>
+				</div>
+			</div>
+			<button id="chat-submit-btn" style="display: none;" hx-swap-oob="true"></button>
+		`, taskID)))
 	}
 }
 

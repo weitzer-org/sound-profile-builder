@@ -34,7 +34,7 @@ type TokenUsage struct {
 
 // OrchestratorService defines the methods available on the ADK Orchestrator
 type OrchestratorService interface {
-	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error)
+	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(phase string)) (string, *TokenUsage, error)
 	RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error)
 	Close()
 }
@@ -62,7 +62,7 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
-func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *TokenUsage, error) {
+func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(phase string)) (string, *TokenUsage, error) {
 	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		isMock = true
@@ -102,6 +102,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 				}
 			}(agentNum, result)
 		}
+	}
+
+	if onProgress != nil {
+		onProgress("Phase 1/4: Analyzing Tone Context & Physics...")
 	}
 
 	// Phase 1: Research & Reality (Concurrent Goroutines)
@@ -144,6 +148,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	dictJSON := string(embeddedCorosMap)
 	ampMenu := GetCategorizedAmplifiers()
 
+	if onProgress != nil {
+		onProgress("Phase 2/4: Mapping to Native CorOS Effects...")
+	}
+
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian
 	sysPrompt4, _ := LoadPrompt("4_coros_librarian")
@@ -174,6 +182,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 
 	log.Printf("Phase 2 Complete.")
+
+	if onProgress != nil {
+		onProgress("Phase 3/4: Calculating FOH & Room EQ Balances...")
+	}
 
 	// Phase 3: Physics & Calculation
 	var wg3 sync.WaitGroup
@@ -206,6 +218,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 	log.Printf("Phase 3 Complete.")
 
+	if onProgress != nil {
+		onProgress("Phase 4/4: Constructing Final DSP Routing Matrix...")
+	}
+
 	// Phase 4: Assembly & Output
 	var wg4 sync.WaitGroup
 	var mixResult, mapResult, dspResult string
@@ -236,6 +252,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		return "", o.Usage, fmt.Errorf("Phase 4 failures: %v, %v, %v", err9, err10, err11)
 	}
 	log.Printf("Phase 4 Complete.")
+
+	if onProgress != nil {
+		onProgress("Finalizing: Rendering Interactive Workspace UI...")
+	}
 
 	// Agent 12: Architect & Evaluator formats the final breakdown
 	architectPrompt := "Evaluate the impact of the pipeline and format the final HTML table based strictly on the following aggregated data payload:\n\n"

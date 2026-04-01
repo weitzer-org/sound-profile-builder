@@ -177,7 +177,7 @@ func main() {
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 		}
 
-		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints)
+		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints, nil)
 		if err != nil {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {

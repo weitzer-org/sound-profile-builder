@@ -1,72 +1,74 @@
-Greetings. I am QC-2, your Quad Cortex Systems Engineer. 
+### QC-2 Systems Engineer: David Gilmour Tone Adaptation
+**Target Analogs:** Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, Plate Reverb.
+**CorOS Verified Models:** `Hiw103` (Amp), `Chief Fuzz` (Pre-FX), `412 Hiw Fane` (Cab - Simulates Fane Crescendo speakers), `Plate Reverb` (Post-FX). 
+**Output Profile:** Full-range optimization for QSC CP12 Active PA.
 
-To recreate David Gilmour’s legendary "Comfortably Numb" tone—specifically the massive, soaring outro solo—we must carefully manage the physics of the **Big Muff (Fuzz Pi)** into a **Hiwatt DR103 (UK C100)**. 
+**Physics & Gain Staging Protocol:**
+The David Gilmour signal path relies on slamming a massive-headroom, ultra-clean amplifier (`Hiw103`) with an aggressively scooped, high-gain fuzz (`Chief Fuzz`). If the amp breaks up, the fuzz turns to muddy static. We must keep the Amp's Preamp Volumes low and Master Volume high. Furthermore, because the Big Muff circuit scoops the midrange, a Single Coil (Telecaster) will sound thin and piercing without EQ compensation, whereas a Humbucker (ES-339) will overload the low-frequencies of the fuzz, causing "farting" or sagging.
 
-A Big Muff applies massive gain and severely scoops the midrange, which can sound buzzy and hollow through a flat-response PA speaker like your QSC CP12. To combat this, we will use a high-headroom clean amp setting with heavily boosted mids, followed by a strict Low Pass Filter (LPF) to remove digital fizz. 
+Below are the precisely separated, dedicated configurations for your Fender Telecaster (Row 1) and Gibson ES-339 (Row 2). 
 
-Per my operational protocols, I have split this configuration into a **Multi-Guitar Target Output**, explicitly separating the parameter math for your **Fender Telecaster** (Single Coils) and **Gibson ES-339** (Humbuckers).
+---
 
-***
+### Row 1: Single Coil Profile (Fender Telecaster)
+**Goal:** Tame the ice-pick treble of the Tele bridge pickup, add low-mid "body" to survive the Big Muff mid-scoop, and maintain endless sustain.
 
-### The "Chameleon" Strategy & Gain Staging
+**Table A: Main Signal Chain (Telecaster)**
+*Use Scenes A (Rhythm) and B (Lead). Assign parameters via Right-Click > Assign to Scene.*
 
-**1. Fender Telecaster (Vintage/Low Output Single Coils)**
-*   **Physics Challenge:** Single coils lack the low-mid girth to push a Big Muff into smooth, violin-like sustain, often resulting in a spiky, thin fuzz tone. 
-*   **Global Input Setting:** `0.0 dB` (Unity). 
-*   **EQ-8 Strategy:** We will add a +3.0dB Low Shelf at 200Hz to simulate humbucker body, allowing the Fuzz Pi to compress smoothly. 
-*   **Bank Logic:** **Row 1 (Scenes A-D)**
-
-**2. Gibson ES-339 (Medium/High Output Humbuckers)**
-*   **Physics Challenge:** Humbuckers push too much voltage into a Big Muff, causing the clipping diodes to "choke" and sound muddy or farty on the low strings.
-*   **Global Input Setting:** `-4.5 dB` Pad. This is critical. It cleans up the input signal so the fuzz acts like a smooth distortion rather than a broken square wave.
-*   **EQ-8 Strategy:** High Pass Filter (HPF) raised to 110Hz to cut muddy neck-pickup rumble, with a slight dip at 350Hz.
-*   **Bank Logic:** **Row 2 (Scenes E-H)**
-
-***
-
-### TABLE A: Main Signal Chain ("Comfortably Numb" Build)
-*Note: Parameters marked with **(Assign)** require you to Right-Click and assign them to Scenes. "Rhythm" replicates the smoother, delay-light first solo. "Lead" replicates the massive outro solo.*
-
-| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
+| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Red: 35% / Thresh: -55dB | Red: 45% / Thresh: -55dB **(Assign)** | Tames single-coil 60-cycle hum and Muff noise floor without killing sustain. |
-| **Pre-FX 1** | Opto Comp | Peak Red: 40, Gain: 5.0 | Peak Red: 55, Gain: 6.0 **(Assign)** | Feeds the Fuzz an already-compressed, sustained signal (Gilmour secret). |
-| **Pre-FX 2** | Fuzz Pi | Sust: 4.5, Tone: 4.5, Vol: 5.0 | Sust: 7.5, Tone: 5.5, Vol: 5.5 **(Assign)** | Triangle/Ram's Head style fuzz. Keep Tone at or below 5.5 to prevent FRFR fizz. |
-| **Pre-FX 3** | Flanger | Mix: 0% (Bypassed) | Mix: 15%, Rate: 0.5Hz, Depth: 40% **(Assign)** | Simulates the Electric Mistress. Kept very subtle to widen the fuzz. |
-| **Amp** | UK C100 Normal | Vol: 4.0, Master: 8.5, Bass: 4.0, Mid: 7.5, Treb: 5.0, Pres: 4.5 | Vol: 4.5, Master: 8.5, Bass: 4.0, Mid: 7.5, Treb: 5.0, Pres: 4.5 **(Assign)** | Hiwatts require high Master / low Vol for high-headroom, pedal-taking cleans. Mids pushed to counteract Fuzz scoop. |
-| **Cab** | 412 UK C100 | Mic A: Dyn 57 (Pos 0.5) <br> Mic B: Rib 121 (Pos 1.5) | Mic A: Dyn 57 (Mix 0dB) <br> Mic B: Rib 121 (Mix -2dB) | Fane speakers. Ribbon mic softens the high-end spikes of the Fuzz Pi. |
-| **Post-EQ** | Parametric-8 | LPF: 5500Hz, HPF: 90Hz | LPF: 5500Hz, HPF: 90Hz | **Crucial for QSC CP12.** Removes the 6kHz+ frequencies where digital fuzz "wasps" live. |
-| **Post-FX 1** | Tape Delay | Mix: 15%, Time: 480ms, Fdbk: 25% | Mix: 28%, Time: 480ms, Fdbk: 45% **(Assign)** | Simulates his Binson Echorec / MXR. Sits warmly behind the notes. |
-| **Post-FX 2** | Hall Reverb | Mix: 15%, Decay: 2.5s | Mix: 25%, Decay: 3.5s **(Assign)** | Simulates large stadium decay. High Cut at 3000Hz keeps repeats from clashing. |
+| **Input/Gate** | Global In (Circle 1) | Thresh: -60dB, Gain: 0.0dB | Thresh: -65dB, Gain: +1.5dB | Tele output needs a slight push for lead sustain; looser gate prevents choking the fuzz tail. |
+| **Pre-FX 1** | Parametric-8 EQ | Band 2: +3.0dB @ 250Hz | Band 2: +3.0dB @ 250Hz | Adds "body" and weight to the single coil before it hits the fuzz to simulate Stratocaster neck-pickup thickness. |
+| **Pre-FX 2** | Chief Fuzz | Bypass: ON (Clean) | Bypass: OFF (Sustain: 7.5, Tone: 4.5, Vol: 6.0) | High sustain, Tone rolled back below noon to tame the Telecaster's high-end pick attack. |
+| **Amp** | Hiw103 | Norm Vol: 3.0, Brill: 2.0 | Norm Vol: 3.0, Brill: 2.0 | Master: 8.5. Tremendous headroom. Amp stays physically clean to allow Fuzz to act as the sole clipping stage. |
+| **Cab** | 412 Hiw Fane | Mic A: Dyn 57 (Center) | Mic A: Dyn 57 (Center) | Fane speakers are inherently bright. Dyn 57 captures the bite. |
+| **Post-FX 1** | Tape Delay | Bypass: ON (Or Mix 10%) | Bypass: OFF (Mix: 25%, Time: 440ms, Fdbk: 30%) | Emulates Binson Echorec. 440ms is Gilmour's golden delay time. |
+| **Post-FX 2** | Plate Reverb | Mix: 15%, Decay: 1.5s | Mix: 35%, Decay: 4.2s | High decay and mix on Lead creates the massive "Comfortably Numb" spatial depth. |
 
-***
+---
+
+### Row 2: Humbucker Profile (Gibson ES-339)
+**Goal:** Prevent the high-output humbuckers from choking the Fuzz input stage, tight high-pass filtering to prevent bass-wobble, and increasing presence for clarity.
+
+**Table B: Main Signal Chain (ES-339)**
+*Use Scenes E (Rhythm) and F (Lead). Assign parameters via Right-Click > Assign to Scene.*
+
+| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Global In (Circle 1) | Thresh: -50dB, Gain: -4.0dB | Thresh: -50dB, Gain: -4.0dB | **Crucial:** -4.0dB pad prevents high-output humbuckers from instantly clipping the digital input and turning the Fuzz into square-wave mud. |
+| **Pre-FX 1** | Parametric-8 EQ | HPF: 120Hz | HPF: 120Hz | Trims humbucker bass resonance before the fuzz. Prevents the Ram's Head circuit from sagging or "farting out". |
+| **Pre-FX 2** | Chief Fuzz | Bypass: ON (Clean) | Bypass: OFF (Sustain: 5.5, Tone: 6.5, Vol: 5.5) | Lower sustain required since humbuckers already push hard. Tone increased to 6.5 to add cut and articulation. |
+| **Amp** | Hiw103 | Norm Vol: 2.5, Brill: 3.5 | Norm Vol: 2.5, Brill: 3.5 | Swapped volume dominance vs Tele: Brilliant channel pushed higher to add chime to dark humbuckers. Master: 8.5. |
+| **Cab** | 412 Hiw Fane | Mic A: Dyn 57, B: Rib 121 | Mic A: Dyn 57, B: Rib 121 | Blending Ribbon 121 (Mix -3dB) to add smooth low-mids, balancing the brighter Amp settings. |
+| **Post-FX 1** | Tape Delay | Bypass: ON | Bypass: OFF (Mix: 20%, Time: 440ms) | Mix lowered slightly vs Single Coils to preserve humbucker note definition. |
+| **Post-FX 2** | Plate Reverb | Mix: 12%, Decay: 1.5s | Mix: 30%, Decay: 4.2s | High Pass filter in Reverb set to 200Hz to prevent low-end wash with the ES-339. |
+
+---
 
 ### Troubleshooting & Refinement Tree
+If the tone played through your QSC CP12 is **"Too Fuzzy" or "Farty/Broken"**:
+1. **Input Pad:** Ensure your ES-339 Input block is at -4.0dB or even -6.0dB. Humbuckers into Big Muffs naturally create chaotic low-end harmonics.
+2. **Fuzz Sustain:** Lower the `Chief Fuzz` Sustain parameter by 1.0 increments. Let the sheer volume of the Hiwatt model do the heavy lifting.
+3. **Amp Headroom:** Verify `Hiw103` Master Volume is at 8.0+ and Normal/Brilliant volumes are below 4.0.
+4. **Speaker EQ (PA Tuning):** To tame fizz on the QSC CP12 PA speaker, go to your Lane Output (Right side of grid) and set the High Cut (LPF) to 5.5kHz to slice off digital artifacts.
 
-If monitoring through your QSC CP12 and the tone feels incorrect, execute these steps strictly in order:
-
-1.  **"It sounds too fizzy, fuzzy, or synthetic."** 
-    *   *Action:* Lower the **Parametric-8 LPF** from 5500Hz down to 4500Hz. Fuzz into a PA speaker inherently reveals high-frequency harshness that a real guitar cabinet would naturally filter out.
-2.  **"The ES-339 sounds muddy/muffled when I play chords."**
-    *   *Action:* You are overloading the Fuzz Pi. Go to the Global Input block and lower the input gain to `-6.0dB`. 
-3.  **"The Telecaster dies out too quickly; I can't hold the long bends."**
-    *   *Action:* Increase the **Opto Comp** Peak Reduction to `65` and increase the **Fuzz Pi** Sustain to `8.5`. Do *not* add Amp Gain, as this will introduce non-musical preamp fizz.
-
-***
+---
 
 ### Session Library (Active Presets)
+**1. Preset Name: "Spoonful - ES339"**
+[Previous Session Data Retained in Memory - See System Prompt History]
 
-**2. Preset Name: "Numb Solo - Tele / ES-339"**
-*   **Target:** David Gilmour, "Comfortably Numb" (1979).
-*   **Guitar:** Multi-Target (Fender Telecaster / Gibson ES-339).
-*   **Physics Goal:** Extreme sustain via Fuzz->Comp staging, tamed by LPF for QSC CP12 Active PA Speaker.
-*   **Full Configuration:**
-    *   **Block 1 (Adaptive Gate):** Red [Rhy: 35% / Lead: 45%], Thresh [-55dB].
-    *   **Block 2 (Opto Comp):** Peak Red [Rhy: 40 / Lead: 55], Gain [5.0 / 6.0].
-    *   **Block 3 (Fuzz Pi):** Sust [Rhy: 4.5 / Lead: 7.5], Tone [4.5 / 5.5], Vol [5.0 / 5.5]. ES-339 Input Pad requires -4.5dB offset.
-    *   **Block 4 (Flanger):** Mix [Rhy: 0% / Lead: 15%], Rate [0.5Hz], Depth [40%].
-    *   **Block 5 (Amp - UK C100 Normal):** Vol [4.0 / 4.5], Bass [4.0], Mid [7.5], Treble [5.0], Presence [4.5], Master [8.5].
-    *   **Block 6 (Cab - 412 UK C100):** Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Rib 121, Pos 1.5, Dist 2.0"), Mix [A: 0dB, B: -2dB].
-    *   **Block 7 (EQ-8):** HPF [90Hz], LPF [5500Hz]. Telecaster: Band 1 Low Shelf [+3.0dB @ 200Hz]. ES-339: Band 2 Peak [-2.0dB @ 350Hz].
-    *   **Block 8 (Tape Delay):** Mix [15% / 28%], Time [480ms], Fdbk [25% / 45%], Drive [10%], HP [150Hz], LP [2500Hz].
-    *   **Block 9 (Hall Reverb):** Mix [15% / 25%], Decay [2.5s / 3.5s], Pre-Delay [20ms], High Cut [3000Hz].
+**2. Preset Name: "Wall Lead - Tele / 339 Matrix"**
+*Target:* David Gilmour (1970s Era).
+*Guitars:* Fender Telecaster (Row 1) / Gibson ES-339 (Row 2).
+*Physics Goal:* High headroom pedal-platform + scooped sustaining fuzz.
+*Full Configuration:*
+*   **Block 1 (EQ-8 - Tele adaptation):** HPF [80Hz], Band 2 [250Hz, +3.0dB, Q 1.0], Band 8 LPF [Bypass]. (Bypass this block for ES-339).
+*   **Block 2 (EQ-8 - 339 adaptation):** HPF [120Hz], Band 4 [-2dB @ 400Hz], Band 8 LPF [Bypass]. (Bypass this block for Telecaster).
+*   **Block 3 (Chief Fuzz):** Sustain [Tele: 7.5 / 339: 5.5], Tone [Tele: 4.5 / 339: 6.5], Vol [6.0].
+*   **Block 4 (Amp - Hiw103):** Norm Vol [Tele: 3.0 / 339: 2.5], Brill Vol [Tele: 2.0 / 339: 3.5], Bass [4.5], Mid [5.5], Treble [6.0], Presence [5.0], Master [8.5].
+*   **Block 5 (Cab - 412 Hiw Fane):** Mic A (Dyn 57, Pos 0.0, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 3.0"). Mix [A: 0dB, B: -3dB].
+*   **Block 6 (Tape Delay):** Mix [Tele: 25% / 339: 20%], Time [440ms], Fdbk [30%], HP [150Hz], LP [3000Hz].
+*   **Block 7 (Plate Reverb):** Mix [Rhythm: 15% / Lead: 35%], Decay [Rhythm: 1.5s / Lead: 4.2s], Pre-Delay [20ms], HP [200Hz], LP [4000Hz]. 
+*   **Lane Output:** Level [+2.0dB], Pan [Center].
