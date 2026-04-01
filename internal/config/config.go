@@ -21,5 +21,13 @@ func LoadConfig(path string) (*AppConfig, error) {
 	if err := json.Unmarshal(bytes, &cfg); err != nil {
 		return nil, err
 	}
+
+	if envBucket := os.Getenv("GCS_BUCKET"); envBucket != "" {
+		cfg.BucketName = envBucket
+	}
+	if envProject := os.Getenv("GOOGLE_CLOUD_PROJECT"); envProject != "" {
+		cfg.ProjectID = envProject
+	}
+
 	return &cfg, nil
 }
