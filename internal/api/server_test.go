@@ -59,8 +59,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	if rrSuccess.Code != http.StatusOK {
 		t.Errorf("Expected 200 OK, got: %d", rrSuccess.Code)
 	}
-	if !strings.Contains(rrSuccess.Body.String(), "Finalize Save") {
-		t.Errorf("Expected response to contain 'Finalize Save' button")
+	if !strings.Contains(rrSuccess.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling button")
 	}
 
 	// 3. Secret Fetcher Error
@@ -82,8 +82,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqOrchGen.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrOrchGen := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrOrchGen, reqOrchGen)
-	if rrOrchGen.Code != http.StatusInternalServerError {
-		t.Errorf("Expected 500 on orch init fail")
+	if !strings.Contains(rrOrchGen.Body.String(), "Initializing ADK Pipeline") {
+		t.Errorf("Expected polling button for orch init fail async")
 	}
 	
 	// 5. Orchestrator Execution Pipeline Error
@@ -93,8 +93,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqPipe.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrPipe := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrPipe, reqPipe)
-	if !strings.Contains(rrPipe.Body.String(), `pipeline execution fail`) {
-		t.Errorf("Expected string 'pipeline execution fail'")
+	if !strings.Contains(rrPipe.Body.String(), "Initializing ADK Pipeline") {
+		t.Errorf("Expected polling button for pipeline fail async")
 	}
 	mockOrch.err = nil
 
@@ -109,14 +109,17 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqBadJson.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrBadJson := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrBadJson, reqBadJson)
-	if !strings.Contains(rrBadJson.Body.String(), `Serialization Error`) {
-		t.Errorf("Expected Serialization Error message")
+	if rrBadJson.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK on bad json spawn, got: %d", rrBadJson.Code)
+	}
+	if !strings.Contains(rrBadJson.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling area")
 	}
 	mockOrch2.err = nil
 }
 
 type badJsonOrchestrator struct{}
-func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *agents.TokenUsage, error) {
+func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {

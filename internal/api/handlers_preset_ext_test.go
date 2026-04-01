@@ -254,8 +254,11 @@ func TestHandleChatPreset(t *testing.T) {
 	reqOrch, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
 	reqOrch.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	s.handleChatPreset().ServeHTTP(rrOrch, reqOrch)
-	if !strings.Contains(rrOrch.Body.String(), "ADK Error") {
-		t.Errorf("Expected ADK Error")
+	if rrOrch.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK on orch fail spawn, got: %d", rrOrch.Code)
+	}
+	if !strings.Contains(rrOrch.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling status")
 	}
 	
 	// Valid Orch
@@ -280,8 +283,11 @@ func TestHandleChatPreset(t *testing.T) {
 	reqBad, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
 	reqBad.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	s.handleChatPreset().ServeHTTP(rrBad, reqBad)
-	if !strings.Contains(rrBad.Body.String(), "Serialization Error") {
-		t.Errorf("Expected Refinement Json Error")
+	if rrBad.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK on bad json spawn, got: %d", rrBad.Code)
+	}
+	if !strings.Contains(rrBad.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling status")
 	}
 
 	// Refinement fail inside ADK
@@ -292,8 +298,11 @@ func TestHandleChatPreset(t *testing.T) {
 	reqRunF, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
 	reqRunF.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	s.handleChatPreset().ServeHTTP(rrRunF, reqRunF)
-	if !strings.Contains(rrRunF.Body.String(), "Execution Error") {
-		t.Errorf("Expected Execution Error fail mode")
+	if rrRunF.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK on execution fail spawn, got: %d", rrRunF.Code)
+	}
+	if !strings.Contains(rrRunF.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling status")
 	}
 }
 

@@ -16,6 +16,6 @@ You must return only strict JSON matching the following schema. Do not include m
 }
 
 # Strict Acoustic Physics Constants (Safety Rules)
-1. **High Cut Safety**: NEVER suggest a `suggested_high_cut_hz` below `5000` (5kHz) for electric guitar tones. If a tone is "warm" or "creamy" (like Clapton Woman Tone), suggest `5500` to `6500`, not lower. Lower cuts will smother the tone.
+1. **High Cut Safety**: NEVER suggest a `suggested_high_cut_hz` below `5000` (5kHz) for electric guitar tones. If a tone is "warm" or "creamy" (like Clapton Woman Tone), suggest `5500` to `6500`, not lower. Lower cuts will smother the tone. (Note: Pre-amp LPF for Woman Tone is handled by the Architect's exceptions).
 2. **Low Cut Safety**: NEVER suggest a `suggested_low_cut_hz` above `200` for standard guitar tones. Standard range is `80` to `120`.
 3. **Global Input Gate Math**: Compute a strict Threshold target. If the user tone specifies single coils, you must use `-65dB` to preserve pick dynamics while cutting 60-cycle hum. If the user tone describes high gain/metal or humbuckers, use `-55dB` to `-60dB` for tight chugging articulation.
