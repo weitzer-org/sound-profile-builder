@@ -11,7 +11,7 @@ steps:
   entrypoint: 'bash'
   args:
   - '-c'
-  - 'gcloud storage cp /workspace/build-errors.txt gs://${_RESULTS_BUCKET}/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://${_RESULTS_BUCKET}/test-results.txt && gcloud storage cp /workspace/coverage.txt gs://${_RESULTS_BUCKET}/coverage.txt || true && grep -q "FAIL_MARKER" /workspace/test-results.txt && exit 1 || exit 0'
+  - 'gcloud storage cp /workspace/build-errors.txt gs://${_RESULTS_BUCKET}/build-errors.txt || true && gcloud storage cp /workspace/test-results.txt gs://${_RESULTS_BUCKET}/test-results.txt && (gcloud storage cp /workspace/coverage.txt gs://${_RESULTS_BUCKET}/coverage.txt || true) && ! grep -q "FAIL_MARKER" /workspace/test-results.txt'
 
 # 0c. Validate CorOS Mappings
 - name: 'golang:latest'
@@ -20,11 +20,11 @@ steps:
 
 # 1. Base Docker Build 
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev', '.']
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/${_SERVICE_NAME}', '.']
 
 # 2. Push generated image artifact into private project Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev']
+  args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/${_SERVICE_NAME}']
 
 # 2b. Upload CorOS Map to App Data Bucket (Git as Source of Truth)
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -41,7 +41,7 @@ steps:
   - 'deploy'
   - '${_SERVICE_NAME}'
   - '--image'
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/sound-builder-dev'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sound-builder/${_SERVICE_NAME}'
   - '--region'
   - 'us-central1'
   - '--platform'
