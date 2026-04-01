@@ -104,8 +104,8 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 	draftCount := 0
 	visibleCount := 0
 
-	var html strings.Builder
-	html.WriteString(`<ul style="list-style-type: none; padding: 0;">`)
+	var sb strings.Builder
+	sb.WriteString(`<ul style="list-style-type: none; padding: 0;">`)
 	for _, p := range presets {
 		if p.Name == "Draft Preset" {
 			draftCount++
@@ -115,7 +115,7 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 		}
 
 		if !showAll && visibleCount >= 10 {
-			html.WriteString(`
+			sb.WriteString(`
 				<li style="margin-top: 1rem; text-align: center;">
 					<button hx-get="/api/presets?show_all=true" hx-target="#library-list-container" style="width: 100%; padding: 0.75rem; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-card)'">Load More...</button>
 				</li>`)
@@ -123,7 +123,7 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 		}
 		visibleCount++
 
-		html.WriteString(fmt.Sprintf(`
+		sb.WriteString(fmt.Sprintf(`
 			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
 				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">%[1]s</h3>
 				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: %[2]s</span>
@@ -134,10 +134,10 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 				<div style="margin-top: 0.5rem;">
 					<button hx-get="/api/preset/view?id=%[3]s" hx-target="#library-editor-workspace" style="width: 100%%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
 				</div>
-			</li>`, p.Name, p.UpdatedAt, p.ID))
+			</li>`, html.EscapeString(p.Name), p.UpdatedAt, p.ID))
 	}
-	html.WriteString(`</ul>`)
-	return html.String()
+	sb.WriteString(`</ul>`)
+	return sb.String()
 }
 
 func (s *Server) handleGetPresets() http.HandlerFunc {

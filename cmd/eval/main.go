@@ -175,7 +175,12 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
-			err = os.WriteFile(fmt.Sprintf("eval_results/%s_multi.html", name), []byte(multiAgentResult), 0644)
+			outDir := "eval_results"
+			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
+				outDir = fmt.Sprintf("eval_results/ablation/%s", subDir)
+				os.MkdirAll(outDir, 0755)
+			}
+			err = os.WriteFile(fmt.Sprintf("%s/%s_multi.html", outDir, name), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 
 			// Save to GCS
@@ -207,6 +212,10 @@ func main() {
 		}
 
 		// 3. RUN B: The Single Monolithic QC-2 Prompt
+		if os.Getenv("SKIP_MONOLITHIC") == "true" {
+			log.Println(" -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)")
+			return
+		}
 		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
 		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 		if err != nil {

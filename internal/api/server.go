@@ -251,6 +251,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
+		// Purge old drafts to keep GCS clean (keep only 3 newest)
+		cleanUpOldDrafts(ctx, s.store)
+
 		// Return the single draft workspace directly in the generator view
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(renderTweakingWorkspaceHTML(draftPreset, false)))

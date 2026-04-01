@@ -351,3 +351,135 @@ func TestCleanUpOldDrafts(t *testing.T) {
 		t.Errorf("Expected 3 drafts returned, got %d", len(resOk))
 	}
 }
+
+func TestHandleUpdateParameter(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	// Save dummy preset with valid structured JSON
+	validPayload := `{"guitars":{"Fender Telecaster Single Coil":[{"id":"block1","type":"drive","parameters":[{"name":"Gain","value":"5.0"}]}]}}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Test", Payload: validPayload})
+
+	// 1. Success
+	{
+		formData := url.Values{}
+		formData.Set("preset_id", "p1")
+		formData.Set("guitar", "Fender Telecaster Single Coil")
+		formData.Set("block_id", "block1")
+		formData.Set("param_name", "Gain")
+		formData.Set("value", "7.0")
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleUpdateParameter().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusNoContent {
+			t.Errorf("Expected 204 NoContent, got %d", rr.Code)
+		}
+
+		// Verify store updated
+		p, _ := store.Get(context.Background(), "p1")
+		if !strings.Contains(p.Payload, `"value":"7.0"`) {
+			t.Errorf("Expected payload to contain updated value 7.0")
+		}
+	}
+
+	// 2. Missing params (400)
+	{
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader("preset_id=p1"))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleUpdateParameter().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("Expected 400 for missing params, got %d", rr.Code)
+		}
+	}
+
+	// 3. Preset not found (404)
+	{
+		formData := url.Values{}
+		formData.Set("preset_id", "missing")
+		formData.Set("guitar", "g")
+		formData.Set("block_id", "b")
+		formData.Set("param_name", "p")
+		formData.Set("value", "v")
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleUpdateParameter().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusNotFound {
+			t.Errorf("Expected 404 for missing preset, got %d", rr.Code)
+		}
+	}
+
+	// 4. Parameter not found (404)
+	{
+		formData := url.Values{}
+		formData.Set("preset_id", "p1")
+		formData.Set("guitar", "Fender Telecaster Single Coil")
+		formData.Set("block_id", "block1")
+		formData.Set("param_name", "MissingParam")
+		formData.Set("value", "7.0")
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleUpdateParameter().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusNotFound {
+			t.Errorf("Expected 404 for missing param, got %d", rr.Code)
+		}
+	}
+}
+
+func TestHandleRemoveBlock(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	validPayload := `{"guitars":{"Fender Telecaster Single Coil":[{"id":"block1","type":"drive"},{"id":"block2","type":"delay"}]}}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Test", Payload: validPayload})
+
+	// 1. Success
+	{
+		formData := url.Values{}
+		formData.Set("preset_id", "p1")
+		formData.Set("guitar", "Fender Telecaster Single Coil")
+		formData.Set("block_id", "block1")
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/remove_block", strings.NewReader(formData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleRemoveBlock().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("Expected 200 OK, got %d", rr.Code)
+		}
+
+		// Verify store updated (block1 should be gone)
+		p, _ := store.Get(context.Background(), "p1")
+		if strings.Contains(p.Payload, `"id":"block1"`) {
+			t.Errorf("Expected block1 to be removed from payload")
+		}
+		if !strings.Contains(p.Payload, `"id":"block2"`) {
+			t.Errorf("Expected block2 to remain in payload")
+		}
+	}
+
+	// 2. Missing params (400)
+	{
+		req, _ := http.NewRequest(http.MethodPost, "/api/preset/remove_block", strings.NewReader("preset_id=p1"))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		s.handleRemoveBlock().ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("Expected 400 for missing params, got %d", rr.Code)
+		}
+	}
+}

@@ -38,12 +38,38 @@ func main() {
 		log.Fatalf("Failed to parse JSON: %v", err)
 	}
 
+	// Load Ontology
+	ontologyPath := "cmd/validate_mappings/coros_ontology.json"
+	ontologyFile, err := os.Open(ontologyPath)
+	if err != nil {
+		log.Fatalf("Failed to open %s: %v", ontologyPath, err)
+	}
+	defer ontologyFile.Close()
+
+	ontologyBytes, err := io.ReadAll(ontologyFile)
+	if err != nil {
+		log.Fatalf("Failed to read %s: %v", ontologyPath, err)
+	}
+
+	var ontology map[string]string
+	if err := json.Unmarshal(ontologyBytes, &ontology); err != nil {
+		log.Fatalf("Failed to parse %s JSON: %v", ontologyPath, err)
+	}
+
 	errorsFound := 0
 
 	for source, m := range mappings {
 		srcLower := strings.ToLower(source)
 		typeLower := strings.ToLower(m.Type)
 		equivLower := strings.ToLower(m.CorosEquivalent)
+
+		// 0. Semantic Ontology Validation
+		if expectedType, ok := ontology[m.CorosEquivalent]; ok {
+			if expectedType != m.Type {
+				fmt.Printf("[ERR] Semantic Mismatch: %s -> %s (Type in map is %s, but ontology requires it to be %s)\n", source, m.CorosEquivalent, m.Type, expectedType)
+				errorsFound++
+			}
+		}
 
 		// Rule 1: Cab should not be mapped to Wah or Overdrive
 		if typeLower == "cab" || strings.Contains(srcLower, "cab") || strings.Contains(srcLower, "cabinet") {

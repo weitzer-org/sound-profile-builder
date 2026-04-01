@@ -1,0 +1,6 @@
+
+🚨 --- Hallucination Detections ---
+✅ No hallucinations detected in baseline.
+
+🚨 --- Ordering Violations ---
+✅ No ordering violations detected in baseline.

@@ -261,6 +261,27 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 // RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
 	
+	skip := false
+	switch agentRole {
+	case "Tone Historian": skip = os.Getenv("ABLATE_AGENT_1") == "true"
+	case "Sonic Profiler": skip = os.Getenv("ABLATE_AGENT_2") == "true"
+	case "Community Scraper": skip = os.Getenv("ABLATE_AGENT_3") == "true"
+	case "CorOS Librarian": skip = os.Getenv("ABLATE_AGENT_4") == "true"
+	case "Cloud Navigator": skip = os.Getenv("ABLATE_AGENT_5") == "true"
+	case "Acoustician": skip = os.Getenv("ABLATE_AGENT_6") == "true"
+	case "Transducer Tech": skip = os.Getenv("ABLATE_AGENT_7") == "true"
+	case "FOH Optimizer": skip = os.Getenv("ABLATE_AGENT_8") == "true"
+	case "Mix Engineer": skip = os.Getenv("ABLATE_AGENT_9") == "true"
+	case "Control Mapper": skip = os.Getenv("ABLATE_AGENT_10") == "true"
+	case "DSP Dispatcher": skip = os.Getenv("ABLATE_AGENT_11") == "true"
+	case "Architect & Evaluator": skip = os.Getenv("ABLATE_AGENT_12") == "true"
+	}
+
+	if skip {
+		log.Printf("[%s] ABLATION TRIGGERED. Skipping LLM call.", agentRole)
+		return fmt.Sprintf("Ablated Output for %s.", agentRole), nil
+	}
+
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
 	// TODO: Test gemini-2.5-flash specifically for the "Refinement Architect" agent to drastically reduce the ~80s latency of matrix generation.

@@ -646,7 +646,7 @@
   },
   "Vemuram Jan Ray": {
     "coros_equivalent": "Vemural Ray",
-    "type": "fx",
+    "type": "overdrive",
     "confidence_score": 1.0
   },
   "Keeley Electronics Red Dirt": {
@@ -696,7 +696,7 @@
   },
   "Lovepedal 5E3 Deluxe": {
     "coros_equivalent": "Love DLX",
-    "type": "fx",
+    "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -845,7 +845,7 @@
   },
   "Electro-Harmonix POG": {
     "coros_equivalent": "Poly Octaver",
-    "type": "fx",
+    "type": "pitch",
     "confidence_score": 1.0
   },
   "Boss OC-2 Octave": {
@@ -869,7 +869,7 @@
     "confidence_score": 1.0
   },
   "Lovetone Meatball": {
-    "coros_equivalent": "Love DLX",
+    "coros_equivalent": "",
     "type": "filter",
     "confidence_score": 1.0,
     "is_capture": true
@@ -1386,7 +1386,7 @@
     "confidence_score": 1.0
   },
   "IR Loader": {
-    "coros_equivalent": "Single (ST) Lite",
+    "coros_equivalent": "",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1481,7 +1481,7 @@
     "confidence_score": 1.0
   },
   "Dunlop Cry Baby Wah From Hell": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "",
     "type": "fx",
     "confidence_score": 1.0
   },
@@ -1836,7 +1836,7 @@
     "is_capture": true
   },
   "Darkglass Alpha\u00b7Omega Ultra": {
-    "coros_equivalent": "Darkglass AOU",
+    "coros_equivalent": "",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true
@@ -2234,7 +2234,7 @@
     "confidence_score": 1.0
   },
   "Cory Wong D.I. Funk Console": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
@@ -2245,7 +2245,7 @@
     "confidence_score": 1.0
   },
   "Cory Wong The 4th Position Compressor": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "",
     "type": "compressor",
     "confidence_score": 1.0
   },
@@ -2267,7 +2267,7 @@
     "is_capture": true
   },
   "Cory Wong The Clean Machine": {
-    "coros_equivalent": "Crying Clyde Wah",
+    "coros_equivalent": "",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
@@ -2278,17 +2278,17 @@
     "confidence_score": 1.0
   },
   "Cory Wong The Tuber": {
-    "coros_equivalent": "Poly Octaver",
+    "coros_equivalent": "",
     "type": "overdrive",
     "confidence_score": 1.0
   },
   "Cory Wong The Wash": {
-    "coros_equivalent": "Crying Clyde Wah",
+    "coros_equivalent": "Studio Plate 70 (ST)",
     "type": "reverb",
     "confidence_score": 1.0
   },
   "Cory Wong The Wash Shimmer": {
-    "coros_equivalent": "Crying Wah From Hell",
+    "coros_equivalent": "Blossom (ST)",
     "type": "reverb",
     "confidence_score": 1.0
   },
@@ -2363,7 +2363,7 @@
     "is_capture": true
   },
   "Gojira REV": {
-    "coros_equivalent": "Vemural Ray",
+    "coros_equivalent": "Studio Plate 70 (ST)",
     "type": "reverb",
     "confidence_score": 1.0
   },
@@ -2410,7 +2410,7 @@
     "is_capture": true
   },
   "Nameless Zuul": {
-    "coros_equivalent": "Darkglass AOU",
+    "coros_equivalent": "",
     "type": "utility",
     "confidence_score": 1.0,
     "is_capture": true
@@ -2458,7 +2458,7 @@
     "confidence_score": 1.0
   },
   "Nolly Delay-2": {
-    "coros_equivalent": "Poly Octaver",
+    "coros_equivalent": "",
     "type": "delay",
     "confidence_score": 1.0
   },
@@ -2580,12 +2580,12 @@
     "confidence_score": 1.0
   },
   "SLO-100 Compressor": {
-    "coros_equivalent": "Solo 100 Lead",
+    "coros_equivalent": "",
     "type": "compressor",
     "confidence_score": 1.0
   },
   "SLO-100 Delay": {
-    "coros_equivalent": "Solo 100 Lead",
+    "coros_equivalent": "",
     "type": "delay",
     "confidence_score": 1.0
   },
@@ -2596,12 +2596,12 @@
     "is_capture": true
   },
   "SLO-100 Overdrive-2": {
-    "coros_equivalent": "Solo 100 Lead",
+    "coros_equivalent": "",
     "type": "overdrive",
     "confidence_score": 1.0
   },
   "SLO-100 Reverb": {
-    "coros_equivalent": "Solo 100 Lead",
+    "coros_equivalent": "",
     "type": "reverb",
     "confidence_score": 1.0
   },
