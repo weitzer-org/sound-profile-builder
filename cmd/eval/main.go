@@ -98,10 +98,18 @@ func main() {
 
 	// The 12-Point Evaluation Suite
 	evalQueries := map[string]string{
-		"01_SRV_Clean":   "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
-		"02_Metal_Rhythm": "Modern high-gain metal rhythm. Tight low end, scooped mids, like a Peavey 5150.",
-		"03_Ambient_Lead": "Ambient, spacey lead tone with lots of modulated delay and plate reverb. Think David Gilmour.",
-		"04_Classic_Rock": "Classic 70s rock crunch. Marshall Plexi style, humbuckers, warm and punchy.",
+		"01_SRV_Clean":   "Clean funk blues tone. Stevie Ray Vaughan style with high headroom. Wants to push it with a TS808.",
+		"02_Chicago_Blues": "Chicago Blues style. Warm Chess Records style overdrive into a small combo amp. Slightly gritty but clean platform.",
+		"03_British_Invasion": "Early British Invasion tone. Vox AC30/JTM45 chime and edge of breakup. Punchy mids, sparkle.",
+		"04_Southern_Rock": "Southern Rock slide style. Dual lead humbuckers into a cranked American Tweed amp. Singing sustain.",
+		"05_Clapton":      "Vintage Cream-era Clapton tone. Rolled-off Les Paul tone knobs into a cranked Marshall.",
+		"06_Gilmour":      "David Gilmour preset using a Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, and a massive Plate Reverb.",
+		"07_Edge":         "The Edge style chime. 1964 Vox AC30 edge-of-breakup with rhythmic dotted-eighth delays.",
+		"08_EVH":          "Van Halen Brown Sound. Hot-rodded 1968 Marshall Plexi, variac sag, plate reverb.",
+		"09_BB_King":      "BB King Lucile tone. High-headroom American Twin Reverb clean platform.",
+		"10_Slash":         "Guns N' Roses Slash lead. Les Paul neck pickup into a hot JCM800 with standard delay.",
+		"11_Mayer_Lead":   "John Mayer Trio Lead. Smooth Two-Rock/Dumble platform, mid-scooped clean with a subtle drive push.",
+		"12_Bonamassa":     "Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.",
 	}
 
 	// Ensure our results directory exists
