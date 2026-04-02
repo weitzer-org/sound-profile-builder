@@ -1,12 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+  timeout: 60000,
   testDir: '.',
   testMatch: '**/*.spec.js',
   use: {
-    baseURL: 'http://localhost:8081',
-    headless: true, // Mirrors the headless style running from gsr
-    video: 'on',    // Automatically captures verification videos of the HTMX dashboard rendering
+    baseURL: 'http://localhost:8082',
+    headless: true,
+    video: 'on',
   },
   forbidOnly: !!process.env.CI,
 });

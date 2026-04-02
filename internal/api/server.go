@@ -187,7 +187,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 			defer orch.Close()
 
-			htmlPayload, tokenUsage, err := orch.RunPipeline(ctx, prompt, constraints, func(phase string) {
+			htmlPayload, tokenUsage, err := orch.RunPipeline(ctx, prompt, constraints, cfg.AgentPrompts, func(phase string) {
 				s.tasksMu.Lock()
 				if task, ok := s.tasks[taskID]; ok {
 					task.Phase = phase
@@ -223,6 +223,13 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			impactsHtml := "<ul>"
 			for _, imp := range archResp.AgentImpact {
 				impactsHtml += "<li>" + imp + "</li>"
+			}
+			if len(cfg.AgentPrompts) > 0 {
+				impactsHtml += "<li><strong>Using Prompt Overrides:</strong> "
+				for k, v := range cfg.AgentPrompts {
+					impactsHtml += fmt.Sprintf("%s (%s), ", k, v)
+				}
+				impactsHtml = strings.TrimSuffix(impactsHtml, ", ") + "</li>"
 			}
 			impactsHtml += "</ul>"
 
@@ -266,12 +273,13 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				return
 			}
 
-			cleanUpOldDrafts(ctx, s.store)
+			bgCtx := context.WithoutCancel(ctx)
+			go cleanUpOldDrafts(bgCtx, s.store)
 
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
 				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(draftPreset, false)
+				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, true, "gen")
 			}
 			s.tasksMu.Unlock()
 		}()
@@ -309,35 +317,33 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/html")
 
 		isChat := strings.HasPrefix(id, "chat-")
-		btnID := "submit-btn"
+		scope := r.URL.Query().Get("scope")
+		if scope == "" {
+			if isChat {
+				scope = "lib"
+			} else {
+				scope = "gen"
+			}
+		}
+
+		btnID := fmt.Sprintf("%s-submit-btn", scope)
 		if isChat {
-			btnID = "chat-submit-btn"
+			btnID = fmt.Sprintf("%s-chat-submit-btn", scope)
 		}
 
 		if task.Status == "running" {
+			areaID := fmt.Sprintf("%s-progress-area", scope)
 			if isChat {
-				w.Write([]byte(fmt.Sprintf(`
-					<button id="%s" hx-get="/api/preset/status?id=%s" hx-trigger="every 2s" hx-target="#%s" hx-swap="outerHTML" class="htmx-request">
-						<span class="spinner" style="display:inline-block;"></span>
-						<span class="btn-text">%s</span>
-					</button>
-				`, btnID, id, btnID, html.EscapeString(task.Phase))))
-				return
-			}
-
-
-			areaID := "progress-area"
-			if isChat {
-				areaID = "chat-progress-area"
+				areaID = fmt.Sprintf("%s-chat-progress-area", scope)
 			}
 			w.Write([]byte(fmt.Sprintf(`
-				<div id="%s" hx-get="/api/preset/status?id=%s" hx-trigger="every 2s" hx-swap="outerHTML">
+				<div id="%s" hx-get="/api/preset/status?id=%s&scope=%s" hx-trigger="every 2s" hx-swap="outerHTML">
 					<div class="progress-panel" style="padding: 0.75rem 1rem; display: flex; flex-direction: row; align-items: center; gap: 0.75rem;">
 						<span class="spinner" style="display:inline-block;"></span>
 						<span style="color: white; font-size: 0.95rem;">Current: <span style="color: var(--accent);">%s</span></span>
 					</div>
 				</div>
-			`, areaID, id, html.EscapeString(task.Phase))))
+			`, areaID, id, scope, html.EscapeString(task.Phase))))
 			return
 		}
 
@@ -352,28 +358,26 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 
 		if isChat {
 			w.Write([]byte(fmt.Sprintf(`
-				<div id="chat-progress-area"></div>
-				<button id="chat-submit-btn" hx-swap-oob="true" style="padding: 0.85rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-width: 100px;">
-					<span class="spinner"></span>
+				<div id="%[2]s-chat-progress-area"></div>
+				<button id="%[2]s-chat-submit-btn" hx-swap-oob="true" style="padding: 0.85rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-width: 100px;">
 					<span class="btn-text">Adjust</span>
 				</button>
-				<div id="workspace-wrapper" hx-swap-oob="true">
-					%s
+				<div id="%[2]s-workspace-wrapper" hx-swap-oob="true">
+					%[1]s
 				</div>
-			`, task.Result)))
+			`, task.Result, scope)))
 			return
 		}
 
 		w.Write([]byte(fmt.Sprintf(`
-			<div id="progress-area"></div>
-			<button id="submit-btn" hx-swap-oob="true">
-				<span class="spinner"></span>
+			<div id="%[2]s-progress-area"></div>
+			<button id="%[2]s-submit-btn" hx-swap-oob="true" style="padding: 0.85rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-width: 100px;">
 				<span class="btn-text">Spin Up ADK Pipeline</span>
 			</button>
-			<div id="generator-workspace" hx-swap-oob="true">
-				%s
+			<div id="%[2]s-workspace-wrapper" hx-swap-oob="true">
+				%[1]s
 			</div>
-		`, task.Result)))
+		`, task.Result, scope)))
 		return
 
 

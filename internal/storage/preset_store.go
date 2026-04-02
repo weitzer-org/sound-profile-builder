@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,6 +63,8 @@ type PresetStore struct {
 	client Client
 	bucket string
 	prefix string
+	cache  []*Preset
+	mu     sync.RWMutex
 }
 
 // NewPresetStore creates a new generic preset store
@@ -89,7 +92,29 @@ func (s *PresetStore) Save(ctx context.Context, p *Preset) error {
 	}
 
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, p.ID)
-	return s.client.WriteFile(ctx, s.bucket, objectName, data)
+	if err := s.client.WriteFile(ctx, s.bucket, objectName, data); err != nil {
+		return err
+	}
+
+	// Update cache
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cache != nil {
+		found := false
+		for i, cached := range s.cache {
+			if cached.ID == p.ID {
+				s.cache[i] = p
+				found = true
+				break
+			}
+		}
+		if !found {
+			s.cache = append(s.cache, p)
+		}
+	}
+
+	return nil
 }
 
 // Get retrieves a specific preset by ID
@@ -109,6 +134,21 @@ func (s *PresetStore) Get(ctx context.Context, id string) (*Preset, error) {
 
 // List retrieves all presets currently saved
 func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
+	s.mu.RLock()
+	if s.cache != nil {
+		defer s.mu.RUnlock()
+		return s.cache, nil
+	}
+	s.mu.RUnlock()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Check again after acquiring write lock
+	if s.cache != nil {
+		return s.cache, nil
+	}
+
 	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
 	if err != nil {
 		return nil, err
@@ -127,11 +167,29 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 			}
 		}
 	}
+
+	s.cache = presets
 	return presets, nil
 }
 
 // Delete removes a preset from storage
 func (s *PresetStore) Delete(ctx context.Context, id string) error {
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, id)
-	return s.client.DeleteFile(ctx, s.bucket, objectName)
+	if err := s.client.DeleteFile(ctx, s.bucket, objectName); err != nil {
+		return err
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cache != nil {
+		for i, p := range s.cache {
+			if p.ID == id {
+				s.cache = append(s.cache[:i], s.cache[i+1:]...)
+				break
+			}
+		}
+	}
+
+	return nil
 }
