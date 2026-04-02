@@ -142,6 +142,16 @@ func main() {
 
 	var wg sync.WaitGroup
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
+
+	agentOverrides := make(map[string]string)
+	if envOverrides := os.Getenv("AGENT_OVERRIDES"); envOverrides != "" {
+		for _, pair := range strings.Split(envOverrides, ",") {
+			kv := strings.Split(pair, "=")
+			if len(kv) == 2 {
+				agentOverrides[kv[0]] = kv[1]
+			}
+		}
+	}
 	
 	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
 	// Initialize GCS Client for Preset Preservation
@@ -177,7 +187,7 @@ func main() {
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 		}
 
-		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints, nil)
+		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints, agentOverrides, nil)
 		if err != nil {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {

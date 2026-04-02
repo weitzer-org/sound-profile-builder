@@ -16,3 +16,5 @@
 - **Capture Toggle**: Add a UI toggle to allow or restrict the multi-agent pipeline from sourcing Factory Captures during preset generation.
 - **Paid Plugin Toggle**: Add a UI configuration to selectively enable/disable routing through Paid Plugin architectures (e.g., Nameless, Cory Wong, Plini).
 - **YouTube Tone Analysis Agent**: Research integrating an agent to search for YouTube videos representing the prompt and analyze the tone from the video audio/context to inform preset generation.
+- **Change Default Presets**: Add/Update standard presets to include: Rhythm, Clean Boost, Overdrive, and Comp.
+

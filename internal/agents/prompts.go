@@ -3,15 +3,13 @@ package agents
 import (
 	"embed"
 	"fmt"
-	"os"
 )
 
 //go:embed prompts/*.md
 var PromptFS embed.FS
 
 // LoadPrompt fetches the markdown text representation of the system/system-instructions for a given agent
-func LoadPrompt(agentFileName string) (string, error) {
-	version := os.Getenv("PROMPT_VERSION")
+func LoadPrompt(agentFileName string, version string) (string, error) {
 	if version == "v2" {
 		v2Path := fmt.Sprintf("prompts/%s_v2.md", agentFileName)
 		bytes, err := PromptFS.ReadFile(v2Path)

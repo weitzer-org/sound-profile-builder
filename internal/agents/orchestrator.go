@@ -34,7 +34,7 @@ type TokenUsage struct {
 
 // OrchestratorService defines the methods available on the ADK Orchestrator
 type OrchestratorService interface {
-	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(phase string)) (string, *TokenUsage, error)
+	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(phase string)) (string, *TokenUsage, error)
 	RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error)
 	Close()
 }
@@ -48,6 +48,14 @@ type Orchestrator struct {
 
 // NewOrchestrator initializes the Gemini ADK client
 func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...option.ClientOption) (*Orchestrator, error) {
+	isMock := os.Getenv("MOCK_MODE") == "true"
+	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
+		isMock = true
+	}
+	if isMock {
+		return &Orchestrator{client: nil, Usage: &TokenUsage{ModelsUsed: make(map[string]int)}, gcs: gcs}, nil
+	}
+
 	allOpts := append([]option.ClientOption{option.WithAPIKey(apiKey)}, opts...)
 	client, err := genai.NewClient(ctx, allOpts...)
 	if err != nil {
@@ -62,7 +70,7 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
-func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(phase string)) (string, *TokenUsage, error) {
+func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(phase string)) (string, *TokenUsage, error) {
 	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		isMock = true
@@ -117,21 +125,36 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	go func() {
 		defer wg1.Done()
-		sysPrompt, _ := LoadPrompt("1_tone_historian")
+		version := agentConfig["1_tone_historian"]
+		if version == "off" {
+			toneResult = "Tone Historian skipped by configuration."
+			return
+		}
+		sysPrompt, _ := LoadPrompt("1_tone_historian", version)
 		toneResult, err1 = o.RunAgent(ctx, "Tone Historian", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("1_tone_historian", toneResult)
 	}()
 
 	go func() {
 		defer wg1.Done()
-		sysPrompt, _ := LoadPrompt("2_sonic_profiler")
+		version := agentConfig["2_sonic_profiler"]
+		if version == "off" {
+			sonicResult = "Sonic Profiler skipped by configuration."
+			return
+		}
+		sysPrompt, _ := LoadPrompt("2_sonic_profiler", version)
 		sonicResult, err2 = o.RunAgent(ctx, "Sonic Profiler", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("2_sonic_profiler", sonicResult)
 	}()
 
 	go func() {
 		defer wg1.Done()
-		sysPrompt, _ := LoadPrompt("3_community_scraper")
+		version := agentConfig["3_community_scraper"]
+		if version == "off" {
+			scrapeResult = "Community Scraper skipped by configuration."
+			return
+		}
+		sysPrompt, _ := LoadPrompt("3_community_scraper", version)
 		scrapeResult, err3 = o.RunAgent(ctx, "Community Scraper", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("3_community_scraper", scrapeResult)
 	}()
@@ -154,25 +177,35 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	// Phase 2: Sourcing & Verification (Sequential)
 	// Agent 4: CorOS Librarian
-	sysPrompt4, _ := LoadPrompt("4_coros_librarian")
-	context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
-	librarianResult, err4 := o.RunAgent(ctx, "CorOS Librarian", context4)
-	if err4 != nil {
-		return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
+	var librarianResult string
+	var err4 error
+	version4 := agentConfig["4_coros_librarian"]
+	if version4 == "off" {
+		librarianResult = "CorOS Librarian skipped by configuration."
+	} else {
+		sysPrompt4, _ := LoadPrompt("4_coros_librarian", version4)
+		context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
+		librarianResult, err4 = o.RunAgent(ctx, "CorOS Librarian", context4)
+		if err4 != nil {
+			return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
+		}
+		logToGCS("4_coros_librarian", librarianResult)
 	}
-	logToGCS("4_coros_librarian", librarianResult)
 
 	// Agent 5: Cloud Navigator
 	allowCloudCaptures, ok := constraints["allow_cloud_captures"].(bool)
 	var navigatorResult string
 	var err5 error
 	
-	if ok && !allowCloudCaptures {
+	version5 := agentConfig["5_cloud_navigator"]
+	if version5 == "off" {
+		navigatorResult = "Cloud Navigator skipped by configuration."
+	} else if ok && !allowCloudCaptures {
 		// Bypass API processing to enforce strict configuration rules and prevent hallucinations
 		navigatorResult = "User explicitly disabled Cloud Sourcing. Do not map any cloud captures."
 		logToGCS("5_cloud_navigator", navigatorResult)
 	} else {
-		sysPrompt5, _ := LoadPrompt("5_cloud_navigator")
+		sysPrompt5, _ := LoadPrompt("5_cloud_navigator", version5)
 		context5 := fmt.Sprintf("%s\n\nLibrarian Output: %s", sysPrompt5, librarianResult)
 		navigatorResult, err5 = o.RunAgent(ctx, "Cloud Navigator", context5)
 		if err5 != nil {
@@ -195,19 +228,34 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	wg3.Add(3)
 	go func() {
 		defer wg3.Done()
-		p, _ := LoadPrompt("6_acoustician")
+		version := agentConfig["6_acoustician"]
+		if version == "off" {
+			acousticianResult = "Acoustician skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("6_acoustician", version)
 		acousticianResult, err6 = o.RunAgent(ctx, "Acoustician", fmt.Sprintf("%s\n\nSonic Profiler: %s\nConstraints: %v", p, sonicResult, constraints))
 		logToGCS("6_acoustician", acousticianResult)
 	}()
 	go func() {
 		defer wg3.Done()
-		p, _ := LoadPrompt("7_transducer_tech")
+		version := agentConfig["7_transducer_tech"]
+		if version == "off" {
+			techResult = "Transducer Tech skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("7_transducer_tech", version)
 		techResult, err7 = o.RunAgent(ctx, "Transducer Tech", fmt.Sprintf("%s\n\nLibrarian Output: %s", p, librarianResult))
 		logToGCS("7_transducer_tech", techResult)
 	}()
 	go func() {
 		defer wg3.Done()
-		p, _ := LoadPrompt("8_foh_optimizer")
+		version := agentConfig["8_foh_optimizer"]
+		if version == "off" {
+			fohResult = "FOH Optimizer skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("8_foh_optimizer", version)
 		fohResult, err8 = o.RunAgent(ctx, "FOH Optimizer", fmt.Sprintf("%s\n\nConstraints: %v (Standard FRFR FOH context applied)", p, constraints))
 		logToGCS("8_foh_optimizer", fohResult)
 	}()
@@ -230,19 +278,34 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	wg4.Add(3)
 	go func() {
 		defer wg4.Done()
-		p, _ := LoadPrompt("9_mix_engineer")
+		version := agentConfig["9_mix_engineer"]
+		if version == "off" {
+			mixResult = "Mix Engineer skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("9_mix_engineer", version)
 		mixResult, err9 = o.RunAgent(ctx, "Mix Engineer", fmt.Sprintf("%s\n\nTone Result: %s", p, toneResult))
 		logToGCS("9_mix_engineer", mixResult)
 	}()
 	go func() {
 		defer wg4.Done()
-		p, _ := LoadPrompt("10_control_mapper")
+		version := agentConfig["10_control_mapper"]
+		if version == "off" {
+			mapResult = "Control Mapper skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("10_control_mapper", version)
 		mapResult, err10 = o.RunAgent(ctx, "Control Mapper", fmt.Sprintf("%s\n\nPrompt: %s\nLibrarian Output: %s\nNavigator Output: %s\nAcoustician Output: %s", p, prompt, librarianResult, navigatorResult, acousticianResult))
 		logToGCS("10_control_mapper", mapResult)
 	}()
 	go func() {
 		defer wg4.Done()
-		p, _ := LoadPrompt("11_dsp_dispatcher")
+		version := agentConfig["11_dsp_dispatcher"]
+		if version == "off" {
+			dspResult = "DSP Dispatcher skipped by configuration."
+			return
+		}
+		p, _ := LoadPrompt("11_dsp_dispatcher", version)
 		dspResult, err11 = o.RunAgent(ctx, "DSP Dispatcher", fmt.Sprintf("%s\n\nLibrarian Output: %s\nNavigator Output: %s", p, librarianResult, navigatorResult))
 		logToGCS("11_dsp_dispatcher", dspResult)
 	}()
@@ -262,18 +325,24 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	architectPrompt += fmt.Sprintf("Constraints: %v\n\nTone: %s\nSonic: %s\nScraper: %s\nLibrarian: %s\nNavigator: %s\nAcoustician: %s\nTransducer: %s\nFOH: %s\nMix: %s\nMap: %s\nDSP: %s",
 		constraints, toneResult, sonicResult, scrapeResult, librarianResult, navigatorResult, acousticianResult, techResult, fohResult, mixResult, mapResult, dspResult)
 
-	sysPrompt12, _ := LoadPrompt("12_architect")
-	finalResult, err12 := o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
-	if err12 != nil {
-		return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
+	var finalResult string
+	var err12 error
+	version12 := agentConfig["12_architect"]
+	if version12 == "off" {
+		finalResult = "Architect skipped by configuration."
+	} else {
+		sysPrompt12, _ := LoadPrompt("12_architect", version12)
+		finalResult, err12 = o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
+		if err12 != nil {
+			return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
+		}
+		logToGCS("12_architect", finalResult)
 	}
 	
 	validBlocks := GetValidNativeBlocks()
 	if len(validBlocks) > 0 {
 		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
 	}
-	
-	logToGCS("12_architect", finalResult)
 
 	return finalResult, o.Usage, nil
 }
@@ -361,7 +430,7 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := LoadPrompt("12_architect")
+	sysPrompt, _ := LoadPrompt("12_architect", "")
 	
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.

@@ -1,75 +1,69 @@
 Greetings. I am QC-2, your Quad Cortex Systems Engineer. 
 
-Target acquired: **B.B. King "Lucille" Tone**.
-Physics Goal: High-headroom, crystalline clean platform with pronounced vocal midrange, snappy attack, and tight low-end. No clipping; dynamics must be controlled entirely by pickup output, picking hand pressure, and speaker compression. 
+To capture B.B. King’s "Lucille" tone using a high-headroom American Twin Reverb platform, we must adhere strictly to the **Headroom Rule**. B.B. King’s tone relies on an absolutely clean, pristine signal with immense dynamic range. All sustain comes from volume (SPL), picking dynamics, and subtle compression—*not* preamp saturation. 
 
-To ensure optimal translation through your QSC CP12 active PA speaker (which reproduces high and low frequencies with brutal honesty compared to a traditional guitar cab), we will utilize a strict EQ-compensation strategy. B.B. King played a hollowbody ES-355 with a Varitone switch, which physically rolled off lower-mids to prevent feedback and increase "sting." We will simulate this using the EQ-8 block.
+Because the "US TWN Vibrato" (Neural DSP's exact model for the Fender Twin Reverb) is a non-master volume circuit, pushing the Amp Volume will introduce overdrive. Therefore, we will keep the Amp Volume low (below the breakup threshold) and use the **Lane Output Level** to achieve your target room volume through your QSC CP12.
 
-*Trigger Verification:* Before you load this, **are your pickups Vintage Output, Medium, or High Output?** This preset assumes Medium Output. Adjust the Input Block Gain accordingly if they are excessively hot.
-
-Here is your dual-instrument split-bank configuration. 
+Per your requirement, I have structured this preset using the **Split-Bank Matrix** to provide perfectly gain-staged profiles for both your Gibson ES-339 and Fender Telecaster within a single preset.
 
 ---
 
-### MULTI-GUITAR TARGET OUTPUT & SPLIT-BANK MATRIX
+### **Row 2 (Scenes E-H): Gibson ES-339 (Humbuckers) Profile**
+**Target:** The authentic "Lucille" configuration. High output humbuckers naturally push amps into overdrive, so we must heavily pad the input gain to preserve the Twin Reverb's high-headroom clean platform. We will utilize a Parametric-8 EQ to simulate Gibson's "Varitone" circuit (Position 2/3), which scoops out low-mid mud to emphasize a vocal, honking midrange.
 
-We are utilizing the **Split-Bank Matrix** to house both your Telecaster and ES-339 within a single preset. The EQ and Input Gain blocks are the "Chameleons" here, altering the physics of the QC to match the instrument.
+**Guitar Instructions:** Select both pickups (Middle Position) or Bridge pickup. Roll your guitar's Tone knob back to 6 or 7.
 
-*   **Row 1 (Scenes A-D): Fender Telecaster Single Coil Profile**
-    *   *Physics Protocol:* Telecasters lack the low-mid mass of Lucille and have a sharper transient. We must boost the Input Block to hit the amp's sweet spot and add "Body" via EQ.
-    *   *Input Block Gain:* **+3.0dB**
-    *   *Parametric-8 EQ (Tele Mode):* Band 1 (Low Shelf) +2.5dB at 200Hz. Band 8 (LPF) set to 4500Hz to tame the ice-pick pick attack.
-*   **Row 2 (Scenes E-H): Gibson ES-339 Humbucker Profile**
-    *   *Physics Protocol:* Humbuckers will overdrive the Twin Reverb model if not padded. To mimic the Varitone switch (Position 2 or 3) and prevent mud, we pad the input and carve out lower mids.
-    *   *Input Block Gain:* **-3.0dB**
-    *   *Parametric-8 EQ (339 Mode):* Band 3 (Bell) -3.0dB at 350Hz. Band 4 (Bell) +1.5dB at 1.2kHz for the vocal "sting".
+#### **Table A: ES-339 Signal Chain (Scenes E-H)**
+*Note: Right-Click > Assign parameters for Rhythm/Lead scene changes.*
 
-**Scene Assignments:**
-*   **A / E:** Rhythm (Dynamic, -1.5dB Lane Output).
-*   **B / F:** Lead (B.B.'s Stinging Lead, +1.5dB Lane Output).
-*   **C / G:** Dry / Comping (Reverb bypassed for tight studio rhythm).
-*   **D / H:** Vibrato (Classic B.B. slow amplitude modulation, Chorus/Vibrato block engaged).
-
----
-
-### Table A: Main Signal Chain (B.B. King / US Twin)
-*Note: Mark Scene-Specific changes clearly with (Right-Click > Assign) in Cortex Control.*
-
-| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
+| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input Gate | Thresh: -65dB | Thresh: -65dB | High-headroom cleans expose floor noise. Keep threshold low to preserve sustain. |
-| **Pre-FX** | Parametric-8 | *Tele:* Body +2.5dB <br>*339:* Mid -3.0dB | *Tele:* Body +2.5dB <br>*339:* Mid -3.0dB | Adapts pickup physics to mimic an ES-355 Varitone circuit. |
-| **Amp** | US TWN Vibrato | Vol: 4.5 <br>Mid: 5.5 | Vol: 6.0 <br>Mid: 6.5 | Emulates non-master volume preamp push. Mids are boosted for Lucille's vocal honk. |
-| **Cab** | 212 US TWN C12K | Mic A: Dyn 57 (Pos:0.4) <br>Mic B: Rib 121 (Pos:0.6) | Mic A: Dyn 57 (Pos:0.4) <br>Mic B: Rib 121 (Pos:0.6) | Dyn 57 captures the "sting" edge-of-cap. Rib 121 provides warmth to counteract QSC CP12 tweeter harshness. |
-| **Post-FX** | Chief CE2W Chorus | Bypassed | Bypassed (Active in Sc D/H) | Used in Vibrato mode (Rate 3.0Hz, Depth 60%) to mimic B.B.'s finger vibrato or amp tremolo. |
-| **Post-FX** | Spring | Mix: 15% <br>Dwell: 3.5 | Mix: 18% <br>Dwell: 4.0 | Fender tube spring tank emulation. Slightly higher mix on lead for trail sustain. |
-| **Lane Output** | Output Level | Level: 0.0dB | Level: +1.5dB | Overall SPL management. Keeps preamp clean while increasing stage volume. |
+| **Input/Gate** | Global Input | Thresh: -62dB, Gain: -4.0dB | Thresh: -62dB, Gain: -4.0dB | **Pad applied (-4dB)**. Prevents humbucker transients from clipping the Twin's input stage. |
+| **Pre-FX** | Optical Comp | Comp: 40%, Gain: 2.0dB | Comp: 55%, Gain: 3.5dB | Transparent LA-2A style. Adds the sustain B.B. King gets from sheer stage volume. |
+| **Amp** | US TWN Vibrato | Vol: 3.5, Bass: 3.0, Mid: 6.5, Treb: 6.0 | Vol: 3.5, Bass: 3.0, Mid: 7.5, Treb: 6.5 | Non-Master Vol circuit. Bass is kept low to prevent humbucker "farting/sag". Mids pushed for cut. |
+| **Cab** | 212 US TWN C25 | Mic A: Dyn 57 (Dist 1.0"), Mic B: Rib 121 (Dist 2.5") | Mix: A -2dB, B 0dB (Unchanged) | Dynamic 57 captures pick attack; Ribbon 121 restores smooth warmth to the high-end. |
+| **Post-FX** | Parametric-8 | Cut 400Hz (-3dB), Boost 1.5kHz (+2dB) | Boost 1.5kHz (+3.5dB), Level: +1.5dB | Simulates Varitone circuit. Removes low-mid mud, pushes vocal "honk". Lead scene boosts Lane Level. |
+| **Post-FX** | Spring | Mix: 15%, Decay: 2.0s | Mix: 20%, Decay: 2.5s | Classic Fender spring tank. Kept subtle to maintain note clarity. |
 
 ---
 
-### Troubleshooting & Refinement Tree
-If you load this preset and it sounds **Too Distorted / Broken** (especially on the ES-339):
-1.  **Input Pad:** Lower the Global Input Block Gain from -3.0dB to -6.0dB. Hot humbuckers will cause digital fuzz if they clip the front of the Amp block.
-2.  **Amp Gain:** Lower the `Vol` parameter on the US TWN Vibrato block by 1.5 increments. 
-3.  **Tube Sag:** Ensure the `Bass` parameter on the US TWN Vibrato is no higher than 3.5. Vintage Twin circuits "fart out" and sag terribly if too much low-end hits the power amp section.
-4.  **Output Compensation:** If lowering the Volume drops your stage level through the QSC CP12, do *not* add a compressor. Raise the `Lane Output Level` or the master volume on the CP12 itself.
+### **Row 1 (Scenes A-D): Fender Telecaster (Single Coils) Profile**
+**Target:** Forcing a Telecaster to mimic Lucille requires the **Chameleon Strategy**. Telecasters lack the low-end weight of a semi-hollow ES-339 and have a sharp, treble-heavy bridge pickup ("ice-pick"). We will increase the Input Block gain to match the ES-339's output, boost the 200Hz range to simulate a semi-hollow body, and aggressively low-pass the high frequencies.
+
+**Guitar Instructions:** Select the Neck pickup, or Middle position. Tone knob at 8.
+
+#### **Table B: Telecaster Signal Chain (Scenes A-D)**
+*Note: Right-Click > Assign parameters for Rhythm/Lead scene changes.*
+
+| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Global Input | Thresh: -50dB, Gain: +1.5dB | Thresh: -50dB, Gain: +1.5dB | **Boost applied (+1.5dB)** to compensate for weak single coils. Higher gate threshold for 60-cycle hum. |
+| **Pre-FX** | Optical Comp | Comp: 45%, Gain: 3.0dB | Comp: 60%, Gain: 4.5dB | Single coils decay faster; higher compression required for B.B. style vibrato sustain. |
+| **Amp** | US TWN Vibrato | Vol: 4.5, Bass: 4.5, Mid: 7.0, Treb: 5.0 | Vol: 4.5, Bass: 4.5, Mid: 8.0, Treb: 5.0 | Amp Volume raised slightly. Treble rolled back to combat single-coil brightness. |
+| **Cab** | 212 US TWN C25 | Mic A: Dyn 57 (Dist 1.5"), Mic B: Rib 121 (Dist 1.0") | Mix: A -4dB, B 0dB (Unchanged) | 57 pushed back slightly. Ribbon mic emphasized heavily to thicken the Telecaster tone. |
+| **Post-FX** | Parametric-8 | Low Shelf 200Hz (+4dB), LPF 4.5kHz | Mid 1.5kHz (+2.5dB), Level: +1.5dB | **Chameleon EQ**: Adds semi-hollow "weight" (200Hz) and physically chops off the Tele "ice-pick" (LPF). |
+| **Post-FX** | Spring | Mix: 18%, Decay: 2.0s | Mix: 22%, Decay: 2.5s | Reverb mix slightly higher to add perceived depth to the solid-body guitar. |
 
 ---
 
-### Session Registry Protocol
-*Appending build to Active Session Library...*
+### **Troubleshooting & Refinement Tree**
+If testing through your QSC CP12 yields unsatisfactory results, execute the following in order:
+1. **Tone is Breaking Up / "Too Fuzzy" on chords:** Your specific pickups may be exceptionally hot. Lower the Input Block Gain by an additional -2.0dB. *Do not touch the Amp Volume.*
+2. **Tone is too quiet compared to other presets:** High Headroom presets often feel quiet because they lack the RMS boost of compression/distortion. **Fix:** Raise the overall **Lane Output Level** on the far right of the QC grid by +3.0dB to +5.0dB until it matches your other presets.
+3. **Too "Thin" / Lacking Bass (Especially on Telecaster):** Do not raise the Amp's Bass knob (this will cause tube sag). Instead, go to the Parametric-8 EQ and increase the Band 1 Low Shelf (+200Hz) by another +2.0dB.
 
-**Session Library (Active Presets)**
+---
 
-1. Preset Name: "Spoonful - ES339" *(Previously logged)*
-2. Preset Name: "Lucille's Twin - Dual"
-*   **Target:** B.B. King (1970s Live Tone).
-*   **Guitar:** ES-339 (Humbuckers) & Telecaster (Single Coils).
-*   **Physics Goal:** Maximize clean headroom, mimic ES-355 Varitone switch, control dynamics via Lane Output rather than compression.
-*   **Full Configuration:**
-    *   **Block 1 (EQ-8 - Scene Controlled):** Tele Mode (Sc A-D) [HPF 90Hz, Band 1 Low Shelf +2.5dB @ 200Hz, LPF 4500Hz]. 339 Mode (Sc E-H) [HPF 110Hz, Band 3 -3.0dB @ 350Hz, Band 4 +1.5dB @ 1200Hz, LPF 6000Hz].
-    *   **Block 2 (Amp - US TWN Vibrato):** Bright Switch [Off], Vol [Rhy: 4.5 / Lead: 6.0], Treble [6.0], Mid [Rhy: 5.5 / Lead: 6.5], Bass [3.5], Presence [5.0]. 
-    *   **Block 3 (Cab - 212 US TWN C12K):** Mic A (Dyn 57, Pos 0.4, Dist 1.0"), Mic B (Ribbon 121, Pos 0.6, Dist 2.5"), Mix [A: 0dB, B: -3dB], Low Cut [100Hz], High Cut [6500Hz].
-    *   **Block 4 (Mod - Chief CE2W Chorus):** Mode [Vibrato], Rate [3.0Hz], Depth [60%]. (Active only on Scenes D/H).
-    *   **Block 5 (Reverb - Spring):** Mix [15% / 18%], Dwell [3.5 / 4.0], Low Color [5.0], High Color [4.0].
-    *   **Output Node:** Level [Rhy: 0.0dB / Lead: +1.5dB]. Input Gain Block assigned to -3.0dB for ES-339 and +3.0dB for Telecaster.
+### **Session Library (Active Presets)**
+
+**2. Preset Name:** "Lucille's Twin - Dual Rig"
+**Target:** B.B. King / High Headroom Clean.
+**Guitar:** Gibson ES-339 (Humbuckers) & Fender Telecaster (Single Coils).
+**Physics Goal:** Absolute clean platform, vocal midrange push, volume-dependent sustain, Varitone simulation via EQ.
+**Full Configuration:**
+*   **Block 1 (Global Input):** ES-339 [Thresh: -62dB, Gain: -4.0dB] / Telecaster [Thresh: -50dB, Gain: +1.5dB].
+*   **Block 2 (Optical Comp):** Peak Red [ES: 40/55%, Tele: 45/60%], Gain [ES: 2.0/3.5dB, Tele: 3.0/4.5dB].
+*   **Block 3 (Amp - US TWN Vibrato):** Vol [ES: 3.5, Tele: 4.5], Bass [ES: 3.0, Tele: 4.5], Mid [ES: 6.5/7.5, Tele: 7.0/8.0], Treb [ES: 6.0/6.5, Tele: 5.0]. Bright Switch: OFF. Master Volume: N/A.
+*   **Block 4 (Cab - 212 US TWN C25):** Mic A (Dyn 57, Pos 1.0, Dist [ES: 1.0", Tele: 1.5"]), Mic B (Ribbon 121, Pos 1.5, Dist [ES: 2.5", Tele: 1.0"]).
+*   **Block 5 (EQ-8):** ES-339 [Cut 400Hz -3dB, Peak 1500Hz +2/+3.5dB]. Telecaster [Low Shelf 200Hz +4dB, LPF 4500Hz, Peak 1500Hz +2.5dB (Lead)]. Output Level [Lead Scene +1.5dB].
+*   **Block 6 (Spring Reverb):** Mix [ES: 15/20%, Tele: 18/22%], Decay [2.0s / 2.5s], Tone [5.0].

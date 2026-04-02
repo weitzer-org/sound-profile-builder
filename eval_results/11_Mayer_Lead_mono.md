@@ -1,77 +1,58 @@
-System Initialization: QC-2 Quad Cortex Systems Engineer
-Target Acquired: John Mayer Trio Lead ("Try!" Era)
-Analog Pedigree: Two-Rock Custom Reverb / Dumble Steel String Singer / Fender Super Reverb, Klon Centaur, Ibanez TS10.
-Physics Strategy: High-headroom, mid-scooped clean platform (Fender Twin architecture mimics the Two-Rock clean channel) pushed by cascading soft-clipping drives (Klon -> TS808) to achieve a smooth, blooming lead tone without harsh preamp distortion.
+**Trigger Verification:** Before we finalize the rig in your Cortex Control app, **are your ES-339 and Telecaster pickups Vintage Output, Medium, or High Output?** (Defaulting to Vintage for the Tele and Medium for the ES-339 for this build). 
 
-As requested, I have developed two distinct hardware profiles utilizing the **Split-Bank Matrix** to adapt this Stratocaster-centric tone for both an **ES-339 (Humbuckers)** and a **Telecaster (Single Coils)**.
+To nail the John Mayer Trio era (e.g., *Try!* live album) tone, we need a massive, high-headroom, mid-scooped clean platform that doesn't compress until it's hit hard by a mid-hump overdrive. We will use the **Captain 50** (Neural DSP’s capture of the Morgan SW50, which is heavily based on the Dumble Steel String Singer / Two-Rock architectures Mayer is famous for). 
+
+Per your constraints, this preset uses the **Split-Bank Matrix** to house entirely separate gain-staging, EQ, and gating physics for your Fender Telecaster (Scenes A-D) and Gibson ES-339 (Scenes E-H).
+
+### 4. Organization Standard (Split-Bank Matrix)
+*   **Row 1 (Telecaster Single Coil):**
+    *   **Scene A (Rhythm):** Huge, scooped clean. Thickened via EQ to emulate Stratocaster body.
+    *   **Scene B (Lead):** Green 808 engaged. Piercing highs rolled off.
+    *   **Scene C (Dry/Comping):** Reverb/Delay bypassed for tight funk (e.g., *Vultures*).
+    *   **Scene D (Ambient/FX):** Myth Drive + Analog Delay for dynamic swells.
+*   **Row 2 (Gibson ES-339 Humbucker):**
+    *   **Scene E (Rhythm):** HPF engaged to cut mahogany mud. Amp gain reduced.
+    *   **Scene F (Lead):** Green 808 engaged, but Tone backed off to compensate for humbucker upper-mid push.
+    *   **Scene G (Dry/Comping):** Completely dry, tight noise gate.
+    *   **Scene H (Ambient/FX):** Deep plate reverb + subtle delay.
 
 ---
 
-### Phase 1: Main Signal Chain & Base Architecture
-*Apply this chain to your QC grid. Parameters marked with `(Right-Click > Assign)` should be assigned to Scenes.*
+### Execution Protocol: Main Signal Chain
+*Note: Parameters marked with **[Rhy / Lead]** or **[Tele / ES-339]** require Scene Assignment (Right-Click > Assign to Scene in Cortex Control).*
 
-**Table A: Main Signal Chain**
-| Block Category | Model Name | Rhythm (Sc A/E) | Lead (Sc B/F) | Physics/Rationale |
+| Block Category | Model Name | Rhythm Settings (Sc A / E) | Lead Settings (Sc B / F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Gate (Circle 1) | Thresh: -55dB | Thresh: -45dB | Keep gate loose on Rhythm for dynamic range. Tighten for Lead to cut TS808 noise. |
-| **Pre-FX 1** | Opto Comp | Comp: 3.0, Gain: 5.0 | Comp: 3.0, Gain: 5.0 | Subtle optical leveling. Prevents hard pick attacks from instantly clipping the Dumble-style drives. |
-| **Pre-FX 2** | Myth Drive (Klon) | Gain: 2.0, Out: 6.5 | Gain: 2.0, Out: 6.5 | Always-on base color. Adds harmonic excitement and a slight low-mid push. |
-| **Pre-FX 3** | Green 808 (TS) | Bypass | OD: 4.5, Bal: 7.0 | Engaged for Lead. Pushes the scooped amp with a massive 720Hz midrange hump. |
-| **Amp** | US TWN Vibrato | Vol: 4.5, Treb: 6.0 | Vol: 5.0, Treb: 5.5 | Extremely high headroom. Bass: 4.0, Mid: 3.5. Mimics the scoop of a Two-Rock. |
-| **Cab** | 212 US TWN | Mic A: Dyn 57 (Center) | Mic B: Rib 121 (Edge) | Dyn 57 for Rhythm cut; Ribbon 121 mixed higher on Lead to smooth high-end fizz. |
-| **Post-FX 1** | Analog Delay | Bypass | Mix: 18%, Time: 320ms | Thickens single notes. High-cut at 1.5kHz so repeats stay out of the way. |
-| **Post-FX 2** | Spring Reverb | Mix: 25%, Decay: 2.5s | Mix: 25%, Decay: 2.5s | Classic Mayer drip. LP filter at 4kHz to prevent splashy artifacts. |
+| **Input/Gate** | **Global Input Gate** | Tele (A): Thresh: -55dB<br>ES339 (E): Thresh: -45dB | Tele (B): Thresh: -50dB<br>ES339 (F): Thresh: -40dB | Humbuckers (ES-339) generate more line noise under gain. Gate is tightened. |
+| **Pre-FX (Drive)** | **Green 808** | *Bypassed* | Overdrive: 3.5<br>Tone: [Tele: 5.5 / ES339: 4.5]<br>Level: 8.0 | Simulates Mayer’s TS10. Low drive/high level pushes the Dumble preamp tubes into natural, saggy saturation. ES-339 needs less Tone control. |
+| **Amp** | **Captain 50** | Vol: [Tele: 4.5 / ES339: 3.0]<br>Bass: 4.0, Mid: 3.5, Treb: 5.5<br>Bright: OFF, Bass Cut: OFF | Vol: [Tele: 4.5 / ES339: 3.0]<br>Bass: 4.0, Mid: 3.5, Treb: 5.5<br>Bright: OFF, Bass Cut: OFF | Mid-scooped Dumble/Two-Rock platform. Humbucker volume is dropped 1.5 notches to maintain the exact same clean headroom as the Telecaster. |
+| **EQ (Adaptation)**| **Parametric-8** | **Tele:** Band 1 (+2.5dB @ 200Hz), Band 8 LPF (4.5kHz)<br>**ES339:** HPF (110Hz), Band 3 (-2dB @ 400Hz) | **Tele:** Band 1 (+2.5dB), LPF (4.8kHz)<br>**ES339:** HPF (110Hz), Band 3 (-2dB) | **The Chameleon Strategy:** Adds necessary Strat-like "wood" to the Telecaster while taming the ice-pick. Cleans up low-mid mud on the ES-339 humbuckers. |
+| **Cab** | **212 Captain 50** | Mic A: Dyn 57 (Pos 0.5, Dist 1.0")<br>Mic B: Rib 121 (Pos 1.5, Dist 3.0")<br>Mix: [A: 0dB, B: -2dB] | Mic A: Dyn 57 (Pos 0.5, Dist 1.0")<br>Mic B: Rib 121 (Pos 1.5, Dist 3.0")<br>Mix: [A: 0dB, B: -2dB] | Dynamic 57 captures the hard pick attack (Mayer’s slap technique); Ribbon 121 provides massive low-end warmth without fizz. |
+| **Post-FX (Delay)**| **Analog Delay** | *Bypassed* | Mix: 18%<br>Time: 315ms<br>Fdbk: 15% (1-2 repeats) | Simulates the Aqua Puss analog delay used purely to thicken the solo tail. Does not interfere with fast playing. |
+| **Post-FX (Verb)** | **Spring** | Mix: 25%<br>Decay: 1.5s<br>Tone: 4.0 | Mix: 30%<br>Decay: 1.8s<br>Tone: 4.5 | Two-Rock amps are famous for lush, dripping spring reverb tanks. Keeps the clean tone glassy and 3-dimensional. |
 
 ---
 
-### Phase 2: Multi-Guitar Target Output & Compensation
-John Mayer’s tone relies heavily on the scooped, glassy nature of Stratocaster neck/middle pickups. We must aggressively EQ and gain-stage your two instruments to force them into this sonic footprint.
-
-#### Target 1: Fender Telecaster (Scenes A - D)
-**Physics Goal:** A Telecaster neck pickup is typically a bit more muffled and less "hollow" than a Stratocaster, while the bridge is too sharp. We need to add low-end bloom and tame the treble bite.
-*   **Input Block:** Set Gain to **+1.5dB**. Tele neck pickups can be slightly under-wound compared to "Texas" style Strat pickups.
-*   **EQ-8 Block (Place between Cab and Delay):**
-    *   **Band 2 (150Hz - Body):** +2.5dB (Adds the "Strat neck" low-end resonance).
-    *   **Band 3 (400Hz - Wood):** -1.5dB (Clears out honk).
-    *   **Band 8 (LPF - Twang Control):** Set to **4.5kHz**. This is critical. It chops off the Telecaster ice-pick frequencies when the Green 808 is engaged, making the overdrive sound "smooth" rather than "gritty."
-
-#### Target 2: Gibson ES-339 Humbuckers (Scenes E - H)
-**Physics Goal:** Humbuckers will immediately overload the Myth Drive and Amp block, destroying the Two-Rock headroom and turning the tone into muddy classic rock. We must simulate a single-coil frequency response and drop the output voltage.
-*   **Input Block:** Set Gain to **-4.5dB**. This prevents the humbuckers from clipping the front of the Opto Comp and keeps the amp strictly in the clean zone during Rhythm playing.
-*   **EQ-8 Block (Place between Cab and Delay):**
-    *   **Band 2 (200Hz - Mud):** -3.0dB (Removes the humbucker low-end buildup).
-    *   **Band 4 (800Hz - Honk):** -4.0dB (Massively scoops the midrange to fake the "hollow" Stratocaster sound).
-    *   **Band 6 (3000Hz - Glass):** +2.5dB (Simulates single-coil presence).
-    *   **Band 8 (LPF):** Set to **5.5kHz**. Tames the aggressive upper-harmonics generated when humbuckers push the Green 808.
+### Troubleshooting & Refinement Tree
+If the tone feels **"Too Compressed" or "Fuzzy"** when using the Gibson ES-339:
+1.  **Input Pad:** Lower the Global Input Gain (or add a Gain Block at the very front) to **-4.5dB**. Medium/High output humbuckers will cause the *Captain 50* model to clip prematurely, destroying the Dumble headroom effect.
+2.  **Tube Sag:** Lower the Amp Bass control to **3.0**. The Morgan/Dumble circuits have notoriously loose low-end; hitting them with a humbucker can cause the simulated power amp to "fart out."
+3.  **Output Compensation:** If step 1 and 2 drop your overall loudness, increase the **Lane Output Level** by +2.0dB to push the QSC CP12 PA speaker, rather than pushing the virtual amp.
 
 ---
 
-### Phase 3: Troubleshooting & Refinement Tree
-If the tone isn't reacting properly to your picking hand, follow this strict diagnostic path:
+### Session Library (Active Presets)
 
-1.  **Too Distorted on Rhythm (ES-339):** Your pickups are very hot. Lower the Input Block Gain to -6.0dB. Do *not* lower the Amp volume, as this will change the tube taper.
-2.  **Lead Tone Sounds "Fuzzy" instead of "Smooth":** The Green 808 is clipping too much low-end. Go to the Amp block and reduce the **Bass** parameter from 4.0 to 3.0. In Fender/Two-Rock circuits, bass frequencies distort first. Rolling off bass clears up overdrive.
-3.  **Volume Drop on Lead:** If the Green 808 doesn't feel loud enough when engaged, **do not** increase the Drive pedal's level (this just compresses the amp more). Instead, assign the **Lane Output Level** (at the far right of the grid) to boost by +2.0dB on Scenes B and F.
-
----
-
-### Phase 4: Session Registry Protocol
-*Appending to Active Session Memory...*
-
-**Session Library (Active Presets)**
-
-2. Preset Name: "Mayer Trio D-Style"
-Target: John Mayer Trio (2005) - "Who Did You Think I Was".
-Guitar: Fender Telecaster (Sc A-D) / Gibson ES-339 (Sc E-H).
-Physics Goal: High-headroom scooped clean platform cascading into soft-clipping drives for sustain without harsh clipping.
-Full Configuration:
-Block 1 (Global Gate): Thresh [Rhy: -55dB / Lead: -45dB].
-Block 2 (Opto Comp): Comp [3.0], Ratio [4:1], Gain [5.0].
-Block 3 (Myth Drive): Gain [2.0], Treb [5.5], Vol [6.5].
-Block 4 (Green 808): OD [Rhy: Bypass / Lead: 4.5], Tone [6.0], Balance [7.0].
-Block 5 (Amp - US TWN Vibrato): Vol [4.5 / 5.0], Bass [4.0], Mid [3.5], Treble [6.0 / 5.5], Lane Level [Rhy: 0.0dB / Lead: +2.0dB].
-Block 6 (Cab - 212 US TWN): Mic A (Dyn 57, Pos 1.0), Mic B (Ribbon 121, Pos 2.5), Mix [Rhy: 70% A / Lead: 50% A].
-Block 7 (EQ-8 - Tele): Gain Pad [+1.5dB]. 150Hz [+2.5dB], 400Hz [-1.5dB], LPF [4.5kHz].
-Block 8 (EQ-8 - ES339): Gain Pad [-4.5dB]. 200Hz [-3.0dB], 800Hz [-4.0dB], 3000Hz [+2.5dB], LPF [5.5kHz].
-Block 9 (Analog Delay): Mix [18%], Time [320ms], Fdbk [25%], HP [250Hz], LP [1500Hz].
-Block 10 (Spring Reverb): Mix [25%], Decay [2.5s], HP [150Hz], LP [4000Hz].
+**2. Preset Name: "Mayer Trio Dumble Rig"**
+*   **Target:** John Mayer Trio / Two-Rock / Dumble SSS
+*   **Guitars:** Fender Telecaster (Single) & Gibson ES-339 (Humbucker)
+*   **Physics Goal:** Massive scooped clean headroom pushed into singing, mid-heavy compression via analog overdrive, compensated for two drastically different guitar impedances.
+*   **Full Configuration:**
+    *   **Block 1 (Global Input/Gate):** Thresh [Tele: -55dB / ES339: -45dB], Decay [150ms].
+    *   **Block 2 (Green 808):** Overdrive [3.5], Tone [Tele: 5.5 / ES339: 4.5], Level [8.0].
+    *   **Block 3 (Amp - Captain 50):** Vol [Tele: 4.5 / ES339: 3.0], Bass [4.0], Mid [3.5], Treble [5.5], Bass Cut [Off], Bright [Off].
+    *   **Block 4 (EQ-8):** **Tele Scenes:** Band 1 [+2.5dB @ 200Hz Peak], Band 8 LPF [4.5kHz]. **ES339 Scenes:** HPF [110Hz], Band 3 [-2.0dB @ 400Hz], Band 8 LPF [Off].
+    *   **Block 5 (Cab - 212 Captain 50):** Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 3.0"), Pan [Center], Mix [A: 0dB, B: -2dB].
+    *   **Block 6 (Analog Delay):** Mix [18%], Time [315ms], Fdbk [15%], Tone [5.0].
+    *   **Block 7 (Spring Reverb):** Mix [Tele: 25% / ES339: 22%], Decay [1.5s], Tone [4.0].
+    *   **Output Routing:** Multi-Out / Output 1/2 to QSC CP12. Level [+0.0dB].

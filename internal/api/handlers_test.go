@@ -84,7 +84,7 @@ func (m *mockSecretFetcher) Close() {}
 type mockOrchestrator struct {
 	err error
 }
-func (m *mockOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(string)) (string, *agents.TokenUsage, error) {
+func (m *mockOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	if m.err != nil {
 		return "", nil, m.err
 	}

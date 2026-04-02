@@ -7,5 +7,11 @@
     "Fender Player Plus HSS Strat"
   ],
   "project_id": "710019748844",
-  "bucket_name": "weitzer-sound-builder"
+  "bucket_name": "weitzer-sound-builder",
+  "agent_prompts": {
+    "2_sonic_profiler": "v2",
+    "4_coros_librarian": "v2",
+    "6_acoustician": "v2",
+    "12_architect": "v2"
+  }
 }

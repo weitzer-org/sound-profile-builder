@@ -54,7 +54,7 @@ func TestOrchestrator_RunPipeline_Success(t *testing.T) {
 		"allow_cloud_captures": false,
 	}
 
-	res, usage, err := orch.RunPipeline(ctx, "test prompt", constraints, nil)
+	res, usage, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
 	if err != nil {
 		t.Fatalf("Expected pipeline to succeed, got %v", err)
 	}
@@ -108,7 +108,7 @@ func TestOrchestrator_TimeoutsAndErrors(t *testing.T) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, 1*time.Millisecond)
 	defer cancel()
 
-	_, _, err := orch.RunPipeline(ctxTimeout, "test", nil, nil)
+	_, _, err := orch.RunPipeline(ctxTimeout, "test", nil, nil, nil)
 	if err == nil {
 		t.Errorf("Expected pipeline to fail on timeout")
 	}
@@ -180,10 +180,37 @@ func TestOrchestrator_RunPipeline_PhaseErrors(t *testing.T) {
 			orch, _ := NewOrchestrator(ctx, "key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
 			defer orch.Close()
 
-			_, _, err := orch.RunPipeline(ctx, "test", map[string]interface{}{"allow_cloud_captures": true}, nil)
+			_, _, err := orch.RunPipeline(ctx, "test", map[string]interface{}{"allow_cloud_captures": true}, nil, nil)
 			if err == nil {
 				t.Errorf("Expected pipeline to fail on target %d", tt.failTarget)
 			}
 		})
+	}
+}
+
+func TestOrchestrator_RunPipeline_AblationConfig(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"candidates":[{"content":{"parts":[{"text":"mock"}]}}]}`))
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	// Turn off Architect (Agent 12)
+	config := map[string]string{
+		"12_architect": "off",
+	}
+
+	res, _, err := orch.RunPipeline(ctx, "test", nil, config, nil)
+	if err != nil {
+		t.Fatalf("Expected pipeline to succeed even with ablation, got %v", err)
+	}
+
+	if res != "Architect skipped by configuration." {
+		t.Errorf("Expected skipped message, got %s", res)
 	}
 }

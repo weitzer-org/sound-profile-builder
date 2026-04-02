@@ -119,7 +119,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 }
 
 type badJsonOrchestrator struct{}
-func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, onProgress func(string)) (string, *agents.TokenUsage, error) {
+func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
