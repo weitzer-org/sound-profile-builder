@@ -224,6 +224,16 @@ func (s *Server) handleDeletePreset() http.HandlerFunc {
 
 		// Reload the list
 		presets, _ := s.store.List(r.Context())
+		
+		// Bypass eventual consistency by manually filtering out the deleted ID
+		var filtered []*storage.Preset
+		for _, p := range presets {
+			if p.ID != id {
+				filtered = append(filtered, p)
+			}
+		}
+		presets = filtered
+
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(renderPresetList(presets, false)))
 	}
@@ -250,7 +260,7 @@ func (s *Server) handleCopyPresetUI() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, true, true, scope)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, true, true, scope, false)))
 	}
 }
 
@@ -314,7 +324,7 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 				%s
 			</div>
 			%s
-		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false, true, scope))
+		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false, true, scope, false))
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
@@ -392,7 +402,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false, true, scope))
+		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false, true, scope, false))
 		
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
@@ -400,8 +410,8 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 }
 
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
-func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, isReadOnly bool, prefix string) string {
-	log.Printf("[DEBUG] renderTweakingWorkspaceHTML for %s: isCopyMode=%t, isReadOnly=%t, prefix=%s", p.Name, isCopyMode, isReadOnly, prefix)
+func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, isReadOnly bool, prefix string, isOOB bool) string {
+	log.Printf("[DEBUG] renderTweakingWorkspaceHTML for %s: isCopyMode=%t, isReadOnly=%t, prefix=%s, isOOB=%t", p.Name, isCopyMode, isReadOnly, prefix, isOOB)
 	// TODO: Make the conversational response from the agent more visible in the UI. 
 	// Currently, it gets hidden inside the "View ADK Processing Log" accordion. We should explore
 	// showing the latest message prominently, especially if the matrix wasn't updated.
@@ -665,13 +675,13 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, isReadOnly 
 			<div style="font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.4; margin-top: 0.5rem;">
 				<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
 			</div>
-			<form hx-post="/api/preset/chat" hx-target="#%[3]s-chat-progress-area" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #%[3]s-chat-input, button[type='submit']">
+			<form hx-post="/api/preset/chat" hx-target="#%[3]s-chat-progress-area" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end; margin-top: 1rem; flex-wrap: wrap;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #%[3]s-chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%[4]s">
 				<input type="hidden" name="scope" value="%[3]s">
 				<div style="flex: 1; min-width: 250px;">
-					<textarea name="message" id="%[3]s-chat-input" placeholder="e.g., Make the amp darker..." style="width: 100%%; resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
+					<textarea name="message" id="%[3]s-chat-input" placeholder="e.g., Make the amp darker..." style="width: 100%%; box-sizing: border-box; resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
 				</div>
-				<button id="%[3]s-chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
+				<button id="%[3]s-chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center;">
 					<span class="btn-text">Adjust</span>
 				</button>
 			</form>
@@ -681,18 +691,23 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, isReadOnly 
 	}
 
 	editButtonHtml := ""
-	if isReadOnly {
+	if isReadOnly && p.Name != "Draft Preset" {
 		editButtonHtml = fmt.Sprintf(`
 			<button hx-get="/api/preset/view?id=%s&edit=true" hx-target="closest .workspace-wrapper" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">Enable Edit</button>
 		`, p.ID)
-	} else {
+	} else if !isReadOnly {
 		editButtonHtml = fmt.Sprintf(`
 			<button hx-get="/api/preset/view?id=%s" hx-target="closest .workspace-wrapper" style="padding: 0.5rem 1rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">View Mode</button>
 		`, p.ID)
 	}
 
+	oobAttr := ""
+	if isOOB {
+		oobAttr = ` hx-swap-oob="true"`
+	}
+
 	return fmt.Sprintf(`
-	<div id="%s-workspace-wrapper" class="workspace-wrapper">
+	<div id="%s-workspace-wrapper" class="workspace-wrapper"`+oobAttr+`>
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
 			%s
 		</div>
@@ -738,7 +753,7 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 			scope = "lib"
 		}
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, !edit, scope)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, !edit, scope, false)))
 	}
 }
 
@@ -895,7 +910,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
 				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(p, false, true, scope)
+				task.Result = renderTweakingWorkspaceHTML(p, false, true, scope, true)
 			}
 			s.tasksMu.Unlock()
 		}()
@@ -1042,7 +1057,7 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false, scope)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false, scope, false)))
 	}
 }
 

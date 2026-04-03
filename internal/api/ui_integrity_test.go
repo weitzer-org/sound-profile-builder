@@ -144,11 +144,11 @@ func TestUIGoldenTweakingWorkspace(t *testing.T) {
 	}
 
 	// Read-Only mode
-	htmlReadOnly := renderTweakingWorkspaceHTML(p, false, true, "lib")
+	htmlReadOnly := renderTweakingWorkspaceHTML(p, false, true, "lib", false)
 	verifyGolden(t, "workspace_readonly", htmlReadOnly)
 
 	// Edit mode
-	htmlEdit := renderTweakingWorkspaceHTML(p, false, false, "lib")
+	htmlEdit := renderTweakingWorkspaceHTML(p, false, false, "lib", false)
 	verifyGolden(t, "workspace_edit", htmlEdit)
 }
 

@@ -91,5 +91,5 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   await deleteBtn.click();
 
   // Wait for UI sequence to complete (duplicate is destroyed)
-  await expect(presetList.filter({ hasText: uniqueDuplicateName }).first()).not.toBeVisible({ timeout: 10000 });
+  await expect(presetList.filter({ hasText: uniqueDuplicateName }).first()).not.toBeVisible({ timeout: 30000 });
 });

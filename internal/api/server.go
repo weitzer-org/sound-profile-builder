@@ -279,20 +279,20 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
 				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, true, "gen")
+				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, true, "gen", true)
 			}
 			s.tasksMu.Unlock()
 		}()
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(fmt.Sprintf(`
-			<div id="progress-area" hx-get="/api/preset/status?id=%s" hx-trigger="every 2s" hx-swap="outerHTML">
+			<div id="gen-progress-area" hx-get="/api/preset/status?id=%s&scope=gen" hx-trigger="every 2s" hx-swap="outerHTML">
 				<div class="progress-panel" style="padding: 0.75rem 1rem; display: flex; flex-direction: row; align-items: center; gap: 0.75rem;">
 					<span class="spinner" style="display:inline-block;"></span>
 					<span style="color: white; font-size: 0.95rem;">Current: <span style="color: var(--accent);">Initializing ADK Pipeline...</span></span>
 				</div>
 			</div>
-			<button id="submit-btn" style="display: none;" hx-swap-oob="true"></button>
+			<button id="gen-submit-btn" style="display: none;" hx-swap-oob="true"></button>
 		`, taskID)))
 	}
 }
@@ -362,9 +362,7 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 				<button id="%[2]s-chat-submit-btn" hx-swap-oob="true" style="padding: 0.85rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-width: 100px;">
 					<span class="btn-text">Adjust</span>
 				</button>
-				<div id="%[2]s-workspace-wrapper" hx-swap-oob="true">
-					%[1]s
-				</div>
+				%[1]s
 			`, task.Result, scope)))
 			return
 		}
@@ -374,9 +372,7 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 			<button id="%[2]s-submit-btn" hx-swap-oob="true" style="padding: 0.85rem 1.5rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; height: 48px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-width: 100px;">
 				<span class="btn-text">Spin Up ADK Pipeline</span>
 			</button>
-			<div id="%[2]s-workspace-wrapper" hx-swap-oob="true">
-				%[1]s
-			</div>
+			%[1]s
 		`, task.Result, scope)))
 		return
 
