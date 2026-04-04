@@ -137,8 +137,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		ctx := context.WithoutCancel(r.Context())
+		log.Printf("DEBUG MOCK: r.FormValue(\"mock\")=%q, os.Getenv(\"MOCK_MODE\")=%q", r.FormValue("mock"), os.Getenv("MOCK_MODE"))
 		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
+			log.Printf("DEBUG MOCK: Mock mode enabled in context")
 		}
 
 		s.apiKeyMu.RLock()
@@ -221,15 +223,41 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 
 			impactsHtml := "<ul>"
-			for _, imp := range archResp.AgentImpact {
-				impactsHtml += "<li>" + imp + "</li>"
+			// Correctly map version strings based on the actual config map
+			agentNames := map[string]string{
+				"1_tone_historian":     "Tone Historian",
+				"2_sonic_profiler":     "Sonic Profiler",
+				"3_community_scraper":  "Community Scraper",
+				"4_coros_librarian":    "CorOS Librarian",
+				"5_cloud_navigator":    "Cloud Navigator",
+				"6_acoustician":        "Acoustician",
+				"7_transducer_tech":    "Transducer Tech",
+				"8_foh_optimizer":      "FOH Optimizer",
+				"9_mix_engineer":       "Mix Engineer",
+				"10_control_mapper":    "Control Mapper",
+				"11_dsp_dispatcher":    "DSP Dispatcher",
 			}
-			if len(cfg.AgentPrompts) > 0 {
-				impactsHtml += "<li><strong>Using Prompt Overrides:</strong> "
-				for k, v := range cfg.AgentPrompts {
-					impactsHtml += fmt.Sprintf("%s (%s), ", k, v)
+
+			for _, imp := range archResp.AgentImpact {
+				processedImp := imp
+				// Find which agent this line belongs to and append version
+				for key, name := range agentNames {
+					if strings.Contains(imp, name) {
+						version := "v1"
+						if v, ok := cfg.AgentPrompts[key]; ok && v != "" {
+							version = v
+						}
+						if !strings.Contains(imp, "v2") && !strings.Contains(imp, "v1") {
+							newHeader := fmt.Sprintf("<strong>Agent %s (%s):</strong>", name, version)
+							processedImp = strings.Replace(imp, "<strong>Agent", newHeader, 1)
+							// If the LLM didn't use the strong Agent format, just append it
+							if processedImp == imp {
+								processedImp = fmt.Sprintf("<strong>%s (%s):</strong> %s", name, version, imp)
+							}
+						}
+					}
 				}
-				impactsHtml = strings.TrimSuffix(impactsHtml, ", ") + "</li>"
+				impactsHtml += "<li>" + processedImp + "</li>"
 			}
 			impactsHtml += "</ul>"
 
@@ -279,7 +307,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
 				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, true, "gen", true)
+				task.Result = renderTweakingWorkspaceHTML(draftPreset, false)
 			}
 			s.tasksMu.Unlock()
 		}()
