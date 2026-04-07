@@ -1,0 +1,56 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"sort"
+	"strings"
+)
+
+func main() {
+	data, err := ioutil.ReadFile("internal/agents/coros_map.json")
+	if err != nil {
+		log.Fatalf("Failed to read map: %v", err)
+	}
+
+	var corosData map[string]map[string]interface{}
+	if err := json.Unmarshal(data, &corosData); err != nil {
+		log.Fatalf("Failed to unmarshal: %v", err)
+	}
+
+	byType := make(map[string]map[string]bool)
+
+	for _, props := range corosData {
+		t, _ := props["type"].(string)
+		if t == "" {
+			t = "unknown"
+		}
+		equiv, ok := props["coros_equivalent"].(string)
+		if ok && equiv != "" {
+			if byType[t] == nil {
+				byType[t] = make(map[string]bool)
+			}
+			byType[t][equiv] = true
+		}
+	}
+
+	var types []string
+	for t := range byType {
+		types = append(types, t)
+	}
+	sort.Strings(types)
+
+	for _, t := range types {
+		fmt.Printf("\n=== TYPE: %s ===\n", strings.ToUpper(t))
+		var items []string
+		for item := range byType[t] {
+			items = append(items, item)
+		}
+		sort.Strings(items)
+		for _, item := range items {
+			fmt.Println("-", item)
+		}
+	}
+}

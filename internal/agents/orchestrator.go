@@ -374,7 +374,20 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
 	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
 	// TODO: Test gemini-2.5-flash specifically for the "Refinement Architect" agent to drastically reduce the ~80s latency of matrix generation.
-	modelName := "gemini-3.1-pro-preview"
+	modelName := os.Getenv("TARGET_MODEL")
+	if modelName == "" {
+		modelName = "gemini-3.1-pro-preview"
+	}
+
+	if os.Getenv("USE_HETEROGENEOUS") == "true" {
+		switch agentRole {
+		case "CorOS Librarian", "Cloud Navigator", "Control Mapper", "Architect & Evaluator", "Refinement Architect":
+			modelName = "gemini-3.1-pro-preview"
+		default:
+			modelName = "gemini-3-flash-preview"
+		}
+	}
+
 	model := o.client.GenerativeModel(modelName)
 	
 	ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
@@ -382,7 +395,7 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 
 	resp, err := model.GenerateContent(ctx1, genai.Text(prompt))
 	if err != nil {
-		log.Printf("[%s] Gemini 3.1 Pro Preview failed or rate-limited: %v. Falling back to Gemini 2.5 Pro.", agentRole, err)
+		log.Printf("[%s] %s failed or rate-limited: %v. Falling back to Gemini 2.5 Pro.", agentRole, modelName, err)
 		
 		// 2. Fallback to Gemini 2.5 Pro
 		modelName = "gemini-2.5-pro"

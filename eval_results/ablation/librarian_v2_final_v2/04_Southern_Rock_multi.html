@@ -1,0 +1,148 @@
+```json
+{
+  "builder_statement": "This preset is designed to deliver a classic, singing Southern rock slide tone centered around an edge-of-breakup Tweed Bassman. I've placed a Jewel compressor at the very front for infinite sag-like sustain and positioned the Tape Echo before the amplifier to authentically emulate an EP-3 preamp slamming the Tweed's input. The severe 4.5kHz low-pass filter suggested by the Acoustician was explicitly overridden as it would suffocate the upper harmonic overtones crucial for slide articulation; standard FOH parameters were used instead. Pickup compensation heavily alters the amp EQ and cab blends to keep the Gibson tight and the Telecaster thick.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Compressor: Jewel</td><td>Active | Comp 4.0 | Mix 100%</td><td>Active | Comp 6.0 | Mix 100%</td></tr><tr><td>Fuzz: Facial Fuzz</td><td>Bypassed</td><td>Active | Fuzz 5.0 | Vol 6.5</td></tr><tr><td>Delay: Tape Delay (Pre-Amp)</td><td>Bypassed</td><td>Active | Mix 25% | Feedback 30% | Time 400ms</td></tr><tr><td>Amplifier: US Tweed Basslad Normal Patch</td><td>Active | Drive 4.5 | Bass 2.0 | Mid 6.5 | Treble 5.5 | Presence 3.0</td><td>Active | Drive 7.5 | Bass 2.0 | Mid 6.5 | Treble 5.5 | Presence 3.0</td></tr><tr><td>Cab: 410 US Basslad P10Q '16</td><td>Active | 121 Ribbon / 57 Dynamic (65% Blend)</td><td>Active | 121 Ribbon / 57 Dynamic (65% Blend)</td></tr><tr><td>Reverb: Spring Reverb</td><td>Active | Mix 25% | Decay 2.5s</td><td>Active | Mix 30% | Decay 3.0s</td></tr><tr><td>Global EQ (FOH)</td><td>HPF 100Hz | LPF 6500Hz</td><td>HPF 100Hz | LPF 6500Hz</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Compressor: Jewel</td><td>Active | Comp 4.0 | Mix 100%</td><td>Active | Comp 6.0 | Mix 100%</td></tr><tr><td>Fuzz: Facial Fuzz</td><td>Bypassed</td><td>Active | Fuzz 6.0 | Vol 6.5</td></tr><tr><td>Delay: Tape Delay (Pre-Amp)</td><td>Bypassed</td><td>Active | Mix 25% | Feedback 30% | Time 400ms</td></tr><tr><td>Amplifier: US Tweed Basslad Normal Patch</td><td>Active | Drive 5.0 | Bass 4.0 | Mid 6.5 | Treble 4.5 | Presence 2.0</td><td>Active | Drive 8.0 | Bass 4.0 | Mid 6.5 | Treble 4.5 | Presence 2.0</td></tr><tr><td>Cab: 410 US Basslad P10Q '16</td><td>Active | 121 Ribbon / 57 Dynamic (80% Ribbon Blend to fatten)</td><td>Active | 121 Ribbon / 57 Dynamic (80% Ribbon Blend to fatten)</td></tr><tr><td>Reverb: Spring Reverb</td><td>Active | Mix 25% | Decay 2.5s</td><td>Active | Mix 30% | Decay 3.0s</td></tr><tr><td>Global EQ (FOH)</td><td>HPF 100Hz | LPF 6500Hz</td><td>HPF 100Hz | LPF 6500Hz</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            {"name": "Comp", "type": "slider", "value": "4.0"},
+            {"name": "Mix", "type": "slider", "value": "100.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Fuzz",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {"name": "Fuzz", "type": "slider", "value": "5.0"},
+            {"name": "Volume", "type": "slider", "value": "6.5"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Delay",
+          "model": "Tape Delay",
+          "parameters": [
+            {"name": "Time", "type": "slider", "value": "400ms"},
+            {"name": "Mix", "type": "slider", "value": "25.0"},
+            {"name": "Feedback", "type": "slider", "value": "30.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "7.5"},
+            {"name": "Bass", "type": "slider", "value": "2.0"},
+            {"name": "Mid", "type": "slider", "value": "6.5"},
+            {"name": "Treble", "type": "slider", "value": "5.5"},
+            {"name": "Presence", "type": "slider", "value": "3.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cab",
+          "model": "410 US Basslad P10Q '16",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "121 Ribbon"},
+            {"name": "Mic 2", "type": "dropdown", "value": "57 Dynamic"},
+            {"name": "Blend", "type": "slider", "value": "65.0"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            {"name": "Mix", "type": "slider", "value": "30.0"},
+            {"name": "Decay", "type": "slider", "value": "3.0s"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            {"name": "Comp", "type": "slider", "value": "4.0"},
+            {"name": "Mix", "type": "slider", "value": "100.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Fuzz",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {"name": "Fuzz", "type": "slider", "value": "6.0"},
+            {"name": "Volume", "type": "slider", "value": "6.5"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Delay",
+          "model": "Tape Delay",
+          "parameters": [
+            {"name": "Time", "type": "slider", "value": "400ms"},
+            {"name": "Mix", "type": "slider", "value": "25.0"},
+            {"name": "Feedback", "type": "slider", "value": "30.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "8.0"},
+            {"name": "Bass", "type": "slider", "value": "4.0"},
+            {"name": "Mid", "type": "slider", "value": "6.5"},
+            {"name": "Treble", "type": "slider", "value": "4.5"},
+            {"name": "Presence", "type": "slider", "value": "2.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cab",
+          "model": "410 US Basslad P10Q '16",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "121 Ribbon"},
+            {"name": "Mic 2", "type": "dropdown", "value": "57 Dynamic"},
+            {"name": "Blend", "type": "slider", "value": "80.0"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            {"name": "Mix", "type": "slider", "value": "30.0"},
+            {"name": "Decay", "type": "slider", "value": "3.0s"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Set the foundational blueprint for a '59 Fender Tweed Bassman paired with an EP-3 and Fuzz Face to achieve an authentic southern rock slide tone.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Outlined core frequency behaviors including an 850Hz peak, asymmetric tube saturation, and dictated a strict -58dB noise gate limit.",
+    "<strong>Agent 3 (Scraper):</strong> Harvested community intelligence warning against Bassman low-end mud and mid-hump drives, advising a front-of-chain compressor for infinite slide sustain instead.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped historical gear strictly to Quad Cortex native blocks (`US Tweed Basslad Bright Patch`, `Facial Fuzz`, `Jewel`, `Tape Delay`) and provided tactical EP-3 emulation hints.",
+    "<strong>Agent 5 (Navigator):</strong> Verified user constraint `allow_cloud_captures: false` and ensured only purely native components were utilized in the block selection.",
+    "<strong>Agent 6 (Acoustician):</strong> Set initial amplifier tone stack variables. (Note: The Architect explicitly overrode the suggested pre-EQ 4.5kHz LPF, as it violated conventional electric guitar high-end roll-off limits).",
+    "<strong>Agent 7 (Transducer):</strong> Positioned a 121 Ribbon mic closely to tame ice-pick transients from slide playing, blended 65% alongside an off-axis SM57 for midrange bite.",
+    "<strong>Agent 8 (FOH):</strong> Framed the entire signal within a professional live context by applying a 100Hz HPF and a 6500Hz LPF.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Programmed baseline spatial algorithms, requesting a 333ms delay time and a 1.2s vintage spring reverb tail.",
+    "<strong>Agent 10 (Map):</strong> Divided the structured workflow into dynamic scenes, automating the progression from edge-of-breakup rhythm into saturated fuzz-lead parameters.",
+    "<strong>Agent 11 (DSP Router):</strong> Organized blocks into the dual-lane structure. (Note: Architect re-routed the Tape Delay strictly to the pre-amp lane to satisfy the vintage 'slam the amp front-end' mandate)."
+  ]
+}
+```

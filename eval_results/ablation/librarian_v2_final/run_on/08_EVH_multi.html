@@ -1,0 +1,172 @@
+```json
+{
+  "builder_statement": "This preset captures the iconic 'Brown Sound' utilizing a pushed Brit Plexi 100 patch with exaggerated Sag to simulate a Variac voltage drop. The signal chain intentionally places the Phaser 90 and a Parametric EQ before the amplifier to tighten the front-end and provide a chewy, authentic sweep without the need for a traditional overdrive pedal. Note: The severe 4.5kHz pre-amp LPF suggested by the Acoustician was explicitly overridden to preserve the necessary upper-mid harmonic bite characteristic of this genre.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;' border='1'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Modulation: Phaser 90</td><td>Bypassed</td><td>Active | Rate: 2.5</td></tr><tr><td>EQ: Parametric-3 (Pre-Amp)</td><td>Active | 200Hz Shelf: -2.5dB | LPF: OFF (Overridden) | Level: 0.0dB</td><td>Active | 200Hz Shelf: -2.5dB | LPF: OFF (Overridden) | Level: +2.0dB (Push)</td></tr><tr><td>Amplifier: Brit Plexi 100 Patch</td><td>Active | Gain: 7.5 | Vol: 7.0 | B: 3.0, M: 6.5, T: 6.0 | Presence: 2.0 | Sag: 7.5</td><td>Active | Gain: 9.0 | Vol: 7.0 | B: 3.0, M: 6.5, T: 6.0 | Presence: 2.0 | Sag: 8.0</td></tr><tr><td>Cabinet: 412 Brit TV GB75Hz '69</td><td>Active | Mic 1: Dyn 57 (Off-Axis) | Mic 2: Rib 121 | Blend: 75/25 | High Cut: 7.0kHz</td><td>Active | Mic 1: Dyn 57 (Off-Axis) | Mic 2: Rib 121 | Blend: 75/25 | High Cut: 7.0kHz</td></tr><tr><td>Modulation: MX Flanger</td><td>Bypassed</td><td>Bypassed</td></tr><tr><td>Delay: Tape Delay</td><td>Bypassed</td><td>Active | Mix: 25% | Feedback: 30% | Time: 380ms</td></tr><tr><td>Reverb: Studio Plate 70 (ST)</td><td>Active | Mix: 20% | Decay: 2.0s</td><td>Active | Mix: 25% | Decay: 2.5s</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;' border='1'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Modulation: Phaser 90</td><td>Bypassed</td><td>Active | Rate: 2.5</td></tr><tr><td>EQ: Parametric-3 (Pre-Amp)</td><td>Active | 200Hz Shelf: -2.5dB | LPF: OFF (Overridden) | Level: 0.0dB</td><td>Active | 200Hz Shelf: -2.5dB | LPF: OFF (Overridden) | Level: +2.0dB (Push)</td></tr><tr><td>Amplifier: Brit Plexi 100 Patch</td><td>Active | Gain: 7.5 | Vol: 7.0 | B: 3.0, M: 6.5, T: 6.0 | Presence: 2.0 | Sag: 7.5</td><td>Active | Gain: 9.0 | Vol: 7.0 | B: 3.0, M: 6.5, T: 6.0 | Presence: 2.0 | Sag: 8.0</td></tr><tr><td>Cabinet: 412 Brit TV GB75Hz '69</td><td>Active | Mic 1: Dyn 57 (Off-Axis) | Mic 2: Rib 121 | Blend: 75/25 | High Cut: 7.0kHz</td><td>Active | Mic 1: Dyn 57 (Off-Axis) | Mic 2: Rib 121 | Blend: 75/25 | High Cut: 7.0kHz</td></tr><tr><td>Modulation: MX Flanger</td><td>Bypassed</td><td>Bypassed</td></tr><tr><td>Delay: Tape Delay</td><td>Bypassed</td><td>Active | Mix: 25% | Feedback: 30% | Time: 380ms</td></tr><tr><td>Reverb: Studio Plate 70 (ST)</td><td>Active | Mix: 20% | Decay: 2.0s</td><td>Active | Mix: 25% | Decay: 2.5s</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Modulation",
+          "model": "Phaser 90",
+          "parameters": [
+            {"name": "Rate", "type": "knob", "value": "2.5"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Low Shelf Freq", "type": "knob", "value": "200Hz"},
+            {"name": "Low Shelf Gain", "type": "knob", "value": "-2.5dB"},
+            {"name": "High Cut", "type": "knob", "value": "OFF"},
+            {"name": "Level", "type": "knob", "value": "+2.0dB"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {"name": "Gain", "type": "knob", "value": "9.0"},
+            {"name": "Bass", "type": "knob", "value": "3.0"},
+            {"name": "Mid", "type": "knob", "value": "6.5"},
+            {"name": "Treble", "type": "knob", "value": "6.0"},
+            {"name": "Presence", "type": "knob", "value": "2.0"},
+            {"name": "Sag", "type": "knob", "value": "8.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {"name": "Mic 1 Type", "type": "selector", "value": "Dynamic 57"},
+            {"name": "Mic 1 Position", "type": "knob", "value": "Off-Axis"},
+            {"name": "Mic 2 Type", "type": "selector", "value": "Ribbon 121"},
+            {"name": "High Cut", "type": "knob", "value": "7.0kHz"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Modulation",
+          "model": "MX Flanger",
+          "parameters": [
+            {"name": "Rate", "type": "knob", "value": "0.5Hz"},
+            {"name": "Mix", "type": "knob", "value": "30%"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Tape Delay",
+          "parameters": [
+            {"name": "Time", "type": "knob", "value": "380ms"},
+            {"name": "Feedback", "type": "knob", "value": "30%"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "knob", "value": "2.5s"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Modulation",
+          "model": "Phaser 90",
+          "parameters": [
+            {"name": "Rate", "type": "knob", "value": "2.5"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Low Shelf Freq", "type": "knob", "value": "200Hz"},
+            {"name": "Low Shelf Gain", "type": "knob", "value": "-2.5dB"},
+            {"name": "High Cut", "type": "knob", "value": "OFF"},
+            {"name": "Level", "type": "knob", "value": "+2.0dB"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {"name": "Gain", "type": "knob", "value": "9.0"},
+            {"name": "Bass", "type": "knob", "value": "3.0"},
+            {"name": "Mid", "type": "knob", "value": "6.5"},
+            {"name": "Treble", "type": "knob", "value": "6.0"},
+            {"name": "Presence", "type": "knob", "value": "2.0"},
+            {"name": "Sag", "type": "knob", "value": "8.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {"name": "Mic 1 Type", "type": "selector", "value": "Dynamic 57"},
+            {"name": "Mic 1 Position", "type": "knob", "value": "Off-Axis"},
+            {"name": "Mic 2 Type", "type": "selector", "value": "Ribbon 121"},
+            {"name": "High Cut", "type": "knob", "value": "7.0kHz"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Modulation",
+          "model": "MX Flanger",
+          "parameters": [
+            {"name": "Rate", "type": "knob", "value": "0.5Hz"},
+            {"name": "Mix", "type": "knob", "value": "30%"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Tape Delay",
+          "parameters": [
+            {"name": "Time", "type": "knob", "value": "380ms"},
+            {"name": "Feedback", "type": "knob", "value": "30%"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "knob", "value": "2.5s"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Constraints):</strong> Enforced a single-amp topology and defined the two specific guitars (ES-339 and Telecaster) while strictly disabling the use of cloud captures.",
+    "<strong>Agent 2 (Tone):</strong> Outlined the foundational 'Brown Sound' components: 1968 Marshall Plexi 100W, EP-3 Delay, Phase 90, and Greenback speakers.",
+    "<strong>Agent 3 (Sonic):</strong> Dictated the saturation style to heavily rely on asymmetrical tube clipping paired with Variac-style voltage sag.",
+    "<strong>Agent 4 (Scraper):</strong> Retrieved community knowledge emphasizing the necessity of placing the Phase 90 BEFORE the amp and using Cab High Cuts to tame the notoriously bright QC Plexi model.",
+    "<strong>Agent 5 (Librarian):</strong> Selected the exact mandatory QC blocks ('Brit Plexi 100 Patch', '412 Brit TV GB75Hz '69') and provided tactical hints for pre-amp parametric EQ pushing.",
+    "<strong>Agent 6 (Navigator):</strong> Complied with constraints by dropping any cloud-based neural captures, exclusively routing the signal through native QC component modeling.",
+    "<strong>Agent 7 (Acoustician):</strong> Provided the core amplifier EQ settings (B:3, M:6.5, T:6) but suggested an overly aggressive 4.5kHz Low Pass Filter which the Architect explicitly had to override.",
+    "<strong>Agent 8 (Transducer):</strong> Designed a dual-mic blend utilizing an SM57 placed off-axis to smooth upper-mid transients, paired with a Ribbon 121 for low-end body.",
+    "<strong>Agent 9 (FOH):</strong> Established a -3.0dB global output to prevent digital clipping when the amplifier is pushed to higher gain states in Scene B.",
+    "<strong>Agent 10 (Mix):</strong> Configured the Tape Delay (380ms) and Studio Plate 70 to replicate the Sunset Sound ambient space and classic lead slapback.",
+    "<strong>Agent 11 (Map/DSP):</strong> Finalized the 4-lane grid layout, explicitly positioning the Modulation and EQ blocks in Lane 1 prior to the Amplifier block to ensure genuine front-end saturation."
+  ]
+}
+```

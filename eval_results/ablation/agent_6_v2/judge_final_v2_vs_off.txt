@@ -1,0 +1,108 @@
+2026/04/02 14:05:01 
+⚖️ --- JUDGEMENT FOR 01_SRV_Clean_multi.html ---
+2026/04/02 14:05:01 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B accurately captures the classic SRV Tube Screamer technique by utilizing a very low Drive (1.5-2.0) and high Level (8.5-9.0), which cleanly slams the front of the amp to induce natural breakup. Preset A sets the Drive to 4.0-4.5, which introduces too much inherent pedal clipping for an authentic 'SRV Clean' target. Additionally, Preset B pairs a Super Reverb model (US SPR) with a 4x10 cabinet, offering a historically accurate midrange footprint and natural sag, whereas Preset A relies on a stiffer Twin Reverb and an unmatched 2x12 cabinet. The subtle use of an optical compressor in Preset B also effectively mimics the power amp sag and sustain SRV achieved through immense stage volume.",
+  "confidence": 0.95
+}
+```
+2026/04/02 14:05:01 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:05:23 
+⚖️ --- JUDGEMENT FOR 02_Chicago_Blues_multi.html ---
+2026/04/02 14:05:23 {
+  "preference": "A",
+  "rationale": "Preset A is technically superior and more accurate to Quad Cortex architecture, completely avoiding Preset B's parameter hallucinations (such as assigning 'Band 8' to a 3-band Parametric-3 EQ or standard tonestack controls to a Capture block). Tonally, Preset A demonstrates excellent judgment for the Chicago Blues style, utilizing the Cab block's built-in HPF/LPF to perfectly mimic vintage studio roll-off. It also applies smart, practical guitar-specific adjustments—increasing Bass and significantly lowering the Cab LPF for the Telecaster to tame 'ice-pick' transients, while keeping the humbuckers tight and clear.",
+  "confidence": 0.95
+}
+2026/04/02 14:05:23 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:05:38 
+⚖️ --- JUDGEMENT FOR 03_British_Invasion_multi.html ---
+2026/04/02 14:05:38 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A captures the authentic 'British Invasion' Top Boost chime much more effectively by utilizing realistic acoustic mitigation for high frequencies (off-axis SM57, Ribbon 121, and a post-amp cab LPF at 6.5kHz). Preset B introduces a pre-amp Parametric EQ with an extremely aggressive Low Pass Filter at 4.0kHz - 4.5kHz. Placing a steep LPF before an AC30 Top Boost entirely neuters the jangle, chime, and harmonic overtone generation the amp is famous for, effectively fighting against the Rangemaster treble booster rather than complementing it. Preset A also elegantly handles guitar output differences via the amp's Input Gain parameter, keeping the signal chain clean and optimal.",
+  "confidence": 0.95
+}
+```
+2026/04/02 14:05:38 🏆 WINNER: run_c_off (Confidence: 0.95)
+2026/04/02 14:05:55 
+⚖️ --- JUDGEMENT FOR 04_Southern_Rock_multi.html ---
+2026/04/02 14:05:55 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B provides a superior and more historically accurate Southern Rock tone by properly pairing the US Tweed Basslad (Bassman) amplifier with its native 4x10 Alnico cabinet (410 US Basslad PR10). This delivers the essential multi-speaker punch and mid-range spread characteristic of the genre, whereas Preset A mistakenly utilizes a smaller 1x12 Deluxe cabinet that shrinks the sonic footprint. Additionally, Preset B demonstrates smarter scene management and clearer UI logic ('State: Active/Bypassed'), keeping the rhythm tone tight and dry before engaging the delay and expanded plate reverb specifically for singing slide leads. Preset B also expertly manages the notoriously flubby low-end of the Tweed circuit by dynamically altering the amp's Bass parameter depending on the guitar's pickup type.",
+  "confidence": 0.95
+}
+```
+2026/04/02 14:05:55 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:06:15 
+⚖️ --- JUDGEMENT FOR 05_Clapton_multi.html ---
+2026/04/02 14:06:15 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A offers a more accurate and usable interpretation of the Cream-era 'Woman Tone' and 'Crossroads' sound. The cocked Wah position at 70% (Preset A) correctly targets the vocal lower-midrange frequencies essential for this signature tone, whereas 85% (Preset B) pushes too far into the treble 'toe-down' territory. Additionally, Preset A's cabinet High Cut at 6500Hz is a realistic roll-off for a cranked JTM45, preserving enough natural harmonic content to prevent the humbuckers from sounding completely muffled, unlike Preset B's overly aggressive 4.2kHz LPF. Preset A also provides more granular, realistic parameter mapping for mic positions and pickup-specific amp EQ compensation.",
+  "confidence": 0.9
+}
+```
+2026/04/02 14:06:15 🏆 WINNER: Baseline (Confidence: 0.90)
+2026/04/02 14:06:49 
+⚖️ --- JUDGEMENT FOR 06_Gilmour_multi.html ---
+2026/04/02 14:06:49 {
+  "preference": "B",
+  "rationale": "Preset B demonstrates a deeper understanding of taming silicon fuzz in a digital modeling environment. By placing a Parametric EQ and an Optical Compressor directly after the Fuzz Pi block, Preset B effectively carves out the Big Muff's notorious low-end mud and catches transient spikes before they clip the digital amp model's input—a very common issue when running high-output fuzzes into clean amp blocks. Furthermore, Preset B's fuzz Sustain levels (8.0-9.0) are much more authentic to Gilmour's soaring 'Comfortably Numb' era lead tones compared to Preset A's restrained 5.5-6.0. The sprawling 5.5s reverb decay on Scene B perfectly captures the massive stadium wash associated with his legendary 70s live sound.",
+  "confidence": 0.95
+}
+2026/04/02 14:06:49 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:07:07 
+⚖️ --- JUDGEMENT FOR 07_Edge_multi.html ---
+2026/04/02 14:07:07 {
+  "preference": "A",
+  "rationale": "Preset A provides a much more authentic and cohesive representation of The Edge's signature tone. It correctly utilizes a mono Circular Delay with specific modulation depth to recreate the iconic dotted-eighth rhythmic wash, maintaining the punchy mono character essential to his sound. Preset A also uses a Parametric EQ to meticulously simulate the specific frequency curve of the Korg SDD-3000 preamp, which is far more accurate than the fixed bands of Preset B's Graphic EQ. Additionally, Preset B contradicts its own builder statement by actively engaging a Chief CS3 compressor after claiming to bypass compression, and it clutters the grid with an unnecessary bypassed delay block.",
+  "confidence": 0.95
+}
+2026/04/02 14:07:07 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:07:21 
+⚖️ --- JUDGEMENT FOR 08_EVH_multi.html ---
+2026/04/02 14:07:21 {
+  "preference": "A",
+  "rationale": "Preset A demonstrates a superior understanding of how to achieve the 'Brown Sound' within the Quad Cortex ecosystem. Placing the EQ before the amplifier to shape the front-end drive and cut low-end mud is historically accurate to EVH's signal chain. Furthermore, Preset A correctly utilizes the amp's 'Bias' parameter (dropped to 0.25) as the authentic way to simulate Variac voltage reduction, whereas Preset B relies on a generic 'Sag' setting. Finally, Preset A handles high-frequency harshness elegantly by blending an R121 ribbon mic (and dynamically adjusting the blend ratio for single coils), completely avoiding Preset B's heavy-handed and unnatural -12.0dB post-cab EQ cut at 4kHz, which would severely muffle the output.",
+  "confidence": 0.95
+}
+2026/04/02 14:07:21 🏆 WINNER: run_c_off (Confidence: 0.95)
+2026/04/02 14:07:41 
+⚖️ --- JUDGEMENT FOR 09_BB_King_multi.html ---
+2026/04/02 14:07:41 {
+  "preference": "B",
+  "rationale": "Preset B demonstrates a far superior understanding of B.B. King's signature 'Lucille' tone. The defining characteristic of King's sound is the Gibson Varitone switch, which Preset B cleverly simulates using a Parametric-8 EQ to scoop the low-mids, resulting in that iconic throaty, focused articulation. Additionally, Preset B selects a historically accurate Spring Reverb, capturing the quintessential Fender amp bounce and drip, whereas Preset A utilizes a Studio Plate that feels too polished and modern for a vintage blues application. Preset B also employs much more granular and realistic cabinet mic placements (Cap Edge 1\" and Mid Cone 45° 2\"), ensuring the high-end stings without becoming harsh, while Preset A's extremely aggressive 4.0kHz LPF in the EQ block would render the tone overly muffled and lifeless.",
+  "confidence": 0.95
+}
+2026/04/02 14:07:41 🏆 WINNER: run_c_off (Confidence: 0.95)
+2026/04/02 14:07:50 
+⚖️ --- JUDGEMENT FOR 10_Slash_multi.html ---
+2026/04/02 14:07:50 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A is significantly better constructed for a Slash tone recreation. It correctly utilizes a Digital Delay to emulate the Boss DD-3 Slash is famous for using, whereas Preset B incorrectly maps this to an Analog Delay despite its own notes. Additionally, Preset A includes a Graphic EQ to push the front of the amp (mimicking his live solo boost) and a Studio Plate reverb, which is essential for capturing the spatial characteristics of the 'Appetite for Destruction' studio sound.",
+  "confidence": 0.95
+}
+```
+2026/04/02 14:07:50 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/02 14:08:04 
+⚖️ --- JUDGEMENT FOR 11_Mayer_Lead_multi.html ---
+2026/04/02 14:08:04 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B captures John Mayer's signature lead tone much more accurately. It includes an essential analog-style delay (Aqua Puss style) to thicken the lead, which Preset A completely omits. Additionally, Preset B uses the classic studio microphone combination of an SM57 and an R-121, which is practically mandatory for Mayer's guitar recording sound. Preset A suffers from a structural flaw: the rationale claims an EQ block is a 'Pre-amp EQ stage' to cut mud, but it is placed as Block 4 (post-amp), and features a harsh 4.5kHz Low Pass Filter that would severely muffle the overall output. Preset B's reverb parameters (2.5s decay) are also much more usable for leads than Preset A's washed-out 4.0s decay.",
+  "confidence": 0.95
+}
+```
+2026/04/02 14:08:04 🏆 WINNER: run_c_off (Confidence: 0.95)
+2026/04/02 14:08:18 
+⚖️ --- JUDGEMENT FOR 12_Bonamassa_multi.html ---
+2026/04/02 14:08:18 {
+  "preference": "B",
+  "rationale": "Preset B is the superior Bonamassa recreation due to two critical factors. First, it includes a Delay block set to 375ms for lead scenes, which is an absolute staple of Joe Bonamassa's signature soaring lead tone (often achieved via vintage or rack delays). Preset A relies entirely on reverb, missing that iconic spatial bounce. Second, Preset B correctly utilizes a known modeling technique for the Dumble ODS by pushing the Master Volume to 7.0 to induce power amp saturation while dropping the block's output level to -12dB, yielding a much more authentic, thick, and responsive tube-like compression compared to Preset A's low Master Volume setting of 3.5. Furthermore, Preset B's inclusion of a dedicated Pre-EQ block properly addresses the resonant differences between the ES-339 and Telecaster before hitting the gain stages.",
+  "confidence": 0.95
+}
+2026/04/02 14:08:18 🏆 WINNER: Baseline (Confidence: 0.95)

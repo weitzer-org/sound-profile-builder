@@ -1,0 +1,128 @@
+```json
+{
+  "builder_statement": "Designed to emulate the legendary, high-headroom blues tones of B.B. King. This preset leverages the US Twin Vibrato model paired with optical compression to deliver singing sustain without pushing the amplifier into clipping. A Graphic EQ placed post-amp simulates the iconic Varitone circuit for scooped rhythm tones, while dual ribbon microphones ensure smooth top-end response.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;' border='1'>\n  <thead>\n    <tr>\n      <th>Effect Type & Name</th>\n      <th>Scene A (Rhythm)</th>\n      <th>Scene B (Lead)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>Input & Gate</strong><br>Noise Gate</td>\n      <td>Gate: -60dB<br>Pad: -3.0dB (Humbucker Tame)</td>\n      <td>Gate: -60dB<br>Pad: -3.0dB (Humbucker Tame)</td>\n    </tr>\n    <tr>\n      <td><strong>Compressor</strong><br>Opto Comp (S/C)</td>\n      <td>Comp: 3.0<br>Level: 5.0<br>State: Active</td>\n      <td>Comp: 7.0<br>Level: 7.0<br>State: Active (Sustain Push)</td>\n    </tr>\n    <tr>\n      <td><strong>Amplifier</strong><br>US Twin Vibrato</td>\n      <td>Gain: 2.0<br>Vol: 5.0<br>Bass: 3.0, Mid: 6.5, Tre: 6.0</td>\n      <td>Gain: 2.9<br>Vol: 5.0<br>Bass: 3.0, Mid: 6.5, Tre: 6.0</td>\n    </tr>\n    <tr>\n      <td><strong>Cabinet</strong><br>212 US TWN C12Q 00s</td>\n      <td>Mic 1: Ribbon 121<br>Mic 2: Ribbon 160<br>Blend: 50 / 50</td>\n      <td>Mic 1: Ribbon 121<br>Mic 2: Ribbon 160<br>Blend: 50 / 50</td>\n    </tr>\n    <tr>\n      <td><strong>EQ</strong><br>Graphic-9</td>\n      <td>400Hz: -4.0dB<br>800Hz: -4.0dB<br>Level: 0.0dB (Varitone Scoop)</td>\n      <td>400Hz: 0.0dB<br>800Hz: 0.0dB<br>Level: +2.0dB (Solo Boost)</td>\n    </tr>\n    <tr>\n      <td><strong>Reverb</strong><br>Spring Reverb</td>\n      <td>Mix: 25%<br>Decay: 2.5s</td>\n      <td>Mix: 35%<br>Decay: 3.5s</td>\n    </tr>\n    <tr>\n      <td><strong>Output</strong><br>FOH Mastering</td>\n      <td>HPF: 100Hz, LPF: 8.5kHz<br>Lane Level: -3.0dB</td>\n      <td>HPF: 100Hz, LPF: 8.5kHz<br>Lane Level: -3.0dB</td>\n    </tr>\n  </tbody>\n</table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;' border='1'>\n  <thead>\n    <tr>\n      <th>Effect Type & Name</th>\n      <th>Scene A (Rhythm)</th>\n      <th>Scene B (Lead)</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td><strong>Input & Gate</strong><br>Noise Gate</td>\n      <td>Gate: -60dB<br>Pad: 0.0dB (Unity for SC)</td>\n      <td>Gate: -60dB<br>Pad: 0.0dB (Unity for SC)</td>\n    </tr>\n    <tr>\n      <td><strong>Compressor</strong><br>Opto Comp (S/C)</td>\n      <td>Comp: 4.0<br>Level: 6.0<br>State: Active</td>\n      <td>Comp: 8.0<br>Level: 8.0<br>State: Active (Sustain Push)</td>\n    </tr>\n    <tr>\n      <td><strong>Amplifier</strong><br>US Twin Vibrato</td>\n      <td>Gain: 2.5<br>Vol: 5.0<br>Bass: 4.5, Mid: 5.0, Tre: 5.0</td>\n      <td>Gain: 3.5<br>Vol: 5.0<br>Bass: 4.5, Mid: 5.0, Tre: 5.0</td>\n    </tr>\n    <tr>\n      <td><strong>Cabinet</strong><br>212 US TWN C12Q 00s</td>\n      <td>Mic 1: Ribbon 121<br>Mic 2: Ribbon 160<br>Blend: 70 / 30</td>\n      <td>Mic 1: Ribbon 121<br>Mic 2: Ribbon 160<br>Blend: 70 / 30</td>\n    </tr>\n    <tr>\n      <td><strong>EQ</strong><br>Graphic-9</td>\n      <td>400Hz: 0.0dB<br>800Hz: 0.0dB<br>Level: 0.0dB (Flat Base)</td>\n      <td>400Hz: 0.0dB<br>800Hz: +3.0dB<br>Level: +2.0dB (Mid Push)</td>\n    </tr>\n    <tr>\n      <td><strong>Reverb</strong><br>Spring Reverb</td>\n      <td>Mix: 20%<br>Decay: 2.5s</td>\n      <td>Mix: 30%<br>Decay: 3.5s</td>\n    </tr>\n    <tr>\n      <td><strong>Output</strong><br>FOH Mastering</td>\n      <td>HPF: 100Hz, LPF: 8.5kHz<br>Lane Level: -3.0dB</td>\n      <td>HPF: 100Hz, LPF: 8.5kHz<br>Lane Level: -3.0dB</td>\n    </tr>\n  </tbody>\n</table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Opto Comp (S/C)",
+          "parameters": [
+            {"name": "Comp", "type": "knob", "value": "3.0"},
+            {"name": "Level", "type": "knob", "value": "5.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Amplifier",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {"name": "Gain", "type": "knob", "value": "2.0"},
+            {"name": "Bass", "type": "knob", "value": "3.0"},
+            {"name": "Mid", "type": "knob", "value": "6.5"},
+            {"name": "Treble", "type": "knob", "value": "6.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Cabinet",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 160"},
+            {"name": "Blend", "type": "knob", "value": "50"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "EQ",
+          "model": "Graphic-9",
+          "parameters": [
+            {"name": "400Hz", "type": "slider", "value": "-4.0"},
+            {"name": "800Hz", "type": "slider", "value": "-4.0"},
+            {"name": "Level", "type": "slider", "value": "0.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            {"name": "Mix", "type": "knob", "value": "25%"},
+            {"name": "Decay", "type": "knob", "value": "2.5s"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Opto Comp (S/C)",
+          "parameters": [
+            {"name": "Comp", "type": "knob", "value": "4.0"},
+            {"name": "Level", "type": "knob", "value": "6.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Amplifier",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {"name": "Gain", "type": "knob", "value": "2.5"},
+            {"name": "Bass", "type": "knob", "value": "4.5"},
+            {"name": "Mid", "type": "knob", "value": "5.0"},
+            {"name": "Treble", "type": "knob", "value": "5.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Cabinet",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 160"},
+            {"name": "Blend", "type": "knob", "value": "70"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "EQ",
+          "model": "Graphic-9",
+          "parameters": [
+            {"name": "400Hz", "type": "slider", "value": "0.0"},
+            {"name": "800Hz", "type": "slider", "value": "0.0"},
+            {"name": "Level", "type": "slider", "value": "0.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            {"name": "Mix", "type": "knob", "value": "20%"},
+            {"name": "Decay", "type": "knob", "value": "2.5s"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Defined the foundational blues aesthetic, identifying the Fender Twin Reverb as the core platform and calling out vintage JBL speaker dynamics.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Established the 2500Hz mid-peak target and demanded pure soft-tube clipping, ensuring the amp breaks up naturally without modern saturation artifacts.",
+    "<strong>Agent 3 (Web Scraper):</strong> Provided critical community insights warning about the ice-picky nature of humbuckers into Twin models, and suggested the Graphic-9 EQ to mimic Lucille's Varitone switch.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the historical gear to exact native blocks (US Twin Vibrato, 212 US TWN C12Q 00s, Opto Comp) and mandated swapping the SM57 for Ribbon mics to cure the harsh top-end.",
+    "<strong>Agent 5 (Navigator):</strong> Strictly enforced the 'allow_cloud_captures: false' constraint, guaranteeing a 100% factory-native block architecture.",
+    "<strong>Agent 6 (Acoustician):</strong> Designed the primary Amp EQ topology (mid-focused) and introduced a -3.0dB input pad to preserve pristine clean headroom for high-output humbuckers. (Note: Architect overrode the aggressive 4.0kHz LPF pre-EQ as it would unnaturally smother the guitar tone).",
+    "<strong>Agent 7 (Transducer):</strong> Carefully selected and positioned dual ribbon microphones (121 and 160) at the cone edge and cap to mechanically smooth out harsh transients before they hit the post-processing.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Implemented mastering safety brackets, cutting below 100Hz to remove stage rumble and above 8.5kHz to keep the highs airy but contained, while setting output lanes to -3.0dB.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Dialed in the Spring Reverb with a generous 2.5s decay, placing the guitar accurately in a vintage, three-dimensional physical room space.",
+    "<strong>Agent 10 (Mapper):</strong> Orchestrated the Scene A (Varitone Scooped Rhythm) and Scene B (Flat/Pushed Sustained Lead) dynamics, automating Opto Comp output and Graphic EQ bands to cut through the mix.",
+    "<strong>Agent 11 (DSP Architect):</strong> Structured a clean, two-lane serial signal flow to maintain CPU efficiency, placing dynamics and amp staging on Lane 1, routing directly into cab, EQ, and ambient effects on Lane 2."
+  ]
+}
+```

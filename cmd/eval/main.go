@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -112,9 +113,15 @@ func main() {
 		"12_Bonamassa":     "Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.",
 	}
 
+	targetModel := os.Getenv("TARGET_MODEL")
+	if targetModel == "" {
+		targetModel = "gemini-3.1-pro-preview"
+	}
+
 	// Ensure our results directory exists
-	if err := os.MkdirAll("eval_results", 0755); err != nil {
-		log.Fatalf("Failed to create eval_results directory: %v", err)
+	resultsDir := filepath.Join("eval_results", targetModel)
+	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+		log.Fatalf("Failed to create results directory: %v", err)
 	}
 
 	// 1. Fetch Secure Credentials
@@ -174,6 +181,13 @@ func main() {
 		go func(name, query string) {
 			defer wg.Done()
 			defer func() { <-sem }()
+			
+			outDir := filepath.Join("eval_results", targetModel)
+			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
+				outDir = filepath.Join("eval_results", targetModel, "ablation", subDir)
+			}
+			os.MkdirAll(outDir, 0755)
+
 		log.Printf("\n=============================================")
 		log.Printf("▶ EXECUTING EVAL: %s", name)
 		log.Printf("=============================================")
@@ -193,12 +207,7 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
-			outDir := "eval_results"
-			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
-				outDir = fmt.Sprintf("eval_results/ablation/%s", subDir)
-				os.MkdirAll(outDir, 0755)
-			}
-			err = os.WriteFile(fmt.Sprintf("%s/%s_multi.html", outDir, name), []byte(multiAgentResult), 0644)
+			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_multi.html", name)), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 
 			// Save to GCS
@@ -241,7 +250,7 @@ func main() {
 			return
 		}
 
-		model := client.GenerativeModel("gemini-3.1-pro-preview")
+		model := client.GenerativeModel(targetModel)
 		model.SystemInstruction = &genai.Content{
 			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
 		}
@@ -257,7 +266,7 @@ func main() {
 			totalMonoInput.Add(int64(usageMono.PromptTokenCount))
 			totalMonoOutput.Add(int64(usageMono.CandidatesTokenCount))
 			
-			err = os.WriteFile(fmt.Sprintf("eval_results/%s_mono.md", name), []byte(monolithicResult), 0644)
+			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_mono.md", name)), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
 		client.Close()

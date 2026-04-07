@@ -50,6 +50,10 @@ func main() {
 	if baselineDir == "" {
 		baselineDir = "eval_results"
 	}
+	labelA := filepath.Base(baselineDir)
+	if labelA == "eval_results" || labelA == "." {
+		labelA = "Baseline"
+	}
 
 	var ablationPath string
 	var labelB string
@@ -137,7 +141,7 @@ Respond ONLY in JSON format:
 			continue
 		}
 
-		winner := "Baseline"
+		winner := labelA
 		if (judge.Preference == "A" && isAblatedA) || (judge.Preference == "B" && !isAblatedA) {
 			winner = labelB
 		} else if judge.Preference == "Equal" {

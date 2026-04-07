@@ -1,8 +1,6 @@
 package agents
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -24,12 +22,5 @@ func readMockFile(path string) (string, error) {
 			return "", err
 		}
 	}
-	var resp geminiMockResp
-	if err := json.Unmarshal(b, &resp); err != nil {
-		return "", err
-	}
-	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
-		return resp.Candidates[0].Content.Parts[0].Text, nil
-	}
-	return "", fmt.Errorf("no mock candidates found")
+	return string(b), nil
 }

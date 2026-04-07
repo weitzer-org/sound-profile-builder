@@ -1,0 +1,128 @@
+```json
+{
+  "builder_statement": "This preset is engineered to deliver a highly dynamic, edge-of-breakup British Invasion tone centered around the legendary Vox AC30 Top Boost. Utilizing the native 'UK C30 TopBoost' amp and a Dallas Rangemaster-style 'Rage Booster' for classic upper-midrange bite, the preset responds exceptionally well to picking dynamics. Specific compensations have been implemented for humbucker vs single-coil pickups, particularly adjusting the amp's inverse 'Cut' control and mic blends to prevent the Top Boost circuit from becoming piercing on the Telecaster or muddy on the ES-339.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Gate / Input</td><td>Threshold: -65dB, Pre-EQ: 200Hz -3dB Cut</td><td>Threshold: -65dB, Pre-EQ: 200Hz -3dB Cut</td></tr><tr><td>Compressor: Jewel</td><td>State: ON, Sustain: 4.0, Blend: 50%</td><td>State: ON, Sustain: 6.0, Blend: 50%</td></tr><tr><td>Treble Boost: Rage Booster</td><td>State: BYPASSED</td><td>State: ON, Boost: 6.5, Level: 5.0</td></tr><tr><td>Amplifier: UK C30 TopBoost</td><td>State: ON, Gain: 3.5, Bass: 3.0, Mid: 6.0, Treble: 5.0, Cut: 4.5, Vol: 7.0</td><td>State: ON, Gain: 5.0, Bass: 3.0, Mid: 6.0, Treble: 5.0, Cut: 6.0, Vol: 7.0</td></tr><tr><td>Cabinet: 212 UK C30 '65</td><td>Condenser 47 (Cap Edge, 1.5in): 90%, Ribbon 121 (Cone, 2.0in): 10%</td><td>Condenser 47 (Cap Edge, 1.5in): 90%, Ribbon 121 (Cone, 2.0in): 10%</td></tr><tr><td>Reverb: Studio Plate 70 (ST)</td><td>State: ON, Mix: 20%, Decay: 1.8s</td><td>State: ON, Mix: 25%, Decay: 2.5s</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Gate / Input</td><td>Threshold: -65dB, Pre-EQ: Flat (No 200Hz cut)</td><td>Threshold: -65dB, Pre-EQ: Flat (No 200Hz cut)</td></tr><tr><td>Compressor: Jewel</td><td>State: ON, Sustain: 5.0, Blend: 50%</td><td>State: ON, Sustain: 7.0, Blend: 50%</td></tr><tr><td>Treble Boost: Rage Booster</td><td>State: BYPASSED</td><td>State: ON, Boost: 5.0, Level: 5.0</td></tr><tr><td>Amplifier: UK C30 TopBoost</td><td>State: ON, Gain: 4.5, Bass: 4.5, Mid: 6.0, Treble: 4.5, Cut: 6.5, Vol: 7.0</td><td>State: ON, Gain: 6.0, Bass: 4.5, Mid: 6.0, Treble: 4.5, Cut: 7.5, Vol: 7.0</td></tr><tr><td>Cabinet: 212 UK C30 '65</td><td>Condenser 47 (Cap Edge, 1.5in): 60%, Ribbon 121 (Cone, 2.0in): 40%</td><td>Condenser 47 (Cap Edge, 1.5in): 60%, Ribbon 121 (Cone, 2.0in): 40%</td></tr><tr><td>Reverb: Studio Plate 70 (ST)</td><td>State: ON, Mix: 20%, Decay: 1.8s</td><td>State: ON, Mix: 25%, Decay: 2.5s</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            {"name": "Sustain", "type": "slider", "value": "4.0"},
+            {"name": "Blend", "type": "slider", "value": "50.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Distortion",
+          "model": "Rage Booster",
+          "parameters": [
+            {"name": "Boost", "type": "slider", "value": "6.5"},
+            {"name": "Bypass", "type": "switch", "value": "true"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "3.5"},
+            {"name": "Bass", "type": "slider", "value": "3.0"},
+            {"name": "Mid", "type": "slider", "value": "6.0"},
+            {"name": "Treble", "type": "slider", "value": "5.0"},
+            {"name": "Cut", "type": "slider", "value": "4.5"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Condenser 47"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mix", "type": "slider", "value": "90.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "1.8"},
+            {"name": "Mix", "type": "slider", "value": "20.0"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            {"name": "Sustain", "type": "slider", "value": "5.0"},
+            {"name": "Blend", "type": "slider", "value": "50.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Distortion",
+          "model": "Rage Booster",
+          "parameters": [
+            {"name": "Boost", "type": "slider", "value": "5.0"},
+            {"name": "Bypass", "type": "switch", "value": "true"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "4.5"},
+            {"name": "Bass", "type": "slider", "value": "4.5"},
+            {"name": "Mid", "type": "slider", "value": "6.0"},
+            {"name": "Treble", "type": "slider", "value": "4.5"},
+            {"name": "Cut", "type": "slider", "value": "6.5"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Condenser 47"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mix", "type": "slider", "value": "60.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "1.8"},
+            {"name": "Mix", "type": "slider", "value": "20.0"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Defined the foundational Vox AC30 Top Boost platform paired with a Dallas Rangemaster treble booster to firmly anchor the target 60s British Invasion edge-of-breakup aesthetic.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Set key acoustic benchmarks including a 3200Hz peak presence focus, asymmetric soft clipping traits, a vintage plate verb flavor, and strict noise gating (-65dB) to manage the booster noise.",
+    "<strong>Agent 3 (Scraper):</strong> Contributed crucial operational warnings about the 'UK C30 TopBoost', explicitly highlighting the inverse nature of the 'Cut' control and warning against extreme Bass settings for humbuckers.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the conceptual gear directly to native Quad Cortex blocks (UK C30 TopBoost, 212 UK C30 '65, Rage Booster, Jewel, Studio Plate 70 ST) and established series order routing hints.",
+    "<strong>Agent 5 (Navigator):</strong> Verified user constraint mappings and explicitly enforced native-only processing, completely disabling any cloud capture usage.",
+    "<strong>Agent 6 (Acoustician):</strong> Provided baseline EQ shaping. However, their suggestion to implement an extreme 4.5kHz Low Pass Filter was completely overridden by the Evaluator to FOH's 7.5kHz global standard, as cutting at 4.5kHz would destructively remove all classic Vox chime. The 200Hz -3dB mud-cut was kept for the ES-339.",
+    "<strong>Agent 7 (Transducer):</strong> Designed a rich two-mic blend utilizing a U47 condenser for pristine top-end definition and an R121 ribbon to add necessary warmth to the otherwise bright Top Boost circuit.",
+    "<strong>Agent 8 (FOH):</strong> Framed the entire signal with a global bandpass filter (80Hz - 7.5kHz) and trimmed output volume by -4.0dB to ensure mix compliance and sufficient headroom during FOH deployment.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Dialed in the vintage 'Studio Plate' reverb depth, establishing a lush 1.8s decay at 20% mix to emulate a live room without washing out the rhythm clarity.",
+    "<strong>Agent 10 (Map Modeler):</strong> Developed the dynamic scene topology, assigning specific values to transition smoothly from a snappy, compressed rhythm (Scene A) to an uncompressed, Treble Boosted lead (Scene B).",
+    "<strong>Agent 11 (DSP Architect):</strong> Dictated a linear, low-latency DSP grid path, feeding Lane 1's dynamic and drive effects directly into the amp/cab block before passing the wet signal to Lane 2 for stereophonic ambient processing."
+  ]
+}
+```

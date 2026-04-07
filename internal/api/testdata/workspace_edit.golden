@@ -1,0 +1,99 @@
+
+	<div id="workspace-wrapper" class="workspace-wrapper">
+		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
+			
+			<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem;">
+				<div style="flex: 1; display: flex; align-items: center;">
+					<h2 id="preset-title-test-preset" style="font-size: 1.5rem; font-weight: 600; margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
+						Test Preset
+					</h2>
+					<form id="rename-form-test-preset" hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
+						<input type="hidden" name="id" value="test-preset">
+						<input type="text" name="preset_name" placeholder="Rename..." required style="flex: 1; min-width: 300px; padding: 0.5rem 1rem; font-size: 1.25rem; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
+						<button type="submit" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
+						<button type="button" onclick="document.getElementById('rename-form-test-preset').style.display='none'; document.getElementById('title-actions-test-preset').style.display='flex';" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
+					</form>
+				</div>
+				<div id="title-actions-test-preset" style="display: flex; gap: 0.5rem; align-items: center;">
+					<button type="button" onclick="document.getElementById('rename-form-test-preset').style.display='flex'; this.parentElement.style.display='none'; document.querySelector('#rename-form-test-preset input[name=preset_name]').value = 'Test Preset';" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--accent); border: none; border-radius: 8px; color: white; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Rename</button>
+					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Back / Exit</button>
+				</div>
+			</div>
+		
+		</div>
+		
+		
+		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
+			
+			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
+			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" hx-indicator="#chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
+				<input type="hidden" name="id" value="test-preset">
+				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
+					<div style="font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4; padding-top: 0.25rem;">
+						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> 
+					</div>
+				</div>
+				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
+				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
+				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;" class="htmx-indicator">
+					<span class="spinner"></span>
+					<span class="btn-text">Adjust</span>
+				</button>
+			</form>
+		</div>
+		
+
+		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
+			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
+				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
+				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
+				<div id="live-matrix-container" style="zoom: 0.8;">
+					<div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+				<button class="tab-btn active" onclick="switchTab(this, 'tab-les-paul')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">Les Paul</button>
+			</div><div class="tabs-content">
+				<div id="tab-les-paul" class="tab-pane" style="display: block;">
+					
+					<div class="effect-block" style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+							<h3 style="margin: 0; font-size: 1.1rem; color: white;">drive: <span style="color: var(--accent);">Overdrive</span></h3>
+							<button hx-post="/api/preset/remove_block" hx-vals='{"preset_id":"test-preset", "guitar":"Les Paul", "block_id":"b1"}' hx-target="#library-editor-workspace" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.8rem; background: #ef4444; border: none; border-radius: 4px; color: white; cursor: pointer;">Remove</button>
+						</div>
+						<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
+				
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
+									<span>Gain</span>
+									<span id="val-les-paul-gain">5.0</span>
+								</div>
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"test-preset", "guitar":"Les Paul", "block_id":"b1", "param_name":"Gain"}' min="0" max="10" step="0.1" value="5.0" style="width: 100%; cursor: pointer;" oninput="document.getElementById('val-les-paul-gain').innerText = this.value + ''">
+							</div>
+						</div></div>
+				</div>
+			</div>
+		<script>
+			function switchTab(btn, paneId) {
+				const container = btn.closest('.workspace-wrapper') || btn.closest('.card');
+				if (!container) return;
+				container.querySelectorAll('.tab-btn').forEach(b => {
+					b.classList.remove('active');
+					b.style.color = 'var(--text-sub)';
+					b.style.borderColor = 'var(--border)';
+				});
+				container.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+				
+				btn.classList.add('active');
+				btn.style.color = 'var(--text-main)';
+				btn.style.borderColor = 'var(--accent)';
+				const pane = container.querySelector('#' + paneId);
+				if (pane) pane.style.display = 'block';
+			}
+		</script>
+	
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	

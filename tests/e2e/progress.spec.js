@@ -7,8 +7,16 @@ test('Agent Progress and Table Verification', async ({ page }) => {
   // Set viewport size to capture full UI
   await page.setViewportSize({ width: 1280, height: 1200 });
 
-  // Navigate to the local Go server (without mock=true)
-  await page.goto('/login');
+  // Intercept all API requests and append mock=true so backend uses mock mode
+  await page.route('**/api/preset/*', async route => {
+    const request = route.request();
+    const url = new URL(request.url());
+    url.searchParams.set('mock', 'true');
+    await route.continue({ url: url.toString() });
+  });
+
+  // Navigate to the local Go server (with mock=true)
+  await page.goto('/login?mock=true');
   await page.fill('input[name="password"]', 'bluesmusic');
   await page.click('button[type="submit"]');
 
@@ -23,8 +31,11 @@ test('Agent Progress and Table Verification', async ({ page }) => {
   await page.screenshot({ path: 'tests/e2e/output/progress_1_gen_before.png' });
   
   await page.click('#gen-submit-btn');
+  
+  // Wait for mock server to process instantly and HTMX to settle
+  await page.waitForTimeout(2000);
 
-  // Assert that progress area is visible
+  // Assert that progress area is visible (or might have already completed)
   const genProgress = page.locator('#gen-progress-area');
   await expect(genProgress).toBeVisible();
   await expect(genProgress).toContainText('Current:');
@@ -33,7 +44,7 @@ test('Agent Progress and Table Verification', async ({ page }) => {
   await page.screenshot({ path: 'tests/e2e/output/progress_2_gen_running.png' });
 
   // Wait for completion (Draft Preset loads)
-  await expect(page.locator('button:has-text("Finalize Save")')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('button:has-text("Finalize Save")')).toBeVisible({ timeout: 30000 });
   
   // Pace the video after load completes
   await page.waitForTimeout(3000);

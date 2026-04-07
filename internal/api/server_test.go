@@ -126,3 +126,68 @@ func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset,
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) Close() {}
+
+func TestServer_HandleTaskStatus(t *testing.T) {
+	s, _, _, _ := setupTestServer()
+
+	// 1. Missing ID
+	reqNoID, _ := http.NewRequest(http.MethodGet, "/api/preset/status", nil)
+	rrNoID := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrNoID, reqNoID)
+	if rrNoID.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 for missing ID")
+	}
+
+	// 2. Task Not Found
+	reqNotFound, _ := http.NewRequest(http.MethodGet, "/api/preset/status?id=missing", nil)
+	rrNotFound := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrNotFound, reqNotFound)
+	if rrNotFound.Code != http.StatusNotFound {
+		t.Errorf("Expected 404 for task not found")
+	}
+
+	// 3. Task Running
+	s.tasksMu.Lock()
+	s.tasks["task-1"] = &TaskState{Status: "running", Phase: "Testing"}
+	s.tasksMu.Unlock()
+
+	reqRunning, _ := http.NewRequest(http.MethodGet, "/api/preset/status?id=task-1", nil)
+	rrRunning := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrRunning, reqRunning)
+	if rrRunning.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for running task")
+	}
+	if !strings.Contains(rrRunning.Body.String(), "Testing") {
+		t.Errorf("Expected response to contain phase 'Testing'")
+	}
+
+	// 4. Task Complete
+	s.tasksMu.Lock()
+	s.tasks["task-1"].Status = "complete"
+	s.tasks["task-1"].Result = "<div>Done</div>"
+	s.tasksMu.Unlock()
+
+	rrComplete := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrComplete, reqRunning)
+	if rrComplete.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for complete task")
+	}
+	if !strings.Contains(rrComplete.Body.String(), "Done") {
+		t.Errorf("Expected response to contain result 'Done'")
+	}
+
+	// 5. Task Error
+	s.tasksMu.Lock()
+	s.tasks["task-1"].Status = "error"
+	s.tasks["task-1"].Error = "some error"
+	s.tasksMu.Unlock()
+
+	rrError := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrError, reqRunning)
+	if rrError.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for error task (returns error UI)")
+	}
+	if !strings.Contains(rrError.Body.String(), "some error") {
+		t.Errorf("Expected response to contain error 'some error'")
+	}
+}

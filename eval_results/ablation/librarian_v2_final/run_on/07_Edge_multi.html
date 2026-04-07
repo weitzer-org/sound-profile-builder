@@ -1,0 +1,164 @@
+```json
+{
+  "builder_statement": "This preset captures the quintessential edge-of-breakup rhythmic chime by utilizing a vintage-voiced UK C30 TopBoost model paired with a Celestion Alnico Blue cabinet capture. The tonal secret lies in using a Parametric EQ block as an 'always-on' preamp push to emulate the distinct coloration of an SDD-3000 preamp stage, combined with placing the dotted-eighth Digital Delay explicitly before the amplifier to allow the repeats to compress naturally alongside the dry signal.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Compressor<br><strong>Chief CS3</strong></td><td>Bypassed</td><td>Active | Sustain: 6.0, Level: +1.0dB</td></tr><tr><td>Preamp / Boost<br><strong>Parametric-3</strong></td><td>Active | Level: 0.0dB, Low Shelf: 200Hz -3dB</td><td>Active | Level: +3.0dB (Front-end push)</td></tr><tr><td>Digital Delay (Pre-Amp)<br><strong>Digital Delay</strong></td><td>Active | Sync: 1/8d, Mix: 35%, HPF: 250Hz</td><td>Active | Sync: 1/8d, Mix: 30%, HPF: 250Hz</td></tr><tr><td>Amplifier<br><strong>UK C30 TopBoost</strong></td><td>Active | Gain: 3.5, Vol: 3.5, Treble: 6.0</td><td>Active | Gain: 3.5, Vol: 3.5, Treble: 6.0</td></tr><tr><td>Cabinet<br><strong>112 UK C15 Blue</strong></td><td>Mic 1: SM57 (0.5\"), Mic 2: Ribbon 121 (2.0\"), High Cut: 6.5kHz</td><td>Mic 1: SM57 (0.5\"), Mic 2: Ribbon 121 (2.0\"), High Cut: 6.5kHz</td></tr><tr><td>Analog Delay (Post-Amp)<br><strong>Analog Delay</strong></td><td>Bypassed</td><td>Active | Sync: 1/4, Mix: 25%, Modulation: Subtle</td></tr><tr><td>Reverb<br><strong>Studio Plate 70 (ST)</strong></td><td>Active | Mix: 15%, Decay: 2.5s</td><td>Active | Mix: 15%, Decay: 2.5s</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Compressor<br><strong>Chief CS3</strong></td><td>Bypassed</td><td>Active | Sustain: 6.0, Level: +1.0dB</td></tr><tr><td>Preamp / Boost<br><strong>Parametric-3</strong></td><td>Active | Level: +1.0dB, Low Shelf: 200Hz -3dB</td><td>Active | Level: +4.0dB (Front-end push)</td></tr><tr><td>Digital Delay (Pre-Amp)<br><strong>Digital Delay</strong></td><td>Active | Sync: 1/8d, Mix: 35%, HPF: 250Hz</td><td>Active | Sync: 1/8d, Mix: 30%, HPF: 250Hz</td></tr><tr><td>Amplifier<br><strong>UK C30 TopBoost</strong></td><td>Active | Gain: 4.0, Vol: 3.5, Treble: 5.5</td><td>Active | Gain: 4.0, Vol: 3.5, Treble: 5.5</td></tr><tr><td>Cabinet<br><strong>112 UK C15 Blue</strong></td><td>Mic 1: SM57 (0.5\"), Mic 2: Ribbon 121 (2.0\"), High Cut: 6.5kHz</td><td>Mic 1: SM57 (0.5\"), Mic 2: Ribbon 121 (2.0\"), High Cut: 6.5kHz</td></tr><tr><td>Analog Delay (Post-Amp)<br><strong>Analog Delay</strong></td><td>Bypassed</td><td>Active | Sync: 1/4, Mix: 25%, Modulation: Subtle</td></tr><tr><td>Reverb<br><strong>Studio Plate 70 (ST)</strong></td><td>Active | Mix: 15%, Decay: 2.5s</td><td>Active | Mix: 15%, Decay: 2.5s</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Chief CS3",
+          "parameters": [
+            {"name": "Sustain", "type": "slider", "value": "6.0"},
+            {"name": "Level", "type": "slider", "value": "1.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Level", "type": "slider", "value": "0.0"},
+            {"name": "Low Shelf Freq", "type": "knob", "value": "200Hz"},
+            {"name": "Low Shelf Gain", "type": "slider", "value": "-3.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Delay",
+          "model": "Digital Delay",
+          "parameters": [
+            {"name": "Sync", "type": "dropdown", "value": "1/8d"},
+            {"name": "Mix", "type": "slider", "value": "35.0"},
+            {"name": "HPF", "type": "knob", "value": "250Hz"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "3.5"},
+            {"name": "Volume", "type": "slider", "value": "3.5"},
+            {"name": "Treble", "type": "slider", "value": "6.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cabinet",
+          "model": "112 UK C15 Blue",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "High Cut", "type": "knob", "value": "6.5kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Sync", "type": "dropdown", "value": "1/4"},
+            {"name": "Mix", "type": "slider", "value": "25.0"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "2.5"},
+            {"name": "Mix", "type": "slider", "value": "15.0"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Chief CS3",
+          "parameters": [
+            {"name": "Sustain", "type": "slider", "value": "6.0"},
+            {"name": "Level", "type": "slider", "value": "1.0"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Level", "type": "slider", "value": "1.0"},
+            {"name": "Low Shelf Freq", "type": "knob", "value": "200Hz"},
+            {"name": "Low Shelf Gain", "type": "slider", "value": "-3.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Delay",
+          "model": "Digital Delay",
+          "parameters": [
+            {"name": "Sync", "type": "dropdown", "value": "1/8d"},
+            {"name": "Mix", "type": "slider", "value": "35.0"},
+            {"name": "HPF", "type": "knob", "value": "250Hz"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "4.0"},
+            {"name": "Volume", "type": "slider", "value": "3.5"},
+            {"name": "Treble", "type": "slider", "value": "5.5"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cabinet",
+          "model": "112 UK C15 Blue",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "High Cut", "type": "knob", "value": "6.5kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Sync", "type": "dropdown", "value": "1/4"},
+            {"name": "Mix", "type": "slider", "value": "25.0"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "2.5"},
+            {"name": "Mix", "type": "slider", "value": "15.0"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Defined the core components of the iconic U2 tone, specifying the '64 Vox AC30, Korg SDD-3000 pre-amp/delay nuances, and the Alnico Blue speakers.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Identified the EL84 soft clipping saturation style and noted a 3500Hz high-mid frequency focus for the jangle.",
+    "<strong>Agent 3 (Scraper):</strong> Contributed crucial community advice, warning against excessive base amp gain and advising a 250Hz high-pass filter strictly within the delay trail.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the conceptual gear into specific Quad Cortex native blocks, enforcing 'UK C30 TopBoost' and using 'Parametric-3' as the front-end preamp driver.",
+    "<strong>Agent 5 (Navigator):</strong> Verified user constraints and enforced strict adherence to local models by entirely disabling Cloud Captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Attempted to map the Sonic Profiler's 3.5kHz peak into an aggressive 3.5kHz Low-Pass Filter. As the Evaluator, I overrode this destructive cut to 6.5kHz to preserve the mandatory high-end chime.",
+    "<strong>Agent 7 (Transducer):</strong> Designed the cab-miking blend, utilizing an on-axis SM57 for attack combined with an off-axis Ribbon 121 (at 2 inches) to smooth the piercing high frequencies.",
+    "<strong>Agent 8 (FOH):</strong> Applied the final mixing bracket (120Hz-6500Hz EQ cuts) and a -4.0dB output reduction to properly seat the bright, ambient signal in a live mix.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Calculated the spatial parameters, arriving at a 375ms delay time and 1.5s reverb decay for optimal rhythmic pacing.",
+    "<strong>Agent 10 (Map Modeler):</strong> Scripted the exact volume, gain, and block bypass states across Scene A (Rhythm) and Scene B (Lead), pushing the Parametric-3 volume heavily in Scene B to trigger overdrive.",
+    "<strong>Agent 11 (DSP Architect):</strong> Initially placed delays post-cab. As Evaluator, applying interpretative safety rules for rhythmic chime (U2/Edge style), I overrode the DSP routing to place the 'Digital Delay' in Lane 1 strictly BEFORE the amplifier block to capture authentic front-end natural compression."
+  ]
+}
+```

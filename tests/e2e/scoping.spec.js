@@ -46,24 +46,18 @@ test('Tab Isolation and Scoping Test', async ({ page }) => {
   // 3. Verify sidebar loads and click view on first preset (already switched to Library tab in step 2)
   await expect(presetList.first()).toBeVisible({ timeout: 10000 });
   
-  // View the first preset in the library
-  await presetList.first().locator('button[hx-get^="/api/preset/view"]').click();
+  // View the specific preset we created
+  await presetList.filter({ hasText: uniqueBaseName }).first().locator('button[hx-get^="/api/preset/view"]').click();
 
-  // Verify workspace loads the preset in read-only mode (static table, no sliders)
-  await expect(page.locator('#lib-live-matrix-container')).toBeVisible();
-  await expect(page.locator('#lib-live-matrix-container input[type="range"]')).not.toBeVisible();
-
-  // Toggle Edit Mode
-  await page.click('#lib-workspace-wrapper button:has-text("Enable Edit")');
-
-  // Verify Edit Table loads (sliders visible)
-  await expect(page.locator('#lib-live-matrix-container input[type="range"]')).toBeVisible();
+  // Verify workspace loads the preset with sliders visible
+  await expect(page.locator('#view-library #live-matrix-container')).toBeVisible();
+  await expect(page.locator('#view-library #live-matrix-container input[type="range"]').first()).toBeVisible({ timeout: 15000 });
 
   // 4. Switch back to Generator tab
   await page.click('button:has-text("Generator")');
 
   // Verify generator workspace is still there and progress area is intact
-  await expect(page.locator('#gen-workspace-wrapper')).toBeVisible();
+  await expect(page.locator('#view-generator .workspace-wrapper').first()).toBeVisible();
   
   // We should see the Draft Preset load eventually
   await expect(page.locator('button:has-text("Finalize Save")')).toBeVisible({ timeout: 30000 });

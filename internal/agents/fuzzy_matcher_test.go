@@ -1,7 +1,6 @@
 package agents
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -65,7 +64,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 func TestApplyFuzzyCorrection(t *testing.T) {
 	validBlocks := map[string]bool{
 		"US Twin Vibrato": true,
-		"UK C30 TopBoost": true,
+		"UK C30 TopBoost": false,
 	}
 
 	tests := []struct {
@@ -73,23 +72,27 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 		expected string
 	}{
 		{
-			input:    `<td>Amplifier:</td><td>US Twin Vibrato</td>`,
-			expected: `<td>Amplifier:</td><td>US Twin Vibrato</td>`, // valid
+			input:    `<td>Amplifier: US Twin Vibrato</td>`,
+			expected: `<td>Amplifier: US Twin Vibrato (Capture)</td>`, // valid + capture
 		},
 		{
-			input:    `<td>Cabinet:</td><td>US Twin V</td>`,
-			expected: `<td>Cabinet:</td><td>US Twin V</td>`, // should allow (if it doesn't match and just returns match) or should correct if valid
+			input:    `<td>Cabinet: UK C30 TopBoost</td>`,
+			expected: `<td>Cabinet: UK C30 TopBoost</td>`, // valid, not capture
 		},
 		{
-			input:    `<td>Level:</td><td>-3.5dB</td>`,
-			expected: `<td>Level:</td><td>-3.5dB</td>`, // should ignore
+			input:    `<td>Cabinet: UK C30 TopBst</td>`,
+			expected: `<td>Cabinet: UK C30 TopBoost</td>`, // fuzzy match
+		},
+		{
+			input:    `<td>Level: -3.5dB</td>`,
+			expected: `<td>Level: -3.5dB</td>`, // ignored category
 		},
 	}
 
 	for _, tc := range tests {
 		got := ApplyFuzzyCorrection(tc.input, validBlocks)
-		if !strings.Contains(got, tc.expected) {
-			t.Errorf("ApplyFuzzyCorrection(%q) = %q; want it to contain %q", tc.input, got, tc.expected)
+		if got != tc.expected {
+			t.Errorf("ApplyFuzzyCorrection(%q) = %q; want %q", tc.input, got, tc.expected)
 		}
 	}
 }

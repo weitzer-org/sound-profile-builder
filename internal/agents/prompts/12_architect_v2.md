@@ -52,4 +52,4 @@ You are the **Architect and Evaluator**. This is the final step. Take all the me
 
 # Strict Architecture Log Rules
 1. Your `agent_impact` array MUST contain exactly 11 string entries.
-2. Every string MUST boldly prefix the agent's name and its active prompt version using `<strong>Agent X (Name v2):</strong> ` (or v1 if referencing standard fallbacks) to ensure clean list formatting and version auditing in the UI.
+2. Every string MUST boldly prefix the agent's name using `<strong>Agent X (Name):</strong> ` to ensure clean list formatting and version auditing in the UI.

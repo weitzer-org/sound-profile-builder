@@ -636,7 +636,9 @@
             let input = document.getElementById('preset-search').value.toLowerCase();
             let items = document.querySelectorAll('#library-list-container li');
             items.forEach(item => {
-                let text = item.querySelector('h3').textContent.toLowerCase();
+                let h3 = item.querySelector('h3');
+                if (!h3) return; // Skip items without h3 (like Load More)
+                let text = h3.textContent.toLowerCase();
                 item.style.display = text.includes(input) ? '' : 'none';
             });
         }

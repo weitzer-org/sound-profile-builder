@@ -1,0 +1,440 @@
+🚀 [Agent 1] Running Pipeline Ablation (no_agent_1)...
+2026/04/01 20:25:45  -> Initializing Global 12-Agent Orchestrator...
+2026/04/01 20:25:45 
+=============================================
+2026/04/01 20:25:45 
+=============================================
+2026/04/01 20:25:45 ▶ EXECUTING EVAL: 12_Bonamassa
+2026/04/01 20:25:45 =============================================
+2026/04/01 20:25:45  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:25:45 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.
+2026/04/01 20:25:45 ▶ EXECUTING EVAL: 11_Mayer_Lead
+2026/04/01 20:25:45 =============================================
+2026/04/01 20:25:45  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:25:45 
+=============================================
+2026/04/01 20:25:45 ▶ EXECUTING EVAL: 09_BB_King
+2026/04/01 20:25:45 =============================================
+2026/04/01 20:25:45  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:25:45 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+BB King Lucile tone. High-headroom American Twin Reverb clean platform.
+2026/04/01 20:25:45 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:25:45 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+John Mayer Trio Lead. Smooth Two-Rock/Dumble platform, mid-scooped clean with a subtle drive push.
+2026/04/01 20:25:45 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:25:45 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:25:55 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=325 Out=56
+2026/04/01 20:25:56 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=331 Out=57
+2026/04/01 20:25:59 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=323 Out=55
+2026/04/01 20:26:04 AGENT_TOKEN_LOG: Agent=Community Scraper In=240 Out=295
+2026/04/01 20:26:04 Phase 1 Complete.
+2026/04/01 20:26:05 AGENT_TOKEN_LOG: Agent=Community Scraper In=234 Out=307
+2026/04/01 20:26:05 Phase 1 Complete.
+2026/04/01 20:26:06 AGENT_TOKEN_LOG: Agent=Community Scraper In=232 Out=375
+2026/04/01 20:26:06 Phase 1 Complete.
+2026/04/01 20:26:20 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28424 Out=61
+2026/04/01 20:26:20 Phase 2 Complete.
+2026/04/01 20:26:29 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28436 Out=86
+2026/04/01 20:26:29 Phase 2 Complete.
+2026/04/01 20:26:30 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:26:30 AGENT_TOKEN_LOG: Agent=Transducer Tech In=149 Out=113
+2026/04/01 20:26:39 AGENT_TOKEN_LOG: Agent=Transducer Tech In=174 Out=92
+2026/04/01 20:26:44 AGENT_TOKEN_LOG: Agent=Acoustician In=498 Out=130
+2026/04/01 20:26:44 Phase 3 Complete.
+2026/04/01 20:26:44 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28504 Out=61
+2026/04/01 20:26:44 Phase 2 Complete.
+2026/04/01 20:26:48 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:26:52 AGENT_TOKEN_LOG: Agent=Acoustician In=497 Out=130
+2026/04/01 20:26:52 Phase 3 Complete.
+2026/04/01 20:26:54 AGENT_TOKEN_LOG: Agent=Transducer Tech In=149 Out=86
+2026/04/01 20:26:56 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=236 Out=57
+2026/04/01 20:26:57 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:27:00 AGENT_TOKEN_LOG: Agent=Control Mapper In=431 Out=389
+2026/04/01 20:27:00 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:27:00 Phase 4 Complete.
+2026/04/01 20:27:00 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=45
+2026/04/01 20:27:07 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=261 Out=79
+2026/04/01 20:27:10 AGENT_TOKEN_LOG: Agent=Acoustician In=496 Out=121
+2026/04/01 20:27:10 Phase 3 Complete.
+2026/04/01 20:27:11 AGENT_TOKEN_LOG: Agent=Control Mapper In=450 Out=348
+2026/04/01 20:27:11 Phase 4 Complete.
+2026/04/01 20:27:17 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:27:24 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=236 Out=93
+2026/04/01 20:27:26 AGENT_TOKEN_LOG: Agent=Control Mapper In=414 Out=296
+2026/04/01 20:27:26 Phase 4 Complete.
+2026/04/01 20:28:10 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2885 Out=4583
+2026/04/01 20:28:10 ✅ MULTI-AGENT SUCCESS | Tokens: In 94594, Out 8169
+2026/04/01 20:28:10 🎉 Successfully saved 11_Mayer_Lead as GCS preset bfa0f3bc-d453-4ec3-85b5-67fbb434e0e6
+2026/04/01 20:28:10  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:28:10 
+=============================================
+2026/04/01 20:28:10 ▶ EXECUTING EVAL: 02_Metal_Rhythm
+2026/04/01 20:28:10 =============================================
+2026/04/01 20:28:10  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:28:10 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+High gain tight metal rhythm. 5150 style. Scooped mids, tight low end. Needs to avoid flub.
+2026/04/01 20:28:10 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:28:26 AGENT_TOKEN_LOG: Agent=Community Scraper In=242 Out=288
+2026/04/01 20:28:28 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2886 Out=5123
+2026/04/01 20:28:28 ✅ MULTI-AGENT SUCCESS | Tokens: In 97722, Out 13580
+2026/04/01 20:28:28 🎉 Successfully saved 12_Bonamassa as GCS preset fc31adff-12c2-4798-ac85-126d2c1ff8ff
+2026/04/01 20:28:28  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:28:28 
+=============================================
+2026/04/01 20:28:28 ▶ EXECUTING EVAL: 04_Classic_Rock
+2026/04/01 20:28:28 =============================================
+2026/04/01 20:28:28  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:28:28 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Classic 70s rock crunch. Marshall Plexi style, humbuckers, warm and punchy.
+2026/04/01 20:28:28 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:28:38 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2870 Out=4951
+2026/04/01 20:28:38 ✅ MULTI-AGENT SUCCESS | Tokens: In 100592, Out 18531
+2026/04/01 20:28:38 🎉 Successfully saved 09_BB_King as GCS preset dc313068-d94c-4169-a047-f2f8aa6dc855
+2026/04/01 20:28:38  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:28:38 
+=============================================
+2026/04/01 20:28:38 ▶ EXECUTING EVAL: 07_Edge
+2026/04/01 20:28:38 =============================================
+2026/04/01 20:28:38  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:28:38 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+The Edge style chime. 1964 Vox AC30 edge-of-breakup with rhythmic dotted-eighth delays.
+2026/04/01 20:28:38 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:28:38 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=328 Out=58
+2026/04/01 20:28:38 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=333 Out=55
+2026/04/01 20:28:38 Phase 1 Complete.
+2026/04/01 20:28:46 AGENT_TOKEN_LOG: Agent=Community Scraper In=237 Out=359
+2026/04/01 20:28:46 Phase 1 Complete.
+2026/04/01 20:28:49 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=333 Out=65
+2026/04/01 20:28:55 AGENT_TOKEN_LOG: Agent=Community Scraper In=242 Out=298
+2026/04/01 20:28:55 Phase 1 Complete.
+2026/04/01 20:29:03 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28417 Out=82
+2026/04/01 20:29:03 Phase 2 Complete.
+2026/04/01 20:29:04 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28488 Out=75
+2026/04/01 20:29:04 Phase 2 Complete.
+2026/04/01 20:29:11 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:29:13 AGENT_TOKEN_LOG: Agent=Transducer Tech In=170 Out=43
+2026/04/01 20:29:15 AGENT_TOKEN_LOG: Agent=Transducer Tech In=163 Out=43
+2026/04/01 20:29:17 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=57
+2026/04/01 20:29:18 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28427 Out=79
+2026/04/01 20:29:18 Phase 2 Complete.
+2026/04/01 20:29:24 AGENT_TOKEN_LOG: Agent=Acoustician In=499 Out=127
+2026/04/01 20:29:24 Phase 3 Complete.
+2026/04/01 20:29:25 AGENT_TOKEN_LOG: Agent=Acoustician In=496 Out=127
+2026/04/01 20:29:25 Phase 3 Complete.
+2026/04/01 20:29:29 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:29:32 AGENT_TOKEN_LOG: Agent=Transducer Tech In=167 Out=114
+2026/04/01 20:29:32 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=45
+2026/04/01 20:29:33 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=44
+2026/04/01 20:29:37 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=250 Out=91
+2026/04/01 20:29:37 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=257 Out=120
+2026/04/01 20:29:38 AGENT_TOKEN_LOG: Agent=Acoustician In=506 Out=129
+2026/04/01 20:29:38 Phase 3 Complete.
+2026/04/01 20:29:50 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=42
+2026/04/01 20:29:56 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=254 Out=95
+2026/04/01 20:29:57 AGENT_TOKEN_LOG: Agent=Control Mapper In=451 Out=813
+2026/04/01 20:29:57 Phase 4 Complete.
+2026/04/01 20:29:58 AGENT_TOKEN_LOG: Agent=Control Mapper In=450 Out=418
+2026/04/01 20:29:58 Phase 4 Complete.
+2026/04/01 20:30:26 AGENT_TOKEN_LOG: Agent=Control Mapper In=439 Out=736
+2026/04/01 20:30:26 Phase 4 Complete.
+2026/04/01 20:31:00 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2983 Out=4993
+2026/04/01 20:31:00 ✅ MULTI-AGENT SUCCESS | Tokens: In 195151, Out 27755
+2026/04/01 20:31:00 🎉 Successfully saved 07_Edge as GCS preset be8c204f-96e3-40c4-9cc2-9a50cbf030a7
+2026/04/01 20:31:00  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:31:00 
+=============================================
+2026/04/01 20:31:00 ▶ EXECUTING EVAL: 08_EVH
+2026/04/01 20:31:00 =============================================
+2026/04/01 20:31:00  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:31:00 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Van Halen Brown Sound. Hot-rodded 1968 Marshall Plexi, variac sag, plate reverb.
+2026/04/01 20:31:00 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:31:00 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3316 Out=4931
+2026/04/01 20:31:00 ✅ MULTI-AGENT SUCCESS | Tokens: In 198467, Out 32686
+2026/04/01 20:31:01 🎉 Successfully saved 02_Metal_Rhythm as GCS preset f07cc8e3-48a0-4591-964f-42792a04f4ea
+2026/04/01 20:31:01  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:31:01 
+=============================================
+2026/04/01 20:31:01 ▶ EXECUTING EVAL: 10_Slash
+2026/04/01 20:31:01 =============================================
+2026/04/01 20:31:01  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:31:01 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Guns N' Roses Slash lead. Les Paul neck pickup into a hot JCM800 with standard delay.
+2026/04/01 20:31:01 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:31:10 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=330 Out=55
+2026/04/01 20:31:13 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=333 Out=60
+2026/04/01 20:31:16 AGENT_TOKEN_LOG: Agent=Community Scraper In=242 Out=334
+2026/04/01 20:31:16 Phase 1 Complete.
+2026/04/01 20:31:20 AGENT_TOKEN_LOG: Agent=Community Scraper In=239 Out=342
+2026/04/01 20:31:20 Phase 1 Complete.
+2026/04/01 20:31:26 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3276 Out=4452
+2026/04/01 20:31:26 ✅ MULTI-AGENT SUCCESS | Tokens: In 202887, Out 37929
+2026/04/01 20:31:26 🎉 Successfully saved 04_Classic_Rock as GCS preset 7a406884-a478-4f77-8684-c89423951848
+2026/04/01 20:31:26  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:31:26 
+=============================================
+2026/04/01 20:31:26 ▶ EXECUTING EVAL: 01_SRV_Clean
+2026/04/01 20:31:26 =============================================
+2026/04/01 20:31:26  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:31:26 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Clean funk blues tone. Stevie Ray Vaughan style with high headroom. Wants to push it with a TS808.
+2026/04/01 20:31:26 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:31:34 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28463 Out=65
+2026/04/01 20:31:34 Phase 2 Complete.
+2026/04/01 20:31:38 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=330 Out=59
+2026/04/01 20:31:38 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28471 Out=93
+2026/04/01 20:31:38 Phase 2 Complete.
+2026/04/01 20:31:43 AGENT_TOKEN_LOG: Agent=Community Scraper In=239 Out=274
+2026/04/01 20:31:43 Phase 1 Complete.
+2026/04/01 20:31:47 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:31:49 AGENT_TOKEN_LOG: Agent=Transducer Tech In=153 Out=112
+2026/04/01 20:31:49 AGENT_TOKEN_LOG: Agent=Transducer Tech In=181 Out=121
+2026/04/01 20:31:49 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:31:59 AGENT_TOKEN_LOG: Agent=Acoustician In=501 Out=130
+2026/04/01 20:31:59 Phase 3 Complete.
+2026/04/01 20:32:05 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28403 Out=94
+2026/04/01 20:32:05 Phase 2 Complete.
+2026/04/01 20:32:05 AGENT_TOKEN_LOG: Agent=Acoustician In=497 Out=127
+2026/04/01 20:32:05 Phase 3 Complete.
+2026/04/01 20:32:06 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=45
+2026/04/01 20:32:12 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=240 Out=81
+2026/04/01 20:32:14 AGENT_TOKEN_LOG: Agent=Transducer Tech In=182 Out=67
+2026/04/01 20:32:16 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=57
+2026/04/01 20:32:18 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=268 Out=75
+2026/04/01 20:32:25 AGENT_TOKEN_LOG: Agent=Acoustician In=500 Out=129
+2026/04/01 20:32:25 Phase 3 Complete.
+2026/04/01 20:32:28 AGENT_TOKEN_LOG: Agent=Control Mapper In=437 Out=795
+2026/04/01 20:32:28 Phase 4 Complete.
+2026/04/01 20:32:31 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:32:40 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:32:47 AGENT_TOKEN_LOG: Agent=Control Mapper In=462 Out=471
+2026/04/01 20:32:48 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=269 Out=140
+2026/04/01 20:32:48 Phase 4 Complete.
+2026/04/01 20:32:59 AGENT_TOKEN_LOG: Agent=Control Mapper In=459 Out=431
+2026/04/01 20:32:59 Phase 4 Complete.
+2026/04/01 20:33:39 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3365 Out=4885
+2026/04/01 20:33:39 ✅ MULTI-AGENT SUCCESS | Tokens: In 296976, Out 46376
+2026/04/01 20:33:39 🎉 Successfully saved 08_EVH as GCS preset 521b54c6-94d1-4775-8b66-09144532167b
+2026/04/01 20:33:39  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:33:39 
+=============================================
+2026/04/01 20:33:39 ▶ EXECUTING EVAL: 03_Ambient_Lead
+2026/04/01 20:33:39 =============================================
+2026/04/01 20:33:39  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:33:39 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Ambient, spacey lead tone with lots of modulated delay and plate reverb. Think David Gilmour.
+2026/04/01 20:33:39 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:33:49 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=326 Out=58
+2026/04/01 20:33:57 AGENT_TOKEN_LOG: Agent=Community Scraper In=235 Out=313
+2026/04/01 20:33:57 Phase 1 Complete.
+2026/04/01 20:34:02 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3016 Out=4503
+2026/04/01 20:34:02 ✅ MULTI-AGENT SUCCESS | Tokens: In 300553, Out 51250
+2026/04/01 20:34:03 🎉 Successfully saved 01_SRV_Clean as GCS preset ff98575f-2aef-4804-b37e-b5c65d077dbc
+2026/04/01 20:34:03  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:34:03 
+=============================================
+2026/04/01 20:34:03 ▶ EXECUTING EVAL: 05_Clapton
+2026/04/01 20:34:03 =============================================
+2026/04/01 20:34:03  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:34:03 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+Vintage Cream-era Clapton tone. Rolled-off Les Paul tone knobs into a cranked Marshall.
+2026/04/01 20:34:03 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:34:03 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3028 Out=5146
+2026/04/01 20:34:03 ✅ MULTI-AGENT SUCCESS | Tokens: In 303581, Out 56396
+2026/04/01 20:34:04 🎉 Successfully saved 10_Slash as GCS preset a29d87d4-694c-4a84-9c96-0fec4bb1e9be
+2026/04/01 20:34:04  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:34:04 
+=============================================
+2026/04/01 20:34:04 ▶ EXECUTING EVAL: 06_Gilmour
+2026/04/01 20:34:04 =============================================
+2026/04/01 20:34:04  -> Executing 12-Agent Orchestrator...
+2026/04/01 20:34:04 Starting ADK Pipeline for prompt: [GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]
+
+David Gilmour preset using a Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, and a massive Plate Reverb.
+2026/04/01 20:34:04 [Tone Historian] ABLATION TRIGGERED. Skipping LLM call.
+2026/04/01 20:34:13 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=328 Out=55
+2026/04/01 20:34:17 AGENT_TOKEN_LOG: Agent=Sonic Profiler In=342 Out=59
+2026/04/01 20:34:21 AGENT_TOKEN_LOG: Agent=Community Scraper In=237 Out=301
+2026/04/01 20:34:21 Phase 1 Complete.
+2026/04/01 20:34:22 AGENT_TOKEN_LOG: Agent=Community Scraper In=251 Out=359
+2026/04/01 20:34:22 Phase 1 Complete.
+2026/04/01 20:34:24 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28442 Out=87
+2026/04/01 20:34:24 Phase 2 Complete.
+2026/04/01 20:34:40 AGENT_TOKEN_LOG: Agent=Transducer Tech In=175 Out=74
+2026/04/01 20:34:43 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28488 Out=82
+2026/04/01 20:34:43 Phase 2 Complete.
+2026/04/01 20:34:48 AGENT_TOKEN_LOG: Agent=CorOS Librarian In=28430 Out=62
+2026/04/01 20:34:48 Phase 2 Complete.
+2026/04/01 20:34:49 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:34:54 AGENT_TOKEN_LOG: Agent=Transducer Tech In=170 Out=43
+2026/04/01 20:34:54 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=58
+2026/04/01 20:35:02 AGENT_TOKEN_LOG: Agent=Acoustician In=500 Out=119
+2026/04/01 20:35:02 Phase 3 Complete.
+2026/04/01 20:35:04 AGENT_TOKEN_LOG: Agent=Transducer Tech In=151 Out=127
+2026/04/01 20:35:06 AGENT_TOKEN_LOG: Agent=Acoustician In=496 Out=129
+2026/04/01 20:35:06 AGENT_TOKEN_LOG: Agent=FOH Optimizer In=145 Out=57
+2026/04/01 20:35:06 Phase 3 Complete.
+2026/04/01 20:35:09 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:35:15 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=40
+2026/04/01 20:35:15 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=257 Out=114
+2026/04/01 20:35:15 AGENT_TOKEN_LOG: Agent=Acoustician In=499 Out=127
+2026/04/01 20:35:15 Phase 3 Complete.
+2026/04/01 20:35:19 AGENT_TOKEN_LOG: Agent=Control Mapper In=452 Out=356
+2026/04/01 20:35:19 Phase 4 Complete.
+2026/04/01 20:35:24 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=238 Out=79
+2026/04/01 20:35:27 AGENT_TOKEN_LOG: Agent=Mix Engineer In=78 Out=45
+2026/04/01 20:35:30 AGENT_TOKEN_LOG: Agent=Control Mapper In=429 Out=319
+2026/04/01 20:35:30 Phase 4 Complete.
+2026/04/01 20:35:31 AGENT_TOKEN_LOG: Agent=DSP Dispatcher In=262 Out=119
+2026/04/01 20:35:45 AGENT_TOKEN_LOG: Agent=Control Mapper In=449 Out=1072
+2026/04/01 20:35:45 Phase 4 Complete.
+2026/04/01 20:36:34 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2915 Out=5565
+2026/04/01 20:36:34 ✅ MULTI-AGENT SUCCESS | Tokens: In 397761, Out 65942
+2026/04/01 20:36:34 🎉 Successfully saved 06_Gilmour as GCS preset f902a1ee-dfb8-45eb-8e7c-28e8aa872044
+2026/04/01 20:36:34  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:36:37 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=2855 Out=4092
+2026/04/01 20:36:37 ✅ MULTI-AGENT SUCCESS | Tokens: In 400616, Out 70034
+2026/04/01 20:36:37 🎉 Successfully saved 05_Clapton as GCS preset c8e2f46c-0a58-45cc-b99b-3f2c70a75825
+2026/04/01 20:36:37  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:37:05 AGENT_TOKEN_LOG: Agent=Architect & Evaluator In=3638 Out=6774
+2026/04/01 20:37:05 ✅ MULTI-AGENT SUCCESS | Tokens: In 404254, Out 76808
+2026/04/01 20:37:05 🎉 Successfully saved 03_Ambient_Lead as GCS preset ee79ffae-00c9-4956-bdbe-ec35be1e26bf
+2026/04/01 20:37:05  -> Skipping Phase 2: Monolithic QC-2 LLM (Ablation Mode active)
+2026/04/01 20:37:05 
+=============================================
+2026/04/01 20:37:05 🏁 EVALUATION SUITE COMPLETE
+2026/04/01 20:37:05 Wrote 24 resulting HTML and MD files to workspace.
+2026/04/01 20:37:05 📊 MULTI-AGENT TOTAL TOKENS: Input: 2993154, Output: 0
+2026/04/01 20:37:05 📊 MONOLITHIC  TOTAL TOKENS: Input: 0, Output: 0
+2026/04/01 20:37:05 =============================================
+📊 [Agent 1] Linting Results...
+⚖️ [Agent 1] Judging Quality (Blinded A/B)...
+2026/04/01 20:37:43 
+⚖️ --- JUDGEMENT FOR 01_SRV_Clean_multi.html ---
+2026/04/01 20:37:43 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B is significantly more authentic to Stevie Ray Vaughan's actual rig and playing style. It correctly selects a Super Reverb-style amplifier ('US SPR Vibrato') paired with a 4x10 cabinet, which was a cornerstone of his legendary live tone, whereas Preset A opts for a Twin. Furthermore, Preset B employs a Spring Reverb, an absolute necessity for that classic Fender 'drip' heard on tracks like 'Lenny', while Preset A incorrectly uses a Studio Plate. Lastly, Preset B correctly omits the optical compressor—SRV relied on amp sag and his Tube Screamer for natural compression—and leverages the Green 808 as an always-on clean boost in the rhythm scene before cranking it for leads, perfectly mirroring his real-world pedal methodology.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:37:43 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:37:53 
+⚖️ --- JUDGEMENT FOR 02_Metal_Rhythm_multi.html ---
+2026/04/01 20:37:53 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A is significantly better for a modern high-gain metal rhythm tone because it correctly includes a dedicated noise gate (Nameless Zuul) placed early in the signal chain. The 5150 amplifier models are notoriously noisy, and a tight modern metal tone is impossible to achieve without hard-gating for staccato tracking. Preset B explicitly mentions a strict noise gate threshold in its agent impact statement but fails to actually include a noise gate in its signal chain. Additionally, Preset A's use of the PV-505 Rhythm channel (often preferred over the Lead channel for its tighter low-end and reduced fizz) combined with input gain staging (Super Bolt) for different pickup outputs demonstrates a much deeper understanding of high-gain tone sculpting.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:37:53 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:38:06 
+⚖️ --- JUDGEMENT FOR 03_Ambient_Lead_multi.html ---
+2026/04/01 20:38:06 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A demonstrates a much deeper understanding of the Gilmour-inspired aesthetic. It correctly utilizes the TW Tube Drive (BK Butler style) and stacks it with the Fuzz Pi during the lead scene, which is the historically accurate method for achieving his smooth, vocal-like sustain without the harshness of a raw fuzz into a clean amp. Preset B uses a Klon-style drive and bypasses it when the fuzz is engaged, missing out on that crucial stacked compression. Furthermore, Preset A includes the essential CE-2W chorus to widen and thicken the lead tone, alongside meticulously crafted humbucker vs. single-coil input compensations.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:38:06 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:38:16 
+⚖️ --- JUDGEMENT FOR 04_Classic_Rock_multi.html ---
+2026/04/01 20:38:16 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A is significantly superior for a classic '70s rock recreation. It features a historically accurate signal chain, properly utilizing a Rangemaster-style treble booster (Rage Booster) to push the Plexi, which is much more authentic to the era than the late-'70s/early-'80s Tube Screamer (Green 808) found in Preset B. Furthermore, Preset A includes essential classic rock staples like an EP-3 style Tape Delay and an MXR-style Phaser for movement, whereas Preset B is barebones and lacks a delay entirely. Preset A also thoughtfully manages the input block, noise gate, and guitar-specific EQ adjustments (such as rolling off Presence on single coils to prevent ice-pick highs), making it a much more comprehensive, polished, and era-correct rig.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:38:16 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:38:28 
+⚖️ --- JUDGEMENT FOR 05_Clapton_multi.html ---
+2026/04/01 20:38:28 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A delivers a far more authentic and intelligently tailored experience. It correctly adapts input gain, EQ, and mic blends between Humbucker and Single Coil guitars, whereas Preset B carelessly applies the exact same settings to both. Furthermore, Preset A uses a period-accurate JTM45 (TM45) model and relies on the player's physical tone knob for the 'Woman Tone', while Preset B includes an anachronistic digital delay and applies a severe, permanent 4.2kHz pre-EQ low-pass filter that would make the base tone muddy and lifeless.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:38:28 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.95)
+2026/04/01 20:38:40 
+⚖️ --- JUDGEMENT FOR 06_Gilmour_multi.html ---
+2026/04/01 20:38:40 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A is significantly better because it successfully adapts its parameter settings to the specific guitar inputs. For the Gibson ES-339 (humbuckers), it raises the Fuzz tone to 60% and cuts more 200Hz mud (-4.0dB), while for the Telecaster (single coils), it rolls the Fuzz tone back to 35% to tame ice-pick highs and retains more bass. Preset B applies the exact same settings (Fuzz Tone 4.8, identical EQ and Amp settings) to both drastically different guitars, which would result in either a muddy humbucker tone or a harsh single-coil tone. Additionally, Preset A uses the correct native Quad Cortex nomenclature for the cabinet ('412 Watt S4123'), whereas Preset B uses an unverified/cloud-like name ('4x12 WEM Super Starfinder') despite strict offline constraints. Preset A also provides excellent inline rationales for the user.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:38:40 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.95)
+2026/04/01 20:38:59 
+⚖️ --- JUDGEMENT FOR 07_Edge_multi.html ---
+2026/04/01 20:38:59 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A demonstrates a superior understanding of recreating 'The Edge' tone, specifically in its routing and DSP selection within the Quad Cortex ecosystem. The choice of the 'Circular Delay' perfectly emulates the modulated, TC 2290-style rack delay crucial for U2's rhythmic bounce, whereas Preset B uses a more generic digital delay. Furthermore, Preset A's cabinet strategy blending a Shure SM57 with a Royer 121 Ribbon mic is an industry-standard acoustic approach to taming the notorious top-end fizz of a Vox AC30 (UK C30). This is much more effective and mix-ready than Preset B's dual-SM57 configuration, which risks compounding harsh upper-midrange frequencies. Finally, Preset A correctly utilizes the compressor's output level to dynamically push the amp's front end into natural saturation for lead scenes, accurately mirroring real-world analog pedalboard gain staging.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:38:59 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.95)
+2026/04/01 20:39:10 
+⚖️ --- JUDGEMENT FOR 08_EVH_multi.html ---
+2026/04/01 20:39:10 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B offers a much more accurate and comprehensive recreation of the EVH 'Brown Sound'. It specifically addresses the legendary 'Variac' trick by increasing amp Sag (8.0) and lowering Bias (3.0), which is crucial for achieving Eddie's spongy power-amp distortion. Furthermore, Preset B includes the MX Flanger (essential for tracks like 'Unchained'), utilizes a Tape Delay to emulate his Maestro Echoplex EP-3, and specifically selects a vintage Greenback 4x12 cabinet model. The addition of a pre-EQ to tighten the low-end and a noise gate to handle the high-gain noise floor makes Preset B significantly more polished and authentic than Preset A.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:39:10 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:39:22 
+⚖️ --- JUDGEMENT FOR 09_BB_King_multi.html ---
+2026/04/01 20:39:22 {
+  "preference": "A",
+  "rationale": "Preset A demonstrates a much more accurate understanding of B.B. King's signature tone and avoids critical acoustic errors. It correctly utilizes a Spring Reverb, which is essential for vintage blues, whereas Preset B incorrectly uses a Plate reverb. Most notably, Preset B contains a catastrophic EQ error: applying a High Pass Filter at 4.5kHz. This would completely gut the guitar's fundamental frequencies and midrange, leaving only a harsh, thin sizzle. Preset A correctly applies a Low Pass Filter at 4.5kHz to smoothly roll off abrasive highs, combined with an 800Hz notch to authentically simulate the out-of-phase honk of a Gibson Varitone circuit. Additionally, Preset A's subtle use of optical compression to emulate high-volume stage sustain without adding artificial overdrive perfectly honors B.B.'s high-headroom, dynamically expressive playing style.",
+  "confidence": 0.98
+}
+2026/04/01 20:39:22 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.98)
+2026/04/01 20:39:45 
+⚖️ --- JUDGEMENT FOR 10_Slash_multi.html ---
+2026/04/01 20:39:45 ```json
+{
+  "preference": "B",
+  "rationale": "Preset B correctly identifies the S.I.R. #36 Modified Marshall tone as the historical target for a Slash recreation. By utilizing a Parametric EQ instead of a Tube Screamer (Green 808) to boost the front end, it accurately mimics the cascaded gain stage of Slash's signature tone without introducing the unnatural compression and distinct mid-hump of a TS-style pedal. While Preset A successfully adapts its settings for different guitar pickups (which Preset B fails to do), Preset A fundamentally builds a generic 80s hard rock/metal tone. Preset B's core amplifier and EQ approach is much more authentic to Slash's specific gear philosophy.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:39:45 🏆 WINNER: Baseline (Confidence: 0.95)
+2026/04/01 20:39:58 
+⚖️ --- JUDGEMENT FOR 11_Mayer_Lead_multi.html ---
+2026/04/01 20:39:58 {
+  "preference": "A",
+  "rationale": "Preset A is superior for a John Mayer lead recreation primarily due to its accurate gain staging and guitar-specific configurations. It correctly utilizes the classic Mayer overdrive stack—a Klon-style pedal (Myth Drive) cascading into a Tube Screamer-style pedal (Green 808)—to achieve his signature mid-heavy, searing lead tone. Preset B relies entirely on the Myth Drive for lead, which misses the crucial TS mid-bump. Furthermore, Preset A thoughtfully adjusts drive, tone, and amp parameters between the ES-339 humbuckers and Telecaster single coils to account for output and frequency differences, whereas Preset B lazily copy-pastes the exact same settings for both guitars.",
+  "confidence": 0.95
+}
+2026/04/01 20:39:58 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.95)
+2026/04/01 20:40:15 
+⚖️ --- JUDGEMENT FOR 12_Bonamassa_multi.html ---
+2026/04/01 20:40:15 ```json
+{
+  "preference": "A",
+  "rationale": "Preset A demonstrates a much deeper understanding of tone-shaping and practical application. It accurately utilizes the Myth Drive (Klon) as a clean/mid boost (Drive 1.5, Level 7.5) to push the front end of the Dumble ODS, which is the cornerstone of Joe Bonamassa's smooth, harmonically rich lead tone. Most importantly, Preset A features highly tailored parameter adjustments for different pickup types—lowering the amp's bass and pedal drive for humbuckers while increasing them for single coils to maintain a consistent core tone. Preset B, while using an accurate EVM12L speaker cabinet, makes the mistake of stacking two overdrives with excessively high gain settings (Myth Drive at 6.0 and Green 808 at 4.5) into a Tweed Twin, which would result in a muddy, over-compressed, and noisy signal. Furthermore, Preset B fails to differentiate any settings between humbuckers and single coils.",
+  "confidence": 0.95
+}
+```
+2026/04/01 20:40:15 🏆 WINNER: Ablated (No no_agent_1) (Confidence: 0.95)
+✅ [Agent 1] Step Complete.\n

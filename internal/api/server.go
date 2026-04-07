@@ -307,7 +307,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
 				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(draftPreset, false)
+				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, false)
 			}
 			s.tasksMu.Unlock()
 		}()

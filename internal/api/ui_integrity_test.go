@@ -144,11 +144,11 @@ func TestUIGoldenTweakingWorkspace(t *testing.T) {
 	}
 
 	// Read-Only mode
-	htmlReadOnly := renderTweakingWorkspaceHTML(p, false)
+	htmlReadOnly := renderTweakingWorkspaceHTML(p, false, true)
 	verifyGolden(t, "workspace_readonly", htmlReadOnly)
 
 	// Edit mode (Note: renderTweakingWorkspaceHTML now determines edit mode based on p.Name or payload, so passing false for isCopyMode still applies)
-	htmlEdit := renderTweakingWorkspaceHTML(p, false)
+	htmlEdit := renderTweakingWorkspaceHTML(p, false, false)
 	verifyGolden(t, "workspace_edit", htmlEdit)
 }
 

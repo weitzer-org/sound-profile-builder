@@ -17,4 +17,8 @@
 - **Paid Plugin Toggle**: Add a UI configuration to selectively enable/disable routing through Paid Plugin architectures (e.g., Nameless, Cory Wong, Plini).
 - **YouTube Tone Analysis Agent**: Research integrating an agent to search for YouTube videos representing the prompt and analyze the tone from the video audio/context to inform preset generation.
 - **Change Default Presets**: Add/Update standard presets to include: Rhythm, Clean Boost, Overdrive, and Comp.
+- **Performance Optimization**: Improve performance of the Preset Library loading. It currently feels slow. Options include:
+    - *Option A (Easy)*: Implement an in-memory TTL cache (e.g., 30 seconds) on the listing handler to eliminate repeated GCS reads.
+    - *Option B (Structured)*: Refactor storage to extract thin metadata index files for lists, instead of handling flat heavy-file scans.
+    - *Option C (Test-Specific)*: Hardcode dry mock returns specifically labeled for E2E speed checks in testing routes.
 
