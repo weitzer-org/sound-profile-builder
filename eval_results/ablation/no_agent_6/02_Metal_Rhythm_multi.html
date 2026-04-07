@@ -1,150 +1,202 @@
 ```json
 {
-  "builder_statement": "This preset captures the quintessential modern high-gain metal tone using a Peavey 5150 style amplifier paired with a V30 loaded 4x12. The signal is aggressively tightened up front by a Green 808 overdrive acting as a boost, while surgical post-amp EQ and precise mic placement tame the inherent high-frequency fizziness, resulting in a crushing rhythm track and a thick, soaring lead channel.",
+  "builder_statement": "This preset captures the tight, aggressive high-gain signature of the classic 5150. I utilized the PV-505 Rhythm block pushed by a Green 808 to tightly track palm mutes while keeping the amp gain moderate and depth low to prevent low-end flub. Scene A delivers a scooped, modern rhythm, while Scene B pushes the mids and activates a plate reverb for searing lead work.",
   "final_html_payload": {
-    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Dynamics: Adaptive Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Suppresses high-gain humbucker feedback without choking sustain.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -45.0dB<br/>Decay: 10.0ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -55.0dB<br/>Decay: 30.0ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Acts as a tight low-end filter and mid-boost before the amp.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 0.0<br/>Tone: 7.5<br/>Level: 10.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 1.5<br/>Tone: 7.0<br/>Level: 10.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: PV-505 Lead<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Primary high-gain tone. Gain is kept low (3.5) due to the amp's immense inherent saturation and the ES-339's hot output.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 3.5<br/>Bass: 5.5<br/>Mid: 3.5<br/>Treble: 6.0<br/>Master: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 4.0<br/>Bass: 5.0<br/>Mid: 6.0<br/>Treble: 5.5<br/>Master: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Graphic-9<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Surgically scoops or boosts the midrange (500Hz/1kHz) to position the guitar in the mix.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>500Hz: -2.0dB<br/>1kHz: -1.0dB<br/>Level: 0.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>500Hz: +1.5dB<br/>1kHz: +2.0dB<br/>Level: +1.5dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 CA Stand OS A V30 '01<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic metal cab pairing. Dynamic 57 for bite, Ribbon 121 for thickness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (0.5in, Cap Edge)<br/>Mic 2: Ribbon 121 (1.5in, Mid-Cone)<br/>Blend: 65% Mic 1<br/>Low Cut: 80Hz<br/>High Cut: 8000Hz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (0.5in, Cap Edge)<br/>Mic 2: Ribbon 121 (1.5in, Mid-Cone)<br/>Blend: 65% Mic 1<br/>Low Cut: 80Hz<br/>High Cut: 8000Hz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds depth and space specifically to the lead scene while keeping rhythm tracking dry and aggressive.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Mix: 0%<br/>Decay: 0.0s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mix: 20%<br/>Decay: 2.5s</td></tr> </tbody> </table>",
-    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Dynamics: Adaptive Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Slightly lower threshold to accommodate the lower output of single coils while controlling 60-cycle hum.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -50.0dB<br/>Decay: 10.0ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -60.0dB<br/>Decay: 30.0ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Tone rolled back slightly to tame the Telecaster's inherent brightness and ice-pick highs.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 0.5<br/>Tone: 6.5<br/>Level: 10.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 2.5<br/>Tone: 6.0<br/>Level: 10.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: PV-505 Lead<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Gain pushed slightly higher (4.5) to compensate for lower-output pickups. Bass increased to fatten up the Telecaster.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 4.5<br/>Bass: 6.5<br/>Mid: 4.0<br/>Treble: 5.0<br/>Master: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 5.5<br/>Bass: 6.0<br/>Mid: 6.5<br/>Treble: 4.5<br/>Master: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Graphic-9<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Less scooping required for single coils to ensure they do not disappear entirely in a heavy mix.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>500Hz: -1.0dB<br/>1kHz: 0.0dB<br/>Level: 0.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>500Hz: +2.5dB<br/>1kHz: +3.0dB<br/>Level: +1.5dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 CA Stand OS A V30 '01<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: High cut is drastically lowered to 6000Hz (per FOH logic) to tame extreme high-end treble from the Tele bridge pickup.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (0.5in, Cap Edge)<br/>Mic 2: Ribbon 121 (1.5in, Mid-Cone)<br/>Blend: 65% Mic 1<br/>Low Cut: 100Hz<br/>High Cut: 6000Hz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Dynamic 57 (0.5in, Cap Edge)<br/>Mic 2: Ribbon 121 (1.5in, Mid-Cone)<br/>Blend: 65% Mic 1<br/>Low Cut: 100Hz<br/>High Cut: 6000Hz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Engaged on Scene B for lead tracking space.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Mix: 0%<br/>Decay: 0.0s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mix: 25%<br/>Decay: 3.0s</td></tr> </tbody> </table>"
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Placed before the amp with drive at zero to aggressively cut low-end and tighten the humbucker tracking.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Drive: 0.0<br/>Tone: 7.5<br/>Level: 10.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Drive: 2.0<br/>Tone: 6.5<br/>Level: 10.0</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: PV-505 Rhythm<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Core 5150 crunch. Gain is kept at 4.5 for rhythm to preserve clarity with hot humbuckers, and depth is dialed back.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Gain: 4.5<br/>Bass: 3.5<br/>Mid: 3.0<br/>Treble: 6.5<br/>Presence: 7.0<br/>Depth: 2.5<br/>Master: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Gain: 6.0<br/>Bass: 4.0<br/>Mid: 6.5<br/>Treble: 6.0<br/>Presence: 6.0<br/>Depth: 2.5<br/>Master: 6.5</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Graphic-9<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Surgically scoops the boxy 500Hz/1kHz bands for rhythm and pushes them forward for the lead scene.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>250Hz: -2.0dB<br/>500Hz: -4.0dB<br/>1kHz: -2.0dB<br/>4kHz: +2.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>250Hz: 0.0dB<br/>500Hz: +2.0dB<br/>1kHz: +3.0dB<br/>4kHz: +1.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 CA Stand OS A V30 '01<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic oversized V30 4x12 tone, mic'd with a Dynamic/Ribbon blend and aggressively filtered.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mic 1: Dynamic 421<br/>Mic 1 Pos: X 0.75, Y 1.0<br/>Mic 2: Ribbon 121<br/>Mic 2 Pos: X 2.50, Y 1.5<br/>Blend: 60%<br/>HPF: 100Hz<br/>LPF: 8000Hz<br/>Level: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mic 1: Dynamic 421<br/>Mic 1 Pos: X 0.75, Y 1.0<br/>Mic 2: Ribbon 121<br/>Mic 2 Pos: X 2.50, Y 1.5<br/>Blend: 60%<br/>HPF: 100Hz<br/>LPF: 8000Hz<br/>Level: -3.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds depth and sustain to the lead tones. Bypassed during rhythm scenes to preserve tightness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Mix: 15%<br/>Decay: 1.2s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mix: 25%<br/>Decay: 3.5s</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Placed before the amp. Tone is rolled back slightly compared to the humbucker variant to tame the inherent single-coil brightness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Drive: 0.0<br/>Tone: 6.0<br/>Level: 10.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Drive: 2.0<br/>Tone: 5.0<br/>Level: 10.0</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: PV-505 Rhythm<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Core 5150 crunch. Gain and bass are pushed slightly higher to compensate for the lower-output single coils, while treble is lowered.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Gain: 5.5<br/>Bass: 5.0<br/>Mid: 3.0<br/>Treble: 5.5<br/>Presence: 6.0<br/>Depth: 2.5<br/>Master: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Gain: 7.0<br/>Bass: 5.5<br/>Mid: 6.5<br/>Treble: 5.0<br/>Presence: 5.0<br/>Depth: 2.5<br/>Master: 6.5</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Graphic-9<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Surgically scoops the boxy 500Hz/1kHz bands for rhythm and pushes them forward for the lead scene. Highs are kept flatter for the Telecaster.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>250Hz: -2.0dB<br/>500Hz: -4.0dB<br/>1kHz: -2.0dB<br/>4kHz: +1.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>250Hz: 0.0dB<br/>500Hz: +2.0dB<br/>1kHz: +3.0dB<br/>4kHz: 0.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 CA Stand OS A V30 '01<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic oversized V30 4x12 tone, mic'd with a Dynamic/Ribbon blend and aggressively filtered.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mic 1: Dynamic 421<br/>Mic 1 Pos: X 0.75, Y 1.0<br/>Mic 2: Ribbon 121<br/>Mic 2 Pos: X 2.50, Y 1.5<br/>Blend: 60%<br/>HPF: 100Hz<br/>LPF: 8000Hz<br/>Level: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mic 1: Dynamic 421<br/>Mic 1 Pos: X 0.75, Y 1.0<br/>Mic 2: Ribbon 121<br/>Mic 2 Pos: X 2.50, Y 1.5<br/>Blend: 60%<br/>HPF: 100Hz<br/>LPF: 8000Hz<br/>Level: -3.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds depth and sustain to the lead tones. Bypassed during rhythm scenes to preserve tightness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Mix: 15%<br/>Decay: 1.2s</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Enabled<br/>Mix: 25%<br/>Decay: 3.5s</td></tr> </tbody> </table>"
   },
   "structured_payload": {
     "guitars": {
       "Gibson ES-339 Humbuckers": [
         {
           "id": "block-1",
-          "type": "Dynamics",
-          "model": "Adaptive Gate",
+          "type": "Overdrive",
+          "model": "Green 808",
           "parameters": [
-            {"name": "Threshold (Rh)", "type": "slider", "value": "-45.0dB"},
-            {"name": "Threshold (Ld)", "type": "slider", "value": "-55.0dB"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Drive (Scene A)", "type": "slider", "value": "0.0"},
+            {"name": "Tone (Scene A)", "type": "slider", "value": "7.5"},
+            {"name": "Level (Scene A)", "type": "slider", "value": "10.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Drive (Scene B)", "type": "slider", "value": "2.0"},
+            {"name": "Tone (Scene B)", "type": "slider", "value": "6.5"},
+            {"name": "Level (Scene B)", "type": "slider", "value": "10.0"}
           ]
         },
         {
           "id": "block-2",
-          "type": "Overdrive",
-          "model": "Green 808",
+          "type": "Amplifier",
+          "model": "PV-505 Rhythm",
           "parameters": [
-            {"name": "Drive", "type": "slider", "value": "0.0"},
-            {"name": "Tone", "type": "slider", "value": "7.5"},
-            {"name": "Level", "type": "slider", "value": "10.0"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Gain (Scene A)", "type": "slider", "value": "4.5"},
+            {"name": "Bass (Scene A)", "type": "slider", "value": "3.5"},
+            {"name": "Mid (Scene A)", "type": "slider", "value": "3.0"},
+            {"name": "Treble (Scene A)", "type": "slider", "value": "6.5"},
+            {"name": "Presence (Scene A)", "type": "slider", "value": "7.0"},
+            {"name": "Depth (Scene A)", "type": "slider", "value": "2.5"},
+            {"name": "Master (Scene A)", "type": "slider", "value": "5.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Gain (Scene B)", "type": "slider", "value": "6.0"},
+            {"name": "Bass (Scene B)", "type": "slider", "value": "4.0"},
+            {"name": "Mid (Scene B)", "type": "slider", "value": "6.5"},
+            {"name": "Treble (Scene B)", "type": "slider", "value": "6.0"},
+            {"name": "Presence (Scene B)", "type": "slider", "value": "6.0"},
+            {"name": "Depth (Scene B)", "type": "slider", "value": "2.5"},
+            {"name": "Master (Scene B)", "type": "slider", "value": "6.5"}
           ]
         },
         {
           "id": "block-3",
-          "type": "Amplifier",
-          "model": "PV-505 Lead",
+          "type": "EQ",
+          "model": "Graphic-9",
           "parameters": [
-            {"name": "Gain", "type": "slider", "value": "3.5"},
-            {"name": "Bass", "type": "slider", "value": "5.5"},
-            {"name": "Mid", "type": "slider", "value": "3.5"},
-            {"name": "Treble", "type": "slider", "value": "6.0"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "250Hz (Scene A)", "type": "slider", "value": "-2.0"},
+            {"name": "500Hz (Scene A)", "type": "slider", "value": "-4.0"},
+            {"name": "1kHz (Scene A)", "type": "slider", "value": "-2.0"},
+            {"name": "4kHz (Scene A)", "type": "slider", "value": "+2.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "250Hz (Scene B)", "type": "slider", "value": "0.0"},
+            {"name": "500Hz (Scene B)", "type": "slider", "value": "+2.0"},
+            {"name": "1kHz (Scene B)", "type": "slider", "value": "+3.0"},
+            {"name": "4kHz (Scene B)", "type": "slider", "value": "+1.0"}
           ]
         },
         {
           "id": "block-4",
-          "type": "EQ",
-          "model": "Graphic-9",
+          "type": "Cabinet",
+          "model": "412 CA Stand OS A V30 '01",
           "parameters": [
-            {"name": "500Hz", "type": "slider", "value": "-2.0dB"},
-            {"name": "1kHz", "type": "slider", "value": "-1.0dB"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 421"},
+            {"name": "Mic 1 X", "type": "slider", "value": "0.75"},
+            {"name": "Mic 1 Y", "type": "slider", "value": "1.0"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2 X", "type": "slider", "value": "2.50"},
+            {"name": "Mic 2 Y", "type": "slider", "value": "1.5"},
+            {"name": "Blend", "type": "slider", "value": "60"},
+            {"name": "HPF", "type": "slider", "value": "100"},
+            {"name": "LPF", "type": "slider", "value": "8000"},
+            {"name": "Level", "type": "slider", "value": "-3.0"}
           ]
         },
         {
           "id": "block-5",
-          "type": "Cabinet",
-          "model": "412 CA Stand OS A V30 '01",
-          "parameters": [
-            {"name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57"},
-            {"name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121"},
-            {"name": "Blend", "type": "slider", "value": "65%"},
-            {"name": "Low Cut", "type": "slider", "value": "80Hz"},
-            {"name": "High Cut", "type": "slider", "value": "8000Hz"}
-          ]
-        },
-        {
-          "id": "block-6",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            {"name": "State", "type": "toggle", "value": "Bypassed"},
-            {"name": "Mix", "type": "slider", "value": "0%"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Bypassed"},
+            {"name": "Mix (Scene A)", "type": "slider", "value": "15"},
+            {"name": "Decay (Scene A)", "type": "slider", "value": "1.2"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Mix (Scene B)", "type": "slider", "value": "25"},
+            {"name": "Decay (Scene B)", "type": "slider", "value": "3.5"}
           ]
         }
       ],
       "Fender Telecaster Single Coil": [
         {
           "id": "block-1",
-          "type": "Dynamics",
-          "model": "Adaptive Gate",
+          "type": "Overdrive",
+          "model": "Green 808",
           "parameters": [
-            {"name": "Threshold (Rh)", "type": "slider", "value": "-50.0dB"},
-            {"name": "Threshold (Ld)", "type": "slider", "value": "-60.0dB"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Drive (Scene A)", "type": "slider", "value": "0.0"},
+            {"name": "Tone (Scene A)", "type": "slider", "value": "6.0"},
+            {"name": "Level (Scene A)", "type": "slider", "value": "10.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Drive (Scene B)", "type": "slider", "value": "2.0"},
+            {"name": "Tone (Scene B)", "type": "slider", "value": "5.0"},
+            {"name": "Level (Scene B)", "type": "slider", "value": "10.0"}
           ]
         },
         {
           "id": "block-2",
-          "type": "Overdrive",
-          "model": "Green 808",
+          "type": "Amplifier",
+          "model": "PV-505 Rhythm",
           "parameters": [
-            {"name": "Drive", "type": "slider", "value": "0.5"},
-            {"name": "Tone", "type": "slider", "value": "6.5"},
-            {"name": "Level", "type": "slider", "value": "10.0"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Gain (Scene A)", "type": "slider", "value": "5.5"},
+            {"name": "Bass (Scene A)", "type": "slider", "value": "5.0"},
+            {"name": "Mid (Scene A)", "type": "slider", "value": "3.0"},
+            {"name": "Treble (Scene A)", "type": "slider", "value": "5.5"},
+            {"name": "Presence (Scene A)", "type": "slider", "value": "6.0"},
+            {"name": "Depth (Scene A)", "type": "slider", "value": "2.5"},
+            {"name": "Master (Scene A)", "type": "slider", "value": "5.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Gain (Scene B)", "type": "slider", "value": "7.0"},
+            {"name": "Bass (Scene B)", "type": "slider", "value": "5.5"},
+            {"name": "Mid (Scene B)", "type": "slider", "value": "6.5"},
+            {"name": "Treble (Scene B)", "type": "slider", "value": "5.0"},
+            {"name": "Presence (Scene B)", "type": "slider", "value": "5.0"},
+            {"name": "Depth (Scene B)", "type": "slider", "value": "2.5"},
+            {"name": "Master (Scene B)", "type": "slider", "value": "6.5"}
           ]
         },
         {
           "id": "block-3",
-          "type": "Amplifier",
-          "model": "PV-505 Lead",
+          "type": "EQ",
+          "model": "Graphic-9",
           "parameters": [
-            {"name": "Gain", "type": "slider", "value": "4.5"},
-            {"name": "Bass", "type": "slider", "value": "6.5"},
-            {"name": "Mid", "type": "slider", "value": "4.0"},
-            {"name": "Treble", "type": "slider", "value": "5.0"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "250Hz (Scene A)", "type": "slider", "value": "-2.0"},
+            {"name": "500Hz (Scene A)", "type": "slider", "value": "-4.0"},
+            {"name": "1kHz (Scene A)", "type": "slider", "value": "-2.0"},
+            {"name": "4kHz (Scene A)", "type": "slider", "value": "+1.0"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "250Hz (Scene B)", "type": "slider", "value": "0.0"},
+            {"name": "500Hz (Scene B)", "type": "slider", "value": "+2.0"},
+            {"name": "1kHz (Scene B)", "type": "slider", "value": "+3.0"},
+            {"name": "4kHz (Scene B)", "type": "slider", "value": "0.0"}
           ]
         },
         {
           "id": "block-4",
-          "type": "EQ",
-          "model": "Graphic-9",
+          "type": "Cabinet",
+          "model": "412 CA Stand OS A V30 '01",
           "parameters": [
-            {"name": "500Hz", "type": "slider", "value": "-1.0dB"},
-            {"name": "1kHz", "type": "slider", "value": "0.0dB"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Enabled"},
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 421"},
+            {"name": "Mic 1 X", "type": "slider", "value": "0.75"},
+            {"name": "Mic 1 Y", "type": "slider", "value": "1.0"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2 X", "type": "slider", "value": "2.50"},
+            {"name": "Mic 2 Y", "type": "slider", "value": "1.5"},
+            {"name": "Blend", "type": "slider", "value": "60"},
+            {"name": "HPF", "type": "slider", "value": "100"},
+            {"name": "LPF", "type": "slider", "value": "8000"},
+            {"name": "Level", "type": "slider", "value": "-3.0"}
           ]
         },
         {
           "id": "block-5",
-          "type": "Cabinet",
-          "model": "412 CA Stand OS A V30 '01",
-          "parameters": [
-            {"name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57"},
-            {"name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121"},
-            {"name": "Blend", "type": "slider", "value": "65%"},
-            {"name": "Low Cut", "type": "slider", "value": "100Hz"},
-            {"name": "High Cut", "type": "slider", "value": "6000Hz"}
-          ]
-        },
-        {
-          "id": "block-6",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            {"name": "State", "type": "toggle", "value": "Bypassed"},
-            {"name": "Mix", "type": "slider", "value": "0%"}
+            {"name": "State (Scene A)", "type": "toggle", "value": "Bypassed"},
+            {"name": "Mix (Scene A)", "type": "slider", "value": "15"},
+            {"name": "Decay (Scene A)", "type": "slider", "value": "1.2"},
+            {"name": "State (Scene B)", "type": "toggle", "value": "Enabled"},
+            {"name": "Mix (Scene B)", "type": "slider", "value": "25"},
+            {"name": "Decay (Scene B)", "type": "slider", "value": "3.5"}
           ]
         }
       ]
     }
   },
   "agent_impact": [
-    "<strong>Agent 1 (Tone Historian):</strong> Identified the Peavey 5150, TS9, and Boss NS-2 as the quintessential gear foundation for the requested high-gain tone profile.",
-    "<strong>Agent 2 (Sonic Profiler):</strong> Set the mechanical targets for cascading tube hard clipping, a 2500Hz peak frequency bite, and an aggressive -55dB noise gate baseline.",
-    "<strong>Agent 3 (Scraper):</strong> Contributed crucial community warnings regarding the immense saturation of the PV-505 model, strongly advising to keep the Gain parameter low (3-4) and strictly warning against scooping the amp's Middle knob below 3.5.",
-    "<strong>Agent 4 (Librarian):</strong> Reconciled the gear requests with strict Quad Cortex nomenclature, verifying block names like 'Adaptive Gate', 'Green 808', 'PV-505 Lead', and '412 CA Stand OS A V30 '01'.",
-    "<strong>Agent 5 (Navigator):</strong> Strictly enforced the user constraint prohibiting any Neural DSP Cloud captures from being mapped or recommended in the final preset.",
-    "<strong>Agent 6 (Acoustician):</strong> Triggered the Architect to manually engineer acoustic divergence, lowering the amp treble and cab high-cuts to 6000Hz for the Telecaster to tame extreme highs, while adjusting the ES-339 for a tighter humbucker bass response.",
-    "<strong>Agent 7 (Transducer):</strong> Provided highly specific mic placements, blending a Dynamic 57 at cap edge (0.5in) with a Ribbon 121 at mid-cone (1.5in) at a 65% ratio to smooth out high-gain fizz.",
-    "<strong>Agent 8 (FOH):</strong> Defined the global EQ cut boundaries (100Hz low cut, 6000Hz high cut) and requested a -3.0dB lane output pad to prevent digital clipping in live mixes.",
-    "<strong>Agent 9 (Mix):</strong> Mandated that the baseline Rhythm tone must remain completely dry (0% Reverb/Delay mix) to maintain the aggressive tightness of the amp.",
-    "<strong>Agent 10 (Map):</strong> Orchestrated the exact parameter shifts between Scene A (scooped modern rhythm with a tight gate) and Scene B (mid-heavy lead boost with 25% plate reverb).",
-    "<strong>Agent 11 (DSP):</strong> Designed the DSP grid logic, successfully allocating the heavy PV-505 amp and drive blocks to Lane 1, while isolating the Cab, EQ, and Reverb processing entirely on Lane 2."
+    "<strong>Agent 1 (Tone Historian):</strong> Identified the high-gain metal ecosystem, specifying the Peavey 5150 core tone paired with a TS9 boost and V30 cab to establish the foundational aggressive voicing.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Set strict target telemetry, specifically dialing in a 3500Hz upper-mid peak frequency and requiring hard clipping tube saturation.",
+    "<strong>Agent 3 (Scraper):</strong> Harvested crucial community warnings, notably advising to keep the 5150 'Depth' parameter below 3.0 to prevent low-end flub, keeping amp gain between 3.5 and 4.5, and dropping dual-amp setups for rhythmic tracking.",
+    "<strong>Agent 4 (Librarian):</strong> Reconciled generic requests with verified Quad Cortex models, strictly mapping the drive to 'Green 808', the amp to 'PV-505 Rhythm', the EQ to 'Graphic-9', and structurally dropping unverified gear like the Boss NS-2.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the project's 'allow_cloud_captures: false' constraint, ensuring that the preset relied solely on verified, first-party native modeling blocks.",
+    "<strong>Agent 6 (Acoustician):</strong> (Ablated) Role absorbed by Architect to enforce acoustic divergence. Mechanically split the core 5150 structure to accommodate the darker Gibson humbuckers (lower gain, higher treble) versus the brighter Telecaster single-coils (higher gain, boosted bass, rolled-off highs).",
+    "<strong>Agent 7 (Transducer):</strong> Positioned dual microphones to capture the V30 cab, specifically putting a Dynamic 421 on the Cap Edge (X: 0.75, Y: 1.0) and a Ribbon 121 off-axis (X: 2.50, Y: 1.5) with a 60% blend.",
+    "<strong>Agent 8 (FOH):</strong> Applied surgical global mix adjustments, setting a tight 100Hz HPF and 8000Hz LPF to focus the band mix, along with a -3.0dB trim to output lanes to prevent digital clipping.",
+    "<strong>Agent 9 (Mix):</strong> Handled spatial effects by dialing in a Studio Plate reverb with a 15% mix and 1.2s decay, ensuring rhythm guitars remained dry and leads gained spatial depth.",
+    "<strong>Agent 10 (Parameter Mapper):</strong> Drafted the granular Scene A (Scooped Rhythm) and Scene B (Mid-pushed Lead) parameters, adjusting the Graphic-9 EQ and drive stages to automate perfectly for different song sections.",
+    "<strong>Agent 11 (DSP):</strong> Designed the processing grid structure, routing the Drive, Amp, EQ, and Cab sequentially onto Lane 1, while isolating the Reverb block to Lane 2 for optimal CPU and signal flow management."
   ]
 }
 ```

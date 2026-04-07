@@ -46,12 +46,29 @@ func main() {
 	}
 	defer client.Close()
 
-	baselineDir := "eval_results"
-	ablationDir := os.Getenv("ABLATION_SUBDIR")
-	if ablationDir == "" {
-		log.Fatalf("ABLATION_SUBDIR env var is required")
+	baselineDir := os.Getenv("DIR_A")
+	if baselineDir == "" {
+		baselineDir = "eval_results"
 	}
-	ablationPath := filepath.Join(baselineDir, "ablation", ablationDir)
+	labelA := filepath.Base(baselineDir)
+	if labelA == "eval_results" || labelA == "." {
+		labelA = "Baseline"
+	}
+
+	var ablationPath string
+	var labelB string
+	dirB := os.Getenv("DIR_B")
+	if dirB != "" {
+		ablationPath = dirB
+		labelB = filepath.Base(dirB)
+	} else {
+		ablationDir := os.Getenv("ABLATION_SUBDIR")
+		if ablationDir == "" {
+			log.Fatalf("ABLATION_SUBDIR env var is required when DIR_B is not set")
+		}
+		ablationPath = filepath.Join(baselineDir, "ablation", ablationDir)
+		labelB = "Ablation (" + ablationDir + ")"
+	}
 
 	files, err := filepath.Glob(filepath.Join(ablationPath, "*.html"))
 	if err != nil {
@@ -124,9 +141,9 @@ Respond ONLY in JSON format:
 			continue
 		}
 
-		winner := "Baseline"
+		winner := labelA
 		if (judge.Preference == "A" && isAblatedA) || (judge.Preference == "B" && !isAblatedA) {
-			winner = "Ablated (No " + ablationDir + ")"
+			winner = labelB
 		} else if judge.Preference == "Equal" {
 			winner = "Equal"
 		}

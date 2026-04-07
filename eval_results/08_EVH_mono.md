@@ -1,95 +1,82 @@
-Greetings. I am QC-2, your Quad Cortex Systems Engineer. 
+**Quad Cortex Systems Engineer (QC-2) - Initialization Complete.**
 
-To accurately capture Eddie Van Halen's "Brown Sound" (circa 1978), we must recreate a specific physics environment: a voltage-starved, fully-cranked Marshall Super Lead (Plexi) driving Celestion Greenbacks. Because a vintage Plexi has **no master volume**, all preamp gain comes from the Normal/Bright volume knobs. We will control your actual stage loudness (SPL) exclusively via the Lane Output Level. 
+Target Acquired: **Van Halen "Brown Sound" (Early Era)**
+Analog Specs: 1968 Marshall Super Lead 100W (Plexi), Variac set to ~90V (Sag/Brown-out), Celestion Greenbacks, MXR Phase 90, EMT 140 Plate Reverb.
+Cortex Output Target: QSC CP12 (Flat-response active PA speaker). 
 
-Additionally, EVH famously ran his MXR Phase 90 *in front* of his distorted amp, which compresses the modulation and creates that signature thick, chewing sweep (e.g., "Eruption").
+### Physics & Hardware Protocol
+Because the QSC CP12 has a dedicated high-frequency tweeter, a dimed Plexi model will sound inherently brighter and harsher than a traditional guitar cabinet in the room. The "Variac" effect—which lowers the operating voltage of the amplifier, causing earlier distortion, severe power-tube sag, and a "chewier" midrange—must be simulated in the QC. Since the CorOS Plexi models do not have a dedicated "Voltage" knob, we will simulate the Variac by diming the amp's Input Volumes, heavily reducing the Amp Block Bass (to prevent farty low-end sag), and applying a post-amp EQ to focus the midrange and roll off the fizz.
 
-Below is the execution protocol, distinctly split for your Gibson ES-339 and Fender Telecaster.
-
----
-
-### 4. Organization Standard (Split-Bank Matrix)
-We will utilize an 8-Scene layout. Right-click the parameters marked below to assign them to Scenes.
-*   **Row 1 (Telecaster - Single Coil):** Scenes A-D
-*   **Row 2 (ES-339 - Humbucker):** Scenes E-H
-
-*Scene Breakdown:*
-*   **A / E:** Rhythm (Plexi cranked, Plate Reverb).
-*   **B / F:** Lead (Adds Phaser, Tape Delay, +1.5dB Output).
-*   **C / G:** Flanger Rhythm ("Unchained" / "Hear About It Later" style).
-*   **D / H:** Dry/Comping (Modulation/Time FX bypassed).
+As requested, below are two completely independent signal chains and gain staging strategies tailored for your specific guitars.
 
 ---
 
-### 5. Execution Protocol: Main Signal Chain
+### CONFIGURATION 1: Fender Telecaster (Single Coils)
+**Bank Mapping:** Row 1 (Scenes A-D)
+*Scene A: Rhythm | Scene B: Lead | Scene C: Dry/Comping | Scene D: Ambient/Phase*
 
-**Table A: Main Signal Chain (Global Target Build)**
-*Apply these blocks from left to right on the grid.*
+**Input Gain Logic:** Telecaster single coils lack the high-output push required to easily overdrive a Plexi. 
+**Action:** Go to the Global Input Block (Circle 1) and set **In 1 Gain to +3.0dB**. 
 
-| Block Category | Model Name | Rhythm/Flange Settings (Sc A,C,E,G) | Lead Settings (Sc B/F) | Physics/Rationale |
+#### Table A.1: Telecaster Signal Chain (Scenes A-D)
+| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Noise Red: 40% (Right-Click) | Noise Red: 20% (Right-Click) | EVH tone is noisy, but clamping too hard kills harmonics. Looser gate for leads. |
-| **Pre-FX (Mod)** | Phaser 95 | Bypass (On for Sc C/G) | Rate: 2.5, Mix: 45% (Active) | Placed *before* the amp. Compresses the sweep into the tube distortion. |
-| **Pre-FX (Mod)** | Flanger | Bypass (Active on Sc C/G) | Bypass | Pre-amp flanger creates intense jet-engine sweep ("Unchained" physics). |
-| **Amp** | Brit Plexi 100 Jump | Vol Bright: 8.5, Vol Norm: 4.0 | Vol Bright: 8.5, Vol Norm: 4.0 | No Master Vol. Jumped channels blend bright attack with low-end body. Bass set to 3.0 to prevent sag/farting. |
-| **EQ** | Parametric-8 | *(See Multi-Guitar Specs Below)* | *(See Multi-Guitar Specs Below)* | Formant matching between Telecaster and ES-339 pickups. |
-| **Cab** | 412 Brit M25 | Mic A: Dyn 57 (Pos 0.5) | Mic A: Dyn 57 (Pos 0.5) | Simulates G12M 25W Greenbacks. 57 handles the bite, Ribbon adds physical cabinet weight. |
-| **Post-FX (Echo)**| Tape Delay | Bypass | Mix: 20%, Time: 300ms (Active) | Slap/thickening echo simulating EVH's Echoplex bombast. |
-| **Post-FX (Rev)** | Plate Reverb | Mix: 15%, Decay: 1.5s | Mix: 18%, Decay: 1.5s | Emulates the Sunset Sound Plate reverb chamber used on VH1. |
-| **Output** | Lane 1 Output | Level: 0.0dB | Level: +1.5dB (Right-Click) | Headroom Rule: Gain comes from Amp Vol; SPL boosts come from the Lane. |
+| **Input/Gate** | Global Gate (In 1) | Thresh: -55.0dB *(Right-Click > Assign)* | Thresh: -50.0dB *(Right-Click > Assign)* | Tighter gate on Lead to kill single-coil 60-cycle hum when not playing. |
+| **Pre-FX 1** | Phaser 95 | Bypass: ON *(Right-Click > Assign)* | Bypass: OFF *(Right-Click > Assign)* | Script-style phaser. Rate set to 25% for the classic "Eruption" slow sweep. |
+| **Pre-FX 2** | Parametric-8 | Band 1 (Low Shelf): +3.5dB @ 200Hz | Band 1: +3.5dB @ 200Hz | **Chameleon Strategy:** Adds massive low-mid body to thin single-coils to mimic a humbucker pushing the amp. |
+| **Amp** | Brit Plexi 100 Jump | Vol Norm: 8.5, Vol High: 8.0 | Vol Norm: 9.5, Vol High: 8.5 *(Right-Click > Assign)* | **No Master Volume.** Pushing the inputs simulates the Variac overdrive. Bass set to 3.0 to prevent sagging/farting. Mid: 7.5, Treb: 6.0, Pres: 6.5. |
+| **Cab** | 412 Brit Green | Mic: Dyn 57, Pos: 1.5, Dist: 1.0" | Mic: Dyn 57, Pos: 1.5, Dist: 1.0" | Off-center positioning tames the aggressive top-end bite of the Telecaster bridge pickup through the QSC CP12. |
+| **Post-EQ** | Parametric-8 | Band 8 (LPF): 4.5kHz, Band 4: +2dB @ 800Hz | Band 8 (LPF): 4.5kHz, Band 4: +4dB @ 800Hz | **Variac Simulation:** The LPF mimics the rounded-off highs of the low voltage, while the 800Hz boost provides the "chewy" midrange. |
+| **Post-FX** | Plate Reverb | Mix: 12%, Decay: 1.8s | Mix: 22%, Decay: 2.5s *(Right-Click > Assign)* | Emulates the Sunset Sound EMT 140 plate reverb. Pre-delay set to 20ms to preserve pick attack. |
+
+*To increase overall loudness for this preset without adding distortion, use the Lane Output Level slider at the far right of the grid.*
 
 ---
 
-### 9. Multi-Guitar Target Output
+### CONFIGURATION 2: Gibson ES-339 (Humbuckers)
+**Bank Mapping:** Row 2 (Scenes E-H)
+*Scene E: Rhythm | Scene F: Lead | Scene G: Dry/Comping | Scene H: Ambient/Phase*
 
-Due to the extreme difference in resonant frequency and output voltage between a Gibson ES-339 (PAF-style Humbuckers) and a Fender Telecaster (Single Coils), you **must** apply the following compensations to prevent the humbuckers from turning to mud, and the single coils from sounding thin/piercing.
+**Input Gain Logic:** The PAF-style humbuckers in the ES-339 hit the front of the Quad Cortex significantly harder, which can cause digital artifacts before the amp block.
+**Action:** Go to the Global Input Block (Circle 1) and set **In 1 Gain to -1.5dB**. 
 
-#### 🎸 Guitar 1: Gibson ES-339 (Humbuckers)
-*Targeting Row 2 (Scenes E-H)*
-EVH's original "Frankenstrat" utilized a PAF humbucker ripped from an ES-335. Your ES-339 is naturally close to the input voltage and midrange focus required.
-1.  **Global Input Pad:** Leave at **0.0dB**.
-2.  **Adaptive Gate:** Threshold set to **-60dB**. Humbuckers are inherently quieter regarding 60-cycle hum.
-3.  **EQ-8 Block Configuration:** 
-    *   **HPF (High Pass):** 80Hz (Tightens the low end, stopping the semi-hollow body resonance from flubbing the Plexi).
-    *   **Band 6 (Upper Mid):** +1.5dB at 2.5kHz (Adds pick attack clarity to combat humbucker warmth).
-    *   **LPF (Low Pass):** 6000Hz (Tames any digital fizz from the FRFR speaker).
-
-#### 🎸 Guitar 2: Fender Telecaster (Single Coils)
-*Targeting Row 1 (Scenes A-D)*
-Single coils lack the inductance to properly push the V1 preamp tube of a Plexi into "Brown Sound" territory. We must electronically simulate a humbucker's physical characteristics.
-1.  **Global Input Pad:** Increase to **+3.0dB**. This physically hits the amp block harder, creating the required saturation without changing the amp's tone stack.
-2.  **Adaptive Gate:** Threshold raised to **-52dB**. Single coils under this much gain will induce 60-cycle noise; the gate must work harder.
-3.  **EQ-8 Block Configuration:**
-    *   **Band 1 (Body Boost):** +3.5dB Low Shelf at 200Hz. (Critically important: adds the physical "thump" of a humbucker).
-    *   **Band 3 (Mid Push):** +2.0dB Peak at 800Hz. (Fills in the scooped midrange of a Telecaster).
-    *   **LPF (Low Pass):** 4500Hz. (Aggressively trims the "ice-pick" high frequencies typical of Tele bridge pickups when driving a Plexi).
+#### Table A.2: ES-339 Signal Chain (Scenes E-H)
+| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Input/Gate** | Global Gate (In 1) | Thresh: -62.0dB *(Right-Click > Assign)* | Thresh: -58.0dB *(Right-Click > Assign)* | Humbuckers are quieter at idle; lower threshold allows more sustain/bloom to bleed through the gate. |
+| **Pre-FX 1** | Phaser 95 | Bypass: ON *(Right-Click > Assign)* | Bypass: OFF *(Right-Click > Assign)* | Used for the "Ain't Talkin' 'Bout Love" swirling lead tone. Rate 25%. |
+| **Pre-FX 2** | Parametric-8 | Band 1: 0.0dB (Flat) | Band 1: 0.0dB (Flat) | ES-339 inherently provides the necessary low-mid push; no body boost required here. |
+| **Amp** | Brit Plexi 100 Jump | Vol Norm: 6.5, Vol High: 7.0 | Vol Norm: 7.5, Vol High: 8.5 *(Right-Click > Assign)* | **No Master Volume.** Volumes are backed off compared to the Telecaster because the humbuckers will compress and distort the Plexi model much earlier. |
+| **Cab** | 412 Brit Green | Mic: Dyn 57, Pos: 1.0, Dist: 1.5" | Mic: Dyn 57, Pos: 1.0, Dist: 1.5" | Positioned closer to the center cap (Pos 1.0) than the Telecaster, allowing the humbucker's natural top-end to cut through the mix. |
+| **Post-EQ** | Parametric-8 | Band 8 (LPF): 6.0kHz, Band 4: +1.5dB @ 800Hz | Band 8 (LPF): 6.0kHz, Band 4: +3.0dB @ 800Hz | **Variac Simulation:** LPF is set higher (6.0kHz) because humbuckers are naturally darker than single coils. |
+| **Post-FX** | Plate Reverb | Mix: 10%, Decay: 1.8s | Mix: 20%, Decay: 2.5s *(Right-Click > Assign)* | High-pass filter inside the Reverb block set to 200Hz to prevent the 339's low-end from making the reverb muddy. |
 
 ---
 
-### 6. Troubleshooting & Refinement Tree
-If testing through your QSC CP12 yields unsatisfactory results, execute the following in order:
-*   **"The low-end sounds like a broken speaker (Flubby/Farty)":** You are experiencing tube sag physics. Reduce the `Vol Normal` on the Amp block to 2.0, and drop the Amp `Bass` to 1.5. 
-*   **"The Phaser sounds too subtle":** Ensure the Phaser 95 block is physically placed *to the left* of the Amp block on the grid. EVH ran his phaser into the front of the amp; placing it post-amp will sound like an 80s studio sheen, not vintage VH.
-*   **"The tone is too fuzzy/harsh":** Lower the Global Input Gain by -3.0dB (simulating rolling off your guitar's volume pot). 
+### Troubleshooting & Refinement Tree
+If the tone sounds incorrect through your QSC CP12, follow this strict sequence:
+1. **Too Distorted/Fuzzy (Clipping)?**
+   * Lower the Input Block Gain by an additional -3.0dB. This mimics rolling off the volume knob on your guitar, cleaning up the front-end of the Plexi.
+2. **Too "Farty" or "Broken" in the low-end?**
+   * *Do not lower the Amp Volume.* Reduce the Amp Block "Bass" parameter in 0.5 increments. Plexi circuits are notoriously flubby when cranked; reducing bass tightens the power tube sag. 
+3. **Too Harsh/Piercing through the PA speaker?**
+   * Increase the "Position" parameter on the Cab block (move it from 1.0 closer to 2.0 or 3.0). This moves the virtual mic further to the edge of the speaker cone, organically rolling off high frequencies.
+4. **Volume Dropped Too Much?**
+   * Raise the Lane Output Level on the far right of the grid. **Never** use a compressor block to fix a volume issue; it will destroy the Variac dynamics.
 
 ---
 
-### 8. Preset Registry Protocol (Session Memory)
+### Session Library (Active Presets)
 
-**Session Library (Active Presets)**
-1. Preset Name: "Spoonful - ES339" [PREVIOUSLY LOGGED]
-2. Preset Name: "Brown Sound EVH 78"
-*   Target: Eddie Van Halen (1978).
-*   Guitars: Gibson ES-339 (Humbuckers) & Fender Telecaster (Single Coils).
-*   Physics Goal: Voltage-starved Plexi saturation, pre-amp modulation compression, non-master volume headroom control.
-*   Full Configuration:
-    *   Block 1 (Adaptive Gate): Noise Red [Rhy: 40% / Lead: 20%], Thresh [-60dB (ES339) / -52dB (Tele)], Decay [150ms].
-    *   Block 2 (Phaser 95): Bypass [Scenes A,C,D,E,G,H], Active [Scenes B/F], Rate [2.5], Mix [45%].
-    *   Block 3 (Flanger): Active [Scenes C/G], Rate [4.0], Width [70%], Regen [65%], Mix [50%].
-    *   Block 4 (Amp - Brit Plexi 100 Jump): Vol Norm [4.0], Vol Bright [8.5], Bass [3.0], Mid [6.5], Treble [7.0], Presence [7.5].
-    *   Block 5 (EQ-8 - Telecaster Profile): Input [+3.0dB], Low Shelf [+3.5dB @ 200Hz], Peak [+2.0dB @ 800Hz], LPF [4500Hz]. 
-    *   Block 5.1 (EQ-8 - ES-339 Profile): Input [0.0dB], HPF [80Hz], Peak [+1.5dB @ 2.5kHz], LPF [6000Hz].
-    *   Block 6 (Cab - 412 Brit M25): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 2.5"), Mix [A: 0dB, B: -2dB].
-    *   Block 7 (Tape Delay): Bypass [Rhy], Active [Lead], Mix [20%], Time [300ms], Fdbk [25%].
-    *   Block 8 (Plate Reverb): Mix [15% / Lead: 18%], Decay [1.5s], Pre-Delay [20ms], HP [150Hz], LP [4000Hz].
-    *   Output: Lane 1 Output [Rhy: 0.0dB / Lead: +1.5dB].
+**2. Preset Name: "Brown Sound - Multi-Strat"**
+*   **Target:** Van Halen I Era (1978).
+*   **Guitars:** Fender Telecaster (SC) / Gibson ES-339 (HB).
+*   **Physics Goal:** Simulate Variac voltage drop (sag/mid-push) into a jumped Plexi out to a flat-response PA speaker.
+*   **Full Configuration:**
+    *   **Block 1 (Global Gate):** Thresh [Tele: -55dB Rhy / -50dB Lead] | [339: -62dB Rhy / -58dB Lead].
+    *   **Block 2 (Phaser 95):** Rate [25%], Sync [Off]. Bypass assigned to Scenes.
+    *   **Block 3 (Parametric-8 Pre):** Band 1 Low Shelf [Tele: +3.5dB @ 200Hz | 339: 0.0dB @ 200Hz]. Band 2-8 [Flat].
+    *   **Block 4 (Amp - Brit Plexi 100 Jump):** Vol Norm [Tele: 8.5 Rhy, 9.5 Lead | 339: 6.5 Rhy, 7.5 Lead], Vol High [Tele: 8.0 Rhy, 8.5 Lead | 339: 7.0 Rhy, 8.5 Lead], Bass [3.0], Mid [7.5], Treble [6.0], Presence [6.5].
+    *   **Block 5 (Cab - 412 Brit Green):** Mic A (Dyn 57), Pos [Tele: 1.5 | 339: 1.0], Dist [Tele: 1.0" | 339: 1.5"], Center [0].
+    *   **Block 6 (Parametric-8 Post):** LPF [Tele: 4500Hz | 339: 6000Hz], Band 4 Peak [+2.0dB Rhy, +4.0dB Lead @ 800Hz, Q: 1.5].
+    *   **Block 7 (Plate Reverb):** Mix [10-12% Rhy / 20-22% Lead], Decay [1.8s Rhy / 2.5s Lead], Pre-delay [20ms], HPF [200Hz], LPF [4000Hz].

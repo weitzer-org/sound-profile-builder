@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -98,15 +99,29 @@ func main() {
 
 	// The 12-Point Evaluation Suite
 	evalQueries := map[string]string{
-		"01_SRV_Clean":   "Stevie Ray Vaughan 'Texas Flood' tone. Vintage single coil Strat. Needs clean Tube Screamer edge.",
-		"02_Metal_Rhythm": "Modern high-gain metal rhythm. Tight low end, scooped mids, like a Peavey 5150.",
-		"03_Ambient_Lead": "Ambient, spacey lead tone with lots of modulated delay and plate reverb. Think David Gilmour.",
-		"04_Classic_Rock": "Classic 70s rock crunch. Marshall Plexi style, humbuckers, warm and punchy.",
+		"01_SRV_Clean":   "Clean funk blues tone. Stevie Ray Vaughan style with high headroom. Wants to push it with a TS808.",
+		"02_Chicago_Blues": "Chicago Blues style. Warm Chess Records style overdrive into a small combo amp. Slightly gritty but clean platform.",
+		"03_British_Invasion": "Early British Invasion tone. Vox AC30/JTM45 chime and edge of breakup. Punchy mids, sparkle.",
+		"04_Southern_Rock": "Southern Rock slide style. Dual lead humbuckers into a cranked American Tweed amp. Singing sustain.",
+		"05_Clapton":      "Vintage Cream-era Clapton tone. Rolled-off Les Paul tone knobs into a cranked Marshall.",
+		"06_Gilmour":      "David Gilmour preset using a Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, and a massive Plate Reverb.",
+		"07_Edge":         "The Edge style chime. 1964 Vox AC30 edge-of-breakup with rhythmic dotted-eighth delays.",
+		"08_EVH":          "Van Halen Brown Sound. Hot-rodded 1968 Marshall Plexi, variac sag, plate reverb.",
+		"09_BB_King":      "BB King Lucile tone. High-headroom American Twin Reverb clean platform.",
+		"10_Slash":         "Guns N' Roses Slash lead. Les Paul neck pickup into a hot JCM800 with standard delay.",
+		"11_Mayer_Lead":   "John Mayer Trio Lead. Smooth Two-Rock/Dumble platform, mid-scooped clean with a subtle drive push.",
+		"12_Bonamassa":     "Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.",
+	}
+
+	targetModel := os.Getenv("TARGET_MODEL")
+	if targetModel == "" {
+		targetModel = "gemini-3.1-pro-preview"
 	}
 
 	// Ensure our results directory exists
-	if err := os.MkdirAll("eval_results", 0755); err != nil {
-		log.Fatalf("Failed to create eval_results directory: %v", err)
+	resultsDir := filepath.Join("eval_results", targetModel)
+	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+		log.Fatalf("Failed to create results directory: %v", err)
 	}
 
 	// 1. Fetch Secure Credentials
@@ -134,6 +149,16 @@ func main() {
 
 	var wg sync.WaitGroup
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
+
+	agentOverrides := make(map[string]string)
+	if envOverrides := os.Getenv("AGENT_OVERRIDES"); envOverrides != "" {
+		for _, pair := range strings.Split(envOverrides, ",") {
+			kv := strings.Split(pair, "=")
+			if len(kv) == 2 {
+				agentOverrides[kv[0]] = kv[1]
+			}
+		}
+	}
 	
 	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
 	// Initialize GCS Client for Preset Preservation
@@ -156,6 +181,13 @@ func main() {
 		go func(name, query string) {
 			defer wg.Done()
 			defer func() { <-sem }()
+			
+			outDir := filepath.Join("eval_results", targetModel)
+			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
+				outDir = filepath.Join("eval_results", targetModel, "ablation", subDir)
+			}
+			os.MkdirAll(outDir, 0755)
+
 		log.Printf("\n=============================================")
 		log.Printf("▶ EXECUTING EVAL: %s", name)
 		log.Printf("=============================================")
@@ -169,18 +201,13 @@ func main() {
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 		}
 
-		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints)
+		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints, agentOverrides, nil)
 		if err != nil {
 			log.Printf("❌ Multi-Agent Pipeline failed for %s: %v", name, err)
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
-			outDir := "eval_results"
-			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
-				outDir = fmt.Sprintf("eval_results/ablation/%s", subDir)
-				os.MkdirAll(outDir, 0755)
-			}
-			err = os.WriteFile(fmt.Sprintf("%s/%s_multi.html", outDir, name), []byte(multiAgentResult), 0644)
+			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_multi.html", name)), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 
 			// Save to GCS
@@ -223,7 +250,7 @@ func main() {
 			return
 		}
 
-		model := client.GenerativeModel("gemini-3.1-pro-preview")
+		model := client.GenerativeModel(targetModel)
 		model.SystemInstruction = &genai.Content{
 			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
 		}
@@ -239,7 +266,7 @@ func main() {
 			totalMonoInput.Add(int64(usageMono.PromptTokenCount))
 			totalMonoOutput.Add(int64(usageMono.CandidatesTokenCount))
 			
-			err = os.WriteFile(fmt.Sprintf("eval_results/%s_mono.md", name), []byte(monolithicResult), 0644)
+			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_mono.md", name)), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
 		client.Close()

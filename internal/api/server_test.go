@@ -59,8 +59,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	if rrSuccess.Code != http.StatusOK {
 		t.Errorf("Expected 200 OK, got: %d", rrSuccess.Code)
 	}
-	if !strings.Contains(rrSuccess.Body.String(), "Finalize Save") {
-		t.Errorf("Expected response to contain 'Finalize Save' button")
+	if !strings.Contains(rrSuccess.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling button")
 	}
 
 	// 3. Secret Fetcher Error
@@ -82,8 +82,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqOrchGen.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrOrchGen := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrOrchGen, reqOrchGen)
-	if rrOrchGen.Code != http.StatusInternalServerError {
-		t.Errorf("Expected 500 on orch init fail")
+	if !strings.Contains(rrOrchGen.Body.String(), "Initializing ADK Pipeline") {
+		t.Errorf("Expected polling button for orch init fail async")
 	}
 	
 	// 5. Orchestrator Execution Pipeline Error
@@ -93,8 +93,8 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqPipe.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrPipe := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrPipe, reqPipe)
-	if !strings.Contains(rrPipe.Body.String(), `pipeline execution fail`) {
-		t.Errorf("Expected string 'pipeline execution fail'")
+	if !strings.Contains(rrPipe.Body.String(), "Initializing ADK Pipeline") {
+		t.Errorf("Expected polling button for pipeline fail async")
 	}
 	mockOrch.err = nil
 
@@ -109,17 +109,85 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	reqBadJson.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
 	rrBadJson := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrBadJson, reqBadJson)
-	if !strings.Contains(rrBadJson.Body.String(), `Serialization Error`) {
-		t.Errorf("Expected Serialization Error message")
+	if rrBadJson.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK on bad json spawn, got: %d", rrBadJson.Code)
+	}
+	if !strings.Contains(rrBadJson.Body.String(), `hx-get="/api/preset/status`) {
+		t.Errorf("Expected response to contain polling area")
 	}
 	mockOrch2.err = nil
 }
 
 type badJsonOrchestrator struct{}
-func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *agents.TokenUsage, error) {
+func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) Close() {}
+
+func TestServer_HandleTaskStatus(t *testing.T) {
+	s, _, _, _ := setupTestServer()
+
+	// 1. Missing ID
+	reqNoID, _ := http.NewRequest(http.MethodGet, "/api/preset/status", nil)
+	rrNoID := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrNoID, reqNoID)
+	if rrNoID.Code != http.StatusBadRequest {
+		t.Errorf("Expected 400 for missing ID")
+	}
+
+	// 2. Task Not Found
+	reqNotFound, _ := http.NewRequest(http.MethodGet, "/api/preset/status?id=missing", nil)
+	rrNotFound := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrNotFound, reqNotFound)
+	if rrNotFound.Code != http.StatusNotFound {
+		t.Errorf("Expected 404 for task not found")
+	}
+
+	// 3. Task Running
+	s.tasksMu.Lock()
+	s.tasks["task-1"] = &TaskState{Status: "running", Phase: "Testing"}
+	s.tasksMu.Unlock()
+
+	reqRunning, _ := http.NewRequest(http.MethodGet, "/api/preset/status?id=task-1", nil)
+	rrRunning := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrRunning, reqRunning)
+	if rrRunning.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for running task")
+	}
+	if !strings.Contains(rrRunning.Body.String(), "Testing") {
+		t.Errorf("Expected response to contain phase 'Testing'")
+	}
+
+	// 4. Task Complete
+	s.tasksMu.Lock()
+	s.tasks["task-1"].Status = "complete"
+	s.tasks["task-1"].Result = "<div>Done</div>"
+	s.tasksMu.Unlock()
+
+	rrComplete := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrComplete, reqRunning)
+	if rrComplete.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for complete task")
+	}
+	if !strings.Contains(rrComplete.Body.String(), "Done") {
+		t.Errorf("Expected response to contain result 'Done'")
+	}
+
+	// 5. Task Error
+	s.tasksMu.Lock()
+	s.tasks["task-1"].Status = "error"
+	s.tasks["task-1"].Error = "some error"
+	s.tasksMu.Unlock()
+
+	rrError := httptest.NewRecorder()
+	s.handleTaskStatus().ServeHTTP(rrError, reqRunning)
+	if rrError.Code != http.StatusOK {
+		t.Errorf("Expected 200 OK for error task (returns error UI)")
+	}
+	if !strings.Contains(rrError.Body.String(), "some error") {
+		t.Errorf("Expected response to contain error 'some error'")
+	}
+}

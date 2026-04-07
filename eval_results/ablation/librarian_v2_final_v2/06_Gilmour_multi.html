@@ -1,0 +1,168 @@
+```json
+{
+  "builder_statement": "A sprawling, Gilmour-inspired vintage tone utilizing a high-headroom Hiwatt D103 platform. To counteract the inherent mid-scoop of the Fuzz Pi, a parametric EQ is engaged simultaneously with the fuzz to push the 650Hz band, preventing the lead scene from getting buried. The signal is capped with an expansive 480ms delay and a massive studio plate reverb for cinematic width.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Gate & Input / In</td><td>Threshold: -65dB<br>Pre-EQ LPF: 7.5kHz (Overridden)<br>Input Gain: -3.0dB</td><td>Threshold: -65dB<br>Pre-EQ LPF: 7.5kHz (Overridden)<br>Input Gain: -3.0dB</td></tr><tr><td>Fuzz / Fuzz Pi</td><td><strong>Bypassed</strong></td><td><strong>Active</strong><br>Sustain: 7.0<br>Tone: 5.0<br>Volume: 5.5</td></tr><tr><td>EQ / Parametric-3</td><td><strong>Bypassed</strong></td><td><strong>Active</strong><br>Mid Freq: 650Hz<br>Mid Gain: +4.0dB</td></tr><tr><td>Amplifier / Watt D103 Normal</td><td><strong>Active</strong><br>Normal Vol: 5.5<br>Bright Vol: 2.0<br>Master: 6.0<br>B: 3.0 | M: 6.5 | T: 6.0</td><td><strong>Active</strong><br>Normal Vol: 5.5<br>Bright Vol: 2.0<br>Master: 6.0<br>B: 3.0 | M: 6.5 | T: 6.0</td></tr><tr><td>Cabinet / 412 Watt S4123</td><td><strong>Active</strong><br>Mic 1 (U87): 80% Blend<br>Mic 2 (121): 20% Blend</td><td><strong>Active</strong><br>Mic 1 (U87): 80% Blend<br>Mic 2 (121): 20% Blend</td></tr><tr><td>Delay / Analog Delay</td><td><strong>Active</strong><br>Time: 480ms<br>Mix: 15%</td><td><strong>Active</strong><br>Time: 480ms<br>Mix: 25%</td></tr><tr><td>Reverb / Studio Plate 70 (ST)</td><td><strong>Active</strong><br>Decay: 3.0s<br>Mix: 25%</td><td><strong>Active</strong><br>Decay: 5.5s<br>Mix: 40%</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Gate & Input / In</td><td>Threshold: -65dB<br>Pre-EQ LPF: 7.0kHz (Overridden)<br>Input Gain: -3.0dB</td><td>Threshold: -65dB<br>Pre-EQ LPF: 7.0kHz (Overridden)<br>Input Gain: -3.0dB</td></tr><tr><td>Fuzz / Fuzz Pi</td><td><strong>Bypassed</strong></td><td><strong>Active</strong><br>Sustain: 8.5<br>Tone: 4.0<br>Volume: 6.5</td></tr><tr><td>EQ / Parametric-3</td><td><strong>Bypassed</strong></td><td><strong>Active</strong><br>Mid Freq: 650Hz<br>Mid Gain: +4.0dB</td></tr><tr><td>Amplifier / Watt D103 Normal</td><td><strong>Active</strong><br>Normal Vol: 6.5<br>Bright Vol: 1.5<br>Master: 7.5<br>B: 4.5 | M: 6.0 | T: 4.5</td><td><strong>Active</strong><br>Normal Vol: 6.5<br>Bright Vol: 1.5<br>Master: 7.5<br>B: 4.5 | M: 6.0 | T: 4.5</td></tr><tr><td>Cabinet / 412 Watt S4123</td><td><strong>Active</strong><br>Mic 1 (U87): 50% Blend<br>Mic 2 (121): 50% Blend</td><td><strong>Active</strong><br>Mic 1 (U87): 50% Blend<br>Mic 2 (121): 50% Blend</td></tr><tr><td>Delay / Analog Delay</td><td><strong>Active</strong><br>Time: 480ms<br>Mix: 15%</td><td><strong>Active</strong><br>Time: 480ms<br>Mix: 25%</td></tr><tr><td>Reverb / Studio Plate 70 (ST)</td><td><strong>Active</strong><br>Decay: 3.0s<br>Mix: 25%</td><td><strong>Active</strong><br>Decay: 5.5s<br>Mix: 40%</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-gate",
+          "type": "Noise Gate",
+          "model": "Input Gate",
+          "parameters": [
+            {"name": "Threshold", "type": "knob", "value": "-65dB"},
+            {"name": "LPF", "type": "knob", "value": "7.5kHz"}
+          ]
+        },
+        {
+          "id": "block-fuzz",
+          "type": "Fuzz",
+          "model": "Fuzz Pi",
+          "parameters": [
+            {"name": "Sustain", "type": "knob", "value": "7.0"},
+            {"name": "Tone", "type": "knob", "value": "5.0"},
+            {"name": "Volume", "type": "knob", "value": "5.5"}
+          ]
+        },
+        {
+          "id": "block-eq",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Mid Freq", "type": "knob", "value": "650Hz"},
+            {"name": "Mid Gain", "type": "knob", "value": "+4.0dB"}
+          ]
+        },
+        {
+          "id": "block-amp",
+          "type": "Amplifier",
+          "model": "Watt D103 Normal",
+          "parameters": [
+            {"name": "Normal Vol", "type": "knob", "value": "5.5"},
+            {"name": "Bright Vol", "type": "knob", "value": "2.0"},
+            {"name": "Master", "type": "knob", "value": "6.0"},
+            {"name": "Bass", "type": "knob", "value": "3.0"},
+            {"name": "Middle", "type": "knob", "value": "6.5"},
+            {"name": "Treble", "type": "knob", "value": "6.0"}
+          ]
+        },
+        {
+          "id": "block-cab",
+          "type": "Cabinet",
+          "model": "412 Watt S4123",
+          "parameters": [
+            {"name": "Mic 1", "type": "selector", "value": "U87"},
+            {"name": "Mic 2", "type": "selector", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "knob", "value": "80/20"}
+          ]
+        },
+        {
+          "id": "block-delay",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Time", "type": "knob", "value": "480ms"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-reverb",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "knob", "value": "5.5s"},
+            {"name": "Mix", "type": "knob", "value": "40%"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-gate",
+          "type": "Noise Gate",
+          "model": "Input Gate",
+          "parameters": [
+            {"name": "Threshold", "type": "knob", "value": "-65dB"},
+            {"name": "LPF", "type": "knob", "value": "7.0kHz"}
+          ]
+        },
+        {
+          "id": "block-fuzz",
+          "type": "Fuzz",
+          "model": "Fuzz Pi",
+          "parameters": [
+            {"name": "Sustain", "type": "knob", "value": "8.5"},
+            {"name": "Tone", "type": "knob", "value": "4.0"},
+            {"name": "Volume", "type": "knob", "value": "6.5"}
+          ]
+        },
+        {
+          "id": "block-eq",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Mid Freq", "type": "knob", "value": "650Hz"},
+            {"name": "Mid Gain", "type": "knob", "value": "+4.0dB"}
+          ]
+        },
+        {
+          "id": "block-amp",
+          "type": "Amplifier",
+          "model": "Watt D103 Normal",
+          "parameters": [
+            {"name": "Normal Vol", "type": "knob", "value": "6.5"},
+            {"name": "Bright Vol", "type": "knob", "value": "1.5"},
+            {"name": "Master", "type": "knob", "value": "7.5"},
+            {"name": "Bass", "type": "knob", "value": "4.5"},
+            {"name": "Middle", "type": "knob", "value": "6.0"},
+            {"name": "Treble", "type": "knob", "value": "4.5"}
+          ]
+        },
+        {
+          "id": "block-cab",
+          "type": "Cabinet",
+          "model": "412 Watt S4123",
+          "parameters": [
+            {"name": "Mic 1", "type": "selector", "value": "U87"},
+            {"name": "Mic 2", "type": "selector", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "knob", "value": "50/50"}
+          ]
+        },
+        {
+          "id": "block-delay",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Time", "type": "knob", "value": "480ms"},
+            {"name": "Mix", "type": "knob", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-reverb",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "knob", "value": "5.5s"},
+            {"name": "Mix", "type": "knob", "value": "40%"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Set the bedrock for a Pink Floyd-style tone by selecting the Hiwatt Custom 100 amplifier, a WEM 4x12, and a Ram's Head Big Muff.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the core texture of the distortion as Symmetric Silicon Clipping and targeted a 2500Hz tonal peak to guide the mid-focus.",
+    "<strong>Agent 3 (Forum Scraper):</strong> Provided critical community warnings regarding the Big Muff's mid-scoop disappearing in a mix, leading to the crucial post-fuzz EQ boost.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the conceptual gear to exact native blocks, enforcing the 'Watt D103 Normal', '412 Watt S4123', and 'Parametric-3'.",
+    "<strong>Agent 5 (Navigator):</strong> Complied precisely with user constraints by ensuring zero reliance on Cortex Cloud captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Provided baseline EQ and gain settings. I explicitly *overrode* their extreme 4.0kHz LPF suggestion to a more genre-appropriate 7.5kHz to preserve high-end sparkle per system rules.",
+    "<strong>Agent 7 (Transducer):</strong> Designed a dual-mic array using a Neumann U87 for crisp attack and a Ribbon 121 to add warmth and tame high-frequency fizz from the fuzz.",
+    "<strong>Agent 8 (FOH):</strong> Framed the patch perfectly within a mix context by applying a master 100Hz HPF / 7500Hz LPF and padding the output by -4.0dB to preserve headroom.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Dialed in the expansive spatial elements by defining a 480ms delay time and pushing the reverb decay up to 5.5s in the lead scene.",
+    "<strong>Agent 10 (Map):</strong> Handled the logic orchestration linking the Parametric-3 EQ block's activation state to the Fuzz Pi block so the mid-boost only occurs during the lead scene.",
+    "<strong>Agent 11 (DSP):</strong> Structured the parallel processing layout, placing saturation and EQ in Lane 1 while offloading the cab and heavy spatial effects to Lane 2 to avoid processor congestion and muddiness."
+  ]
+}
+```

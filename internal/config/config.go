@@ -6,10 +6,11 @@ import (
 )
 
 type AppConfig struct {
-	SingleAmpMode      bool   `json:"single_amp_mode"`
-	AllowCloudCaptures bool   `json:"allow_cloud_captures"`
-	ProjectID          string `json:"project_id"`
-	BucketName         string `json:"bucket_name"`
+	SingleAmpMode      bool              `json:"single_amp_mode"`
+	AllowCloudCaptures bool              `json:"allow_cloud_captures"`
+	ProjectID          string            `json:"project_id"`
+	BucketName         string            `json:"bucket_name"`
+	AgentPrompts       map[string]string `json:"agent_prompts"`
 }
 
 func LoadConfig(path string) (*AppConfig, error) {

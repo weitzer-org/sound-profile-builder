@@ -1,0 +1,161 @@
+```json
+{
+  "builder_statement": "Built to capture the massive, articulate tone of a Dumble Overdrive Special pushed by a Klon-style drive. Relying entirely on native blocks due to cloud restrictions, the Dumbbell ODS and an EVM12L cabinet form a high-headroom foundation. A post-amp parametric EQ mimics a thick, multi-amp blend, while a classic plate reverb and analog delay provide the signature dark, ambient lead trails.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Input & Noise Gate</td><td>Gain: -3.0dB, Gate: -60dB</td><td>Gain: -3.0dB, Gate: -60dB</td></tr><tr><td>Overdrive - Myth Drive</td><td>Bypassed</td><td>Engaged (Drive: 2.0, Level: 8.5)</td></tr><tr><td>Overdrive - Green 808</td><td>Bypassed (Tone < 5.0)</td><td>Bypassed (Tone < 5.0)</td></tr><tr><td>Amplifier - Dumbbell ODS</td><td>Engaged (Gain: 4.0, Bass: 3.0, Mid: 7.0, Treble: 5.5)</td><td>Engaged (Gain: 6.0, Bass: 3.0, Mid: 7.0, Treble: 5.5)</td></tr><tr><td>Cabinet - 212 Too Rock EV</td><td>Engaged (Mic 1: SM57 Cap Edge, Mic 2: R121 Cone, Blend: 75/25)</td><td>Engaged (Mic 1: SM57 Cap Edge, Mic 2: R121 Cone, Blend: 75/25)</td></tr><tr><td>EQ - Parametric-8</td><td>Engaged (200Hz Shelf: -3dB, 800Hz Boost, LPF: 5.0kHz)</td><td>Engaged (200Hz Shelf: -3dB, 800Hz Boost, LPF: 5.0kHz)</td></tr><tr><td>Delay - Analog Delay</td><td>Bypassed</td><td>Engaged (Time: 400ms, Feedback: 15%, Mix: 25%)</td></tr><tr><td>Reverb - Studio Plate 70 (ST)</td><td>Engaged (Mix: 20%)</td><td>Engaged (Mix: 25%)</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th>Effect Type & Name</th><th>Scene A (Rhythm)</th><th>Scene B (Lead)</th></tr></thead><tbody><tr><td>Input & Noise Gate</td><td>Gain: 0.0dB, Gate: -60dB</td><td>Gain: 0.0dB, Gate: -60dB</td></tr><tr><td>Overdrive - Myth Drive</td><td>Bypassed</td><td>Engaged (Drive: 2.0, Level: 8.5)</td></tr><tr><td>Overdrive - Green 808</td><td>Bypassed (Tone < 5.0)</td><td>Bypassed (Tone < 5.0)</td></tr><tr><td>Amplifier - Dumbbell ODS</td><td>Engaged (Gain: 4.0, Bass: 5.5, Mid: 7.0, Treble: 5.0)</td><td>Engaged (Gain: 6.0, Bass: 5.5, Mid: 7.0, Treble: 5.0)</td></tr><tr><td>Cabinet - 212 Too Rock EV</td><td>Engaged (Mic 1: SM57 Cap Edge, Mic 2: R121 Cone, Blend: 75/25)</td><td>Engaged (Mic 1: SM57 Cap Edge, Mic 2: R121 Cone, Blend: 75/25)</td></tr><tr><td>EQ - Parametric-8</td><td>Engaged (800Hz Boost, LPF: 5.0kHz)</td><td>Engaged (800Hz Boost, LPF: 5.0kHz)</td></tr><tr><td>Delay - Analog Delay</td><td>Bypassed</td><td>Engaged (Time: 400ms, Feedback: 15%, Mix: 25%)</td></tr><tr><td>Reverb - Studio Plate 70 (ST)</td><td>Engaged (Mix: 20%)</td><td>Engaged (Mix: 25%)</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Overdrive",
+          "model": "Myth Drive",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "2.0"},
+            {"name": "Level", "type": "slider", "value": "8.5"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            {"name": "Tone", "type": "slider", "value": "4.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Dumbbell ODS",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "6.0"},
+            {"name": "Bass", "type": "slider", "value": "3.0"},
+            {"name": "Mid", "type": "slider", "value": "7.0"},
+            {"name": "Treble", "type": "slider", "value": "5.5"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "slider", "value": "75"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "EQ",
+          "model": "Parametric-8",
+          "parameters": [
+            {"name": "Band 1", "type": "dropdown", "value": "200Hz Shelf -3dB"},
+            {"name": "Band 4", "type": "dropdown", "value": "800Hz Boost"},
+            {"name": "High Cut", "type": "dropdown", "value": "5.0kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Time", "type": "slider", "value": "400ms"},
+            {"name": "Feedback", "type": "slider", "value": "15%"},
+            {"name": "Mix", "type": "slider", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Mix", "type": "slider", "value": "25%"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Overdrive",
+          "model": "Myth Drive",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "2.0"},
+            {"name": "Level", "type": "slider", "value": "8.5"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            {"name": "Tone", "type": "slider", "value": "4.0"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Dumbbell ODS",
+          "parameters": [
+            {"name": "Gain", "type": "slider", "value": "6.0"},
+            {"name": "Bass", "type": "slider", "value": "5.5"},
+            {"name": "Mid", "type": "slider", "value": "7.0"},
+            {"name": "Treble", "type": "slider", "value": "5.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "slider", "value": "75"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "EQ",
+          "model": "Parametric-8",
+          "parameters": [
+            {"name": "Band 4", "type": "dropdown", "value": "800Hz Boost"},
+            {"name": "High Cut", "type": "dropdown", "value": "5.0kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Delay",
+          "model": "Analog Delay",
+          "parameters": [
+            {"name": "Time", "type": "slider", "value": "400ms"},
+            {"name": "Feedback", "type": "slider", "value": "15%"},
+            {"name": "Mix", "type": "slider", "value": "25%"}
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Mix", "type": "slider", "value": "25%"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone):</strong> Established the foundational Dumble Overdrive Special, TS808/Klon pairing, and EVM12L speaker target.",
+    "<strong>Agent 2 (Sonic):</strong> Defined the 750Hz mid-push, asymmetric tube clipping flavor, and enforced a -60dB noise gate.",
+    "<strong>Agent 3 (Scraper):</strong> Warned about boomy humbuckers, recommended an 8-band EQ for multi-amp thickness, and specified exact tone limits for the Green 808.",
+    "<strong>Agent 4 (Librarian):</strong> Replaced cloud dependencies with native gear, enforcing 'Dumbbell ODS' and '212 Too Rock EV' as mandatory blocks.",
+    "<strong>Agent 5 (Navigator):</strong> Verified block availability and rigidly applied the user's explicit ban on cloud sourcing.",
+    "<strong>Agent 6 (Acoustician):</strong> Calculated input gain cuts and baseline amp EQ. Crucially, the Architect overrode their 4.5kHz LPF advice to 5.0kHz to preserve rock genre norms and high-end clarity.",
+    "<strong>Agent 7 (Transducer):</strong> Configured the dual mic setup, pairing the Dynamic 57 and Ribbon 121 with a 75/25 blend.",
+    "<strong>Agent 8 (FOH):</strong> Directed global lane EQ bounding (120Hz HPF, 7.5kHz LPF) and finalized output staging.",
+    "<strong>Agent 9 (Mix):</strong> Established foundational spatial dimensions with guidelines for delay and plate reverb decay.",
+    "<strong>Agent 10 (Map):</strong> Translated requests into specific Scene A (Rhythm) and Scene B (Lead) parameter values, dictating exactly when the Klon-style push engages.",
+    "<strong>Agent 11 (DSP):</strong> Structured the signal flow into two lanes, ensuring drives remained pre-amp while pushing time-based effects and the Parametric EQ post-amp."
+  ]
+}
+```

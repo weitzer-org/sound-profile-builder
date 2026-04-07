@@ -1,0 +1,148 @@
+```json
+{
+  "builder_statement": "Built to deliver a vocal, mid-forward Dumble-style overdrive tone inspired by classic blues-rock. I paired the Dumbbell ODS with the 212 Too Rock EV cabinet and a Klon-style push for singing leads. Per safety rails, I explicitly overrode the Acoustician's overly dark 4.5kHz LPF up to 6.5kHz to preserve genre-appropriate articulation.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th style='border: 1px solid #ccc; padding: 8px;'>Effect Type & Name</th><th style='border: 1px solid #ccc; padding: 8px;'>Scene A (Rhythm)</th><th style='border: 1px solid #ccc; padding: 8px;'>Scene B (Lead)</th></tr></thead><tbody><tr><td style='border: 1px solid #ccc; padding: 8px;'>Overdrive: Green 808</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Boost: Myth Drive</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Drive: 1.5, Level: 7.5)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Amplifier: Dumbbell ODS</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (OD Channel, PAB: On, Bass: 3.0, Mid: 7.0, Treble: 6.0)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (OD Channel, PAB: On, Bass: 3.0, Mid: 7.0, Treble: 6.0)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Cab: 212 Too Rock EV</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (57 On-Axis / 121 Off-Axis, 50/50 Blend)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (57 On-Axis / 121 Off-Axis, 50/50 Blend)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>EQ: Parametric-3</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (200Hz Shelf: -3dB, 2kHz Notch: -3dB, LPF: 6.5kHz)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (200Hz Shelf: -3dB, 2kHz Notch: -3dB, LPF: 6.5kHz)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Reverb: Studio Plate 70 (ST)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Mix: 12%, Decay: 1.5s)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Mix: 22%, Decay: 1.5s)</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'><thead><tr><th style='border: 1px solid #ccc; padding: 8px;'>Effect Type & Name</th><th style='border: 1px solid #ccc; padding: 8px;'>Scene A (Rhythm)</th><th style='border: 1px solid #ccc; padding: 8px;'>Scene B (Lead)</th></tr></thead><tbody><tr><td style='border: 1px solid #ccc; padding: 8px;'>Overdrive: Green 808</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Boost: Myth Drive</td><td style='border: 1px solid #ccc; padding: 8px;'>Bypassed</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Drive: 2.5, Level: 7.5)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Amplifier: Dumbbell ODS</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (OD Channel, PAB: On, Bass: 5.0, Mid: 7.0, Treble: 4.5)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (OD Channel, PAB: On, Bass: 5.0, Mid: 7.0, Treble: 4.5)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Cab: 212 Too Rock EV</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (57 On-Axis / 121 Off-Axis, 35/65 Blend favoring 121)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (57 On-Axis / 121 Off-Axis, 35/65 Blend favoring 121)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>EQ: Parametric-3</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (200Hz Shelf: 0dB, 2kHz Notch: -2dB, LPF: 6.5kHz)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (200Hz Shelf: 0dB, 2kHz Notch: -2dB, LPF: 6.5kHz)</td></tr><tr><td style='border: 1px solid #ccc; padding: 8px;'>Reverb: Studio Plate 70 (ST)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Mix: 12%, Decay: 1.5s)</td><td style='border: 1px solid #ccc; padding: 8px;'>Engaged (Mix: 22%, Decay: 1.5s)</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            {"name": "Bypass", "type": "switch", "value": "Off"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Overdrive",
+          "model": "Myth Drive",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "1.5"},
+            {"name": "Level", "type": "slider", "value": "7.5"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Dumbbell ODS",
+          "parameters": [
+            {"name": "Channel", "type": "switch", "value": "OD"},
+            {"name": "PAB", "type": "switch", "value": "On"},
+            {"name": "Bass", "type": "slider", "value": "3.0"},
+            {"name": "Mid", "type": "slider", "value": "7.0"},
+            {"name": "Treble", "type": "slider", "value": "6.0"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "slider", "value": "50.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Low Shelf", "type": "slider", "value": "200Hz -3.0dB"},
+            {"name": "Mid Notch", "type": "slider", "value": "2kHz"},
+            {"name": "High Cut", "type": "slider", "value": "6.5kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "1.5s"},
+            {"name": "Mix Scene A", "type": "slider", "value": "12%"},
+            {"name": "Mix Scene B", "type": "slider", "value": "22%"}
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            {"name": "Bypass", "type": "switch", "value": "Off"}
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Overdrive",
+          "model": "Myth Drive",
+          "parameters": [
+            {"name": "Drive", "type": "slider", "value": "2.5"},
+            {"name": "Level", "type": "slider", "value": "7.5"}
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "Dumbbell ODS",
+          "parameters": [
+            {"name": "Channel", "type": "switch", "value": "OD"},
+            {"name": "PAB", "type": "switch", "value": "On"},
+            {"name": "Bass", "type": "slider", "value": "5.0"},
+            {"name": "Mid", "type": "slider", "value": "7.0"},
+            {"name": "Treble", "type": "slider", "value": "4.5"}
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cabinet",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {"name": "Mic 1", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 2", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Blend", "type": "slider", "value": "35.0"}
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            {"name": "Low Shelf", "type": "slider", "value": "200Hz 0.0dB"},
+            {"name": "Mid Notch", "type": "slider", "value": "2kHz"},
+            {"name": "High Cut", "type": "slider", "value": "6.5kHz"}
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "Reverb",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {"name": "Decay", "type": "slider", "value": "1.5s"},
+            {"name": "Mix Scene A", "type": "slider", "value": "12%"},
+            {"name": "Mix Scene B", "type": "slider", "value": "22%"}
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone):</strong> Requested a foundation built on a Dumble Overdrive Special 100W paired with Klon/TS808 pushes and a classic EVM12L speaker cab.",
+    "<strong>Agent 2 (Sonic):</strong> Outlined core frequency attributes including an 800Hz midrange peak, asymmetric clipping, and vintage plate ambiance.",
+    "<strong>Agent 3 (Scraper):</strong> Brought crucial community warnings to keep the amplifier Bass parameter extremely low (for Gibson guitars) and to surgically notch out 2kHz harshness when stacking the Klon style drive.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the user request to exact native DSP blocks: Dumbbell ODS, 212 Too Rock EV, Myth Drive, and Parametric-3 EQ.",
+    "<strong>Agent 5 (Navigator):</strong> Disabled cloud captures, ensuring the final rig remains natively self-contained using internal models only.",
+    "<strong>Agent 6 (Acoustician):</strong> Set initial EQ (Bass 3, Treble 6) and gain staging, though I explicitly overrode their unusually harsh 4.5kHz LPF recommendation to a safer 6.5kHz per structural safety rails.",
+    "<strong>Agent 7 (Transducer):</strong> Established a dual mic setup, assigning a 57 on-axis and a 121 off-axis to organically smooth out upper-mid transients.",
+    "<strong>Agent 8 (FOH):</strong> Defined the mix boundaries (-3dB output) and provided the critical 6500Hz LPF guidance that justified my override of the Acoustician.",
+    "<strong>Agent 9 (Mix):</strong> Designed the wet-mix characteristics, introducing a 1.5s vintage studio plate reverb for required digital gigging spatialization.",
+    "<strong>Agent 10 (Map):</strong> Handled scene mechanics, assigning the Myth Drive to engage on Scene B for tight, sustained leads while modulating the reverb mix up to 22%.",
+    "<strong>Agent 11 (DSP):</strong> Organized the blocks linearly into two functional grid lanes, stacking the drives into the amp on Lane 1 and following with the Cab, EQ, and Reverb on Lane 2."
+  ]
+}
+```

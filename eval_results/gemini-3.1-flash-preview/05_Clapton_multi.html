@@ -1,0 +1,208 @@
+```json
+{
+  "builder_statement": "This preset captures Eric Clapton's 'Woman Tone' from the Cream era, built around a cranked Marshall Super Lead and a treble booster. It provides a warm, articulate rhythm sound and a searing, vocal-like lead tone by engaging a wah and booster.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Input: Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A gentle noise gate to clean up high-gain hum without cutting off sustain, as suggested by community feedback.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Threshold: -55.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Threshold: -55.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Wah: Crying Clyde Wah<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates the classic Vox V846 wah used extensively in this era for expressive, vocal-like lead sweeps.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: True</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Pedal Position: 50%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Models the Dallas Rangemaster Treble Booster, essential for tightening the low-end and pushing the Marshall into saturated lead territory.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: True</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Level: 6.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The verified model for the Marshall 1959 Super Lead, the foundational amp for the 'Bluesbreakers' tone. EQ is tailored for the warmer ES-339.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 6.5<br/>Volume: 5.0<br/>Bass: 2.5<br/>Mid: 7.0<br/>Treble: 6.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 6.5<br/>Volume: 5.5<br/>Bass: 2.5<br/>Mid: 7.0<br/>Treble: 6.0</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit 60B GB '71<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A vintage 4x12 cabinet with Celestion 'Greenbacks' to match the amplifier. A dual-mic setup adds depth and realism.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Condenser 67<br/>Mic 1 Pos: Cap Edge<br/>Mic 2: Condenser 67<br/>Mic 2 Pos: Cone<br/>Blend: 50%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Condenser 67<br/>Mic 1 Pos: Cap Edge<br/>Mic 2: Condenser 67<br/>Mic 2 Pos: Cone<br/>Blend: 50%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: This block shapes the final tone, adding body, implementing the 'Woman Tone' LPF, and applying FOH-style global cuts.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Cut: 120Hz<br/>Low Shelf Freq: 200Hz<br/>Low Shelf Gain: +1.5dB<br/>High Cut Freq: 4.5kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Cut: 120Hz<br/>Low Shelf Freq: 200Hz<br/>Low Shelf Gain: +1.5dB<br/>High Cut Freq: 8.0kHz</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Vintage Digital<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A subtle slapback-style delay to add space and dimension without muddying the core tone.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 500ms<br/>Feedback: 30%<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 500ms<br/>Feedback: 30%<br/>Mix: 25%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Plate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A classic studio plate reverb to provide a smooth, ambient wash that sits behind the main guitar signal.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0s<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0s<br/>Mix: 25%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Output: Main<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Sets the final preset volume to a safe level, preventing digital clipping from the cranked amplifier model.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Level: -8.5dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Level: -8.5dB</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Input: Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A gentle noise gate to clean up high-gain hum without cutting off sustain, as suggested by community feedback.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Threshold: -55.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Threshold: -55.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Wah: Crying Clyde Wah<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates the classic Vox V846 wah used extensively in this era for expressive, vocal-like lead sweeps.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: True</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Pedal Position: 50%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Models the Dallas Rangemaster Treble Booster, essential for tightening the low-end and pushing the Marshall into saturated lead territory.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: True</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Bypass: False<br/>Level: 6.0dB</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The verified model for the Marshall 1959 Super Lead. EQ settings are adjusted to add body and tame the brightness of the Telecaster.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 7.0<br/>Volume: 5.0<br/>Bass: 4.5<br/>Mid: 8.0<br/>Treble: 5.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 7.0<br/>Volume: 5.5<br/>Bass: 4.5<br/>Mid: 8.0<br/>Treble: 5.0</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit 60B GB '71<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A vintage 4x12 cabinet with Celestion 'Greenbacks' to match the amplifier. A dual-mic setup adds depth and realism.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Condenser 67<br/>Mic 1 Pos: Cap Edge<br/>Mic 2: Condenser 67<br/>Mic 2 Pos: Cone<br/>Blend: 50%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: Condenser 67<br/>Mic 1 Pos: Cap Edge<br/>Mic 2: Condenser 67<br/>Mic 2 Pos: Cone<br/>Blend: 50%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: This block shapes the final tone, adding body, implementing the 'Woman Tone' LPF, and applying FOH-style global cuts.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Cut: 120Hz<br/>Low Shelf Freq: 200Hz<br/>Low Shelf Gain: +1.5dB<br/>High Cut Freq: 4.5kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Cut: 120Hz<br/>Low Shelf Freq: 200Hz<br/>Low Shelf Gain: +1.5dB<br/>High Cut Freq: 8.0kHz</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Vintage Digital<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A subtle slapback-style delay to add space and dimension without muddying the core tone.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 500ms<br/>Feedback: 30%<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 500ms<br/>Feedback: 30%<br/>Mix: 25%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Plate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A classic studio plate reverb to provide a smooth, ambient wash that sits behind the main guitar signal.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0s<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0s<br/>Mix: 25%</td></tr><tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Output: Main<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Sets the final preset volume to a safe level, preventing digital clipping from the cranked amplifier model.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Level: -8.5dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Level: -8.5dB</td></tr> </tbody> </table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Input",
+          "model": "Gate",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "False" },
+            { "name": "Threshold", "type": "slider", "value": "-55.0dB" }
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Wah",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "True" },
+            { "name": "Pedal Position", "type": "slider", "value": "50%" }
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Overdrive",
+          "model": "Rage Booster",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "True" },
+            { "name": "Level", "type": "slider", "value": "6.0dB" }
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            { "name": "Gain", "type": "slider", "value": "6.5" },
+            { "name": "Volume", "type": "slider", "value": "5.0" },
+            { "name": "Bass", "type": "slider", "value": "2.5" },
+            { "name": "Mid", "type": "slider", "value": "7.0" },
+            { "name": "Treble", "type": "slider", "value": "6.0" }
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cabinet",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            { "name": "Mic 1", "type": "dropdown", "value": "Condenser 67" },
+            { "name": "Mic 1 Pos", "type": "dropdown", "value": "Cap Edge" },
+            { "name": "Mic 2", "type": "dropdown", "value": "Condenser 67" },
+            { "name": "Mic 2 Pos", "type": "dropdown", "value": "Cone" },
+            { "name": "Blend", "type": "slider", "value": "50%" }
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            { "name": "Low Cut", "type": "slider", "value": "120Hz" },
+            { "name": "Low Shelf Freq", "type": "slider", "value": "200Hz" },
+            { "name": "Low Shelf Gain", "type": "slider", "value": "+1.5dB" },
+            { "name": "High Cut Freq", "type": "slider", "value": "4.5kHz" }
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Delay",
+          "model": "Vintage Digital",
+          "parameters": [
+            { "name": "Time", "type": "slider", "value": "500ms" },
+            { "name": "Feedback", "type": "slider", "value": "30%" },
+            { "name": "Mix", "type": "slider", "value": "25%" }
+          ]
+        },
+        {
+          "id": "block-8",
+          "type": "Reverb",
+          "model": "Plate",
+          "parameters": [
+            { "name": "Decay", "type": "slider", "value": "2.0s" },
+            { "name": "Mix", "type": "slider", "value": "25%" }
+          ]
+        },
+        {
+          "id": "block-9",
+          "type": "Output",
+          "model": "Main",
+          "parameters": [
+            { "name": "Level", "type": "slider", "value": "-8.5dB" }
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Input",
+          "model": "Gate",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "False" },
+            { "name": "Threshold", "type": "slider", "value": "-55.0dB" }
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "Wah",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "True" },
+            { "name": "Pedal Position", "type": "slider", "value": "50%" }
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Overdrive",
+          "model": "Rage Booster",
+          "parameters": [
+            { "name": "Bypass", "type": "toggle", "value": "True" },
+            { "name": "Level", "type": "slider", "value": "6.0dB" }
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Amplifier",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            { "name": "Gain", "type": "slider", "value": "7.0" },
+            { "name": "Volume", "type": "slider", "value": "5.0" },
+            { "name": "Bass", "type": "slider", "value": "4.5" },
+            { "name": "Mid", "type": "slider", "value": "8.0" },
+            { "name": "Treble", "type": "slider", "value": "5.0" }
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Cabinet",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            { "name": "Mic 1", "type": "dropdown", "value": "Condenser 67" },
+            { "name": "Mic 1 Pos", "type": "dropdown", "value": "Cap Edge" },
+            { "name": "Mic 2", "type": "dropdown", "value": "Condenser 67" },
+            { "name": "Mic 2 Pos", "type": "dropdown", "value": "Cone" },
+            { "name": "Blend", "type": "slider", "value": "50%" }
+          ]
+        },
+        {
+          "id": "block-6",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            { "name": "Low Cut", "type": "slider", "value": "120Hz" },
+            { "name": "Low Shelf Freq", "type": "slider", "value": "200Hz" },
+            { "name": "Low Shelf Gain", "type": "slider", "value": "+1.5dB" },
+            { "name": "High Cut Freq", "type": "slider", "value": "4.5kHz" }
+          ]
+        },
+        {
+          "id": "block-7",
+          "type": "Delay",
+          "model": "Vintage Digital",
+          "parameters": [
+            { "name": "Time", "type": "slider", "value": "500ms" },
+            { "name": "Feedback", "type": "slider", "value": "30%" },
+            { "name": "Mix", "type": "slider", "value": "25%" }
+          ]
+        },
+        {
+          "id": "block-8",
+          "type": "Reverb",
+          "model": "Plate",
+          "parameters": [
+            { "name": "Decay", "type": "slider", "value": "2.0s" },
+            { "name": "Mix", "type": "slider", "value": "25%" }
+          ]
+        },
+        {
+          "id": "block-9",
+          "type": "Output",
+          "model": "Main",
+          "parameters": [
+            { "name": "Level", "type": "slider", "value": "-8.5dB" }
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the core tonal blueprint by specifying the Marshall 1959 Super Lead amp, Dallas Rangemaster booster, Vox V846 Wah, Celestion G12M 'Greenback' speakers, and Neumann U67 microphone.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the ambient texture by specifically requesting a 'Plate' style reverb and set the Noise Gate's target threshold to -55dB to control hiss without sacrificing sustain.",
+    "<strong>Agent 3 (Web Scraper):</strong> Provided the critical 'Woman Tone' technique, suggesting the use of a Parametric EQ with a Low-Pass Filter before the amp. It also warned about potential digital clipping, which led to the final Output block level being reduced.",
+    "<strong>Agent 4 (Librarian):</strong> Translated the real-world gear into the exact, verifiable block names used in the final preset: `Brit Plexi 100 Patch`, `Rage Booster`, `Crying Clyde Wah`, `412 Brit 60B GB '71`, and `Parametric-3`.",
+    "<strong>Agent 5 (Cloud Navigator):</strong> Enforced the user constraint to disallow cloud-based captures, ensuring that the entire preset was built using standard, universally available effects blocks.",
+    "<strong>Agent 6 (Acoustician):</strong> Drove the 'Acoustic Divergence' by providing baseline amp EQ settings and a pre-EQ curve. These values were then specifically adapted for the humbucker (less bass) and single-coil (more bass/mids, less treble) guitars.",
+    "<strong>Agent 7 (Transducer):</strong> Defined the specific dual-microphone setup on the cabinet, selecting 'Cap Edge' and 'Cone' as the microphone positions and setting the blend to an even 50/50.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Implemented master-bus style processing by setting a global high-pass filter at 120Hz and a low-pass at 8000Hz within the EQ block, and set the final preset volume on the Output block to -8.5dB for optimal gain staging.",
+    "<strong>Agent 9 (Mix Architect):</strong> Specified the parameters for the time-based effects, setting the delay time to 500ms and the reverb decay to 2.0 seconds, both with a shared mix level of 25%.",
+    "<strong>Agent 10 (Scene Mapper):</strong> Orchestrated the dynamic switching between rhythm and lead tones. This involved bypassing the Wah and Booster for Scene A, then activating them, increasing the amp volume, and opening up the EQ's High Cut for the Scene B lead.",
+    "<strong>Agent 11 (DSP Architect):</strong> Determined the final signal path order of the effect blocks on the grid: Wah -> Booster -> Amp -> Cab -> EQ, which dictates how the tone is processed from input to output."
+  ]
+}
+```

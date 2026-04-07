@@ -1,0 +1,2 @@
+- [ ] Add effect rationale to the fallback table renderer in `handlers_preset.go` when available in StructuredPreset
+- [ ] Investigate potential bug in refinement from the preset library (possible duplicate ID collision on `#workspace-wrapper` causing HTMX to target the wrong element)

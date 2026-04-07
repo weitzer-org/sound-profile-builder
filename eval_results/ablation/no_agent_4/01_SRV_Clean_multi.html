@@ -1,63 +1,20 @@
 ```json
 {
-  "builder_statement": "This preset captures the iconic, glass-shattering Texas blues tone by slamming the front end of a vintage '64 Fender Vibroverb with a high-headroom Tube Screamer. The design relies entirely on the US Vibra 40 amp block per the single-amp constraint, using symmetrical soft clipping and a carefully tailored midrange bump to emulate Stevie's legendary dynamic attack and signature spring reverb ambient space.",
+  "builder_statement": "This preset meticulously recreates a 1964 Fender Blackface-style foundation pushed by a TS808 overdrive to achieve that quintessential Texas blues tone. By leveraging the US Twin for massive clean headroom and hitting the front end hard with a Green 808, it delivers articulate, blooming cleans in Rhythm mode and a blistering, focused mid-range bark in Lead mode.",
   "final_html_payload": {
-    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Eliminates 60-cycle hum and high-gain hiss introduced by the drive pedal.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 15.0 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 15.0 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Compressor: Opt Comp<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Set with a low mix to lightly level the dynamics of the humbuckers without killing picking transients.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Comp: 3.0<br/>Mix: 20%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Comp: 3.0<br/>Mix: 20%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Acts as a clean boost. Drive is extremely low, Level is high to punish the amp's front end. Tone increased slightly for darker humbuckers.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 1.0<br/>Tone: 6.5<br/>Level: 9.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 2.0<br/>Tone: 7.0<br/>Level: 10.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: US Vibra 40<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: The core amp tone. Bright switch is ON to add articulation and bite to the naturally darker ES-339. Input gain lowered slightly to retain headroom.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 6.5<br/>Bass: 2.5<br/>Mid: 6.0<br/>Treble: 5.5<br/>Bright: ON</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 8.0<br/>Bass: 2.0<br/>Mid: 7.5<br/>Treble: 6.0<br/>Bright: ON</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 1x15 US Vibra<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Simulates the EVM15L speaker. Mics blended for punchy transients and rich low-mids.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (X: 0.15, Y: 0.00)<br/>Mic 2: 121 Ribbon (X: 0.80, Y: 0.25)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (X: 0.15, Y: 0.00)<br/>Mic 2: 121 Ribbon (X: 0.80, Y: 0.25)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Sculpting mix placement. 200Hz heavily cut to remove humbucker mud. LPF extended to 5.0kHz to retain high-end presence.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 5000 Hz<br/>200Hz Band: -4.0 dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 5000 Hz<br/>200Hz Band: -4.0 dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Analog Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Very short slapback to thicken the room sound.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Mix: 20%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Spring<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic amp drip and decay essential for the Texas Blues vibe.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0 s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0 s<br/>Mix: 15%</td></tr> </tbody> </table>",
-    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Crucial for true single coils and noisy drive stages.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 15.0 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 15.0 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Compressor: Opt Comp<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Mix and comp pushed slightly higher than the humbucker variant to fatten up the inherently thinner single coil snap.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Comp: 4.0<br/>Mix: 30%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Comp: 4.0<br/>Mix: 30%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Clean boost application. Tone is rolled back to 5.0 to prevent the bridge pickup from becoming shrill.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 1.5<br/>Tone: 5.0<br/>Level: 9.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Drive: 2.5<br/>Tone: 5.5<br/>Level: 10.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: US Vibra 40<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Core amp tone. Bright switch is explicitly OFF to prevent ice-pick treble spikes with vintage single coils. Gain slightly higher to compensate for lower output.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 7.5<br/>Bass: 3.5<br/>Mid: 6.0<br/>Treble: 4.5<br/>Bright: OFF</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Gain: 9.0<br/>Bass: 3.0<br/>Mid: 7.5<br/>Treble: 5.0<br/>Bright: OFF</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 1x15 US Vibra<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Simulates EVM15L to retain low-end power beneath the single coils.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (X: 0.15, Y: 0.00)<br/>Mic 2: 121 Ribbon (X: 0.80, Y: 0.25)<br/>Blend: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1: SM57 (X: 0.15, Y: 0.00)<br/>Mic 2: 121 Ribbon (X: 0.80, Y: 0.25)<br/>Blend: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Retains much more 200Hz body (-1dB cut vs -4dB) for the single coils, and enforces the strict 4.2kHz LPF to slice off fizziness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 4200 Hz<br/>200Hz Band: -1.0 dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>HPF: 100 Hz<br/>LPF: 4200 Hz<br/>200Hz Band: -1.0 dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Analog Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: 125ms snap to create stereo width and depth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Mix: 20%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Spring<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic amp drip.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0 s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 2.0 s<br/>Mix: 15%</td></tr> </tbody> </table>"
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Dynamics: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Controls baseline noise floor. Raised to -60dB to account for hotter humbucker output.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -60.0 dB<br/>Decay: 100 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -60.0 dB<br/>Decay: 100 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Pre-EQ filtering to shape the humbucker tone before the drive block, removing low-mid mud.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Shelf (200Hz): -4.0 dB<br/>High Cut (LPF): 5.0 kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Shelf (200Hz): -4.0 dB<br/>High Cut (LPF): 5.0 kHz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Community-verified TS808 emulation. Set with low drive and high level to hit the amp's preamp section hard.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Drive: 1.0<br/>Level: 9.0<br/>Tone: 6.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 1.0<br/>Level: 9.0<br/>Tone: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: US Twin<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Recommended for single-amp builds requiring massive clean headroom. Bass reduced for the Gibson.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Volume: 6.5<br/>Bass: 2.5<br/>Middle: 6.5<br/>Treble: 6.0<br/>Master: 7.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Volume: 6.5<br/>Bass: 2.5<br/>Middle: 6.5<br/>Treble: 6.0<br/>Master: 7.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 1x15 US<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Represents the 1x15 JBL D130F speaker format. Dual mic setup captures cap edge attack and outer cone warmth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1 Pos: X:0.15 Y:0.05<br/>Mic 2 Pos: X:0.85 Y:0.15<br/>Blend: 65% Mic 1</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1 Pos: X:0.15 Y:0.05<br/>Mic 2 Pos: X:0.85 Y:0.15<br/>Blend: 65% Mic 1</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Analog Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Subtle 125ms slapback delay to thicken the lead tone and provide Texas blues spatial characteristics.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Feedback: 10%<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Feedback: 10%<br/>Mix: 15%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Spring Reverb<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Essential amp-style spring reverb emulation set to 1.5s decay.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 1.5 s<br/>Tone: 5.0<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 1.5 s<br/>Tone: 5.0<br/>Mix: 15%</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Dynamics: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Tightens the 60-cycle hum of single coils without choking off sustain.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 150 ms</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Threshold: -65.0 dB<br/>Decay: 150 ms</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Pre-EQ filtering. Retains more low-end body for the Telecaster while rolling off harsh treble (ice-pick).</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Shelf (200Hz): -1.0 dB<br/>High Cut (LPF): 4.2 kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Low Shelf (200Hz): -1.0 dB<br/>High Cut (LPF): 4.2 kHz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Maxed Level pushing the amplifier input. Tone reduced to compensate for the bright bridge pickup.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed<br/>Drive: 1.5<br/>Level: 10.0<br/>Tone: 4.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 1.5<br/>Level: 10.0<br/>Tone: 4.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: US Twin<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: High headroom clean base. Midrange pushed higher to give the Telecaster more punch and presence.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Volume: 7.5<br/>Bass: 3.5<br/>Middle: 7.5<br/>Treble: 4.5<br/>Master: 7.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Volume: 7.5<br/>Bass: 3.5<br/>Middle: 7.5<br/>Treble: 4.5<br/>Master: 7.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 1x15 US<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Simulates 1x15 JBL D130F. Blend adjusted for more center-cap cut to highlight single coil twang.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1 Pos: X:0.15 Y:0.05<br/>Mic 2 Pos: X:0.85 Y:0.15<br/>Blend: 75% Mic 1</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Mic 1 Pos: X:0.15 Y:0.05<br/>Mic 2 Pos: X:0.85 Y:0.15<br/>Blend: 75% Mic 1</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Analog Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Slapback delay that widens the perceived size of the single coil tone.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Feedback: 10%<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Time: 125 ms<br/>Feedback: 10%<br/>Mix: 15%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Spring Reverb<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Classic spring verb emulation, 1.5s decay mapped correctly for Texas blues spacing.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 1.5 s<br/>Tone: 5.0<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Decay: 1.5 s<br/>Tone: 5.0<br/>Mix: 15%</td></tr> </tbody> </table>"
   },
   "structured_payload": {
     "guitars": {
       "Gibson ES-339 Humbuckers": [
         {
           "id": "gate-1",
-          "type": "Utility",
+          "type": "Dynamics",
           "model": "Noise Gate",
           "parameters": [
-            { "name": "Threshold", "type": "slider", "value": "-65.0" },
-            { "name": "Decay", "type": "slider", "value": "15.0" }
-          ]
-        },
-        {
-          "id": "comp-1",
-          "type": "Compressor",
-          "model": "Opt Comp",
-          "parameters": [
-            { "name": "Comp", "type": "slider", "value": "3.0" },
-            { "name": "Mix", "type": "slider", "value": "20.0" }
-          ]
-        },
-        {
-          "id": "drive-1",
-          "type": "Overdrive",
-          "model": "Green 808",
-          "parameters": [
-            { "name": "Drive", "type": "slider", "value": "1.0" },
-            { "name": "Tone", "type": "slider", "value": "6.5" },
-            { "name": "Level", "type": "slider", "value": "9.0" }
-          ]
-        },
-        {
-          "id": "amp-1",
-          "type": "Amplifier",
-          "model": "US Vibra 40",
-          "parameters": [
-            { "name": "Gain", "type": "slider", "value": "6.5" },
-            { "name": "Bass", "type": "slider", "value": "2.5" },
-            { "name": "Mid", "type": "slider", "value": "6.0" },
-            { "name": "Treble", "type": "slider", "value": "5.5" },
-            { "name": "Bright", "type": "toggle", "value": "ON" }
-          ]
-        },
-        {
-          "id": "cab-1",
-          "type": "Cabinet",
-          "model": "1x15 US Vibra",
-          "parameters": [
-            { "name": "Mic 1 Position X", "type": "slider", "value": "0.15" },
-            { "name": "Mic 1 Position Y", "type": "slider", "value": "0.00" },
-            { "name": "Mic 2 Position X", "type": "slider", "value": "0.80" },
-            { "name": "Mic 2 Position Y", "type": "slider", "value": "0.25" },
-            { "name": "Blend", "type": "slider", "value": "65.0" }
+            { "name": "Threshold", "type": "slider", "value": "-60.0" },
+            { "name": "Decay", "type": "slider", "value": "100" }
           ]
         },
         {
@@ -65,81 +22,75 @@
           "type": "EQ",
           "model": "Parametric-8",
           "parameters": [
-            { "name": "HPF", "type": "slider", "value": "100.0" },
-            { "name": "LPF", "type": "slider", "value": "5000.0" },
-            { "name": "200Hz Gain", "type": "slider", "value": "-4.0" }
+            { "name": "Low Shelf Freq", "type": "slider", "value": "200" },
+            { "name": "Low Shelf Gain", "type": "slider", "value": "-4.0" },
+            { "name": "High Cut Freq", "type": "slider", "value": "5000" }
           ]
         },
         {
-          "id": "delay-1",
+          "id": "od-1",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Scene Dependent" },
+            { "name": "Drive", "type": "slider", "value": "1.0" },
+            { "name": "Level", "type": "slider", "value": "9.0" },
+            { "name": "Tone", "type": "slider", "value": "6.5" }
+          ]
+        },
+        {
+          "id": "amp-1",
+          "type": "Amplifier",
+          "model": "US Twin",
+          "parameters": [
+            { "name": "Volume", "type": "slider", "value": "6.5" },
+            { "name": "Bass", "type": "slider", "value": "2.5" },
+            { "name": "Middle", "type": "slider", "value": "6.5" },
+            { "name": "Treble", "type": "slider", "value": "6.0" },
+            { "name": "Master", "type": "slider", "value": "7.0" }
+          ]
+        },
+        {
+          "id": "cab-1",
+          "type": "Cabinet",
+          "model": "1x15 US",
+          "parameters": [
+            { "name": "Mic 1 X", "type": "slider", "value": "0.15" },
+            { "name": "Mic 1 Y", "type": "slider", "value": "0.05" },
+            { "name": "Mic 2 X", "type": "slider", "value": "0.85" },
+            { "name": "Mic 2 Y", "type": "slider", "value": "0.15" },
+            { "name": "Blend", "type": "slider", "value": "65" }
+          ]
+        },
+        {
+          "id": "dly-1",
           "type": "Delay",
           "model": "Analog Delay",
           "parameters": [
-            { "name": "Time", "type": "slider", "value": "125.0" },
-            { "name": "Mix", "type": "slider", "value": "15.0" }
+            { "name": "Time", "type": "slider", "value": "125" },
+            { "name": "Feedback", "type": "slider", "value": "10" },
+            { "name": "Mix", "type": "slider", "value": "15" }
           ]
         },
         {
-          "id": "reverb-1",
+          "id": "rev-1",
           "type": "Reverb",
-          "model": "Spring",
+          "model": "Spring Reverb",
           "parameters": [
-            { "name": "Decay", "type": "slider", "value": "2.0" },
-            { "name": "Mix", "type": "slider", "value": "15.0" }
+            { "name": "Decay", "type": "slider", "value": "1.5" },
+            { "name": "Tone", "type": "slider", "value": "5.0" },
+            { "name": "Mix", "type": "slider", "value": "15" }
           ]
         }
       ],
       "Fender Telecaster Single Coil": [
         {
           "id": "gate-1",
-          "type": "Utility",
+          "type": "Dynamics",
           "model": "Noise Gate",
           "parameters": [
             { "name": "Threshold", "type": "slider", "value": "-65.0" },
-            { "name": "Decay", "type": "slider", "value": "15.0" }
-          ]
-        },
-        {
-          "id": "comp-1",
-          "type": "Compressor",
-          "model": "Opt Comp",
-          "parameters": [
-            { "name": "Comp", "type": "slider", "value": "4.0" },
-            { "name": "Mix", "type": "slider", "value": "30.0" }
-          ]
-        },
-        {
-          "id": "drive-1",
-          "type": "Overdrive",
-          "model": "Green 808",
-          "parameters": [
-            { "name": "Drive", "type": "slider", "value": "1.5" },
-            { "name": "Tone", "type": "slider", "value": "5.0" },
-            { "name": "Level", "type": "slider", "value": "9.0" }
-          ]
-        },
-        {
-          "id": "amp-1",
-          "type": "Amplifier",
-          "model": "US Vibra 40",
-          "parameters": [
-            { "name": "Gain", "type": "slider", "value": "7.5" },
-            { "name": "Bass", "type": "slider", "value": "3.5" },
-            { "name": "Mid", "type": "slider", "value": "6.0" },
-            { "name": "Treble", "type": "slider", "value": "4.5" },
-            { "name": "Bright", "type": "toggle", "value": "OFF" }
-          ]
-        },
-        {
-          "id": "cab-1",
-          "type": "Cabinet",
-          "model": "1x15 US Vibra",
-          "parameters": [
-            { "name": "Mic 1 Position X", "type": "slider", "value": "0.15" },
-            { "name": "Mic 1 Position Y", "type": "slider", "value": "0.00" },
-            { "name": "Mic 2 Position X", "type": "slider", "value": "0.80" },
-            { "name": "Mic 2 Position Y", "type": "slider", "value": "0.25" },
-            { "name": "Blend", "type": "slider", "value": "65.0" }
+            { "name": "Decay", "type": "slider", "value": "150" }
           ]
         },
         {
@@ -147,44 +98,81 @@
           "type": "EQ",
           "model": "Parametric-8",
           "parameters": [
-            { "name": "HPF", "type": "slider", "value": "100.0" },
-            { "name": "LPF", "type": "slider", "value": "4200.0" },
-            { "name": "200Hz Gain", "type": "slider", "value": "-1.0" }
+            { "name": "Low Shelf Freq", "type": "slider", "value": "200" },
+            { "name": "Low Shelf Gain", "type": "slider", "value": "-1.0" },
+            { "name": "High Cut Freq", "type": "slider", "value": "4200" }
           ]
         },
         {
-          "id": "delay-1",
+          "id": "od-1",
+          "type": "Overdrive",
+          "model": "Green 808",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Scene Dependent" },
+            { "name": "Drive", "type": "slider", "value": "1.5" },
+            { "name": "Level", "type": "slider", "value": "10.0" },
+            { "name": "Tone", "type": "slider", "value": "4.5" }
+          ]
+        },
+        {
+          "id": "amp-1",
+          "type": "Amplifier",
+          "model": "US Twin",
+          "parameters": [
+            { "name": "Volume", "type": "slider", "value": "7.5" },
+            { "name": "Bass", "type": "slider", "value": "3.5" },
+            { "name": "Middle", "type": "slider", "value": "7.5" },
+            { "name": "Treble", "type": "slider", "value": "4.5" },
+            { "name": "Master", "type": "slider", "value": "7.0" }
+          ]
+        },
+        {
+          "id": "cab-1",
+          "type": "Cabinet",
+          "model": "1x15 US",
+          "parameters": [
+            { "name": "Mic 1 X", "type": "slider", "value": "0.15" },
+            { "name": "Mic 1 Y", "type": "slider", "value": "0.05" },
+            { "name": "Mic 2 X", "type": "slider", "value": "0.85" },
+            { "name": "Mic 2 Y", "type": "slider", "value": "0.15" },
+            { "name": "Blend", "type": "slider", "value": "75" }
+          ]
+        },
+        {
+          "id": "dly-1",
           "type": "Delay",
           "model": "Analog Delay",
           "parameters": [
-            { "name": "Time", "type": "slider", "value": "125.0" },
-            { "name": "Mix", "type": "slider", "value": "15.0" }
+            { "name": "Time", "type": "slider", "value": "125" },
+            { "name": "Feedback", "type": "slider", "value": "10" },
+            { "name": "Mix", "type": "slider", "value": "15" }
           ]
         },
         {
-          "id": "reverb-1",
+          "id": "rev-1",
           "type": "Reverb",
-          "model": "Spring",
+          "model": "Spring Reverb",
           "parameters": [
-            { "name": "Decay", "type": "slider", "value": "2.0" },
-            { "name": "Mix", "type": "slider", "value": "15.0" }
+            { "name": "Decay", "type": "slider", "value": "1.5" },
+            { "name": "Tone", "type": "slider", "value": "5.0" },
+            { "name": "Mix", "type": "slider", "value": "15" }
           ]
         }
       ]
     }
   },
   "agent_impact": [
-    "<strong>Agent 1 (Tone Historian):</strong> Identified the 1964 Fender Vibroverb, TS808 Tube Screamer, 15-inch EVM15L speaker, and Shure SM57 microphone as the foundational core for the target Texas Blues tone.",
-    "<strong>Agent 2 (Sonic Profiler):</strong> Mapped the 720Hz midrange peak, determined symmetrical soft clipping as the drive style, defined the spring reverb characteristic, and established a -65.0dB threshold target for the noise gate.",
-    "<strong>Agent 3 (Scraper):</strong> Recommended specific QC blocks (Green 808, US Vibra 40, Opt Comp), mandated pushing the 808 level high with low drive, and issued a critical warning against using the Bright switch on vintage single coil pickups to avoid harshness.",
-    "<strong>Agent 4 (Librarian):</strong> Standardized and verified the proprietary Quad Cortex module names, enforcing strict syntax matching (e.g., 'Green 808', 'US Vibra 40', 'Opt Comp').",
-    "<strong>Agent 5 (Navigator):</strong> Complied with the user's `allow_cloud_captures: false` constraint, explicitly forcing the logic to rely exclusively on native amp and cab models rather than third-party neuron profiles.",
-    "<strong>Agent 6 (Acoustician):</strong> Designed the baseline preamp input parameters (-3.0dB gain, Amp Vol 7) and calculated foundational EQ shapes, including the 200Hz body adjustments and the 4.2kHz LPF limit.",
-    "<strong>Agent 7 (Transducer):</strong> Positioned dual microphones to accurately mimic real studio capture: an SM57 at Cap Edge (X: 0.15) for high-frequency transients and a secondary mic at Cone Edge (X: 0.80) with a 65% blend for low-mid harmonic reinforcement.",
-    "<strong>Agent 8 (FOH):</strong> Applied live-mix global EQ boundaries (100Hz HPF to 6500Hz LPF overall constraints) and padded the total lane output by -3.0dB to ensure digital headroom consistency.",
-    "<strong>Agent 9 (Mix):</strong> Separated time-based effects, specifically dialing in a short 125ms slapback analog delay and a 2.0s decay spring reverb, locking both mixes strictly at 15% for Rhythm.",
-    "<strong>Agent 10 (Map):</strong> Engineered the Scene A (Rhythm) to Scene B (Lead) morphing logic, programming the 1.5 increase in amp volume, mid/treble frequency pushes, and tight overdrive bass cuts required for solos.",
-    "<strong>Agent 11 (DSP):</strong> Ensured compliance with the `single_amp_mode: true` constraint and validated that all mapped blocks fit neatly within DSP resource lane limitations without creating illegal routing loops."
+    "<strong>Agent 1 (Tone Historian):</strong> Defined the foundational tone requirements, establishing the 1964 Fender Blackface-style amp, a TS808 drive, and a 1x15 JBL D130F speaker emulation for classic SRV-style Texas blues.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Established technical frequency goals, identifying a peak presence of 723Hz, requiring symmetrical soft clipping, setting a -65dB gate baseline, and mandating Spring Reverb.",
+    "<strong>Agent 3 (Scraper):</strong> Researched community forums to dictate the 'US Twin' over other clean amps for maximum headroom, selected the 'Green 808' block, and warned against max-level clipping.",
+    "<strong>Agent 4 (Librarian):</strong> Validated exact offline Quad Cortex block nomenclature, officially mapping the user requests to the 'US Twin', 'Green 808', 'Parametric-8', and 'Spring Reverb' blocks.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the constraints by disabling all cloud capture searches, strictly restricting the preset to internal factory stock models and blocks.",
+    "<strong>Agent 6 (Acoustician):</strong> Provided initial parameter tuning, including lowering the bass on the amplifier to prevent flubbiness, assigning an input gain cut (-3.0dB), and utilizing a Pre-EQ shelf to cut 200Hz.",
+    "<strong>Agent 7 (Transducer):</strong> Designed the virtual microphone array, explicitly placing Mic 1 at Center-Cap Edge (X: 0.15, Y: 0.05) and Mic 2 Outer Cone (X: 0.85, Y: 0.15) with an initial 75/25 blend.",
+    "<strong>Agent 8 (FOH):</strong> Engineered safety parameters for the venue mix, defining a 100Hz HPF, a 7500Hz LPF, and attenuating the final lane output by -4.0dB to stop the maxed Green 808 from clipping the outputs.",
+    "<strong>Agent 9 (Mix):</strong> Tailored the spatial effects section, locking in a 125ms delay for classic slapback feel, and setting the Spring Reverb to a 1.5s decay with a 15% wet mix.",
+    "<strong>Agent 10 (Map):</strong> Assigned scene behavioral logic, structuring 'Scene A' as a clean rhythm tone with the overdrive bypassed, and 'Scene B' as a pushed lead tone engaging the Green 808.",
+    "<strong>Agent 11 (DSP):</strong> Streamlined the layout to respect the single amp constraint, ensuring all blocks fit on a single, linear processing lane to minimize processor footprint."
   ]
 }
 ```

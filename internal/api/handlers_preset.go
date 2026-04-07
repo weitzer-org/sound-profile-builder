@@ -239,7 +239,7 @@ func (s *Server) handleCopyPresetUI() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, true)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, true, false)))
 	}
 }
 
@@ -252,8 +252,10 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 
 		id := r.FormValue("id")
 		ctx := r.Context()
+		log.Printf("DEBUG: handleCopyPreset called with id: %s", id)
 		p, err := s.store.Get(ctx, id)
 		if err != nil {
+			log.Printf("DEBUG: handleCopyPreset preset not found: %s", id)
 			http.Error(w, "Preset not found", http.StatusNotFound)
 			return
 		}
@@ -281,24 +283,21 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 
 		presets, _ := s.store.List(ctx)
 
-		// Bypass GCS eventual consistency by manually injecting the newly saved preset if not yet listed
-		found := false
+		// Bypass GCS eventual consistency by manually injecting the newly saved preset at the top
+		var filtered []*storage.Preset
 		for _, v := range presets {
-			if v.ID == pCopy.ID {
-				found = true
-				break
+			if v.ID != pCopy.ID {
+				filtered = append(filtered, v)
 			}
 		}
-		if !found {
-			presets = append([]*storage.Preset{pCopy}, presets...)
-		}
+		presets = append([]*storage.Preset{pCopy}, filtered...)
 
 		finalDOM := fmt.Sprintf(`
 			<div id="library-list-container" hx-swap-oob="true">
 				%s
 			</div>
 			%s
-		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false))
+		`, renderPresetList(presets, false), renderTweakingWorkspaceHTML(pCopy, false, false))
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
@@ -354,6 +353,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 			return
 		}
 
+		wasDraft := p.Name == "Draft Preset"
 		p.Name = name
 		if err := s.store.Save(ctx, p); err != nil {
 			log.Printf("Failed to rename preset: %v", err)
@@ -371,7 +371,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false))
+		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false, wasDraft))
 		
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
@@ -379,7 +379,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 }
 
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
-func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
+func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic bool) string {
 	// TODO: Make the conversational response from the agent more visible in the UI. 
 	// Currently, it gets hidden inside the "View ADK Processing Log" accordion. We should explore
 	// showing the latest message prominently, especially if the matrix wasn't updated.
@@ -451,6 +451,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.LegacyHTML) > 0 {
 		structured = combined.Structured
 		legacyMatrices = combined.LegacyHTML
+		// Force Drafts to always use legacyHTML display mode
 		if p.Name == "Draft Preset" {
 			legacyMode = true
 		}
@@ -458,6 +459,11 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		// Fallback for isolated StructuredPreset (pure saved presets) or legacy string maps
 		if err2 := json.Unmarshal([]byte(p.Payload), &structured); err2 == nil {
 			// Found pure StructuredPreset
+			if p.Name == "Draft Preset" {
+				legacyMode = true
+				// If we only have structured payload but it's a draft, we might need to invent a table or handle it.
+				// For now, assume drafts always have legacyHTML filled or combined payload.
+			}
 		} else {
 			if err3 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err3 == nil {
 				legacyMode = true
@@ -465,6 +471,44 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 				legacyMode = true
 				legacyMatrices = map[string]string{"Legacy Format": p.Payload}
 			}
+		}
+	}
+
+	if forceStatic {
+		legacyMode = true
+	}
+
+	// TODO: Add effect rationale into this version of the table when available in StructuredPreset.
+	// Fallback: If we need static view but only have structured data, generate a simple table
+	if legacyMode && len(legacyMatrices) == 0 && len(structured.Guitars) > 0 {
+		legacyMatrices = make(map[string]string)
+		for guitarName, blocks := range structured.Guitars {
+			var sb strings.Builder
+			sb.WriteString(`<table class="grid-matrix" style="width:100%; border-collapse: collapse;">`)
+			sb.WriteString(`<thead><tr style="background: var(--bg-card);"><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">EFFECT TYPE & NAME</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">SCENE A (RHYTHM)</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">SCENE B (LEAD)</th></tr></thead>`)
+			sb.WriteString(`<tbody>`)
+			for _, block := range blocks {
+				var params []string
+				for _, pr := range block.Parameters {
+					params = append(params, fmt.Sprintf("%s: %s%s", html.EscapeString(pr.Name), html.EscapeString(pr.Value), html.EscapeString(pr.Unit)))
+				}
+				paramsStr := strings.Join(params, "<br>")
+				
+				var title string
+				if block.Model != "" {
+					title = fmt.Sprintf("%s: %s", block.Type, block.Model)
+				} else {
+					title = block.Type
+				}
+				
+				// TODO: Add effect rationale into this version of the table when available in StructuredPreset.
+				sb.WriteString(fmt.Sprintf(`<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem; vertical-align: top;"><b>%s</b></td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td></tr>`, 
+					html.EscapeString(title), 
+					paramsStr,
+					paramsStr))
+			}
+			sb.WriteString(`</tbody></table>`)
+			legacyMatrices[guitarName] = sb.String()
 		}
 	}
 
@@ -612,7 +656,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 		controlPanelHtml = fmt.Sprintf(`
 		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem; border: 2px solid var(--accent);">
 			<h3 style="margin: 0; font-size: 1.25rem; color: var(--text-main);">Duplicate Preset</h3>
-			<form hx-post="/api/preset/copy" hx-target="#main-workspace" style="display: flex; gap: 0.75rem; align-items: flex-start;" autocomplete="off">
+			<form hx-post="/api/preset/copy" hx-target="this" style="display: flex; gap: 0.75rem; align-items: flex-start;" autocomplete="off">
 				<input type="hidden" name="id" value="%[1]s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<input type="text" name="new_name" placeholder="Enter name for the duplicate..." required style="flex: 1; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 1.25rem; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
@@ -632,7 +676,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			%s
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
-			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
+			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" hx-indicator="#chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="%s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
@@ -642,7 +686,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool) string {
 				</div>
 				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
 				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
-				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;">
+				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;" class="htmx-indicator">
 					<span class="spinner"></span>
 					<span class="btn-text">Adjust</span>
 				</button>
@@ -689,7 +733,7 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false)))
 	}
 }
 
@@ -817,7 +861,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		// Save the state
 		s.store.Save(ctx, p)
 
-		finalDOM := renderTweakingWorkspaceHTML(p, false)
+		finalDOM := renderTweakingWorkspaceHTML(p, false, true)
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
@@ -948,7 +992,7 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false)))
 	}
 }
 

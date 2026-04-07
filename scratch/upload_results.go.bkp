@@ -1,0 +1,69 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"io/fs"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/weitzer-org/sound-builder/internal/storage"
+	"github.com/weitzer-org/sound-builder/internal/config"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// 1. Init GCS Client
+	gcsClient, err := storage.NewGCSClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to init GCS client: %v", err)
+	}
+	defer gcsClient.Close()
+
+	// 2. Load Config for Bucket Name
+	cfg, err := config.LoadConfig("config.json")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	bucket := cfg.BucketName
+	prefix := "ablation_results/"
+
+	sourceDir := "eval_results/ablation"
+
+	// 3. Walk directory
+	err = filepath.WalkDir(sourceDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		// Calculate object name (relative path inside GCS)
+		relPath, _ := filepath.Rel(sourceDir, path)
+		objectName := filepath.ToSlash(filepath.Join(prefix, relPath))
+
+		log.Printf("Uploading %s to gs://%s/%s ...", path, bucket, objectName)
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read %s: %w", path, err)
+		}
+
+		err = gcsClient.WriteFile(ctx, bucket, objectName, data)
+		if err != nil {
+			return fmt.Errorf("failed to upload %s: %w", path, err)
+		}
+
+		log.Printf("✅ Uploaded %s", objectName)
+		return nil
+	})
+
+	if err != nil {
+		log.Fatalf("Walk failed: %v", err)
+	}
+
+	log.Println("🎉 All files uploaded successfully!")
+}

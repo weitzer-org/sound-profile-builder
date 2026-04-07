@@ -1,68 +1,75 @@
-**Systems Engineer QC-2 Initializing...**
+**System Identity:** QC-2 (Quad Cortex Systems Engineer)
+**Target Acknowledged:** Vintage Cream-era Eric Clapton ("Woman Tone"). 
+**Hardware Output:** QSC CP12 (Active 12" PA Speaker) via Cortex Control Desktop.
 
-Target Acquired: **Eric Clapton - "Crossroads" (Cream / Live at Winterland 1968)**.
-Hardware Target: Gibson SG ("The Fool" with PAF humbuckers) into a dimed 100W Marshall Super Lead (Plexi), pushing 4x12 Celestion Greenbacks.
-Physics Profile: The quintessential "Woman Tone" relies on a massive, non-master-volume tube amplifier pushed to the brink of explosion, combined with rolling the guitar's neck pickup Tone knob completely to zero. The amp's natural brightness compensates for the rolled-off pickup, creating a vocal, sustaining midrange without piercing highs.
+To achieve Clapton’s legendary 1960s tone, we must respect the physical constraints of the analog gear he used: a fully cranked non-master volume Marshall Super Lead pushing Celestion Greenbacks to the point of structural failure, paired with a humbucker guitar whose tone knob is rolled back to 0-2. 
 
-As requested by Protocol 9, I have structured this matrix to adapt this vintage analog circuit to two completely different sets of pickup physics: **Gibson ES-339 (Humbuckers)** and **Fender Telecaster (Single Coils)**.
-
----
-
-### Pickup Compensation Strategy & Physics First Protocol
-*QSC CP12 Tuning:* Since the CP12 is an FRFR PA speaker, it reproduces frequencies up to 20kHz. A real 4x12 Greenback cabinet dies off steeply around 5kHz. We will strictly enforce High-Pass and Low-Pass filters in the Cab Block to prevent modern digital harshness and faithfully recreate the 1968 microphone limitations.
-
-**Guitar 1: Gibson ES-339 (Humbuckers) [Scenes E-H]**
-*   **Physics:** Medium/Vintage-output humbuckers perfectly emulate Clapton's SG. 
-*   **Woman Tone Execution:** You must physically switch to your Neck Pickup and roll your guitar's Tone Knob down to `0` or `1`. The amp block is dialed exceptionally bright and aggressive to catch the remaining midrange frequencies and force them into harmonic feedback. 
-*   **Input Gain:** Set Global Input Gain to `-1.5dB`.
-
-**Guitar 2: Fender Telecaster (Single Coil) [Scenes A-D]**
-*   **Physics:** Single coils lack the inductance, output, and low-mid thrust to push a Plexi into Cream-era saturation. Furthermore, rolling a Tele neck tone to `0` often sounds muddy, not "vocal."
-*   **Woman Tone Execution:** Keep your Telecaster Tone knob at `10`. Scene B will engage the Parametric-8 EQ block, which uses a steep Low-Pass Filter (LPF) at 1.8kHz to artificially simulate the humbucker "Woman Tone" roll-off while boosting output by +4dB to hammer the amp's front end. 
-*   **Input Gain:** Set Global Input Gain to `+2.5dB`.
+Because you are alternating between a **Gibson ES-339 (Humbuckers)** and a **Fender Telecaster (Single Coils)**, we cannot treat them equally. The Telecaster physically lacks the correct inductance and capacitor characteristics to achieve a true "Woman Tone" by simply rolling down its tone knob. Therefore, I have deployed the **"Chameleon" Strategy** using an EQ-8 block to artificially replicate the resonant peak of a rolled-off PAF humbucker for the Telecaster.
 
 ---
 
-### The Split-Bank Matrix Standard
-*Row 1 (Telecaster)*: **A** Rhythm (Crunch) | **B** Lead (Woman Tone EQ) | **C** Dry/Comping | **D** Ambient/FX
-*Row 2 (ES-339)*: **E** Rhythm (Crunch) | **F** Lead (Vocal Sustain) | **G** Dry/Comping | **H** Ambient/FX
+### 1. The Split-Bank Matrix Organization
+Assign your footswitches using Cortex Control's Scene mode.
+*   **Row 1 (Scenes A-D) - FENDER TELECASTER:** Uses dedicated EQ filtering to simulate a neck humbucker with a .022µF capacitor rolled to 0. 
+*   **Row 2 (Scenes E-H) - GIBSON ES-339:** True bypass of the extreme EQ. You will physically roll your guitar's neck tone knob down to 1 or 2, and max the volume.
 
-#### Table A: Main Signal Chain
-*(Right-Click parameters in Cortex Control to Assign to Scenes)*
+---
 
+### 2. Main Signal Chain & Multi-Guitar Settings
+
+*Note: All parameters marked with [Scene Assigned] must be assigned by right-clicking the parameter in Cortex Control and setting values per scene.*
+
+**Table A: Main Signal Chain**
 | Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Noise Red: 35%<br>Decay: 150ms | Noise Red: 20%<br>Decay: 300ms | Adaptive block used. Lower reduction on leads preserves natural tube sustain and feedback. |
-| **Pre-FX** | Parametric-8 EQ | *(Tele Sc A Only)*<br>Gain: +2dB<br>Band 1: 250Hz (+2dB) | *(Tele Sc B Only)*<br>Gain: +4dB<br>LPF: 1.8kHz (12dB/oct)<br>Band 4: 600Hz (+3dB) | Simulates the PAF humbucker push for the Tele. Tele Scene B cuts highs to fake the Woman Tone. *(Bypassed for ES-339).* |
-| **Amp** | Brit Plexi 100 Jumped | Vol I: 6.5<br>Vol II: 5.5<br>Output Level: -1.5dB | Vol I: 8.0<br>Vol II: 7.0<br>Output Level: 0.0dB | Vol I controls bite, Vol II adds girth. No Master Volume exists on a Plexi. Use Lane Output for SPL. |
-| **Amp (Tone Stack)**| Brit Plexi 100 Jumped | Bass: 2.5<br>Mid: 7.0<br>Treb: 6.5<br>Pres: 5.0 | Bass: 2.0<br>Mid: 8.5<br>Treb: 7.0<br>Pres: 6.0 | *Bass must be kept exceptionally low.* Cranked Plexis sag and "fart out" with high bass. Mids pushed for vocal quality. |
-| **Cab** | 412 Brit Green | Mic 1: Dyn 57 (Pos 1.2)<br>Mic 2: Cond 67 (Pos 3.0) | Mic 1: Dyn 57 (Pos 1.2)<br>Mic 2: Cond 67 (Pos 3.0) | Essential 1968 Winterland mic pairing. 57 for aggression, 67 back slightly for resonance. |
-| **Cab (Filters)** | Cab EQ / Mix | Mix: 50/50<br>HPF: 95Hz<br>LPF: 5200Hz | Mix: 50/50<br>HPF: 95Hz<br>LPF: 5200Hz | Crucial for the QSC CP12. The steep 5.2kHz LPF kills digital fizz and PA tweeter harshness. |
-| **Post-FX** | Room Reverb | Mix: 12%<br>Decay: 1.2s<br>Predelay: 15ms | Mix: 18%<br>Decay: 1.5s<br>Predelay: 15ms | Replicates the natural venue ambiance of Winterland. Lead scene adds slight wash for soloing. |
+| **Input/Gate** | Global Input Gate (Circle 1) | **Tele:** Gain +3.0dB, Thresh -55dB<br>**339:** Gain 0.0dB, Thresh -60dB | **Tele:** Gain +3.0dB, Thresh -55dB<br>**339:** Gain 0.0dB, Thresh -60dB | Tele needs +3dB to hit amp tubes as hard as the 339. Humbuckers need a slightly lower gate. |
+| **Pre-FX (EQ)** | Parametric-8 | **Tele (Sc A):** LPF @ 1500Hz, Band 5: +5dB @ 600Hz.<br>**339 (Sc E):** Bypass block. | **Tele (Sc B):** LPF @ 1800Hz, Band 5: +6dB @ 800Hz.<br>**339 (Sc F):** Bypass block. | **Chameleon Strategy:** The strict LPF and mid-hump digitally recreate the physics of a rolled-off tone pot for the Tele. |
+| **Amp** | Brit Plexi 100 Jumped | **Vol Normal:** 5.0<br>**Vol High:** 6.5<br>**Bass:** 2.0 *(Crucial)*<br>**Mid:** 8.5<br>**Treble:** 4.5<br>**Lane Out:** +3.5dB | **Vol Normal:** 7.0<br>**Vol High:** 9.0<br>**Bass:** 1.5<br>**Mid:** 9.0<br>**Treble:** 5.0<br>**Lane Out:** +2.0dB | Vintage Plexi has no Master. High Volume controls clipping. Bass *must* drop as Volume rises to prevent speaker/tube flub. |
+| **Cab** | 412 Brit Green | **Mic A:** Ribbon 121, Pos 2.0, Dist 1.0"<br>**Mic B:** Dyn 57, Pos 1.5, Dist 1.0"<br>**Mix:** A: 0dB, B: -3dB | Same as Rhythm | Greenbacks compress smoothly. The Ribbon 121 off-center provides the "flute-like" darkness; the 57 retains pick definition. |
+| **Post-FX** | Room Reverb | **Mix:** 12%<br>**Decay:** 1.2s<br>**HP:** 150Hz / **LP:** 4000Hz | **Mix:** 15%<br>**Decay:** 1.4s<br>**HP:** 150Hz / **LP:** 4000Hz | Simulates the ambient bleed of a loud amp bleeding into the drum mics at live Cream shows. |
 
 ---
 
-### Troubleshooting & Refinement Tree
-If the tone is **"Too Fuzzy" or "Broken"**:
-1.  **Input Pad:** Lower Global Input Gain by another `-3.0dB`. Hot humbuckers into a dimed Plexi model will cause digital input clipping before it even hits the virtual tubes.
-2.  **Tube Sag:** Lower the Amp Block `Bass` parameter to `1.5` or `1.0`. Vintage Marshall power sections cannot handle low frequencies when Volumes are past 6. 
-3.  **Volume Compensation:** If cleaning up the gain lowers your overall volume in the room, **do not** touch the Amp Volumes. Raise the Lane Output Level or the Grid Output Level.
+### 3. Multi-Guitar Gain Staging Instructions
+
+**For the Gibson ES-339 (Scenes E-H):**
+1. Switch to your Neck Pickup. 
+2. Roll the ES-339's Neck Tone knob down to **1 or 2**. 
+3. Roll Guitar Volume to 10.
+4. *Physics Check:* The natural output of the humbuckers will push the Brit Plexi 100 into heavy saturation. Use your guitar volume knob to clean up for rhythm sections (roll back to 6 or 7).
+
+**For the Fender Telecaster (Scenes A-D):**
+1. Switch to your Neck Pickup.
+2. Keep your Telecaster Tone and Volume at **10** (Wide Open).
+3. *Physics Check:* The EQ-8 block is active here. By hard-chopping everything above 1500Hz-1800Hz, we are preventing the Telecaster's high-end sizzle from turning the Plexi into a fuzz box, while the 600Hz-800Hz boost simulates the humbucker body. 
 
 ---
 
-### Session Library (Active Presets)
+### 4. Troubleshooting & Refinement Tree
 
-**1. Preset Name: "Spoonful - ES339"**
-Target: Howlin' Wolf / Hubert Sumlin (1960). 
-*(Previously Logged in System)*
+If monitoring through your QSC CP12 yields unsatisfactory results, execute the following protocol strictly in this order:
 
-**2. Preset Name: "Crossroads - Woman"**
-Target: Eric Clapton (Cream, 1968).
-Guitars: Gibson ES-339 (Humbuckers) / Fender Telecaster (Single Coil).
-Physics Goal: Simulate non-master volume 100W Marshall saturation. Vocal midrange via physics-based tone roll-off and steep LPF filtering. Adapting PAF impedance curves for single coils via Pre-EQ.
+*   **Symptom: Tone is "Farty", "Loose", or sounds like a broken speaker.**
+    *   *Action:* Lower the Amp Block's **Bass** parameter by -1.0 increments. A fully cranked Plexi cannot handle low-end frequencies before the clipping stage.
+*   **Symptom: Too much fuzz/buzz, losing the "flute" character (ES-339).**
+    *   *Action:* Your humbuckers may be higher output than vintage PAFs. Go to the Global Input (Circle 1) and drop the input gain from `0.0dB` to `-3.0dB` or `-6.0dB` to simulate lower-output vintage pickups. Compensate for the volume drop by raising the overall Lane Output Level.
+*   **Symptom: QSC CP12 sounds too "boomy" or muddy in the room.**
+    *   *Action:* Engage the High Pass Filter (HPF) in the Cab Block and set it to `90Hz`. PA speakers inherently produce more sub-bass than actual guitar cabs.
+
+---
+
+### 5. Preset Registry Protocol (Session Memory)
+
+**Session Library (Active Presets)**
+
+1. Preset Name: "Spoonful - ES339" (Previously loaded in memory - Howlin' Wolf Target)
+2. Preset Name: "Sunshine Woman - Multi-Gtr"
+Target: Eric Clapton (Cream, 1967).
+Guitar: Gibson ES-339 (Humbuckers) / Fender Telecaster (Single Coil).
+Physics Goal: Emulate cranked Plexi Sag + Rolled-off PAF tone capacitor physics.
 Full Configuration:
-Block 1 (Adaptive Gate): Noise Red [Rhy: 35% / Lead: 20%], Thresh [-60dB], Decay [150ms / 300ms].
-Block 2 (EQ-8): *ES-339 = Bypassed.* Tele Rhy (Sc A) = Gain [+2dB], Band 1 Peak [250Hz, +2dB]. Tele Lead (Sc B) = Gain [+4dB], LPF [1800Hz, 12dB/oct], Band 4 Peak [600Hz, +3dB].
-Block 3 (Amp - Brit Plexi 100 Jumped): Vol I [6.5 / 8.0], Vol II [5.5 / 7.0], Bass [2.5 / 2.0], Mid [7.0 / 8.5], Treble [6.5 / 7.0], Presence [5.0 / 6.0], Output Level [-1.5dB / 0.0dB].
-Block 4 (Cab - 412 Brit Green): Mic A (Dyn 57, Pos 1.2, Dist 1.0"), Mic B (Cond 67, Pos 3.0, Dist 2.0"), Mix [50/50], HPF [95Hz], LPF [5200Hz].
-Block 5 (Room Reverb): Mix [12% / 18%], Decay [1.2s / 1.5s], Predelay [15ms], HPF [150Hz], LPF [4000Hz].
+Block 1 (Global Input): Gain [Tele: +3.0dB / 339: 0.0dB], Gate Thresh [Tele: -55dB / 339: -60dB].
+Block 2 (Parametric-8 EQ): Tele Active / 339 Bypass. LPF [Rhy: 1500Hz / Lead: 1800Hz], Band 5 [Rhy: +5.0dB @ 600Hz / Lead: +6.0dB @ 800Hz]. 
+Block 3 (Amp - Brit Plexi 100 Jumped): Vol Normal [5.0 / 7.0], Vol High [6.5 / 9.0], Bass [2.0 / 1.5], Mid [8.5 / 9.0], Treble [4.5 / 5.0], Presence [4.0], Lane Output Level [+3.5dB / +2.0dB].
+Block 4 (Cab - 412 Brit Green): Mic A (Ribbon 121, Pos 2.0, Dist 1.0"), Mic B (Dyn 57, Pos 1.5, Dist 1.0"), Mix [A: 0dB, B: -3dB].
+Block 5 (Room Reverb): Mix [12% / 15%], Decay [1.2s / 1.4s], HP [150Hz], LP [4000Hz].

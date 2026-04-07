@@ -1,0 +1,138 @@
+```json
+{
+  "builder_statement": "This preset captures the quintessential B.B. King 'Lucille' clean blues tone, prioritizing massive dynamic headroom via a Twin Reverb platform. A pre-amp optical compressor provides signature singing sustain without grit, while a pre-amp parametric EQ effectively simulates the aggressive midrange scoop of the ES-355 Varitone circuit.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse; text-align: left;'><thead><tr><th style='border: 1px solid #ddd; padding: 8px;'>Effect Type & Name</th><th style='border: 1px solid #ddd; padding: 8px;'>Scene A (Rhythm)</th><th style='border: 1px solid #ddd; padding: 8px;'>Scene B (Lead)</th></tr></thead><tbody><tr><td style='border: 1px solid #ddd; padding: 8px;'>Compressor: Jewel</td><td style='border: 1px solid #ddd; padding: 8px;'>Sustain: 4.0, Blend: 50%, Level: 0.0dB</td><td style='border: 1px solid #ddd; padding: 8px;'>Sustain: 7.5, Blend: 60%, Level: +2.5dB</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>EQ: Parametric-3</td><td style='border: 1px solid #ddd; padding: 8px;'>Band 1: 200Hz -3.0dB, Band 2: 800Hz -6.0dB, LPF: 6.5kHz</td><td style='border: 1px solid #ddd; padding: 8px;'>Band 1: 200Hz -3.0dB, Band 2: 800Hz -1.5dB, LPF: 6.5kHz</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Amplifier: US TWN Vibrato</td><td style='border: 1px solid #ddd; padding: 8px;'>Bright: OFF, Vol: 4.0, Bass: 3.0, Mid: 6.0, Treb: 6.0, Master: 8.0</td><td style='border: 1px solid #ddd; padding: 8px;'>Bright: OFF, Vol: 4.0, Bass: 3.0, Mid: 6.0, Treb: 6.0, Master: 9.5</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Cabinet: 212 US TWN C12Q 00s</td><td style='border: 1px solid #ddd; padding: 8px;'>Mic 1: 121 Ribbon (85%), Mic 2: 414 Cond (15%)</td><td style='border: 1px solid #ddd; padding: 8px;'>Mic 1: 121 Ribbon (85%), Mic 2: 414 Cond (15%)</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Reverb: Spring Reverb</td><td style='border: 1px solid #ddd; padding: 8px;'>Mix: 20%, Decay: 2.5s</td><td style='border: 1px solid #ddd; padding: 8px;'>Mix: 28%, Decay: 3.2s</td></tr></tbody></table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse; text-align: left;'><thead><tr><th style='border: 1px solid #ddd; padding: 8px;'>Effect Type & Name</th><th style='border: 1px solid #ddd; padding: 8px;'>Scene A (Rhythm)</th><th style='border: 1px solid #ddd; padding: 8px;'>Scene B (Lead)</th></tr></thead><tbody><tr><td style='border: 1px solid #ddd; padding: 8px;'>Compressor: Jewel</td><td style='border: 1px solid #ddd; padding: 8px;'>Sustain: 4.0, Blend: 50%, Level: 0.0dB</td><td style='border: 1px solid #ddd; padding: 8px;'>Sustain: 7.5, Blend: 60%, Level: +2.5dB</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>EQ: Parametric-3</td><td style='border: 1px solid #ddd; padding: 8px;'>Band 1: 200Hz 0.0dB, Band 2: 800Hz -4.0dB, LPF: 6.0kHz</td><td style='border: 1px solid #ddd; padding: 8px;'>Band 1: 200Hz 0.0dB, Band 2: 800Hz -1.5dB, LPF: 6.0kHz</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Amplifier: US TWN Vibrato</td><td style='border: 1px solid #ddd; padding: 8px;'>Bright: OFF, Vol: 4.0, Bass: 3.0, Mid: 6.0, Treb: 5.0, Master: 8.0</td><td style='border: 1px solid #ddd; padding: 8px;'>Bright: OFF, Vol: 4.0, Bass: 3.0, Mid: 6.0, Treb: 5.0, Master: 9.5</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Cabinet: 212 US TWN C12Q 00s</td><td style='border: 1px solid #ddd; padding: 8px;'>Mic 1: 121 Ribbon (85%), Mic 2: 414 Cond (15%)</td><td style='border: 1px solid #ddd; padding: 8px;'>Mic 1: 121 Ribbon (85%), Mic 2: 414 Cond (15%)</td></tr><tr><td style='border: 1px solid #ddd; padding: 8px;'>Reverb: Spring Reverb</td><td style='border: 1px solid #ddd; padding: 8px;'>Mix: 20%, Decay: 2.5s</td><td style='border: 1px solid #ddd; padding: 8px;'>Mix: 28%, Decay: 3.2s</td></tr></tbody></table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            { "name": "Sustain", "type": "slider", "value": "4.0" },
+            { "name": "Blend", "type": "slider", "value": "50" },
+            { "name": "Level", "type": "slider", "value": "0.0" }
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            { "name": "Band 1 Freq", "type": "slider", "value": "200" },
+            { "name": "Band 1 Gain", "type": "slider", "value": "-3.0" },
+            { "name": "Band 2 Freq", "type": "slider", "value": "800" },
+            { "name": "Band 2 Gain", "type": "slider", "value": "-6.0" },
+            { "name": "High Cut", "type": "slider", "value": "6500" }
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "US TWN Vibrato",
+          "parameters": [
+            { "name": "Bright", "type": "switch", "value": "OFF" },
+            { "name": "Volume", "type": "slider", "value": "4.0" },
+            { "name": "Bass", "type": "slider", "value": "3.0" },
+            { "name": "Mid", "type": "slider", "value": "6.0" },
+            { "name": "Treble", "type": "slider", "value": "6.0" },
+            { "name": "Master", "type": "slider", "value": "8.0" }
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cab",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            { "name": "Mic 1 Type", "type": "selector", "value": "121 Ribbon" },
+            { "name": "Mic 2 Type", "type": "selector", "value": "414 Condenser" },
+            { "name": "Blend", "type": "slider", "value": "85" }
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            { "name": "Mix", "type": "slider", "value": "20" },
+            { "name": "Decay", "type": "slider", "value": "2.5" }
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "type": "Compressor",
+          "model": "Jewel",
+          "parameters": [
+            { "name": "Sustain", "type": "slider", "value": "4.0" },
+            { "name": "Blend", "type": "slider", "value": "50" },
+            { "name": "Level", "type": "slider", "value": "0.0" }
+          ]
+        },
+        {
+          "id": "block-2",
+          "type": "EQ",
+          "model": "Parametric-3",
+          "parameters": [
+            { "name": "Band 1 Freq", "type": "slider", "value": "200" },
+            { "name": "Band 1 Gain", "type": "slider", "value": "0.0" },
+            { "name": "Band 2 Freq", "type": "slider", "value": "800" },
+            { "name": "Band 2 Gain", "type": "slider", "value": "-4.0" },
+            { "name": "High Cut", "type": "slider", "value": "6000" }
+          ]
+        },
+        {
+          "id": "block-3",
+          "type": "Amplifier",
+          "model": "US TWN Vibrato",
+          "parameters": [
+            { "name": "Bright", "type": "switch", "value": "OFF" },
+            { "name": "Volume", "type": "slider", "value": "4.0" },
+            { "name": "Bass", "type": "slider", "value": "3.0" },
+            { "name": "Mid", "type": "slider", "value": "6.0" },
+            { "name": "Treble", "type": "slider", "value": "5.0" },
+            { "name": "Master", "type": "slider", "value": "8.0" }
+          ]
+        },
+        {
+          "id": "block-4",
+          "type": "Cab",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            { "name": "Mic 1 Type", "type": "selector", "value": "121 Ribbon" },
+            { "name": "Mic 2 Type", "type": "selector", "value": "414 Condenser" },
+            { "name": "Blend", "type": "slider", "value": "85" }
+          ]
+        },
+        {
+          "id": "block-5",
+          "type": "Reverb",
+          "model": "Spring Reverb",
+          "parameters": [
+            { "name": "Mix", "type": "slider", "value": "20" },
+            { "name": "Decay", "type": "slider", "value": "2.5" }
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the foundational blues requirements: a pristine Twin Reverb platform paired with JBL-style D120F speakers and spring reverb for authentic 1970s character.",
+    "<strong>Agent 2 (Sonic Architect):</strong> Set the target frequency peak at 2000Hz to ensure the lead tone sits prominently in a mix, and prescribed Soft Tube Clipping to keep the tone exclusively clean.",
+    "<strong>Agent 3 (Scraper):</strong> Contributed crucial community insights: warning against using overdrive pedals to maintain attack, suggesting optical compression for B.B. King style sustain, and utilizing an aggressive EQ notch to mimic the Varitone circuit.",
+    "<strong>Agent 4 (Librarian):</strong> Replaced the harsh CA Duo Vib with the US TWN Vibrato amp model, selected the specific 212 US TWN C12Q 00s cabinet, and provided tactical routing hints for the pre-amp EQ scoop.",
+    "<strong>Agent 5 (Navigator):</strong> Prevented the inclusion of non-native third-party captures, adhering strictly to the user's 'allow_cloud_captures: false' constraint.",
+    "<strong>Agent 6 (Acoustician):</strong> Designed the specific amp EQ profile (Bass 3, Mid 6, Treble 6) and pre-EQ cuts. <em>Architect Override: I overrode the Acoustician's extremely restrictive 4.5kHz LPF up to 6.5kHz/6.0kHz, as 4.5kHz would unnaturally muffle the required upper-mid articulation of a Fender clean platform.</em>",
+    "<strong>Agent 7 (Transducer):</strong> Provided a dual mic array using a 121 Ribbon at the cap edge blended (85%) with a 414 Condenser, successfully rolling off harsh 'ice-pick' transients natively at the speaker stage.",
+    "<strong>Agent 8 (FOH):</strong> Determined final mix integration points including a global output limit of -3.0dB and defining mix endpoints.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Confirmed the spatial dimensions, opting for a 2.5 second tail on the Spring Reverb at an optimal 25% wet mix to achieve traditional studio ambiance.",
+    "<strong>Agent 10 (Map Editor):</strong> Created the dynamic variations between Scene A (Rhythm) and Scene B (Lead), utilizing Master Volume and Compressor Sustain boosts rather than relying on distortion blocks.",
+    "<strong>Agent 11 (DSP Router):</strong> Formatted the signal flow, guaranteeing the optical compressor and 'Varitone' EQ sat perfectly in Lane 1 before hitting the amplifier input block."
+  ]
+}
+```

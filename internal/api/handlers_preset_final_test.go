@@ -110,7 +110,7 @@ func TestHandlers_FillCoverageGaps(t *testing.T) {
 type mockOrchestratorSuccessComplex struct {
 	err error
 }
-func (m *mockOrchestratorSuccessComplex) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}) (string, *agents.TokenUsage, error) {
+func (m *mockOrchestratorSuccessComplex) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestratorSuccessComplex) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {

@@ -1,0 +1,200 @@
+```json
+{
+  "builder_statement": "This preset captures the quintessential high-headroom, soaring lead tone associated with David Gilmour's classic stadium era. Relying strictly on a single Custom 100 amplifier pushed by a silicon Chief Fuzz, it leverages a dedicated post-fuzz EQ to replicate the specific 1kHz mid-hump of a Ram's Head Big Muff. A Tape Echo feeding a Lush Plate reverb provides the expansive, cinematic spatial tail crucial for legendary solo phrasing.",
+  "final_html_payload": {
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Suppresses high floor noise induced by the silicon fuzz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Threshold: -65.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Threshold: -65.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Simple EQ (Pre)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Pre-conditions humbuckers by aggressively cutting 200Hz mud before the fuzz hits, preventing a blown-out low end.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>200Hz: -3.5dB<br/>High Pass: 100Hz<br/>Low Pass: 3.2kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>200Hz: -3.5dB<br/>High Pass: 100Hz<br/>Low Pass: 3.2kHz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Chief Fuzz<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides the massive, sustaining silicon distortion essential for the soaring solo tone.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Sustain: 7.5<br/>Tone: 6.0<br/>Level: 6.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Simple EQ (Post-Fuzz)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Community-recommended trick to boost the 1kHz range, transforming the scooped Chief Fuzz into an authentic Ram's Head.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>1kHz: +3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>1kHz: +3.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Custom 3SE (Capture)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Acts as an incredibly pristine, high-headroom pedal platform. Master is dimed while Drive is kept low.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 2.5<br/>Master: 10.0<br/>Bass: 2.5<br/>Mid: 6.5<br/>Treble: 5.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 2.5<br/>Master: 10.0<br/>Bass: 2.5<br/>Mid: 6.5<br/>Treble: 5.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: UK C15W<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Accurately replicates the WEM 4x12 Fane Crescendo speakers using a Ribbon 160 / Dynamic 57 blend.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 160 (Cap Edge)<br/>Mic 2: Dynamic 57 (Mid Cone)<br/>Blend: 60/40</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 160 (Cap Edge)<br/>Mic 2: Dynamic 57 (Mid Cone)<br/>Blend: 60/40</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Tape Echo<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates the classic Binson Echorec pre-delay feeding into the plate reverb for rhythmic depth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Time: 375ms<br/>Feedback: 35%<br/>Mix: 25%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Lush Plate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A massive, cinematic EMT 140 plate decay that extends the notes beautifully and dynamically changes with scenes.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.5s<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 3.8s<br/>Mix: 35%</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Utility: Noise Gate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Suppresses high floor noise induced by the silicon fuzz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Threshold: -65.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Threshold: -65.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Simple EQ (Pre)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Boosts the 200Hz region to add body and girth to the single coil, preventing the fuzz from sounding too thin and raspy.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>200Hz: +1.5dB<br/>High Pass: 100Hz<br/>Low Pass: 3.0kHz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>200Hz: +1.5dB<br/>High Pass: 100Hz<br/>Low Pass: 3.0kHz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Fuzz: Chief Fuzz<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Provides massive distortion. The tone is rolled back and sustain increased here to compensate for the bright, snappy tele pickups.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Sustain: 8.5<br/>Tone: 4.5<br/>Level: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Simple EQ (Post-Fuzz)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Community-recommended trick to boost the 1kHz range, transforming the scooped Chief Fuzz into an authentic Ram's Head.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>1kHz: +3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>1kHz: +3.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Custom 3SE (Capture)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Acts as an incredibly pristine pedal platform. Telecaster variant uses pushed bass and softened treble for balance.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 3.0<br/>Master: 10.0<br/>Bass: 4.0<br/>Mid: 6.0<br/>Treble: 4.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 3.0<br/>Master: 10.0<br/>Bass: 4.0<br/>Mid: 6.0<br/>Treble: 4.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: UK C15W<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Accurately replicates the WEM 4x12 Fane Crescendo speakers using a Ribbon 160 / Dynamic 57 blend.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 160 (Cap Edge)<br/>Mic 2: Dynamic 57 (Mid Cone)<br/>Blend: 60/40</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 160 (Cap Edge)<br/>Mic 2: Dynamic 57 (Mid Cone)<br/>Blend: 60/40</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Tape Echo<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates the classic Binson Echorec pre-delay feeding into the plate reverb for rhythmic depth.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Time: 375ms<br/>Feedback: 35%<br/>Mix: 25%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Lush Plate<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A massive, cinematic EMT 140 plate decay that extends the notes beautifully and dynamically changes with scenes.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.5s<br/>Mix: 25%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 3.8s<br/>Mix: 35%</td></tr> </tbody> </table>"
+  },
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1-noise-gate",
+          "type": "Utility",
+          "model": "Noise Gate",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Threshold", "type": "slider", "value": "-65.0" }
+          ]
+        },
+        {
+          "id": "block-2-pre-eq",
+          "type": "EQ",
+          "model": "Simple EQ",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "200Hz", "type": "slider", "value": "-3.5" },
+            { "name": "High Pass", "type": "slider", "value": "100" },
+            { "name": "Low Pass", "type": "slider", "value": "3200" }
+          ]
+        },
+        {
+          "id": "block-3-fuzz",
+          "type": "Fuzz",
+          "model": "Chief Fuzz",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Sustain", "type": "slider", "value": "7.5" },
+            { "name": "Tone", "type": "slider", "value": "6.0" },
+            { "name": "Level", "type": "slider", "value": "6.0" }
+          ]
+        },
+        {
+          "id": "block-4-post-eq",
+          "type": "EQ",
+          "model": "Simple EQ",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "1kHz", "type": "slider", "value": "3.0" }
+          ]
+        },
+        {
+          "id": "block-5-amp",
+          "type": "Amplifier",
+          "model": "Custom 100",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Drive", "type": "slider", "value": "2.5" },
+            { "name": "Master", "type": "slider", "value": "10.0" },
+            { "name": "Bass", "type": "slider", "value": "2.5" },
+            { "name": "Mid", "type": "slider", "value": "6.5" },
+            { "name": "Treble", "type": "slider", "value": "5.5" }
+          ]
+        },
+        {
+          "id": "block-6-cab",
+          "type": "Cabinet",
+          "model": "UK C15W",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Mic 1", "type": "dropdown", "value": "Ribbon 160" },
+            { "name": "Mic 2", "type": "dropdown", "value": "Dynamic 57" },
+            { "name": "Blend", "type": "slider", "value": "60" }
+          ]
+        },
+        {
+          "id": "block-7-delay",
+          "type": "Delay",
+          "model": "Tape Echo",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Time", "type": "slider", "value": "375" },
+            { "name": "Feedback", "type": "slider", "value": "35" },
+            { "name": "Mix", "type": "slider", "value": "25" }
+          ]
+        },
+        {
+          "id": "block-8-reverb",
+          "type": "Reverb",
+          "model": "Lush Plate",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Decay", "type": "slider", "value": "3.8" },
+            { "name": "Mix", "type": "slider", "value": "35" }
+          ]
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1-noise-gate",
+          "type": "Utility",
+          "model": "Noise Gate",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Threshold", "type": "slider", "value": "-65.0" }
+          ]
+        },
+        {
+          "id": "block-2-pre-eq",
+          "type": "EQ",
+          "model": "Simple EQ",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "200Hz", "type": "slider", "value": "1.5" },
+            { "name": "High Pass", "type": "slider", "value": "100" },
+            { "name": "Low Pass", "type": "slider", "value": "3000" }
+          ]
+        },
+        {
+          "id": "block-3-fuzz",
+          "type": "Fuzz",
+          "model": "Chief Fuzz",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Sustain", "type": "slider", "value": "8.5" },
+            { "name": "Tone", "type": "slider", "value": "4.5" },
+            { "name": "Level", "type": "slider", "value": "6.5" }
+          ]
+        },
+        {
+          "id": "block-4-post-eq",
+          "type": "EQ",
+          "model": "Simple EQ",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "1kHz", "type": "slider", "value": "3.0" }
+          ]
+        },
+        {
+          "id": "block-5-amp",
+          "type": "Amplifier",
+          "model": "Custom 100",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Drive", "type": "slider", "value": "3.0" },
+            { "name": "Master", "type": "slider", "value": "10.0" },
+            { "name": "Bass", "type": "slider", "value": "4.0" },
+            { "name": "Mid", "type": "slider", "value": "6.0" },
+            { "name": "Treble", "type": "slider", "value": "4.5" }
+          ]
+        },
+        {
+          "id": "block-6-cab",
+          "type": "Cabinet",
+          "model": "UK C15W",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Mic 1", "type": "dropdown", "value": "Ribbon 160" },
+            { "name": "Mic 2", "type": "dropdown", "value": "Dynamic 57" },
+            { "name": "Blend", "type": "slider", "value": "60" }
+          ]
+        },
+        {
+          "id": "block-7-delay",
+          "type": "Delay",
+          "model": "Tape Echo",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Time", "type": "slider", "value": "375" },
+            { "name": "Feedback", "type": "slider", "value": "35" },
+            { "name": "Mix", "type": "slider", "value": "25" }
+          ]
+        },
+        {
+          "id": "block-8-reverb",
+          "type": "Reverb",
+          "model": "Lush Plate",
+          "parameters": [
+            { "name": "State", "type": "toggle", "value": "Active" },
+            { "name": "Decay", "type": "slider", "value": "3.8" },
+            { "name": "Mix", "type": "slider", "value": "35" }
+          ]
+        }
+      ]
+    }
+  },
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the foundational 'Comfortably Numb' era gear footprint, explicitly selecting the Hiwatt Custom 100 DR103, Ram's Head Big Muff Pi, WEM 4x12 Fane Crescendo cabinet, and the EMT 140 Plate reverb.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Calculated the core acoustic measurements, identifying a critical 3200Hz peak frequency, the necessity of silicon diode clipping for the fuzz, and defining the massive plate decay characteristics and -65dB gate threshold.",
+    "<strong>Agent 3 (Web Scraper):</strong> Sourced essential Quad Cortex community consensus, mapping the analog gear to the 'Custom 100' and 'Chief Fuzz' models, and dictating the insertion of a post-fuzz Simple EQ to boost 1kHz for proper Ram's Head articulation while warning against excessive low-end fuzz mud.",
+    "<strong>Agent 4 (CorOS Librarian):</strong> Skipped execution per user configuration, deferring to the scraped community terminology and historical equipment mappings for model names.",
+    "<strong>Agent 5 (Cloud Navigator):</strong> Enforced the strict exclusion of external Neural DSP cloud captures, guaranteeing the entire rig was constructed 100% using factory Quad Cortex models and native algorithms.",
+    "<strong>Agent 6 (Acoustician):</strong> Resolved amplifier gain staging by diming the Hiwatt Master volume while dropping drive to 2-3 for maximum headroom, and configured the Chameleon Pre-EQ (200Hz adjustments and 3.2kHz LPF) to handle the brutal transient fuzz spikes.",
+    "<strong>Agent 7 (Transducer):</strong> Positioned the virtual microphones on the WEM cabinet, deploying a Ribbon 160 at the Cap Edge and a Dynamic 57 at the Mid Cone, perfectly blended at a 60/40 ratio for optimal phase coherence.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Prevented digital clipping on the main bus by commanding a -3.0dB cut to the output lane to compensate for the massive fuzz volume spike, and instantiated global 100Hz and 8000Hz master EQ cuts.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Designed the wet spatial tail, programming a Tape Echo (set to 375ms to emulate the Binson Echorec) cascading directly into a 2.5s Lush Plate reverb with a 25% wet mix.",
+    "<strong>Agent 10 (MIDI / Scene Mapper):</strong> Dynamically assigned the parameter states for Scene A (Rhythm: Fuzz bypassed, shorter 2.5s Reverb) and Scene B (Lead: Fuzz active, expanded 3.8s Reverb and Tape Echo active).",
+    "<strong>Agent 11 (DSP Architect):</strong> Validated the single-amp routing requirement and enforced the acoustic divergence logic, mechanically cutting bass and harshness on the ES-339 humbucker layout while pushing 200Hz body and lowering fuzz tone on the bright Telecaster single coil layout."
+  ]
+}
+```

@@ -135,3 +135,44 @@ func TestUILibraryIntegrity(t *testing.T) {
 		}
 	}
 }
+
+func TestUIGoldenTweakingWorkspace(t *testing.T) {
+	p := &storage.Preset{
+		ID:   "test-preset",
+		Name: "Test Preset",
+		Payload: `{"guitars":{"Les Paul":[{"id":"b1","type":"drive","model":"Overdrive","parameters":[{"name":"Gain","value":"5.0","type":"slider","unit":""}]}]}}`,
+	}
+
+	// Read-Only mode
+	htmlReadOnly := renderTweakingWorkspaceHTML(p, false, true)
+	verifyGolden(t, "workspace_readonly", htmlReadOnly)
+
+	// Edit mode (Note: renderTweakingWorkspaceHTML now determines edit mode based on p.Name or payload, so passing false for isCopyMode still applies)
+	htmlEdit := renderTweakingWorkspaceHTML(p, false, false)
+	verifyGolden(t, "workspace_edit", htmlEdit)
+}
+
+func verifyGolden(t *testing.T, name string, got string) {
+	t.Helper()
+	goldenFile := "testdata/" + name + ".golden"
+
+	if os.Getenv("UPDATE_GOLDEN") == "true" {
+		os.MkdirAll("testdata", 0755)
+		err := os.WriteFile(goldenFile, []byte(got), 0644)
+		if err != nil {
+			t.Fatalf("Failed to update golden file: %v", err)
+		}
+		t.Logf("Updated golden file %s", goldenFile)
+		return
+	}
+
+	wantBytes, err := os.ReadFile(goldenFile)
+	if err != nil {
+		t.Fatalf("Failed to read golden file %s: %v. Run with UPDATE_GOLDEN=true to create it.", goldenFile, err)
+	}
+	want := string(wantBytes)
+
+	if got != want {
+		t.Errorf("Golden mismatch for %s. Run with UPDATE_GOLDEN=true to update if this change is intended.", name)
+	}
+}

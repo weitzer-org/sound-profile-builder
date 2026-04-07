@@ -1,3 +1,4 @@
+Error parsing 09_BB_King_multi.html: Expecting ',' delimiter: line 4 column 2614 (char 3096)
 
 🚨 --- Hallucination Detections ---
 ✅ No hallucinations detected in baseline.

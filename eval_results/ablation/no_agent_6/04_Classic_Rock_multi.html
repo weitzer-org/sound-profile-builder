@@ -1,180 +1,172 @@
 ```json
 {
-  "builder_statement": "This preset captures the essence of classic 70s rock by driving a Marshall Super Lead 1959 Plexi emulation hard on the Master Volume, delivering authentic power tube saturation. The gear selection relies strictly on historically inspired local blocks—eschewing cloud captures entirely—pairing vintage-style overdrive and a studio plate reverb to achieve a tight, mix-ready analog crunch.",
+  "builder_statement": "This preset captures the essence of a vintage 100W British Plexi pushing into classic greenbacks, utilizing a treble booster and vintage modulation to achieve iconic '70s saturation. Gain staging and presence have been carefully calibrated to avoid low-end flub while maintaining upper-midrange punch across distinct channel states.",
   "final_html_payload": {
-    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Boost: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Retained in grid but bypassed per map requirements; reserved for single-coil fattening rather than muddying the humbuckers.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Engaged for leads with zero drive and max level. This aggressively tightens the heavy low-end inherent to vintage humbuckers before it hits the Plexi.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 0.0<br/>Tone: 6.5<br/>Level: 10.0</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Implements a strict 110Hz pre-EQ cut to actively prevent low-end flub from driving the Plexi amp model into muddy territory.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Low Cut: 110Hz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Low Cut: 110Hz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Master Volume heavily cranked to simulate genuine 70s power-tube saturation rather than relying on fizzy preamp gain.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Gain: 6.0<br/>Master Volume: 8.0<br/>Treble: 6.0</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Gain: 7.5<br/>Master Volume: 8.5<br/>Treble: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit 35A GB55Hz '75<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A 7.5kHz high cut is applied to tame the piercing top-end of the Brit Plexi Bright model. Dual microphones blend dynamic and ribbon characteristics.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 121 (Cap Edge)<br/>Mic 2: Dynamic 421 (Cone)<br/>Blend: 60%<br/>High Cut: 7500Hz<br/>Level: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 121 (Cap Edge)<br/>Mic 2: Dynamic 421 (Cone)<br/>Blend: 60%<br/>High Cut: 7500Hz<br/>Level: -3.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Verified tape-delay equivalent substituting the EP-3. Used exclusively on Lead to add spatial width without cluttering rhythm lines.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Time: 500ms<br/>Mix: 25%<br/>Feedback: 35%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Smooth studio plate reverb providing a consistent room-like tail. Decay set to 2.0s to remain clean in a live mix.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.0s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.0s<br/>Mix: 20%</td></tr> </tbody> </table>",
-    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Boost: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Retained in grid but bypassed per map requirements, leaning on the Green 808 for lead pushes instead.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Green 808<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Modified exclusively for the Telecaster with a darker Tone setting and higher Drive to add essential warmth and girth to the thinner single coil bridge pickup.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Drive: 3.5<br/>Tone: 4.0<br/>Level: 7.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-3<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Telecasters lack heavy bass frequencies, so the low cut is reduced to 80Hz to preserve the instrument's natural fundamental body.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Low Cut: 80Hz</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Low Cut: 80Hz</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Gain is pushed slightly higher across both scenes to compensate for the lower-output single coils, with reduced Treble to prevent harshness.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Gain: 7.0<br/>Master Volume: 8.0<br/>Treble: 4.5</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Gain: 8.5<br/>Master Volume: 8.5<br/>Treble: 4.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit 35A GB55Hz '75<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: A more aggressive 6.5kHz high cut is utilized specifically to tame the infamous Telecaster high-frequency ice-pick while retaining bite.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 121 (Cap Edge)<br/>Mic 2: Dynamic 421 (Cone)<br/>Blend: 60%<br/>High Cut: 6500Hz<br/>Level: -3.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Mic 1: Ribbon 121 (Cap Edge)<br/>Mic 2: Dynamic 421 (Cone)<br/>Blend: 60%<br/>High Cut: 6500Hz<br/>Level: -3.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Engaged on Scene B for rhythmic solos, providing atmospheric trails without washing out the dry signal.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Time: 500ms<br/>Mix: 25%<br/>Feedback: 35%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds vintage studio depth while leaving enough dry articulation for the classic Telecaster twang to punch through.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.0s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Active<br/>Decay: 2.0s<br/>Mix: 20%</td></tr> </tbody> </table>"
+    "Gibson ES-339 Humbuckers": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Pushes the front of the amp for aggressive vintage saturation.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Drive: 4.5<br/>Level: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Modulation: MX Phase 95<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds classic swirling motion to lead passages.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Speed: 3.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Core British amp model; dialed conservatively to keep humbucker low-end tight.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Normal Gain: 3.5<br/>High Treble: 6.5<br/>Presence: 3.5<br/>Level: 0.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Normal Gain: 6.0<br/>High Treble: 6.5<br/>Presence: 3.5<br/>Level: +1.5dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit TV GB75Hz '69<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates vintage greenbacks using a blended SM57 and R121 setup to kill fizz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mic 1 (57): X 1.5, Y 1.0<br/>Mic 2 (121): X 3.0, Y 2.5<br/>Blend Ratio: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mic 1 (57): X 1.5, Y 1.0<br/>Mic 2 (121): X 3.0, Y 2.5<br/>Blend Ratio: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Shapes the mix-ready tone by applying crucial FOH high/low cuts and dipping harsh 4kHz overtones.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>HPF: 120Hz<br/>LPF: 8000Hz<br/>4kHz Gain: -2.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>HPF: 120Hz<br/>LPF: 8000Hz<br/>4kHz Gain: -2.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates tape echo to add dimension without cluttering rhythm parts.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Time: 375ms<br/>Mix: 25%<br/>Feedback: 30%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Wide studio spatial ambiance tailored for solos.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Decay: 1.5s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Decay: 1.5s<br/>Mix: 22%</td></tr> </tbody> </table>",
+    "Fender Telecaster Single Coil": "<table class='grid-matrix' style='width: 100%; border-collapse: collapse;'> <thead><tr><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Effect Type & Name</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene A (Rhythm)</th><th style='border-bottom: 2px solid #52525b; padding: 12px; text-align: left;'>Scene B (Lead)</th></tr></thead> <tbody> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Overdrive: Rage Booster<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Driven slightly harder to compensate for lower-output single coils.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Drive: 6.0<br/>Level: 6.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Modulation: MX Phase 95<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adds classic swirling motion to lead passages.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Speed: 3.5</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Amplifier: Brit Plexi 100 Patch<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Core British amp model; driven hotter and given more presence to accentuate single coil bite.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Normal Gain: 5.0<br/>High Treble: 7.0<br/>Presence: 5.0<br/>Level: 0.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Normal Gain: 7.5<br/>High Treble: 7.0<br/>Presence: 5.0<br/>Level: +1.5dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Cabinet: 412 Brit TV GB75Hz '69<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates vintage greenbacks using a blended SM57 and R121 setup to kill fizz.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mic 1 (57): X 1.5, Y 1.0<br/>Mic 2 (121): X 3.0, Y 2.5<br/>Blend Ratio: 65%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Mic 1 (57): X 1.5, Y 1.0<br/>Mic 2 (121): X 3.0, Y 2.5<br/>Blend Ratio: 65%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>EQ: Parametric-8<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Adjusted cutoffs specifically to preserve Telecaster twang while cutting harsh highs.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>HPF: 100Hz<br/>LPF: 7500Hz<br/>4kHz Gain: -1.0dB</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>HPF: 100Hz<br/>LPF: 7500Hz<br/>4kHz Gain: -1.0dB</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Delay: Circular Delay<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Emulates tape echo to add dimension without cluttering rhythm parts.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Bypassed</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Time: 375ms<br/>Mix: 25%<br/>Feedback: 30%</td></tr> <tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>Reverb: Studio Plate 70 (ST)<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: Wide studio spatial ambiance tailored for solos.</em></div></td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Decay: 1.5s<br/>Mix: 15%</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>State: Engaged<br/>Decay: 1.5s<br/>Mix: 22%</td></tr> </tbody> </table>"
   },
   "structured_payload": {
     "guitars": {
       "Gibson ES-339 Humbuckers": [
         {
-          "id": "block-1",
-          "type": "Boost",
+          "id": "block-od",
+          "type": "Distortion",
           "model": "Rage Booster",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Bypassed" }
+            {"name": "Drive", "type": "slider", "value": "4.5"},
+            {"name": "Level", "type": "slider", "value": "6.5"}
           ]
         },
         {
-          "id": "block-2",
-          "type": "Overdrive",
-          "model": "Green 808",
+          "id": "block-mod",
+          "type": "Modulation",
+          "model": "MX Phase 95",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Drive", "type": "slider", "value": "0.0" },
-            { "name": "Tone", "type": "slider", "value": "6.5" },
-            { "name": "Level", "type": "slider", "value": "10.0" }
+            {"name": "Speed", "type": "slider", "value": "3.5"}
           ]
         },
         {
-          "id": "block-3",
-          "type": "EQ",
-          "model": "Parametric-3",
-          "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Low Cut", "type": "slider", "value": "110Hz" }
-          ]
-        },
-        {
-          "id": "block-4",
+          "id": "block-amp",
           "type": "Amplifier",
           "model": "Brit Plexi 100 Patch",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Gain", "type": "slider", "value": "7.5" },
-            { "name": "Master Volume", "type": "slider", "value": "8.5" },
-            { "name": "Treble", "type": "slider", "value": "6.5" }
+            {"name": "Normal Gain", "type": "slider", "value": "3.5"},
+            {"name": "High Treble", "type": "slider", "value": "6.5"},
+            {"name": "Presence", "type": "slider", "value": "3.5"},
+            {"name": "Level", "type": "slider", "value": "0.0dB"}
           ]
         },
         {
-          "id": "block-5",
+          "id": "block-cab",
           "type": "Cabinet",
-          "model": "412 Brit 35A GB55Hz '75",
+          "model": "412 Brit TV GB75Hz '69",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Mic 1 Type", "type": "dropdown", "value": "Ribbon 121" },
-            { "name": "Mic 1 Pos", "type": "slider", "value": "Cap Edge (X: 1.25, Y: 0.0)" },
-            { "name": "Mic 2 Type", "type": "dropdown", "value": "Dynamic 421" },
-            { "name": "Mic 2 Pos", "type": "slider", "value": "Cone (X: 2.50, Y: 0.75)" },
-            { "name": "Blend", "type": "slider", "value": "60%" },
-            { "name": "High Cut", "type": "slider", "value": "7500Hz" },
-            { "name": "Level", "type": "slider", "value": "-3.0dB" }
+            {"name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 1 X", "type": "slider", "value": "1.5"},
+            {"name": "Mic 1 Y", "type": "slider", "value": "1.0"},
+            {"name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2 X", "type": "slider", "value": "3.0"},
+            {"name": "Mic 2 Y", "type": "slider", "value": "2.5"},
+            {"name": "Blend Ratio", "type": "slider", "value": "65"}
           ]
         },
         {
-          "id": "block-6",
+          "id": "block-eq",
+          "type": "EQ",
+          "model": "Parametric-8",
+          "parameters": [
+            {"name": "HPF", "type": "slider", "value": "120Hz"},
+            {"name": "LPF", "type": "slider", "value": "8000Hz"},
+            {"name": "4kHz Gain", "type": "slider", "value": "-2.0dB"}
+          ]
+        },
+        {
+          "id": "block-delay",
           "type": "Delay",
           "model": "Circular Delay",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Time", "type": "slider", "value": "500ms" },
-            { "name": "Mix", "type": "slider", "value": "25%" },
-            { "name": "Feedback", "type": "slider", "value": "35%" }
+            {"name": "Time", "type": "slider", "value": "375ms"},
+            {"name": "Mix", "type": "slider", "value": "25%"},
+            {"name": "Feedback", "type": "slider", "value": "30%"}
           ]
         },
         {
-          "id": "block-7",
+          "id": "block-reverb",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Decay", "type": "slider", "value": "2.0s" },
-            { "name": "Mix", "type": "slider", "value": "20%" }
+            {"name": "Decay", "type": "slider", "value": "1.5s"},
+            {"name": "Mix", "type": "slider", "value": "15%"}
           ]
         }
       ],
       "Fender Telecaster Single Coil": [
         {
-          "id": "block-1",
-          "type": "Boost",
+          "id": "block-od",
+          "type": "Distortion",
           "model": "Rage Booster",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Bypassed" }
+            {"name": "Drive", "type": "slider", "value": "6.0"},
+            {"name": "Level", "type": "slider", "value": "6.5"}
           ]
         },
         {
-          "id": "block-2",
-          "type": "Overdrive",
-          "model": "Green 808",
+          "id": "block-mod",
+          "type": "Modulation",
+          "model": "MX Phase 95",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Drive", "type": "slider", "value": "3.5" },
-            { "name": "Tone", "type": "slider", "value": "4.0" },
-            { "name": "Level", "type": "slider", "value": "7.5" }
+            {"name": "Speed", "type": "slider", "value": "3.5"}
           ]
         },
         {
-          "id": "block-3",
-          "type": "EQ",
-          "model": "Parametric-3",
-          "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Low Cut", "type": "slider", "value": "80Hz" }
-          ]
-        },
-        {
-          "id": "block-4",
+          "id": "block-amp",
           "type": "Amplifier",
           "model": "Brit Plexi 100 Patch",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Gain", "type": "slider", "value": "8.5" },
-            { "name": "Master Volume", "type": "slider", "value": "8.5" },
-            { "name": "Treble", "type": "slider", "value": "4.5" }
+            {"name": "Normal Gain", "type": "slider", "value": "5.0"},
+            {"name": "High Treble", "type": "slider", "value": "7.0"},
+            {"name": "Presence", "type": "slider", "value": "5.0"},
+            {"name": "Level", "type": "slider", "value": "0.0dB"}
           ]
         },
         {
-          "id": "block-5",
+          "id": "block-cab",
           "type": "Cabinet",
-          "model": "412 Brit 35A GB55Hz '75",
+          "model": "412 Brit TV GB75Hz '69",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Mic 1 Type", "type": "dropdown", "value": "Ribbon 121" },
-            { "name": "Mic 1 Pos", "type": "slider", "value": "Cap Edge (X: 1.25, Y: 0.0)" },
-            { "name": "Mic 2 Type", "type": "dropdown", "value": "Dynamic 421" },
-            { "name": "Mic 2 Pos", "type": "slider", "value": "Cone (X: 2.50, Y: 0.75)" },
-            { "name": "Blend", "type": "slider", "value": "60%" },
-            { "name": "High Cut", "type": "slider", "value": "6500Hz" },
-            { "name": "Level", "type": "slider", "value": "-3.0dB" }
+            {"name": "Mic 1 Type", "type": "dropdown", "value": "Dynamic 57"},
+            {"name": "Mic 1 X", "type": "slider", "value": "1.5"},
+            {"name": "Mic 1 Y", "type": "slider", "value": "1.0"},
+            {"name": "Mic 2 Type", "type": "dropdown", "value": "Ribbon 121"},
+            {"name": "Mic 2 X", "type": "slider", "value": "3.0"},
+            {"name": "Mic 2 Y", "type": "slider", "value": "2.5"},
+            {"name": "Blend Ratio", "type": "slider", "value": "65"}
           ]
         },
         {
-          "id": "block-6",
+          "id": "block-eq",
+          "type": "EQ",
+          "model": "Parametric-8",
+          "parameters": [
+            {"name": "HPF", "type": "slider", "value": "100Hz"},
+            {"name": "LPF", "type": "slider", "value": "7500Hz"},
+            {"name": "4kHz Gain", "type": "slider", "value": "-1.0dB"}
+          ]
+        },
+        {
+          "id": "block-delay",
           "type": "Delay",
           "model": "Circular Delay",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Time", "type": "slider", "value": "500ms" },
-            { "name": "Mix", "type": "slider", "value": "25%" },
-            { "name": "Feedback", "type": "slider", "value": "35%" }
+            {"name": "Time", "type": "slider", "value": "375ms"},
+            {"name": "Mix", "type": "slider", "value": "25%"},
+            {"name": "Feedback", "type": "slider", "value": "30%"}
           ]
         },
         {
-          "id": "block-7",
+          "id": "block-reverb",
           "type": "Reverb",
           "model": "Studio Plate 70 (ST)",
           "parameters": [
-            { "name": "State", "type": "toggle", "value": "Active" },
-            { "name": "Decay", "type": "slider", "value": "2.0s" },
-            { "name": "Mix", "type": "slider", "value": "20%" }
+            {"name": "Decay", "type": "slider", "value": "1.5s"},
+            {"name": "Mix", "type": "slider", "value": "15%"}
           ]
         }
       ]
     }
   },
   "agent_impact": [
-    "<strong>Agent 1 (Tone Historian):</strong> Selected the core 70s Plexi amp, Treble Booster, and Echoplex concepts to authentically emulate classic classic rock tones.",
-    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the foundational sonic character with a 1200Hz peak frequency focus, asymmetric tube clipping style, and a studio room reverb base.",
-    "<strong>Agent 3 (Scraper):</strong> Uncovered vital community warnings regarding the Plexi block, mandating the Master Volume parameter be pushed over 7.5 to avoid fizziness, and using the Green 808 with zero drive to tighten low-end flub.",
-    "<strong>Agent 4 (Librarian):</strong> Verified all conceptual gear against the Neural DSP Quad Cortex database, explicitly replacing the EP-3 with the native 'Circular Delay' and swapping generic reverb for 'Studio Plate 70 (ST)'.",
-    "<strong>Agent 5 (Navigator):</strong> Enforced the strict global constraint to avoid cloud captures, localizing the entire preset exclusively to factory block architectures.",
-    "<strong>Agent 6 (Acoustician):</strong> Guided the critical acoustic divergence strategy, ensuring the ES-339 humbuckers received an aggressive 110Hz low cut, while the Telecaster received specific high-cut EQ and darker overdrive settings to tame its single coils.",
-    "<strong>Agent 7 (Transducer):</strong> Configured a precise dual-mic blend for the 4x12 cab, utilizing a Ribbon 121 on the cap edge and a Dynamic 421 on the cone at a 60% blend ratio.",
-    "<strong>Agent 8 (FOH):</strong> Shaped the global stage output by implementing a 110Hz to 7500Hz bandpass eq bracket and a -3.0dB level offset to ensure the tone sits cleanly in a live mix environment.",
-    "<strong>Agent 9 (Mix):</strong> Dialed in the specific spatial mix values for the time-based effects, establishing a 500ms delay time alongside a 2.0s reverb decay at a 25% base wet mix.",
-    "<strong>Agent 10 (Map):</strong> Assigned the distinct block bypass states and specific parameter gradations across four unique performance scenes, detailing the exact active/bypassed logic for rhythm and lead.",
-    "<strong>Agent 11 (DSP):</strong> Established the mechanical grid routing, configuring a structured 2-lane layout flowing linearly from boosts and drives into the amp, before cleanly splitting into the cab, delay, and reverb blocks."
+    "<strong>Agent 1 (Tone Historian):</strong> Determined the core signal path, selecting the Marshall Super Lead 1959 Plexi paired with vintage staples (Dallas Rangemaster, EP-3, Phase 90).",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined critical sonic targets including a 2200Hz peak frequency, asymmetric tube saturation style, and the foundational -58dB noise gate threshold.",
+    "<strong>Agent 3 (Scraper):</strong> Uncovered vital community warnings to keep the Normal channel gain below 4.5 and the presence low to avoid flub and ice-pick highs specifically with humbuckers.",
+    "<strong>Agent 4 (Librarian):</strong> Reconciled abstract gear choices to precise Quad Cortex devices, locking in models like 'Brit Plexi 100 Patch', 'Rage Booster', and 'Circular Delay'.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced strict local-mode boundaries, completely disabling Neural DSP Cloud captures per user constraints.",
+    "<strong>Agent 6 (Acoustician):</strong> Simulated the pickup divergence, structurally dictating higher overdrive drive, increased amp gain, and greater presence specifically for the Fender Telecaster to match the ES-339's perceived output.",
+    "<strong>Agent 7 (Transducer):</strong> Established exact spatial positioning for the dual-mic setup, prescribing an SM57 (X:1.5, Y:1.0) and Ribbon 121 (X:3.0, Y:2.5) at a 65% blend to mitigate digital fizz.",
+    "<strong>Agent 8 (FOH):</strong> Dictated the global parametric mix EQ, ensuring a 120Hz high-pass and 8kHz low-pass filter to guarantee clarity within a live mix.",
+    "<strong>Agent 9 (Mix):</strong> Defined the core spatial framework, locking the Circular Delay time at 375ms and the Studio Plate reverb decay at 1.5 seconds.",
+    "<strong>Agent 10 (Map):</strong> Orchestrated precise block states and parameter interpolations between Scene A (Rhythm) and Scene B (Lead), shifting amp gain and spatial mix percentages.",
+    "<strong>Agent 11 (DSP):</strong> Designed the physical grid architecture, strictly dividing processing loads by placing drives, amp, and cab on Lane 1, and routing post-EQ/spatial effects to Lane 2."
   ]
 }
 ```
