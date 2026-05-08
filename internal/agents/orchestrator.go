@@ -102,6 +102,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		}
 	}
 
+	allowFactoryCaptures, ok := constraints["allow_factory_captures"].(bool)
+	if ok && !allowFactoryCaptures {
+		prompt = "[GLOBAL USER CONFIG FLAG: NO FACTORY CAPTURES. The generated preset MUST NOT use any factory captures.]\n\n" + prompt
+	}
+
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())

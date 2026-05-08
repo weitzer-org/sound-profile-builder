@@ -125,6 +125,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
+		allowFactoryCaptures := r.FormValue("allow_factory_captures") == "on"
+		allowPaidPlugins := r.FormValue("allow_paid_plugins") == "on"
+
 		cfg := s.appConfig
 		if cfg == nil {
 			cfg = &config.AppConfig{SingleAmpMode: false, AllowCloudCaptures: true}
@@ -134,7 +137,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 			"single_amp_mode":      cfg.SingleAmpMode,
 			"allow_cloud_captures": cfg.AllowCloudCaptures,
-			"allow_paid_plugins":   cfg.AllowPaidPlugins,
+			"allow_factory_captures": allowFactoryCaptures,
+			"allow_paid_plugins":   allowPaidPlugins,
 			"available_plugins":   cfg.AvailablePlugins,
 		}
 
