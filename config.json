@@ -1,6 +1,10 @@
 {
   "single_amp_mode": true,
   "allow_cloud_captures": false,
+  "allow_paid_plugins": true,
+  "available_plugins": [
+    "Cory Wong"
+  ],
   "guitars": [
     "Gibson ES-339",
     "Fender Telecaster American Pro II",

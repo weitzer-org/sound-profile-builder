@@ -134,6 +134,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 			"single_amp_mode":      cfg.SingleAmpMode,
 			"allow_cloud_captures": cfg.AllowCloudCaptures,
+			"allow_paid_plugins":   cfg.AllowPaidPlugins,
+			"available_plugins":   cfg.AvailablePlugins,
 		}
 
 		ctx := context.WithoutCancel(r.Context())
