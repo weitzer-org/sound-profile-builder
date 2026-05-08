@@ -125,12 +125,17 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		allowFactoryCaptures := r.FormValue("allow_factory_captures") == "on"
-		allowPaidPlugins := r.FormValue("allow_paid_plugins") == "on"
+		allowFactoryCaptures := r.FormValue("allow_factory_captures") != "off"
+		allowPaidPlugins := r.FormValue("allow_paid_plugins") != "off"
 
 		cfg := s.appConfig
 		if cfg == nil {
-			cfg = &config.AppConfig{SingleAmpMode: false, AllowCloudCaptures: true}
+			cfg = &config.AppConfig{
+				SingleAmpMode:        false,
+				AllowCloudCaptures:   true,
+				AllowFactoryCaptures: true,
+				AllowPaidPlugins:     true,
+			}
 		}
 
 		constraints := map[string]interface{}{
