@@ -2219,61 +2219,61 @@
     "is_capture": true
   },
   "Cory Wong Cab 1 (M) & (ST)": {
-    "coros_equivalent": "412 CA Stand OS A V30 '01",
+    "coros_equivalent": "Cory Wong Cab 1 (M) & (ST)",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Cory Wong Cab 2 (M) & (ST)": {
-    "coros_equivalent": "212 CA Recto V30 '98",
+    "coros_equivalent": "Cory Wong Cab 2 (M) & (ST)",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Cory Wong Cab 3 (M) & (ST)": {
-    "coros_equivalent": "412 CA Stand OS A V30 '01",
+    "coros_equivalent": "Cory Wong Cab 3 (M) & (ST)",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Cory Wong D.I. Funk Console": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Cory Wong D.I. Funk Console",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
   },
   "Cory Wong Delay-y-y": {
-    "coros_equivalent": "Circular Delay",
+    "coros_equivalent": "Cory Wong Delay-y-y",
     "type": "delay",
     "confidence_score": 1.0
   },
   "Cory Wong The 4th Position Compressor": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Cory Wong The 4th Position Compressor",
     "type": "compressor",
     "confidence_score": 1.0
   },
   "Cory Wong The 80s": {
-    "coros_equivalent": "Crying Clyde Wah",
+    "coros_equivalent": "Cory Wong The 80s",
     "type": "modulation",
     "confidence_score": 1.0
   },
   "Cory Wong The Amp Snob": {
-    "coros_equivalent": "US Twin Vibrato",
+    "coros_equivalent": "Cory Wong The Amp Snob",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
   },
   "Cory Wong The Big Rig Overdrive": {
-    "coros_equivalent": "Chief Bass Overdrive",
+    "coros_equivalent": "Cory Wong The Big Rig Overdrive",
     "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Cory Wong The Clean Machine": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Cory Wong The Clean Machine",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique"
   },
   "Cory Wong The Postal Service": {
-    "coros_equivalent": "Single (ST) Lite",
+    "coros_equivalent": "Cory Wong The Postal Service",
     "type": "filter",
     "confidence_score": 1.0
   },

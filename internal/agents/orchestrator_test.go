@@ -2,9 +2,11 @@ package agents
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -212,5 +214,38 @@ func TestOrchestrator_RunPipeline_AblationConfig(t *testing.T) {
 
 	if res != "Architect skipped by configuration." {
 		t.Errorf("Expected skipped message, got %s", res)
+	}
+}
+
+func TestOrchestrator_RunPipeline_PluginConstraints(t *testing.T) {
+	var capturedBody string
+	var mu sync.Mutex
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		capturedBody += string(body)
+		mu.Unlock()
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	constraints := map[string]interface{}{
+		"allow_paid_plugins": false,
+	}
+
+	_, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
+	if err != nil {
+		t.Fatalf("Pipeline failed: %v", err)
+	}
+
+	if !strings.Contains(capturedBody, "NO PAID PLUGINS") {
+		t.Errorf("Expected prompt to contain 'NO PAID PLUGINS', got captured body: %s", capturedBody)
 	}
 }

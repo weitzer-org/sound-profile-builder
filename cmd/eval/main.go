@@ -169,6 +169,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to init orchestrator: %v", err)
 	}
+	orch.AgentModels = cfg.AgentModels
 	defer orch.Close()
 
 	// Max 3 concurrent execution pipelines to avoid immediate quota bans 

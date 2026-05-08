@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,9 +42,10 @@ type OrchestratorService interface {
 
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
-	client *genai.Client
-	Usage  *TokenUsage
-	gcs    storage.Client
+	client      *genai.Client
+	Usage       *TokenUsage
+	gcs         storage.Client
+	AgentModels map[string]string // Added for per-agent model configuration
 }
 
 // NewOrchestrator initializes the Gemini ADK client
@@ -90,6 +92,16 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]\n\n" + prompt
 	}
 
+	allowPaidPlugins, ok := constraints["allow_paid_plugins"].(bool)
+	if ok && !allowPaidPlugins {
+		prompt = "[GLOBAL USER CONFIG FLAG: NO PAID PLUGINS. The generated preset MUST NOT use any paid plugins.]\n\n" + prompt
+	} else if ok && allowPaidPlugins {
+		availablePlugins, ok := constraints["available_plugins"].([]string)
+		if ok && len(availablePlugins) > 0 {
+			prompt = fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(availablePlugins, ", ")) + prompt
+		}
+	}
+
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())
@@ -130,7 +142,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			toneResult = "Tone Historian skipped by configuration."
 			return
 		}
-		sysPrompt, _ := LoadPrompt("1_tone_historian", version)
+		sysPrompt, _ := o.loadPromptForAgent("1_tone_historian", version)
 		toneResult, err1 = o.RunAgent(ctx, "Tone Historian", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("1_tone_historian", toneResult)
 	}()
@@ -142,7 +154,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			sonicResult = "Sonic Profiler skipped by configuration."
 			return
 		}
-		sysPrompt, _ := LoadPrompt("2_sonic_profiler", version)
+		sysPrompt, _ := o.loadPromptForAgent("2_sonic_profiler", version)
 		sonicResult, err2 = o.RunAgent(ctx, "Sonic Profiler", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("2_sonic_profiler", sonicResult)
 	}()
@@ -154,7 +166,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			scrapeResult = "Community Scraper skipped by configuration."
 			return
 		}
-		sysPrompt, _ := LoadPrompt("3_community_scraper", version)
+		sysPrompt, _ := o.loadPromptForAgent("3_community_scraper", version)
 		scrapeResult, err3 = o.RunAgent(ctx, "Community Scraper", sysPrompt+"\n\nUser Request: "+prompt)
 		logToGCS("3_community_scraper", scrapeResult)
 	}()
@@ -183,7 +195,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	if version4 == "off" {
 		librarianResult = "CorOS Librarian skipped by configuration."
 	} else {
-		sysPrompt4, _ := LoadPrompt("4_coros_librarian", version4)
+		sysPrompt4, _ := o.loadPromptForAgent("4_coros_librarian", version4)
 		context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
 		librarianResult, err4 = o.RunAgent(ctx, "CorOS Librarian", context4)
 		if err4 != nil {
@@ -205,7 +217,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		navigatorResult = "User explicitly disabled Cloud Sourcing. Do not map any cloud captures."
 		logToGCS("5_cloud_navigator", navigatorResult)
 	} else {
-		sysPrompt5, _ := LoadPrompt("5_cloud_navigator", version5)
+		sysPrompt5, _ := o.loadPromptForAgent("5_cloud_navigator", version5)
 		context5 := fmt.Sprintf("%s\n\nLibrarian Output: %s", sysPrompt5, librarianResult)
 		navigatorResult, err5 = o.RunAgent(ctx, "Cloud Navigator", context5)
 		if err5 != nil {
@@ -233,7 +245,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			acousticianResult = "Acoustician skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("6_acoustician", version)
+		p, _ := o.loadPromptForAgent("6_acoustician", version)
 		acousticianResult, err6 = o.RunAgent(ctx, "Acoustician", fmt.Sprintf("%s\n\nSonic Profiler: %s\nConstraints: %v", p, sonicResult, constraints))
 		logToGCS("6_acoustician", acousticianResult)
 	}()
@@ -244,7 +256,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			techResult = "Transducer Tech skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("7_transducer_tech", version)
+		p, _ := o.loadPromptForAgent("7_transducer_tech", version)
 		techResult, err7 = o.RunAgent(ctx, "Transducer Tech", fmt.Sprintf("%s\n\nLibrarian Output: %s", p, librarianResult))
 		logToGCS("7_transducer_tech", techResult)
 	}()
@@ -255,7 +267,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			fohResult = "FOH Optimizer skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("8_foh_optimizer", version)
+		p, _ := o.loadPromptForAgent("8_foh_optimizer", version)
 		fohResult, err8 = o.RunAgent(ctx, "FOH Optimizer", fmt.Sprintf("%s\n\nConstraints: %v (Standard FRFR FOH context applied)", p, constraints))
 		logToGCS("8_foh_optimizer", fohResult)
 	}()
@@ -283,7 +295,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			mixResult = "Mix Engineer skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("9_mix_engineer", version)
+		p, _ := o.loadPromptForAgent("9_mix_engineer", version)
 		mixResult, err9 = o.RunAgent(ctx, "Mix Engineer", fmt.Sprintf("%s\n\nTone Result: %s", p, toneResult))
 		logToGCS("9_mix_engineer", mixResult)
 	}()
@@ -294,7 +306,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			mapResult = "Control Mapper skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("10_control_mapper", version)
+		p, _ := o.loadPromptForAgent("10_control_mapper", version)
 		mapResult, err10 = o.RunAgent(ctx, "Control Mapper", fmt.Sprintf("%s\n\nPrompt: %s\nLibrarian Output: %s\nNavigator Output: %s\nAcoustician Output: %s", p, prompt, librarianResult, navigatorResult, acousticianResult))
 		logToGCS("10_control_mapper", mapResult)
 	}()
@@ -305,7 +317,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			dspResult = "DSP Dispatcher skipped by configuration."
 			return
 		}
-		p, _ := LoadPrompt("11_dsp_dispatcher", version)
+		p, _ := o.loadPromptForAgent("11_dsp_dispatcher", version)
 		dspResult, err11 = o.RunAgent(ctx, "DSP Dispatcher", fmt.Sprintf("%s\n\nLibrarian Output: %s\nNavigator Output: %s", p, librarianResult, navigatorResult))
 		logToGCS("11_dsp_dispatcher", dspResult)
 	}()
@@ -331,7 +343,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	if version12 == "off" {
 		finalResult = "Architect skipped by configuration."
 	} else {
-		sysPrompt12, _ := LoadPrompt("12_architect", version12)
+		sysPrompt12, _ := o.loadPromptForAgent("12_architect", version12)
 		finalResult, err12 = o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
 		if err12 != nil {
 			return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
@@ -379,12 +391,25 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 		modelName = "gemini-3.1-pro-preview"
 	}
 
-	if os.Getenv("USE_HETEROGENEOUS") == "true" {
-		switch agentRole {
-		case "CorOS Librarian", "Cloud Navigator", "Control Mapper", "Architect & Evaluator", "Refinement Architect":
-			modelName = "gemini-3.1-pro-preview"
-		default:
-			modelName = "gemini-3-flash-preview"
+	key := ""
+	switch agentRole {
+	case "Tone Historian": key = "1_tone_historian"
+	case "Sonic Profiler": key = "2_sonic_profiler"
+	case "Community Scraper": key = "3_community_scraper"
+	case "CorOS Librarian": key = "4_coros_librarian"
+	case "Cloud Navigator": key = "5_cloud_navigator"
+	case "Acoustician": key = "6_acoustician"
+	case "Transducer Tech": key = "7_transducer_tech"
+	case "FOH Optimizer": key = "8_foh_optimizer"
+	case "Mix Engineer": key = "9_mix_engineer"
+	case "Control Mapper": key = "10_control_mapper"
+	case "DSP Dispatcher": key = "11_dsp_dispatcher"
+	case "Architect & Evaluator", "Refinement Architect": key = "12_architect"
+	}
+
+	if key != "" && o.AgentModels != nil {
+		if specificModel, ok := o.AgentModels[key]; ok {
+			modelName = specificModel
 		}
 	}
 
@@ -427,6 +452,27 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	return fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0]), nil
 }
 
+// loadPromptForAgent loads the prompt for a given agent, falling back to flash version if applicable and available.
+func (o *Orchestrator) loadPromptForAgent(key string, version string) (string, error) {
+	model := "gemini-3.1-pro-preview" // default
+	if o.AgentModels != nil {
+		if m, ok := o.AgentModels[key]; ok {
+			model = m
+		}
+	}
+
+	if strings.Contains(model, "flash") {
+		promptName := key + "_flash"
+		prompt, err := LoadPrompt(promptName, version)
+		if err == nil {
+			return prompt, nil
+		}
+		// Fallback to standard prompt if flash prompt not found
+	}
+
+	return LoadPrompt(key, version)
+}
+
 // Close explicitly frees the Gemini rest connection
 func (o *Orchestrator) Close() {
 	if o.client != nil {
@@ -443,7 +489,7 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := LoadPrompt("12_architect", "")
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", "")
 	
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.

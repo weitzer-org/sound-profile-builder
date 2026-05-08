@@ -12,7 +12,7 @@ func TestLoadConfig_Success(t *testing.T) {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	content := `{"single_amp_mode": true, "allow_cloud_captures": false}`
+	content := `{"single_amp_mode": true, "allow_cloud_captures": false, "allow_paid_plugins": true, "available_plugins": ["Cory Wong"]}`
 	if _, err := tmpFile.Write([]byte(content)); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
@@ -28,6 +28,12 @@ func TestLoadConfig_Success(t *testing.T) {
 	}
 	if cfg.AllowCloudCaptures {
 		t.Error("Expected AllowCloudCaptures to be false")
+	}
+	if !cfg.AllowPaidPlugins {
+		t.Error("Expected AllowPaidPlugins to be true")
+	}
+	if len(cfg.AvailablePlugins) != 1 || cfg.AvailablePlugins[0] != "Cory Wong" {
+		t.Errorf("Expected AvailablePlugins to be ['Cory Wong'], got %v", cfg.AvailablePlugins)
 	}
 }
 
