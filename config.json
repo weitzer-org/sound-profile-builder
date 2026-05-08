@@ -1,6 +1,7 @@
 {
   "single_amp_mode": true,
   "allow_cloud_captures": false,
+  "allow_factory_captures": true,
   "allow_paid_plugins": true,
   "available_plugins": [
     "Cory Wong"

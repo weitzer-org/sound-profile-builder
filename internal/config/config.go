@@ -8,6 +8,7 @@ import (
 type AppConfig struct {
 	SingleAmpMode      bool              `json:"single_amp_mode"`
 	AllowCloudCaptures bool              `json:"allow_cloud_captures"`
+	AllowFactoryCaptures bool              `json:"allow_factory_captures"`
 	AllowPaidPlugins   bool              `json:"allow_paid_plugins"`
 	AvailablePlugins   []string          `json:"available_plugins"`
 	ProjectID          string            `json:"project_id"`
