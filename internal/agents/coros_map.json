@@ -7,7 +7,7 @@
   },
   "Marshall JCM800 1987": {
     "coros_equivalent": "Brit 2203 87",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -25,7 +25,7 @@
   },
   "Marshall Silver Jubilee 2555": {
     "coros_equivalent": "Brit PA-EL34",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -37,13 +37,13 @@
   },
   "Mesa Boogie Mark IIC+": {
     "coros_equivalent": "CA MkCC+",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Mesa Boogie JP2C": {
     "coros_equivalent": "CA John's",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -73,25 +73,25 @@
   },
   "Mesa Boogie Triaxis": {
     "coros_equivalent": "CA 3Axe",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Mesa Boogie Walkabout": {
     "coros_equivalent": "CA BassWalk",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Mesa Boogie Big Block 750": {
     "coros_equivalent": "CA BigBrick750",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Mesa Boogie M6 Carbine": {
     "coros_equivalent": "CA M6Rifle",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -110,13 +110,13 @@
   },
   "Fender Deluxe 5E2 1958": {
     "coros_equivalent": "US DLX 58",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Fender Princeton 65": {
     "coros_equivalent": "US Prince 65",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -147,7 +147,7 @@
   },
   "Vox AC10 1964": {
     "coros_equivalent": "UK C10 64",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -159,7 +159,7 @@
   },
   "Peavey 5150 Signature": {
     "coros_equivalent": "PV 505Sig",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -178,7 +178,7 @@
   },
   "Diezel Herbert": {
     "coros_equivalent": "D-Cell Herb",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -203,7 +203,7 @@
   },
   "Bogner Fish": {
     "coros_equivalent": "Bogna Fish",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -234,7 +234,7 @@
   },
   "Dover Amplification DA-50": {
     "coros_equivalent": "Dovre 50",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -247,31 +247,31 @@
   },
   "ENGL Powerball Mark I": {
     "coros_equivalent": "ENG Energy",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "ENGL Savage 120": {
     "coros_equivalent": "ENG Feral 120",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Fryette Pittbull Fifty/CL": {
     "coros_equivalent": "Fryed Pit Bull 50",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Fryette SigX": {
     "coros_equivalent": "Fryed Sig10",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Naylor Duel 38": {
     "coros_equivalent": "Nailer Battle 38",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -284,7 +284,7 @@
   },
   "Gibson GA-8": {
     "coros_equivalent": "Gibb GA8",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -297,25 +297,25 @@
   },
   "ADA MP1 Preamp": {
     "coros_equivalent": "ABA MPre1",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Komet 60": {
     "coros_equivalent": "Comet 60",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Cornford Hellcat": {
     "coros_equivalent": "Corn Vixen",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Krank Rev1": {
     "coros_equivalent": "Crank Rev1",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -328,7 +328,7 @@
   },
   "Custom Audio Amplifier 3+SE": {
     "coros_equivalent": "Custom 3SE",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -348,31 +348,31 @@
   },
   "Orange Rocker 30": {
     "coros_equivalent": "Range Rock",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Orange Rockerverb 100 MK3": {
     "coros_equivalent": "Range Rverb",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Sound City B120": {
     "coros_equivalent": "SCity B120",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Tone King Imperial MKII": {
     "coros_equivalent": "TuneRoyal MK2",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Victory Sheriff 22": {
     "coros_equivalent": "Victor Marshal",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -385,13 +385,13 @@
   },
   "Ampeg SVT Classic": {
     "coros_equivalent": "Amped SV Classic",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Ampeg SVT-2 Pro": {
     "coros_equivalent": "Amped Super Valve Pro",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -403,13 +403,13 @@
   },
   "Ampeg V-4B": {
     "coros_equivalent": "Amped V5B",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Markbass Little Mark III": {
     "coros_equivalent": "Bass Mark LM3",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
@@ -421,54 +421,54 @@
   },
   "Pearce BC-1": {
     "coros_equivalent": "Peace BC1",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Tech 21 SansAmp GED-2112": {
     "coros_equivalent": "Tech41 GED12",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Tech 21 Bass Driver DI": {
     "coros_equivalent": "BDDI",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0
   },
   "Aguilar AG700": {
     "coros_equivalent": "Aggi 700",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Aguilar DB751": {
     "coros_equivalent": "Aggi 751",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Aguilar ToneHammer 500": {
     "coros_equivalent": "Aggi Hammer 500",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Darkglass Alpha\u00b7Omega 900": {
     "coros_equivalent": "Darkglass AO900",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Darkglass Microtubes 900 V2": {
     "coros_equivalent": "Darkglass MT900V2",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
   "Orange AD200 Bass MK3": {
     "coros_equivalent": "Range AD200",
-    "type": "fx",
+    "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true
   },
