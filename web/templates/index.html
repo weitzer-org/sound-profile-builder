@@ -555,6 +555,17 @@
                             <input type="text" name="prompt" placeholder="e.g. Generate a preset for 'Texas Flood' by Stevie Ray Vaughan..." required>
                         </div>
 
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="allow-factory-captures" name="allow_factory_captures" value="on" checked>
+                            <input type="hidden" name="allow_factory_captures" value="off">
+                            <label for="allow-factory-captures">Allow Factory Captures</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="allow-paid-plugins" name="allow_paid_plugins" value="on" checked>
+                            <input type="hidden" name="allow_paid_plugins" value="off">
+                            <label for="allow-paid-plugins">Allow Paid Plugins</label>
+                        </div>
+
                         <button type="submit" id="gen-submit-btn" class="loading">
                             <span class="spinner"></span>
                             <span class="btn-text">Spin Up ADK Pipeline</span>

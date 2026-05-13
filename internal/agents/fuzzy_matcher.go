@@ -131,15 +131,17 @@ func min(a, b, c int) int {
 	return m
 }
 
-var categorizedAmpsCache string
+var categorizedAmpsWithCapturesCache string
+var categorizedAmpsWithoutCapturesCache string
 var parseAmpsOnce sync.Once
 
 // GetCategorizedAmplifiers reads the embedded JSON and creates a formatted Markdown menu
 // grouping all available distinct amplifier names by their tonal archetype for LLM injection.
-func GetCategorizedAmplifiers() string {
+func GetCategorizedAmplifiers(allowFactoryCaptures bool) string {
 	parseAmpsOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
-		buckets := make(map[string]map[string]bool)
+		bucketsWithCaptures := make(map[string]map[string]bool)
+		bucketsWithoutCaptures := make(map[string]map[string]bool)
 
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
 			for _, props := range corosData {
@@ -149,28 +151,44 @@ func GetCategorizedAmplifiers() string {
 						if arch == "" {
 							arch = "Other / Unique"
 						}
-						
-						if buckets[arch] == nil {
-							buckets[arch] = make(map[string]bool)
+						isCap, _ := props["is_capture"].(bool)
+
+						if bucketsWithCaptures[arch] == nil {
+							bucketsWithCaptures[arch] = make(map[string]bool)
 						}
-						buckets[arch][equiv] = true
+						bucketsWithCaptures[arch][equiv] = true
+
+						if !isCap {
+							if bucketsWithoutCaptures[arch] == nil {
+								bucketsWithoutCaptures[arch] = make(map[string]bool)
+							}
+							bucketsWithoutCaptures[arch][equiv] = true
+						}
 					}
 				}
 			}
 		}
 
-		var sb strings.Builder
-		sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
-		for archetype, amps := range buckets {
-			sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
-			for amp := range amps {
-				sb.WriteString(fmt.Sprintf("- %s\n", amp))
+		buildMenu := func(buckets map[string]map[string]bool) string {
+			var sb strings.Builder
+			sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
+			for archetype, amps := range buckets {
+				sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
+				for amp := range amps {
+					sb.WriteString(fmt.Sprintf("- %s\n", amp))
+				}
 			}
+			return sb.String()
 		}
-		categorizedAmpsCache = sb.String()
+
+		categorizedAmpsWithCapturesCache = buildMenu(bucketsWithCaptures)
+		categorizedAmpsWithoutCapturesCache = buildMenu(bucketsWithoutCaptures)
 	})
-	
-	return categorizedAmpsCache
+
+	if allowFactoryCaptures {
+		return categorizedAmpsWithCapturesCache
+	}
+	return categorizedAmpsWithoutCapturesCache
 }
 
 // SnapToClosestBlock checks if the input is a valid block, else returns the closest equivalent.

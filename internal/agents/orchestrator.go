@@ -3,6 +3,7 @@ package agents
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -102,6 +103,14 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		}
 	}
 
+	effectiveAllowFactoryCaptures := true
+	if v, ok := constraints["allow_factory_captures"].(bool); ok {
+		effectiveAllowFactoryCaptures = v
+	}
+	if !effectiveAllowFactoryCaptures {
+		prompt = "[GLOBAL USER CONFIG FLAG: NO FACTORY CAPTURES. The generated preset MUST NOT use any factory captures.]\n\n" + prompt
+	}
+
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())
@@ -181,7 +190,21 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	// Read embedded dictionary for Agent 4
 	dictJSON := string(embeddedCorosMap)
-	ampMenu := GetCategorizedAmplifiers()
+	if !effectiveAllowFactoryCaptures {
+		var fullMap map[string]map[string]interface{}
+		if err := json.Unmarshal(embeddedCorosMap, &fullMap); err == nil {
+			filteredMap := make(map[string]map[string]interface{})
+			for k, v := range fullMap {
+				if isCap, _ := v["is_capture"].(bool); !isCap {
+					filteredMap[k] = v
+				}
+			}
+			if b, err := json.Marshal(filteredMap); err == nil {
+				dictJSON = string(b)
+			}
+		}
+	}
+	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures)
 
 	if onProgress != nil {
 		onProgress("Phase 2/4: Mapping to Native CorOS Effects...")
@@ -353,7 +376,17 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	
 	validBlocks := GetValidNativeBlocks()
 	if len(validBlocks) > 0 {
-		finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
+		if !effectiveAllowFactoryCaptures {
+			filteredValidBlocks := make(map[string]bool)
+			for k, isCap := range validBlocks {
+				if !isCap {
+					filteredValidBlocks[k] = false
+				}
+			}
+			finalResult = ApplyFuzzyCorrection(finalResult, filteredValidBlocks)
+		} else {
+			finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
+		}
 	}
 
 	return finalResult, o.Usage, nil

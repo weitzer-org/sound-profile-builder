@@ -125,16 +125,44 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
+		allowFactoryCaptures := true
+		if vals, ok := r.Form["allow_factory_captures"]; ok {
+			allowFactoryCaptures = false
+			for _, v := range vals {
+				if v == "on" {
+					allowFactoryCaptures = true
+					break
+				}
+			}
+		}
+
+		allowPaidPlugins := true
+		if vals, ok := r.Form["allow_paid_plugins"]; ok {
+			allowPaidPlugins = false
+			for _, v := range vals {
+				if v == "on" {
+					allowPaidPlugins = true
+					break
+				}
+			}
+		}
+
 		cfg := s.appConfig
 		if cfg == nil {
-			cfg = &config.AppConfig{SingleAmpMode: false, AllowCloudCaptures: true}
+			cfg = &config.AppConfig{
+				SingleAmpMode:        true,
+				AllowCloudCaptures:   false,
+				AllowFactoryCaptures: true,
+				AllowPaidPlugins:     true,
+			}
 		}
 
 		constraints := map[string]interface{}{
 			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 			"single_amp_mode":      cfg.SingleAmpMode,
 			"allow_cloud_captures": cfg.AllowCloudCaptures,
-			"allow_paid_plugins":   cfg.AllowPaidPlugins,
+			"allow_factory_captures": cfg.AllowFactoryCaptures && allowFactoryCaptures,
+			"allow_paid_plugins":   cfg.AllowPaidPlugins && allowPaidPlugins,
 			"available_plugins":   cfg.AvailablePlugins,
 		}
 
