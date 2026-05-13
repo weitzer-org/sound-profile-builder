@@ -125,14 +125,33 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		allowFactoryCaptures := r.FormValue("allow_factory_captures") != "off"
-		allowPaidPlugins := r.FormValue("allow_paid_plugins") != "off"
+		allowFactoryCaptures := true
+		if vals, ok := r.Form["allow_factory_captures"]; ok {
+			allowFactoryCaptures = false
+			for _, v := range vals {
+				if v == "on" {
+					allowFactoryCaptures = true
+					break
+				}
+			}
+		}
+
+		allowPaidPlugins := true
+		if vals, ok := r.Form["allow_paid_plugins"]; ok {
+			allowPaidPlugins = false
+			for _, v := range vals {
+				if v == "on" {
+					allowPaidPlugins = true
+					break
+				}
+			}
+		}
 
 		cfg := s.appConfig
 		if cfg == nil {
 			cfg = &config.AppConfig{
-				SingleAmpMode:        false,
-				AllowCloudCaptures:   true,
+				SingleAmpMode:        true,
+				AllowCloudCaptures:   false,
 				AllowFactoryCaptures: true,
 				AllowPaidPlugins:     true,
 			}
