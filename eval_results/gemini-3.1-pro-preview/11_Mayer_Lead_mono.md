@@ -1,87 +1,57 @@
-### System Initialization: Quad Cortex Engineer "QC-2"
-**Target Engaged:** John Mayer Trio Lead (Dumble SSS / Two-Rock Platform).
-**Audio Physics Goal:** High headroom, mid-scooped clean with a thick lower-mid floor. Smooth, non-clipping drive push via Tube Screamer analog topology. 
-**Hardware Consideration:** The QSC CP12 is an active PA speaker with a relatively flat response, but it can push harsh treble at high SPL. We must utilize a Low Pass Filter (LPF) to emulate the natural high-frequency roll-off of Mayer's G12-65/EVM12L guitar speakers to prevent "ice-pick" highs.
+### QUAD CORTEX SYSTEMS ENGINEER (QC-2)
+**Target Acknowledged:** John Mayer Trio Lead
+**Hardware Profile:** Cortex Control (Mac Desktop) -> QSC CP12 (Active FRFR)
+**Analog Counterpart:** Dumble Overdrive Special Clean Channel + TS10/Klon + Two-Rock 2x12 (Celestion G12-65).
+**Closest Available QC Models:** *Custom ODS Clean* (Amp), *212 Custom G65* (Cab), *Green 808* (Drive).
 
-**Verified Amp Model:** `Grammatico GSG100` (Neural DSP's official circuit-level capture of the Grammatico GSG, a legendary Dumble Steel String Singer clone).
-
----
-
-### Phase 1: Input Leveling & Pickup Compensation
-Before setting up the blocks, we must configure the **Global Input Block** to prevent the ES-339 humbuckers from clipping the highly-sensitive GSG preamp phase inverter. 
-
-*   **Fender Telecaster (Vintage/Medium Single Coil):** Set Input 1 Gain to **+1.5dB**. 
-*   **Gibson ES-339 (Medium/High Humbucker):** Set Input 1 Gain to **-3.5dB**. *(This is critical: John's Dumble tone relies on the amp doing the lifting, not hot pickups slamming the front end).*
+To achieve this iconic "glassy but pushed" tone on an active PA speaker like the QSC CP12, we must strictly manage the upper-midrange frequencies to prevent digital harshness, while utilizing the **Chameleon Strategy** to adapt the exact same preset for both your ES-339 and your Telecaster. 
 
 ---
 
-### Phase 2: Split-Bank Scene Architecture
-We will utilize the standard QC-2 Split-Bank Matrix. Ensure you right-click the parameters below in Cortex Control to Assign them to Scenes.
+### MULTI-GUITAR GAIN STAGING STRATEGY
+Because the Fender Telecaster and Gibson ES-339 have vastly different magnetic profiles and output voltages, we are utilizing a **Split-Bank Matrix**:
+*   **Row 1 (Scenes A-D) - Fender Telecaster (Single Coil):** The goal here is adding fundamental weight. We rely on the EQ-8 to boost the 200Hz body and slightly push the amp volume to hit edge-of-breakup.
+*   **Row 2 (Scenes E-H) - Gibson ES-339 (Humbucker):** The goal here is clarity and headroom. The ES-339's higher output will naturally clip the *Custom ODS Clean* too early. We will attenuate the Input Gain by -4.0dB and use the EQ-8 to clear out 400Hz low-mid mud, allowing the natural humbucker compression to sing.
 
-*   **Row 1 (Single Coils - Telecaster):** Scenes A (Rhythm), B (Lead), C (Dry), D (Ambient).
-*   **Row 2 (Humbuckers - ES-339):** Scenes E (Rhythm), F (Lead), G (Dry), H (Ambient).
+---
 
-#### Table A: Main Signal Chain
-*(Note: Right-Click > Assign any parameter marked with differing Scene values)*
+### TABLE A: MAIN SIGNAL CHAIN
+*Note: All parameters marked with `(Assign)` must be Right-Clicked > "Assign to Scene" in Cortex Control. Values are displayed as **[Telecaster] / [ES-339]**.*
 
 | Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Gate (Grid)** | `Adaptive Gate` | Noise Red: 35%<br>Thresh: -60dB | Noise Red: 15%<br>Thresh: -65dB | Higher reduction on Rhythm for dead silence; lower on Lead to preserve sustain/decay. |
-| **Pre-FX (Drive)**| `Green 808` | Bypass: ON | Bypass: OFF<br>Gain: 2.5<br>Tone: 5.5<br>Level: 8.0 | Simulates TS10 pushing the GSG100. High level/low gain hits the amp tubes harder without compressing the signal. |
-| **Pre-FX (EQ)** | `Parametric-8` | *(See Guitar Configs)* | *(See Guitar Configs)* | Used to physically morph the humbuckers to single-coils and vice-versa. |
-| **Amp** | `Grammatico GSG100`| Vol: 4.5<br>Treb: 7.0<br>Mid: 3.5<br>Bass: 5.5<br>Master: 7.5 | Vol: 4.5 *(Assigned)*<br>Treb: 6.5 *(Assigned)*<br>Mid: 4.5 *(Assigned)* | Mid-scooped rhythm. On Lead scenes, Treble drops slightly and Mids raise to cut through the mix without piercing. |
-| **Cab** | `212 Grammatico GSG`| Mic A: Dyn 57 (Pos 1.2)<br>Mic B: Ribbon 121 (Pos 2.0) | Mic Mix: A: 0dB<br>Mic B: -2dB | 57 captures the pick attack; 121 placed further out captures the "sag" and low-end depth. |
-| **Post-FX (Delay)**| `Analog Delay` | Bypass: ON | Bypass: OFF<br>Mix: 18%<br>Time: 320ms | Aqua Puss style slap/trail. Fills the empty space behind a trio guitar solo. |
-| **Post-FX (Verb)**| `Plate Reverb` | Mix: 15%<br>Decay: 1.2s | Mix: 18%<br>Decay: 1.5s | Mayer utilizes outboard studio plates and springs. HPF set to 150Hz to keep low-mids un-muddied. |
+| **Input/Gate** | Global Input Gate | Thresh: -62dB `[A]` / -55dB `[E]`<br>Gain: 0.0dB `[A]` / -4.0dB `[E]` | Thresh: -62dB `[B]` / -55dB `[F]`<br>Gain: 0.0dB `[B]` / -4.0dB `[F]` | ES-339 requires a -4.0dB pad to prevent premature preamp clipping. Humbuckers also need a higher gate threshold for sympathetic noise. |
+| **Pre-FX (Chameleon)** | Parametric-8 | Band 1 (Low Shelf): +3.0dB `[A]` / 0.0dB `[E]`<br>Band 3 (Peak): 0.0dB `[A]` / -2.5dB @ 400Hz `[E]` | Band 8 (LPF): 5000Hz `[B]` / Off `[F]` | Adds 200Hz weight to the Telecaster. Scoops 400Hz mud from the ES-339. Telecaster LPF tamed on Lead to prevent pick-attack harshness. |
+| **Pre-FX (Drive)** | Green 808 | Bypass State: OFF (Assigned) | Bypass State: ON (Assigned)<br>Drive: 3.5<br>Tone: 6.0<br>Level: 7.5 | Simulates Mayer's TS10. By keeping Drive low and Level high, we push the tubes rather than relying on op-amp clipping. |
+| **Amp** | Custom ODS Clean | Vol (Assign): 5.5 `[A]` / 4.5 `[E]`<br>Bass: 4.0<br>Mid: 3.5<br>Treble: 6.0 | Vol (Assign): 5.5 `[B]` / 4.5 `[F]`<br>Deep Sw: ON<br>Bright Sw: OFF | Dumble-style preamp is naturally bottom-heavy. Mid is scooped to 3.5 for the "glassy" Mayer rhythm platform. ES-339 Vol is lowered to retain headroom. |
+| **Cab** | 212 Custom G65 | Mic A (Dyn 57): Pos 1.5, Dist 1.0"<br>Mic B (Rib 121): Pos 1.0, Dist 2.5"<br>Mix: A at 0dB, B at -3dB | Same as Rhythm | G12-65 speakers naturally roll off harsh highs. The Ribbon 121 adds 3D depth, counteracting the directional tweeter of the QSC CP12. |
+| **Post-FX (Delay)** | Analog Delay | Mix (Assign): 5%<br>Time: 350ms<br>Fdbk: 20% | Mix (Assign): 15%<br>Time: 350ms<br>Fdbk: 30% | Mayer uses subtle analog slap/trail to thicken leads without muddying the rhythm chops. |
+| **Post-FX (Reverb)** | Spring Reverb | Mix (Assign): 25%<br>Dwell: 4.0<br>Tone: 5.0 | Mix (Assign): 30%<br>Dwell: 5.5<br>Tone: 5.5 | Replicates the Fender-style spring tank built into Two-Rock/Dumble platforms. Increased Dwell/Mix on Lead for sustain. |
+| **Output** | Lane 1 Output | Level: 0.0dB | Level: +1.5dB | Output Level raised for Lead SPL increase without adding further preamp saturation (The Headroom Rule). |
 
 ---
 
-### Phase 3: Multi-Guitar EQ Targeting (`Parametric-8` Block)
-To make this preset gig-ready for both guitars seamlessly, insert the `Parametric-8` EQ block immediately after the `Adaptive Gate` and program these Scene-specific assignments.
-
-#### Configuration 1: Fender Telecaster Single Coil (Scenes A-D)
-*Single coils naturally lack the massive low-end of Mayer's Stratocaster "Big Dipper" pickups. We must synthesize that body.*
-*   **Band 1 (Low Shelf):** Frequency 150Hz | Gain +2.5dB (Adds weight/chest thump through the QSC CP12).
-*   **Band 3 (Bell):** Frequency 400Hz | Gain -1.5dB (Hollows out the boxy frequency to achieve the scooped "Trio" tone).
-*   **Band 8 (High Pass/LPF):** Frequency 4500Hz. (Crucial: Cuts the Telecaster's "ice-pick" bridge pickup frequencies so it sounds smooth like a neck position under drive).
-
-#### Configuration 2: Gibson ES-339 Humbuckers (Scenes E-H)
-*Humbuckers will naturally sound congested and muddy through a Dumble circuit due to overlapping 250Hz-500Hz frequencies. We must synthesize single-coil clarity.*
-*   **Band 1 (Low Shelf):** Frequency 120Hz | Gain -3.0dB (Removes humbucker mud and prevents the GSG amp from sagging too hard).
-*   **Band 4 (Bell):** Frequency 800Hz | Gain +2.0dB (Adds the "quack" and pick attack usually lost in humbuckers).
-*   **Band 8 (High Pass/LPF):** Frequency 6000Hz. (Allows more treble through than the Telecaster to maintain string definition).
+### TROUBLESHOOTING & REFINEMENT TREE
+If playing through the **QSC CP12** and the tone feels:
+1.  **Too "Fuzzy" on the ES-339 Lead:** Lower the Global Input Gain from -4.0dB to -6.0dB. Do *not* turn down the Amp Volume first.
+2.  **Too "Ice-Pick" on the Telecaster:** Do not lower the Treble on the amp. Instead, go to the EQ-8 Block and lower the Band 8 LPF from 5000Hz down to 4200Hz. This specifically tames the QSC CP12's high-frequency driver without ruining the amplifier's fundamental presence.
+3.  **Lacking Sustain on Lead:** Increase the `Level` parameter on the Green 808, *not* the Drive parameter.
 
 ---
 
-### Phase 4: Troubleshooting & Refinement Tree
-*   **If the Telecaster Lead is "Too Biting":** Lower the `Tone` knob on the `Green 808` from 5.5 to 4.0. 
-*   **If the ES-339 sounds "Farty" on the Low E String:** The amp block is receiving too much bass. Lower the `Grammatico GSG100` Bass knob to 4.0.
-*   **If overall SPL is too quiet on the QSC CP12:** **DO NOT** turn up the `Vol` or `Master` on the Amp block, as this alters the Dumble clipping physics. Instead, swipe down on the QC screen and increase the **Lane Output Level** by +3.0dB to +5.0dB.
+### SESSION LIBRARY (ACTIVE PRESETS)
+*(Appending to Session Memory for future recall)*
 
----
-
-### Phase 5: Preset Registry Protocol (Session Memory)
-
-```text
-Session Library (Active Presets)
-
-1. Preset Name: "Spoonful - ES339"
-Target: Howlin' Wolf / Hubert Sumlin (1960).
-Guitar: ES-339 (Humbuckers) w/ Pick.
-Physics Goal: Clean/Edge-of-breakup rhythm + Fuzz/Sag lead without using pedals.
-Full Configuration: [Stored in previous output]
-
-2. Preset Name: "Mayer Trio - Dual Rig"
-Target: John Mayer Trio (Dumble SSS Tone).
-Guitar: Fender Telecaster & Gibson ES-339.
-Physics Goal: Extremely high headroom, mid-scooped clean with non-compressing analog drive push.
-Full Configuration:
-Block 1 (Adaptive Gate): Noise Red [Rhy: 35% / Lead: 15%], Thresh [-60dB / -65dB], Decay [150ms].
-Block 2 (EQ-8 - Telecaster Sc A-D): Low Shelf [150Hz, +2.5dB], Band 3 [400Hz, -1.5dB], LPF [4500Hz].
-Block 3 (EQ-8 - ES339 Sc E-H): Low Shelf [120Hz, -3.0dB], Band 4 [800Hz, +2.0dB], LPF [6000Hz].
-Block 4 (Green 808 - Lead Only): Gain [2.5], Tone [5.5], Level [8.0].
-Block 5 (Amp - Grammatico GSG100): Vol [4.5], Treb [Rhy: 7.0 / Lead: 6.5], Mid [Rhy: 3.5 / Lead: 4.5], Bass [5.5], Master [7.5], Presence [5.0].
-Block 6 (Cab - 212 Grammatico GSG): Mic A (Dyn 57, Pos 1.2, Dist 1.0"), Mic B (Ribbon 121, Pos 2.0, Dist 3.0"), Mix [A: 0dB, B: -2dB].
-Block 7 (Analog Delay - Lead Only): Mix [18%], Time [320ms], Fdbk [20%], HP [150Hz].
-Block 8 (Plate Reverb): Mix [Rhy: 15% / Lead: 18%], Decay [Rhy: 1.2s / Lead: 1.5s], HP [150Hz], LP [4000Hz].
-```
+**2. Preset Name:** "Gravity Trio - Tele/339 Split"
+**Target:** John Mayer Trio (2005).
+**Guitar:** Matrix Split - Fender Telecaster (SC) / Gibson ES-339 (HB).
+**Physics Goal:** Deep-scooped high-headroom clean platform with TS-style mid-hump lead push, optimized for FRFR playback.
+**Full Configuration:**
+*   **Input (Global Gate):** Thresh [-62dB ScA-D / -55dB ScE-H], Gain [0.0dB ScA-D / -4.0dB ScE-H].
+*   **Block 1 (EQ-8):** HPF [80Hz], Band 1 Low Shelf [200Hz, +3dB ScA-D / 0dB ScE-H], Band 3 Peak [400Hz, 0dB ScA-D / -2.5dB ScE-H], Band 8 LPF [5000Hz ScA-D / Off ScE-H].
+*   **Block 2 (Green 808):** Bypass [On Scenes B/F, Off Scenes A/E], Drive [3.5], Tone [6.0], Level [7.5].
+*   **Block 3 (Amp - Custom ODS Clean):** Vol [5.5 ScA-D / 4.5 ScE-H], Bass [4.0], Mid [3.5], Treble [6.0], Deep [On], Bright [Off].
+*   **Block 4 (Cab - 212 Custom G65):** Mic A (Dyn 57, Pos 1.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.0, Dist 2.5"), Mix [A: 0dB, B: -3dB].
+*   **Block 5 (Analog Delay):** Mix [5% Rhy / 15% Lead], Time [350ms], Fdbk [20% Rhy / 30% Lead].
+*   **Block 6 (Spring Reverb):** Mix [25% Rhy / 30% Lead], Dwell [4.0 Rhy / 5.5 Lead], Tone [5.0 Rhy / 5.5 Lead].
+*   **Lane 1 Output:** Level [0.0dB Rhy / +1.5dB Lead].

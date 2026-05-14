@@ -1,67 +1,77 @@
-As **QC-2**, your Quad Cortex Systems Engineer, I have engineered a dual-profile preset specifically tailored to capture the quintessential late 50s/early 60s Chess Records Chicago Blues tone. 
+Hello. I am QC-2, your Quad Cortex Systems Engineer. 
 
-Our target is a "warm, slightly gritty but clean platform" characteristic of vintage Fender Tweed combos recorded in an open room. To accommodate the physics of both your Gibson ES-339 (Humbuckers) and Fender Telecaster (Single Coils) through a QSC CP12 FRFR speaker, we must utilize strict input gain staging and EQ compensation. Vintage Tweed circuits (like the 5E3 Deluxe) lack a Master Volume and sag heavily under humbucker transients. 
+To nail the legendary Chess Records tone (think Muddy Waters, Little Walter, and early Hubert Sumlin), we are bypassing modern pedals. This preset relies entirely on vintage tube sag, transformer saturation, and physical room acoustics. 
 
-Here is your Split-Bank Configuration. **Row 1 (Scenes A-D)** is calibrated for the Telecaster. **Row 2 (Scenes E-H)** is calibrated for the ES-339.
+Our analog target is a pushed 1950s 5E3 circuit. In the Quad Cortex, the **Closest Available Model** is the **US DLX 58**. Because vintage 5E3 circuits do not have a Master Volume, the physical overdrive is generated exclusively by pushing the "Inst Vol" (Instrument Volume) knob. Overall loudness going into your QSC CP12 must be controlled via the **Lane Output Level**.
 
-### Guitar 1: Fender Telecaster (Single Coils)
-**Target:** Row 1 (Scenes A-D). 
-**Physics Goal:** Vintage Telecasters are bright with a sharp attack and lower output. We will increase the Input Gain to hit the Tweed circuit harder, achieving that natural gritty breakup. We will also use the EQ to add low-mid body and roll off the ice-pick highs to mimic vintage tape/console darkening.
+Below are the exact, clearly separated configurations for both your **Fender Telecaster (Row 1)** and **Gibson ES-339 (Row 2)** to compensate for pickup output and frequency differences.
 
-**Pre-Requisite Global Input Setting (In 1):** Set Input Gain to **+2.0dB**. 
+---
 
-#### Table A.1: Telecaster Signal Chain (Row 1)
-*Note: Parameters marked with "(Right-Click > Assign)" change between Scene A (Rhythm) and Scene B (Lead).*
+### Pickup Output & Global Gain Compensation Strategy
+Before building the blocks, apply these Global/Lane adjustments to ensure proper signal-to-noise ratio and headroom:
 
-| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
+*   **Fender Telecaster (Vintage/Single Coil):** 
+    *   Input Block Gain: `0.0dB`
+    *   Lane Output Level: `+2.0dB` (Compensates for lower natural pickup output).
+*   **Gibson ES-339 (Medium Humbucker):** 
+    *   Input Block Gain: `-3.0dB` (Prevents immediate digital clipping and unwanted early tube flub).
+    *   Lane Output Level: `0.0dB`
+
+---
+
+### Table A: Main Signal Chain (Split-Bank Matrix)
+*Row 1 (Scenes A-D) = Telecaster / Row 2 (Scenes E-H) = ES-339.*
+*(Right-Click > Assign) on values with multiple Scene brackets.*
+
+| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input Gate | Thresh: -55.0dB | Thresh: -60.0dB | Single coils have 60-cycle hum; higher threshold on Rhythm keeps comping tight. |
-| **Pre-FX (EQ)** | Parametric-8 | Band 1: +3.0dB (200Hz)<br>High Pass: 80Hz | Band 1: +3.0dB (200Hz)<br>High Pass: 80Hz | Adds essential physical "body" to the single coils. HPF prevents sub-rumble in the QSC. |
-| **Pre-FX (Drive)**| Green 808 | Bypass | On (Gain: 0, Tone: 4.5, Level: 7) | Classic mid-hump push for leads without adding artificial fuzz. |
-| **Amp** | US Tweed DLX Normal | Inst Vol: 4.5<br>Tone: 6.0 | Inst Vol: 6.0<br>Tone: 6.5 | 5E3 circuit. No Master Vol. Inst Vol creates natural tube overdrive and sag. |
-| **Cab** | 112 US Tweed DLX | Mic A: Dyn 57 (Pos 1.0)<br>Mic B: Ribbon 160 (Pos 0.5) | Mic A: Dyn 57 (Pos 1.0)<br>Mic B: Ribbon 160 (Pos 0.5) | Ribbon mic adds warmth. SM57 off-center prevents harsh pick attack through FRFR. |
-| **Post-FX (Dly)** | Slapback Delay | Mix: 15% / Time: 120ms | Mix: 20% / Time: 120ms | Simulates Chess Records tape slap / room echo. |
-| **Post-FX (Rev)** | Room Reverb | Mix: 18% / Decay: 1.2s | Mix: 22% / Decay: 1.5s | Short decay places the amp in a physical room, avoiding ambient wash. |
-| **Output** | Lane Output Level | 0.0dB | +1.5dB | Compensates for the lack of Amp Master Volume to jump the SPL for solos. |
+| **Input/Gate** | Adaptive Gate | **Tele (Sc A):** Red: 35%, Thresh: -65dB<br>**339 (Sc E):** Red: 15%, Thresh: -70dB | **Tele (Sc B):** Red: 45%, Thresh: -60dB<br>**339 (Sc F):** Red: 20%, Thresh: -65dB | Single coils require higher reduction %. Humbuckers need less, allowing more natural decay. |
+| **Pre-FX (EQ)** | Parametric-8 | **Tele (Sc A):** Low Shelf +3dB @ 200Hz, LPF @ 4.5kHz<br>**339 (Sc E):** HPF @ 100Hz, LPF @ 6.0kHz | **Tele (Sc B):** Mid Peak +2dB @ 1kHz<br>**339 (Sc F):** Mid Peak +1.5dB @ 1kHz | *Chameleon Strategy*: Tele needs body boost. 339 needs HPF to prevent the Tweed amp from farting out on low notes. |
+| **Amp** | US DLX 58 | **Tele (Sc A):** Inst Vol: 4.5, Tone: 6.5<br>**339 (Sc E):** Inst Vol: 3.0, Tone: 7.0 | **Tele (Sc B):** Inst Vol: 6.5, Tone: 6.0<br>**339 (Sc F):** Inst Vol: 5.0, Tone: 6.5 | 339 hits the preamp harder; requires lower Inst Vol to stay at the same edge-of-breakup clean platform as the Tele. |
+| **Cab** | 112 US DLX 58 | **Both:** Mic A (Ribbon 121), Pos 0.5, Dist 2.0" (Mix: 0dB)<br>Mic B (Dyn 57), Pos 0.0, Dist 1.0" (Mix: -6dB) | *(Cab parameters remain static)* | Ribbon mic provides the warm Chess Records vocal quality. Dynamic 57 adds slight pick attack bite for the QSC CP12 PA speaker. |
+| **Post-FX 1** | Analog Delay | **Both:** Mix 8%, Time 90ms, Fdbk 5% | **Both:** Mix 12%, Time 90ms, Fdbk 5% | Emulates the fast tape/analog slapback echo often used in 50s Chicago blues studios. |
+| **Post-FX 2** | Room Reverb | **Both:** Mix 15%, Decay 0.9s, HPF 150Hz, LPF 3000Hz | **Both:** Mix 15%, Decay 0.9s, HPF 150Hz, LPF 3000Hz | Replicates the physical acoustic space of 2120 S. Michigan Ave (Chess Studios). Filtered to avoid mud. |
 
-***
+*Scene Function Reminder:* 
+*   **Scenes C / G (Dry/Comping):** Same as Rhythm (A/E) but Bypass the Delay and Reverb blocks. 
+*   **Scenes D / H (Ambient):** Increase Delay Mix to 20% and Reverb Mix to 25%.
 
-### Guitar 2: Gibson ES-339 (Humbuckers)
-**Target:** Row 2 (Scenes E-H).
-**Physics Goal:** The ES-339 produces higher output and heavier low-midrange frequencies. If we run this directly into a Tweed circuit at unity gain, the virtual power tubes will digitally clip and "fart out" (tube sag collapse). We must pad the input and lean out the EQ to maintain clarity and that "clean platform" grit.
+---
 
-**Pre-Requisite Global Input Setting (In 1):** Set Input Gain to **-4.5dB**. *(Crucial for Headroom Rule).*
+### Troubleshooting & Refinement Tree
+Tweed circuits are notoriously sensitive to picking dynamics. If you find the tone is **"Too Distorted"** or **"Too Fuzzy"** through your QSC CP12, execute this strict order of operations:
+1. **Input Pad:** Lower the Input Block Gain by an additional `-3.0dB`. (This physically simulates rolling off your guitar's volume knob without losing treble).
+2. **Amp Gain:** Reduce the Amp Block `Inst Vol` by 1.0 to 2.0 increments.
+3. **Tube Sag/Flub:** If the low-end sounds "broken" or "farty" (especially on the ES-339 neck pickup), return to the Pre-FX Parametric-8 EQ and raise the HPF from 100Hz up to 130Hz. 
+4. **Output Compensation:** If step 1 or 2 causes a drop in volume, **do not add a compressor**. Compensate by raising the global Lane Output Level.
 
-#### Table A.2: Gibson ES-339 Signal Chain (Row 2)
-*Note: Parameters marked with "(Right-Click > Assign)" change between Scene E (Rhythm) and Scene F (Lead).*
+---
 
-| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
-| :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Global Input Gate | Thresh: -65.0dB | Thresh: -65.0dB | Humbuckers are quieter regarding EMI. Lower threshold allows max sustain. |
-| **Pre-FX (EQ)** | Parametric-8 | Band 2: -2.5dB (300Hz)<br>High Pass: 100Hz | Band 2: -2.5dB (300Hz)<br>High Pass: 100Hz | Tames humbucker low-mid mud. HPF raised to 100Hz to prevent 5E3 sag collapse. |
-| **Pre-FX (Drive)**| Green 808 | Bypass | On (Gain: 1, Tone: 6.0, Level: 6) | Tone is brighter here to cut through the ES-339's natural dark voicing. |
-| **Amp** | US Tweed DLX Normal | Inst Vol: 3.5<br>Tone: 7.5 | Inst Vol: 4.5<br>Tone: 8.0 | Lower Inst Vol compared to Tele to retain clean platform. Brighter Tone knob setting. |
-| **Cab** | 112 US Tweed DLX | Mic A: Dyn 57 (Pos 0.5)<br>Mic B: Ribbon 160 (Pos 1.5) | Mic A: Dyn 57 (Pos 0.5)<br>Mic B: Ribbon 160 (Pos 1.5) | SM57 moved closer to cone center (0.5) to add bite to the humbuckers. |
-| **Post-FX (Dly)** | Slapback Delay | Mix: 12% / Time: 120ms | Mix: 16% / Time: 120ms | Slightly lower mix for humbuckers to prevent rhythmic muddying. |
-| **Post-FX (Rev)** | Room Reverb | Mix: 15% / Decay: 1.2s | Mix: 18% / Decay: 1.5s | Studio room simulation. |
-| **Output** | Lane Output Level | +2.0dB | +3.5dB | Overall level raised to compensate for the -4.5dB input pad on the humbuckers. |
+### Session Library (Active Presets)
 
-***
+**1. Preset Name: "Spoonful - ES339"**
+Target: Howlin' Wolf / Hubert Sumlin (1960).
+Guitar: ES-339 (Humbuckers) w/ Pick.
+Physics Goal: Clean/Edge-of-breakup rhythm + Fuzz/Sag lead without using pedals.
+Full Configuration:
+*   Block 1 (Adaptive Gate): Noise Red [Rhy: 40% / Lead: 15%], Thresh [-60dB / -65dB], Decay [100ms / 250ms].
+*   Block 2 (EQ-8): HPF [90Hz], Band 6 [0.0dB], LPF [Rhy: 4200Hz / Lead: 4500Hz] (Simulates thumb attack).
+*   Block 3 (Amp - US Tweed Basslad Jumped): Vol Norm [2.0 / 2.2], Vol Bright [2.5 / 3.2], Bass [2.5], Mid [6.0 / 7.0], Treble [7.0 / 6.5], Presence [6.0], Output Level [+7.0dB / +8.5dB].
+*   Block 4 (Cab - 410 Basslad PR10): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 0.8, Dist 5.0"), Mix [A: 0dB, B: -4dB].
+*   Block 5 (Tape Delay): Mix [15% / 22%], Time [110ms], Fdbk [15%], Drive [35%], HP [150Hz], LP [2500Hz].
+*   Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].
 
-### ⚠️ Troubleshooting & Refinement Tree
-If you test this through your QSC CP12 and find the tone is **"Too Distorted" or "Too Fuzzy"** (especially on the ES-339):
-1. **Input Pad:** Verify your Input 1 block is set to -4.5dB (or drop it to -6.0dB). This mimics rolling off your guitar volume. 
-2. **Amp Gain:** Reduce the Amp block `Inst Vol` by 0.5 increments. 
-3. **Tube Sag:** If the low notes sound "broken" or loose, raise the EQ block's High Pass Filter to `120Hz` to starve the Tweed amp of low-frequency energy.
-4. **Output Compensation:** If the tone cleans up but is now too quiet, *only* increase the Lane Output Level.
-
-***
-
-### 💾 Session Library (Active Presets)
-**2. Preset Name:** "Chess Records Chicago - Split"
-**Target:** Muddy Waters / Buddy Guy early studio tones.
-**Guitars:** Gibson ES-339 & Fender Telecaster.
-**Physics Goal:** Authentic non-master-volume 5E3 Tweed edge-of-breakup with split-gain staging to prevent humbucker clipping and single-coil thinness. 
-**Full Configuration (Archived for Recall):**
-*Row 1 (Telecaster): Input +2.0dB. Gate Thresh [-55dB / -60dB]. EQ-8: HPF 80Hz, Band 1 +3.0dB (200Hz). TS808: Bypass/On, Gain 0, Level 7. Amp (US Tweed DLX Norm): Inst Vol [4.5 / 6.0], Tone [6.0 / 6.5]. Cab: 112 US Tweed (57 Pos 1.0, 160 Pos 0.5). Output Level [0dB / +1.5dB].*
-*Row 2 (ES-339): Input -4.5dB. Gate Thresh -65dB. EQ-8: HPF 100Hz, Band 2 -2.5dB (300Hz). TS808: Bypass/On, Gain 1, Level 6, Tone 6. Amp (US Tweed DLX Norm): Inst Vol [3.5 / 4.5], Tone [7.5 / 8.0]. Cab: 112 US Tweed (57 Pos 0.5, 160 Pos 1.5). Output Level [+2.0dB / +3.5dB].*
+**2. Preset Name: "Chess 2120 - Split Bank"**
+Target: Chicago Blues / Muddy Waters / Early Buddy Guy (1950s).
+Guitar: Dual Matrix (Telecaster Single Coils & ES-339 Humbuckers).
+Physics Goal: Vintage 5E3 Sag, Console Slapback, strictly edge-of-breakup via Inst Vol manipulation.
+Full Configuration:
+*   Input Block: Gain [Tele: 0.0dB / 339: -3.0dB].
+*   Block 1 (Adaptive Gate): Noise Red [Tele: 35-45% / 339: 15-20%], Thresh [-65dB to -60dB].
+*   Block 2 (EQ-8): Tele [Low Shelf +3dB @ 200Hz, LPF 4.5kHz]. 339 [HPF 100Hz, LPF 6.0kHz]. Lead Scene Mid Peak [+1.5dB to +2.0dB @ 1kHz].
+*   Block 3 (Amp - US DLX 58): Inst Vol [Tele Rhy: 4.5, Lead: 6.5 / 339 Rhy: 3.0, Lead: 5.0], Tone [Tele: 6.5 / 339: 7.0], Mic Vol [0.0]. 
+*   Block 4 (Cab - 112 US DLX 58): Mic A (Ribbon 121, Pos 0.5, Dist 2.0"), Mic B (Dyn 57, Pos 0.0, Dist 1.0"), Mix [A: 0dB, B: -6dB].
+*   Block 5 (Analog Delay): Mix [8% / Lead: 12%], Time [90ms], Fdbk [5%].
+*   Block 6 (Room Reverb): Mix [15%], Decay [0.9s], HP [150Hz], LP [3000Hz].
+*   Lane Output Level: [Tele: +2.0dB / 339: 0.0dB].

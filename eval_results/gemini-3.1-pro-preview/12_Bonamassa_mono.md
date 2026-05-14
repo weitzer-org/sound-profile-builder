@@ -1,86 +1,75 @@
-Greetings. I am **QC-2**, your Quad Cortex Systems Engineer. 
+**QC-2 Systems Engineer Online.**
+Target acquired: Joe Bonamassa Modern Blues Lead. 
+Core Physics: Smooth, high-headroom tube drive, mid-forward articulation, Dumble-style cascade gain staging.
 
-To achieve the Joe Bonamassa modern blues lead tone—characterized by vocal, cascading midrange, smooth top-end compression, and immense sustain—we will utilize the **Custom ODS OD** (Neural DSP's exact emulation of the Dumble Overdrive Special). Because we are monitoring through a **QSC CP12 (Active PA Speaker)**, we will retain full Cabinet simulation and ensure the low-frequency energy (below 100Hz) is strictly managed to prevent the speaker's DSP limiters from engaging and ruining our transient response.
+Before we finalize the grid, I must run the **Trigger Protocol**:
+*Are your pickups Vintage Output, Medium, or High Output?* (Assuming Medium output for both the ES-339 and Telecaster for this baseline configuration).
 
-Before we finalize, my core diagnostic trigger: *Are your specific ES-339 and Telecaster pickups Vintage Output, Medium, or High Output?* (Assuming Medium-High for the ES-339 and Vintage for the Telecaster for this build).
+To achieve this tone through your QSC CP12 (Active FRFR PA Speaker), we must severely manage the high-frequency crossover. FRFRs reproduce high-end fizz that a traditional guitar speaker naturally rolls off. We will aggressively use High/Low Pass Filters (HPF/LPF) to simulate physical speaker impedance limits.
 
-Here is your Split-Bank Matrix protocol, followed by the exact block-by-block configurations for both instruments.
+Here is your Split-Bank Matrix. We will use the CorOS **"Overdrive Rev OD"** (verified Dumble Overdrive Special pseudonym) pushed by a **"Green 808"** (Tube Screamer).
 
-### **Organization Standard (Split-Bank Matrix)**
-*   **Row 1 (Scenes A-D) - Fender Telecaster (Single Coil Base)**
-    *   **Scene A:** Rhythm (Tight, -1.5dB output, Mid-Gain).
-    *   **Scene B:** Lead (Mid-boosted, +1.5dB output, Delay ON).
-    *   **Scene C:** Dry/Comping (No Reverb/Delay).
-    *   **Scene D:** Ambient/FX (High Mix Reverb/Delay).
-*   **Row 2 (Scenes E-H) - Gibson ES-339 (Humbucker Base)**
-    *   **Scene E:** Rhythm (Tight, -1.5dB output, Pad engaged).
-    *   **Scene F:** Lead (Mid-boosted, +1.5dB output, Delay ON).
-    *   **Scene G:** Dry/Comping (No Reverb/Delay).
-    *   **Scene H:** Ambient/FX (High Mix Reverb/Delay).
+### 🎸 MULTI-GUITAR TARGET SEPARATION & GAIN STAGING
+
+**Row 1 (Scenes A-D): Fender Telecaster (Single Coil)**
+*   **Physics Goal:** Thicken the fundamental frequencies so the single coils don't sound "wiry" through the Dumble circuit. 
+*   **Input Staging:** Set Global Input Gain to **+2.5dB**. 
+*   **EQ Compensation:** Active Parametric-8 block inline. Band 2 (Low Shelf) +3.0dB at 200Hz (adds body). Band 8 (LPF) at 4500Hz (tames the bridge pickup ice-pick).
+
+**Row 2 (Scenes E-H): Gibson ES-339 (Humbuckers)**
+*   **Physics Goal:** Tighten the low-mids. Dumble circuits are notorious for "farting out" in the bass frequencies when hit with neck humbuckers.
+*   **Input Staging:** Set Global Input Gain to **-3.0dB** to prevent premature clipping of the Green 808 block.
+*   **EQ Compensation:** Active Parametric-8 block inline. HPF set to 100Hz. Band 3 (Peak) -2.5dB at 350Hz (clears out the mud).
 
 ---
 
-### **Multi-Guitar Target Output: Distinct Configurations**
+### 🎛️ TABLE A: MAIN SIGNAL CHAIN
+*(Right-Click > Assign) specific parameters to Scenes A/B (Telecaster) and Scenes E/F (ES-339).*
 
-Due to the extreme physics differences between an ES-339 (massive low-mid resonance, high output humbuckers) and a Telecaster (spiky transients, low output, scooped mids), driving a Dumble-style amp requires fundamentally different gain staging and EQ. 
-
-#### **1. Gibson ES-339 (Humbuckers) Configuration**
-**Goal:** Prevent low-mid mud, avoid digital clipping at the input, and keep the overdrive smooth without fuzzing out. 
-*   **Input Block:** Set Gain to **-3.0dB** (Crucial for high-output humbuckers to preserve headroom).
-
-**Table A: Main Signal Chain (ES-339)**
-*Mark Scene-Specific changes clearly with "(Right-Click > Assign)".*
-
-| Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
+| Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Noise Red: 30% | Noise Red: 15% | Lower reduction on lead preserves sustain tail. Threshold set to dynamic floor. |
-| **Pre-FX** | Myth Drive | Drive: 1.0, Tone: 6.0, Level: 7.5 | Drive: 2.5, Tone: 6.5, Level: 8.5 | Acts as a Klon-style mid-push. Tightens bass before it hits the Dumble preamp. |
-| **Amp** | Custom ODS OD | Drive: 4.5, OD: 5.0, Bass: 3.5, Mid: 5.5, Treb: 5.0, Master: 5.0 | Drive: 6.0, OD: 6.5, Bass: 3.0, Mid: 7.0, Treb: 5.5, Master: 5.5 | Cascading gain structure. Lowered bass prevents tube sag/farting out on humbuckers. |
-| **Cab** | 412 UK V30 | Mic A: Dyn 57 (Pos 1.5, Dist 1")<br>Mic B: Rib 121 (Pos 3.0, Dist 2") | Mic A: Dyn 57 (Pos 1.0, Dist 1")<br>Mic B: Rib 121 (Pos 3.0, Dist 2") | Dyn 57 moved closer to center on Lead for aggressive cut. Ribbon adds 339 body. Mix A: 0dB, B: -4dB. |
-| **Post-FX 1** | Analog Delay | Bypass: ON | Mix: 15%, Time: 380ms, Fdbk: 25% | Classic Bonamassa thickener. Dark repeats prevent clashing with the dry lead note. |
-| **Post-FX 2** | Plate Reverb | Mix: 12%, HPF: 150Hz, LPF: 4000Hz | Mix: 18%, HPF: 150Hz, LPF: 4000Hz | Simulates studio plate/rack reverb. HPF keeps the QSC CP12 woofer tight. |
+| **Input/Gate** | Global Gate (Circle 1) | Thresh: -62dB [Tele] / -58dB [339] | Thresh: -65dB [Tele] / -60dB [339] | 339 humbuckers require a tighter gate for palm mutes. Lead scenes relaxed for sustain. |
+| **Pre-FX (EQ)** | Parametric-8 | *See specific EQ notes above* | *See specific EQ notes above* | The "Chameleon strategy." Re-voices the guitar to hit the amp with the optimal frequency band. |
+| **Pre-FX (OD)** | Green 808 | Bypass: OFF | Bypass: ON <br>Drive: 2.0 <br>Tone: 5.5 <br>Level: 8.5 | Asymmetrical clipping. Low drive, high level pushes the amp's preamp tubes into natural, smooth compression. |
+| **Amp** | Overdrive Rev OD | Drive: 3.5 [Tele] / 2.5 [339]<br>Bass: 3.5<br>Mid: 5.0<br>Treble: 4.5<br>Level: 6.0 | Drive: 5.5 [Tele] / 4.0 [339]<br>Bass: 3.5<br>Mid: 6.5 [Tele] / 6.0 [339]<br>Treble: 4.5<br>Level: +1.5dB relative | Dumble cascade logic. Pushing Mids on Lead scenes creates the Bonamassa "honk" that cuts through a mix. Lower drive for 339 to prevent fuzz. |
+| **Cab** | 212 CA Duo Ch | Mic A: Ribbon 121 (Pos 0.5, Dist 1.0")<br>Mic B: Dyn 57 (Pos 1.5, Dist 2.0")<br>Mix: A at 0dB, B at -3dB | *Same as Rhythm* | Ribbon 121 provides a massive, smooth low-mid. Dyn 57 adds necessary bite. HPF 85Hz / LPF 5000Hz tames the QSC CP12 tweeter. |
+| **Post-FX 1** | Analog Delay | Mix: 10%<br>Time: 350ms<br>Fdbk: 15% | Mix: 22%<br>Time: 420ms<br>Fdbk: 25% | Warm BBD repeats do not clash with the primary lead notes. Lengthened time for lead creates a wider stereo field. |
+| **Post-FX 2** | Plate Reverb | Mix: 12%<br>Decay: 1.2s | Mix: 18%<br>Decay: 1.8s | Plate simulates studio reflections. Smooth tail without muddying the fast pentatonic runs. |
 
 ---
 
-#### **2. Fender Telecaster (Single Coils) Configuration**
-**Goal:** Synthesize the missing low-mid body of a humbucker, tame the ice-pick bridge pickup attack, and push the amp harder to compensate for lower pickup output.
-*   **Input Block:** Set Gain to **+1.5dB** (Recovers signal lost from vintage single coils). 
-*   **EQ Block Addition:** Insert a **Parametric-8 EQ** block *immediately after the Adaptive Gate* but *before the Myth Drive*.
-
-**Table B: Main Signal Chain Modifications (Telecaster)**
-*Apply these overrides to the Table A baseline using Scenes A & B.*
-
-| Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
-| :--- | :--- | :--- | :--- | :--- |
-| **Gate/EQ** | Parametric-8 | Band 2: +3.0dB @ 250Hz (Peak)<br>Band 8: LPF @ 5500Hz | Band 2: +4.0dB @ 250Hz (Peak)<br>Band 8: LPF @ 4800Hz | **Chameleon Strategy:** Band 2 mimics the humbucker body. LPF aggressively shaves Telecaster ice-pick transients. |
-| **Pre-FX** | Myth Drive | Drive: 3.0, Tone: 4.5, Level: 8.0 | Drive: 4.5, Tone: 5.0, Level: 9.0 | Telecaster needs more pedal drive and a darker Tone setting compared to the ES-339. |
-| **Amp** | Custom ODS OD | Drive: 6.0, OD: 6.0, Bass: 5.5, Mid: 6.0, Treb: 4.5 | Drive: 7.5, OD: 7.5, Bass: 5.0, Mid: 7.5, Treb: 4.0 | Increased bass to fill out the single coils. Lowered treble. Cascading drive pushed harder for sustain. |
+### 🔧 TROUBLESHOOTING & REFINEMENT TREE
+If the lead tone feels "Too Distorted", "Fuzzy", or "Flubby" through your QSC CP12:
+1. **Input Pad:** Lower the Input Block Gain to -6.0dB (This simulates rolling off your guitar volume and instantly cleans up the amp headroom).
+2. **Amp Gain:** Reduce the Amp block *Drive* by 2.0 increments. Do *not* lower the Level (Master).
+3. **Tube Sag/Flub:** If the neck pickup on the ES-339 sounds "farty" or broken during fast runs, reduce the Amp block *Bass* to 2.0. The Dumble circuit naturally amplifies low-end exponentially; cut bass before the gain stages.
+4. **Output Compensation:** Compensate for any volume loss by raising the Lane Output Level. Never use a compressor to fix gain issues.
 
 ---
 
-### **Troubleshooting & Refinement Tree**
-If testing through your QSC CP12 yields unsatisfactory results, apply this strict order of operations:
-1.  **If the tone is "Too Distorted" or "Too Fuzzy" (Usually ES-339 issue):**
-    *   *Input Pad:* Lower Input Block Gain further to -6.0dB (Simulates rolling off guitar volume, directly clearing up the Dumble preamp).
-    *   *Amp Gain:* Reduce the `OD` parameter on the Custom ODS by 2.0 increments. Do *not* touch the `Drive` first.
-2.  **If the amp sounds "broken/farty" in the low-end:**
-    *   *Tube Sag:* Reduce `Bass` on the Custom ODS to 2.0. Dumble circuits are notorious for low-end flub when the OD section is pushed hard.
-3.  **If the volume drops too much after reducing gain:**
-    *   *Output Compensation:* Raise the Lane Output Level (far right circle on the grid). Never use a compressor to fix this volume discrepancy.
+### 💾 SESSION LIBRARY (ACTIVE PRESETS)
 
----
+**1. Preset Name: "Spoonful - ES339"**
+Target: Howlin' Wolf / Hubert Sumlin (1960).
+Guitar: ES-339 (Humbuckers) w/ Pick.
+Physics Goal: Clean/Edge-of-breakup rhythm + Fuzz/Sag lead without using pedals.
+Full Configuration:
+Block 1 (Adaptive Gate): Noise Red [Rhy: 40% / Lead: 15%], Thresh [-60dB / -65dB], Decay [100ms / 250ms].
+Block 2 (EQ-8): HPF [90Hz], Band 6 [0.0dB], LPF [Rhy: 4200Hz / Lead: 4500Hz] (Simulates thumb attack).
+Block 3 (Amp - US Tweed Basslad Jumped): Vol Norm [2.0 / 2.2], Vol Bright [2.5 / 3.2], Bass [2.5], Mid [6.0 / 7.0], Treble [7.0 / 6.5], Presence [6.0], Output Level [+7.0dB / +8.5dB].
+Block 4 (Cab - 410 Basslad PR10): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 0.8, Dist 5.0"), Mix [A: 0dB, B: -4dB].
+Block 5 (Tape Delay): Mix [15% / 22%], Time [110ms], Fdbk [15%], Drive [35%], HP [150Hz], LP [2500Hz].
+Block 6 (Room Reverb): Mix [12%], Decay [0.8s], HP [120Hz], LP [3500Hz].
 
-### **Session Library (Active Presets)**
-
-**2. Preset Name: "JB Modern Blues - ES339/Tele"**
-*   **Target:** Joe Bonamassa (Modern Dumble Lead Tone).
-*   **Guitar:** ES-339 (Humbuckers) / Telecaster (Single Coils).
-*   **Physics Goal:** Cascading vocal midrange, zero harsh fizz, high sustain, FRFR optimized.
-*   **Full Configuration:**
-    *   *Block 1 (Adaptive Gate):* Noise Red [ES339 Rhy: 30% / Lead: 15%] [Tele Rhy: 45% / Lead: 25%].
-    *   *Block 2 (EQ-8 - Telecaster Only):* HPF [100Hz], Band 2 [+3dB/+4dB @ 250Hz], LPF [5500Hz/4800Hz].
-    *   *Block 3 (Myth Drive):* Drive [ES: 1.0/2.5] [Tele: 3.0/4.5], Tone [ES: 6.0/6.5] [Tele: 4.5/5.0], Level [7.5 to 9.0 depending on Scene].
-    *   *Block 4 (Amp - Custom ODS OD):* Drive [ES: 4.5/6.0] [Tele: 6.0/7.5], OD [ES: 5.0/6.5] [Tele: 6.0/7.5], Bass [ES: 3.5/3.0] [Tele: 5.5/5.0], Mid [ES: 5.5/7.0] [Tele: 6.0/7.5], Treble [ES: 5.0/5.5] [Tele: 4.5/4.0], Master [5.0/5.5].
-    *   *Block 5 (Cab - 412 UK V30):* Mic A (Dyn 57, Pos 1.5/1.0, Dist 1.0"), Mic B (Ribbon 121, Pos 3.0, Dist 2.0"), Mix [A: 0dB, B: -4dB].
-    *   *Block 6 (Analog Delay):* Mix [15%], Time [380ms], Fdbk [25%]. Active on Lead Scenes.
-    *   *Block 7 (Plate Reverb):* Mix [12% / 18%], HP [150Hz], LP [4000Hz]. Decay [1.8s]. Lane Output Level managed to +1.5dB on Lead Scenes.
+**2. Preset Name: "JB Modern Blues - Dual Rig"** *(NEW)*
+Target: Joe Bonamassa.
+Guitar: Gibson ES-339 / Fender Telecaster.
+Physics Goal: Smooth Dumble ODS cascading gain, mid-pushed articulate lead via FRFR speaker limiters.
+Full Configuration:
+Global Input: Gate [-62dB Tele / -58dB 339], Gain [+2.5dB Tele / -3.0dB 339].
+Block 1 (EQ-8): Tele [Band 2: +3.0dB @ 200Hz, LPF @ 4500Hz] / 339 [HPF @ 100Hz, Band 3: -2.5dB @ 350Hz].
+Block 2 (Green 808): Bypass [Rhy: Off / Lead: On], Drive [2.0], Tone [5.5], Level [8.5].
+Block 3 (Amp - Overdrive Rev OD): Drive [Rhy: 3.5(T)/2.5(339) / Lead: 5.5(T)/4.0(339)], Bass [3.5], Mid [Rhy: 5.0 / Lead: 6.5(T)/6.0(339)], Treble [4.5], Level [Rhy: 6.0 / Lead: +1.5dB].
+Block 4 (Cab - 212 CA Duo Ch): Mic A (Ribbon 121, Pos 0.5, Dist 1.0"), Mic B (Dyn 57, Pos 1.5, Dist 2.0"), Mix [A: 0dB, B: -3dB], HPF [85Hz], LPF [5000Hz].
+Block 5 (Analog Delay): Mix [Rhy: 10% / Lead: 22%], Time [Rhy: 350ms / Lead: 420ms], Fdbk [Rhy: 15% / Lead: 25%].
+Block 6 (Plate Reverb): Mix [Rhy: 12% / Lead: 18%], Decay [Rhy: 1.2s / Lead: 1.8s].

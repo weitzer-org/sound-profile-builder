@@ -1,75 +1,71 @@
-Target Locked: **The Edge (U2) - 1964 Vox AC30TB & Dotted-Eighth Delay.**
-Analog Hunt Specs: Korg SDD-3000 Preamp (always-on for signal coloration), 1964 Vox AC30 Top Boost (Alnico Blue speakers), Herdim pick (dimpled side for "chiff" attack), TC Electronic 2290 / Korg SDD-3000 Delays. 
+**System Initialization: QC-2 Quad Cortex Systems Engineer**
+**Target Acknowledged:** U2 / The Edge - 1964 Vox AC30TB Edge-of-Breakup with Dotted-Eighth Rhythmic Delay.
+**Hardware Environment:** Cortex Control (Mac Desktop) routed to QSC CP12 Active PA Speaker.
 
-As **QC-2**, I have engineered this preset to handle the strict physics of an AC30 Top Boost (a non-master volume circuit that easily falls into "fuzz" territory if gain-staged improperly). To simulate the legendary always-on SDD-3000 preamp and the Herdim pick attack, we are utilizing the **Parametric-8 EQ** block before the amp.
+To achieve the iconic "Edge" chime, we must replicate the physics of his rig: an SDD-3000 preamp pushing the front end of a 1964 Vox AC30 Top Boost, captured by a Shure SM57, with a highly pronounced modulated digital delay. Because the Vox circuit lacks a Master Volume and responds drastically to input impedance, we will use the **"Chameleon" Protocol** via the Parametric-8 EQ block to simulate the SDD-3000 preamp curve while simultaneously adapting the rig for your two distinct guitars. 
 
-Per your requirement, here is the Split-Bank Matrix detailing distinct configurations for your **Fender Telecaster (Row 1)** and **Gibson ES-339 (Row 2)**.
+Below are the strictly separated configurations for your Fender Telecaster (Scenes A-D) and Gibson ES-339 (Scenes E-H).
 
-***
+---
 
-### 🎸 ROW 1: FENDER TELECASTER (Scenes A–D)
-**Pickup Output Compensation:** Single-coils lack the low-mid push to drive an AC30 into that specific thick, chiming compression. We will use the Pre-EQ to boost the 200Hz body and push the Brilliant Volume higher. 
-*   **Scene A:** Rhythm (Dry, tight edge-of-breakup)
-*   **Scene B:** Lead / Classic Edge (Dotted-8th Delay engaged)
-*   **Scene C:** Dry / Comping (No spatial FX)
-*   **Scene D:** Ambient (Shimmer added for "With or Without You" swells)
+### Part 1: Fender Telecaster (Single Coil) Configuration
+**Split-Bank Matrix: Row 1 (Scenes A-D)**
+*Physics Goal:* Telecasters naturally lack the low-mid "thump" of Edge’s preferred Explorer/Strat bridge pickups. We will use the EQ-8 to push the preamp harder (+3.0dB) to hit the exact edge-of-breakup threshold, while boosting the 200Hz body band to prevent the AC30 Top Boost circuit from sounding shrill through your QSC CP12.
 
-#### Table A: Telecaster Signal Chain
+**Table A: Main Signal Chain (Telecaster)**
+*Mark Scene-Specific changes clearly with (Right-Click > Assign).*
+
 | Block Category | Model Name | Rhythm Settings (Sc A) | Lead Settings (Sc B) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Thresh: -50dB / Red: 40% | Thresh: -55dB / Red: 30% | 60-cycle hum management. Lead scene opens up to preserve delay trails. |
-| **Pre-FX (Preamp)** | Parametric-8 | Peak 1: +2.5dB @ 200Hz | Peak 1: +2.5dB @ 200Hz | **Chameleon EQ:** Simulates SDD-3000 preamp thickness. Band 7 (+3dB @ 4.5kHz) simulates Herdim pick attack. |
-| **Amp** | UK C30 Top Boost | Bril Vol: 5.5 / Norm: 3.0 | Bril Vol: 6.5 / Norm: 3.0 | Tube Taper Logic: Pushing Brilliant Vol creates the chime. Cut set to 4.0. *Non-Master Vol amp.* |
-| **Cab** | 212 UK C30 Fawn | Dyn 57 (Pos 1.5, Dist 1") | Dyn 57 (Pos 1.5, Dist 1") | Speaker Physics: Celestion Alnico Blues. Rib 121 added at -4dB for low-end warmth. |
-| **Post-FX 1** | Digital Delay | *Bypassed* | Mix: 45% / Sync: 3/16 | The "Streets" engine. High mix ensures repeats are almost identical in volume to the dry pick attack. Mod Rate: 1.5Hz. |
-| **Post-FX 2** | Hall Reverb | Mix: 12% / Decay: 1.5s | Mix: 18% / Decay: 2.0s | Spatial Goal: Creates the arena-sized stadium wash without muddying the dotted-8th repeats. |
+| **Input/Gate** | Global Input Gate | Thresh: -65dB | Thresh: -65dB | Low output single coils require a lower gate threshold to preserve delicate Herdim pick scrapes. |
+| **Pre-FX (Preamp)** | Parametric-8 | Output: +3.0dB<br>Band 2 (Peak): +2.5dB @ 250Hz<br>Band 6 (Peak): +1.5dB @ 3000Hz | Output: +4.5dB<br>Band 2: +2.5dB<br>Band 6: +2.5dB | Simulates the Korg SDD-3000 preamp push. Adds missing body weight to the Telecaster bridge pickup. |
+| **Amp** | UK C30 Top Boost | Vol: 6.5<br>Bass: 4.5<br>Treble: 6.5<br>Cut: 3.5 | Vol: 6.5<br>Bass: 4.5<br>Treble: 6.5<br>Cut: 3.5 | Classic TB settings. High treble, moderate cut (Cut acts as a reverse presence/LPF). No Master Volume; rely on Lane Level for SPL. |
+| **Cab** | 212 UK C30 (Alnico Blue) | Mic A: Dyn 57 (Pos 0.4, Dist 1.0")<br>Mic B: Ribbon 121 (Pos 0.8, Dist 2.5")<br>Mix: A at 0dB, B at -3dB | [Same] | Edge's exact mic pairing. SM57 provides the aggressive 3kHz bite; Ribbon 121 adds warmth. |
+| **Post-FX (Delay)** | Digital Delay | Sync: On (1/8d)<br>Mix: 42%<br>Fdbk: 28%<br>Mod Depth: 15% | Sync: On (1/8d)<br>Mix: 45%<br>Fdbk: 35%<br>Mod Depth: 18% | 1/8d (dotted eighth) is the signature rhythm. High mix percentage ensures repeats are almost as loud as the attack. Mod adds SDD-3000 wow/flutter. |
+| **Post-FX (Verb)** | Plate Reverb | Mix: 12%<br>Decay: 1.2s<br>HPF: 150Hz / LPF: 4000Hz | Mix: 16%<br>Decay: 1.5s<br>HPF: 150Hz / LPF: 4000Hz | Subtle stadium air. LPF set low to ensure the reverb doesn't mask the crisp delay repeats. |
+| **Output** | Lane Output | Level: 0.0dB | Level: +1.5dB | Volume jump for lead lines without altering the amp's tube saturation physics. |
 
-***
+---
 
-### 🎸 ROW 2: GIBSON ES-339 (Scenes E–H)
-**Pickup Output Compensation:** Humbuckers will completely collapse the headroom of a vintage AC30 model, resulting in a dark, muddy fuzz rather than crystalline chime. We must apply a severe Input Pad, aggressively cut the low-mids, and raise the Tone Cut frequency to restore the "glass" of the AC30.
-*   **Scene E:** Rhythm (Input Padded, tight)
-*   **Scene F:** Lead / Classic Edge (Dotted-8th Delay engaged)
-*   **Scene G:** Dry / Comping 
-*   **Scene H:** Ambient (Shimmer Wash)
+### Part 2: Gibson ES-339 (Humbucker) Configuration
+**Split-Bank Matrix: Row 2 (Scenes E-H)**
+*Physics Goal:* The ES-339’s PAF-style humbuckers output significantly more voltage and low-mid frequencies (200-400Hz). Hitting a Vox AC30TB with an unpadded humbucker instantly bypasses "chime" and results in muddy, unfocused overdrive. We must aggressively pad the input gain and scoop the low-mids to force the ES-339 to behave like a single-coil.
 
-#### Table B: ES-339 Signal Chain
+**Table B: Main Signal Chain (ES-339)**
+*Mark Scene-Specific changes clearly with (Right-Click > Assign).*
+
 | Block Category | Model Name | Rhythm Settings (Sc E) | Lead Settings (Sc F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input/Gate** | Adaptive Gate | Gain: -4.5dB / Red: 20% | Gain: -4.5dB / Red: 15% | **Critical:** -4.5dB Input Gain pad prevents the humbuckers from clipping the amp block into muddy fuzz. |
-| **Pre-FX (Preamp)** | Parametric-8 | Peak 1: -3.5dB @ 250Hz | Peak 1: -3.5dB @ 250Hz | **Chameleon EQ:** Carves out humbucker mud. HPF raised to 120Hz. Band 7 (+4dB @ 4.5kHz) forces the "chiff" attack through the dark pickups. |
-| **Amp** | UK C30 Top Boost | Bril Vol: 3.5 / Norm: 1.5 | Bril Vol: 4.5 / Norm: 1.5 | Tube Taper Logic: Lower volume to maintain edge-of-breakup. Treble raised to 7.5. Tone Cut reduced to 2.0 to allow more high-end glass. |
-| **Cab** | 212 UK C30 Fawn | Dyn 57 (Pos 0.5, Dist 1") | Dyn 57 (Pos 0.5, Dist 1") | Speaker Physics: Mic moved closer to the dust cap (Pos 0.5) to artificially extract more top-end bite from the ES-339. |
-| **Post-FX 1** | Digital Delay | *Bypassed* | Mix: 40% / Sync: 3/16 | Feedback: 40% (~4 repeats). High Pass set to 200Hz to prevent low-end humbucker frequencies from cascading into mud. |
-| **Post-FX 2** | Hall Reverb | Mix: 10% / Decay: 1.5s | Mix: 15% / Decay: 2.0s | Spatial Goal: Slightly lower mix than the Telecaster to prevent the naturally thicker 339 tone from overwhelming the DSP space. |
+| **Input/Gate** | Global Input Gate | Thresh: -55dB<br>Input Pad: -4.5dB | Thresh: -55dB<br>Input Pad: -4.5dB | The -4.5dB pad prevents the humbuckers from clipping the amp block's virtual 12AX7 tubes too early. Higher gate threshold due to humbucker output. |
+| **Pre-FX (Preamp)** | Parametric-8 | Output: 0.0dB<br>Band 2 (Peak): -3.0dB @ 300Hz<br>HPF: 110Hz | Output: +1.5dB<br>Band 2: -3.0dB @ 300Hz<br>HPF: 110Hz | Hollowbody humbuckers carry mud at 300Hz. Scooping this band reveals the Vox chime. HPF prevents PA boominess. |
+| **Amp** | UK C30 Top Boost | Vol: 4.0<br>Bass: 3.0<br>Treble: 7.0<br>Cut: 4.5 | Vol: 4.5<br>Bass: 3.0<br>Treble: 7.0<br>Cut: 4.5 | Volume heavily reduced (from 6.5 on Tele) to maintain edge-of-breakup. Cut increased to tame harsh upper-harmonics from humbuckers. |
+| **Cab** | 212 UK C30 (Alnico Blue) | Mic A: Dyn 57 (Pos 0.6, Dist 1.0")<br>Mic B: Ribbon 121 (Pos 0.8, Dist 3.0")<br>Mix: A at 0dB, B at -6dB | [Same] | Moved the SM57 slightly off-center (Pos 0.6) to reduce humbucker 'ice-pick'. Reduced Ribbon mix to prevent low-end build-up. |
+| **Post-FX (Delay)** | Digital Delay | Sync: On (1/8d)<br>Mix: 38%<br>Fdbk: 25%<br>Mod Depth: 15% | Sync: On (1/8d)<br>Mix: 42%<br>Fdbk: 32%<br>Mod Depth: 18% | Slightly lower mix than the Telecaster, as humbucker transients are thicker and can clutter the rhythmic grid if delays are too loud. |
+| **Post-FX (Verb)** | Plate Reverb | Mix: 10%<br>Decay: 1.2s<br>HPF: 180Hz / LPF: 3500Hz | Mix: 14%<br>Decay: 1.5s<br>HPF: 180Hz / LPF: 3500Hz | HPF raised to 180Hz to keep the ES-339's lower fundamentals completely dry. |
+| **Output** | Lane Output | Level: +2.0dB | Level: +3.5dB | Because we lowered the Amp Volume to clean up the humbuckers, we must raise Lane Output Level to match SPL with the Telecaster scenes. |
 
-***
+---
 
-### ⚙️ Troubleshooting & Refinement Tree
-If the preset sounds inaccurate through your QSC CP12 PA Speaker, follow this strict operational order:
-1. **Delay Timing Sounds Messy/Clashing:** The Digital Delay block is set to `Sync: 3/16`. You **must** tap the tempo of the song on the QC footswitch for the rhythm to work. If you are playing "Where the Streets Have No Name," tap ~125 BPM. 
-2. **ES-339 Sounds "Broken" or "Farty" on Power Chords:** The vintage Vox circuit sags heavily under humbucker load. Lower the `Bass` parameter on the Amp block to `2.0` and verify the Global Input Gain is padded to `-4.5dB`.
-3. **Not Enough Volume (SPL):** Because the `UK C30 Top Boost` lacks a Master Volume, do *not* touch the Brilliant/Normal volume knobs to get louder in the room (this will only add distortion). Instead, swipe down on the Cortex Desktop App and raise the **Lane Output Level** from `0.0dB` to `+3.0dB` or `+5.0dB`.
+### Troubleshooting & Refinement Tree (Vox Circuits)
+If the tone is **"Too Distorted"** or sounding fuzzy through your QSC CP12:
+1. **Input Pad:** Ensure the ES-339 has the Global Input Level pulled back to at least -4.5dB. 
+2. **Amp Gain:** Lower the `Vol` parameter on the UK C30 Top Boost block in 0.5 increments. 
+3. **Tube Sag/Farting:** The AC30 model can sag aggressively if pushed with too much low end. Lower the `Bass` parameter on the Amp block to 2.0.
+4. **Output Compensation:** If the tone is finally clean but now too quiet, *do not touch the Amp Volume*. Raise the Lane Output Level slider on the right side of the Cortex Control UI.
 
-***
+---
 
-### 🗄️ Session Library (Active Presets)
-**2. Preset Name: "Chime & Streets - Tele/339"**
-*   **Target:** The Edge (U2) - 1964 Vox AC30TB w/ SDD-3000.
-*   **Guitars:** Fender Telecaster (Row 1) & Gibson ES-339 (Row 2).
-*   **Physics Goal:** Edge-of-breakup chime with high-mix, bucket-brigade modulated repeats. Humbuckers padded to avoid AC30 sag collapse.
-*   **Full Configuration (Telecaster Sc A/B):**
-    *   Block 1 (Adaptive Gate): Thresh [-50dB / -55dB], Noise Red [40% / 30%].
-    *   Block 2 (EQ-8): HPF [90Hz], Band 1 [+2.5dB @ 200Hz], Band 7 [+3.0dB @ 4500Hz], LPF [10kHz].
-    *   Block 3 (Amp - UK C30 Top Boost): Bril Vol [5.5 / 6.5], Norm Vol [3.0], Bass [4.0], Treble [6.5], Tone Cut [4.0]. Lane Out [+2.0dB].
-    *   Block 4 (Cab - 212 UK C30 Fawn): Mic A (Dyn 57, Pos 1.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.0, Dist 2.0"), Mix [A: 0dB, B: -4dB].
-    *   Block 5 (Digital Delay): Bypassed/Active, Mix [45%], Time [Sync 3/16], Fdbk [38%], Mod Rate [1.5Hz], Mod Depth [20%], HPF [150Hz].
-    *   Block 6 (Hall Reverb): Mix [12% / 18%], Decay [1.5s / 2.0s], Pre-Delay [20ms].
-*   **Full Configuration (ES-339 Sc E/F):**
-    *   *Input Pad: -4.5dB.*
-    *   Block 1 (Adaptive Gate): Thresh [-60dB], Noise Red [20% / 15%].
-    *   Block 2 (EQ-8): HPF [120Hz], Band 1 [-3.5dB @ 250Hz], Band 6 [+2.0dB @ 3000Hz], Band 7 [+4.0dB @ 4500Hz], LPF [10kHz].
-    *   Block 3 (Amp - UK C30 Top Boost): Bril Vol [3.5 / 4.5], Norm Vol [1.5], Bass [2.0], Treble [7.5], Tone Cut [2.0]. Lane Out [+4.5dB].
-    *   Block 4 (Cab - 212 UK C30 Fawn): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 2.0, Dist 3.0"), Mix [A: 0dB, B: -8dB].
-    *   Block 5 (Digital Delay): Bypassed/Active, Mix [40%], Time [Sync 3/16], Fdbk [40%], Mod Rate [1.5Hz], Mod Depth [20%], HPF [200Hz].
-    *   Block 6 (Hall Reverb): Mix [10% / 15%], Decay [1.5s / 2.0s].
+### Session Registry Protocol (Active Presets)
+**Session Library Update:**
+2. **Preset Name:** "Streets Chime Matrix"
+*Target:* U2 / The Edge (1964 Vox AC30TB w/ Dotted 8th).
+*Guitar:* Split-Matrix (Sc A-D: Telecaster | Sc E-H: ES-339).
+*Physics Goal:* Replicate SDD-3000 preamp push into AC30TB edge-of-breakup. Compensate for extreme input impedance variance between vintage single-coils and PAF humbuckers.
+*Full Configuration:*
+- **Input/Gate:** Thresh [-65dB Tele / -55dB 339]. Input Gain [0.0dB Tele / -4.5dB 339].
+- **EQ-8 (Preamp):** Tele [Out: +3.0dB, B2: +2.5dB@250Hz, B6: +1.5dB@3kHz]. 339 [Out: 0.0dB, HPF: 110Hz, B2: -3.0dB@300Hz]. 
+- **Amp (UK C30 Top Boost):** Tele [Vol 6.5, Bass 4.5, Treb 6.5, Cut 3.5]. 339 [Vol 4.0, Bass 3.0, Treb 7.0, Cut 4.5].
+- **Cab (212 UK C30):** Mic A (Dyn 57), Mic B (Rib 121). Tele Mix [0dB / -3dB]. 339 Mix [0dB / -6dB]. 
+- **Delay (Digital Delay):** Sync [On - 1/8d], Mod Depth [15%], Tele Mix [42%], 339 Mix [38%].
+- **Reverb (Plate):** Mix [12% Tele / 10% 339], HPF [150Hz Tele / 180Hz 339]. LPF [4000Hz].
+- **Lane Level:** Tele [0.0dB Rhy / +1.5dB Ld]. 339 [+2.0dB Rhy / +3.5dB Ld].

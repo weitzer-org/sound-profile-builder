@@ -1,68 +1,73 @@
-**QC-2 Systems Engineer Online.**
-**Target Verified:** Southern Rock Slide Style (Allman / Skynyrd dynamics). 
-**Physics Goal:** Extreme natural compression and singing sustain via a cranked vintage American Tweed circuit. 
+Target Identified: Southern Rock Slide Style (Allman Brothers / Derek Trucks inspiration). 
+Physics Goal: Infinite "singing" sustain, thick midrange to support a glass/brass slide, and edge-of-breakup dynamics controlled by the guitar's volume knob. We are utilizing the Neural DSP "US Tweed Basslad Jumped" (closest available model to a vintage Fender Tweed Bassman 5F6-A) pushing into a transparent overdrive to generate sustain without the low-end "farting out" common in Tweed circuits.
 
-To achieve "singing sustain" without harsh slide clatter, we must manage the resonant frequencies of the glass/brass slide against the physical limitations of a Tweed circuit. Tweeds lack negative feedback and have loose low-end; when you push them with humbuckers, they "fart out" or completely collapse in the bass frequencies. 
+Since you are running into a QSC CP12 FRFR active speaker, managing low-end resonance and taming high-end fizz is critical. 
 
-To satisfy the **Multi-Guitar Protocol (Rule 9)** and the **Split-Bank Matrix (Rule 4)**, this preset is engineered to house both your Gibson ES-339 and a Fender Telecaster in a single session. We will use a dedicated Grid Gain Block and a Parametric EQ to instantly adapt the physics for either guitar via Scene selection.
-
-***
-
-### 🎸 MULTI-GUITAR GAIN STAGING & COMPENSATION
-
-**Profile 1: Gibson ES-339 (Humbuckers) — Assigned to Row 2 (Scenes E-H)**
-*   **Physics Challenge:** Humbuckers hitting a cranked Tweed create excessive low-mid mud, killing sustain and replacing it with fuzz.
-*   **QC Compensation:** The Grid Gain block is dropped to -4.0dB. The EQ-8 block cuts bass heavily at 150Hz. This tightens the humbuckers to allow the Green 808 to push the preamp tubes purely in the midrange, resulting in infinite, singing slide sustain.
-
-**Profile 2: Fender Telecaster (Single Coils) — Assigned to Row 1 (Scenes A-D)**
-*   **Physics Challenge:** Telecasters lack the output to push the Tweed into heavy sustain, and the bridge pickup will make the slide sound piercing (ice-pick effect).
-*   **QC Compensation:** The Grid Gain block is boosted to +2.0dB. The EQ-8 block adds a +3.0dB shelf at 200Hz for body, and applies an aggressive Low Pass Filter (LPF) at 4.2kHz to physically roll off the harsh glass/metal scrape of the slide.
+Here is your Quad Cortex configuration. Per system protocol, I am providing distinct routing and gain staging for both your Gibson ES-339 and a Fender Telecaster.
 
 ***
 
-### 🎛️ SIGNAL CHAIN & SCENE MATRIX (FRFR/QSC CP12 Optimized)
+### 🎸 MULTI-GUITAR GAIN STAGING & CONFIGURATION
 
-*Note: The vintage '57 Twin does not have a Master Volume. To increase your overall room loudness (SPL) without altering the drive tone, you MUST use the Lane Output Level at the end of the grid.*
+To maximize the physics of each pickup type while maintaining the same amplifier core, you must set your Global Input differently for each guitar. 
 
-#### Table A: Main Signal Chain
-*Mark Scene-Specific changes clearly with "(Right-Click > Assign)".*
+#### Row 1 (Scenes A-D): Single Coil Profile (Fender Telecaster)
+*Slide on a Telecaster can become piercingly bright, lacking the natural compression of humbuckers.*
+*   **Input Block Gain:** `+2.0dB` (Pushes the amp closer to humbucker territory).
+*   **EQ Compensation (Parametric-8):** Enable Band 1 (Low Shelf) at `200Hz` with `+3.0dB` gain to add physical weight/body to the slide notes. Enable Band 8 (LPF) at `4500Hz` to tame the "glassy" transient of the slide hitting the strings.
+*   **Amp Block Adjustments:** Increase `Vol Norm` to `6.0` to thicken the low-mids.
+*   **Scene Matrix:** [A] Rhythm (Tight), [B] Lead (+1.5dB / Mid-Boost), [C] Dry Comping, [D] Ambient Slide Swells.
+
+#### Row 2 (Scenes E-H): Humbucker Profile (Gibson ES-339)
+*Vintage Tweed circuits lack a tight power amp; feeding high-output humbuckers straight in will cause extreme tube sag and muddiness.*
+*   **Input Block Gain:** `-3.0dB` to `-4.5dB` (Crucial to prevent digital clipping and preserve the amp's headroom).
+*   **EQ Compensation (Parametric-8):** Disable the 200Hz boost. Ensure a High-Pass Filter (HPF) is active at `90Hz` to prevent the neck humbucker from blowing out the Tweed's power section.
+*   **Amp Block Adjustments:** Drop `Bass` to `2.5` to tighten the sag. Let the humbuckers do the heavy lifting for the low-end.
+*   **Scene Matrix:** [E] Rhythm (Tight), [F] Lead (+1.5dB / Mid-Boost), [G] Dry Comping, [H] Ambient Slide Swells.
+
+***
+
+### TABLE A: MAIN SIGNAL CHAIN (The "Statesboro" Build)
+*(Note: Parameters marked "Assign" should be assigned to Scenes B/F via Right-Click in Cortex Control for your Lead tone).*
 
 | Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input** | Global Input 1 | Thresh: -60dB | Thresh: -65dB | Slide playing is noisy. Relaxing the gate on Lead prevents choking the singing tail of the sustain. |
-| **Pre-FX (Gain)** | Utility Gain | **Sc A (Tele):** +2.0dB<br>**Sc E (339):** -4.0dB | **Sc B (Tele):** +2.0dB<br>**Sc F (339):** -4.0dB | Levels the pickup output to hit the overdrive and amp with identical voltage pressure. |
-| **Pre-FX (Drive)** | Green 808 | Overdrive: 2.0<br>Tone: 6.0<br>Level: 6.5 | Overdrive: 6.5<br>Tone: 5.5<br>Level: 8.0 | *TS-style circuit.* Cuts bass natively. High level/drive on Lead heavily compresses the signal for infinite slide sustain. |
-| **Amp** | US TWN 57 Jumped | Vol Bright: 6.0<br>Vol Norm: 5.0<br>Bass: 2.5<br>Treble: 6.5<br>Presence: 5.0 | Vol Bright: 8.5<br>Vol Norm: 5.0<br>Bass: 2.0<br>Treble: 6.0<br>Presence: 4.5 | *Vintage Tweed Twin.* Bass must be remarkably low (2.0) to prevent tube sag collapse. Jumped channels add low-mid thickness. |
-| **Cab** | 212 US TWN 57 | Mic A: Dyn 57 (Pos 0.5, Dist 1")<br>Mic B: Rib 121 (Pos 1.5, Dist 3") | Mix: Mic A (0dB), Mic B (-2dB) | 57 captures the bite of the slide. Ribbon 121 (Off-center) captures the cabinet resonance and smooths the harsh treble. |
-| **Post-FX (EQ)** | Parametric-8 | **Sc A:** LPF 4.5kHz, +3dB @ 200Hz<br>**Sc E:** LPF 6kHz, -2dB @ 150Hz | **Sc B:** LPF 4.2kHz, +3dB @ 200Hz<br>**Sc F:** LPF 5.5kHz, -2dB @ 150Hz | *The Chameleon Strategy.* Physically morphs the amp response to suit Single Coils (Row 1) or Humbuckers (Row 2). |
-| **Post-FX (Delay)**| Analog Delay | Mix: 0% *(Bypassed)* | Mix: 25%<br>Time: 380ms<br>Fdbk: 30% | Analog bucket-brigade repeats sit *behind* the dry signal, thickening the slide tone without washing it out. |
-| **Post-FX (Verb)** | Plate Reverb | Mix: 15%<br>Decay: 1.2s | Mix: 22%<br>Decay: 1.8s | Replicates the acoustic reflections of vintage Southern Rock live rooms (e.g., Fillmore East). |
+| **Input/Gate** | Adaptive Gate | Noise Red: `40%` | Noise Red: `15%` (Assign) | Lower gate % on lead preserves the dying sustain of slide vibrato. |
+| **Pre-FX (Drive)** | Myth Drive | Gain: `1.5`, Tone: `6.0`, Level: `7.5` | Gain: `4.0` (Assign), Tone: `6.5` | Emulates a Klon. Low gain hits the amp hard for natural tube sustain. Lead scene adds clipping. |
+| **Amp** | US Tweed Basslad Jumped | Vol Norm: `3.5`, Vol Bright: `5.0`, Bass: `3.0`, Mid: `6.5`, Treb: `6.0`, Pres: `5.5` | Vol Norm: `4.5` (Assign), Vol Bright: `6.5` (Assign) | **No Master Volume on this model.** Normal channel adds girth; Bright channel adds the slide "bite". Midrange is pushed for sustain. |
+| **Cab** | 410 Basslad PR10 | Mic A: Dyn 57 (Pos 0.5, Dist 1.0"), Mic B: Rib 121 (Pos 0.8, Dist 4.0") | Mix: `A: 0dB`, `B: -3dB` | 57 captures the string scratch; 121 ribbon adds the warm "wood" of the guitar body. |
+| **Post-FX (Delay)** | Analog Delay | Mix: `12%`, Time: `350ms`, Fdbk: `20%` | Mix: `25%` (Assign), Time: `350ms`, Fdbk: `35%` | Fills the space between slide notes without washing out the core tone. |
+| **Post-FX (Reverb)** | Plate | Mix: `15%`, Decay: `1.2s`, Pre-delay: `15ms` | Mix: `20%` (Assign), Decay: `1.8s` | Replicates the live Fillmore East hall acoustics. |
+| **Output** | Lane Output Level | Level: `0.0dB` | Level: `+1.5dB` (Assign) | Sole control for actual FOH/QSC SPL loudness. |
 
 ***
 
 ### 🔧 TROUBLESHOOTING & REFINEMENT TREE
-
-If the sustain feels "Too Distorted," "Too Fuzzy," or "Farty" through your QSC CP12, follow this exact order of operations:
-1.  **Input Pad:** Lower the Utility Gain block by another -2.0dB. The amp is receiving too much voltage.
-2.  **Amp Sag Control:** Go to the US TWN 57 Jumped amp block and lower the **Bass** to 1.0. Cranked Tweeds generate low-end fuzz naturally; cutting bass removes the "fart."
-3.  **Slide Attack Harshness:** If the physical slide hitting the strings is deafening, go to the Parametric-8 block and lower the High Cut (LPF) from 4.2kHz down to 3.5kHz. 
-4.  **Output Compensation:** If step 1 or 2 causes a drop in volume, **DO NOT** turn the Amp Volumes back up. Go to the far right of the grid and raise the Lane Output Level.
+If playing through your QSC CP12 reveals issues:
+1. **The Amp sounds "broken", "farty", or "woofy" on the low strings:**
+   * *Fix:* The Bassman circuit's power tubes are sagging too hard under the ES-339 humbuckers. Drop the Amp Block's `Bass` parameter by 1.0 increments. If it persists, lower your Global Input Gain to `-6.0dB`.
+2. **The slide attack is harsh, icy, or fatiguing:**
+   * *Fix:* Go to the Cab Block and increase the Distance of Mic A (Dyn 57) from `1.0"` to `2.5"`. Alternatively, lower the `Tone` knob on the Myth Drive block.
+3. **Not enough volume for the gig:**
+   * *Fix:* **Do not touch the Amp Volume knobs** (this will just add more distortion and fuzz). Go to your Lane Output Level at the end of the grid and increase the output by `+2.0dB` to `+4.0dB`.
 
 ***
 
-### 💾 SESSION REGISTRY PROTOCOL
-*Appending to Active Memory...*
+### 💾 PRESET REGISTRY PROTOCOL (Session Library)
+*Saving configuration to session memory...*
 
 **Session Library (Active Presets)**
-2. Preset Name: "Southern Slide - Dual Profile"
-Target: Duane Allman / Gary Rossington (1971).
-Guitar: Gibson ES-339 (Humbuckers) & Fender Telecaster (Single Coils) w/ Heavy Slide.
-Physics Goal: Singing compression, aggressive bass cut to prevent Tweed sag collapse, high-headroom projection.
+1. Preset Name: "Spoonful - ES339" *(Saved in previous memory)*
+2. Preset Name: "Statesboro Slide"
+Target: Duane Allman / Derek Trucks (Southern Rock).
+Guitar 1: ES-339 (Humbuckers) / Guitar 2: Telecaster (Single Coils). Slide playing.
+Physics Goal: Singing sustain via mid-pushed preamp without excessive fuzz, utilizing a transparent drive into a jumped Tweed circuit.
 Full Configuration:
-Block 1 (Utility Gain): Sc A/B [+2.0dB], Sc E/F [-4.0dB].
-Block 2 (Green 808): Overdrive [Rhy: 2.0 / Lead: 6.5], Tone [Rhy: 6.0 / Lead: 5.5], Level [Rhy: 6.5 / Lead: 8.0].
-Block 3 (Amp - US TWN 57 Jumped): Vol Bright [Rhy: 6.0 / Lead: 8.5], Vol Normal [5.0], Bass [Rhy: 2.5 / Lead: 2.0], Treble [Rhy: 6.5 / Lead: 6.0], Presence [Rhy: 5.0 / Lead: 4.5].
-Block 4 (Cab - 212 US TWN 57): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 3.0"), Mix [A: 0dB, B: -2dB].
-Block 5 (EQ-8): Telecaster (Sc A/B) [Band 1: +3.0dB @ 200Hz, LPF: 4.2kHz]. ES-339 (Sc E/F) [Band 1: -2.0dB @ 150Hz, LPF: 5.5kHz].
-Block 6 (Analog Delay): Mix [Rhy: 0% / Lead: 25%], Time [380ms], Fdbk [30%].
-Block 7 (Plate Reverb): Mix [Rhy: 15% / Lead: 22%], Decay [Rhy: 1.2s / Lead: 1.8s], HP [150Hz], LP [4000Hz].
+Block 1 (Adaptive Gate): Noise Red [Rhy: 40% / Lead: 15%].
+Block 2 (EQ-8): ES-339 [HPF 90Hz]. Telecaster [HPF 90Hz, Band 1: 200Hz +3.0dB, LPF 4500Hz].
+Block 3 (Myth Drive): Gain [Rhy: 1.5 / Lead: 4.0], Tone [6.0 / 6.5], Level [7.5].
+Block 4 (Amp - US Tweed Basslad Jumped): Vol Norm [3.5 / 4.5], Vol Bright [5.0 / 6.5], Bass [3.0], Mid [6.5], Treble [6.0], Presence [5.5].
+Block 5 (Cab - 410 Basslad PR10): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Rib 121, Pos 0.8, Dist 4.0"), Mix [A: 0dB, B: -3dB].
+Block 6 (Analog Delay): Mix [12% / 25%], Time [350ms], Fdbk [20% / 35%].
+Block 7 (Plate Reverb): Mix [15% / 20%], Decay [1.2s / 1.8s].
+Lane Output: Rhy [0.0dB] / Lead [+1.5dB].
