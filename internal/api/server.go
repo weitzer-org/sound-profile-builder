@@ -157,13 +157,28 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 		}
 
+		favorCaptures := false
+		if cfg != nil {
+			favorCaptures = cfg.FavorCaptures
+		}
+		if vals, ok := r.Form["favor_captures"]; ok {
+			favorCaptures = false
+			for _, v := range vals {
+				if v == "on" {
+					favorCaptures = true
+					break
+				}
+			}
+		}
+
 		constraints := map[string]interface{}{
-			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
-			"single_amp_mode":      cfg.SingleAmpMode,
-			"allow_cloud_captures": cfg.AllowCloudCaptures,
+			"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
+			"single_amp_mode":        cfg.SingleAmpMode,
+			"allow_cloud_captures":   cfg.AllowCloudCaptures,
 			"allow_factory_captures": cfg.AllowFactoryCaptures && allowFactoryCaptures,
-			"allow_paid_plugins":   cfg.AllowPaidPlugins && allowPaidPlugins,
-			"available_plugins":   cfg.AvailablePlugins,
+			"favor_captures":         favorCaptures,
+			"allow_paid_plugins":     cfg.AllowPaidPlugins && allowPaidPlugins,
+			"available_plugins":     cfg.AvailablePlugins,
 		}
 
 		ctx := context.WithoutCancel(r.Context())

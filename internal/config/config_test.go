@@ -12,7 +12,7 @@ func TestLoadConfig_Success(t *testing.T) {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	content := `{"single_amp_mode": true, "allow_cloud_captures": false, "allow_paid_plugins": true, "allow_factory_captures": true, "available_plugins": ["Cory Wong"]}`
+	content := `{"single_amp_mode": true, "allow_cloud_captures": false, "allow_paid_plugins": true, "allow_factory_captures": true, "favor_captures": true, "available_plugins": ["Cory Wong"]}`
 	if _, err := tmpFile.Write([]byte(content)); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)
 	}
@@ -34,6 +34,9 @@ func TestLoadConfig_Success(t *testing.T) {
 	}
 	if !cfg.AllowFactoryCaptures {
 		t.Error("Expected AllowFactoryCaptures to be true")
+	}
+	if !cfg.FavorCaptures {
+		t.Error("Expected FavorCaptures to be true")
 	}
 	if len(cfg.AvailablePlugins) != 1 || cfg.AvailablePlugins[0] != "Cory Wong" {
 		t.Errorf("Expected AvailablePlugins to be ['Cory Wong'], got %v", cfg.AvailablePlugins)
@@ -63,5 +66,36 @@ func TestLoadConfig_InvalidJSON(t *testing.T) {
 	_, err = LoadConfig(tmpFile.Name())
 	if err == nil {
 		t.Error("Expected error for invalid JSON, got nil")
+	}
+}
+
+func TestLoadConfig_EnvOverrides(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "config_env_*.json")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	content := `{"single_amp_mode": true}`
+	if _, err := tmpFile.Write([]byte(content)); err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	os.Setenv("GCS_BUCKET", "custom-bucket")
+	os.Setenv("GOOGLE_CLOUD_PROJECT", "custom-project")
+	defer os.Unsetenv("GCS_BUCKET")
+	defer os.Unsetenv("GOOGLE_CLOUD_PROJECT")
+
+	cfg, err := LoadConfig(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
+
+	if cfg.BucketName != "custom-bucket" {
+		t.Errorf("Expected BucketName 'custom-bucket', got '%s'", cfg.BucketName)
+	}
+	if cfg.ProjectID != "custom-project" {
+		t.Errorf("Expected ProjectID 'custom-project', got '%s'", cfg.ProjectID)
 	}
 }

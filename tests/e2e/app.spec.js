@@ -38,6 +38,8 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
 
   // Test Tonal Prompt
   await page.fill('input[name="prompt"]', 'Generate a Hendrix style Fuzz Face matrix.');
+  await expect(page.locator('#favor-captures')).toBeVisible();
+  await page.check('#favor-captures');
   await page.click('button#gen-submit-btn');
 
   // Wait for mock data response (which includes Draft Preset in header)

@@ -197,9 +197,11 @@ func main() {
 		log.Println(" -> Executing 12-Agent Orchestrator...")
 
 		constraints := map[string]interface{}{
-			"single_amp_mode":      true,
-			"allow_cloud_captures": false,
-			"guitars":              []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
+			"single_amp_mode":        true,
+			"allow_cloud_captures":   false,
+			"allow_factory_captures": true,
+			"favor_captures":         true,
+			"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 		}
 
 		multiAgentResult, usage, err := orch.RunPipeline(ctx, query, constraints, agentOverrides, nil)

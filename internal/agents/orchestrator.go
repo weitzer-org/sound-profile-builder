@@ -111,6 +111,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: NO FACTORY CAPTURES. The generated preset MUST NOT use any factory captures.]\n\n" + prompt
 	}
 
+	if v, ok := constraints["favor_captures"].(bool); ok && v {
+		prompt = "[GLOBAL USER CONFIG FLAG: FAVOR CAPTURES. The generated preset should actively prioritize using official Factory Neural Captures (tagged with is_capture: true) over built-in algorithmic component models when possible.]\n\n" + prompt
+	}
+
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := fmt.Sprintf("%d", time.Now().UnixNano())

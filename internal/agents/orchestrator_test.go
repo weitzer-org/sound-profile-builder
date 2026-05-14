@@ -282,3 +282,36 @@ func TestOrchestrator_RunPipeline_FactoryCaptureConstraints(t *testing.T) {
 		t.Errorf("Expected prompt to contain 'NO FACTORY CAPTURES', got captured body: %s", capturedBody)
 	}
 }
+
+func TestOrchestrator_RunPipeline_FavorCaptureConstraints(t *testing.T) {
+	var capturedBody string
+	var mu sync.Mutex
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		capturedBody += string(body)
+		mu.Unlock()
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	constraints := map[string]interface{}{
+		"favor_captures": true,
+	}
+
+	_, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
+	if err != nil {
+		t.Fatalf("Pipeline failed: %v", err)
+	}
+
+	if !strings.Contains(capturedBody, "FAVOR CAPTURES") {
+		t.Errorf("Expected prompt to contain 'FAVOR CAPTURES', got captured body: %s", capturedBody)
+	}
+}
