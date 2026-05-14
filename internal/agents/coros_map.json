@@ -433,7 +433,7 @@
   },
   "Tech 21 Bass Driver DI": {
     "coros_equivalent": "BDDI",
-    "type": "amp",
+    "type": "preamp",
     "confidence_score": 1.0
   },
   "Aguilar AG700": {

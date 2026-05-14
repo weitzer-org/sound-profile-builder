@@ -1,61 +1,63 @@
-System Initialization: QC-2 (Quad Cortex Systems Engineer)
-Target Identified: Guns N' Roses / Slash (Modded JCM800, Creamy Neck Pickup Lead, Standard Delay).
-Output Hardware Assumed: QSC CP12 (Active 12" PA Speaker). High-frequency roll-off required to prevent FRFR tweeter fizz and emulate actual Marshall 4x12 cabinet physics.
+**Target Identified:** Slash (Guns N' Roses) 
+**Analog Specs Hunt:** Marshall JCM800 2203 (often modded for extra gain) or Silver Jubilee, Seymour Duncan Alnico II Pro pickups (Medium Output PAFs, Neck Position for signature solos), Marshall 1960AV Cabinets (Celestion Vintage 30s), Boss DD-3 Digital Delay. 
+**Quad Cortex Mapping:** Brit 2203, Green 808 (acting as the "hot mod" tube gain stage), 412 Brit V30, Digital Delay.
 
-### 1. Multi-Guitar Gain Staging & Pickup Compensation Strategy
-To achieve Slash’s signature sustaining, Alnico II Les Paul neck tone, we must physically alter the signal path depending on your guitar. 
+To achieve that signature "flutey," infinitely sustaining neck pickup tone through a QSC CP12 PA Speaker, we have to fight the physics of the neck humbucker: it naturally outputs excessive bass frequencies that will "fart out" and cause intermodulation distortion in a high-gain JCM800 model. We will use the Green 808 not for distortion, but as a severe bass-cut/mid-boost before the amp to keep the neck pickup tight and vocal.
 
-Gibson ES-339 Humbuckers (Scenes E-H)
-*   **Physics Goal:** Your ES-339 likely has PAF-style humbuckers ('57 Classics). These are slightly hotter and tighter than Slash’s Alnico II Pro pickups. 
-*   **Compensation:** Set Global Input Gain (Circle 1) to **-1.5dB**. This prevents the pre-amp from compressing too early, retaining the spongy, dynamic attack characteristic of Alnico II magnets. Roll your guitar's tone knob down to about 6 or 7.
+Here is your gig-ready configuration, split specifically for Humbucker and Single Coil architectures.
 
-Fender Telecaster Single Coils (Scenes A-D)
-*   **Physics Goal:** Single coils lack the inductance, output, and low-mid resonant peak of a Les Paul neck humbucker. 
-*   **Compensation:** Set Global Input Gain (Circle 1) to **+3.5dB**. We will utilize a dedicated Parametric-8 EQ block (active *only* on Scenes A-D) to artificially induce a humbucker resonant peak. Switch your Telecaster to the **Neck Pickup**.
+### **Multi-Guitar Target Output**
+
+#### **Guitar 1: Gibson Les Paul / ES-339 (Humbuckers) - Row 2 (Scenes E-H)**
+*   **Pickup Output:** Medium-to-High.
+*   **Gain Staging Protocol:** Input Block Gain set to **0.0dB**. 
+*   **Chameleon Strategy (Scene F - Lead):** Humbuckers in the neck position require mud management. We will aggressively high-pass the signal before the amp and push the 800Hz–1.5kHz range to get that vocal Slash character.
+
+#### **Guitar 2: Fender Telecaster (Single Coils) - Row 1 (Scenes A-D)**
+*   **Pickup Output:** Vintage/Low.
+*   **Gain Staging Protocol:** Input Block Gain set to **+3.5dB** to hit the amp's preamp tubes with the same voltage as a humbucker.
+*   **Chameleon Strategy (Scene B - Lead):** Telecaster neck pickups are inherently hollow compared to an Alnico II Pro. We will use the Parametric-8 block to add +4.0dB at 250Hz (Body) and apply a Low Pass Filter at 4.5kHz to tame the single-coil pick attack and simulate the humbucker's rolled-off top end.
 
 ---
 
-### 2. Organization Standard (Split-Bank Matrix)
-*   **Row 1 (Telecaster):** Scene A (Rhythm), Scene B (Slash Lead), Scene C (Dry Lead), Scene D (Ambient).
-*   **Row 2 (ES-339):** Scene E (Rhythm), Scene F (Slash Lead), Scene G (Dry Lead), Scene H (Ambient).
-
----
-
-### 3. Main Signal Chain (Table A)
-*Note: Parameters marked with "(Assign)" require you to Right-Click > Assign to Scene in the Cortex Control Mac Desktop App.*
+### **Table A: Main Signal Chain**
+*Note: Parameters marked with different values for Rhythm/Lead indicate a Scene-Specific change (Right-Click > Assign).*
 
 | Block Category | Model Name | Rhythm Settings (Sc A/E) | Lead Settings (Sc B/F) | Physics/Rationale |
 | :--- | :--- | :--- | :--- | :--- |
-| **Input** | Global In 1 | Gate Thresh: -60dB | Gate Thresh: -55dB | Tighter gate on lead to control the hot JCM800 hiss when resting. |
-| **Pre-FX (Tele Only)** | Parametric-8 | *Bypassed for ES-339.* | Band 2: +4.0dB @ 250Hz. LPF: 4500Hz. | Artificially thickens the single coil to mimic Les Paul neck mahogany body/humbucker output. |
-| **Drive** | Green 808 | Bypassed (Off) | Active (On). Drive: 0, Tone: 6.5, Level: 8.5 | Simulates the famous SIR #36/#39 JCM800 mod by slamming the preamp tubes for liquid sustain. |
-| **Amp** | Brit 800 | Preamp: 6.0<br>Vol (Master): 4.5 | Preamp: 8.0 (Assign)<br>Vol (Master): 4.5 | Slash’s tone is heavily mid-focused. Bass: 4.5, Mid: 7.5, Treble: 5.0, Presence: 4.5. |
-| **Cab** | 412 Brit V30 | Mic A: Dyn 57 (Pos 0.5, Dist 1.0") | Mic B: Ribbon 121 (Pos 1.5, Dist 1.5") | Vintage 30s are essential for GNR. The Ribbon mic smooths out the high-mids for creamy neck sweeps. Mix: A: 0dB, B: -2dB. |
-| **Post-FX** | Digital Delay | Bypassed (Off) | Mix: 22% (Assign). Time: 420ms, Fdbk: 25% | Standard DD-3 style delay. High Cut (LPF) set to 2.5kHz so repeats don't clash with the solo. |
-| **Post-FX** | Plate | Mix: 10%, Decay: 1.2s | Mix: 15% (Assign), Decay: 1.8s (Assign) | Replicates the studio plate reverb used on *Appetite for Destruction*. |
-| **Output** | Lane 1 Out | Level: 0.0dB | Level: +1.5dB (Assign) | Lifts the solo physically above the band mix (headroom rule). |
+| **Input** | Global Input | Gain: +3.5dB (Tele) / 0.0dB (LP) | Gain: +3.5dB (Tele) / 0.0dB (LP) | Normalizing pickup voltage hitting the digital grid to prevent fuzz. |
+| **Gate** | Adaptive Gate | Red: 50%, Thresh: -55dB | Red: 30%, Thresh: -65dB | Higher reduction for choppy rhythm; opened up for lead to allow infinite sustain. |
+| **Pre-FX (EQ)** | Parametric-8 | *Bypassed* | Tele: +4dB @ 250Hz, LPF 4.5kHz <br> LP: -2dB @ 300Hz | **Chameleon EQ:** Fattens the Telecaster neck pickup; clears low-mid mud from the Les Paul neck pickup. |
+| **Pre-FX (Drive)**| Green 808 | Bypassed (Rhythm uses raw amp) | Gain: 1.0, Level: 8.5, Tone: 6.5 | Acts as the "hot mod." Tightens sub-bass before the amp and hits preamp tubes hard for sustain. |
+| **Amp** | Brit 2203 | Master: 6.0, Preamp: 5.5 <br> Bass: 4.0, Mid: 6.0, Treb: 6.0 | Master: 6.0, Preamp: 7.5 <br> Bass: 4.5, Mid: 7.5, Treb: 5.5 | Boosting Mids on the lead scene pushes the "vocal" frequencies of the neck pickup forward. |
+| **Cab** | 412 Brit V30 | Mic A: Dyn 57 (Pos 0.5, Dist 1.0") <br> Mic B: Rib 121 (Pos 1.5, Dist 3") | Mix: Mic A (-2dB), Mic B (0dB) <br> HPF: 80Hz, LPF: 6.0kHz | Blending the bite of the 57 with the dark warmth of the 121. LPF at 6kHz is vital for the QSC CP12 to avoid digital fizz. |
+| **Post-FX (Dly)** | Digital Delay | Mix: 5% (Barely audible) | Mix: 22%, Time: 420ms, Fdbk: 25% | 420ms is the standard Slash stadium delay time. High Cut set to 2.5kHz inside block to keep repeats behind the lead note. |
+| **Post-FX (Rev)** | Hall Reverb | Mix: 10%, Decay: 1.2s | Mix: 15%, Decay: 1.8s | Simulates the massive arena sound of the *Use Your Illusion* tour. |
 
 ---
 
-### 4. Troubleshooting & Refinement Tree
-If the lead tone sounds **"Too Distorted" or "Too Fuzzy"** through your QSC CP12:
-1.  **Input Pad:** Lower Global Input Gain by another -3.0dB. Hot humbuckers into a boosted 800 can cause digital clipping.
-2.  **Amp Gain:** Reduce the Amp Block *Preamp* parameter from 8.0 down to 6.0. 
-3.  **FRFR Fizz Check:** If the CP12 sounds harsh on the high strings, go to the Cab Block and ensure the High Cut (LPF) is set strictly to 6500Hz. PA speakers reproduce frequencies up to 20kHz, whereas a real Marshall 1960B cabinet physically cannot produce sound above ~6kHz.
+### **Troubleshooting & Refinement Tree**
+If you load this up through your QSC CP12 and switch to the Neck Pickup on your Les Paul, and it sounds **"Too muddy/farty on the low notes"**:
+1.  **Tube Sag/Bass Physics:** Go to the Brit 2203 Amp block and reduce the *Bass* parameter from 4.5 down to 3.0. JCM800s create low-end distortion when the preamp is pushed. 
+2.  **Drive Block:** Ensure the Green 808 is engaged. Tube Screamers inherently cut frequencies below 100Hz, acting as a physical cleanup for hot humbuckers.
+3.  **Input Pad:** If the front of your Les Paul's notes sound "splatty," your pickups are hotter than standard PAFs. Lower the Input Block Gain to -3.0dB.
 
 ---
 
-### 5. Session Registry Protocol
-**Appending to Active Session Library...**
+### **Session Registry Protocol**
+*Appended to Active Session Memory for future recall.*
 
-**2. Preset Name:** "Appetite Neck Lead - Dual"
-*   **Target:** Slash / Guns N' Roses (1987).
-*   **Guitar(s):** Gibson ES-339 (Humbuckers) & Fender Telecaster (Single Coil).
-*   **Physics Goal:** High-gain, mid-focused creamy neck pickup sustain with analog-style delay trails, optimized for 12" FRFR active speakers.
-*   **Full Configuration:**
-    *   **Block 1 (Pre-EQ Tele Compensator):** EQ-8. Active Scenes A-D only. HPF [90Hz], Band 2 [+4.0dB @ 250Hz / Q 1.0], LPF [4500Hz]. 
-    *   **Block 2 (Drive - Green 808):** Active Lead Scenes. Drive [0.0], Tone [6.5], Level [8.5].
-    *   **Block 3 (Amp - Brit 800):** Preamp [Rhy: 6.0 / Lead: 8.0], Master [4.5], Bass [4.5], Mid [7.5], Treble [5.0], Presence [4.5]. Lane Output Level [Rhy: 0.0dB / Lead: +1.5dB].
-    *   **Block 4 (Cab - 412 Brit V30):** Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 1.5"). Mix [A: 0dB, B: -2dB]. HPF [80Hz], LPF [6500Hz].
-    *   **Block 5 (Delay - Digital):** Bypassed Rhythm / Active Lead. Mix [22%], Time [420ms], Feedback [25%], Low Cut [200Hz], High Cut [2500Hz].
-    *   **Block 6 (Reverb - Plate):** Mix [Rhy: 10% / Lead: 15%], Decay [Rhy: 1.2s / Lead: 1.8s], Pre-Delay [20ms].
+**Session Library (Active Presets)**
+
+2. Preset Name: "SChild Neck Lead - Multi-Route"
+Target: Slash / Guns N' Roses (1987-1991).
+Guitar: Dual Profile (Telecaster SC / Gibson LP HB).
+Physics Goal: Hot-rodded JCM800 with tight low-end for neck pickup clarity, sustained via preamp saturation and mid-boosting rather than pure fuzz.
+Full Configuration:
+Block 1 (Adaptive Gate): Noise Red [Rhy: 50% / Lead: 30%], Thresh [-55dB / -65dB], Decay [150ms / 300ms].
+Block 2 (EQ-8 - Chameleon): [Tele Lead: Band 2 +4.0dB @ 250Hz, LPF 4500Hz] / [LP Lead: Band 2 -2.0dB @ 300Hz, HPF 100Hz].
+Block 3 (Green 808): Bypass [Scene A/E], Active [Scene B/F], Gain [1.0], Level [8.5], Tone [6.5].
+Block 4 (Amp - Brit 2203): Preamp [Rhy: 5.5 / Lead: 7.5], Master [6.0], Bass [Rhy: 4.0 / Lead: 4.5], Mid [Rhy: 6.0 / Lead: 7.5], Treble [Rhy: 6.0 / Lead: 5.5], Presence [5.0], Output Level [0.0dB].
+Block 5 (Cab - 412 Brit V30): Mic A (Dyn 57, Pos 0.5, Dist 1.0"), Mic B (Ribbon 121, Pos 1.5, Dist 3.0"), Mix [A: -2dB, B: 0dB], HPF [80Hz], LPF [6000Hz].
+Block 6 (Digital Delay): Mix [Rhy: 5% / Lead: 22%], Time [420ms], Fdbk [25%], Low Cut [150Hz], High Cut [2500Hz].
+Block 7 (Hall Reverb): Mix [Rhy: 10% / Lead: 15%], Decay [Rhy: 1.2s / Lead: 1.8s], Pre-Delay [20ms].
