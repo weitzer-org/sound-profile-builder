@@ -89,10 +89,12 @@ func (c *OpenLLMClient) Generate(ctx context.Context, systemPrompt, userPrompt, 
 	}
 
 	url := c.BaseURL
-	if strings.HasSuffix(url, "/") {
-		url += "chat/completions"
-	} else {
-		url += "/chat/completions"
+	if !strings.HasSuffix(url, "/chat/completions") && !strings.HasSuffix(url, "/chat/completions/") {
+		if strings.HasSuffix(url, "/") {
+			url += "chat/completions"
+		} else {
+			url += "/chat/completions"
+		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBytes))

@@ -474,6 +474,8 @@ func getFallbackChain(primaryModel string) []string {
 		return []string{"gemini-3-flash-preview", "gemini-2.5-pro"}
 	case "gemini-3-flash-preview":
 		return []string{"gemini-2.5-pro"}
+	case "gemini-2.5-pro":
+		return nil
 	default:
 		return []string{"gemini-2.5-pro"}
 	}
@@ -572,18 +574,18 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		if err != nil {
 			// Check if this error is due to reaching the context window limits
 			errStr := err.Error()
-			isContextLimit := strings.Contains(strings.ToLower(errStr), "context") || 
-							   strings.Contains(strings.ToLower(errStr), "limit") || 
-							   strings.Contains(strings.ToLower(errStr), "length") || 
-							   strings.Contains(strings.ToLower(errStr), "max") ||
-							   strings.Contains(strings.ToLower(errStr), "token")
+			lower := strings.ToLower(errStr)
+			isContextLimit := strings.Contains(lower, "context length") || 
+							   strings.Contains(lower, "context_length") || 
+							   strings.Contains(lower, "maximum context") || 
+							   strings.Contains(lower, "context window") ||
+							   (strings.Contains(lower, "context") && strings.Contains(lower, "limit"))
 
 			if isContextLimit {
 				log.Printf("⚠️ WARNING: [%s] Open-LLM hit context window max: %v. Falling back to default production model: gemini-3.1-pro-preview", agentRole, err)
 				if o.client == nil {
 					return "", fmt.Errorf("[%s] Open-LLM hit context limit, but Gemini fallback client is not initialized (missing API key)", agentRole)
 				}
-				isOpenLLMRoute = false
 				modelName = "gemini-3.1-pro-preview"
 				// Fall through to standard Gemini execution path below!
 			} else {
@@ -639,7 +641,7 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		lastErr = err
 	}
 
-	if lastErr != nil && resp == nil {
+	if finalModelName == "" {
 		return "", fmt.Errorf("[%s] All fallback models failed: %w", agentRole, lastErr)
 	}
 

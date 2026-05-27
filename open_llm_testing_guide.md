@@ -48,7 +48,7 @@ If you are working offline or want to test the full 12-agent pipeline locally wi
 ### Step 1: Spin up the Offline Mock vLLM Server
 This service simulates streaming a standard LLM completion at ~25 tokens per second on port `8000`:
 ```bash
-python3 /usr/local/google/home/benweitzer/.gemini/jetski/brain/610fa260-94b9-45d8-93a3-65f4151144fa/scratch/mock_vllm.py
+python3 path/to/mock_vllm.py
 ```
 
 ### Step 2: Run the Go API Gateway
@@ -78,7 +78,7 @@ You can optimize performance and context limits across the 12-agent orchestratio
 
 For example, you can assign heavy physics mapping logic to large model sizes (like a 72B parameter instruction set) while routing format and cleanup tasks to fast/lightweight models (like an 8B parameter set).
 
-To set this up, update the `agent_models` mapping in the main server configuration file ([config.json](file:///usr/local/google/home/benweitzer/Documents/sound-profile-builder/config.json)):
+To set this up, update the `agent_models` mapping in the main server configuration file (`config.json`):
 
 ```json
 {

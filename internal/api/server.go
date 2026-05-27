@@ -229,6 +229,13 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 						return
 					}
 				}
+				key = strings.TrimSpace(key)
+				if key == "" {
+					s.apiKeyMu.Unlock()
+					log.Printf("Security alert: Loaded or fetched dynamic key is blank/empty!")
+					http.Error(w, "Invalid Secure AI Credentials Configuration", http.StatusInternalServerError)
+					return
+				}
 				s.apiKeyCache = key
 			}
 			apiKey = s.apiKeyCache

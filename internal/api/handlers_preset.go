@@ -774,7 +774,8 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 				var err error
 				apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
 				if err != nil {
-					w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
+					log.Printf("Failed to fetch Open-LLM API key from Secret Manager: %v", err)
+					w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
 					return
 				}
 			}
@@ -786,14 +787,16 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			var err error
 			apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
 			if err != nil {
-				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
+				log.Printf("Failed to fetch Gemini API key: %v", err)
+				w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
 				return
 			}
 		}
 
 		orch, err := s.orchMaker(ctx, apiKey)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">ADK Error: %v</div>`, err)))
+			log.Printf("Failed to initialize Orchestrator service: %v", err)
+			w.Write([]byte(`<div style="color:#ef4444;">Pipeline Initialization Error. Please contact administrator.</div>`))
 			return
 		}
 		defer orch.Close()
