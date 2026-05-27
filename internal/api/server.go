@@ -280,6 +280,9 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			htmlPayload = strings.TrimSuffix(htmlPayload, "```")
 			htmlPayload = strings.TrimSpace(htmlPayload)
 
+			// Sanitize raw literal quotes within string properties to prevent decoding crashes
+			htmlPayload = sanitizeJSONQuotes(htmlPayload)
+
 			var archResp struct {
 				BuilderStatement  string                  `json:"builder_statement"`
 				FinalHTMLPayload  map[string]string       `json:"final_html_payload"`
