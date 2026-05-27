@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -142,7 +143,9 @@ func renderPresetList(presets []*storage.Preset, showAll bool) string {
 
 func (s *Server) handleGetPresets() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		presets, err := s.store.List(r.Context())
+		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+		defer cancel()
+		presets, err := s.store.List(ctx)
 		if err != nil {
 			http.Error(w, "Failed to list presets", http.StatusInternalServerError)
 			return
@@ -538,7 +541,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 				<div id="tab-%s" class="tab-pane" style="%s">
 					%s
 				</div>
-			`, safeId, displayStyle, matrixHTML)
+			`, safeId, displayStyle, wrapCellContentInBadges(matrixHTML))
 		}
 	} else {
 		for guitarName, blocks := range structured.Guitars {
@@ -707,7 +710,14 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
 				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
 				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
-				<div id="live-matrix-container" style="zoom: 0.8;">
+				<div class="mobile-scene-toggle-bar" style="display: none;">
+					<span style="font-size: 0.85rem; color: var(--text-sub); font-weight: 500;">Active Scene View:</span>
+					<div class="segmented-control" style="display: flex; gap: 4px; background: rgba(15,23,42,0.6); padding: 3px; border-radius: 6px; border: 1px solid var(--border);">
+						<button type="button" class="scene-toggle-btn active" onclick="toggleActiveScene(this, 'a')" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 600; border: none; border-radius: 4px; background: var(--accent); color: white; cursor: pointer; transition: all 0.2s;">Scene A (Rhythm)</button>
+						<button type="button" class="scene-toggle-btn" onclick="toggleActiveScene(this, 'b')" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 500; border: none; border-radius: 4px; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s;">Scene B (Lead)</button>
+					</div>
+				</div>
+				<div id="live-matrix-container">
 					%s
 				</div>
 				%s
@@ -1016,5 +1026,21 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false)))
 	}
+}
+
+// wrapCellContentInBadges parses HTML matrices and wraps individual row parameters inside dsp-badge tags for high-contrast mobile PWA display.
+func wrapCellContentInBadges(input string) string {
+	// 1. Replace all <br/> variations with badge boundary tags
+	input = strings.ReplaceAll(input, "<br/>", "</span><span class='dsp-badge'>")
+	input = strings.ReplaceAll(input, "<br>", "</span><span class='dsp-badge'>")
+	
+	// 2. Wrap cell content starting targets with the container and first badge tag
+	re := regexp.MustCompile(`(?i)<td([^>]*)>`)
+	input = re.ReplaceAllString(input, `<td${1}><div class='dsp-badge-container'><span class='dsp-badge'>`)
+	
+	// 3. Complete cell tag matching closes
+	input = strings.ReplaceAll(input, "</td>", "</span></div></td>")
+	
+	return input
 }
 
