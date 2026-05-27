@@ -42,6 +42,18 @@ func TestSanitizeJSONQuotes(t *testing.T) {
 			expected: `{"builder_statement": "Features a \"D-Style\" boost, which is legendary", "final_html_payload": {"key": "value"}}`,
 			valid:    true,
 		},
+		{
+			name:     "Escaped backslash followed by closing quote",
+			input:    `{"key": "value\\"}`,
+			expected: `{"key": "value\\"}`,
+			valid:    true,
+		},
+		{
+			name:     "Literal quote followed by comma inside string",
+			input:    `{"builder_statement": "Features a "D-Style", which is legendary"}`,
+			expected: `{"builder_statement": "Features a \"D-Style\", which is legendary"}`,
+			valid:    true,
+		},
 	}
 
 	for _, tt := range tests {

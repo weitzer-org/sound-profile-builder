@@ -22,11 +22,15 @@ func sanitizeJSONQuotes(raw string) string {
 			continue
 		}
 
-		// Handle pre-escaped quotes
-		if r == '\\' && i+1 < n && runes[i+1] == '"' {
-			sb.WriteRune('\\')
-			sb.WriteRune('"')
-			i++
+		// Handle escaped characters (e.g., \", \\, \n, \t)
+		if r == '\\' {
+			if i+1 < n {
+				sb.WriteRune('\\')
+				sb.WriteRune(runes[i+1])
+				i++
+			} else {
+				sb.WriteRune('\\')
+			}
 			continue
 		}
 
@@ -40,8 +44,22 @@ func sanitizeJSONQuotes(raw string) string {
 			isStructural := false
 			if nextIdx < n {
 				nextChar := runes[nextIdx]
-				if nextChar == ',' || nextChar == '}' || nextChar == ']' || nextChar == ':' {
+				if nextChar == '}' || nextChar == ']' || nextChar == ':' {
 					isStructural = true
+				} else if nextChar == ',' {
+					// A structural comma is followed by a new key or value.
+					// If the next non-whitespace character is not a valid JSON element start,
+					// it is likely a literal comma inside the string.
+					afterComma := nextIdx + 1
+					for afterComma < n && isWhitespace(runes[afterComma]) {
+						afterComma++
+					}
+					if afterComma < n {
+						c := runes[afterComma]
+						if c == '"' || c == '{' || c == '[' || c == '}' || c == ']' || (c >= '0' && c <= '9') || c == '-' || c == 't' || c == 'f' || c == 'n' {
+							isStructural = true
+						}
+					}
 				}
 			} else {
 				// End of input is structural
