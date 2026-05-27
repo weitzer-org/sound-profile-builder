@@ -241,11 +241,11 @@ func TestHandleChatPreset(t *testing.T) {
 	reqAuth, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
 	reqAuth.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	s.handleChatPreset().ServeHTTP(rrAuth, reqAuth)
-	if !strings.Contains(rrAuth.Body.String(), "Auth Error") {
-		t.Errorf("Expected Auth Error")
+	if !strings.Contains(rrAuth.Body.String(), "Secure AI Authentication Error") {
+		t.Errorf("Expected Secure AI Authentication Error")
 	}
 	sc.err = nil
-
+ 
 	// Orch creation fail
 	s.orchMaker = func(ctx context.Context, key string) (agents.OrchestratorService, error) {
 		return nil, fmt.Errorf("orch fail")
@@ -257,8 +257,8 @@ func TestHandleChatPreset(t *testing.T) {
 	if rrOrch.Code != http.StatusOK {
 		t.Errorf("Expected 200 OK on orch fail spawn, got: %d", rrOrch.Code)
 	}
-	if !strings.Contains(rrOrch.Body.String(), `ADK Error:`) {
-		t.Errorf("Expected response to contain ADK Error")
+	if !strings.Contains(rrOrch.Body.String(), `Pipeline Initialization Error`) {
+		t.Errorf("Expected response to contain Pipeline Initialization Error")
 	}
 	
 	// Valid Orch
