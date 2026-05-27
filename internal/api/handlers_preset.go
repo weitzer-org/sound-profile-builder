@@ -819,6 +819,9 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		jsonResponse = strings.TrimSuffix(jsonResponse, "```")
 		jsonResponse = strings.TrimSpace(jsonResponse)
 
+		// Sanitize raw literal quotes within string properties to prevent decoding crashes
+		jsonResponse = sanitizeJSONQuotes(jsonResponse)
+
 		var archResp struct {
 			ConversationalResponse string                  `json:"conversational_response"`
 			BuilderStatement       string                  `json:"builder_statement"`
