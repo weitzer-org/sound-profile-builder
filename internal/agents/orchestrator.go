@@ -43,13 +43,16 @@ type OrchestratorService interface {
 
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
-	client      *genai.Client
-	Usage       *TokenUsage
-	gcs         storage.Client
-	AgentModels map[string]string // Added for per-agent model configuration
+	client         *genai.Client
+	Usage          *TokenUsage
+	gcs            storage.Client
+	AgentModels    map[string]string // Added for per-agent model configuration
+	useOpenLLM     bool
+	openLLMClient  *OpenLLMClient
+	openLLMTimeout time.Duration
 }
 
-// NewOrchestrator initializes the Gemini ADK client
+// NewOrchestrator initializes the Gemini ADK client or the Open-LLM REST client
 func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...option.ClientOption) (*Orchestrator, error) {
 	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
@@ -59,17 +62,71 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 		return &Orchestrator{client: nil, Usage: &TokenUsage{ModelsUsed: make(map[string]int)}, gcs: gcs}, nil
 	}
 
-	allOpts := append([]option.ClientOption{option.WithAPIKey(apiKey)}, opts...)
-	client, err := genai.NewClient(ctx, allOpts...)
-	if err != nil {
-		return nil, err
+	useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
+	
+	// Build Open-LLM client (always available for hybrid "openllm:" prefixed routing)
+	url := os.Getenv("OPENLLM_API_URL")
+	if url == "" {
+		url = "https://open-llm-gateway-710019748844.us-central1.run.app/v1"
 	}
+	key := ""
+	if useOpenLLM {
+		key = apiKey
+	}
+	if key == "" {
+		key = os.Getenv("OPENLLM_API_KEY")
+	}
+	model := os.Getenv("OPENLLM_MODEL")
+	if model == "" {
+		model = "active-model"
+	}
+	timeout := 10 * time.Minute
+	if tStr := os.Getenv("OPENLLM_TIMEOUT"); tStr != "" {
+		if parsedT, err := time.ParseDuration(tStr); err == nil {
+			timeout = parsedT
+		} else {
+			log.Printf("Warning: Invalid OPENLLM_TIMEOUT '%s', defaulting to 10 minutes", tStr)
+		}
+	}
+	openLLMTimeout := timeout
+	openLLMClient := NewOpenLLMClient(url, key, model, timeout)
+
+	var client *genai.Client
+	var err error
+	// Instantiate Gemini client if not exclusively using Open-LLM or if a key is available for dynamic side-by-side execution
+	if !useOpenLLM || apiKey != "" || os.Getenv("GEMINI_API_KEY") != "" {
+		geminiKey := apiKey
+		if geminiKey == "" {
+			geminiKey = os.Getenv("GEMINI_API_KEY")
+		}
+		// Only build if we have a real non-empty credential key (excluding fallback flags)
+		if geminiKey != "" && geminiKey != "mock-api-key" {
+			allOpts := append([]option.ClientOption{option.WithAPIKey(geminiKey)}, opts...)
+			client, err = genai.NewClient(ctx, allOpts...)
+			if err != nil {
+				// Don't crash if open-llm is active but just warn, since we might only use open-llm!
+				if useOpenLLM {
+					log.Printf("Warning: Failed to initialize optional Gemini client: %v", err)
+				} else {
+					return nil, err
+				}
+			}
+		}
+	}
+
 	// Initialize concurrency-safe Token Tracker
 	usage := &TokenUsage{
 		ModelsUsed: make(map[string]int),
 	}
 
-	return &Orchestrator{client: client, Usage: usage, gcs: gcs}, nil
+	return &Orchestrator{
+		client:         client,
+		Usage:          usage,
+		gcs:            gcs,
+		useOpenLLM:     useOpenLLM,
+		openLLMClient:  openLLMClient,
+		openLLMTimeout: openLLMTimeout,
+	}, nil
 }
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
@@ -121,6 +178,18 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	gcs := o.gcs
 
 	logToGCS := func(agentNum string, result string) {
+		if os.Getenv("LOCAL_AGENT_LOGGING") == "true" {
+			dirName := execID
+			if customDir := os.Getenv("LOCAL_AGENT_LOGGING_DIR"); customDir != "" {
+				dirName = customDir
+			}
+			os.MkdirAll("eval_results/diagnostics/"+dirName, 0755)
+			filePath := "eval_results/diagnostics/" + dirName + "/" + agentNum + ".json"
+			err := os.WriteFile(filePath, []byte(result), 0644)
+			if err != nil {
+				log.Printf("Failed to log %s to local file: %v", agentNum, err)
+			}
+		}
 		if gcs != nil {
 			go func(aNum, res string) {
 				// Detach context to ensure logging finishes even if main pipeline is cancelled
@@ -156,7 +225,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		sysPrompt, _ := o.loadPromptForAgent("1_tone_historian", version)
-		toneResult, err1 = o.RunAgent(ctx, "Tone Historian", sysPrompt+"\n\nUser Request: "+prompt)
+		toneResult, err1 = o.RunAgentSplit(ctx, "Tone Historian", sysPrompt, "User Request: "+prompt)
 		logToGCS("1_tone_historian", toneResult)
 	}()
 
@@ -168,7 +237,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		sysPrompt, _ := o.loadPromptForAgent("2_sonic_profiler", version)
-		sonicResult, err2 = o.RunAgent(ctx, "Sonic Profiler", sysPrompt+"\n\nUser Request: "+prompt)
+		sonicResult, err2 = o.RunAgentSplit(ctx, "Sonic Profiler", sysPrompt, "User Request: "+prompt)
 		logToGCS("2_sonic_profiler", sonicResult)
 	}()
 
@@ -180,7 +249,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		sysPrompt, _ := o.loadPromptForAgent("3_community_scraper", version)
-		scrapeResult, err3 = o.RunAgent(ctx, "Community Scraper", sysPrompt+"\n\nUser Request: "+prompt)
+		scrapeResult, err3 = o.RunAgentSplit(ctx, "Community Scraper", sysPrompt, "User Request: "+prompt)
 		logToGCS("3_community_scraper", scrapeResult)
 	}()
 
@@ -223,8 +292,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		librarianResult = "CorOS Librarian skipped by configuration."
 	} else {
 		sysPrompt4, _ := o.loadPromptForAgent("4_coros_librarian", version4)
-		context4 := fmt.Sprintf("%s\n\nTone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", sysPrompt4, toneResult, scrapeResult, dictJSON, ampMenu, constraints)
-		librarianResult, err4 = o.RunAgent(ctx, "CorOS Librarian", context4)
+		userContext4 := fmt.Sprintf("Tone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", toneResult, scrapeResult, dictJSON, ampMenu, constraints)
+		librarianResult, err4 = o.RunAgentSplit(ctx, "CorOS Librarian", sysPrompt4, userContext4)
 		if err4 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
 		}
@@ -245,8 +314,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		logToGCS("5_cloud_navigator", navigatorResult)
 	} else {
 		sysPrompt5, _ := o.loadPromptForAgent("5_cloud_navigator", version5)
-		context5 := fmt.Sprintf("%s\n\nLibrarian Output: %s", sysPrompt5, librarianResult)
-		navigatorResult, err5 = o.RunAgent(ctx, "Cloud Navigator", context5)
+		userContext5 := fmt.Sprintf("Librarian Output: %s", librarianResult)
+		navigatorResult, err5 = o.RunAgentSplit(ctx, "Cloud Navigator", sysPrompt5, userContext5)
 		if err5 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Navigator failure: %v", err5)
 		}
@@ -273,7 +342,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("6_acoustician", version)
-		acousticianResult, err6 = o.RunAgent(ctx, "Acoustician", fmt.Sprintf("%s\n\nSonic Profiler: %s\nConstraints: %v", p, sonicResult, constraints))
+		acousticianResult, err6 = o.RunAgentSplit(ctx, "Acoustician", p, fmt.Sprintf("Sonic Profiler: %s\nConstraints: %v", sonicResult, constraints))
 		logToGCS("6_acoustician", acousticianResult)
 	}()
 	go func() {
@@ -284,7 +353,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("7_transducer_tech", version)
-		techResult, err7 = o.RunAgent(ctx, "Transducer Tech", fmt.Sprintf("%s\n\nLibrarian Output: %s", p, librarianResult))
+		techResult, err7 = o.RunAgentSplit(ctx, "Transducer Tech", p, fmt.Sprintf("Librarian Output: %s", librarianResult))
 		logToGCS("7_transducer_tech", techResult)
 	}()
 	go func() {
@@ -295,7 +364,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("8_foh_optimizer", version)
-		fohResult, err8 = o.RunAgent(ctx, "FOH Optimizer", fmt.Sprintf("%s\n\nConstraints: %v (Standard FRFR FOH context applied)", p, constraints))
+		fohResult, err8 = o.RunAgentSplit(ctx, "FOH Optimizer", p, fmt.Sprintf("Constraints: %v (Standard FRFR FOH context applied)", constraints))
 		logToGCS("8_foh_optimizer", fohResult)
 	}()
 	wg3.Wait()
@@ -323,7 +392,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("9_mix_engineer", version)
-		mixResult, err9 = o.RunAgent(ctx, "Mix Engineer", fmt.Sprintf("%s\n\nTone Result: %s", p, toneResult))
+		mixResult, err9 = o.RunAgentSplit(ctx, "Mix Engineer", p, fmt.Sprintf("Tone Result: %s", toneResult))
 		logToGCS("9_mix_engineer", mixResult)
 	}()
 	go func() {
@@ -334,7 +403,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("10_control_mapper", version)
-		mapResult, err10 = o.RunAgent(ctx, "Control Mapper", fmt.Sprintf("%s\n\nPrompt: %s\nLibrarian Output: %s\nNavigator Output: %s\nAcoustician Output: %s", p, prompt, librarianResult, navigatorResult, acousticianResult))
+		mapResult, err10 = o.RunAgentSplit(ctx, "Control Mapper", p, fmt.Sprintf("Prompt: %s\nLibrarian Output: %s\nNavigator Output: %s\nAcoustician Output: %s", prompt, librarianResult, navigatorResult, acousticianResult))
 		logToGCS("10_control_mapper", mapResult)
 	}()
 	go func() {
@@ -345,7 +414,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("11_dsp_dispatcher", version)
-		dspResult, err11 = o.RunAgent(ctx, "DSP Dispatcher", fmt.Sprintf("%s\n\nLibrarian Output: %s\nNavigator Output: %s", p, librarianResult, navigatorResult))
+		dspResult, err11 = o.RunAgentSplit(ctx, "DSP Dispatcher", p, fmt.Sprintf("Librarian Output: %s\nNavigator Output: %s", librarianResult, navigatorResult))
 		logToGCS("11_dsp_dispatcher", dspResult)
 	}()
 	wg4.Wait()
@@ -371,7 +440,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		finalResult = "Architect skipped by configuration."
 	} else {
 		sysPrompt12, _ := o.loadPromptForAgent("12_architect", version12)
-		finalResult, err12 = o.RunAgent(ctx, "Architect & Evaluator", sysPrompt12+"\n\n"+architectPrompt)
+		finalResult, err12 = o.RunAgentSplit(ctx, "Architect & Evaluator", sysPrompt12, architectPrompt)
 		if err12 != nil {
 			return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
 		}
@@ -396,9 +465,27 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	return finalResult, o.Usage, nil
 }
 
-// RunAgent executes a prompt using Gemini 3.1 Pro Preview with fallback logic to Gemini 2.5 Pro
+// getFallbackChain generates a progressive chronological backup pathway list for standard model components
+func getFallbackChain(primaryModel string) []string {
+	switch primaryModel {
+	case "gemini-3.1-pro-preview":
+		return []string{"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"}
+	case "gemini-3.5-flash":
+		return []string{"gemini-3-flash-preview", "gemini-2.5-pro"}
+	case "gemini-3-flash-preview":
+		return []string{"gemini-2.5-pro"}
+	default:
+		return []string{"gemini-2.5-pro"}
+	}
+}
+
+// RunAgent redirects to RunAgentSplit with empty system instructions
 func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt string) (string, error) {
-	
+	return o.RunAgentSplit(ctx, agentRole, "", prompt)
+}
+
+// RunAgentSplit executes a prompt with separate system and user prompts using the configured backend (Gemini or Open-LLM)
+func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
 	skip := false
 	switch agentRole {
 	case "Tone Historian": skip = os.Getenv("ABLATE_AGENT_1") == "true"
@@ -412,20 +499,12 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	case "Mix Engineer": skip = os.Getenv("ABLATE_AGENT_9") == "true"
 	case "Control Mapper": skip = os.Getenv("ABLATE_AGENT_10") == "true"
 	case "DSP Dispatcher": skip = os.Getenv("ABLATE_AGENT_11") == "true"
-	case "Architect & Evaluator": skip = os.Getenv("ABLATE_AGENT_12") == "true"
+	case "Architect & Evaluator", "Refinement Architect": skip = os.Getenv("ABLATE_AGENT_12") == "true"
 	}
 
 	if skip {
 		log.Printf("[%s] ABLATION TRIGGERED. Skipping LLM call.", agentRole)
 		return fmt.Sprintf("Ablated Output for %s.", agentRole), nil
-	}
-
-	// 1. Attempt generation with Gemini 3.1 Pro Preview (Primary)
-	// TODO: Evaluate if ALL 12 agents actually require gemini-3.1-pro-preview. Given its strict capacity limits, we should benchmark if less demanding agents (like Librarian or Formatter) can run efficiently on gemini-2.5-flash or gemini-2.5-pro to save global quota.
-	// TODO: Test gemini-2.5-flash specifically for the "Refinement Architect" agent to drastically reduce the ~80s latency of matrix generation.
-	modelName := os.Getenv("TARGET_MODEL")
-	if modelName == "" {
-		modelName = "gemini-3.1-pro-preview"
 	}
 
 	key := ""
@@ -444,32 +523,124 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	case "Architect & Evaluator", "Refinement Architect": key = "12_architect"
 	}
 
+	modelName := os.Getenv("TARGET_MODEL")
+	if modelName == "" {
+		if o.useOpenLLM {
+			modelName = o.openLLMClient.Model
+		} else {
+			// Apply production routing defaults (Agent 1 & 12 use 3.1 Pro, others use 3.5 Flash)
+			if key == "1_tone_historian" || key == "12_architect" {
+				modelName = "gemini-3.1-pro-preview"
+			} else {
+				modelName = "gemini-3.5-flash"
+			}
+		}
+	}
+
 	if key != "" && o.AgentModels != nil {
 		if specificModel, ok := o.AgentModels[key]; ok {
 			modelName = specificModel
 		}
 	}
 
-	model := o.client.GenerativeModel(modelName)
-	
-	ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
-	defer cancel1()
+	// Determine if this specific request targets the Open-LLM backend
+	isPrefixOpenLLM := strings.HasPrefix(strings.ToLower(modelName), "openllm:")
+	isOpenLLMRoute := o.useOpenLLM || isPrefixOpenLLM
 
-	resp, err := model.GenerateContent(ctx1, genai.Text(prompt))
-	if err != nil {
-		log.Printf("[%s] %s failed or rate-limited: %v. Falling back to Gemini 2.5 Pro.", agentRole, modelName, err)
-		
-		// 2. Fallback to Gemini 2.5 Pro
-		modelName = "gemini-2.5-pro"
-		fallbackModel := o.client.GenerativeModel(modelName)
-		
-		ctx2, cancel2 := context.WithTimeout(ctx, 3*time.Minute)
-		defer cancel2()
-		
-		resp, err = fallbackModel.GenerateContent(ctx2, genai.Text(prompt))
-		if err != nil {
-			return "", fmt.Errorf("[%s] Fallback model also failed: %v", agentRole, err)
+	actualModelName := modelName
+	if isPrefixOpenLLM {
+		actualModelName = modelName[8:] // Strip "openllm:"
+		if actualModelName == "" {
+			actualModelName = o.openLLMClient.Model
 		}
+	}
+
+	// 1. Open-LLM Branch
+	if isOpenLLMRoute {
+		if o.openLLMClient == nil {
+			return "", fmt.Errorf("[%s] Open-LLM client not initialized", agentRole)
+		}
+		timeout := o.openLLMTimeout
+		if timeout == 0 {
+			timeout = 10 * time.Minute
+		}
+		ctx1, cancel1 := context.WithTimeout(ctx, timeout)
+		defer cancel1()
+
+		log.Printf("[%s] Dispatching Open-LLM request (Model: %s, Timeout: %s)...", agentRole, actualModelName, timeout)
+		content, promptTokens, completionTokens, err := o.openLLMClient.Generate(ctx1, systemPrompt, userPrompt, actualModelName)
+		if err != nil {
+			// Check if this error is due to reaching the context window limits
+			errStr := err.Error()
+			isContextLimit := strings.Contains(strings.ToLower(errStr), "context") || 
+							   strings.Contains(strings.ToLower(errStr), "limit") || 
+							   strings.Contains(strings.ToLower(errStr), "length") || 
+							   strings.Contains(strings.ToLower(errStr), "max") ||
+							   strings.Contains(strings.ToLower(errStr), "token")
+
+			if isContextLimit {
+				log.Printf("⚠️ WARNING: [%s] Open-LLM hit context window max: %v. Falling back to default production model: gemini-3.1-pro-preview", agentRole, err)
+				if o.client == nil {
+					return "", fmt.Errorf("[%s] Open-LLM hit context limit, but Gemini fallback client is not initialized (missing API key)", agentRole)
+				}
+				isOpenLLMRoute = false
+				modelName = "gemini-3.1-pro-preview"
+				// Fall through to standard Gemini execution path below!
+			} else {
+				return "", fmt.Errorf("[%s] Open-LLM failure: %w", agentRole, err)
+			}
+		} else {
+			// Accumulate metrics natively
+			o.Usage.mu.Lock()
+			o.Usage.InputTokens += promptTokens
+			o.Usage.OutputTokens += completionTokens
+			o.Usage.ModelsUsed[modelName]++ // Keep full modelName in stats to identify openllm custom calls
+			o.Usage.mu.Unlock()
+
+			log.Printf("AGENT_TOKEN_LOG (OpenLLM): Agent=%s In=%d Out=%d", agentRole, promptTokens, completionTokens)
+			return content, nil
+		}
+	}
+
+	// 2. Standard Gemini Branch
+	prompt := systemPrompt
+	if userPrompt != "" {
+		if prompt != "" {
+			prompt = prompt + "\n\n" + userPrompt
+		} else {
+			prompt = userPrompt
+		}
+	}
+
+	// Build the complete fallback sequence list starting with primary model target
+	candidates := append([]string{modelName}, getFallbackChain(modelName)...)
+	
+	var lastErr error
+	var resp *genai.GenerateContentResponse
+	var finalModelName string
+	var err error
+
+	for _, mName := range candidates {
+		if o.client == nil {
+			return "", fmt.Errorf("[%s] Gemini client is nil, cannot invoke model %s", agentRole, mName)
+		}
+		model := o.client.GenerativeModel(mName)
+		
+		ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
+		resp, err = model.GenerateContent(ctx1, genai.Text(prompt))
+		cancel1()
+		
+		if err == nil {
+			finalModelName = mName
+			break
+		}
+		
+		log.Printf("[%s] Model %s failed or rate-limited: %v. Retrying next fallback...", agentRole, mName, err)
+		lastErr = err
+	}
+
+	if lastErr != nil && resp == nil {
+		return "", fmt.Errorf("[%s] All fallback models failed: %w", agentRole, lastErr)
 	}
 
 	if len(resp.Candidates) == 0 {
@@ -478,11 +649,11 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 
 	// Safely extract and accumulate generated API metrics natively 
 	if resp.UsageMetadata != nil {
-		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount)
+		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Model=%s", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, finalModelName)
 		o.Usage.mu.Lock()
 		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
 		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
-		o.Usage.ModelsUsed[modelName]++
+		o.Usage.ModelsUsed[finalModelName]++
 		o.Usage.mu.Unlock()
 	}
 
@@ -568,7 +739,7 @@ EXISTING STRUCTURED AND HTML PAYLOAD:
 
 	// TODO: Test which agents should additionally be invoked for the refinement flow for optimal results.
 	// Currently we rely entirely on the standalone Refinement Architect editor agent, but pulling in context from the Mix Engineer or Librarian may yield higher fidelity modifications.
-	finalResult, err := o.RunAgent(ctx, "Refinement Architect", sysPrompt+"\n\n"+refinementPrompt+historyText)
+	finalResult, err := o.RunAgentSplit(ctx, "Refinement Architect", sysPrompt, refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
 	}

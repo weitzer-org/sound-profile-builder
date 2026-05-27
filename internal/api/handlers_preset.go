@@ -765,14 +765,30 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		if projectID == "" {
 			projectID = "710019748844" // Default fallback
 		}
-		secretName := os.Getenv("GEMINI_API_KEY_NAME")
-		if secretName == "" {
-			secretName = "gsr-gemini-api-key" // Default fallback
-		}
-		apiKey, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
-		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
-			return
+		var apiKey string
+		useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
+		if useOpenLLM {
+			apiKey = os.Getenv("OPENLLM_API_KEY")
+			if apiKey == "" {
+				secretName := "open-llm-api-auth-secret"
+				var err error
+				apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
+				if err != nil {
+					w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
+					return
+				}
+			}
+		} else {
+			secretName := os.Getenv("GEMINI_API_KEY_NAME")
+			if secretName == "" {
+				secretName = "gsr-gemini-api-key" // Default fallback
+			}
+			var err error
+			apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
+			if err != nil {
+				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Auth Error: %v</div>`, err)))
+				return
+			}
 		}
 
 		orch, err := s.orchMaker(ctx, apiKey)

@@ -199,16 +199,35 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				if s.appConfig != nil && s.appConfig.ProjectID != "" {
 					projectID = s.appConfig.ProjectID
 				}
-				secretName := os.Getenv("GEMINI_API_KEY_NAME")
-				if secretName == "" {
-					secretName = "gsr-gemini-api-key"
-				}
-				key, err := s.smFetcher.GetPassword(ctx, projectID, secretName)
-				if err != nil {
-					s.apiKeyMu.Unlock()
-					log.Printf("Failed to fetch API key: %v", err)
-					http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
-					return
+
+				useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
+				var key string
+				var err error
+
+				if useOpenLLM {
+					key = os.Getenv("OPENLLM_API_KEY")
+					if key == "" {
+						secretName := "open-llm-api-auth-secret"
+						key, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
+						if err != nil {
+							s.apiKeyMu.Unlock()
+							log.Printf("Failed to fetch Open-LLM API key from Secret Manager: %v", err)
+							http.Error(w, "Missing Secure Open-LLM Credentials", http.StatusInternalServerError)
+							return
+						}
+					}
+				} else {
+					secretName := os.Getenv("GEMINI_API_KEY_NAME")
+					if secretName == "" {
+						secretName = "gsr-gemini-api-key"
+					}
+					key, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
+					if err != nil {
+						s.apiKeyMu.Unlock()
+						log.Printf("Failed to fetch Gemini API key: %v", err)
+						http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
+						return
+					}
 				}
 				s.apiKeyCache = key
 			}
