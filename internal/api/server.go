@@ -277,15 +277,23 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			var tokenUsage *agents.TokenUsage
 			var pipelineErr error
 
-			if prompt == "TEST_EVAL_SRV_CLEAN" {
-				log.Printf("DEBUG: Entering TEST_EVAL_SRV_CLEAN path for task %s", taskID)
-				bytes, readErr := os.ReadFile("test_parsed.json")
+			isMockModeEnabled := os.Getenv("MOCK_MODE") == "true" || r.FormValue("mock") == "true" || prompt == "TEST_EVAL_SRV_CLEAN"
+			isBBKingMock := isMockModeEnabled && (strings.Contains(strings.ToLower(prompt), "bb king") || strings.Contains(strings.ToLower(prompt), "thrill is gone"))
+			isSRVMock := prompt == "TEST_EVAL_SRV_CLEAN"
+
+			if isSRVMock || isBBKingMock {
+				mockFile := "test_parsed.json"
+				if isBBKingMock {
+					mockFile = "test_parsed_bb_king.json"
+				}
+				log.Printf("DEBUG: Entering mock path with file %s for task %s", mockFile, taskID)
+				bytes, readErr := os.ReadFile(mockFile)
 				if readErr != nil {
-					log.Printf("Failed to read test_parsed.json: %v", readErr)
+					log.Printf("Failed to read mock file %s: %v", mockFile, readErr)
 					s.updateTaskError(taskID, fmt.Sprintf("Eval File Read Error: %v", readErr))
 					return
 				}
-				log.Printf("DEBUG: Successfully read test_parsed.json. Size: %d", len(bytes))
+				log.Printf("DEBUG: Successfully read mock file %s. Size: %d", mockFile, len(bytes))
 				trimmedStr := strings.TrimSpace(string(bytes))
 				var unescaped string
 				if parseErr := json.Unmarshal([]byte(trimmedStr), &unescaped); parseErr == nil {
@@ -423,7 +431,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 
 			log.Printf("DEBUG: Bypassing/running GCS save. prompt is: %q", prompt)
-			if prompt != "TEST_EVAL_SRV_CLEAN" {
+			isMockPrompt := isMockModeEnabled && (prompt == "TEST_EVAL_SRV_CLEAN" || strings.Contains(strings.ToLower(prompt), "bb king") || strings.Contains(strings.ToLower(prompt), "thrill is gone"))
+			if !isMockPrompt {
 				log.Printf("DEBUG: Inside GCS Save block")
 				if err := s.store.Save(ctx, draftPreset); err != nil {
 					s.updateTaskError(taskID, fmt.Sprintf("Storage Error: %v", err))

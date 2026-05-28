@@ -5,7 +5,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: '**/*.spec.js',
   use: {
-    baseURL: 'http://localhost:8082',
+    baseURL: 'http://localhost:8083',
     headless: true,
     video: 'on',
   },

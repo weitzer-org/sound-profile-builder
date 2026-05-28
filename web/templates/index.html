@@ -425,6 +425,27 @@
             font-weight: inherit !important;
             white-space: inherit !important;
         }
+
+        /* Desktop-specific inline parameters rationale text styling inside cells */
+        table.grid-matrix td[data-reason]:after {
+            content: attr(data-reason);
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            font-style: italic;
+            margin-top: 6px;
+            line-height: 1.4;
+            font-weight: 400;
+            font-family: system-ui, -apple-system, sans-serif;
+            white-space: normal;
+            word-wrap: break-word;
+            text-align: left;
+        }
+
+        /* Default (Desktop): Hide dynamic interactive Info Icons */
+        table.grid-matrix td .info-icon {
+            display: none !important;
+        }
         
         /* Media Queries for Responsiveness */
         @media (max-width: 1024px) {
@@ -687,30 +708,64 @@
                 margin-bottom: 1.5rem !important;
             }
 
-            /* Stack dynamic draft rename inputs vertically to fit screen */
+            /* Two-Row grid action controls for mobile card headers (Maximum placeholder space) */
+            body.is-standalone .workspace-wrapper {
+                padding-bottom: 110px !important; /* Space to clear the fixed bottom docked chat bar! */
+                box-sizing: border-box !important;
+            }
+
             body.is-standalone .workspace-wrapper > .card > div:first-child {
-                flex-direction: column !important;
-                gap: 0.75rem !important;
-                align-items: stretch !important;
-                display: flex !important;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
             body.is-standalone .workspace-wrapper > .card > div:first-child form {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 0.75rem !important;
-                width: 100% !important;
-                display: flex !important;
+                display: contents !important;
             }
 
             body.is-standalone .workspace-wrapper > .card > div:first-child input[type="text"] {
+                grid-column: span 2 !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
-                min-width: 0 !important;
+                padding: 0.65rem 0.85rem !important;
+                font-size: 0.95rem !important;
+                border-radius: 8px !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child button {
+            body.is-standalone .workspace-wrapper > .card > div:first-child button[type="submit"] {
+                grid-column: 1 !important;
                 width: 100% !important;
+                padding: 0.65rem 1rem !important;
+                font-size: 0.9rem !important;
+                box-sizing: border-box !important;
+            }
+
+            body.is-standalone .workspace-wrapper > .card > div:first-child button[id*="discard-btn"] {
+                grid-column: 2 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0.65rem 1rem !important;
+                font-size: 0.9rem !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Fixed dynamic docked chat card panel at bottom of PWA mobile viewports */
+            body.is-standalone .workspace-wrapper > .card.chat-control-panel {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                z-index: 120 !important;
+                background: #1e293b !important;
+                border-top: 1px solid var(--border) !important;
+                margin: 0 !important;
+                border-radius: 16px 16px 0 0 !important;
+                padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px !important;
+                box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.5) !important;
                 box-sizing: border-box !important;
             }
 
@@ -895,6 +950,37 @@
             white-space: normal !important;
         }
 
+        /* Mobile PWA Specific: Hide static pseudo-elements, show touch info icon */
+        body.is-standalone table.grid-matrix td[data-reason]:after {
+            content: none !important;
+            display: none !important;
+        }
+        body.is-standalone table.grid-matrix td .info-icon {
+            display: inline-flex !important;
+        }
+
+        /* Mobile semantic parameter badge categories coloring rules */
+        body.is-standalone .dsp-badge.badge-state-enabled {
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.25) !important;
+        }
+        body.is-standalone .dsp-badge.badge-state-bypass {
+            background: rgba(156, 163, 175, 0.12) !important;
+            color: #9ca3af !important;
+            border: 1px solid rgba(156, 163, 175, 0.25) !important;
+        }
+        body.is-standalone .dsp-badge.badge-level {
+            background: rgba(59, 130, 246, 0.12) !important;
+            color: #93c5fd !important;
+            border: 1px solid rgba(59, 130, 246, 0.25) !important;
+        }
+        body.is-standalone .dsp-badge.badge-freq {
+            background: rgba(168, 85, 247, 0.12) !important;
+            color: #d8b4fe !important;
+            border: 1px solid rgba(168, 85, 247, 0.25) !important;
+        }
+
         /* Clean vertical line separators and row grid outlines */
         body.is-standalone table.grid-matrix th,
         body.is-standalone table.grid-matrix td {
@@ -953,6 +1039,214 @@
             background: var(--accent) !important;
             color: white !important;
             font-weight: 600 !important;
+        }
+
+        /* --- PREMIUM RESPONSIVE LIBRARY PRESET HEADER ACTION CARDS --- */
+        body.is-standalone .library-preset-header-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+            width: 100% !important;
+            display: flex !important;
+            box-sizing: border-box !important;
+        }
+
+        body.is-standalone .library-preset-header-actions .preset-title-wrapper {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+        }
+
+        body.is-standalone .library-preset-header-actions h2 {
+            font-size: 1.25rem !important;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            width: 100% !important;
+            margin: 0 !important;
+            text-align: left !important;
+        }
+
+        /* Active Rename Form elements formatting (Grid split) */
+        body.is-standalone .library-preset-header-actions .rename-preset-form:not([style*="display: none"]) {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+        }
+
+        body.is-standalone .library-preset-header-actions .rename-preset-form input[type="text"] {
+            grid-column: span 2 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            padding: 0.65rem 0.85rem !important;
+            font-size: 0.95rem !important;
+            border-radius: 8px !important;
+        }
+
+        body.is-standalone .library-preset-header-actions .rename-preset-form button {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 0.65rem 1rem !important;
+            font-size: 0.9rem !important;
+            margin: 0 !important;
+        }
+        
+        body.is-standalone .library-preset-header-actions .rename-preset-form button[type="submit"] {
+            grid-column: 1 !important;
+        }
+        body.is-standalone .library-preset-header-actions .rename-preset-form button[type="button"] {
+            grid-column: 2 !important;
+        }
+
+        /* Action Buttons Block layout splits (Grid split on Row 2) */
+        body.is-standalone .library-preset-header-actions .preset-title-actions-buttons {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+        }
+
+        body.is-standalone .library-preset-header-actions .preset-title-actions-buttons button {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 0.65rem 1rem !important;
+            font-size: 0.9rem !important;
+            margin: 0 !important;
+        }
+
+        /* --- DYNAMIC INTERACTIVE COMPONENTS FOR PREMIUM MOBILE EXPERIENCE --- */
+        /* Clickable ⓘ Info Icons */
+        .info-icon {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 15px;
+            height: 15px;
+            font-size: 0.65rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 5px;
+            vertical-align: middle;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            font-weight: bold !important;
+        }
+        .info-icon:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Glassmorphic reasoning modal popups */
+        .reasoning-popover-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(15, 23, 42, 0.4) !important;
+            backdrop-filter: blur(5px) !important;
+            -webkit-backdrop-filter: blur(5px) !important;
+            z-index: 2000 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+            animation: popoverFadeIn 0.2s ease-out;
+        }
+
+        .reasoning-popover-card {
+            background: #1e293b !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            max-width: 340px !important;
+            width: 85% !important;
+            box-sizing: border-box !important;
+            animation: popoverSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reasoning-popover-title {
+            font-size: 1.05rem !important;
+            font-weight: 600 !important;
+            color: var(--accent) !important;
+            margin-top: 0 !important;
+            margin-bottom: 0.75rem !important;
+            text-align: left !important;
+        }
+
+        .reasoning-popover-text {
+            font-size: 0.88rem !important;
+            color: white !important;
+            line-height: 1.5 !important;
+            margin-bottom: 1.25rem !important;
+            text-align: left !important;
+        }
+
+        .reasoning-popover-close {
+            width: 100% !important;
+            padding: 0.65rem !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            color: var(--text-sub) !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            box-sizing: border-box !important;
+        }
+        .reasoning-popover-close:active {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+        }
+
+        /* Slide-down floating action alerts (toasts) */
+        .toast-alert {
+            position: fixed !important;
+            top: calc(15px + env(safe-area-inset-top)) !important;
+            left: 50% !important;
+            transform: translateX(-50%) translateY(-60px) !important;
+            background: #10b981 !important;
+            color: white !important;
+            padding: 8px 18px !important;
+            border-radius: 30px !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3) !important;
+            z-index: 3000 !important;
+            opacity: 0 !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            pointer-events: none !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
+        .toast-alert.show {
+            transform: translateX(-50%) translateY(0) !important;
+            opacity: 1 !important;
+        }
+
+        @keyframes popoverFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popoverSlideUp {
+            from { transform: translateY(15px) scale(0.96); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
     </style>
 </head>
@@ -1162,6 +1456,79 @@
                         event.detail.path = path;
                     }
                 });
+            }
+        });
+
+        // Global click event listener for cell ⓘ Info Icons to pop open structured agent reasoning
+        document.body.addEventListener('click', (event) => {
+            const icon = event.target.closest('.info-icon');
+            if (!icon) return;
+
+            const td = icon.closest('td');
+            if (!td) return;
+
+            const reason = td.getAttribute('data-reason');
+            if (!reason) return;
+
+            showReasoningTooltip(icon, reason);
+        });
+
+        // showReasoningTooltip displays a glassmorphic popover with physical haptic response
+        function showReasoningTooltip(anchor, text) {
+            document.querySelectorAll('.reasoning-popover-overlay').forEach(el => el.remove());
+
+            const overlay = document.createElement('div');
+            overlay.className = 'reasoning-popover-overlay';
+            overlay.innerHTML = `
+                <div class="reasoning-popover-card">
+                    <div class="reasoning-popover-title">✨ Agent Rationale</div>
+                    <div class="reasoning-popover-text">${text}</div>
+                    <button class="reasoning-popover-close" onclick="this.closest('.reasoning-popover-overlay').remove()">Dismiss</button>
+                </div>
+            `;
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.remove();
+            });
+
+            document.body.appendChild(overlay);
+
+            // Light vibration haptic pulse
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+        }
+
+        // showToastNotification handles slide-down emerald actions alerts confirmations
+        function showToastNotification(message) {
+            let toast = document.querySelector('.toast-alert');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'toast-alert';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<span>✨</span> <span>${message}</span>`;
+            toast.getBoundingClientRect();
+            toast.classList.add('show');
+
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(15);
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Intercept dynamic HTMX request responses and trigger notifications
+        document.body.addEventListener('htmx:afterOnLoad', (event) => {
+            const path = event.detail.pathInfo.requestPath;
+            if (path.includes('/preset/rename')) {
+                showToastNotification('Preset renamed and saved to GCS successfully!');
+            } else if (path.includes('/preset/update_parameter')) {
+                showToastNotification('Parameter updated successfully!');
+            } else if (path.includes('/preset/chat')) {
+                showToastNotification('Refinement sent and workspace updated!');
             }
         });
     </script>
