@@ -421,19 +421,19 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		`, p.ID)
 	} else {
 		headerHtml = fmt.Sprintf(`
-			<div style="display: flex; justify-content: space-between; align-items: center; width: 100%%; gap: 1rem;">
-				<div style="flex: 1; display: flex; align-items: center;">
+			<div class="library-preset-header-actions" style="display: flex; justify-content: space-between; align-items: center; width: 100%%; gap: 1rem;">
+				<div class="preset-title-wrapper" style="flex: 1; display: flex; align-items: center;">
 					<h2 id="preset-title-%[2]s" style="font-size: 1.5rem; font-weight: 600; margin: 0; color: white; display: flex; align-items: center; gap: 1rem;">
 						%[1]s
 					</h2>
-					<form id="rename-form-%[2]s" hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
+					<form id="rename-form-%[2]s" class="rename-preset-form" hx-post="/api/preset/rename" hx-target="closest .workspace-wrapper" style="display: none; gap: 0.5rem; flex: 1; margin: 0; align-items: center;" autocomplete="off">
 						<input type="hidden" name="id" value="%[2]s">
 						<input type="text" name="preset_name" placeholder="Rename..." required style="flex: 1; min-width: 300px; padding: 0.5rem 1rem; font-size: 1.25rem; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 500; outline: none; transition: box-shadow 0.2s;" onfocus="this.style.boxShadow='0 0 0 2px rgba(99,102,241,0.5)'" onblur="this.style.boxShadow='none'">
 						<button type="submit" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--success); border: none; border-radius: 8px; color: white; cursor: pointer;">Save</button>
 						<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='none'; document.getElementById('title-actions-%[2]s').style.display='flex';" style="padding: 0.5rem 1rem; font-size: 1rem; font-weight: 600; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer;">Cancel</button>
 					</form>
 				</div>
-				<div id="title-actions-%[2]s" style="display: flex; gap: 0.5rem; align-items: center;">
+				<div id="title-actions-%[2]s" class="preset-title-actions-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
 					<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.parentElement.style.display='none'; document.querySelector('#rename-form-%[2]s input[name=preset_name]').value = '%[1]s';" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--accent); border: none; border-radius: 8px; color: white; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Rename</button>
 					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Back / Exit</button>
 				</div>
@@ -675,7 +675,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		`, p.ID)
 	} else {
 		controlPanelHtml = fmt.Sprintf(`
-		<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+		<div class="card chat-control-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			%s
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
@@ -1028,19 +1028,56 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 	}
 }
 
-// wrapCellContentInBadges parses HTML matrices and wraps individual row parameters inside dsp-badge tags for high-contrast mobile PWA display.
+// parseCellParametersToBadges splits lines and assigns semantic styling classes to PWA parameters badges
+func parseCellParametersToBadges(cellText string) string {
+	parts := strings.Split(cellText, "<br/>")
+	if len(parts) == 1 {
+		parts = strings.Split(cellText, "<br>")
+	}
+	
+	var badges []string
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		
+		badgeClass := "badge-default"
+		lower := strings.ToLower(part)
+		if strings.Contains(lower, "state: bypass") || strings.Contains(lower, "bypass") {
+			badgeClass = "badge-state-bypass"
+		} else if strings.Contains(lower, "state:") || strings.Contains(lower, "enabled") {
+			badgeClass = "badge-state-enabled"
+		} else if strings.Contains(lower, "gain:") || strings.Contains(lower, "level:") || strings.Contains(lower, "volume:") || strings.Contains(lower, "mix:") || strings.Contains(lower, "blend:") {
+			badgeClass = "badge-level"
+		} else if strings.Contains(lower, "hpf:") || strings.Contains(lower, "lpf:") || strings.Contains(lower, "hz") || strings.Contains(lower, "khz") {
+			badgeClass = "badge-freq"
+		}
+		
+		badges = append(badges, fmt.Sprintf("<span class='dsp-badge %s'>%s</span>", badgeClass, part))
+	}
+	
+	return "<div class='dsp-badge-container'>" + strings.Join(badges, "") + "</div>"
+}
+
+// wrapCellContentInBadges parses HTML matrices and wraps individual row parameters inside dynamic container layout blocks
 func wrapCellContentInBadges(input string) string {
-	// 1. Replace all <br/> variations with badge boundary tags
-	input = strings.ReplaceAll(input, "<br/>", "</span><span class='dsp-badge'>")
-	input = strings.ReplaceAll(input, "<br>", "</span><span class='dsp-badge'>")
+	re := regexp.MustCompile(`(?i)<td([^>]*)>(.*?)</td>`)
 	
-	// 2. Wrap cell content starting targets with the container and first badge tag
-	re := regexp.MustCompile(`(?i)<td([^>]*)>`)
-	input = re.ReplaceAllString(input, `<td${1}><div class='dsp-badge-container'><span class='dsp-badge'>`)
-	
-	// 3. Complete cell tag matching closes
-	input = strings.ReplaceAll(input, "</td>", "</span></div></td>")
-	
-	return input
+	return re.ReplaceAllStringFunc(input, func(match string) string {
+		submatches := re.FindStringSubmatch(match)
+		if len(submatches) < 3 {
+			return match
+		}
+		attributes := submatches[1]
+		cellContent := submatches[2]
+		
+		// Skip wrapping header fields or outer structures
+		if strings.Contains(cellContent, "<table") || strings.Contains(cellContent, "<tr") || strings.Contains(cellContent, "<th") {
+			return match
+		}
+		
+		return fmt.Sprintf("<td%s>%s</td>", attributes, parseCellParametersToBadges(cellContent))
+	})
 }
 
