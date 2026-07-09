@@ -65,10 +65,16 @@ func main() {
 	defer storeClient.Close()
 
 	var smFetcher storage.SecretFetcher
-	mockPassword := os.Getenv("MOCK_PASSWORD")
-	if mockPassword != "" {
+	// UI login password: prefer UI_PASSWORD (production), fall back to
+	// MOCK_PASSWORD (local dev). Either one selects the local secret fetcher and
+	// bypasses GCP Secret Manager.
+	uiPassword := os.Getenv("UI_PASSWORD")
+	if uiPassword == "" {
+		uiPassword = os.Getenv("MOCK_PASSWORD")
+	}
+	if uiPassword != "" {
 		log.Println("Using Local Secret Fetcher for UI Authentication")
-		smFetcher = &localSecretFetcher{uiPassword: mockPassword}
+		smFetcher = &localSecretFetcher{uiPassword: uiPassword}
 	} else {
 		smClient, err := storage.NewSecretManagerClient(ctx)
 		if err != nil {

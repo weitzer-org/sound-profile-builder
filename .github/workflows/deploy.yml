@@ -1,0 +1,26 @@
+name: Deploy to Fly.io
+
+# Deploys to production on every push to main (i.e. when a PR is merged).
+# Requires a repository secret FLY_API_TOKEN — create one with:
+#   fly tokens create deploy -x 999999h
+# then add it under GitHub → Settings → Secrets and variables → Actions.
+on:
+  push:
+    branches:
+      - main
+
+# Prevent overlapping deploys; let the newest push win.
+concurrency:
+  group: deploy-fly
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
