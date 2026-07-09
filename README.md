@@ -2,6 +2,32 @@
 
 This repository holds the Go-based Multi-Agent system that orchestrates Google Gemini Phase-Agents (Tone Historian, CorOS Librarian, FOH Optimizer, etc.) to evaluate and build physics-accurate Quad Cortex DSP matrices.
 
+## 🖥️ Local Development (Docker)
+
+Run the full stack locally in Docker — the app plus a **MinIO** (S3-compatible) store that stands in for Cloudflare R2. No cloud accounts required.
+
+**Prerequisites:** Docker + Docker Compose (on Windows: Docker Desktop with WSL2).
+
+```bash
+cp .env.example .env      # first run only (the scripts also create it if missing)
+```
+
+Start in **mock mode** — canned pipeline, no Gemini key needed:
+```bash
+./run-mock.sh             # streams logs; add -d to run detached
+```
+
+Start in **live mode** — real Gemini pipeline (needs a valid GEMINI_API_KEY in .env):
+```bash
+./run-live.sh
+```
+
+- App: **http://localhost:8080** — log in with the `MOCK_PASSWORD` from your `.env`
+- MinIO console: **http://localhost:9001** (`minioadmin` / `minioadmin`)
+- Stop: `docker compose down` (add `-v` to also wipe stored presets)
+
+> The chosen production runtime is **Fly.io + Cloudflare R2** (`fly.toml`); the Google Cloud flow below is preserved for a future migration. See `CLAUDE.md` for architecture, storage backends, and testing.
+
 ## 🚀 Deployment (Google Cloud)
 Because of internal MacOS constraints (`Santa` restricting `go build` binaries in randomized temp `/tmp` folders), we deploy the application dynamically to **Google Cloud Build** and **Cloud Run** for isolated, secure execution and testing. 
 

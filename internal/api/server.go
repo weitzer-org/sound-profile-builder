@@ -182,10 +182,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 		}
 
 		ctx := context.WithoutCancel(r.Context())
-		log.Printf("DEBUG MOCK: r.FormValue(\"mock\")=%q, os.Getenv(\"MOCK_MODE\")=%q", r.FormValue("mock"), os.Getenv("MOCK_MODE"))
 		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
-			log.Printf("DEBUG MOCK: Mock mode enabled in context")
 		}
 
 		s.apiKeyMu.RLock()

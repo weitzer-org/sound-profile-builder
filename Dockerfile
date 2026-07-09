@@ -22,6 +22,8 @@ COPY --from=builder /server /server
 COPY --from=builder /app/web/templates /app/web/templates
 COPY --from=builder /app/internal/agents/prompts /app/internal/agents/prompts
 COPY --from=builder /app/config.json /app/config.json
+# Mock-mode fixtures (MOCK_MODE=true short-circuits the pipeline to these).
+COPY --from=builder /app/testdata /app/testdata
 
 EXPOSE 8080
 ENTRYPOINT ["/server"]

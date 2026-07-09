@@ -31,11 +31,38 @@ func main() {
 	log.Println("Starting QC-2 Multi-Agent Modeler Backend...")
 
 	ctx := context.Background()
-	gcsClient, err := storage.NewGCSClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to initialize GCS client: %v", err)
+
+	// Storage backend selection. Defaults to GCS so the existing Google Cloud
+	// deployment path is unchanged; set STORAGE_BACKEND=s3 for an S3-compatible
+	// store (Cloudflare R2 in prod, MinIO for local Docker development).
+	backend := os.Getenv("STORAGE_BACKEND")
+	if backend == "" {
+		backend = "gcs"
 	}
-	defer gcsClient.Close()
+
+	var storeClient storage.Client
+	switch backend {
+	case "s3":
+		if os.Getenv("S3_BUCKET") == "" {
+			log.Fatalf("STORAGE_BACKEND=s3 requires S3_BUCKET to be set")
+		}
+		s3Client, err := storage.NewS3Client(ctx)
+		if err != nil {
+			log.Fatalf("Failed to initialize S3 storage client: %v", err)
+		}
+		storeClient = s3Client
+		log.Println("Storage backend: S3-compatible")
+	case "gcs":
+		gcsClient, err := storage.NewGCSClient(ctx)
+		if err != nil {
+			log.Fatalf("Failed to initialize GCS client: %v", err)
+		}
+		storeClient = gcsClient
+		log.Println("Storage backend: Google Cloud Storage")
+	default:
+		log.Fatalf("Unknown STORAGE_BACKEND %q (expected \"gcs\" or \"s3\")", backend)
+	}
+	defer storeClient.Close()
 
 	var smFetcher storage.SecretFetcher
 	mockPassword := os.Getenv("MOCK_PASSWORD")
@@ -56,14 +83,23 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
-	memoryStore := storage.NewMemoryStore(gcsClient, cfg.BucketName)
+	// Resolve the bucket name. For S3, S3_BUCKET wins; otherwise fall back to
+	// the config value (which GCS_BUCKET may already have overridden).
+	bucket := cfg.BucketName
+	if backend == "s3" {
+		if b := os.Getenv("S3_BUCKET"); b != "" {
+			bucket = b
+		}
+	}
+
+	store := storage.NewPresetStore(storeClient, bucket)
+	memoryStore := storage.NewMemoryStore(storeClient, bucket)
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
-		return agents.NewOrchestrator(ic, key, gcsClient)
+		return agents.NewOrchestrator(ic, key, storeClient)
 	}
 
 	// Initialize Server
-	server := api.NewServer(store, memoryStore, gcsClient, smFetcher, orchMaker, cfg)
+	server := api.NewServer(store, memoryStore, storeClient, smFetcher, orchMaker, cfg)
 
 	port := os.Getenv("PORT")
 	if port == "" {

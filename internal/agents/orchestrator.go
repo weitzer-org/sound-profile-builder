@@ -196,6 +196,9 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 				bgCtx := context.WithoutCancel(ctx)
 				bucket := os.Getenv("GCS_BUCKET_NAME")
 				if bucket == "" {
+					bucket = os.Getenv("S3_BUCKET") // track the active S3/R2 bucket when set
+				}
+				if bucket == "" {
 					bucket = "weitzer-sound-builder" // Default fallback
 				}
 				err := gcs.WriteFile(bgCtx, bucket, fmt.Sprintf("logs/%s/%s.json", execID, aNum), []byte(res))
