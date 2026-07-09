@@ -17,7 +17,7 @@ echo "🚀 Submitting Cloud Build to Private Worker Pool (us-central1)..."
 echo "📂 Using Test Results Bucket: $RESULTS_BUCKET"
 echo "📂 Using App Data Bucket:     $DATA_BUCKET"
 
-if gcloud beta builds submit --project="$PROJECT_ID" --region=us-central1 --config cloudbuild.yaml --substitutions=_RESULTS_BUCKET=$RESULTS_BUCKET,_DATA_BUCKET=$DATA_BUCKET,_SERVICE_NAME=$SERVICE_NAME .; then
+if gcloud beta builds submit --project="$PROJECT_ID" --region=us-central1 --config cloudbuild.gcp.yaml --substitutions=_RESULTS_BUCKET=$RESULTS_BUCKET,_DATA_BUCKET=$DATA_BUCKET,_SERVICE_NAME=$SERVICE_NAME .; then
     echo ""
     echo "✅ Build Completed Successfully!"
     echo -n "🌐 YOUR LIVE DASHBOARD URL IS: "
