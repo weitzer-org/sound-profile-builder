@@ -198,6 +198,7 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	validBlocks := map[string]bool{
 		"US Twin Vibrato":            true,
 		"FNDR TWDLX IN Edge BAL CAB": true, // real user_captures.json entry
+		"Boss Blues Driver Waza":     true, // real user_captures.json entry, block_type "drive"
 	}
 
 	sp := &storage.StructuredPreset{
@@ -208,6 +209,8 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 				{ID: "3", Type: "Utility", Model: "Bypassed"},
 				{ID: "4", Type: "Reverb", Model: "Spring Reverb"},
 				{ID: "5", Type: "Cabinet", Model: "FNDR TWDLX IN Edge BAL CAB"},
+				{ID: "6", Type: "drive", Model: "Boss Blues Driver Waza"},
+				{ID: "7", Type: "drive", Model: "Fake Boutique Fuzz XYZ"},
 			},
 		},
 	}
@@ -229,5 +232,11 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	}
 	if blocks[3].Model != "Spring Reverb" {
 		t.Errorf("expected native reverb block (not a gear category) to be left unflagged, got %q", blocks[3].Model)
+	}
+	if blocks[5].Model != "Boss Blues Driver Waza (My Capture)" {
+		t.Errorf("expected real drive-type user capture to be labeled My Capture, got %q", blocks[5].Model)
+	}
+	if blocks[6].Model != FlagUnverifiedBlock("Fake Boutique Fuzz XYZ") {
+		t.Errorf("expected fabricated drive-type block to be flagged (regression: \"drive\" type was missing from gearBlockTypes), got %q", blocks[6].Model)
 	}
 }

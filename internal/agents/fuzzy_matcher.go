@@ -37,7 +37,7 @@ var blockCorrectionRegex = regexp.MustCompile(`(?i)(<td[^>]*>)([A-Za-z0-9\s/]+:\
 // drive-only problem (RULE 11 already forbids treating time-based effects as captures).
 var gearBlockTypes = map[string]bool{
 	"amplifier": true, "cab": true, "cabinet": true,
-	"overdrive": true, "distortion": true, "fuzz": true,
+	"overdrive": true, "distortion": true, "fuzz": true, "drive": true,
 	"preamp": true,
 }
 
