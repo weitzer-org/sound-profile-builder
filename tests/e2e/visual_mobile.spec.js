@@ -41,17 +41,6 @@ test.describe('Mobile visual regression (iPhone 16 Pro, mock mode)', () => {
       expect(page).toHaveScreenshot('mobile-5-scene-a.png', { fullPage: true, maxDiffPixelRatio: 0.02 })
     );
 
-    // Agent rationale popover (only rendered in standalone/is-standalone mode).
-    const infoIconCount = await page.locator('table.grid-matrix td .info-icon').count();
-    if (infoIconCount > 0) {
-      await page.locator('table.grid-matrix td .info-icon').first().click();
-      await page.waitForSelector('.reasoning-popover-card', { timeout: 5000 });
-      await page.waitForTimeout(300);
-      await expect(page).toHaveScreenshot('mobile-6-reasoning-popover.png', { maxDiffPixelRatio: 0.02 });
-      await page.click('.reasoning-popover-close');
-      await page.waitForTimeout(200);
-    }
-
     // Scene B (Lead) segmented toggle.
     await page.click('.mobile-scene-toggle-bar button:has-text("Scene B (Lead)")');
     await page.waitForTimeout(300);

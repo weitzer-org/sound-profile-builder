@@ -426,27 +426,6 @@
             white-space: inherit !important;
         }
 
-        /* Desktop-specific inline parameters rationale text styling inside cells */
-        table.grid-matrix td[data-reason]:after {
-            content: attr(data-reason);
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-sub);
-            font-style: italic;
-            margin-top: 6px;
-            line-height: 1.4;
-            font-weight: 400;
-            font-family: system-ui, -apple-system, sans-serif;
-            white-space: normal;
-            word-wrap: break-word;
-            text-align: left;
-        }
-
-        /* Default (Desktop): Hide dynamic interactive Info Icons */
-        table.grid-matrix td .info-icon {
-            display: none !important;
-        }
-        
         /* Media Queries for Responsiveness */
         @media (max-width: 1024px) {
             .container {
@@ -658,6 +637,10 @@
                 padding-bottom: 4px;
                 justify-content: flex-start !important;
                 scrollbar-width: none !important;
+                /* Fade the right edge so a tab hidden past the fold reads as
+                   "more to scroll" rather than simply cut off. */
+                mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%) !important;
+                -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%) !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) .nav-header div[style*="display: flex; gap: 0.75rem;"]::-webkit-scrollbar {
@@ -951,15 +934,6 @@
             white-space: normal !important;
         }
 
-        /* Mobile PWA Specific: Hide static pseudo-elements, show touch info icon */
-        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td[data-reason]:after {
-            content: none !important;
-            display: none !important;
-        }
-        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td .info-icon {
-            display: inline-flex !important;
-        }
-
         /* Mobile semantic parameter badge categories coloring rules */
         body:is(.is-standalone, .is-mobile-layout) .dsp-badge.badge-state-enabled {
             background: rgba(16, 185, 129, 0.12) !important;
@@ -1124,95 +1098,6 @@
         }
 
         /* --- DYNAMIC INTERACTIVE COMPONENTS FOR PREMIUM MOBILE EXPERIENCE --- */
-        /* Clickable ⓘ Info Icons */
-        .info-icon {
-            display: inline-flex !important;
-            align-items: center;
-            justify-content: center;
-            width: 15px;
-            height: 15px;
-            font-size: 0.65rem;
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--accent);
-            border-radius: 50%;
-            cursor: pointer;
-            margin-left: 5px;
-            vertical-align: middle;
-            transition: all 0.2s;
-            box-sizing: border-box;
-            font-weight: bold !important;
-        }
-        .info-icon:hover {
-            background: var(--accent);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        /* Glassmorphic reasoning modal popups */
-        .reasoning-popover-overlay {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: rgba(15, 23, 42, 0.4) !important;
-            backdrop-filter: blur(5px) !important;
-            -webkit-backdrop-filter: blur(5px) !important;
-            z-index: 2000 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-sizing: border-box !important;
-            animation: popoverFadeIn 0.2s ease-out;
-        }
-
-        .reasoning-popover-card {
-            background: #1e293b !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
-            border-radius: 16px !important;
-            padding: 1.5rem !important;
-            max-width: 340px !important;
-            width: 85% !important;
-            box-sizing: border-box !important;
-            animation: popoverSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .reasoning-popover-title {
-            font-size: 1.05rem !important;
-            font-weight: 600 !important;
-            color: var(--accent) !important;
-            margin-top: 0 !important;
-            margin-bottom: 0.75rem !important;
-            text-align: left !important;
-        }
-
-        .reasoning-popover-text {
-            font-size: 0.88rem !important;
-            color: white !important;
-            line-height: 1.5 !important;
-            margin-bottom: 1.25rem !important;
-            text-align: left !important;
-        }
-
-        .reasoning-popover-close {
-            width: 100% !important;
-            padding: 0.65rem !important;
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 8px !important;
-            color: var(--text-sub) !important;
-            font-weight: 600 !important;
-            font-size: 0.85rem !important;
-            cursor: pointer !important;
-            transition: all 0.2s !important;
-            box-sizing: border-box !important;
-        }
-        .reasoning-popover-close:active {
-            background: rgba(255, 255, 255, 0.1) !important;
-            color: white !important;
-        }
-
         /* Slide-down floating action alerts (toasts) */
         .toast-alert {
             position: fixed !important;
@@ -1241,14 +1126,6 @@
             opacity: 1 !important;
         }
 
-        @keyframes popoverFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes popoverSlideUp {
-            from { transform: translateY(15px) scale(0.96); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
-        }
     </style>
 </head>
 <body>
@@ -1470,46 +1347,6 @@
             applyMobileLayoutClass(mobileLayoutQuery);
             mobileLayoutQuery.addEventListener('change', applyMobileLayoutClass);
         });
-
-        // Global click event listener for cell ⓘ Info Icons to pop open structured agent reasoning
-        document.body.addEventListener('click', (event) => {
-            const icon = event.target.closest('.info-icon');
-            if (!icon) return;
-
-            const td = icon.closest('td');
-            if (!td) return;
-
-            const reason = td.getAttribute('data-reason');
-            if (!reason) return;
-
-            showReasoningTooltip(icon, reason);
-        });
-
-        // showReasoningTooltip displays a glassmorphic popover with physical haptic response
-        function showReasoningTooltip(anchor, text) {
-            document.querySelectorAll('.reasoning-popover-overlay').forEach(el => el.remove());
-
-            const overlay = document.createElement('div');
-            overlay.className = 'reasoning-popover-overlay';
-            overlay.innerHTML = `
-                <div class="reasoning-popover-card">
-                    <div class="reasoning-popover-title">✨ Agent Rationale</div>
-                    <div class="reasoning-popover-text">${text}</div>
-                    <button class="reasoning-popover-close" onclick="this.closest('.reasoning-popover-overlay').remove()">Dismiss</button>
-                </div>
-            `;
-
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.remove();
-            });
-
-            document.body.appendChild(overlay);
-
-            // Light vibration haptic pulse
-            if (window.navigator && window.navigator.vibrate) {
-                window.navigator.vibrate(10);
-            }
-        }
 
         // showToastNotification handles slide-down emerald actions alerts confirmations
         function showToastNotification(message) {
