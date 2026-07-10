@@ -22,6 +22,7 @@ devsetup.md
 .scratch/
 tests/e2e/node_modules/
 tests/e2e/test-results/
+tests/e2e/output/demo/
 main
 server
  
