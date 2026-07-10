@@ -123,7 +123,7 @@
         }
 
         /* --- PWA STANDALONE STYLING (Active ONLY when body has .is-standalone class) --- */
-        body.is-standalone {
+        body:is(.is-standalone, .is-mobile-layout) {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
@@ -140,19 +140,19 @@
             justify-content: center;
         }
 
-        body.is-standalone * {
+        body:is(.is-standalone, .is-mobile-layout) * {
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        body.is-standalone input {
+        body:is(.is-standalone, .is-mobile-layout) input {
             -webkit-user-select: text;
             user-select: text;
         }
 
-        body.is-standalone button:active {
+        body:is(.is-standalone, .is-mobile-layout) button:active {
             transform: scale(0.97);
             filter: brightness(0.9);
         }
@@ -203,6 +203,15 @@
                     }
                 });
             }
+
+            // Apply the mobile-optimized layout to any narrow viewport, not
+            // just installed/standalone PWA sessions.
+            const mobileLayoutQuery = window.matchMedia('(max-width: 600px)');
+            const applyMobileLayoutClass = (e) => {
+                document.body.classList.toggle('is-mobile-layout', e.matches);
+            };
+            applyMobileLayoutClass(mobileLayoutQuery);
+            mobileLayoutQuery.addEventListener('change', applyMobileLayoutClass);
         });
     </script>
 </body>

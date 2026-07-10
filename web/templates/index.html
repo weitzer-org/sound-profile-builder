@@ -572,7 +572,7 @@
         }
 
         /* --- PWA STANDALONE STYLING (Active ONLY when body has .is-standalone class) --- */
-        body.is-standalone {
+        body:is(.is-standalone, .is-mobile-layout) {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
@@ -586,22 +586,22 @@
             height: 100%;
         }
 
-        body.is-standalone * {
+        body:is(.is-standalone, .is-mobile-layout) * {
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        body.is-standalone input, 
-        body.is-standalone textarea, 
-        body.is-standalone select {
+        body:is(.is-standalone, .is-mobile-layout) input, 
+        body:is(.is-standalone, .is-mobile-layout) textarea, 
+        body:is(.is-standalone, .is-mobile-layout) select {
             -webkit-user-select: text;
             user-select: text;
         }
 
         /* Scrollable views in rigid layout with sticky top offsets */
-        body.is-standalone .main-view {
+        body:is(.is-standalone, .is-mobile-layout) .main-view {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             /* Calculate exact container height minus sticky top header */
@@ -610,14 +610,14 @@
             box-sizing: border-box;
         }
 
-        body.is-standalone .nav-header {
+        body:is(.is-standalone, .is-mobile-layout) .nav-header {
             padding-top: calc(1.25rem + env(safe-area-inset-top)) !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         /* Fast mobile scale tactile feedback animations */
-        body.is-standalone button:active, 
-        body.is-standalone .top-nav-btn:active {
+        body:is(.is-standalone, .is-mobile-layout) button:active, 
+        body:is(.is-standalone, .is-mobile-layout) .top-nav-btn:active {
             transform: scale(0.97);
             filter: brightness(0.9);
         }
@@ -625,12 +625,12 @@
         /* --- MOBILE RESPONSIVE TWEAKS FOR STANDALONE PWA --- */
         @media (max-width: 600px) {
             /* Hide logo modeler subtext to save critical viewport width pixels */
-            body.is-standalone .logo-subtext {
+            body:is(.is-standalone, .is-mobile-layout) .logo-subtext {
                 display: none;
             }
 
             /* Shrink navigation container padding and force bounding */
-            body.is-standalone .nav-header > div {
+            body:is(.is-standalone, .is-mobile-layout) .nav-header > div {
                 padding: 0 1rem !important;
                 gap: 0.5rem !important;
                 display: flex !important;
@@ -641,12 +641,12 @@
                 justify-content: space-between;
             }
 
-            body.is-standalone .nav-logo {
+            body:is(.is-standalone, .is-mobile-layout) .nav-logo {
                 flex-shrink: 0 !important;
             }
 
             /* Convert tab button row into a non-wrapping horizontal scroll swipe bar */
-            body.is-standalone .nav-header div[style*="display: flex; gap: 0.75rem;"] {
+            body:is(.is-standalone, .is-mobile-layout) .nav-header div[style*="display: flex; gap: 0.75rem;"] {
                 display: flex !important;
                 flex-flow: row nowrap !important;
                 overflow-x: auto !important;
@@ -660,61 +660,62 @@
                 scrollbar-width: none !important;
             }
 
-            body.is-standalone .nav-header div[style*="display: flex; gap: 0.75rem;"]::-webkit-scrollbar {
+            body:is(.is-standalone, .is-mobile-layout) .nav-header div[style*="display: flex; gap: 0.75rem;"]::-webkit-scrollbar {
                 display: none !important;
             }
 
-            body.is-standalone .top-nav-btn {
+            body:is(.is-standalone, .is-mobile-layout) .top-nav-btn {
                 padding: 0.5rem 0.85rem !important;
                 font-size: 0.85rem !important;
                 flex-shrink: 0 !important;
+                min-height: 44px !important;
             }
 
             /* Safe Area container scale constraints and force vertical layout stack */
-            body.is-standalone .container {
+            body:is(.is-standalone, .is-mobile-layout) .container {
                 padding: 1.5rem 1rem !important;
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 1.5rem !important;
             }
 
-            body.is-standalone .card {
+            body:is(.is-standalone, .is-mobile-layout) .card {
                 padding: 1.25rem !important;
                 border-radius: 8px !important;
                 box-sizing: border-box !important;
             }
 
             /* Global viewport safety block limits to prevent parent overflow stretching */
-            body.is-standalone div,
-            body.is-standalone form,
-            body.is-standalone section,
-            body.is-standalone main {
+            body:is(.is-standalone, .is-mobile-layout) div,
+            body:is(.is-standalone, .is-mobile-layout) form,
+            body:is(.is-standalone, .is-mobile-layout) section,
+            body:is(.is-standalone, .is-mobile-layout) main {
                 max-width: 100% !important;
                 box-sizing: border-box !important;
             }
 
             /* Explicitly exempt the horizontal touch-scroll matrix container and table elements from page safety bounds */
-            body.is-standalone #live-matrix-container,
-            body.is-standalone #live-matrix-container * {
+            body:is(.is-standalone, .is-mobile-layout) #live-matrix-container,
+            body:is(.is-standalone, .is-mobile-layout) #live-matrix-container * {
                 max-width: none !important;
             }
 
-            body.is-standalone h1 {
+            body:is(.is-standalone, .is-mobile-layout) h1 {
                 font-size: 1.85rem !important;
             }
 
-            body.is-standalone p.subtitle {
+            body:is(.is-standalone, .is-mobile-layout) p.subtitle {
                 font-size: 0.95rem !important;
                 margin-bottom: 1.5rem !important;
             }
 
             /* Two-Row grid action controls for mobile card headers (Maximum placeholder space) */
-            body.is-standalone .workspace-wrapper {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper {
                 padding-bottom: 110px !important; /* Space to clear the fixed bottom docked chat bar! */
                 box-sizing: border-box !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card > div:first-child {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr !important;
                 gap: 10px !important;
@@ -722,11 +723,11 @@
                 box-sizing: border-box !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child form {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card > div:first-child form {
                 display: contents !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child input[type="text"] {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card > div:first-child input[type="text"] {
                 grid-column: span 2 !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
@@ -735,7 +736,7 @@
                 border-radius: 8px !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child button[type="submit"] {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card > div:first-child button[type="submit"] {
                 grid-column: 1 !important;
                 width: 100% !important;
                 padding: 0.65rem 1rem !important;
@@ -743,7 +744,7 @@
                 box-sizing: border-box !important;
             }
 
-            body.is-standalone .workspace-wrapper > .card > div:first-child button[id*="discard-btn"] {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card > div:first-child button[id*="discard-btn"] {
                 grid-column: 2 !important;
                 width: 100% !important;
                 margin: 0 !important;
@@ -753,7 +754,7 @@
             }
 
             /* Fixed dynamic docked chat card panel at bottom of PWA mobile viewports */
-            body.is-standalone .workspace-wrapper > .card.chat-control-panel {
+            body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card.chat-control-panel {
                 position: fixed !important;
                 bottom: 0 !important;
                 left: 0 !important;
@@ -770,7 +771,7 @@
             }
 
             /* Force dynamic grid wrapper cells to bind to phone container sizes */
-            body.is-standalone .tweaking-workspace {
+            body:is(.is-standalone, .is-mobile-layout) .tweaking-workspace {
                 display: block !important;
                 width: 100% !important;
                 min-width: 0 !important;
@@ -779,7 +780,7 @@
             }
 
             /* iOS-style range sliders */
-            body.is-standalone input[type="range"] {
+            body:is(.is-standalone, .is-mobile-layout) input[type="range"] {
                 -webkit-appearance: none !important;
                 appearance: none !important;
                 width: 100% !important;
@@ -790,7 +791,7 @@
                 margin: 12px 0 !important;
             }
 
-            body.is-standalone input[type="range"]::-webkit-slider-thumb {
+            body:is(.is-standalone, .is-mobile-layout) input[type="range"]::-webkit-slider-thumb {
                 -webkit-appearance: none !important;
                 appearance: none !important;
                 width: 20px !important;
@@ -802,18 +803,18 @@
                 transition: transform 0.1s !important;
             }
 
-            body.is-standalone input[type="range"]::-webkit-slider-thumb:active {
+            body:is(.is-standalone, .is-mobile-layout) input[type="range"]::-webkit-slider-thumb:active {
                 transform: scale(1.25) !important;
             }
 
             /* Force single-column parameter cards grid to optimize touch layouts */
-            body.is-standalone .effect-block div[style*="grid-template-columns"] {
+            body:is(.is-standalone, .is-mobile-layout) .effect-block div[style*="grid-template-columns"] {
                 grid-template-columns: 1fr !important;
                 gap: 1.25rem !important;
             }
 
             /* Constrain library preset list card height so the active editor block remains in-focus below it */
-            body.is-standalone #library-list-container {
+            body:is(.is-standalone, .is-mobile-layout) #library-list-container {
                 max-height: 220px !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
@@ -824,7 +825,7 @@
         }
 
         /* --- HIGH-READABILITY COMPACT ZERO-SCROLL MATRIX GRID FOR PWA MOBILE --- */
-        body.is-standalone .mobile-scene-toggle-bar {
+        body:is(.is-standalone, .is-mobile-layout) .mobile-scene-toggle-bar {
             display: flex !important;
             align-items: center;
             justify-content: space-between;
@@ -833,7 +834,7 @@
             box-sizing: border-box !important;
         }
 
-        body.is-standalone #live-matrix-container {
+        body:is(.is-standalone, .is-mobile-layout) #live-matrix-container {
             position: relative !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important; /* Touch physics */
@@ -843,7 +844,7 @@
             zoom: 1.0 !important; /* Reset zoom on mobile viewports for clean pixel-scale readability */
         }
 
-        body.is-standalone table.grid-matrix {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix {
             width: 100% !important;
             min-width: 0 !important;
             table-layout: fixed !important;
@@ -852,15 +853,15 @@
             position: static !important;
         }
 
-        body.is-standalone table.grid-matrix thead,
-        body.is-standalone table.grid-matrix tbody,
-        body.is-standalone table.grid-matrix tr {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix thead,
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix tbody,
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix tr {
             position: static !important;
         }
 
         /* Fixed Row Headers Column styling */
-        body.is-standalone table.grid-matrix th:first-child,
-        body.is-standalone table.grid-matrix td:first-child {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th:first-child,
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td:first-child {
             width: 130px !important;
             min-width: 130px !important;
             max-width: 130px !important;
@@ -874,8 +875,8 @@
         }
 
         /* Default Layout: Render Scene A (Rhythm) column and hide Scene B column */
-        body.is-standalone table.grid-matrix th:nth-child(2),
-        body.is-standalone table.grid-matrix td:nth-child(2) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th:nth-child(2),
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td:nth-child(2) {
             width: calc(100% - 130px) !important;
             min-width: 0 !important;
             max-width: none !important;
@@ -885,19 +886,19 @@
             border-right: none !important;
         }
 
-        body.is-standalone table.grid-matrix th:nth-child(3),
-        body.is-standalone table.grid-matrix td:nth-child(3) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th:nth-child(3),
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td:nth-child(3) {
             display: none !important;
         }
 
         /* Toggled Layout (show-scene-b active): Hide Scene A column and show Scene B column */
-        body.is-standalone table.grid-matrix.show-scene-b th:nth-child(2),
-        body.is-standalone table.grid-matrix.show-scene-b td:nth-child(2) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix.show-scene-b th:nth-child(2),
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix.show-scene-b td:nth-child(2) {
             display: none !important;
         }
 
-        body.is-standalone table.grid-matrix.show-scene-b th:nth-child(3),
-        body.is-standalone table.grid-matrix.show-scene-b td:nth-child(3) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix.show-scene-b th:nth-child(3),
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix.show-scene-b td:nth-child(3) {
             width: calc(100% - 130px) !important;
             min-width: 0 !important;
             max-width: none !important;
@@ -908,14 +909,14 @@
         }
 
         /* Dynamic Parameter Flex-Wrapping cells for active parameters column */
-        body.is-standalone table.grid-matrix td:not(:first-child) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td:not(:first-child) {
             padding: 8px 10px !important;
             background-color: transparent !important;
             box-sizing: border-box !important;
             vertical-align: middle !important;
         }
 
-        body.is-standalone .dsp-badge-container {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge-container {
             display: flex !important;
             flex-wrap: wrap !important;
             gap: 6px !important;
@@ -924,7 +925,7 @@
         }
 
         /* Soft-Indigo high-contrast mobile PWA badge pill formatting */
-        body.is-standalone .dsp-badge {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge {
             display: inline-block !important;
             background: rgba(99, 102, 241, 0.12) !important;
             color: #a5b4fc !important;
@@ -939,7 +940,7 @@
         }
 
         /* Strip badge layouts from row headers first column cells */
-        body.is-standalone table.grid-matrix td:first-child .dsp-badge {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td:first-child .dsp-badge {
             background: transparent !important;
             color: white !important;
             border: none !important;
@@ -951,44 +952,44 @@
         }
 
         /* Mobile PWA Specific: Hide static pseudo-elements, show touch info icon */
-        body.is-standalone table.grid-matrix td[data-reason]:after {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td[data-reason]:after {
             content: none !important;
             display: none !important;
         }
-        body.is-standalone table.grid-matrix td .info-icon {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td .info-icon {
             display: inline-flex !important;
         }
 
         /* Mobile semantic parameter badge categories coloring rules */
-        body.is-standalone .dsp-badge.badge-state-enabled {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge.badge-state-enabled {
             background: rgba(16, 185, 129, 0.12) !important;
             color: #34d399 !important;
             border: 1px solid rgba(16, 185, 129, 0.25) !important;
         }
-        body.is-standalone .dsp-badge.badge-state-bypass {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge.badge-state-bypass {
             background: rgba(156, 163, 175, 0.12) !important;
             color: #9ca3af !important;
             border: 1px solid rgba(156, 163, 175, 0.25) !important;
         }
-        body.is-standalone .dsp-badge.badge-level {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge.badge-level {
             background: rgba(59, 130, 246, 0.12) !important;
             color: #93c5fd !important;
             border: 1px solid rgba(59, 130, 246, 0.25) !important;
         }
-        body.is-standalone .dsp-badge.badge-freq {
+        body:is(.is-standalone, .is-mobile-layout) .dsp-badge.badge-freq {
             background: rgba(168, 85, 247, 0.12) !important;
             color: #d8b4fe !important;
             border: 1px solid rgba(168, 85, 247, 0.25) !important;
         }
 
         /* Clean vertical line separators and row grid outlines */
-        body.is-standalone table.grid-matrix th,
-        body.is-standalone table.grid-matrix td {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th,
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix td {
             border-right: 1px solid var(--border) !important;
             border-bottom: 1px solid var(--border) !important;
         }
 
-        body.is-standalone table.grid-matrix th {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th {
             border-bottom: 2px solid var(--border) !important;
             font-weight: 600 !important;
             color: var(--accent) !important;
@@ -997,18 +998,18 @@
             text-align: left !important;
         }
 
-        body.is-standalone table.grid-matrix th:first-child {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix th:first-child {
             background-color: #0f172a !important;
             border-right: 1px solid var(--border) !important;
         }
 
         /* Zebra striping for improved horizontal readability */
-        body.is-standalone table.grid-matrix tr:nth-child(even) td:not(:first-child) {
+        body:is(.is-standalone, .is-mobile-layout) table.grid-matrix tr:nth-child(even) td:not(:first-child) {
             background-color: rgba(255, 255, 255, 0.02) !important;
         }
 
         /* iOS-style segmented control pills for pickup tabs */
-        body.is-standalone .tabs-header {
+        body:is(.is-standalone, .is-mobile-layout) .tabs-header {
             background: rgba(15, 23, 42, 0.6) !important;
             padding: 4px !important;
             border-radius: 8px !important;
@@ -1018,11 +1019,11 @@
             overflow-x: auto !important;
             scrollbar-width: none !important;
         }
-        body.is-standalone .tabs-header::-webkit-scrollbar {
+        body:is(.is-standalone, .is-mobile-layout) .tabs-header::-webkit-scrollbar {
             display: none !important;
         }
 
-        body.is-standalone .tab-btn {
+        body:is(.is-standalone, .is-mobile-layout) .tab-btn {
             flex: 1 !important;
             text-align: center !important;
             font-size: 0.85rem !important;
@@ -1035,14 +1036,14 @@
             white-space: nowrap !important;
         }
 
-        body.is-standalone .tab-btn.active {
+        body:is(.is-standalone, .is-mobile-layout) .tab-btn.active {
             background: var(--accent) !important;
             color: white !important;
             font-weight: 600 !important;
         }
 
         /* --- PREMIUM RESPONSIVE LIBRARY PRESET HEADER ACTION CARDS --- */
-        body.is-standalone .library-preset-header-actions {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions {
             flex-direction: column !important;
             align-items: stretch !important;
             gap: 10px !important;
@@ -1051,7 +1052,7 @@
             box-sizing: border-box !important;
         }
 
-        body.is-standalone .library-preset-header-actions .preset-title-wrapper {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .preset-title-wrapper {
             width: 100% !important;
             box-sizing: border-box !important;
             display: flex !important;
@@ -1060,7 +1061,7 @@
             gap: 8px !important;
         }
 
-        body.is-standalone .library-preset-header-actions h2 {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions h2 {
             font-size: 1.25rem !important;
             white-space: normal !important;
             word-wrap: break-word !important;
@@ -1070,7 +1071,7 @@
         }
 
         /* Active Rename Form elements formatting (Grid split) */
-        body.is-standalone .library-preset-header-actions .rename-preset-form:not([style*="display: none"]) {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .rename-preset-form:not([style*="display: none"]) {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
             gap: 10px !important;
@@ -1079,7 +1080,7 @@
             margin: 0 !important;
         }
 
-        body.is-standalone .library-preset-header-actions .rename-preset-form input[type="text"] {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .rename-preset-form input[type="text"] {
             grid-column: span 2 !important;
             width: 100% !important;
             min-width: 0 !important;
@@ -1089,7 +1090,7 @@
             border-radius: 8px !important;
         }
 
-        body.is-standalone .library-preset-header-actions .rename-preset-form button {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .rename-preset-form button {
             width: 100% !important;
             box-sizing: border-box !important;
             padding: 0.65rem 1rem !important;
@@ -1097,15 +1098,15 @@
             margin: 0 !important;
         }
         
-        body.is-standalone .library-preset-header-actions .rename-preset-form button[type="submit"] {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .rename-preset-form button[type="submit"] {
             grid-column: 1 !important;
         }
-        body.is-standalone .library-preset-header-actions .rename-preset-form button[type="button"] {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .rename-preset-form button[type="button"] {
             grid-column: 2 !important;
         }
 
         /* Action Buttons Block layout splits (Grid split on Row 2) */
-        body.is-standalone .library-preset-header-actions .preset-title-actions-buttons {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .preset-title-actions-buttons {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
             gap: 10px !important;
@@ -1114,7 +1115,7 @@
             margin: 0 !important;
         }
 
-        body.is-standalone .library-preset-header-actions .preset-title-actions-buttons button {
+        body:is(.is-standalone, .is-mobile-layout) .library-preset-header-actions .preset-title-actions-buttons button {
             width: 100% !important;
             box-sizing: border-box !important;
             padding: 0.65rem 1rem !important;
@@ -1457,6 +1458,17 @@
                     }
                 });
             }
+
+            // Apply the mobile-optimized layout (vertical card stacks, zero-
+            // horizontal-scroll matrix, badge pills) to any narrow viewport,
+            // not just installed/standalone PWA sessions, so a regular phone
+            // browser tab benefits too.
+            const mobileLayoutQuery = window.matchMedia('(max-width: 600px)');
+            const applyMobileLayoutClass = (e) => {
+                document.body.classList.toggle('is-mobile-layout', e.matches);
+            };
+            applyMobileLayoutClass(mobileLayoutQuery);
+            mobileLayoutQuery.addEventListener('change', applyMobileLayoutClass);
         });
 
         // Global click event listener for cell ⓘ Info Icons to pop open structured agent reasoning
