@@ -88,11 +88,14 @@ test('Table Use Cases Screenshots', async ({ page }) => {
   });
 
   await firstPreset.locator('button:has-text("Adjust preset")').click();
-  await page.waitForSelector('.effect-block', { timeout: 10000 });
-  
-  // Assert editable controls are visible
-  await expect(page.locator('.effect-block')).toBeVisible();
-  await expect(page.locator('.param-group')).toBeVisible();
+  await page.waitForSelector('#library-editor-workspace .effect-block', { timeout: 10000 });
+
+  // Assert editable controls are visible. Scoped to #library-editor-workspace
+  // since the Generator tab's own workspace (from earlier in this test) stays
+  // mounted in the DOM (just hidden) when switching tabs, and would otherwise
+  // also match these locators, tripping Playwright's strict mode.
+  await expect(page.locator('#library-editor-workspace .effect-block').first()).toBeVisible();
+  await expect(page.locator('#library-editor-workspace .param-group').first()).toBeVisible();
   
   await page.screenshot({ path: path.join(screenshotDir, 'use_case_3_loaded_editable.png'), fullPage: true });
 
