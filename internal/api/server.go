@@ -271,65 +271,18 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 			defer orch.Close()
 
-			var htmlPayload string
-			var tokenUsage *agents.TokenUsage
-			var pipelineErr error
-
-			isMockModeEnabled := os.Getenv("MOCK_MODE") == "true" || r.FormValue("mock") == "true" || prompt == "TEST_EVAL_SRV_CLEAN"
-			isBBKingMock := isMockModeEnabled && (strings.Contains(strings.ToLower(prompt), "bb king") || strings.Contains(strings.ToLower(prompt), "thrill is gone"))
-			isSRVMock := prompt == "TEST_EVAL_SRV_CLEAN"
-
-			if isSRVMock || isBBKingMock {
-				mockFile := "test_parsed.json"
-				if isBBKingMock {
-					mockFile = "test_parsed_bb_king.json"
-				}
-				log.Printf("DEBUG: Entering mock path with file %s for task %s", mockFile, taskID)
-				bytes, readErr := os.ReadFile(mockFile)
-				if readErr != nil {
-					log.Printf("Failed to read mock file %s: %v", mockFile, readErr)
-					s.updateTaskError(taskID, fmt.Sprintf("Eval File Read Error: %v", readErr))
-					return
-				}
-				log.Printf("DEBUG: Successfully read mock file %s. Size: %d", mockFile, len(bytes))
-				trimmedStr := strings.TrimSpace(string(bytes))
-				var unescaped string
-				if parseErr := json.Unmarshal([]byte(trimmedStr), &unescaped); parseErr == nil {
-					htmlPayload = unescaped
-				} else {
-					log.Printf("Failed to unmarshal string: %v", parseErr)
-					htmlPayload = trimmedStr
-				}
-				log.Printf("DEBUG: Successfully unmarshalled JSON string. Len: %d", len(htmlPayload))
+			htmlPayload, tokenUsage, err := orch.RunPipeline(ctx, prompt, constraints, cfg.AgentPrompts, func(phase string) {
 				s.tasksMu.Lock()
 				if task, ok := s.tasks[taskID]; ok {
-					task.Phase = "Finalizing Real Eval Matrix..."
+					task.Phase = phase
 				}
 				s.tasksMu.Unlock()
-				time.Sleep(200 * time.Millisecond)
-				tokenUsage = &agents.TokenUsage{
-					InputTokens:  38210,
-					OutputTokens: 9555,
-					ModelsUsed: map[string]int{
-						"gemini-3.1-pro-preview": 2,
-						"gemini-3.5-flash":       9,
-					},
-				}
-				log.Printf("DEBUG: Completed setup for test task variables")
-			} else {
-				htmlPayload, tokenUsage, pipelineErr = orch.RunPipeline(ctx, prompt, constraints, cfg.AgentPrompts, func(phase string) {
-					s.tasksMu.Lock()
-					if task, ok := s.tasks[taskID]; ok {
-						task.Phase = phase
-					}
-					s.tasksMu.Unlock()
-				})
+			})
 
-				if pipelineErr != nil {
-					log.Printf("Orchestrator generation failure: %v", pipelineErr)
-					s.updateTaskError(taskID, fmt.Sprintf("Pipeline Execution Error: %v", pipelineErr))
-					return
-				}
+			if err != nil {
+				log.Printf("Orchestrator generation failure: %v", err)
+				s.updateTaskError(taskID, fmt.Sprintf("Pipeline Execution Error: %v", err))
+				return
 			}
 
 			htmlPayload = strings.TrimSpace(htmlPayload)
@@ -428,29 +381,18 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				},
 			}
 
-			log.Printf("DEBUG: Bypassing/running GCS save. prompt is: %q", prompt)
-			isMockPrompt := isMockModeEnabled && (prompt == "TEST_EVAL_SRV_CLEAN" || strings.Contains(strings.ToLower(prompt), "bb king") || strings.Contains(strings.ToLower(prompt), "thrill is gone"))
-			if !isMockPrompt {
-				log.Printf("DEBUG: Inside GCS Save block")
-				if err := s.store.Save(ctx, draftPreset); err != nil {
-					s.updateTaskError(taskID, fmt.Sprintf("Storage Error: %v", err))
-					return
-				}
-				bgCtx := context.WithoutCancel(ctx)
-				go cleanUpOldDrafts(bgCtx, s.store)
-				log.Printf("DEBUG: Finished GCS Save and background cleanup kickoff")
-			} else {
-				log.Printf("DEBUG: Successfully skipped GCS save for TEST_EVAL_SRV_CLEAN")
+			if err := s.store.Save(ctx, draftPreset); err != nil {
+				s.updateTaskError(taskID, fmt.Sprintf("Storage Error: %v", err))
+				return
 			}
+
+			bgCtx := context.WithoutCancel(ctx)
+			go cleanUpOldDrafts(bgCtx, s.store)
 
 			s.tasksMu.Lock()
 			if task, ok := s.tasks[taskID]; ok {
-				log.Printf("DEBUG: Setting task status to complete")
 				task.Status = "complete"
 				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, false)
-				log.Printf("DEBUG: Finished workspace rendering. Result size: %d", len(task.Result))
-			} else {
-				log.Printf("DEBUG: WARNING! Task %s not found in status map during final save block!", taskID)
 			}
 			s.tasksMu.Unlock()
 		}()

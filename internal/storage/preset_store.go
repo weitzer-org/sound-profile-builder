@@ -117,19 +117,8 @@ func (s *PresetStore) Save(ctx context.Context, p *Preset) error {
 	return nil
 }
 
-// Get retrieves a specific preset by ID (checking active cache first)
+// Get retrieves a specific preset by ID
 func (s *PresetStore) Get(ctx context.Context, id string) (*Preset, error) {
-	s.mu.RLock()
-	if s.cache != nil {
-		for _, cached := range s.cache {
-			if cached.ID == id {
-				s.mu.RUnlock()
-				return cached, nil
-			}
-		}
-	}
-	s.mu.RUnlock()
-
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, id)
 	data, err := s.client.ReadFile(ctx, s.bucket, objectName)
 	if err != nil {
@@ -140,22 +129,6 @@ func (s *PresetStore) Get(ctx context.Context, id string) (*Preset, error) {
 	if err := json.Unmarshal(data, &p); err != nil {
 		return nil, err
 	}
-
-	s.mu.Lock()
-	if s.cache != nil {
-		found := false
-		for _, cached := range s.cache {
-			if cached.ID == p.ID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			s.cache = append(s.cache, &p)
-		}
-	}
-	s.mu.Unlock()
-
 	return &p, nil
 }
 
