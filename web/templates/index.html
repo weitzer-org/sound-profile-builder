@@ -558,11 +558,19 @@
             padding-right: env(safe-area-inset-right);
             box-sizing: border-box;
             
-            /* Lock body size to stop elastic window bounce scrolling */
+            /* Lock body size to stop elastic window bounce scrolling.
+               100dvh (not 100vh) tracks the real visible viewport as the
+               mobile browser's address bar shows/hides on scroll -- 100vh
+               is fixed to the fully-collapsed-chrome size, so content below
+               that point (e.g. the generate button) could end up clipped
+               and require a scroll that keeps getting reset as the address
+               bar height changes. 100% is a fallback for browsers without
+               dvh support. */
             position: fixed;
             overflow: hidden;
             width: 100%;
             height: 100%;
+            height: 100dvh;
         }
 
         body:is(.is-standalone, .is-mobile-layout) * {
@@ -583,8 +591,10 @@
         body:is(.is-standalone, .is-mobile-layout) .main-view {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            /* Calculate exact container height minus sticky top header */
+            /* Calculate exact container height minus sticky top header.
+               dvh version wins where supported -- see body rule above for why. */
             height: calc(100vh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+            height: calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
             padding-top: calc(70px + env(safe-area-inset-top)) !important;
             box-sizing: border-box;
         }
@@ -736,7 +746,10 @@
                 box-sizing: border-box !important;
             }
 
-            /* Fixed dynamic docked chat card panel at bottom of PWA mobile viewports */
+            /* Fixed dynamic docked chat card panel at bottom of PWA mobile viewports.
+               Kept intentionally compact (~1/3 smaller than the desktop card)
+               since it's permanently docked and competes with the content
+               above it for screen space on a small viewport. */
             body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card.chat-control-panel {
                 position: fixed !important;
                 bottom: 0 !important;
@@ -748,9 +761,35 @@
                 border-top: 1px solid var(--border) !important;
                 margin: 0 !important;
                 border-radius: 16px 16px 0 0 !important;
-                padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px !important;
+                padding: 8px 14px calc(8px + env(safe-area-inset-bottom)) 14px !important;
+                gap: 0.65rem !important;
                 box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.5) !important;
                 box-sizing: border-box !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel h3 {
+                font-size: 0.8rem !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel textarea {
+                min-height: 32px !important;
+                padding: 0.55rem 0.7rem !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* Builder Statement can run several lines from the LLM; clamp it
+               so it doesn't push the docked panel's height around. */
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel textarea + div {
+                display: -webkit-box !important;
+                -webkit-box-orient: vertical !important;
+                -webkit-line-clamp: 2 !important;
+                overflow: hidden !important;
+                font-size: 0.78rem !important;
+                padding-top: 0 !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel button[type="submit"] {
+                height: 32px !important;
             }
 
             /* Force dynamic grid wrapper cells to bind to phone container sizes */
