@@ -1,11 +1,15 @@
 name: Deploy to Fly.io
 
-# Deploys to production on every push to main (i.e. when a PR is merged).
-# Requires a repository secret FLY_API_TOKEN — create one with:
+# Deploys to production once the Test workflow succeeds on main (i.e. after a
+# PR is merged and its build/unit/e2e checks pass). Requires a repository
+# secret FLY_API_TOKEN — create one with:
 #   fly tokens create deploy -x 999999h
 # then add it under GitHub → Settings → Secrets and variables → Actions.
 on:
-  push:
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
     branches:
       - main
 
@@ -18,8 +22,11 @@ jobs:
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

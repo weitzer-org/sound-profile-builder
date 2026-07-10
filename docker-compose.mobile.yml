@@ -1,0 +1,17 @@
+services:
+  app:
+    ports: !override
+      - "8082:8080"
+
+  # Remapped so this stack's MinIO can run alongside the desktop stack's
+  # MinIO (docker-compose.yml) without a host port clash. Only matters in
+  # MOCK mode / when S3_ENDPOINT isn't pointed at real R2 -- in LIVE mode
+  # against real R2 storage, these containers still start but sit unused.
+  # (!override is required here: Compose concatenates `ports:` lists across
+  # -f files by default rather than replacing them, so without it this stack
+  # would try to bind the base file's 9000/9001 too and clash with the
+  # desktop stack's MinIO.)
+  minio:
+    ports: !override
+      - "9002:9000"
+      - "9003:9001"

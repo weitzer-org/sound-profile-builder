@@ -10,6 +10,7 @@ services:
       # Defaults to the local MinIO service. Set S3_ENDPOINT in .env (e.g. your
       # Cloudflare R2 endpoint) to point local dev at real object storage.
       S3_ENDPOINT: "${S3_ENDPOINT:-http://minio:9000}"
+      S3_BUCKET: "${S3_BUCKET:-sound-builder-local}"
       PORT: "8080"
       # Controlled by run-mock.sh / run-live.sh; defaults to mock (no key needed).
       MOCK_MODE: "${MOCK_MODE:-true}"

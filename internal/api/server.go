@@ -57,6 +57,19 @@ func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, cli
 
 // routes registers all the HTTP handlers for the application.
 func (s *Server) routes() {
+	// PWA Manifest and Service Worker (Public endpoints)
+	s.mux.HandleFunc("/manifest.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "web/static/manifest.json")
+	})
+	s.mux.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		http.ServeFile(w, r, "web/static/sw.js")
+	})
+	// Serve /static/ assets (icons, images)
+	fs := http.FileServer(http.Dir("web/static"))
+	s.mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	// Public Routes
 	s.mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {

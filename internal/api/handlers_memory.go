@@ -1,17 +1,20 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // handleGetMemories returns HTML fragments for the Memory Rules tab
 func (s *Server) handleGetMemories() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+		defer cancel()
 		memories, err := s.memoryStore.List(ctx)
 		if err != nil {
 			log.Printf("Failed to list memories: %v", err)
