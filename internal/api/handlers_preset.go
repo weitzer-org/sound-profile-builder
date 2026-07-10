@@ -521,7 +521,13 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 	first := true
 
 	if legacyMode {
-		for guitarName, matrixHTML := range legacyMatrices {
+		legacyGuitarNames := make([]string, 0, len(legacyMatrices))
+		for guitarName := range legacyMatrices {
+			legacyGuitarNames = append(legacyGuitarNames, guitarName)
+		}
+		sort.Strings(legacyGuitarNames)
+		for _, guitarName := range legacyGuitarNames {
+			matrixHTML := legacyMatrices[guitarName]
 			activeClass := ""
 			displayStyle := "display: none;"
 			if first {
@@ -544,7 +550,13 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			`, safeId, displayStyle, wrapCellContentInBadges(matrixHTML))
 		}
 	} else {
-		for guitarName, blocks := range structured.Guitars {
+		guitarNames := make([]string, 0, len(structured.Guitars))
+		for guitarName := range structured.Guitars {
+			guitarNames = append(guitarNames, guitarName)
+		}
+		sort.Strings(guitarNames)
+		for _, guitarName := range guitarNames {
+			blocks := structured.Guitars[guitarName]
 			activeClass := ""
 			displayStyle := "display: none;"
 			if first {
