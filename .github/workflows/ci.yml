@@ -1,0 +1,60 @@
+name: CI
+
+# Runs unit tests on every push and PR. Deploys to Fly.io only after tests
+# pass on an actual push to main (not on PRs) -- a single workflow with
+# `deploy` gated on `needs: test` rather than two workflows linked via
+# workflow_run, since that indirection isn't buying us anything here.
+#
+# Deploy requires a repository secret FLY_API_TOKEN -- create one with:
+#   fly tokens create deploy -x 999999h
+# then add it under GitHub -> Settings -> Secrets and variables -> Actions.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Unit tests
+        run: go test ./...
+
+      # E2E/visual/structural Playwright specs (tests/e2e/*.spec.js) are
+      # disabled here -- they were taking too long for this workflow's
+      # purpose. Run them locally instead: bring the app up in mock mode
+      # (docker compose up, MOCK_MODE=true) and run against the pinned
+      # mcr.microsoft.com/playwright:v1.58.2 image, e.g.:
+      #   docker run --rm --network host -e BASE_URL=http://localhost:8080 \
+      #     -v "$(pwd)/tests/e2e:/e2e" -w /e2e mcr.microsoft.com/playwright:v1.58.2 \
+      #     sh -c "npm install && npx playwright test --workers=1"
+
+  deploy:
+    name: Deploy app
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
