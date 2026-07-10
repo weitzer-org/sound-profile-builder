@@ -136,6 +136,17 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 		}
 
+		allowUserCaptures := true
+		if vals, ok := r.Form["allow_user_captures"]; ok {
+			allowUserCaptures = false
+			for _, v := range vals {
+				if v == "on" {
+					allowUserCaptures = true
+					break
+				}
+			}
+		}
+
 		allowPaidPlugins := true
 		if vals, ok := r.Form["allow_paid_plugins"]; ok {
 			allowPaidPlugins = false
@@ -153,6 +164,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				SingleAmpMode:        true,
 				AllowCloudCaptures:   false,
 				AllowFactoryCaptures: true,
+				AllowUserCaptures:    true,
 				AllowPaidPlugins:     true,
 			}
 		}
@@ -171,12 +183,28 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 		}
 
+		favorCloudCaptures := false
+		if cfg != nil {
+			favorCloudCaptures = cfg.FavorCloudCaptures
+		}
+		if vals, ok := r.Form["favor_cloud_captures"]; ok {
+			favorCloudCaptures = false
+			for _, v := range vals {
+				if v == "on" {
+					favorCloudCaptures = true
+					break
+				}
+			}
+		}
+
 		constraints := map[string]interface{}{
 			"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
 			"single_amp_mode":        cfg.SingleAmpMode,
 			"allow_cloud_captures":   cfg.AllowCloudCaptures,
 			"allow_factory_captures": cfg.AllowFactoryCaptures && allowFactoryCaptures,
+			"allow_user_captures":    cfg.AllowUserCaptures && allowUserCaptures,
 			"favor_captures":         favorCaptures,
+			"favor_cloud_captures":   favorCloudCaptures,
 			"allow_paid_plugins":     cfg.AllowPaidPlugins && allowPaidPlugins,
 			"available_plugins":     cfg.AvailablePlugins,
 		}
@@ -293,6 +321,16 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 				s.updateTaskError(taskID, fmt.Sprintf("Serialization Error: %v", err))
 				return
 			}
+
+			allowFactoryCapturesForFlag := true
+			if v, ok := constraints["allow_factory_captures"].(bool); ok {
+				allowFactoryCapturesForFlag = v
+			}
+			allowUserCapturesForFlag := true
+			if v, ok := constraints["allow_user_captures"].(bool); ok {
+				allowUserCapturesForFlag = v
+			}
+			agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag))
 
 			impactsHtml := "<ul>"
 			// Correctly map version strings based on the actual config map

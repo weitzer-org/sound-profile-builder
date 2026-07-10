@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 var validNativeBlocks = make(map[string]bool)
@@ -22,7 +24,81 @@ var validCategories = map[string]bool{
 }
 var blockCorrectionRegex = regexp.MustCompile(`(?i)(<td[^>]*>)([A-Za-z0-9\s/]+:\s*)([^<]+)`)
 
-// GetValidNativeBlocks parses the embedded JSON natively, returning a map of [blockName]isCapture.
+// gearBlockTypes are the block categories checked against the Dictionary/Capture
+// Library before flagging a name as unverified. Scoped to amp/cab/drive-family
+// categories deliberately: coros_map.json's coverage of non-gear categories (reverb,
+// delay, gate, EQ, ...) is real but sparse (e.g. only 4 distinct native reverb names
+// across 12 entries) — it's a gear-translation table, not a canonical list of every
+// native QC block name. Flagging against it for those categories produced false
+// positives on common, legitimate native names ("Spring Reverb", "Noise Gate") that
+// simply aren't covered. Known tradeoff: this also means a genuinely fabricated name
+// in one of those categories won't be caught. Accepted because the fabrication risk
+// this guardrail targets — inventing a fake "capture" — is structurally an amp/cab/
+// drive-only problem (RULE 11 already forbids treating time-based effects as captures).
+var gearBlockTypes = map[string]bool{
+	"amplifier": true, "cab": true, "cabinet": true,
+	"overdrive": true, "distortion": true, "fuzz": true,
+	"preamp": true,
+}
+
+// UserCapture represents a single Cortex Cloud capture the user has personally
+// downloaded, hand-curated into user_captures.json.
+type UserCapture struct {
+	Name        string `json:"name"`
+	BlockType   string `json:"block_type"`
+	Description string `json:"description"`
+	Source      string `json:"source"`
+}
+
+var userCaptures []UserCapture
+var parseUserCapturesOnce sync.Once
+
+// GetUserCaptures parses the embedded user_captures.json, returning the user's
+// personal library of downloaded Cortex Cloud captures.
+func GetUserCaptures() []UserCapture {
+	parseUserCapturesOnce.Do(func() {
+		_ = json.Unmarshal(embeddedUserCaptures, &userCaptures)
+	})
+	return userCaptures
+}
+
+var userCapturesJSONCache string
+var marshalUserCapturesOnce sync.Once
+
+// GetUserCapturesJSON returns GetUserCaptures() pre-marshaled to JSON, cached after the
+// first call — the library is static embedded data, so there's no reason to re-encode
+// the same ~KB blob on every single pipeline run.
+func GetUserCapturesJSON() string {
+	marshalUserCapturesOnce.Do(func() {
+		userCapturesJSONCache = "[]"
+		if b, err := json.Marshal(GetUserCaptures()); err == nil {
+			userCapturesJSONCache = string(b)
+		}
+	})
+	return userCapturesJSONCache
+}
+
+var userCaptureNameSet map[string]bool
+var parseUserCaptureNamesOnce sync.Once
+
+// IsUserCaptureName reports whether name is an exact entry in the user's personal
+// capture library, as distinct from a coros_map.json factory capture — both are
+// captures, but the UI and the allow/favor toggles need to tell them apart.
+func IsUserCaptureName(name string) bool {
+	parseUserCaptureNamesOnce.Do(func() {
+		userCaptureNameSet = make(map[string]bool)
+		for _, c := range GetUserCaptures() {
+			if c.Name != "" {
+				userCaptureNameSet[c.Name] = true
+			}
+		}
+	})
+	return userCaptureNameSet[name]
+}
+
+// GetValidNativeBlocks parses the embedded coros_map.json and user_captures.json,
+// returning a map of [blockName]isCapture. User captures are always treated as
+// captures since they are, by definition, real Cortex Cloud captures.
 func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
@@ -35,8 +111,42 @@ func GetValidNativeBlocks() map[string]bool {
 				}
 			}
 		}
+		for _, c := range GetUserCaptures() {
+			if c.Name == "" {
+				continue
+			}
+			validNativeBlocks[c.Name] = true
+			validBlocksRunes[c.Name] = []rune(strings.ToLower(c.Name))
+		}
 	})
 	return validNativeBlocks
+}
+
+// BuildEffectiveValidBlocks filters GetValidNativeBlocks() by which capture sources are
+// currently allowed for this generation. Native (non-capture) blocks always pass
+// through unfiltered. coros_map.json's own factory captures and the user's personal
+// user_captures.json library are gated independently — allowFactoryCaptures and
+// allowUserCaptures — even though GetValidNativeBlocks() represents both under the same
+// is_capture=true flag. Without this distinction, disallowing factory captures would
+// also strip every real user capture out of the valid set, causing a correctly-chosen
+// user capture to be flagged "Unverified" purely because it shares the isCapture flag
+// with the factory captures being excluded.
+func BuildEffectiveValidBlocks(allowFactoryCaptures, allowUserCaptures bool) map[string]bool {
+	all := GetValidNativeBlocks()
+	effective := make(map[string]bool, len(all))
+	for name, isCap := range all {
+		if IsUserCaptureName(name) {
+			if allowUserCaptures {
+				effective[name] = isCap
+			}
+			continue
+		}
+		if isCap && !allowFactoryCaptures {
+			continue
+		}
+		effective[name] = isCap
+	}
+	return effective
 }
 
 // ApplyFuzzyCorrection iterates over HTML table rows and corrects block names.
@@ -46,26 +156,101 @@ func ApplyFuzzyCorrection(jsonStr string, validBlocks map[string]bool) string {
 		sub := re.FindStringSubmatch(match)
 		if len(sub) == 4 {
 			prefix := sub[1] + sub[2]
-			name := sub[3]
-            
 			key := strings.ToLower(strings.TrimSpace(sub[2]))
 
 			if !validCategories[key] {
 				return match
 			}
 
-			snapped := SnapToClosestBlock(name, validBlocks)
-			
-			// If the snapped block natively belongs to the 'Capture' category, inject the suffix for the UI.
-			if isCap := validBlocks[snapped]; isCap {
-				snapped += " (Capture)"
-			}
-			
-			return prefix + snapped
+			resolved := resolveBlockName(sub[3], strings.TrimSuffix(key, ":"), validBlocks)
+			return prefix + resolved
 		}
 		return match
 	})
 	return corrected
+}
+
+// resolveBlockName is the single place the verification policy lives, shared by
+// ApplyFuzzyCorrection (HTML draft view) and FlagUnverifiedStructuredBlocks (saved
+// structured payload) so both paths always agree: snap to the closest real Dictionary/
+// Capture Library entry, label it by source if it's a capture, or flag it as unverified
+// if it's an unrecognized gear-category name nothing came close to.
+func resolveBlockName(rawName, category string, validBlocks map[string]bool) string {
+	name := stripCaptureAnnotation(rawName)
+	if isSkippableValue(name) {
+		return name
+	}
+
+	snapped := SnapToClosestBlock(name, validBlocks)
+
+	if isCap := validBlocks[snapped]; isCap {
+		return annotateCaptureSource(snapped)
+	}
+
+	if snapped == name && gearBlockTypes[category] {
+		// SnapToClosestBlock left the value untouched, meaning nothing in the Dictionary
+		// or the user's Capture Library came close — this is likely a fabricated name.
+		// Only gear-type categories are checked; native block categories (reverb, gate,
+		// EQ, ...) have no dictionary entries to match against by design.
+		if _, known := validBlocks[snapped]; !known {
+			return FlagUnverifiedBlock(snapped)
+		}
+	}
+
+	return snapped
+}
+
+// annotateCaptureSource labels a verified capture name with which library it came from,
+// so the UI always shows both the exact real name and whether it's a Neural DSP factory
+// capture or one of the user's own downloaded Cortex Cloud captures, rather than a
+// generic "(Capture)" suffix that doesn't distinguish the two.
+func annotateCaptureSource(name string) string {
+	if IsUserCaptureName(name) {
+		return name + " (My Capture)"
+	}
+	return name + " (Factory Capture)"
+}
+
+// stripCaptureAnnotation removes a trailing capture-annotation suffix the model
+// sometimes writes into a block name itself — "(Capture)", "(My Capture)",
+// "[Factory Capture]", etc. — mirroring what this file adds programmatically once a
+// name is verified. Without stripping it first, a real, valid capture name showing up
+// pre-annotated would fail to match its bare dictionary entry and get incorrectly
+// flagged as unverified. Requires an actual bracket/paren/dash delimiter before
+// "capture", not just trailing whitespace — some real capture names legitimately end in
+// the bare word "Capture" (e.g. "JM Default Capture" in this library), and a delimiter-
+// free match would truncate those.
+var captureAnnotationSuffix = regexp.MustCompile(`(?i)\s*[(\[-]\s*(?:my |factory )?capture\s*[)\]]?\s*$`)
+
+func stripCaptureAnnotation(s string) string {
+	trimmed := strings.TrimSpace(s)
+	return strings.TrimSpace(captureAnnotationSuffix.ReplaceAllString(trimmed, ""))
+}
+
+// FlagUnverifiedBlock marks a block name that could not be matched against the
+// Dictionary or the user's Capture Library, so the UI surfaces a warning instead of
+// silently presenting a possibly-fabricated name as real.
+func FlagUnverifiedBlock(name string) string {
+	return name + " ⚠️ (Unverified — not in Dictionary or your Capture Library)"
+}
+
+// FlagUnverifiedStructuredBlocks walks a StructuredPreset's effect blocks and applies
+// the same resolveBlockName policy ApplyFuzzyCorrection applies to the HTML draft view,
+// so a fabricated block name doesn't survive a preset save unflagged, and a real capture
+// is always labeled with its source and shown under its exact name.
+func FlagUnverifiedStructuredBlocks(sp *storage.StructuredPreset, validBlocks map[string]bool) {
+	if sp == nil {
+		return
+	}
+	for _, blocks := range sp.Guitars {
+		for i := range blocks {
+			if strings.TrimSpace(blocks[i].Model) == "" {
+				continue
+			}
+			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
+			blocks[i].Model = resolveBlockName(blocks[i].Model, blockType, validBlocks)
+		}
+	}
 }
 
 // IgnoreList contains structural block names that shouldn't be snapped to amplifiers/effects.
@@ -191,14 +376,26 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool) string {
 	return categorizedAmpsWithoutCapturesCache
 }
 
+// isSkippableValue reports whether a value is a structural UI element or an obviously
+// non-block input (a parameter like "-3.0dB", or a status like "Bypassed") that should
+// never be snapped or flagged as an unverified block name.
+func isSkippableValue(s string) bool {
+	return IgnoreList[s] || len(s) < 3 || strings.Contains(s, "dB") || strings.Contains(s, "%") || strings.Contains(s, "ms") || strings.Contains(s, "Hz") || s == "Bypassed" || s == "Active" || s == "Engaged"
+}
+
 // SnapToClosestBlock checks if the input is a valid block, else returns the closest equivalent.
 func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 	inputStr := strings.TrimSpace(input)
-	
-	// Skip structural UI elements and obviously bad inputs like parameters (-3.0dB)
-	if IgnoreList[inputStr] || len(inputStr) < 3 || strings.Contains(inputStr, "dB") || strings.Contains(inputStr, "%") || strings.Contains(inputStr, "ms") || strings.Contains(inputStr, "Hz") || inputStr == "Bypassed" || inputStr == "Active" || inputStr == "Engaged" {
+
+	if isSkippableValue(inputStr) {
 		return inputStr
 	}
+
+	// Ensure the candidate pool (validBlocksRunes) is populated regardless of whether
+	// the caller already called GetValidNativeBlocks() — this must not depend on call
+	// order, since validBlocksRunes is a package-level cache separate from whatever
+	// validBlocks map the caller passes in.
+	GetValidNativeBlocks()
 
 	bestDistance := math.MaxInt32
 	bestMatch := inputStr

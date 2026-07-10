@@ -836,6 +836,8 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
+		agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, agents.GetValidNativeBlocks())
+
 		// Append user message
 		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
 
