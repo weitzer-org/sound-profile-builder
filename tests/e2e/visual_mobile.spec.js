@@ -62,7 +62,9 @@ test.describe('Mobile visual regression (iPhone 16 Pro, mock mode)', () => {
       const activeView = document.querySelector('.main-view[style*="display: block;"]') || document.querySelector('#view-generator');
       if (activeView) activeView.scrollTop = 0;
     });
-    await page.click('button:has-text("Preset Library")');
+    // Mobile nav is the fixed bottom tab bar; the desktop top-nav row is
+    // hidden under this viewport now that the tab bar replaces it.
+    await page.click('.mobile-tab-btn[data-view="view-library"]');
     await page.waitForSelector('#library-list-container li', { timeout: 10000 });
     await page.waitForTimeout(500);
     await withFullMobileCapture(page, () =>

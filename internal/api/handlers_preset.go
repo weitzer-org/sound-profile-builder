@@ -585,16 +585,28 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 
 				for _, param := range block.Parameters {
 					safeParamId := strings.ReplaceAll(strings.ToLower(param.Name), " ", "-")
-					if param.Type == "slider" {
+					// Sliders are hard-coded 0-10 below, which only makes sense for a
+					// true dimensionless 0-10 value (Gain/Tone/Volume). A param carrying
+					// a real-world Unit (dB/Hz/ms/%) can't be represented on that fixed
+					// range, so render it as a labeled text field instead -- the same
+					// control "Mic 1"/"Mic 2" (the default branch below) already uses.
+					if param.Type == "slider" && param.Unit == "" {
 						blocksHtml.WriteString(fmt.Sprintf(`
 							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
 								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
 									<span>%[1]s</span>
-									<span id="val-%[2]s-%[3]s">%[4]s%[5]s</span>
+									<span id="val-%[2]s-%[3]s">%[4]s</span>
 								</div>
-								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[6]s", "guitar":"%[7]s", "block_id":"%[8]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value + '%[5]s'">
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[5]s", "guitar":"%[6]s", "block_id":"%[7]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value">
 							</div>
-						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, param.Unit, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+					} else if param.Type == "slider" {
+						blocksHtml.WriteString(fmt.Sprintf(`
+							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
+								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s %[6]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
+							</div>
+						`, html.EscapeString(param.Name), param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID), param.Unit))
 					} else if param.Type == "toggle" {
 						checked := ""
 						if param.Value == "on" || param.Value == "true" {
@@ -710,6 +722,26 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		`, refinementSummaryHtml, p.ID, html.EscapeString(p.BuilderStatement))
 	}
 
+	// View/Edit toggle: unifies the two things a saved preset can show (the
+	// narrated rationale table vs. the manual editable controls) into one
+	// workspace instead of two disconnected entry points ("Copy" vs "Adjust
+	// preset"). Only applies to saved presets in Adjust mode -- not the
+	// Duplicate flow (isCopyMode), and not an in-progress draft, which is
+	// already forced into the rationale table via legacyMode above.
+	viewEditToggleHtml := ""
+	if !isCopyMode && p.Name != "Draft Preset" {
+		viewBtnStyle, editBtnStyle := "background: var(--accent); color: white;", "color: var(--text-sub);"
+		if !forceStatic {
+			viewBtnStyle, editBtnStyle = "color: var(--text-sub);", "background: var(--accent); color: white;"
+		}
+		viewEditToggleHtml = fmt.Sprintf(`
+			<div style="display: flex; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 3px;">
+				<button type="button" hx-get="/api/preset/view?id=%[1]s&static=true" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; %[2]s">View</button>
+				<button type="button" hx-get="/api/preset/view?id=%[1]s" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; %[3]s">Edit</button>
+			</div>
+		`, p.ID, viewBtnStyle, editBtnStyle)
+	}
+
 	return fmt.Sprintf(`
 	<div id="workspace-wrapper" class="workspace-wrapper">
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
@@ -720,7 +752,10 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
-				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
+				<div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+					<h2 style="font-size: 1.25rem; margin: 0;">Live DSP Matrix</h2>
+					%s
+				</div>
 				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
 				<div class="mobile-scene-toggle-bar" style="display: none;">
 					<span style="font-size: 0.85rem; color: var(--text-sub); font-weight: 500;">Active Scene View:</span>
@@ -736,7 +771,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			</div>
 		</div>
 	</div>
-	`, headerHtml, controlPanelHtml, matrixContainerHtml, historyHtml)
+	`, headerHtml, controlPanelHtml, viewEditToggleHtml, matrixContainerHtml, historyHtml)
 }
 
 func (s *Server) handleViewPreset() http.HandlerFunc {
@@ -754,8 +789,15 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 			return
 		}
 
+		// "View" mode in the library: a saved preset's Payload still carries the
+		// original rationale-annotated legacy_html from generation (rename never
+		// touches Payload), it's just not rendered by default. ?static=true
+		// surfaces it; presets without legacy_html fall back to the existing
+		// auto-generated table.
+		staticMode := r.URL.Query().Get("static") == "true"
+
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, staticMode)))
 	}
 }
 

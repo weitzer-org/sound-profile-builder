@@ -152,6 +152,59 @@ func TestUIGoldenTweakingWorkspace(t *testing.T) {
 	verifyGolden(t, "workspace_edit", htmlEdit)
 }
 
+func TestUIGoldenPresetList(t *testing.T) {
+	presets := []*storage.Preset{
+		{ID: "preset-aaa", Name: "Texas Flood - SRV", UpdatedAt: "2026-07-11T12:45:09Z"},
+		{ID: "preset-bbb", Name: "1940s muddy waters", UpdatedAt: "2026-07-09T23:11:30Z"},
+	}
+	html := renderPresetList(presets, false)
+	verifyGolden(t, "preset_list", html)
+}
+
+func TestRenderPresetListEmpty(t *testing.T) {
+	html := renderPresetList(nil, false)
+	if !strings.Contains(html, "No presets saved yet.") {
+		t.Errorf("expected empty-state message, got: %s", html)
+	}
+}
+
+// TestUIWiringContract pins the hx-target/id and form-field-name contracts that
+// JS and the mobile UX redesign depend on, so a pure visual restyle (checkbox ->
+// toggle switch, top nav -> bottom tab bar, etc.) can't silently break wiring.
+func TestUIWiringContract(t *testing.T) {
+	htmlData, err := os.ReadFile("../../web/templates/index.html")
+	if err != nil {
+		t.Fatalf("Failed to read templates: %v", err)
+	}
+	body := string(htmlData)
+
+	requiredIDs := []string{
+		"gen-workspace-wrapper",
+		"library-editor-workspace",
+		"library-list-container",
+		"gen-progress-area",
+		"rules-list-container",
+	}
+	for _, id := range requiredIDs {
+		if !strings.Contains(body, `id="`+id+`"`) {
+			t.Errorf("UI Wiring Regression: expected id=%q in index.html, not found", id)
+		}
+	}
+
+	requiredCheckboxNames := []string{
+		"allow_factory_captures",
+		"allow_paid_plugins",
+		"favor_captures",
+		"allow_user_captures",
+		"favor_cloud_captures",
+	}
+	for _, name := range requiredCheckboxNames {
+		if !strings.Contains(body, `name="`+name+`"`) {
+			t.Errorf("UI Wiring Regression: expected form field name=%q in index.html, not found", name)
+		}
+	}
+}
+
 func verifyGolden(t *testing.T, name string, got string) {
 	t.Helper()
 	goldenFile := "testdata/" + name + ".golden"

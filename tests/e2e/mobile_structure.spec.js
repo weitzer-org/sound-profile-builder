@@ -92,11 +92,15 @@ test.describe('Mobile layout (iPhone 16 Pro viewport)', () => {
     await page.waitForTimeout(300);
     await assertNoHorizontalScroll(page, 'generation workspace');
 
-    await page.click('button:has-text("Preset Library")');
+    // Navigation on mobile is the fixed bottom tab bar (.mobile-tab-btn), not
+    // the desktop top-nav row -- that row is hidden under the mobile
+    // breakpoint now that the tab bar replaces it (see index.html's
+    // .is-mobile-layout nav-header override).
+    await page.click('.mobile-tab-btn[data-view="view-library"]');
     await page.waitForSelector('#library-list-container li', { timeout: 10000 });
     await assertNoHorizontalScroll(page, 'preset library');
 
-    await page.click('button:has-text("Learned Rules")');
+    await page.click('.mobile-tab-btn[data-view="view-rules"]');
     await page.waitForSelector('#rules-list-container', { timeout: 10000 });
     await assertNoHorizontalScroll(page, 'learned rules');
   });
@@ -107,7 +111,9 @@ test.describe('Mobile layout (iPhone 16 Pro viewport)', () => {
     await page.click('button[type="submit"]');
     await page.waitForSelector('h1:has-text("Spin Up a Tone")', { timeout: 15000 });
 
-    const navButtons = page.locator('.top-nav-btn');
+    // Mobile's primary nav is the fixed bottom tab bar, not the desktop
+    // top-nav row (hidden on mobile now that the tab bar replaces it).
+    const navButtons = page.locator('.mobile-tab-btn');
     const navCount = await navButtons.count();
     expect(navCount).toBeGreaterThan(0);
     for (let i = 0; i < navCount; i++) {

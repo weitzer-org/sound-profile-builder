@@ -197,6 +197,56 @@ func TestHandleViewPreset(t *testing.T) {
 	}
 }
 
+// TestHandleViewPreset_StaticMode is the Phase 0 contract for the new View/Edit
+// toggle: `?static=true` on a saved (non-draft) preset whose Payload still
+// carries the original rationale-annotated legacy_html (see handleRenamePreset,
+// which never touches Payload) must render that table instead of the structured
+// editable sliders. A preset without legacy_html must fall back gracefully to
+// the existing structured-only table generator rather than erroring. Default
+// behavior (no `static` param) must be unchanged.
+func TestHandleViewPreset_StaticMode(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+	ctx := context.Background()
+
+	withLegacy := `{"structured":{"guitars":{"Les Paul":[{"id":"b1","type":"drive","model":"Overdrive","parameters":[{"name":"Gain","value":"5.0","type":"slider","unit":""}]}]}},"legacy_html":{"Les Paul":"<table class='grid-matrix'><tr><td>Overdrive: Klon<div><em>Rationale: clean boost</em></div></td></tr></table>"}}`
+	store.Save(ctx, &storage.Preset{ID: "saved-with-legacy", Name: "Saved Preset", Payload: withLegacy})
+
+	structuredOnly := `{"guitars":{"Les Paul":[{"id":"b1","type":"drive","model":"Overdrive","parameters":[{"name":"Gain","value":"5.0","type":"slider","unit":""}]}]}}`
+	store.Save(ctx, &storage.Preset{ID: "saved-structured-only", Name: "Saved No Rationale", Payload: structuredOnly})
+
+	// Default (no ?static): must stay on the structured editable view, unchanged.
+	reqDefault, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-with-legacy", nil)
+	rrDefault := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrDefault, reqDefault)
+	if !strings.Contains(rrDefault.Body.String(), `type="range"`) {
+		t.Errorf("Default view mode regressed: expected structured editable sliders, got: %s", rrDefault.Body.String())
+	}
+	if strings.Contains(rrDefault.Body.String(), "Rationale: clean boost") {
+		t.Errorf("Default view mode regressed: should not show rationale text without ?static=true")
+	}
+
+	// ?static=true with legacy_html present: must show the real rationale table.
+	reqStatic, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-with-legacy&static=true", nil)
+	rrStatic := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrStatic, reqStatic)
+	if !strings.Contains(rrStatic.Body.String(), "Rationale: clean boost") {
+		t.Errorf("Static view mode: expected persisted rationale text, got: %s", rrStatic.Body.String())
+	}
+
+	// ?static=true without legacy_html: must fall back gracefully, not error.
+	reqFallback, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-structured-only&static=true", nil)
+	rrFallback := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrFallback, reqFallback)
+	if rrFallback.Code != http.StatusOK {
+		t.Fatalf("Static view fallback: expected 200, got %d", rrFallback.Code)
+	}
+	if !strings.Contains(rrFallback.Body.String(), "SCENE A (RHYTHM)") {
+		t.Errorf("Static view fallback: expected auto-generated table, got: %s", rrFallback.Body.String())
+	}
+}
+
 func TestHandleChatPreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
