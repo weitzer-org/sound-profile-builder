@@ -183,18 +183,22 @@ func resolveBlockName(rawName, category string, validBlocks map[string]bool) str
 
 	snapped := SnapToClosestBlock(name, validBlocks)
 
-	if isCap := validBlocks[snapped]; isCap {
-		return annotateCaptureSource(snapped)
+	// Comma-ok is required here: a missing key and a known-but-non-capture entry both
+	// zero-value to `false` on a plain map read, which previously let a name that snapped
+	// to a real but *disallowed* (filtered-out) capture pass through unflagged.
+	if isCap, known := validBlocks[snapped]; known {
+		if isCap {
+			return annotateCaptureSource(snapped)
+		}
+		return snapped
 	}
 
-	if snapped == name && gearBlockTypes[category] {
-		// SnapToClosestBlock left the value untouched, meaning nothing in the Dictionary
-		// or the user's Capture Library came close — this is likely a fabricated name.
-		// Only gear-type categories are checked; native block categories (reverb, gate,
-		// EQ, ...) have no dictionary entries to match against by design.
-		if _, known := validBlocks[snapped]; !known {
-			return FlagUnverifiedBlock(snapped)
-		}
+	// Nothing in the Dictionary or the user's Capture Library — as allowed by the
+	// caller's validBlocks — matched closely enough. Only gear-type categories are
+	// checked; native block categories (reverb, gate, EQ, ...) have no dictionary
+	// entries to match against by design.
+	if gearBlockTypes[category] {
+		return FlagUnverifiedBlock(snapped)
 	}
 
 	return snapped

@@ -131,6 +131,18 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 			input:    `<td>Utility: JM Default Capture</td>`,
 			expected: `<td>Utility: JM Default Capture</td>`,
 		},
+		{
+			// Regression: SnapToClosestBlock always corrects against the global dictionary
+			// regardless of what's in the caller's validBlocks, so a typo of a real but
+			// disallowed/filtered-out factory capture ("Brit 2203 87" absent from this
+			// test's validBlocks, simulating allow_factory_captures=false) snaps to its
+			// exact real name. A plain `validBlocks[snapped]` read can't distinguish that
+			// from a known, legitimate non-capture block (both zero-value to false), so it
+			// must use the comma-ok idiom and flag it instead of passing the real name
+			// through silently unflagged and unlabeled.
+			input:    `<td>Amplifier: Brit 2203 8</td>`,
+			expected: `<td>Amplifier: Brit 2203 87 ⚠️ (Unverified — not in Dictionary or your Capture Library)</td>`,
+		},
 	}
 
 	// Simulate a user-owned capture being part of the recognized set for this generation.
