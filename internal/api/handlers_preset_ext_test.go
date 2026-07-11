@@ -539,3 +539,97 @@ func TestHandleRemoveBlock(t *testing.T) {
 		}
 	}
 }
+
+// TestHandleUpdateParameter_EnvelopedPayload is the regression contract for a
+// code-review finding: real LIVE-saved presets store Payload as
+// {"structured":..., "legacy_html":...}, not a bare StructuredPreset. Before
+// this fix, handleUpdateParameter only understood the bare shape, so
+// unmarshaling the enveloped JSON silently produced an empty Guitars map and
+// every edit to a real saved preset's parameter 404'd. This also asserts the
+// preset's legacy_html rationale survives an edit instead of being dropped.
+func TestHandleUpdateParameter_EnvelopedPayload(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	envelopedPayload := `{
+		"structured": {"guitars": {"Strat": [{"id":"block1","type":"drive","parameters":[{"name":"Gain","type":"slider","value":"5.0"}]}]}},
+		"legacy_html": {"Strat": "<table class='grid-matrix'><tr><td>Rationale text</td></tr></table>"}
+	}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Live Capture", Payload: envelopedPayload})
+
+	formData := url.Values{}
+	formData.Set("preset_id", "p1")
+	formData.Set("guitar", "Strat")
+	formData.Set("block_id", "block1")
+	formData.Set("param_name", "Gain")
+	formData.Set("value", "7.0")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleUpdateParameter().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("Expected 204 NoContent editing an enveloped preset, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	p, _ := store.Get(context.Background(), "p1")
+	if !strings.Contains(p.Payload, `"value":"7.0"`) {
+		t.Errorf("Expected updated value 7.0 in payload, got: %s", p.Payload)
+	}
+	if !strings.Contains(p.Payload, "Rationale text") {
+		t.Errorf("Expected legacy_html rationale to survive the edit, got: %s", p.Payload)
+	}
+}
+
+// TestHandleUpdateParameter_UnitRoundTrip is the regression contract for a
+// duplication bug: the workspace displays a unit-bearing param as
+// "Value Unit" in a single text field. Submitting that field back verbatim
+// must not bake the unit into the stored Value, or it compounds on every
+// subsequent render+edit cycle ("-65.0 dB" -> "-65.0 dB dB" -> ...).
+func TestHandleUpdateParameter_UnitRoundTrip(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	payload := `{"guitars":{"Strat":[{"id":"block1","type":"gate","parameters":[{"name":"Threshold","type":"slider","value":"-65.0","unit":"dB"}]}]}}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Test", Payload: payload})
+
+	// Simulate the browser submitting the full displayed value ("-70.0 dB"),
+	// as the rendered text input's value attribute would show.
+	formData := url.Values{}
+	formData.Set("preset_id", "p1")
+	formData.Set("guitar", "Strat")
+	formData.Set("block_id", "block1")
+	formData.Set("param_name", "Threshold")
+	formData.Set("value", "-70.0 dB")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleUpdateParameter().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("Expected 204 NoContent, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	p, _ := store.Get(context.Background(), "p1")
+	if !strings.Contains(p.Payload, `"value":"-70.0"`) {
+		t.Errorf("Expected stored Value to be the bare number \"-70.0\" (unit stripped), got: %s", p.Payload)
+	}
+	if strings.Contains(p.Payload, "dB dB") {
+		t.Errorf("Unit duplicated in stored payload: %s", p.Payload)
+	}
+
+	// Rendering the updated preset should show the unit exactly once, not
+	// compounded from a prior edit-render cycle.
+	updated, _ := store.Get(context.Background(), "p1")
+	html := renderTweakingWorkspaceHTML(updated, false, false)
+	if !strings.Contains(html, `value="-70.0 dB"`) {
+		t.Errorf("Expected re-rendered field to show \"-70.0 dB\" exactly once, got: %s", html)
+	}
+	if strings.Contains(html, "dB dB") {
+		t.Errorf("Re-rendered field duplicated the unit: %s", html)
+	}
+}

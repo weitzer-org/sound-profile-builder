@@ -960,7 +960,7 @@
                 min-height: 50vh;
             }
 
-            body:is(.is-standalone, .is-mobile-layout) #view-library .container > div:first-child,
+            body:is(.is-standalone, .is-mobile-layout) #library-list-pane,
             body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
                 width: 100% !important;
                 box-sizing: border-box !important;
@@ -975,7 +975,7 @@
                 background: var(--bg-dark) !important;
             }
 
-            body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > div:first-child {
+            body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-list-pane {
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
@@ -1419,7 +1419,7 @@
     <div id="view-library" class="main-view" style="display: none;">
         <div class="container" style="grid-template-columns: 1fr 2.5fr;"> <!-- List on Left (skinnier), Editor on Right -->
             <!-- LEFT COLUMN: Preset List -->
-            <div>
+            <div id="library-list-pane">
                 <div class="card" style="position: sticky; top: 6rem;">
                     <h2 style="margin-top:0;">Saved Presets</h2>
                     <input type="text" id="preset-search" placeholder="Search presets..." style="margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" onkeyup="filterPresets()">
@@ -1495,6 +1495,13 @@
 
             document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
+
+            // The mobile list-detail push-nav (see the htmx:afterSwap
+            // listener below) can leave #view-library showing its detail
+            // pane; switching tabs away and back should always land back on
+            // the list, not a stale detail view from a previous visit.
+            const libraryContainer = document.querySelector('#view-library .container');
+            if (libraryContainer) libraryContainer.classList.remove('showing-detail');
         }
 
         function filterPresets() {
@@ -1635,7 +1642,7 @@
         document.body.addEventListener('htmx:afterSwap', (event) => {
             if (event.detail.target && event.detail.target.id === 'library-editor-workspace') {
                 const container = document.querySelector('#view-library .container');
-                if (container && window.matchMedia('(max-width: 600px)').matches) {
+                if (container && document.body.classList.contains('is-mobile-layout')) {
                     container.classList.add('showing-detail');
                 }
             }

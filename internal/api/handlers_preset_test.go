@@ -182,3 +182,110 @@ func TestRenderTweakingWorkspaceHTML_SliderUnitFix_EmbeddedUnit(t *testing.T) {
 		t.Errorf("Expected embedded-unit values to render unchanged (no unit field to append), got: %s", html)
 	}
 }
+
+// TestRenderTweakingWorkspaceHTML_SliderRejectsNonFiniteValue guards against
+// strconv.ParseFloat accepting "NaN"/"Inf" as valid floats: a slider param
+// carrying one of those strings must fall into the text-input branch instead
+// of an <input type="range" value="NaN">, which has no meaningful position.
+func TestRenderTweakingWorkspaceHTML_SliderRejectsNonFiniteValue(t *testing.T) {
+	preset := &storage.Preset{
+		Name: "My Preset",
+		Payload: `{
+			"guitars": {
+				"Strat": [
+					{
+						"id": "block-1",
+						"type": "Overdrive",
+						"model": "Test",
+						"parameters": [
+							{"name": "Drive", "type": "slider", "value": "NaN"}
+						]
+					}
+				]
+			}
+		}`,
+	}
+	html := renderTweakingWorkspaceHTML(preset, false, false)
+
+	idx := strings.Index(html, "Drive")
+	if idx == -1 {
+		t.Fatalf("Drive param not found in output")
+	}
+	nextRange := strings.Index(html[idx:], `type="range"`)
+	nextText := strings.Index(html[idx:], `type="text"`)
+	if nextRange != -1 && (nextText == -1 || nextRange < nextText) {
+		t.Errorf(`Expected a "NaN" value to render as type="text", not an invalid 0-10 range slider, got: %s`, html)
+	}
+}
+
+// TestRenderTweakingWorkspaceHTML_CopyOfFlatLegacyPreset is the regression
+// contract for a code-review finding: presets saved via the older
+// map[string]string Payload shape (no structured/legacy_html envelope, e.g.
+// cmd/save_presets) have no structured guitar data. Copying one and clicking
+// "Edit" (isCopyMode=false) used to unmarshal that flat map as a technically
+// valid but empty StructuredPreset, producing a blank workspace with zero
+// param groups instead of falling back to the original table content.
+func TestRenderTweakingWorkspaceHTML_CopyOfFlatLegacyPreset(t *testing.T) {
+	flatLegacyPayload := `{"Strat": "<table class='grid-matrix'><tr><td>Overdrive: Green 808</td></tr></table>"}`
+	presetCopy := &storage.Preset{
+		Name:    "1940s muddy waters (Copy)",
+		Payload: flatLegacyPayload,
+	}
+
+	html := renderTweakingWorkspaceHTML(presetCopy, false, false)
+
+	if !strings.Contains(html, "Green 808") {
+		t.Errorf("Expected the copy to fall back to the original legacy table content instead of a blank workspace, got: %s", html)
+	}
+	if strings.Contains(html, "hx-get=\"/api/preset/view") {
+		t.Errorf("Expected no View/Edit toggle for a preset with no structured data (both states would render identically), got: %s", html)
+	}
+}
+
+func TestSanitizeAgentHTML(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		wantGone []string
+		wantKept []string
+	}{
+		{
+			name:     "strips script tags",
+			input:    `Overdrive: Green 808<script>alert(1)</script><br/>Drive: 5.0`,
+			wantGone: []string{"<script>", "alert(1)"},
+			wantKept: []string{"Overdrive: Green 808", "Drive: 5.0"},
+		},
+		{
+			name:     "strips inline event handlers",
+			input:    `<div onclick="alert(1)" style='color:red'>Rationale text</div>`,
+			wantGone: []string{"onclick"},
+			wantKept: []string{"<div", "style='color:red'", "Rationale text"},
+		},
+		{
+			name:     "neutralizes javascript: URIs",
+			input:    `<a href="javascript:alert(1)">click</a>`,
+			wantGone: []string{"javascript:alert(1)"},
+		},
+		{
+			name:     "preserves legitimate formatting tags",
+			input:    `<div style='font-size: 0.85em;'><em>Rationale: Boosts the sweet spot</em></div>`,
+			wantKept: []string{"<div style='font-size: 0.85em;'>", "<em>Rationale: Boosts the sweet spot</em>"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			out := sanitizeAgentHTML(tc.input)
+			for _, s := range tc.wantGone {
+				if strings.Contains(out, s) {
+					t.Errorf("Expected %q to be stripped, got: %s", s, out)
+				}
+			}
+			for _, s := range tc.wantKept {
+				if !strings.Contains(out, s) {
+					t.Errorf("Expected %q to survive sanitization, got: %s", s, out)
+				}
+			}
+		})
+	}
+}
