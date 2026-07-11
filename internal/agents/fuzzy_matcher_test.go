@@ -143,6 +143,24 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 			input:    `<td>Amplifier: Brit 2203 8</td>`,
 			expected: `<td>Amplifier: Brit 2203 87 ⚠️ (Unverified — not in Dictionary or your Capture Library)</td>`,
 		},
+		{
+			// Regression: a chat-refinement turn re-injects the prior structured/HTML
+			// payload into the next prompt and asks the LLM to preserve unchanged blocks,
+			// so an already-flagged fabricated name commonly gets echoed back verbatim.
+			// stripCaptureAnnotation doesn't recognize this suffix (it's not a capture
+			// annotation), so without idempotency in FlagUnverifiedBlock the warning text
+			// would compound on every subsequent turn instead of staying stable.
+			input:    `<td>Amplifier: 57 Tweed Champ Bright ⚠️ (Unverified — not in Dictionary or your Capture Library)</td>`,
+			expected: `<td>Amplifier: 57 Tweed Champ Bright ⚠️ (Unverified — not in Dictionary or your Capture Library)</td>`,
+		},
+		{
+			// Regression: "drive:" was missing from validCategories (the HTML draft-view
+			// path's category gate), separate from gearBlockTypes (the structured-payload
+			// path's gate, fixed earlier). A fabricated drive-pedal name in the HTML draft
+			// view must be flagged too, not silently skipped before reaching resolveBlockName.
+			input:    `<td>Drive: Fake Boutique Fuzz XYZ</td>`,
+			expected: `<td>Drive: Fake Boutique Fuzz XYZ ⚠️ (Unverified — not in Dictionary or your Capture Library)</td>`,
+		},
 	}
 
 	// Simulate a user-owned capture being part of the recognized set for this generation.

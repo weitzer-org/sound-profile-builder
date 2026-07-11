@@ -16,7 +16,7 @@ var validBlocksRunes = make(map[string][]rune)
 var parseBlocksOnce sync.Once
 var validCategories = map[string]bool{
 	"amplifier:": true, "cab:": true, "cabinet:": true,
-	"overdrive:": true, "distortion:": true, "fuzz:": true,
+	"overdrive:": true, "distortion:": true, "fuzz:": true, "drive:": true,
 	"reverb:": true, "delay:": true, "modulation:": true,
 	"pitch:": true, "filter:": true, "eq:": true,
 	"utility:": true, "wah:": true, "volume:": true,
@@ -231,11 +231,19 @@ func stripCaptureAnnotation(s string) string {
 	return strings.TrimSpace(captureAnnotationSuffix.ReplaceAllString(trimmed, ""))
 }
 
+const unverifiedSuffix = " ⚠️ (Unverified — not in Dictionary or your Capture Library)"
+
 // FlagUnverifiedBlock marks a block name that could not be matched against the
 // Dictionary or the user's Capture Library, so the UI surfaces a warning instead of
-// silently presenting a possibly-fabricated name as real.
+// silently presenting a possibly-fabricated name as real. Idempotent: a chat-refinement
+// turn that echoes an already-flagged name back unchanged (SnapToClosestBlock can't snap
+// the long annotated string to anything real, so resolveBlockName reaches here again)
+// must not compound the warning text turn over turn.
 func FlagUnverifiedBlock(name string) string {
-	return name + " ⚠️ (Unverified — not in Dictionary or your Capture Library)"
+	if strings.HasSuffix(name, unverifiedSuffix) {
+		return name
+	}
+	return name + unverifiedSuffix
 }
 
 // FlagUnverifiedStructuredBlocks walks a StructuredPreset's effect blocks and applies
