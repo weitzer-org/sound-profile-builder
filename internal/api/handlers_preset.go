@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -590,7 +591,17 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 					// a real-world Unit (dB/Hz/ms/%) can't be represented on that fixed
 					// range, so render it as a labeled text field instead -- the same
 					// control "Mic 1"/"Mic 2" (the default branch below) already uses.
-					if param.Type == "slider" && param.Unit == "" {
+					// A slider only makes sense for a true dimensionless 0-10 value.
+					// storage.BlockParameter has a separate Unit field, but in
+					// practice the live agent pipeline often doesn't split it out --
+					// it just puts the whole "+3.0 dB" / "6500 Hz" string in Value
+					// and leaves Unit empty. Checking Unit alone missed that case
+					// (confirmed against a real generated preset, not just the
+					// hand-built test fixture), so decide off whether Value itself
+					// parses as a bare number instead.
+					_, floatErr := strconv.ParseFloat(strings.TrimSpace(param.Value), 64)
+					valueIsBareNumber := floatErr == nil
+					if param.Type == "slider" && param.Unit == "" && valueIsBareNumber {
 						blocksHtml.WriteString(fmt.Sprintf(`
 							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
 								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
@@ -601,12 +612,16 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 							</div>
 						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 					} else if param.Type == "slider" {
+						displayValue := param.Value
+						if param.Unit != "" {
+							displayValue = param.Value + " " + param.Unit
+						}
 						blocksHtml.WriteString(fmt.Sprintf(`
 							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
 								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
-								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s %[6]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
+								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
 							</div>
-						`, html.EscapeString(param.Name), param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID), param.Unit))
+						`, html.EscapeString(param.Name), html.EscapeString(displayValue), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 					} else if param.Type == "toggle" {
 						checked := ""
 						if param.Value == "on" || param.Value == "true" {

@@ -134,3 +134,51 @@ func TestRenderTweakingWorkspaceHTML_SliderUnitFix(t *testing.T) {
 		t.Errorf("Expected Threshold (unit=dB) to render as type=\"text\", not a 0-10 range slider")
 	}
 }
+
+// TestRenderTweakingWorkspaceHTML_SliderUnitFix_EmbeddedUnit covers the shape
+// actually produced by the live agent pipeline (found by running a real
+// generation, not just the hand-built fixture above): the Architect &
+// Evaluator agent often doesn't populate the separate Unit field at all --
+// it puts the whole "+2.5 dB" / "8000 Hz" string directly in Value. Checking
+// param.Unit alone missed this case entirely and still rendered an invalid
+// 0-10 slider for it.
+func TestRenderTweakingWorkspaceHTML_SliderUnitFix_EmbeddedUnit(t *testing.T) {
+	preset := &storage.Preset{
+		Name: "My Preset",
+		Payload: `{
+			"guitars": {
+				"Strat": [
+					{
+						"id": "block-1",
+						"type": "Utility",
+						"model": "Input Gate",
+						"parameters": [
+							{"name": "Input Gain", "type": "slider", "value": "+2.5 dB"},
+							{"name": "High Cut", "type": "slider", "value": "8000 Hz"},
+							{"name": "Drive", "type": "slider", "value": "1.5"}
+						]
+					}
+				]
+			}
+		}`,
+	}
+	html := renderTweakingWorkspaceHTML(preset, false, false)
+
+	if !strings.Contains(html, `value="1.5"`) {
+		t.Errorf("Expected bare-number param (Drive) to still render as a range input, got: %s", html)
+	}
+	for _, label := range []string{"Input Gain", "High Cut"} {
+		idx := strings.Index(html, label)
+		if idx == -1 {
+			t.Fatalf("%s param not found in output", label)
+		}
+		nextRange := strings.Index(html[idx:], `type="range"`)
+		nextText := strings.Index(html[idx:], `type="text"`)
+		if nextRange != -1 && (nextText == -1 || nextRange < nextText) {
+			t.Errorf("Expected %s (unit embedded in value, no separate Unit field) to render as type=\"text\", not a 0-10 range slider", label)
+		}
+	}
+	if !strings.Contains(html, `value="+2.5 dB"`) || !strings.Contains(html, `value="8000 Hz"`) {
+		t.Errorf("Expected embedded-unit values to render unchanged (no unit field to append), got: %s", html)
+	}
+}
