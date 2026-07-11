@@ -283,6 +283,114 @@ func TestOrchestrator_RunPipeline_FactoryCaptureConstraints(t *testing.T) {
 	}
 }
 
+func TestOrchestrator_RunPipeline_UserCaptureConstraints_Disabled(t *testing.T) {
+	var capturedBody string
+	var mu sync.Mutex
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		capturedBody += string(body)
+		mu.Unlock()
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	constraints := map[string]interface{}{
+		"allow_user_captures": false,
+	}
+
+	_, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
+	if err != nil {
+		t.Fatalf("Pipeline failed: %v", err)
+	}
+
+	if !strings.Contains(capturedBody, "NO USER CAPTURES") {
+		t.Errorf("Expected prompt to contain 'NO USER CAPTURES', got captured body: %s", capturedBody)
+	}
+	// "ToneJunkie" is a capture source unique to user_captures.json (unlike an amp/pedal
+	// name, which can coincidentally also appear in coros_map.json's own dictionary) —
+	// it must not leak into the outgoing request when the library is disabled.
+	if strings.Contains(capturedBody, "ToneJunkie") {
+		t.Errorf("Expected user capture library to be excluded from prompt when disabled, got captured body: %s", capturedBody)
+	}
+}
+
+func TestOrchestrator_RunPipeline_FavorCloudCaptureConstraints(t *testing.T) {
+	var capturedBody string
+	var mu sync.Mutex
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		capturedBody += string(body)
+		mu.Unlock()
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	constraints := map[string]interface{}{
+		"favor_cloud_captures": true,
+	}
+
+	_, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
+	if err != nil {
+		t.Fatalf("Pipeline failed: %v", err)
+	}
+
+	if !strings.Contains(capturedBody, "FAVOR CLOUD CAPTURES") {
+		t.Errorf("Expected prompt to contain 'FAVOR CLOUD CAPTURES', got captured body: %s", capturedBody)
+	}
+}
+
+func TestOrchestrator_RunPipeline_UserCaptureLibraryInjected(t *testing.T) {
+	var capturedBody string
+	var mu sync.Mutex
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		capturedBody += string(body)
+		mu.Unlock()
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	defer orch.Close()
+
+	// allow_cloud_captures: true so Agent 5 (Cloud Navigator) actually runs and also
+	// receives the injected library, in addition to Agent 4 (Librarian) which receives
+	// it unconditionally.
+	constraints := map[string]interface{}{
+		"allow_cloud_captures": true,
+	}
+
+	_, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil)
+	if err != nil {
+		t.Fatalf("Pipeline failed: %v", err)
+	}
+
+	if !strings.Contains(capturedBody, "User Capture Library") {
+		t.Errorf("Expected Librarian/Navigator prompts to include 'User Capture Library', got captured body: %s", capturedBody)
+	}
+}
+
 func TestOrchestrator_RunPipeline_FavorCaptureConstraints(t *testing.T) {
 	var capturedBody string
 	var mu sync.Mutex

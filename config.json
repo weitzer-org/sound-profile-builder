@@ -2,7 +2,9 @@
   "single_amp_mode": true,
   "allow_cloud_captures": false,
   "allow_factory_captures": true,
+  "allow_user_captures": true,
   "favor_captures": false,
+  "favor_cloud_captures": false,
   "allow_paid_plugins": true,
   "available_plugins": [
     "Cory Wong"

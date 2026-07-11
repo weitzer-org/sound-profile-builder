@@ -858,6 +858,14 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
+		allowFactoryCapturesForFlag := true
+		allowUserCapturesForFlag := true
+		if s.appConfig != nil {
+			allowFactoryCapturesForFlag = s.appConfig.AllowFactoryCaptures
+			allowUserCapturesForFlag = s.appConfig.AllowUserCaptures
+		}
+		agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag))
+
 		// Append user message
 		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
 

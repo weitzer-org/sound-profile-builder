@@ -26,6 +26,9 @@ const (
 //go:embed coros_map.json
 var embeddedCorosMap []byte
 
+//go:embed user_captures.json
+var embeddedUserCaptures []byte
+
 // TokenUsage rigidly aggregates exact API volume metadata
 type TokenUsage struct {
 	InputTokens  int32
@@ -168,8 +171,20 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: NO FACTORY CAPTURES. The generated preset MUST NOT use any factory captures.]\n\n" + prompt
 	}
 
+	effectiveAllowUserCaptures := true
+	if v, ok := constraints["allow_user_captures"].(bool); ok {
+		effectiveAllowUserCaptures = v
+	}
+	if !effectiveAllowUserCaptures {
+		prompt = "[GLOBAL USER CONFIG FLAG: NO USER CAPTURES. The generated preset MUST NOT use any entries from the User Capture Library.]\n\n" + prompt
+	}
+
 	if v, ok := constraints["favor_captures"].(bool); ok && v {
 		prompt = "[GLOBAL USER CONFIG FLAG: FAVOR CAPTURES. The generated preset should actively prioritize using official Factory Neural Captures (tagged with is_capture: true) over built-in algorithmic component models when possible.]\n\n" + prompt
+	}
+
+	if v, ok := constraints["favor_cloud_captures"].(bool); ok && v {
+		prompt = "[GLOBAL USER CONFIG FLAG: FAVOR CLOUD CAPTURES. The generated preset should actively prioritize using entries from the User Capture Library (the user's own downloaded Cortex Cloud captures) over built-in algorithmic component models and factory captures when possible.]\n\n" + prompt
 	}
 
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
@@ -282,6 +297,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures)
 
+	userCapturesJSON := "[]"
+	if effectiveAllowUserCaptures {
+		userCapturesJSON = GetUserCapturesJSON()
+	}
+
 	if onProgress != nil {
 		onProgress("Phase 2/4: Mapping to Native CorOS Effects...")
 	}
@@ -295,7 +315,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		librarianResult = "CorOS Librarian skipped by configuration."
 	} else {
 		sysPrompt4, _ := o.loadPromptForAgent("4_coros_librarian", version4)
-		userContext4 := fmt.Sprintf("Tone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nConstraints: %v", toneResult, scrapeResult, dictJSON, ampMenu, constraints)
+		userContext4 := fmt.Sprintf("Tone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nUser Capture Library: %s\nConstraints: %v", toneResult, scrapeResult, dictJSON, ampMenu, userCapturesJSON, constraints)
 		librarianResult, err4 = o.RunAgentSplit(ctx, "CorOS Librarian", sysPrompt4, userContext4)
 		if err4 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
@@ -317,7 +337,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		logToGCS("5_cloud_navigator", navigatorResult)
 	} else {
 		sysPrompt5, _ := o.loadPromptForAgent("5_cloud_navigator", version5)
-		userContext5 := fmt.Sprintf("Librarian Output: %s", librarianResult)
+		userContext5 := fmt.Sprintf("Librarian Output: %s\nUser Capture Library: %s", librarianResult, userCapturesJSON)
 		navigatorResult, err5 = o.RunAgentSplit(ctx, "Cloud Navigator", sysPrompt5, userContext5)
 		if err5 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Navigator failure: %v", err5)
@@ -450,19 +470,9 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		logToGCS("12_architect", finalResult)
 	}
 	
-	validBlocks := GetValidNativeBlocks()
-	if len(validBlocks) > 0 {
-		if !effectiveAllowFactoryCaptures {
-			filteredValidBlocks := make(map[string]bool)
-			for k, isCap := range validBlocks {
-				if !isCap {
-					filteredValidBlocks[k] = false
-				}
-			}
-			finalResult = ApplyFuzzyCorrection(finalResult, filteredValidBlocks)
-		} else {
-			finalResult = ApplyFuzzyCorrection(finalResult, validBlocks)
-		}
+	if len(GetValidNativeBlocks()) > 0 {
+		effectiveBlocks := BuildEffectiveValidBlocks(effectiveAllowFactoryCaptures, effectiveAllowUserCaptures)
+		finalResult = ApplyFuzzyCorrection(finalResult, effectiveBlocks)
 	}
 
 	return finalResult, o.Usage, nil

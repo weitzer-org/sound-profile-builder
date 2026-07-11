@@ -48,6 +48,26 @@ In prod, secrets are injected as env vars (Fly: `fly secrets`), never committed.
 - Always run and show the **unit + e2e results** as proof before claiming the
   application works.
 
+## Code review
+Merges to `main` auto-deploy to prod (see Deployment) and there's no CI test
+gate, so review before merging is the main safety net.
+
+- Before opening/merging a PR, run **`/code-review low`** or
+  **`/code-review medium`** against the branch diff — always pass the effort
+  level explicitly rather than relying on whatever `/code-review` defaults to
+  bare. `medium` and `high` both run the same 8 parallel finder agents; the
+  effort level changes candidate volume per agent and how aggressively
+  findings get verified (precision-biased at `medium`, recall-biased at
+  `high`), not the number of agents spawned.
+- Small/low-risk diffs (typos, config, doc tweaks): `/code-review low` is
+  enough.
+- Larger or risky changes (auth, storage backend, agent pipeline logic):
+  `/code-review high`.
+- Reserve `/code-review ultra` (multi-agent cloud review) for substantial
+  features before merge — it's billed separately, so don't run it routinely.
+- `/code-review --fix` applies the findings directly if you want them
+  auto-fixed instead of just reported.
+
 ## Deployment
 - **Fly.io** (chosen runtime): `fly.toml`; secrets via `fly secrets`; storage =
   Cloudflare R2 (S3 backend). Scales to zero.

@@ -9,7 +9,9 @@ type AppConfig struct {
 	SingleAmpMode        bool              `json:"single_amp_mode"`
 	AllowCloudCaptures   bool              `json:"allow_cloud_captures"`
 	AllowFactoryCaptures bool              `json:"allow_factory_captures"`
+	AllowUserCaptures    bool              `json:"allow_user_captures"`
 	FavorCaptures        bool              `json:"favor_captures"`
+	FavorCloudCaptures   bool              `json:"favor_cloud_captures"`
 	AllowPaidPlugins     bool              `json:"allow_paid_plugins"`
 	AvailablePlugins     []string          `json:"available_plugins"`
 	ProjectID            string            `json:"project_id"`
