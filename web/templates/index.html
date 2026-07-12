@@ -957,6 +957,11 @@
                 padding-right: 1.1em !important;
                 position: relative !important;
                 cursor: pointer;
+                /* It's a real <button> now (for keyboard/screen-reader
+                   accessibility); strip any native button chrome iOS/Safari
+                   might still apply on top of the inline style resets. */
+                -webkit-appearance: none !important;
+                appearance: none !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) .chat-control-panel .builder-statement-text::after {
@@ -1043,23 +1048,32 @@
                 min-height: 50vh;
             }
 
-            /* Slide via `left`, not `transform` -- a transform (even a
-               no-op translateX(0)) on an ancestor creates a new containing
-               block for any position:fixed descendant, so #library-
-               detail-pane's docked .chat-control-panel would stop being
-               fixed to the real viewport and instead track this pane's own
+            /* #library-detail-pane slides via `left`, not `transform` -- a
+               transform (even a no-op translateX(0)) on an ancestor creates
+               a new containing block for any position:fixed descendant, so
+               this pane's docked .chat-control-panel would stop being fixed
+               to the real viewport and instead track this pane's own
                (scrolling) box, drifting away from the tab bar it's meant to
                sit above. `left` avoids that at the cost of a
                layout-triggering (not compositor-only) transition, which is
-               fine for a single rare navigation animation. */
-            body:is(.is-standalone, .is-mobile-layout) #library-list-pane,
+               fine for a single rare navigation animation.
+               #library-list-pane has no position:fixed descendants, so it
+               keeps animating via `transform` -- important because it also
+               flips between position:absolute (showing-detail) and the
+               browser default position:static (not showing-detail), and
+               `left` has no effect on a statically positioned element, so a
+               `left`-based transition back to the list view wouldn't
+               animate at all; `transform` doesn't care what `position` is. */
+            body:is(.is-standalone, .is-mobile-layout) #library-list-pane {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            }
+
             body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
                 width: 100% !important;
                 box-sizing: border-box !important;
                 transition: left 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
-            }
-
-            body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
                 position: absolute !important;
                 top: 0 !important;
                 left: 100% !important;
@@ -1069,7 +1083,7 @@
             body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-list-pane {
                 position: absolute !important;
                 top: 0 !important;
-                left: -22% !important;
+                transform: translateX(-22%) !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-detail-pane {
@@ -1564,6 +1578,13 @@
             }, 500);
         }
 
+        // Reassigned by setupDockedPanelSpacing() once it runs (on
+        // DOMContentLoaded, before any onclick can fire) -- switchMainTab
+        // calls this so tab switches re-sync the docked-panel clearance too,
+        // not just htmx swaps (switching tabs is pure JS display-toggling,
+        // no htmx event fires for it).
+        let syncDockedPanelSpacing = () => {};
+
         function switchMainTab(btn, viewId) {
             // Two nav sets point at the same views (top-nav-btn on desktop,
             // mobile-tab-btn in the fixed bottom bar) -- sync both by
@@ -1584,6 +1605,8 @@
             // the list, not a stale detail view from a previous visit.
             const libraryContainer = document.querySelector('#view-library .container');
             if (libraryContainer) libraryContainer.classList.remove('showing-detail');
+
+            syncDockedPanelSpacing();
         }
 
         function filterPresets() {
@@ -1696,10 +1719,13 @@
         // never ends up hidden behind either fixed layer.
         function setupDockedPanelSpacing() {
             const tabbar = document.querySelector('.mobile-tabbar');
-            const tabbarHeight = tabbar ? tabbar.offsetHeight : 0;
 
+            // Measured fresh on every call (not captured once) so a
+            // resize/orientation change that alters the tab bar's own
+            // height (safe-area insets can change) is reflected too.
             const setClearance = (panelHeight) => {
-                document.documentElement.style.setProperty('--docked-panel-clearance', (tabbarHeight + panelHeight) + 'px');
+                const currentTabbarHeight = tabbar ? tabbar.offsetHeight : 0;
+                document.documentElement.style.setProperty('--docked-panel-clearance', (currentTabbarHeight + panelHeight) + 'px');
             };
 
             if (typeof ResizeObserver === 'undefined') return; // graceful no-op on ancient browsers
@@ -1707,7 +1733,12 @@
             let observedPanel = null;
             const ro = new ResizeObserver((entries) => {
                 for (const entry of entries) {
-                    setClearance(entry.contentRect.height);
+                    // contentRect excludes padding/border; the panel has
+                    // both (8px/14px padding, 1px top border), so it would
+                    // undercount the panel's true rendered height by ~17px,
+                    // leaving that much scrollable content peeking out from
+                    // under it. offsetHeight is always the full border-box.
+                    setClearance(entry.target.offsetHeight);
                 }
             });
 
@@ -1736,6 +1767,10 @@
 
             syncObservedPanel();
             document.body.addEventListener('htmx:afterSwap', syncObservedPanel);
+            // switchMainTab toggles .main-view display locally (no htmx
+            // event fires for that), so it calls this directly too -- see
+            // the syncDockedPanelSpacing assignment below.
+            syncDockedPanelSpacing = syncObservedPanel;
         }
 
         // showToastNotification handles slide-down emerald actions alerts confirmations
