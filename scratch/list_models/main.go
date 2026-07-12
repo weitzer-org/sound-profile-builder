@@ -4,48 +4,38 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/google/generative-ai-go/genai"
-	"github.com/weitzer-org/sound-builder/internal/config"
-	"github.com/weitzer-org/sound-builder/internal/storage"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
+	"google.golang.org/genai"
 )
 
 func main() {
 	ctx := context.Background()
 
-	smClient, err := storage.NewSecretManagerClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to init Secret Manager: %v", err)
-	}
-	defer smClient.Close()
-
-	cfg, err := config.LoadConfig("config.json")
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		log.Fatalf("GEMINI_API_KEY must be set")
 	}
 
-	apiKey, err := smClient.GetPassword(ctx, cfg.ProjectID, "gsr-gemini-api-key")
-	if err != nil {
-		log.Fatalf("Failed to fetch API key: %v", err)
-	}
-
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: apiKey, Backend: genai.BackendGeminiAPI})
 	if err != nil {
 		log.Fatalf("GenAI client failed: %v", err)
 	}
-	defer client.Close()
 
-	iter := client.ListModels(ctx)
+	page, err := client.Models.List(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to list models: %v", err)
+	}
 	for {
-		m, err := iter.Next()
-		if err == iterator.Done {
+		for _, m := range page.Items {
+			fmt.Printf("Model: %s\n", m.Name)
+		}
+		if page.NextPageToken == "" {
 			break
 		}
+		page, err = page.Next(ctx)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to fetch next page: %v", err)
 		}
-		fmt.Printf("Model: %s\n", m.Name)
 	}
 }

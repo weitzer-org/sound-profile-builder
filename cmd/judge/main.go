@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/generative-ai-go/genai"
-	"github.com/weitzer-org/sound-builder/internal/storage"
-	"google.golang.org/api/option"
+	"google.golang.org/genai"
 )
 
 type Judgement struct {
@@ -25,26 +23,17 @@ type Judgement struct {
 func main() {
 	ctx := context.Background()
 
-	// 1. Fetch Secure Credentials
-	smClient, err := storage.NewSecretManagerClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to init Secret Manager: %v", err)
-	}
-	defer smClient.Close()
-
-	// Hardcode or load config to get project ID
-	// For simplicity, let's try to load config.json or use fallback.
-	projectID := "710019748844"
-	apiKey, err := smClient.GetPassword(ctx, projectID, "gsr-gemini-api-key")
-	if err != nil {
-		log.Fatalf("Failed to fetch API key: %v", err)
+	// 1. Fetch Credentials. Reads GEMINI_API_KEY directly rather than requiring a GCP
+	// project + Secret Manager access.
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		log.Fatalf("GEMINI_API_KEY must be set to run the judge")
 	}
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: apiKey, Backend: genai.BackendGeminiAPI})
 	if err != nil {
 		log.Fatalf("GenAI client failed: %v", err)
 	}
-	defer client.Close()
 
 	baselineDir := os.Getenv("DIR_A")
 	if baselineDir == "" {
@@ -118,14 +107,25 @@ Respond ONLY in JSON format:
 }
 `, strings.ReplaceAll(basename, "_multi.html", ""), string(aData), string(bData))
 
-		model := client.GenerativeModel("gemini-3.1-pro-preview")
-		resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+		genConfig := &genai.GenerateContentConfig{
+			ResponseMIMEType: "application/json",
+			ResponseSchema: &genai.Schema{
+				Type: genai.TypeObject,
+				Properties: map[string]*genai.Schema{
+					"preference": {Type: genai.TypeString, Enum: []string{"A", "B", "Equal"}},
+					"rationale":  {Type: genai.TypeString},
+					"confidence": {Type: genai.TypeNumber},
+				},
+				Required: []string{"preference", "rationale", "confidence"},
+			},
+		}
+		resp, err := client.Models.GenerateContent(ctx, "gemini-3.1-pro-preview", []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("Failed to judge %s: %v", basename, err)
 			continue
 		}
 
-		resultText := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+		resultText := resp.Text()
 		log.Printf("\n⚖️ --- JUDGEMENT FOR %s ---", basename)
 		log.Println(resultText)
 
