@@ -68,6 +68,32 @@ gate, so review before merging is the main safety net.
 - `/code-review --fix` applies the findings directly if you want them
   auto-fixed instead of just reported.
 
+### Security review
+`/code-review`'s standard finder angles (correctness, cleanup, altitude,
+conventions) are not a substitute for an explicit security pass — they check
+whether a change does what it intends, not whether an adversary can bend it.
+A hand-rolled regex "sanitizer" for agent-authored HTML passed an internal
+`/code-review high` pass in this repo and still shipped with several XSS
+bypasses (HTML-entity-encoded schemes, attribute selectors without leading
+whitespace, dangerous attributes beyond href/src) that only surfaced once
+GitHub's automated reviewers (gemini-code-assist, CodeRabbit) looked at the
+PR with that specific lens.
+
+- For any diff touching auth, secrets, storage-backend credentials, or how
+  externally-influenced content (user input, Gemini/LLM output, anything
+  from the agent pipeline) gets rendered or escaped, explicitly ask for a
+  security-focused pass — call it out by name when invoking review (e.g. "review
+  this diff for injection/XSS/auth-bypass risk," not just "review this diff")
+  rather than assuming the default finder angles cover it.
+- Don't hand-roll HTML sanitization, escaping, or URL-scheme filtering with
+  regex — regex can't safely parse HTML. Use a real parser-based allowlist
+  library (this repo uses `github.com/microcosm-cc/bluemonday`).
+- Treat the GitHub-integrated bots' comments on open PRs (gemini-code-assist,
+  CodeRabbit) as a real second opinion, not noise — they've caught real
+  security bugs internal review missed. Read and address `security-high`/
+  `security-critical` findings before merging regardless of what level of
+  `/code-review` already ran.
+
 ## Deployment
 - **Fly.io** (chosen runtime): `fly.toml`; secrets via `fly secrets`; storage =
   Cloudflare R2 (S3 backend). Scales to zero.

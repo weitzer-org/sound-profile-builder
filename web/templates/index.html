@@ -223,6 +223,27 @@
             transform: translateY(-1px);
         }
 
+        /* Desktop top nav: state lives in the .active class (toggled by
+           switchMainTab), not inline styles set from JS -- matches the
+           .mobile-tab-btn approach and keeps the "what does active look
+           like" definition in one place. */
+        .top-nav-btn {
+            width: auto;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-sub);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .top-nav-btn.active {
+            border-color: var(--accent);
+            color: white;
+            font-weight: 600;
+        }
+
         /* Loading state logic */
         .spinner {
             display: none;
@@ -303,7 +324,19 @@
         table.grid-matrix tbody tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
-        
+
+        /* The agent's Rationale text is wrapped in a plain <div><em>...</em></div>
+           inside column 1 -- the sanitizer strips the inline style the prompt
+           asks the model to add (see sanitizeAgentHTML), so the muted/smaller
+           look is defined once here instead of trusted from model output. */
+        table.grid-matrix td div {
+            font-size: 0.85em;
+            color: var(--text-sub);
+            white-space: normal;
+            line-height: 1.4;
+            margin-top: 4px;
+        }
+
         /* Architecture Log styling */
         #result h3 {
             margin-top: 3rem;
@@ -1337,9 +1370,9 @@
                 QC-2 <span class="logo-subtext" style="color: var(--text-sub); font-weight: 500;">Modeler</span>
             </div>
             <div style="display: flex; gap: 0.75rem;">
-                <button class="top-nav-btn active" data-view="view-generator" onclick="switchMainTab(this, 'view-generator')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;">Generator</button>
-                <button class="top-nav-btn" data-view="view-library" onclick="switchMainTab(this, 'view-library')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click">Preset Library</button>
-                <button class="top-nav-btn" data-view="view-rules" onclick="switchMainTab(this, 'view-rules')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">Learned Rules</button>
+                <button class="top-nav-btn active" data-view="view-generator" onclick="switchMainTab(this, 'view-generator')">Generator</button>
+                <button class="top-nav-btn" data-view="view-library" onclick="switchMainTab(this, 'view-library')" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click">Preset Library</button>
+                <button class="top-nav-btn" data-view="view-rules" onclick="switchMainTab(this, 'view-rules')" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">Learned Rules</button>
             </div>
         </div>
     </div>
@@ -1479,16 +1512,8 @@
             // mobile-tab-btn in the fixed bottom bar) -- sync both by
             // data-view rather than just the button that was clicked, so
             // whichever one triggered this, both stay in sync.
-            document.querySelectorAll('.top-nav-btn').forEach(b => {
-                b.style.borderColor = 'var(--border)';
-                b.style.color = 'var(--text-sub)';
-                b.style.fontWeight = '500';
-            });
-            document.querySelectorAll('.top-nav-btn[data-view="' + viewId + '"]').forEach(b => {
-                b.style.borderColor = 'var(--accent)';
-                b.style.color = 'white';
-                b.style.fontWeight = '600';
-            });
+            document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.top-nav-btn[data-view="' + viewId + '"]').forEach(b => b.classList.add('active'));
 
             document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.mobile-tab-btn[data-view="' + viewId + '"]').forEach(b => b.classList.add('active'));
@@ -1642,7 +1667,8 @@
         document.body.addEventListener('htmx:afterSwap', (event) => {
             if (event.detail.target && event.detail.target.id === 'library-editor-workspace') {
                 const container = document.querySelector('#view-library .container');
-                if (container && document.body.classList.contains('is-mobile-layout')) {
+                const isMobileOrStandalone = document.body.classList.contains('is-mobile-layout') || document.body.classList.contains('is-standalone');
+                if (container && isMobileOrStandalone) {
                     container.classList.add('showing-detail');
                 }
             }

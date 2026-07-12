@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -422,24 +423,30 @@ func parseStructuredPayload(payload string) (structured storage.StructuredPreset
 // internal/agents/prompts/12_architect.md), embedded into the dashboard via
 // fmt.Sprintf with no html/template auto-escaping -- and reachable on demand,
 // indefinitely, via the "View" toggle rather than just transiently right
-// after generation. The prompt legitimately relies on the model emitting a
-// small set of formatting tags (div/em/br/style attributes) for the
-// Rationale text, so a blanket html.EscapeString would break that rendering.
-// Instead, strip the constructs that actually execute script -- <script>
-// tags, inline event-handler attributes, and javascript: URIs -- which also
-// closes off a model emitting them because the user's Builder Statement/chat
-// prompt talked it into doing so.
-var (
-	agentScriptTagRe    = regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
-	agentEventHandlerRe = regexp.MustCompile(`(?i)\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)`)
-	agentJSSchemeRe     = regexp.MustCompile(`(?i)((?:href|src)\s*=\s*)("|')\s*javascript:[^"']*("|')`)
-)
+// after generation. A hand-rolled regex sanitizer was tried here first and
+// rejected in code review: regex can't safely parse HTML (HTML-entity-encoded
+// schemes like "jav&#x61;script:", attribute selectors without leading
+// whitespace like "<svg/onload=...>", and dangerous attributes beyond
+// href/src such as <object data="..."> all bypass it). bluemonday parses the
+// actual DOM and strips anything off its allowlist, which is the standard
+// answer to that entire bug class. The prompt legitimately relies on the
+// model emitting div/em/br/table structure for the Rationale text and table
+// layout, so those stay allowlisted; inline `style` is dropped rather than
+// allowlisted per-CSS-property (a much larger surface for the same class of
+// bypass) -- table.grid-matrix's own CSS already defines the real styling
+// (see the "Override inline styles from the agent" rule), and the rationale
+// note's look is defined once in CSS instead of trusted from model output.
+var legacyHTMLPolicy = newLegacyHTMLPolicy()
+
+func newLegacyHTMLPolicy() *bluemonday.Policy {
+	p := bluemonday.NewPolicy()
+	p.AllowElements("table", "thead", "tbody", "tr", "th", "td", "div", "em", "br", "b", "strong", "span")
+	p.AllowAttrs("class").OnElements("table", "div", "span")
+	return p
+}
 
 func sanitizeAgentHTML(input string) string {
-	s := agentScriptTagRe.ReplaceAllString(input, "")
-	s = agentEventHandlerRe.ReplaceAllString(s, "")
-	s = agentJSSchemeRe.ReplaceAllString(s, "$1$2#$3")
-	return s
+	return legacyHTMLPolicy.Sanitize(input)
 }
 
 func sanitizeLegacyMatrices(in map[string]string) map[string]string {
@@ -1084,8 +1091,13 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 								// suffix back off before storing so Unit
 								// doesn't get baked into Value and duplicated
 								// ("-65.0 dB" -> "-65.0 dB dB") on the next
-								// render.
-								newValue = strings.TrimSuffix(newValue, " "+param.Unit)
+								// render. Match case-insensitively and with or
+								// without the separating space, since a user
+								// editing the field by hand won't necessarily
+								// preserve either exactly.
+								if strings.HasSuffix(strings.ToLower(newValue), strings.ToLower(param.Unit)) {
+									newValue = strings.TrimSpace(newValue[:len(newValue)-len(param.Unit)])
+								}
 							}
 							structured.Guitars[guitar][i].Parameters[j].Value = newValue
 							updated = true

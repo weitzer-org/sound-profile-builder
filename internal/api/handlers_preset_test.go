@@ -14,7 +14,9 @@ func TestRenderTweakingWorkspaceHTML(t *testing.T) {
 		Payload: `{"structured": {"guitars": {"Strat": []}}, "legacy_html": {"Strat": "<table class='grid-matrix'></table>"}}`,
 	}
 	html := renderTweakingWorkspaceHTML(draftPreset, false, false)
-	if !strings.Contains(html, "<table class='grid-matrix'>") {
+	// The sanitizer (bluemonday) normalizes attribute quoting to double
+	// quotes, so this doesn't match the single-quoted source payload verbatim.
+	if !strings.Contains(html, `<table class="grid-matrix">`) {
 		t.Errorf("Expected draft preset to render legacy table, got: %s", html)
 	}
 	if strings.Contains(html, "param-group") {
@@ -27,7 +29,7 @@ func TestRenderTweakingWorkspaceHTML(t *testing.T) {
 		Payload: `{"structured": {"guitars": {"Strat": []}}, "legacy_html": {"Strat": "<table class='grid-matrix'></table>"}}`,
 	}
 	html = renderTweakingWorkspaceHTML(savedPreset, false, true) // forceStatic = true
-	if !strings.Contains(html, "<table class='grid-matrix'>") {
+	if !strings.Contains(html, `<table class="grid-matrix">`) {
 		t.Errorf("Expected forceStatic to render legacy table")
 	}
 
@@ -252,24 +254,58 @@ func TestSanitizeAgentHTML(t *testing.T) {
 		{
 			name:     "strips script tags",
 			input:    `Overdrive: Green 808<script>alert(1)</script><br/>Drive: 5.0`,
-			wantGone: []string{"<script>", "alert(1)"},
+			wantGone: []string{"script", "alert(1)"},
 			wantKept: []string{"Overdrive: Green 808", "Drive: 5.0"},
 		},
 		{
+			name:     "strips a script tag with whitespace before the closing bracket",
+			input:    `before<script >alert(1)</script >after`,
+			wantGone: []string{"script", "alert(1)"},
+			wantKept: []string{"before", "after"},
+		},
+		{
 			name:     "strips inline event handlers",
-			input:    `<div onclick="alert(1)" style='color:red'>Rationale text</div>`,
-			wantGone: []string{"onclick"},
-			wantKept: []string{"<div", "style='color:red'", "Rationale text"},
+			input:    `<div onclick="alert(1)">Rationale text</div>`,
+			wantGone: []string{"onclick", "alert"},
+			wantKept: []string{"<div>", "Rationale text"},
+		},
+		{
+			name: "strips event handlers introduced without leading whitespace (svg/onload)",
+			// A hand-rolled regex requiring "\s+on[a-z]+=" misses this --
+			// "/" separates the attribute instead of a space.
+			input:    `<svg/onload=alert(1)>`,
+			wantGone: []string{"onload", "alert", "<svg"},
 		},
 		{
 			name:     "neutralizes javascript: URIs",
 			input:    `<a href="javascript:alert(1)">click</a>`,
-			wantGone: []string{"javascript:alert(1)"},
+			wantGone: []string{"javascript:alert(1)", "<a"},
 		},
 		{
-			name:     "preserves legitimate formatting tags",
-			input:    `<div style='font-size: 0.85em;'><em>Rationale: Boosts the sweet spot</em></div>`,
-			wantKept: []string{"<div style='font-size: 0.85em;'>", "<em>Rationale: Boosts the sweet spot</em>"},
+			name: "neutralizes HTML-entity-encoded javascript: schemes",
+			// Browsers decode HTML entities in attribute values before
+			// resolving the URL scheme, so a regex matching the literal
+			// string "javascript:" can be bypassed this way.
+			input:    `<a href="jav&#x61;script:alert(1)">click</a>`,
+			wantGone: []string{"alert(1)", "<a"},
+		},
+		{
+			name: "strips dangerous attributes beyond href/src",
+			// <object data="..."> and <form action="..."> can also execute
+			// script; a regex only checking href/src misses these entirely.
+			input:    `<object data="javascript:alert(1)"></object>`,
+			wantGone: []string{"javascript:alert(1)", "<object", "data="},
+		},
+		{
+			name:     "strips inline style attributes entirely",
+			input:    `<div style='background:url(javascript:alert(1))'>Rationale text</div>`,
+			wantGone: []string{"style", "javascript:alert(1)"},
+			wantKept: []string{"<div>", "Rationale text"},
+		},
+		{
+			name:     "preserves legitimate formatting tags and table structure",
+			input:    `<table class='grid-matrix'><tr><td><div><em>Rationale: Boosts the sweet spot</em></div></td></tr></table>`,
+			wantKept: []string{`<table class="grid-matrix">`, "<tr>", "<td>", "<div>", "<em>Rationale: Boosts the sweet spot</em>"},
 		},
 	}
 
