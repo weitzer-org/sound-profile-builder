@@ -25,6 +25,15 @@
             --accent-hover: #1d4ed8;
             --border: #334155;
             --success: #10b981;
+            --mobile-tabbar-height: 70px;
+            /* Extra scroll clearance for whatever's docked above the tab bar
+               on mobile (the chat-control-panel, when present). Kept as a
+               separate variable from --mobile-tabbar-height and updated at
+               runtime by a ResizeObserver (see setupDockedPanelSpacing)
+               instead of hand-computed, since the panel's height changes
+               with the Builder Statement expand/collapse toggle, textarea
+               growth, and htmx content swaps. */
+            --docked-panel-clearance: var(--mobile-tabbar-height);
         }
 
         body {
@@ -806,9 +815,11 @@
                 line-height: 1;
             }
 
-            /* Leave room above the fixed tab bar so it never covers content */
+            /* Leave room above the fixed tab bar -- and, when a workspace's
+               docked chat-control-panel is also present, above that too --
+               so neither ever covers content. */
             body:is(.is-standalone, .is-mobile-layout) .main-view {
-                padding-bottom: 70px !important;
+                padding-bottom: var(--docked-panel-clearance) !important;
                 box-sizing: border-box;
             }
 
@@ -897,10 +908,14 @@
             /* Fixed dynamic docked chat card panel at bottom of PWA mobile viewports.
                Kept intentionally compact (~1/3 smaller than the desktop card)
                since it's permanently docked and competes with the content
-               above it for screen space on a small viewport. */
+               above it for screen space on a small viewport. Docked above
+               the fixed .mobile-tabbar (also bottom:0, higher z-index), not
+               at bottom:0 itself -- otherwise the tab bar covers this
+               panel's lower portion (including the Adjust button) and
+               intercepts taps meant for it. */
             body:is(.is-standalone, .is-mobile-layout) .workspace-wrapper > .card.chat-control-panel {
                 position: fixed !important;
-                bottom: 0 !important;
+                bottom: var(--mobile-tabbar-height) !important;
                 left: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
@@ -908,8 +923,8 @@
                 background: #1e293b !important;
                 border-top: 1px solid var(--border) !important;
                 margin: 0 !important;
-                border-radius: 16px 16px 0 0 !important;
-                padding: 8px 14px calc(8px + env(safe-area-inset-bottom)) 14px !important;
+                border-radius: 16px !important;
+                padding: 8px 14px !important;
                 gap: 0.65rem !important;
                 box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.5) !important;
                 box-sizing: border-box !important;
@@ -925,15 +940,50 @@
                 font-size: 0.85rem !important;
             }
 
-            /* Builder Statement can run several lines from the LLM; clamp it
-               so it doesn't push the docked panel's height around. */
-            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel textarea + div {
+            /* Builder Statement can run several lines from the LLM. Clamped
+               to 2 lines by default so it doesn't push the docked (fixed-
+               position) panel's height around, but tappable to expand --
+               the original clamp-with-no-escape hid the rest of the
+               statement with no way to read it on mobile. Expanded state
+               scrolls internally instead of growing unbounded, so the fixed
+               panel never covers more than ~30% of the viewport. */
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel .builder-statement-text {
                 display: -webkit-box !important;
                 -webkit-box-orient: vertical !important;
                 -webkit-line-clamp: 2 !important;
                 overflow: hidden !important;
                 font-size: 0.78rem !important;
                 padding-top: 0 !important;
+                padding-right: 1.1em !important;
+                position: relative !important;
+                cursor: pointer;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel .builder-statement-text::after {
+                content: '▾';
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                color: var(--accent);
+                font-size: 0.9em;
+                line-height: 1.4;
+                background: #1e293b;
+                padding-left: 4px;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel .builder-statement-text.expanded {
+                display: block !important;
+                -webkit-line-clamp: unset !important;
+                max-height: 30vh !important;
+                overflow-y: auto !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .chat-control-panel .builder-statement-text.expanded::after {
+                content: '▴';
+                position: static;
+                display: inline-block;
+                background: none;
+                margin-left: 4px;
             }
 
             body:is(.is-standalone, .is-mobile-layout) .chat-control-panel button[type="submit"] {
@@ -993,31 +1043,38 @@
                 min-height: 50vh;
             }
 
+            /* Slide via `left`, not `transform` -- a transform (even a
+               no-op translateX(0)) on an ancestor creates a new containing
+               block for any position:fixed descendant, so #library-
+               detail-pane's docked .chat-control-panel would stop being
+               fixed to the real viewport and instead track this pane's own
+               (scrolling) box, drifting away from the tab bar it's meant to
+               sit above. `left` avoids that at the cost of a
+               layout-triggering (not compositor-only) transition, which is
+               fine for a single rare navigation animation. */
             body:is(.is-standalone, .is-mobile-layout) #library-list-pane,
             body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
                 width: 100% !important;
                 box-sizing: border-box !important;
-                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                transition: left 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
                 position: absolute !important;
                 top: 0 !important;
-                left: 0 !important;
-                transform: translateX(100%) !important;
+                left: 100% !important;
                 background: var(--bg-dark) !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-list-pane {
                 position: absolute !important;
                 top: 0 !important;
-                left: 0 !important;
-                transform: translateX(-22%) !important;
+                left: -22% !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-detail-pane {
                 position: relative !important;
-                transform: translateX(0) !important;
+                left: 0 !important;
             }
 
             body:is(.is-standalone, .is-mobile-layout) #mobile-library-back {
@@ -1625,7 +1682,61 @@
             };
             applyMobileLayoutClass(mobileLayoutQuery);
             mobileLayoutQuery.addEventListener('change', applyMobileLayoutClass);
+
+            setupDockedPanelSpacing();
         });
+
+        // The docked .chat-control-panel's height on mobile isn't fixed --
+        // it changes with the Builder Statement expand/collapse toggle,
+        // textarea auto-grow as the user types, and htmx swaps replacing the
+        // whole workspace. Rather than re-measuring on each of those
+        // individually, observe the panel's actual rendered size directly
+        // and keep --docked-panel-clearance (see :root) in sync with
+        // "tab bar height + current panel height", so scrollable content
+        // never ends up hidden behind either fixed layer.
+        function setupDockedPanelSpacing() {
+            const tabbar = document.querySelector('.mobile-tabbar');
+            const tabbarHeight = tabbar ? tabbar.offsetHeight : 0;
+
+            const setClearance = (panelHeight) => {
+                document.documentElement.style.setProperty('--docked-panel-clearance', (tabbarHeight + panelHeight) + 'px');
+            };
+
+            if (typeof ResizeObserver === 'undefined') return; // graceful no-op on ancient browsers
+
+            let observedPanel = null;
+            const ro = new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                    setClearance(entry.contentRect.height);
+                }
+            });
+
+            const syncObservedPanel = () => {
+                // More than one .chat-control-panel can exist at once (the
+                // Generator workspace's and the Library workspace's each
+                // persist in the DOM, one hidden behind display:none on its
+                // ancestor .main-view) -- querySelector alone would pick
+                // whichever is first in DOM order regardless of visibility.
+                // offsetParent is NOT a valid visibility check here: it's
+                // unconditionally null for any position:fixed element per
+                // spec, which .chat-control-panel itself is -- so it would
+                // report every candidate as "hidden" even the real one.
+                // getClientRects().length is 0 exactly when a display:none
+                // ancestor exists, regardless of the element's own position.
+                const panel = Array.from(document.querySelectorAll('.chat-control-panel')).find(el => el.getClientRects().length > 0) || null;
+                if (panel === observedPanel) return;
+                if (observedPanel) ro.unobserve(observedPanel);
+                observedPanel = panel;
+                if (panel) {
+                    ro.observe(panel);
+                } else {
+                    setClearance(0);
+                }
+            };
+
+            syncObservedPanel();
+            document.body.addEventListener('htmx:afterSwap', syncObservedPanel);
+        }
 
         // showToastNotification handles slide-down emerald actions alerts confirmations
         function showToastNotification(message) {
