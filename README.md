@@ -26,10 +26,49 @@ Start in **live mode** — real Gemini pipeline (needs a valid GEMINI_API_KEY in
 - MinIO console: **http://localhost:9001** (`minioadmin` / `minioadmin`)
 - Stop: `docker compose down` (add `-v` to also wipe stored presets)
 
-> The chosen production runtime is **Fly.io + Cloudflare R2** (`fly.toml`); the Google Cloud flow below is preserved for a future migration. See `CLAUDE.md` for architecture, storage backends, and testing.
+See `CLAUDE.md` for architecture, storage backends, and testing.
 
-## 🚀 Deployment (Google Cloud)
-Because of internal MacOS constraints (`Santa` restricting `go build` binaries in randomized temp `/tmp` folders), we deploy the application dynamically to **Google Cloud Build** and **Cloud Run** for isolated, secure execution and testing. 
+## 🚀 Deployment (Fly.io — production)
+
+**Fly.io + Cloudflare R2** is the chosen production runtime (`fly.toml`). The Google Cloud path below is preserved for a possible future migration, not currently used for production traffic.
+
+### Auto-deploy on merge
+
+`.github/workflows/ci.yml` runs on every push and PR:
+- The **Unit** job (`go build`, `go vet`, `go test ./...`) runs on PRs and pushes alike — this is the PR check gate.
+- The **Deploy** job only fires on an actual push to `main` (i.e. after a PR merges), and only if Unit passed first. It runs `flyctl deploy --remote-only` using the `FLY_API_TOKEN` repo secret. PRs never deploy — the Deploy job shows as *skipped*, not run, in a PR's checks.
+
+So the normal flow is: open a PR → CI runs unit tests → merge → CI deploys to Fly.io automatically. No manual deploy step required for normal changes.
+
+### Manual deploy / first-time setup
+
+```bash
+fly launch --no-deploy   # first time only -- creates the app, may rename it
+fly deploy               # build + deploy from your local machine
+```
+
+Secrets are set on Fly, not committed (`fly.toml` documents the full list):
+```bash
+fly secrets set \
+  GEMINI_API_KEY=... \
+  UI_PASSWORD=<your-ui-login-password> \
+  S3_ACCESS_KEY_ID=... \
+  S3_SECRET_ACCESS_KEY=... \
+  S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com \
+  S3_BUCKET=<your-r2-bucket>
+```
+
+Storage is Cloudflare R2 via the S3-compatible backend (`STORAGE_BACKEND=s3`, set in `fly.toml`'s `[env]`); the app scales to zero when idle and wakes in ~1-2s on the next request (`fly.toml`'s `[http_service]`).
+
+To set up the auto-deploy CI itself in a new environment, add a `FLY_API_TOKEN` repo secret:
+```bash
+fly tokens create deploy -x 999999h
+# then add it under GitHub -> Settings -> Secrets and variables -> Actions
+```
+
+## 🗄️ Legacy / Future Deployment (Google Cloud Run)
+
+The original runtime, kept working intentionally in case of a future migration back to GCP -- not used for current production traffic. Because of internal MacOS constraints (`Santa` restricting `go build` binaries in randomized temp `/tmp` folders), this path deploys dynamically via **Google Cloud Build** to **Cloud Run** for isolated, secure execution and testing.
 
 ### 1. Provisioning the Cloud Storage Backend
 The CorOS mapping dictionary and agent cache live inside a secure Google Cloud Storage bucket (`gs://weitzer-sound-builder`). 
