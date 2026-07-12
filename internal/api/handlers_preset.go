@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -381,9 +384,111 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 	}
 }
 
+// presetPayload is the on-disk shape LIVE generation saves: structured
+// parameter data plus the original narrated rationale HTML, keyed by guitar
+// name. Payload can also be an older bare storage.StructuredPreset (no
+// envelope) or an even older flat map[string]string of guitar name -> legacy
+// HTML (pre-structured saves). parseStructuredPayload tries all three shapes
+// the same way for every consumer -- rendering, parameter edits, block
+// removal -- so they can't disagree about what a preset means.
+type presetPayload struct {
+	Structured storage.StructuredPreset `json:"structured"`
+	LegacyHTML map[string]string        `json:"legacy_html"`
+}
+
+// parseStructuredPayload decodes a preset's Payload, returning whichever of
+// structured/legacy data it actually contains. hasEnvelope reports whether
+// the payload used the combined {structured, legacy_html} shape, so callers
+// that write the preset back know whether to preserve that envelope.
+// A pure-StructuredPreset decode is only trusted if it actually produced
+// guitar data -- the older flat-map shape's top-level keys (guitar names)
+// don't match StructuredPreset's "guitars" field, so it can decode into an
+// empty result with no error, which previously masqueraded as a real (but
+// empty) structured preset instead of falling through to the legacy-map case.
+func parseStructuredPayload(payload string) (structured storage.StructuredPreset, legacyMatrices map[string]string, hasEnvelope bool) {
+	var combined presetPayload
+	if err := json.Unmarshal([]byte(payload), &combined); err == nil && len(combined.LegacyHTML) > 0 {
+		return combined.Structured, sanitizeLegacyMatrices(combined.LegacyHTML), true
+	}
+	if err := json.Unmarshal([]byte(payload), &structured); err == nil && len(structured.Guitars) > 0 {
+		return structured, nil, false
+	}
+	if err := json.Unmarshal([]byte(payload), &legacyMatrices); err == nil && len(legacyMatrices) > 0 {
+		return storage.StructuredPreset{}, sanitizeLegacyMatrices(legacyMatrices), false
+	}
+	return storage.StructuredPreset{}, sanitizeLegacyMatrices(map[string]string{"Legacy Format": payload}), false
+}
+
+// legacy_html is HTML the Gemini agent pipeline authors directly (see
+// internal/agents/prompts/12_architect.md), embedded into the dashboard via
+// fmt.Sprintf with no html/template auto-escaping -- and reachable on demand,
+// indefinitely, via the "View" toggle rather than just transiently right
+// after generation. A hand-rolled regex sanitizer was tried here first and
+// rejected in code review: regex can't safely parse HTML (HTML-entity-encoded
+// schemes like "jav&#x61;script:", attribute selectors without leading
+// whitespace like "<svg/onload=...>", and dangerous attributes beyond
+// href/src such as <object data="..."> all bypass it). bluemonday parses the
+// actual DOM and strips anything off its allowlist, which is the standard
+// answer to that entire bug class. The prompt legitimately relies on the
+// model emitting div/em/br/table structure for the Rationale text and table
+// layout, so those stay allowlisted; inline `style` is dropped rather than
+// allowlisted per-CSS-property (a much larger surface for the same class of
+// bypass) -- table.grid-matrix's own CSS already defines the real styling
+// (see the "Override inline styles from the agent" rule), and the rationale
+// note's look is defined once in CSS instead of trusted from model output.
+var legacyHTMLPolicy = newLegacyHTMLPolicy()
+
+func newLegacyHTMLPolicy() *bluemonday.Policy {
+	p := bluemonday.NewPolicy()
+	p.AllowElements("table", "thead", "tbody", "tr", "th", "td", "div", "em", "br", "b", "strong", "span")
+	p.AllowAttrs("class").OnElements("table", "div", "span")
+	return p
+}
+
+func sanitizeAgentHTML(input string) string {
+	return legacyHTMLPolicy.Sanitize(input)
+}
+
+func sanitizeLegacyMatrices(in map[string]string) map[string]string {
+	out := make(map[string]string, len(in))
+	for guitar, rawHTML := range in {
+		out[guitar] = sanitizeAgentHTML(rawHTML)
+	}
+	return out
+}
+
+// marshalStructuredPayload re-encodes edited structured data, preserving the
+// {structured, legacy_html} envelope when the original payload had one so
+// edits never silently drop a preset's narrated rationale.
+func marshalStructuredPayload(structured storage.StructuredPreset, legacyMatrices map[string]string, hasEnvelope bool) ([]byte, error) {
+	if hasEnvelope {
+		return json.Marshal(presetPayload{Structured: structured, LegacyHTML: legacyMatrices})
+	}
+	return json.Marshal(structured)
+}
+
+// isBareSliderNumber reports whether value is a finite number suitable for a
+// 0-10 range input. strconv.ParseFloat also accepts "NaN"/"Inf"/"Infinity"
+// (case-insensitive) as valid floats with no error, which would otherwise
+// render an <input type="range" value="NaN">.
+func isBareSliderNumber(value string) bool {
+	f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+	return err == nil && !math.IsNaN(f) && !math.IsInf(f, 0)
+}
+
+// pillToggleStyle returns the inline style for one side of a two-button
+// segmented toggle (View/Edit, etc.), so each toggle doesn't hand-roll its
+// own active/inactive style swap.
+func pillToggleStyle(active bool) string {
+	if active {
+		return "background: var(--accent); color: white;"
+	}
+	return "color: var(--text-sub);"
+}
+
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
 func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic bool) string {
-	// TODO: Make the conversational response from the agent more visible in the UI. 
+	// TODO: Make the conversational response from the agent more visible in the UI.
 	// Currently, it gets hidden inside the "View ADK Processing Log" accordion. We should explore
 	// showing the latest message prominently, especially if the matrix wasn't updated.
 	historyHtml := ""
@@ -442,41 +547,12 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 	}
 
 	// Parse payload into structured preset or fallback legacy
-	var structured storage.StructuredPreset
-	legacyMode := false
-	var legacyMatrices map[string]string
-
-	var combined struct {
-		Structured storage.StructuredPreset `json:"structured"`
-		LegacyHTML map[string]string         `json:"legacy_html"`
-	}
-
-	if err := json.Unmarshal([]byte(p.Payload), &combined); err == nil && len(combined.LegacyHTML) > 0 {
-		structured = combined.Structured
-		legacyMatrices = combined.LegacyHTML
-		// Force Drafts to always use legacyHTML display mode
-		if p.Name == "Draft Preset" {
-			legacyMode = true
-		}
-	} else {
-		// Fallback for isolated StructuredPreset (pure saved presets) or legacy string maps
-		if err2 := json.Unmarshal([]byte(p.Payload), &structured); err2 == nil {
-			// Found pure StructuredPreset
-			if p.Name == "Draft Preset" {
-				legacyMode = true
-				// If we only have structured payload but it's a draft, we might need to invent a table or handle it.
-				// For now, assume drafts always have legacyHTML filled or combined payload.
-			}
-		} else {
-			if err3 := json.Unmarshal([]byte(p.Payload), &legacyMatrices); err3 == nil {
-				legacyMode = true
-			} else {
-				legacyMode = true
-				legacyMatrices = map[string]string{"Legacy Format": p.Payload}
-			}
-		}
-	}
-
+	structured, legacyMatrices, _ := parseStructuredPayload(p.Payload)
+	// Drafts always show the narrated rationale table, and any preset with
+	// no structured guitar data (old flat-legacy-map saves, or a copy of
+	// one) has nothing editable to show even if the caller didn't ask for
+	// static mode -- both force legacy display the same way forceStatic does.
+	legacyMode := p.Name == "Draft Preset" || len(structured.Guitars) == 0
 	if forceStatic {
 		legacyMode = true
 	}
@@ -585,16 +661,30 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 
 				for _, param := range block.Parameters {
 					safeParamId := strings.ReplaceAll(strings.ToLower(param.Name), " ", "-")
-					if param.Type == "slider" {
+					if param.Type == "slider" && param.Unit == "" && isBareSliderNumber(param.Value) {
+						// Sliders are hard-coded 0-10, which only makes sense
+						// for a true dimensionless 0-10 value (Gain/Tone/Volume).
+						// A param carrying a real-world Unit (dB/Hz/ms/%) can't
+						// be represented on that fixed range, so it falls into
+						// the shared text-input branch below instead -- the
+						// same control "Mic 1"/"Mic 2" already uses.
+						// storage.BlockParameter has a separate Unit field, but
+						// in practice the live agent pipeline often doesn't
+						// split it out -- it just puts the whole "+3.0 dB" /
+						// "6500 Hz" string in Value and leaves Unit empty.
+						// Checking Unit alone missed that case (confirmed
+						// against a real generated preset, not just the
+						// hand-built test fixture), so decide off whether Value
+						// itself parses as a finite bare number instead.
 						blocksHtml.WriteString(fmt.Sprintf(`
 							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
 								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
 									<span>%[1]s</span>
-									<span id="val-%[2]s-%[3]s">%[4]s%[5]s</span>
+									<span id="val-%[2]s-%[3]s">%[4]s</span>
 								</div>
-								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[6]s", "guitar":"%[7]s", "block_id":"%[8]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value + '%[5]s'">
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[5]s", "guitar":"%[6]s", "block_id":"%[7]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value">
 							</div>
-						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, param.Unit, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 					} else if param.Type == "toggle" {
 						checked := ""
 						if param.Value == "on" || param.Value == "true" {
@@ -607,12 +697,20 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 							</div>
 						`, html.EscapeString(param.Name), checked, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 					} else {
+						// Shared text-input control for everything else:
+						// unit-bearing sliders (dB/Hz/ms/%), and ordinary text
+						// params like "Mic 1"/"Mic 2" (Unit is always "" for
+						// those, so displayValue just falls back to Value).
+						displayValue := param.Value
+						if param.Unit != "" {
+							displayValue = param.Value + " " + param.Unit
+						}
 						blocksHtml.WriteString(fmt.Sprintf(`
 							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
 								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
 								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
 							</div>
-						`, html.EscapeString(param.Name), html.EscapeString(param.Value), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
+						`, html.EscapeString(param.Name), html.EscapeString(displayValue), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 					}
 				}
 				blocksHtml.WriteString(`</div></div>`)
@@ -710,6 +808,26 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		`, refinementSummaryHtml, p.ID, html.EscapeString(p.BuilderStatement))
 	}
 
+	// View/Edit toggle: unifies the two things a saved preset can show (the
+	// narrated rationale table vs. the manual editable controls) into one
+	// workspace instead of two disconnected entry points ("Copy" vs "Adjust
+	// preset"). Only applies to saved presets in Adjust mode -- not the
+	// Duplicate flow (isCopyMode), and not an in-progress draft, which is
+	// already forced into the rationale table via legacyMode above.
+	// A preset with no structured guitar data (old flat-legacy-map saves, or
+	// a copy of one -- see legacyMode above) has nothing for "Edit" to show,
+	// so skip the toggle entirely rather than offering a control whose two
+	// states render identically.
+	viewEditToggleHtml := ""
+	if !isCopyMode && p.Name != "Draft Preset" && len(structured.Guitars) > 0 {
+		viewEditToggleHtml = fmt.Sprintf(`
+			<div style="display: flex; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 3px;">
+				<button type="button" hx-get="/api/preset/view?id=%[1]s&static=true" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; %[2]s">View</button>
+				<button type="button" hx-get="/api/preset/view?id=%[1]s" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; %[3]s">Edit</button>
+			</div>
+		`, p.ID, pillToggleStyle(forceStatic), pillToggleStyle(!forceStatic))
+	}
+
 	return fmt.Sprintf(`
 	<div id="workspace-wrapper" class="workspace-wrapper">
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
@@ -720,7 +838,10 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
-				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
+				<div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+					<h2 style="font-size: 1.25rem; margin: 0;">Live DSP Matrix</h2>
+					%s
+				</div>
 				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
 				<div class="mobile-scene-toggle-bar" style="display: none;">
 					<span style="font-size: 0.85rem; color: var(--text-sub); font-weight: 500;">Active Scene View:</span>
@@ -736,7 +857,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			</div>
 		</div>
 	</div>
-	`, headerHtml, controlPanelHtml, matrixContainerHtml, historyHtml)
+	`, headerHtml, controlPanelHtml, viewEditToggleHtml, matrixContainerHtml, historyHtml)
 }
 
 func (s *Server) handleViewPreset() http.HandlerFunc {
@@ -754,8 +875,15 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 			return
 		}
 
+		// "View" mode in the library: a saved preset's Payload still carries the
+		// original rationale-annotated legacy_html from generation (rename never
+		// touches Payload), it's just not rendered by default. ?static=true
+		// surfaces it; presets without legacy_html fall back to the existing
+		// auto-generated table.
+		staticMode := r.URL.Query().Get("static") == "true"
+
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, false)))
+		w.Write([]byte(renderTweakingWorkspaceHTML(p, false, staticMode)))
 	}
 }
 
@@ -946,11 +1074,7 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 			return
 		}
 
-		var structured storage.StructuredPreset
-		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
-			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
-			return
-		}
+		structured, legacyMatrices, hasEnvelope := parseStructuredPayload(p.Payload)
 
 		// Update the parameter
 		updated := false
@@ -959,7 +1083,23 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 				if block.ID == blockID {
 					for j, param := range block.Parameters {
 						if param.Name == paramName {
-							structured.Guitars[guitar][i].Parameters[j].Value = value
+							newValue := strings.TrimSpace(value)
+							if param.Unit != "" {
+								// The rendered field displays "Value Unit"
+								// (see the text-input branch in
+								// renderTweakingWorkspaceHTML); strip that
+								// suffix back off before storing so Unit
+								// doesn't get baked into Value and duplicated
+								// ("-65.0 dB" -> "-65.0 dB dB") on the next
+								// render. Match case-insensitively and with or
+								// without the separating space, since a user
+								// editing the field by hand won't necessarily
+								// preserve either exactly.
+								if strings.HasSuffix(strings.ToLower(newValue), strings.ToLower(param.Unit)) {
+									newValue = strings.TrimSpace(newValue[:len(newValue)-len(param.Unit)])
+								}
+							}
+							structured.Guitars[guitar][i].Parameters[j].Value = newValue
 							updated = true
 							break
 						}
@@ -973,8 +1113,8 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 			return
 		}
 
-		// Marshal back
-		payloadBytes, err := json.Marshal(structured)
+		// Marshal back, preserving the legacy_html envelope if the preset had one
+		payloadBytes, err := marshalStructuredPayload(structured, legacyMatrices, hasEnvelope)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
 			return
@@ -1015,11 +1155,7 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 			return
 		}
 
-		var structured storage.StructuredPreset
-		if err := json.Unmarshal([]byte(p.Payload), &structured); err != nil {
-			http.Error(w, fmt.Sprintf("Failed to parse structured preset: %v", err), http.StatusInternalServerError)
-			return
-		}
+		structured, legacyMatrices, hasEnvelope := parseStructuredPayload(p.Payload)
 
 		if blocks, ok := structured.Guitars[guitar]; ok {
 			var newBlocks []storage.EffectBlock
@@ -1031,7 +1167,7 @@ func (s *Server) handleRemoveBlock() http.HandlerFunc {
 			structured.Guitars[guitar] = newBlocks
 		}
 
-		payloadBytes, err := json.Marshal(structured)
+		payloadBytes, err := marshalStructuredPayload(structured, legacyMatrices, hasEnvelope)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to marshal updated preset: %v", err), http.StatusInternalServerError)
 			return

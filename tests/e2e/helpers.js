@@ -29,6 +29,17 @@ export async function withFullMobileCapture(page, takeShot) {
     if (wrapper) {
       wrapper.style.setProperty('padding-bottom', '1.5rem', 'important');
     }
+
+    // The fixed bottom tab bar has the same "stuck mid-content" duplication
+    // problem in a stitched fullPage screenshot that the docked chat panel
+    // above does -- position:fixed elements re-render at the same viewport
+    // offset in every scrolled segment. Hide it for the capture; it's chrome,
+    // not page content, and its own layout is covered by mobile_structure's
+    // tap-target checks rather than the visual baselines.
+    const tabbar = document.querySelector('.mobile-tabbar');
+    if (tabbar) {
+      tabbar.style.setProperty('display', 'none', 'important');
+    }
   });
 
   try {
@@ -57,6 +68,11 @@ export async function withFullMobileCapture(page, takeShot) {
       const wrapper = document.querySelector('.workspace-wrapper');
       if (wrapper) {
         wrapper.style.removeProperty('padding-bottom');
+      }
+
+      const tabbar = document.querySelector('.mobile-tabbar');
+      if (tabbar) {
+        tabbar.style.removeProperty('display');
       }
     });
   }

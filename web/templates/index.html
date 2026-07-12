@@ -109,16 +109,97 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
         }
 
+        /* Toggle switch: same <input type="checkbox" name="..."> markup as
+           before (backend form parsing is unaffected), styled as a switch
+           via appearance:none + a track/thumb drawn with ::before. */
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
             color: var(--text-main);
             background: rgba(30, 41, 59, 0.5);
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             border-radius: 8px;
             border: 1px solid var(--border);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            order: -1;
+            flex: 1;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 40px;
+            height: 23px;
+            background: var(--border);
+            border-radius: 999px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .checkbox-group input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            top: 2.5px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.15s ease;
+        }
+
+        .checkbox-group input[type="checkbox"]:checked {
+            background: var(--accent);
+        }
+
+        .checkbox-group input[type="checkbox"]:checked::before {
+            transform: translateX(16px);
+        }
+
+        .checkbox-group input[type="checkbox"]:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Collapsible secondary generator options, collapsed by default */
+        details.gen-advanced {
+            margin-bottom: 1.5rem;
+        }
+        details.gen-advanced summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            padding: 0.5rem 0;
+            list-style: none;
+        }
+        details.gen-advanced summary::-webkit-details-marker {
+            display: none;
+        }
+        details.gen-advanced summary::before {
+            content: '›';
+            display: inline-block;
+            margin-right: 0.5rem;
+            transition: transform 0.15s ease;
+        }
+        details.gen-advanced[open] summary::before {
+            transform: rotate(90deg);
+        }
+        details.gen-advanced > .checkbox-group {
+            margin-top: 0.75rem;
         }
 
         button {
@@ -140,6 +221,27 @@
         button:hover {
             background: var(--accent-hover);
             transform: translateY(-1px);
+        }
+
+        /* Desktop top nav: state lives in the .active class (toggled by
+           switchMainTab), not inline styles set from JS -- matches the
+           .mobile-tab-btn approach and keeps the "what does active look
+           like" definition in one place. */
+        .top-nav-btn {
+            width: auto;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-sub);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .top-nav-btn.active {
+            border-color: var(--accent);
+            color: white;
+            font-weight: 600;
         }
 
         /* Loading state logic */
@@ -222,7 +324,19 @@
         table.grid-matrix tbody tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
-        
+
+        /* The agent's Rationale text is wrapped in a plain <div><em>...</em></div>
+           inside column 1 -- the sanitizer strips the inline style the prompt
+           asks the model to add (see sanitizeAgentHTML), so the muted/smaller
+           look is defined once here instead of trusted from model output. */
+        table.grid-matrix td div {
+            font-size: 0.85em;
+            color: var(--text-sub);
+            white-space: normal;
+            line-height: 1.4;
+            margin-top: 4px;
+        }
+
         /* Architecture Log styling */
         #result h3 {
             margin-top: 3rem;
@@ -550,6 +664,16 @@
             100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
         }
 
+        /* Fixed bottom nav, mobile-only -- shown via .is-mobile-layout below */
+        .mobile-tabbar {
+            display: none;
+        }
+
+        /* Library list->detail back button, mobile-only -- shown below */
+        #mobile-library-back {
+            display: none;
+        }
+
         /* --- PWA STANDALONE STYLING (Active ONLY when body has .is-standalone class) --- */
         body:is(.is-standalone, .is-mobile-layout) {
             padding-top: env(safe-area-inset-top);
@@ -634,34 +758,58 @@
                 flex-shrink: 0 !important;
             }
 
-            /* Convert tab button row into a non-wrapping horizontal scroll swipe bar */
+            /* Top nav's button row is replaced by the fixed bottom tab bar on
+               mobile (see .mobile-tabbar below) -- no horizontal-scroll
+               fallback needed now that navigation always fits. */
             body:is(.is-standalone, .is-mobile-layout) .nav-header div[style*="display: flex; gap: 0.75rem;"] {
-                display: flex !important;
-                flex-flow: row nowrap !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                flex-shrink: 1 !important;
-                min-width: 0 !important;
-                flex-grow: 1 !important;
-                gap: 0.5rem !important;
-                padding-bottom: 4px;
-                justify-content: flex-start !important;
-                scrollbar-width: none !important;
-                /* Fade the right edge so a tab hidden past the fold reads as
-                   "more to scroll" rather than simply cut off. */
-                mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%) !important;
-                -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%) !important;
-            }
-
-            body:is(.is-standalone, .is-mobile-layout) .nav-header div[style*="display: flex; gap: 0.75rem;"]::-webkit-scrollbar {
                 display: none !important;
             }
 
-            body:is(.is-standalone, .is-mobile-layout) .top-nav-btn {
-                padding: 0.5rem 0.85rem !important;
-                font-size: 0.85rem !important;
-                flex-shrink: 0 !important;
-                min-height: 44px !important;
+            /* Fixed bottom tab bar: primary mobile navigation */
+            body:is(.is-standalone, .is-mobile-layout) .mobile-tabbar {
+                display: flex !important;
+                position: fixed !important;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 150;
+                background: var(--bg-card);
+                border-top: 1px solid var(--border);
+                padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+                box-sizing: border-box;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .mobile-tab-btn {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 0.2rem;
+                background: none;
+                border: none;
+                color: var(--text-sub);
+                font-size: 0.68rem;
+                font-weight: 600;
+                padding: 0.4rem 0;
+                min-height: 44px;
+                cursor: pointer;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .mobile-tab-btn.active {
+                color: var(--accent);
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .mobile-tab-icon {
+                font-size: 1.1rem;
+                line-height: 1;
+            }
+
+            /* Leave room above the fixed tab bar so it never covers content */
+            body:is(.is-standalone, .is-mobile-layout) .main-view {
+                padding-bottom: 70px !important;
+                box-sizing: border-box;
             }
 
             /* Safe Area container scale constraints and force vertical layout stack */
@@ -835,14 +983,61 @@
                 gap: 1.25rem !important;
             }
 
-            /* Constrain library preset list card height so the active editor block remains in-focus below it */
-            body:is(.is-standalone, .is-mobile-layout) #library-list-container {
-                max-height: 220px !important;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                border: 1px solid var(--border) !important;
-                border-radius: 8px !important;
-                padding: 0.5rem !important;
+            /* List -> detail push navigation: only one pane visible at a time,
+               sliding in/out instead of stacking the full list above the
+               editor (which forced scrolling past every preset card first). */
+            body:is(.is-standalone, .is-mobile-layout) #view-library .container {
+                display: block !important;
+                position: relative !important;
+                overflow: hidden !important;
+                min-height: 50vh;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) #library-list-pane,
+            body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) #library-detail-pane {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: translateX(100%) !important;
+                background: var(--bg-dark) !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-list-pane {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: translateX(-22%) !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) #view-library .container.showing-detail > #library-detail-pane {
+                position: relative !important;
+                transform: translateX(0) !important;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) #mobile-library-back {
+                display: none;
+                width: auto;
+                background: none;
+                border: none;
+                color: var(--accent);
+                font-weight: 600;
+                font-size: 0.9rem;
+                padding: 0.75rem 0.25rem;
+                margin-bottom: 0.5rem;
+                cursor: pointer;
+                min-height: 44px;
+            }
+
+            body:is(.is-standalone, .is-mobile-layout) .container.showing-detail #mobile-library-back {
+                display: flex !important;
+                align-items: center;
+                gap: 0.25rem;
             }
         }
 
@@ -1175,12 +1370,25 @@
                 QC-2 <span class="logo-subtext" style="color: var(--text-sub); font-weight: 500;">Modeler</span>
             </div>
             <div style="display: flex; gap: 0.75rem;">
-                <button class="top-nav-btn active" onclick="switchMainTab(this, 'view-generator')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--accent); border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;">Generator</button>
-                <button class="top-nav-btn" onclick="switchMainTab(this, 'view-library')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click">Preset Library</button>
-                <button class="top-nav-btn" onclick="switchMainTab(this, 'view-rules')" style="width: auto; padding: 0.75rem 1.5rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); font-weight: 500; cursor: pointer; transition: all 0.2s;" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">Learned Rules</button>
+                <button class="top-nav-btn active" data-view="view-generator" onclick="switchMainTab(this, 'view-generator')">Generator</button>
+                <button class="top-nav-btn" data-view="view-library" onclick="switchMainTab(this, 'view-library')" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click">Preset Library</button>
+                <button class="top-nav-btn" data-view="view-rules" onclick="switchMainTab(this, 'view-rules')" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">Learned Rules</button>
             </div>
         </div>
     </div>
+
+    <!-- Fixed bottom tab bar: primary navigation on mobile -->
+    <nav class="mobile-tabbar">
+        <button class="mobile-tab-btn active" data-view="view-generator" onclick="switchMainTab(this, 'view-generator')">
+            <span class="mobile-tab-icon">⚡</span><span>Generate</span>
+        </button>
+        <button class="mobile-tab-btn" data-view="view-library" onclick="switchMainTab(this, 'view-library')" hx-get="/api/presets" hx-target="#library-list-container" hx-trigger="click">
+            <span class="mobile-tab-icon">📚</span><span>Library</span>
+        </button>
+        <button class="mobile-tab-btn" data-view="view-rules" onclick="switchMainTab(this, 'view-rules')" hx-get="/api/memories" hx-target="#rules-list-container" hx-trigger="click once">
+            <span class="mobile-tab-icon">🧠</span><span>Rules</span>
+        </button>
+    </nav>
 
     <!-- MAIN VIEWS -->
     <div id="view-generator" class="main-view" style="display: block;">
@@ -1207,20 +1415,24 @@
                             <label for="allow-paid-plugins">Allow Paid Plugins</label>
                         </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="favor-captures" name="favor_captures" value="on">
-                            <input type="hidden" name="favor_captures" value="off">
-                            <label for="favor-captures">Favor Captures Over Models</label>
-                        </div>
-                        <div class="checkbox-group">
                             <input type="checkbox" id="allow-user-captures" name="allow_user_captures" value="on" checked>
                             <input type="hidden" name="allow_user_captures" value="off">
                             <label for="allow-user-captures">Use My Capture Library</label>
                         </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="favor-cloud-captures" name="favor_cloud_captures" value="on">
-                            <input type="hidden" name="favor_cloud_captures" value="off">
-                            <label for="favor-cloud-captures">Favor My Capture Library</label>
-                        </div>
+
+                        <details class="gen-advanced">
+                            <summary>Advanced options</summary>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="favor-captures" name="favor_captures" value="on">
+                                <input type="hidden" name="favor_captures" value="off">
+                                <label for="favor-captures">Favor Captures Over Models</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="favor-cloud-captures" name="favor_cloud_captures" value="on">
+                                <input type="hidden" name="favor_cloud_captures" value="off">
+                                <label for="favor-cloud-captures">Favor My Capture Library</label>
+                            </div>
+                        </details>
 
                         <button type="submit" id="gen-submit-btn" class="loading">
                             <span class="spinner"></span>
@@ -1240,7 +1452,7 @@
     <div id="view-library" class="main-view" style="display: none;">
         <div class="container" style="grid-template-columns: 1fr 2.5fr;"> <!-- List on Left (skinnier), Editor on Right -->
             <!-- LEFT COLUMN: Preset List -->
-            <div>
+            <div id="library-list-pane">
                 <div class="card" style="position: sticky; top: 6rem;">
                     <h2 style="margin-top:0;">Saved Presets</h2>
                     <input type="text" id="preset-search" placeholder="Search presets..." style="margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" onkeyup="filterPresets()">
@@ -1250,12 +1462,22 @@
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: Structured Workspace Editor -->
-            <div id="library-editor-workspace">
-                <div class="card" style="text-align: center; padding: 5rem 2rem;">
-                    <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 2rem;">🎛️</div>
-                    <h2 style="margin-top: 0;">Workspace Dashboard</h2>
-                    <p class="subtitle">Select a preset from the library list or run a generation to view parameters.</p>
+            <!-- RIGHT COLUMN: Structured Workspace Editor. Wrapped in
+                 #library-detail-pane (a plain passthrough on desktop) so mobile
+                 can push-slide this whole pane in over the list instead of
+                 stacking both, without touching #library-editor-workspace's
+                 id/hx-target contract -- htmx still swaps its innerHTML exactly
+                 as before, this wrapper just survives that swap. -->
+            <div id="library-detail-pane">
+                <button type="button" id="mobile-library-back" onclick="document.querySelector('#view-library .container').classList.remove('showing-detail')">
+                    <span aria-hidden="true">‹</span> All presets
+                </button>
+                <div id="library-editor-workspace">
+                    <div class="card" style="text-align: center; padding: 5rem 2rem;">
+                        <div style="font-size: 3rem; color: var(--text-muted); margin-bottom: 2rem;">🎛️</div>
+                        <h2 style="margin-top: 0;">Workspace Dashboard</h2>
+                        <p class="subtitle">Select a preset from the library list or run a generation to view parameters.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1286,17 +1508,25 @@
         }
 
         function switchMainTab(btn, viewId) {
-            document.querySelectorAll('.top-nav-btn').forEach(b => {
-                b.style.borderColor = 'var(--border)';
-                b.style.color = 'var(--text-sub)';
-                b.style.fontWeight = '500';
-            });
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.color = 'white';
-            btn.style.fontWeight = '600';
+            // Two nav sets point at the same views (top-nav-btn on desktop,
+            // mobile-tab-btn in the fixed bottom bar) -- sync both by
+            // data-view rather than just the button that was clicked, so
+            // whichever one triggered this, both stay in sync.
+            document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.top-nav-btn[data-view="' + viewId + '"]').forEach(b => b.classList.add('active'));
+
+            document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mobile-tab-btn[data-view="' + viewId + '"]').forEach(b => b.classList.add('active'));
 
             document.querySelectorAll('.main-view').forEach(v => v.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
+
+            // The mobile list-detail push-nav (see the htmx:afterSwap
+            // listener below) can leave #view-library showing its detail
+            // pane; switching tabs away and back should always land back on
+            // the list, not a stale detail view from a previous visit.
+            const libraryContainer = document.querySelector('#view-library .container');
+            if (libraryContainer) libraryContainer.classList.remove('showing-detail');
         }
 
         function filterPresets() {
@@ -1427,6 +1657,20 @@
                 showToastNotification('Parameter updated successfully!');
             } else if (path.includes('/preset/chat')) {
                 showToastNotification('Refinement sent and workspace updated!');
+            }
+        });
+
+        // On mobile, opening a preset (Copy/Adjust preset/View/Edit -- anything
+        // that swaps #library-editor-workspace) pushes in the detail pane over
+        // the list instead of stacking both. Desktop is unaffected (the CSS
+        // that reacts to .showing-detail is itself mobile-scoped).
+        document.body.addEventListener('htmx:afterSwap', (event) => {
+            if (event.detail.target && event.detail.target.id === 'library-editor-workspace') {
+                const container = document.querySelector('#view-library .container');
+                const isMobileOrStandalone = document.body.classList.contains('is-mobile-layout') || document.body.classList.contains('is-standalone');
+                if (container && isMobileOrStandalone) {
+                    container.classList.add('showing-detail');
+                }
             }
         });
     </script>

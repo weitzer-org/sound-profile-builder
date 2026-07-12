@@ -47,7 +47,15 @@
 
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
 			<div class="card" style="padding: 1.5rem; margin-bottom: 0; border-radius: 12px;">
-				<h2 style="font-size: 1.25rem; margin-top: 0; margin-bottom: 1rem;">Live DSP Matrix</h2>
+				<div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+					<h2 style="font-size: 1.25rem; margin: 0;">Live DSP Matrix</h2>
+					
+			<div style="display: flex; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 3px;">
+				<button type="button" hx-get="/api/preset/view?id=test-preset&static=true" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; background: var(--accent); color: white;">View</button>
+				<button type="button" hx-get="/api/preset/view?id=test-preset" hx-target="#library-editor-workspace" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border: none; border-radius: 7px; cursor: pointer; color: var(--text-sub);">Edit</button>
+			</div>
+		
+				</div>
 				<!-- TODO: Parse the matrix HTML or instruct the LLM to emit badges next to each effect indicating whether it is a native algorithm, 1P Capture, or 3P Capture. -->
 				<div class="mobile-scene-toggle-bar" style="display: none;">
 					<span style="font-size: 0.85rem; color: var(--text-sub); font-weight: 500;">Active Scene View:</span>

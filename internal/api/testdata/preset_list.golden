@@ -1,0 +1,23 @@
+<ul style="list-style-type: none; padding: 0;">
+			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Texas Flood - SRV</h3>
+				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: 2026-07-11T12:45:09Z</span>
+				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+					<button hx-get="/api/preset/copy_ui?id=preset-aaa" hx-target="#library-editor-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
+					<button id="delete-btn-preset-aaa" hx-post="/api/preset/delete" hx-vals='{"id":"preset-aaa"}' hx-trigger="confirmed" hx-target="#library-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+				</div>
+				<div style="margin-top: 0.5rem;">
+					<button hx-get="/api/preset/view?id=preset-aaa" hx-target="#library-editor-workspace" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
+				</div>
+			</li>
+			<li style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+				<h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">1940s muddy waters</h3>
+				<span style="font-size: 0.8rem; color: var(--text-sub);">Saved: 2026-07-09T23:11:30Z</span>
+				<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+					<button hx-get="/api/preset/copy_ui?id=preset-bbb" hx-target="#library-editor-workspace" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Copy</button>
+					<button id="delete-btn-preset-bbb" hx-post="/api/preset/delete" hx-vals='{"id":"preset-bbb"}' hx-trigger="confirmed" hx-target="#library-list-container" onclick="if(this.dataset.confirmed) { htmx.trigger(this, 'confirmed'); } else { this.dataset.confirmed = 'true'; this.innerText = 'Confirm?'; this.style.background = '#7f1d1d'; setTimeout(() => { this.dataset.confirmed = ''; this.innerText = 'Delete'; this.style.background = '#ef4444'; }, 3000); }" style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: #ef4444; border: 1px solid #b91c1c; border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;">Delete</button>
+				</div>
+				<div style="margin-top: 0.5rem;">
+					<button hx-get="/api/preset/view?id=preset-bbb" hx-target="#library-editor-workspace" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; background: var(--success); color: white; border: none; cursor: pointer;">Adjust preset</button>
+				</div>
+			</li></ul>

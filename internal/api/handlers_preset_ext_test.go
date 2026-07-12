@@ -197,6 +197,56 @@ func TestHandleViewPreset(t *testing.T) {
 	}
 }
 
+// TestHandleViewPreset_StaticMode is the Phase 0 contract for the new View/Edit
+// toggle: `?static=true` on a saved (non-draft) preset whose Payload still
+// carries the original rationale-annotated legacy_html (see handleRenamePreset,
+// which never touches Payload) must render that table instead of the structured
+// editable sliders. A preset without legacy_html must fall back gracefully to
+// the existing structured-only table generator rather than erroring. Default
+// behavior (no `static` param) must be unchanged.
+func TestHandleViewPreset_StaticMode(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+	ctx := context.Background()
+
+	withLegacy := `{"structured":{"guitars":{"Les Paul":[{"id":"b1","type":"drive","model":"Overdrive","parameters":[{"name":"Gain","value":"5.0","type":"slider","unit":""}]}]}},"legacy_html":{"Les Paul":"<table class='grid-matrix'><tr><td>Overdrive: Klon<div><em>Rationale: clean boost</em></div></td></tr></table>"}}`
+	store.Save(ctx, &storage.Preset{ID: "saved-with-legacy", Name: "Saved Preset", Payload: withLegacy})
+
+	structuredOnly := `{"guitars":{"Les Paul":[{"id":"b1","type":"drive","model":"Overdrive","parameters":[{"name":"Gain","value":"5.0","type":"slider","unit":""}]}]}}`
+	store.Save(ctx, &storage.Preset{ID: "saved-structured-only", Name: "Saved No Rationale", Payload: structuredOnly})
+
+	// Default (no ?static): must stay on the structured editable view, unchanged.
+	reqDefault, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-with-legacy", nil)
+	rrDefault := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrDefault, reqDefault)
+	if !strings.Contains(rrDefault.Body.String(), `type="range"`) {
+		t.Errorf("Default view mode regressed: expected structured editable sliders, got: %s", rrDefault.Body.String())
+	}
+	if strings.Contains(rrDefault.Body.String(), "Rationale: clean boost") {
+		t.Errorf("Default view mode regressed: should not show rationale text without ?static=true")
+	}
+
+	// ?static=true with legacy_html present: must show the real rationale table.
+	reqStatic, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-with-legacy&static=true", nil)
+	rrStatic := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrStatic, reqStatic)
+	if !strings.Contains(rrStatic.Body.String(), "Rationale: clean boost") {
+		t.Errorf("Static view mode: expected persisted rationale text, got: %s", rrStatic.Body.String())
+	}
+
+	// ?static=true without legacy_html: must fall back gracefully, not error.
+	reqFallback, _ := http.NewRequest(http.MethodGet, "/api/preset/view?id=saved-structured-only&static=true", nil)
+	rrFallback := httptest.NewRecorder()
+	s.handleViewPreset().ServeHTTP(rrFallback, reqFallback)
+	if rrFallback.Code != http.StatusOK {
+		t.Fatalf("Static view fallback: expected 200, got %d", rrFallback.Code)
+	}
+	if !strings.Contains(rrFallback.Body.String(), "SCENE A (RHYTHM)") {
+		t.Errorf("Static view fallback: expected auto-generated table, got: %s", rrFallback.Body.String())
+	}
+}
+
 func TestHandleChatPreset(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
@@ -487,5 +537,99 @@ func TestHandleRemoveBlock(t *testing.T) {
 		if rr.Code != http.StatusBadRequest {
 			t.Errorf("Expected 400 for missing params, got %d", rr.Code)
 		}
+	}
+}
+
+// TestHandleUpdateParameter_EnvelopedPayload is the regression contract for a
+// code-review finding: real LIVE-saved presets store Payload as
+// {"structured":..., "legacy_html":...}, not a bare StructuredPreset. Before
+// this fix, handleUpdateParameter only understood the bare shape, so
+// unmarshaling the enveloped JSON silently produced an empty Guitars map and
+// every edit to a real saved preset's parameter 404'd. This also asserts the
+// preset's legacy_html rationale survives an edit instead of being dropped.
+func TestHandleUpdateParameter_EnvelopedPayload(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	envelopedPayload := `{
+		"structured": {"guitars": {"Strat": [{"id":"block1","type":"drive","parameters":[{"name":"Gain","type":"slider","value":"5.0"}]}]}},
+		"legacy_html": {"Strat": "<table class='grid-matrix'><tr><td>Rationale text</td></tr></table>"}
+	}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Live Capture", Payload: envelopedPayload})
+
+	formData := url.Values{}
+	formData.Set("preset_id", "p1")
+	formData.Set("guitar", "Strat")
+	formData.Set("block_id", "block1")
+	formData.Set("param_name", "Gain")
+	formData.Set("value", "7.0")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleUpdateParameter().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("Expected 204 NoContent editing an enveloped preset, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	p, _ := store.Get(context.Background(), "p1")
+	if !strings.Contains(p.Payload, `"value":"7.0"`) {
+		t.Errorf("Expected updated value 7.0 in payload, got: %s", p.Payload)
+	}
+	if !strings.Contains(p.Payload, "Rationale text") {
+		t.Errorf("Expected legacy_html rationale to survive the edit, got: %s", p.Payload)
+	}
+}
+
+// TestHandleUpdateParameter_UnitRoundTrip is the regression contract for a
+// duplication bug: the workspace displays a unit-bearing param as
+// "Value Unit" in a single text field. Submitting that field back verbatim
+// must not bake the unit into the stored Value, or it compounds on every
+// subsequent render+edit cycle ("-65.0 dB" -> "-65.0 dB dB" -> ...).
+func TestHandleUpdateParameter_UnitRoundTrip(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
+
+	payload := `{"guitars":{"Strat":[{"id":"block1","type":"gate","parameters":[{"name":"Threshold","type":"slider","value":"-65.0","unit":"dB"}]}]}}`
+	store.Save(context.Background(), &storage.Preset{ID: "p1", Name: "Test", Payload: payload})
+
+	// Simulate the browser submitting the full displayed value ("-70.0 dB"),
+	// as the rendered text input's value attribute would show.
+	formData := url.Values{}
+	formData.Set("preset_id", "p1")
+	formData.Set("guitar", "Strat")
+	formData.Set("block_id", "block1")
+	formData.Set("param_name", "Threshold")
+	formData.Set("value", "-70.0 dB")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/update_parameter", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleUpdateParameter().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("Expected 204 NoContent, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	p, _ := store.Get(context.Background(), "p1")
+	if !strings.Contains(p.Payload, `"value":"-70.0"`) {
+		t.Errorf("Expected stored Value to be the bare number \"-70.0\" (unit stripped), got: %s", p.Payload)
+	}
+	if strings.Contains(p.Payload, "dB dB") {
+		t.Errorf("Unit duplicated in stored payload: %s", p.Payload)
+	}
+
+	// Rendering the updated preset should show the unit exactly once, not
+	// compounded from a prior edit-render cycle.
+	updated, _ := store.Get(context.Background(), "p1")
+	html := renderTweakingWorkspaceHTML(updated, false, false)
+	if !strings.Contains(html, `value="-70.0 dB"`) {
+		t.Errorf("Expected re-rendered field to show \"-70.0 dB\" exactly once, got: %s", html)
+	}
+	if strings.Contains(html, "dB dB") {
+		t.Errorf("Re-rendered field duplicated the unit: %s", html)
 	}
 }
