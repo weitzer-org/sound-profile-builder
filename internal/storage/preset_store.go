@@ -17,12 +17,17 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// BlockParameter represents a single knob or slider value
+// BlockParameter represents a single knob or slider value. Value is the canonical,
+// editable value (Scene A / Rhythm) -- the editable workspace UI reads and writes this
+// field only and has no scene awareness. ValueB is an optional Scene B / Lead override for
+// the read-only preview table; when empty, rendering falls back to Value (same setting in
+// both scenes).
 type BlockParameter struct {
-	Name  string `json:"name"`
-	Type  string `json:"type"` // "slider", "toggle", "dropdown"
-	Value string `json:"value"`
-	Unit  string `json:"unit,omitempty"`
+	Name   string `json:"name"`
+	Type   string `json:"type"` // "slider", "toggle", "dropdown"
+	Value  string `json:"value"`
+	ValueB string `json:"value_b,omitempty"`
+	Unit   string `json:"unit,omitempty"`
 }
 
 // EffectBlock represents a single gear block in the signal chain
@@ -31,6 +36,7 @@ type EffectBlock struct {
 	Type       string           `json:"type"` // e.g. "Amplifier", "Overdrive"
 	Model      string           `json:"model"`
 	Parameters []BlockParameter `json:"parameters"`
+	Rationale  string           `json:"rationale,omitempty"`
 }
 
 // StructuredPreset wraps the signal chain per guitar variation

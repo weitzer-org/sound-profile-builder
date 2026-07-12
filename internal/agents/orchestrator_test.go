@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
-	"google.golang.org/api/option"
 )
 
 // mockGeminiResponse is the expected shape of Google's GenAI API output
@@ -45,7 +44,7 @@ func TestOrchestrator_RunPipeline_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, err := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, err := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	if err != nil {
 		t.Fatalf("Failed to init orchestrator: %v", err)
 	}
@@ -79,7 +78,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 
 	p := &storage.Preset{
 		Payload: "<matrix></matrix>",
@@ -104,7 +103,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 func TestOrchestrator_TimeoutsAndErrors(t *testing.T) {
 	ctx := context.Background()
 
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint("http://127.0.0.1:0"))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint("http://127.0.0.1:0"))
 
 	// Fast timeout ensures RunAgent errors immediately
 	ctxTimeout, cancel := context.WithTimeout(ctx, 1*time.Millisecond)
@@ -135,7 +134,7 @@ func TestOrchestrator_EmptyCandidates(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 
 	_, err := orch.RunAgent(ctx, "Agent", "prompt")
 	if err == nil {
@@ -145,9 +144,9 @@ func TestOrchestrator_EmptyCandidates(t *testing.T) {
 
 func TestOrchestrator_NewOrchestrator_Error(t *testing.T) {
 	ctx := context.Background()
-	_, err := NewOrchestrator(ctx, "key", nil, option.WithCredentialsFile("doesnotexist.json"))
+	_, err := NewOrchestrator(ctx, "key", nil, WithInvalidConfig())
 	if err == nil {
-		t.Errorf("Expected GenAI client to fail with nonexistent credentials injection")
+		t.Errorf("Expected GenAI client to fail with an invalid client configuration")
 	}
 }
 
@@ -179,7 +178,7 @@ func TestOrchestrator_RunPipeline_PhaseErrors(t *testing.T) {
 			defer mockServer.Close()
 
 			ctx := context.Background()
-			orch, _ := NewOrchestrator(ctx, "key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+			orch, _ := NewOrchestrator(ctx, "key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 			defer orch.Close()
 
 			_, _, err := orch.RunPipeline(ctx, "test", map[string]interface{}{"allow_cloud_captures": true}, nil, nil)
@@ -199,7 +198,7 @@ func TestOrchestrator_RunPipeline_AblationConfig(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	// Turn off Architect (Agent 12)
@@ -233,7 +232,7 @@ func TestOrchestrator_RunPipeline_PluginConstraints(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	constraints := map[string]interface{}{
@@ -266,7 +265,7 @@ func TestOrchestrator_RunPipeline_FactoryCaptureConstraints(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	constraints := map[string]interface{}{
@@ -299,7 +298,7 @@ func TestOrchestrator_RunPipeline_UserCaptureConstraints_Disabled(t *testing.T) 
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	constraints := map[string]interface{}{
@@ -338,7 +337,7 @@ func TestOrchestrator_RunPipeline_FavorCloudCaptureConstraints(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	constraints := map[string]interface{}{
@@ -371,7 +370,7 @@ func TestOrchestrator_RunPipeline_UserCaptureLibraryInjected(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	// allow_cloud_captures: true so Agent 5 (Cloud Navigator) actually runs and also
@@ -407,7 +406,7 @@ func TestOrchestrator_RunPipeline_FavorCaptureConstraints(t *testing.T) {
 	defer mockServer.Close()
 
 	ctx := context.Background()
-	orch, _ := NewOrchestrator(ctx, "fake-key", nil, option.WithEndpoint(mockServer.URL), option.WithHTTPClient(mockServer.Client()))
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
 	defer orch.Close()
 
 	constraints := map[string]interface{}{

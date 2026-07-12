@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/api/option"
 )
 
 func TestOpenLLMClient_Generate_Success(t *testing.T) {
@@ -332,8 +331,8 @@ func TestOrchestrator_OpenLLM_ContextLimit_Fallback(t *testing.T) {
 	ctx := context.Background()
 	// Build main orchestrator in hybrid mode pointing to our mock Gemini server endpoint options
 	orch, err := NewOrchestrator(ctx, "fake-gemini-key", nil, 
-		option.WithEndpoint(geminiServer.URL), 
-		option.WithHTTPClient(geminiServer.Client()))
+		WithEndpoint(geminiServer.URL), 
+		WithHTTPClient(geminiServer.Client()))
 	if err != nil {
 		t.Fatalf("Failed to instantiate Orchestrator: %v", err)
 	}

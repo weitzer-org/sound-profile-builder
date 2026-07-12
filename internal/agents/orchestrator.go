@@ -11,9 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/generative-ai-go/genai"
 	"github.com/weitzer-org/sound-builder/internal/storage"
-	"google.golang.org/api/option"
+	"google.golang.org/genai"
 )
 
 // ContextKey establishes standard context keys for the agents package
@@ -29,12 +28,44 @@ var embeddedCorosMap []byte
 //go:embed user_captures.json
 var embeddedUserCaptures []byte
 
-// TokenUsage rigidly aggregates exact API volume metadata
-type TokenUsage struct {
+// AgentUsage captures per-agent token, model, call-count, and latency data for one
+// pipeline run so before/after quality-vs-cost comparisons don't have to be reconstructed
+// from log lines.
+type AgentUsage struct {
 	InputTokens  int32
 	OutputTokens int32
-	ModelsUsed   map[string]int
-	mu           sync.Mutex
+	Model        string
+	Calls        int
+	LatencyMs    int64
+}
+
+// TokenUsage rigidly aggregates exact API volume metadata
+type TokenUsage struct {
+	InputTokens    int32
+	OutputTokens   int32
+	ModelsUsed     map[string]int
+	PerAgent       map[string]*AgentUsage
+	TotalLatencyMs int64
+	mu             sync.Mutex
+}
+
+// recordAgentUsage accumulates one agent call's token/latency data under agentRole.
+func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outputTokens int32, latencyMs int64) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if u.PerAgent == nil {
+		u.PerAgent = make(map[string]*AgentUsage)
+	}
+	a, ok := u.PerAgent[agentRole]
+	if !ok {
+		a = &AgentUsage{}
+		u.PerAgent[agentRole] = a
+	}
+	a.InputTokens += inputTokens
+	a.OutputTokens += outputTokens
+	a.Model = model
+	a.Calls++
+	a.LatencyMs += latencyMs
 }
 
 // OrchestratorService defines the methods available on the ADK Orchestrator
@@ -56,7 +87,7 @@ type Orchestrator struct {
 }
 
 // NewOrchestrator initializes the Gemini ADK client or the Open-LLM REST client
-func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...option.ClientOption) (*Orchestrator, error) {
+func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opts ...ClientOption) (*Orchestrator, error) {
 	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		isMock = true
@@ -104,8 +135,14 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 		}
 		// Only build if we have a real non-empty credential key (excluding fallback flags)
 		if geminiKey != "" && geminiKey != "mock-api-key" {
-			allOpts := append([]option.ClientOption{option.WithAPIKey(geminiKey)}, opts...)
-			client, err = genai.NewClient(ctx, allOpts...)
+			cc := &genai.ClientConfig{
+				APIKey:  geminiKey,
+				Backend: genai.BackendGeminiAPI, // plain Gemini API key auth; never Vertex AI, no GCP project required
+			}
+			for _, opt := range opts {
+				opt(cc)
+			}
+			client, err = genai.NewClient(ctx, cc)
 			if err != nil {
 				// Don't crash if open-llm is active but just warn, since we might only use open-llm!
 				if useOpenLLM {
@@ -134,6 +171,13 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 
 // RunPipeline takes the user's prompt and routes it through the 12 agents
 func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(phase string)) (string, *TokenUsage, error) {
+	pipelineStart := time.Now()
+	defer func() {
+		o.Usage.mu.Lock()
+		o.Usage.TotalLatencyMs = time.Since(pipelineStart).Milliseconds()
+		o.Usage.mu.Unlock()
+	}()
+
 	isMock := os.Getenv("MOCK_MODE") == "true"
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		isMock = true
@@ -468,8 +512,14 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
 		}
 		logToGCS("12_architect", finalResult)
+
+		if rendered, err := injectRenderedHTML(finalResult); err == nil {
+			finalResult = rendered
+		} else {
+			return "", o.Usage, fmt.Errorf("Architect returned unparseable JSON: %v", err)
+		}
 	}
-	
+
 	if len(GetValidNativeBlocks()) > 0 {
 		effectiveBlocks := BuildEffectiveValidBlocks(effectiveAllowFactoryCaptures, effectiveAllowUserCaptures)
 		finalResult = ApplyFuzzyCorrection(finalResult, effectiveBlocks)
@@ -617,42 +667,50 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		}
 	}
 
-	// 2. Standard Gemini Branch
-	prompt := systemPrompt
-	if userPrompt != "" {
-		if prompt != "" {
-			prompt = prompt + "\n\n" + userPrompt
-		} else {
-			prompt = userPrompt
-		}
+	// 2. Standard Gemini Branch.
+	// systemPrompt and userPrompt are now sent as a real system instruction + user turn
+	// (via GenerateContentConfig.SystemInstruction) instead of being concatenated into one
+	// user-role text blob, which is what the old SDK's single genai.Text(prompt) call forced.
+	genConfig := o.buildGenerationConfig(agentRole, key)
+	if systemPrompt != "" {
+		genConfig.SystemInstruction = &genai.Content{Parts: []*genai.Part{genai.NewPartFromText(systemPrompt)}}
 	}
+	content := userPrompt
+	if content == "" {
+		// Degenerate case: only systemPrompt was provided. Don't echo it back as the user
+		// turn too -- it's already set as SystemInstruction above, and for a prompt the
+		// size of 12_architect_v3.md that would double input tokens for no reason.
+		content = "Please generate the response based on the system instructions."
+	}
+	contents := []*genai.Content{genai.NewContentFromText(content, genai.RoleUser)}
 
 	// Build the complete fallback sequence list starting with primary model target
 	candidates := append([]string{modelName}, getFallbackChain(modelName)...)
-	
+
 	var lastErr error
 	var resp *genai.GenerateContentResponse
 	var finalModelName string
 	var err error
 
+	callStart := time.Now()
 	for _, mName := range candidates {
 		if o.client == nil {
 			return "", fmt.Errorf("[%s] Gemini client is nil, cannot invoke model %s", agentRole, mName)
 		}
-		model := o.client.GenerativeModel(mName)
-		
+
 		ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
-		resp, err = model.GenerateContent(ctx1, genai.Text(prompt))
+		resp, err = o.client.Models.GenerateContent(ctx1, mName, contents, genConfig)
 		cancel1()
-		
+
 		if err == nil {
 			finalModelName = mName
 			break
 		}
-		
+
 		log.Printf("[%s] Model %s failed or rate-limited: %v. Retrying next fallback...", agentRole, mName, err)
 		lastErr = err
 	}
+	latencyMs := time.Since(callStart).Milliseconds()
 
 	if finalModelName == "" {
 		return "", fmt.Errorf("[%s] All fallback models failed: %w", agentRole, lastErr)
@@ -662,17 +720,44 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		return "", fmt.Errorf("[%s] No response candidates from LLM", agentRole)
 	}
 
-	// Safely extract and accumulate generated API metrics natively 
+	// Safely extract and accumulate generated API metrics natively
 	if resp.UsageMetadata != nil {
-		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Model=%s", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, finalModelName)
+		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, finalModelName, latencyMs)
 		o.Usage.mu.Lock()
 		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
 		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
 		o.Usage.ModelsUsed[finalModelName]++
 		o.Usage.mu.Unlock()
+		o.Usage.recordAgentUsage(agentRole, finalModelName, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, latencyMs)
 	}
 
-	return fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0]), nil
+	return resp.Text(), nil
+}
+
+// buildGenerationConfig assembles the per-agent GenerationConfig: temperature, search
+// grounding (agents 1 & 3 only), and structured JSON output. Agent 12 (Architect) uses the
+// raw-JSON-Schema path (ResponseJsonSchema) because its payload has guitar-name-keyed
+// dynamic objects the typed OpenAPI-subset Schema can't express; every other agent uses the
+// typed ResponseSchema.
+func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.GenerateContentConfig {
+	cfg := &genai.GenerateContentConfig{
+		Temperature: agentTemperature(key),
+		Tools:       agentSearchTool(key),
+	}
+	if key == "12_architect" {
+		cfg.ResponseMIMEType = "application/json"
+		if agentRole == "Refinement Architect" {
+			cfg.ResponseJsonSchema = architectRefineJSONSchema()
+		} else {
+			cfg.ResponseJsonSchema = architectGenerationJSONSchema()
+		}
+		return cfg
+	}
+	if schema := agentResponseSchema(key); schema != nil {
+		cfg.ResponseMIMEType = "application/json"
+		cfg.ResponseSchema = schema
+	}
+	return cfg
 }
 
 // loadPromptForAgent loads the prompt for a given agent, falling back to flash version if applicable and available.
@@ -698,9 +783,8 @@ func (o *Orchestrator) loadPromptForAgent(key string, version string) (string, e
 
 // Close explicitly frees the Gemini rest connection
 func (o *Orchestrator) Close() {
-	if o.client != nil {
-		o.client.Close()
-	}
+	// google.golang.org/genai's Client is a plain REST client with no persistent
+	// connection/stream and no Close method (unlike the old SDK's gRPC-backed client).
 }
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
@@ -712,12 +796,14 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := o.loadPromptForAgent("12_architect", "")
-	
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v3")
+
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
 
-CRITICAL REFINE INSTRUCTION: If your refinement includes swapping a piece of gear (e.g. changing the Amplifier, Cabinet, or an Effect), you MUST meticulously update the actual "Type: [Block Name]" text in the first column of the HTML table. Do NOT just update the Rationale and leave the old block name in the table!
+CRITICAL REFINE INSTRUCTION: If your refinement includes swapping a piece of gear (e.g. changing the Amplifier, Cabinet, or an Effect), you MUST meticulously update the actual "model" field on that block in structured_payload, and its "rationale" field. Do NOT just update the rationale text and leave the old model name in place!
+
+You do NOT produce an HTML table. final_html_payload is rendered automatically from your structured_payload after you return it.
 
 You MUST output the following exact JSON schema:
 
@@ -725,20 +811,17 @@ You MUST output the following exact JSON schema:
   "conversational_response": "Your conversational answer to the user. Describe what you changed, or answer their question.",
   "builder_statement": "Provide a short and concise statement on what you did during this refinement. Focus on the core tone and gear choices. Do NOT explain the differences between the guitars. IMPORTANT: If you do NOT make changes to the matrix (i.e. you are just answering a question), leave this field completely empty.",
   "dsp_matrix_updated": true, /* Set to true ONLY if you made changes to the matrix, false otherwise */
-  "final_html_payload": { "guitar_name": "YOUR_FULL_HTML_TABLE_HERE" }, /* The *entire* updated HTML table matrix map for ALL guitars explicitly (only if dsp_matrix_updated is true) */
   "structured_payload": {
     "guitars": {
-      "Fender Telecaster Single Coil": {
-        "blocks": [
-          { "type": "Amplifier", "name": "...", "settings": { ... }, "rationale": "...", "position": 0 }
-        ]
-      }
+      "Fender Telecaster Single Coil": [
+        { "id": "block-1", "type": "Amplifier", "model": "...", "rationale": "Why this block/model was chosen.", "parameters": [ {"name": "Gain", "type": "slider", "value": "7.0", "value_b": "8.5"} ] }
+      ]
     }
-  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! */
+  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! Every block needs "rationale"; only add "value_b" on a parameter when Scene B (Lead) genuinely differs from Scene A (Rhythm) -- omit it otherwise. */
   "agent_impact": ["Bullet point describing impact"]
 }
 
-EXISTING STRUCTURED AND HTML PAYLOAD:
+EXISTING STRUCTURED PAYLOAD:
 %s
 `, p.Payload)
 
@@ -757,6 +840,12 @@ EXISTING STRUCTURED AND HTML PAYLOAD:
 	finalResult, err := o.RunAgentSplit(ctx, "Refinement Architect", sysPrompt, refinementPrompt+historyText)
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
+	}
+
+	if rendered, err := injectRenderedHTML(finalResult); err == nil {
+		finalResult = rendered
+	} else {
+		return "", o.Usage, fmt.Errorf("Refinement Architect returned unparseable JSON: %v", err)
 	}
 
 	validBlocks := GetValidNativeBlocks()

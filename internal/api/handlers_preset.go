@@ -973,11 +973,12 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 		jsonResponse = sanitizeJSONQuotes(jsonResponse)
 
 		var archResp struct {
-			ConversationalResponse string                  `json:"conversational_response"`
-			BuilderStatement       string                  `json:"builder_statement"`
-			DSPMatrixUpdated       bool                  `json:"dsp_matrix_updated"`
-			StructuredPayload       storage.StructuredPreset `json:"structured_payload"`
-			AgentImpact            []string                `json:"agent_impact"`
+			ConversationalResponse string                   `json:"conversational_response"`
+			BuilderStatement       string                   `json:"builder_statement"`
+			DSPMatrixUpdated       bool                     `json:"dsp_matrix_updated"`
+			StructuredPayload      storage.StructuredPreset `json:"structured_payload"`
+			FinalHTMLPayload       map[string]string        `json:"final_html_payload"`
+			AgentImpact            []string                 `json:"agent_impact"`
 		}
 
 		if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
@@ -1014,7 +1015,16 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 
 		if archResp.DSPMatrixUpdated {
 			if len(archResp.StructuredPayload.Guitars) > 0 {
-				payloadBytes, err := json.Marshal(archResp.StructuredPayload)
+				// Preserve the {structured, legacy_html} envelope (same shape
+				// handleGeneratePreset writes) so the just-rendered HTML -- including
+				// the per-block Rationale and Scene B values injectRenderedHTML just
+				// computed -- survives the refinement instead of being dropped, which
+				// would otherwise silently fall back to the legacy renderer's
+				// rationale-blind, single-scene table on the next view.
+				payloadBytes, err := json.Marshal(presetPayload{
+					Structured: archResp.StructuredPayload,
+					LegacyHTML: archResp.FinalHTMLPayload,
+				})
 				if err != nil {
 					log.Printf("Failed to marshal structured payload: %v", err)
 				} else {

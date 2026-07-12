@@ -11,11 +11,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
+	"google.golang.org/genai"
 )
 
 const qc2MonolithicPrompt = `System Instructions: Quad Cortex Systems Engineer (Generalized)
@@ -124,33 +123,48 @@ func main() {
 		log.Fatalf("Failed to create results directory: %v", err)
 	}
 
-	// 1. Fetch Secure Credentials
-	smClient, err := storage.NewSecretManagerClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to init Secret Manager: %v", err)
+	// 1. Fetch Credentials. Reads GEMINI_API_KEY directly (matching how the app itself
+	// authenticates locally, see cmd/server/main.go's localSecretFetcher) rather than
+	// requiring a GCP project + Secret Manager access.
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		log.Fatalf("GEMINI_API_KEY must be set to run live evals")
 	}
-	defer smClient.Close()
-
-	gcsClient, err := storage.NewGCSClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to init GCS client: %v", err)
-	}
-	defer gcsClient.Close()
 
 	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	apiKey, err := smClient.GetPassword(ctx, cfg.ProjectID, "gsr-gemini-api-key")
-	if err != nil {
-		log.Fatalf("Failed to fetch API key: %v", err)
+	// Storage is optional for eval purposes: the useful output (HTML/MD files, tokens,
+	// latency) is written locally regardless. Only wire up a preset store if S3-compatible
+	// storage (Cloudflare R2 in prod, MinIO locally) is explicitly configured; otherwise
+	// skip persistence rather than requiring GCS/GCP project access.
+	var storeClient storage.Client
+	var store *storage.PresetStore
+	if os.Getenv("STORAGE_BACKEND") == "s3" && os.Getenv("S3_BUCKET") != "" {
+		s3Client, err := storage.NewS3Client(ctx)
+		if err != nil {
+			log.Fatalf("Failed to initialize S3 storage client: %v", err)
+		}
+		defer s3Client.Close()
+		storeClient = s3Client
+		store = storage.NewPresetStore(storeClient, os.Getenv("S3_BUCKET"))
+		log.Println(" -> Storage backend: S3-compatible (presets will be persisted)")
+	} else {
+		log.Println(" -> No STORAGE_BACKEND=s3 configured; skipping preset persistence, writing local files only")
 	}
 
 	var wg sync.WaitGroup
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
 
-	agentOverrides := make(map[string]string)
+	// Start from config.json's version pins (e.g. 12_architect: v3) so this tool matches
+	// what the real app actually runs; AGENT_OVERRIDES can still override individual
+	// agents on top for ad-hoc ablation runs.
+	agentOverrides := make(map[string]string, len(cfg.AgentPrompts))
+	for k, v := range cfg.AgentPrompts {
+		agentOverrides[k] = v
+	}
 	if envOverrides := os.Getenv("AGENT_OVERRIDES"); envOverrides != "" {
 		for _, pair := range strings.Split(envOverrides, ",") {
 			kv := strings.Split(pair, "=")
@@ -159,30 +173,31 @@ func main() {
 			}
 		}
 	}
-	
-	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
-	// Initialize GCS Client for Preset Preservation
-	store := storage.NewPresetStore(gcsClient, cfg.BucketName)
 
 	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
-	orch, err := agents.NewOrchestrator(ctx, apiKey, gcsClient)
-	if err != nil {
-		log.Fatalf("Failed to init orchestrator: %v", err)
-	}
-	orch.AgentModels = cfg.AgentModels
-	defer orch.Close()
 
-	// Max 3 concurrent execution pipelines to avoid immediate quota bans 
+	// Max 3 concurrent execution pipelines to avoid immediate quota bans
 	sem := make(chan struct{}, 3)
 
 	for name, query := range evalQueries {
 		wg.Add(1)
 		sem <- struct{}{}
-		
+
 		go func(name, query string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			
+
+			// A fresh Orchestrator (and its TokenUsage) per goroutine -- sharing one across
+			// concurrent RunPipeline calls corrupts token/latency stats, since each run
+			// would read back a blend of whatever else was in flight at the time.
+			orch, err := agents.NewOrchestrator(ctx, apiKey, storeClient)
+			if err != nil {
+				log.Printf("❌ Failed to init orchestrator for %s: %v", name, err)
+				return
+			}
+			orch.AgentModels = cfg.AgentModels
+			defer orch.Close()
+
 			outDir := filepath.Join("eval_results", targetModel)
 			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
 				outDir = filepath.Join("eval_results", targetModel, "ablation", subDir)
@@ -210,34 +225,37 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
+			totalMultiOutput.Add(int64(usage.OutputTokens))
 			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_multi.html", name)), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 
-			// Save to GCS
-			cleanResult := strings.TrimSpace(multiAgentResult)
-			cleanResult = strings.TrimPrefix(cleanResult, "```json")
-			cleanResult = strings.TrimSuffix(cleanResult, "```")
-			cleanResult = strings.TrimSpace(cleanResult)
+			// Persist to the preset store, if one is configured (see STORAGE_BACKEND above).
+			if store != nil {
+				cleanResult := strings.TrimSpace(multiAgentResult)
+				cleanResult = strings.TrimPrefix(cleanResult, "```json")
+				cleanResult = strings.TrimSuffix(cleanResult, "```")
+				cleanResult = strings.TrimSpace(cleanResult)
 
-			var parsed struct {
-				BuilderStatement string            `json:"builder_statement"`
-				FinalHTMLPayload map[string]string `json:"final_html_payload"`
-			}
-
-			if err := json.Unmarshal([]byte(cleanResult), &parsed); err == nil {
-				payloadBytes, _ := json.Marshal(parsed.FinalHTMLPayload)
-				p := &storage.Preset{
-					Name:             strings.ReplaceAll(name, "_", " "),
-					Payload:          string(payloadBytes),
-					BuilderStatement: parsed.BuilderStatement,
+				var parsed struct {
+					BuilderStatement string            `json:"builder_statement"`
+					FinalHTMLPayload map[string]string `json:"final_html_payload"`
 				}
-				if err := store.Save(ctx, p); err != nil {
-					log.Printf("❌ Failed to save preset for %s to GCS: %v", name, err)
+
+				if err := json.Unmarshal([]byte(cleanResult), &parsed); err == nil {
+					payloadBytes, _ := json.Marshal(parsed.FinalHTMLPayload)
+					p := &storage.Preset{
+						Name:             strings.ReplaceAll(name, "_", " "),
+						Payload:          string(payloadBytes),
+						BuilderStatement: parsed.BuilderStatement,
+					}
+					if err := store.Save(ctx, p); err != nil {
+						log.Printf("❌ Failed to save preset for %s: %v", name, err)
+					} else {
+						log.Printf("🎉 Successfully saved %s as preset %s", name, p.ID)
+					}
 				} else {
-					log.Printf("🎉 Successfully saved %s as GCS preset %s", name, p.ID)
+					log.Printf("⚠️ Failed to parse JSON for saving: %s", name)
 				}
-			} else {
-				log.Printf("⚠️ Failed to parse JSON for saving to GCS: %s", name)
 			}
 		}
 
@@ -247,32 +265,29 @@ func main() {
 			return
 		}
 		log.Println(" -> Phase 2: Monolithic QC-2 LLM...")
-		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+		client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: apiKey, Backend: genai.BackendGeminiAPI})
 		if err != nil {
 			log.Printf("Failed to create direct genai client: %v", err)
 			return
 		}
 
-		model := client.GenerativeModel(targetModel)
-		model.SystemInstruction = &genai.Content{
-			Parts: []genai.Part{genai.Text(qc2MonolithicPrompt)},
+		genConfig := &genai.GenerateContentConfig{
+			SystemInstruction: &genai.Content{Parts: []*genai.Part{genai.NewPartFromText(qc2MonolithicPrompt)}},
 		}
-
-		resp, err := model.GenerateContent(ctx, genai.Text(query))
+		resp, err := client.Models.GenerateContent(ctx, targetModel, []*genai.Content{genai.NewContentFromText(query, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("❌ Monolithic generation failed for %s: %v", name, err)
 		} else {
-			monolithicResult := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+			monolithicResult := resp.Text()
 			usageMono := resp.UsageMetadata
-			
+
 			log.Printf("✅ MONO SUCCESS | Tokens: In %d, Out %d", usageMono.PromptTokenCount, usageMono.CandidatesTokenCount)
 			totalMonoInput.Add(int64(usageMono.PromptTokenCount))
 			totalMonoOutput.Add(int64(usageMono.CandidatesTokenCount))
-			
+
 			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_mono.md", name)), []byte(monolithicResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 		}
-		client.Close()
 		}(name, query)
 	}
 
