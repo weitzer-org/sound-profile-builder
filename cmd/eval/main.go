@@ -158,7 +158,13 @@ func main() {
 	var wg sync.WaitGroup
 	var totalMultiInput, totalMultiOutput, totalMonoInput, totalMonoOutput atomic.Int64
 
-	agentOverrides := make(map[string]string)
+	// Start from config.json's version pins (e.g. 12_architect: v3) so this tool matches
+	// what the real app actually runs; AGENT_OVERRIDES can still override individual
+	// agents on top for ad-hoc ablation runs.
+	agentOverrides := make(map[string]string, len(cfg.AgentPrompts))
+	for k, v := range cfg.AgentPrompts {
+		agentOverrides[k] = v
+	}
 	if envOverrides := os.Getenv("AGENT_OVERRIDES"); envOverrides != "" {
 		for _, pair := range strings.Split(envOverrides, ",") {
 			kv := strings.Split(pair, "=")
@@ -167,27 +173,31 @@ func main() {
 			}
 		}
 	}
-	
-	// 2. RUN A: Initialize Global 12-Agent Orchestrator Pipeline
-	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
-	orch, err := agents.NewOrchestrator(ctx, apiKey, storeClient)
-	if err != nil {
-		log.Fatalf("Failed to init orchestrator: %v", err)
-	}
-	orch.AgentModels = cfg.AgentModels
-	defer orch.Close()
 
-	// Max 3 concurrent execution pipelines to avoid immediate quota bans 
+	log.Println(" -> Initializing Global 12-Agent Orchestrator...")
+
+	// Max 3 concurrent execution pipelines to avoid immediate quota bans
 	sem := make(chan struct{}, 3)
 
 	for name, query := range evalQueries {
 		wg.Add(1)
 		sem <- struct{}{}
-		
+
 		go func(name, query string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			
+
+			// A fresh Orchestrator (and its TokenUsage) per goroutine -- sharing one across
+			// concurrent RunPipeline calls corrupts token/latency stats, since each run
+			// would read back a blend of whatever else was in flight at the time.
+			orch, err := agents.NewOrchestrator(ctx, apiKey, storeClient)
+			if err != nil {
+				log.Printf("❌ Failed to init orchestrator for %s: %v", name, err)
+				return
+			}
+			orch.AgentModels = cfg.AgentModels
+			defer orch.Close()
+
 			outDir := filepath.Join("eval_results", targetModel)
 			if subDir := os.Getenv("ABLATION_SUBDIR"); subDir != "" {
 				outDir = filepath.Join("eval_results", targetModel, "ablation", subDir)
@@ -215,6 +225,7 @@ func main() {
 		} else {
 			log.Printf("✅ MULTI-AGENT SUCCESS | Tokens: In %d, Out %d", usage.InputTokens, usage.OutputTokens)
 			totalMultiInput.Add(int64(usage.InputTokens))
+			totalMultiOutput.Add(int64(usage.OutputTokens))
 			err = os.WriteFile(filepath.Join(outDir, fmt.Sprintf("%s_multi.html", name)), []byte(multiAgentResult), 0644)
 			if err != nil { log.Printf("File err: %v", err) }
 

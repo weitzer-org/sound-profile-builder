@@ -677,7 +677,10 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 	}
 	content := userPrompt
 	if content == "" {
-		content = systemPrompt // degenerate case: only one of the two prompts was provided
+		// Degenerate case: only systemPrompt was provided. Don't echo it back as the user
+		// turn too -- it's already set as SystemInstruction above, and for a prompt the
+		// size of 12_architect_v3.md that would double input tokens for no reason.
+		content = "Please generate the response based on the system instructions."
 	}
 	contents := []*genai.Content{genai.NewContentFromText(content, genai.RoleUser)}
 

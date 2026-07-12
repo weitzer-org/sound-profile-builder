@@ -86,3 +86,15 @@ func TestInjectRenderedHTML_RendersFromStructuredPayload(t *testing.T) {
 		t.Errorf("expected rendered table to be present, got: %s", out)
 	}
 }
+
+func TestInjectRenderedHTML_ErrorsOnMalformedStructuredPayload(t *testing.T) {
+	// structured_payload is present (required by the schema) but its "guitars" value
+	// is a string instead of an object -- a genuine schema-compliance failure, not a
+	// legitimate "nothing to render" case. This must be a hard error, not silently
+	// dropped, or a broken preset gets persisted with no diagnostic trail.
+	raw := `{"builder_statement": "test", "structured_payload": {"guitars": "not-an-object"}, "agent_impact": []}`
+	out, err := injectRenderedHTML(raw)
+	if err == nil {
+		t.Fatalf("expected an error for malformed structured_payload, got none (output: %s)", out)
+	}
+}

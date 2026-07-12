@@ -2,6 +2,7 @@ package agents
 
 import (
 	"encoding/json"
+	"fmt"
 	"html"
 	"sort"
 	"strings"
@@ -37,13 +38,19 @@ func injectRenderedHTML(raw string) (string, error) {
 	var sp struct {
 		Guitars map[string][]storage.EffectBlock `json:"guitars"`
 	}
-	if err := json.Unmarshal(rawStructured, &sp); err != nil || len(sp.Guitars) == 0 {
+	if err := json.Unmarshal(rawStructured, &sp); err != nil {
+		// structured_payload is present but doesn't match the schema-mandated shape --
+		// a real compliance failure, not "nothing to render". Fail loudly rather than
+		// silently persisting a preset with no preview table and no diagnostic trail.
+		return clean, fmt.Errorf("structured_payload present but malformed: %w", err)
+	}
+	if len(sp.Guitars) == 0 {
 		return clean, nil
 	}
 
 	htmlBytes, err := json.Marshal(renderAllGuitarsHTML(sp.Guitars))
 	if err != nil {
-		return clean, nil
+		return clean, fmt.Errorf("failed to marshal rendered HTML: %w", err)
 	}
 	envelope["final_html_payload"] = htmlBytes
 

@@ -353,6 +353,62 @@ func TestHandleChatPreset(t *testing.T) {
 	}
 }
 
+// mockOrchestratorRefineWithHTML returns a full RefineChat response carrying both
+// structured_payload and final_html_payload, to verify handleChatPreset persists the
+// {structured, legacy_html} envelope instead of dropping the rendered HTML.
+type mockOrchestratorRefineWithHTML struct{}
+
+func (m *mockOrchestratorRefineWithHTML) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
+	return "", &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorRefineWithHTML) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
+	return `{
+		"conversational_response": "Swapped the amp.",
+		"dsp_matrix_updated": true,
+		"structured_payload": {"guitars": {"Tele": [{"id":"b1","type":"Amplifier","model":"Plexi","rationale":"punchier","parameters":[{"name":"Gain","type":"slider","value":"7.0"}]}]}},
+		"final_html_payload": {"Tele": "<table class='grid-matrix'><tbody><tr><td>Amplifier: Plexi<br/><div><em>Rationale: punchier</em></div></td></tr></tbody></table>"},
+		"agent_impact": ["did stuff"]
+	}`, &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorRefineWithHTML) Close() {}
+
+func TestHandleChatPreset_PersistsHTMLEnvelope(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	memStore := storage.NewMemoryStore(mockStorage, "b")
+	orchMaker := func(ctx context.Context, key string) (agents.OrchestratorService, error) {
+		return &mockOrchestratorRefineWithHTML{}, nil
+	}
+	s := NewServer(store, memStore, mockStorage, &mockSecretFetcher{}, orchMaker, nil)
+
+	ctx := context.Background()
+	store.Save(ctx, &storage.Preset{ID: "html-envelope-test", Name: "name", Payload: "none"})
+
+	formData := url.Values{}
+	formData.Set("id", "html-envelope-test")
+	formData.Set("message", "swap the amp")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleChatPreset().ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	saved, err := store.Get(ctx, "html-envelope-test")
+	if err != nil {
+		t.Fatalf("failed to fetch saved preset: %v", err)
+	}
+	if !strings.Contains(saved.Payload, "legacy_html") {
+		t.Errorf("expected persisted payload to preserve the legacy_html envelope, got: %s", saved.Payload)
+	}
+	if !strings.Contains(saved.Payload, "Rationale: punchier") {
+		t.Errorf("expected the rendered HTML's rationale text to survive persistence, got: %s", saved.Payload)
+	}
+}
+
 func TestHandleCopyPresetUI(t *testing.T) {
 	mockStorage := &mockErrorClient{mockClient: newMockClient()}
 	store := storage.NewPresetStore(mockStorage, "b")
