@@ -79,12 +79,13 @@ whitespace, dangerous attributes beyond href/src) that only surfaced once
 GitHub's automated reviewers (gemini-code-assist, CodeRabbit) looked at the
 PR with that specific lens.
 
-- For any diff touching auth, secrets, storage-backend credentials, or how
+- Run **`/security-review`** (project skill, `.claude/skills/security-review/`)
+  as an optional, additive pass — not a replacement for `/code-review` —
+  whenever a diff touches auth, secrets, storage-backend credentials, or how
   externally-influenced content (user input, Gemini/LLM output, anything
-  from the agent pipeline) gets rendered or escaped, explicitly ask for a
-  security-focused pass — call it out by name when invoking review (e.g. "review
-  this diff for injection/XSS/auth-bypass risk," not just "review this diff")
-  rather than assuming the default finder angles cover it.
+  from the agent pipeline) gets rendered, parsed, or escaped. It runs
+  adversarial finder angles (injection, auth/authz, secrets handling, supply
+  chain) that `/code-review`'s standard angles don't cover.
 - Don't hand-roll HTML sanitization, escaping, or URL-scheme filtering with
   regex — regex can't safely parse HTML. Use a real parser-based allowlist
   library (this repo uses `github.com/microcosm-cc/bluemonday`).
