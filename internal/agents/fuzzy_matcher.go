@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -140,7 +142,7 @@ func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactor
 
 	if allowUserCaptures {
 		for _, c := range GetUserCaptures() {
-			if c.Name != "" && c.Description != "" && strings.Contains(haystack, c.Name) {
+			if c.Name != "" && c.Description != "" && containsAsToken(haystack, c.Name) {
 				found = append(found, capturedGear{Name: c.Name, Color: c.Description})
 			}
 		}
@@ -148,7 +150,7 @@ func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactor
 
 	if allowFactoryCaptures {
 		for _, c := range getFactoryCaptureColors() {
-			if strings.Contains(haystack, c.Name) {
+			if containsAsToken(haystack, c.Name) {
 				found = append(found, c)
 			}
 		}
@@ -162,6 +164,46 @@ func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactor
 		return ""
 	}
 	return string(b)
+}
+
+// containsAsToken reports whether needle appears in haystack as a whole token rather than
+// merely as a substring of some longer word -- a plain strings.Contains on a short capture
+// name (e.g. "CA 400") could otherwise false-match inside an unrelated longer token the
+// Librarian/Navigator happened to write (e.g. "CA 4000X"). Checks that the character
+// immediately before and after each match (if any) isn't itself alphanumeric.
+func containsAsToken(haystack, needle string) bool {
+	if needle == "" {
+		return false
+	}
+	isWordChar := func(r rune) bool {
+		return unicode.IsLetter(r) || unicode.IsDigit(r)
+	}
+	for start := 0; ; {
+		idx := strings.Index(haystack[start:], needle)
+		if idx == -1 {
+			return false
+		}
+		matchStart := start + idx
+		matchEnd := matchStart + len(needle)
+
+		beforeOK := true
+		if matchStart > 0 {
+			r, _ := utf8.DecodeLastRuneInString(haystack[:matchStart])
+			beforeOK = !isWordChar(r)
+		}
+		afterOK := true
+		if matchEnd < len(haystack) {
+			r, _ := utf8.DecodeRuneInString(haystack[matchEnd:])
+			afterOK = !isWordChar(r)
+		}
+		if beforeOK && afterOK {
+			return true
+		}
+		start = matchStart + 1
+		if start >= len(haystack) {
+			return false
+		}
+	}
 }
 
 var userCaptureNameSet map[string]bool

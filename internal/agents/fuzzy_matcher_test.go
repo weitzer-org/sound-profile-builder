@@ -7,6 +7,28 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
+func TestContainsAsToken(t *testing.T) {
+	tests := []struct {
+		haystack string
+		needle   string
+		expected bool
+	}{
+		{"The Librarian selected CA 400 for this run.", "CA 400", true},
+		{"The Librarian selected CA 4000X for this run.", "CA 400", false}, // substring of a longer token, not a real match
+		{"CA 400", "CA 400", true},                                         // exact match, no surrounding text
+		{"Options: CA 400, CA 401", "CA 400", true},                        // punctuation boundary
+		{"XCA 400", "CA 400", false},                                       // needle glued to a preceding word char
+		{"CA 400X", "CA 400", false},                                       // needle glued to a following word char
+		{"nothing relevant here", "CA 400", false},
+	}
+	for _, tc := range tests {
+		got := containsAsToken(tc.haystack, tc.needle)
+		if got != tc.expected {
+			t.Errorf("containsAsToken(%q, %q) = %v; want %v", tc.haystack, tc.needle, got, tc.expected)
+		}
+	}
+}
+
 func TestLevenshteinDistance(t *testing.T) {
 	tests := []struct {
 		s        string

@@ -19,11 +19,11 @@ import (
 // never sees which side is which.
 
 type Judgement struct {
-	Preference          string  `json:"preference"`
-	GroundingNotes       string  `json:"grounding_notes"`
-	StructuralNotes      string  `json:"structural_notes"`
-	Rationale            string  `json:"rationale"`
-	Confidence           float64 `json:"confidence"`
+	Preference      string  `json:"preference"`
+	GroundingNotes  string  `json:"grounding_notes"`
+	StructuralNotes string  `json:"structural_notes"`
+	Rationale       string  `json:"rationale"`
+	Confidence      float64 `json:"confidence"`
 }
 
 func main() {
@@ -55,6 +55,9 @@ func main() {
 	if outFile == "" {
 		outFile = "/tmp/qc2-judge-results.json"
 	}
+	if labelA == labelB {
+		log.Fatalf("LABEL_A and LABEL_B must be distinct (both %q) -- winCount's map keys would collapse into one, silently conflating both sides' win tallies", labelA)
+	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{APIKey: apiKey, Backend: genai.BackendGeminiAPI})
 	if err != nil {
@@ -85,11 +88,11 @@ func main() {
 
 	winCount := map[string]int{labelA: 0, labelB: 0, "Equal": 0}
 	type row struct {
-		Name    string
-		Winner  string
-		Conf    float64
-		Ground  string
-		Struct  string
+		Name      string
+		Winner    string
+		Conf      float64
+		Ground    string
+		Struct    string
 		Rationale string
 	}
 	var rows []row
