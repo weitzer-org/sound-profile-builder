@@ -1,10 +1,33 @@
 package agents
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
+
+func TestContainsAsToken(t *testing.T) {
+	tests := []struct {
+		haystack string
+		needle   string
+		expected bool
+	}{
+		{"The Librarian selected CA 400 for this run.", "CA 400", true},
+		{"The Librarian selected CA 4000X for this run.", "CA 400", false}, // substring of a longer token, not a real match
+		{"CA 400", "CA 400", true},                                         // exact match, no surrounding text
+		{"Options: CA 400, CA 401", "CA 400", true},                        // punctuation boundary
+		{"XCA 400", "CA 400", false},                                       // needle glued to a preceding word char
+		{"CA 400X", "CA 400", false},                                       // needle glued to a following word char
+		{"nothing relevant here", "CA 400", false},
+	}
+	for _, tc := range tests {
+		got := containsAsToken(tc.haystack, tc.needle)
+		if got != tc.expected {
+			t.Errorf("containsAsToken(%q, %q) = %v; want %v", tc.haystack, tc.needle, got, tc.expected)
+		}
+	}
+}
 
 func TestLevenshteinDistance(t *testing.T) {
 	tests := []struct {
@@ -39,7 +62,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	validBlocks := map[string]bool{
 		"US Twin Vibrato": true,
 		"UK C30 TopBoost": true,
-		"Parametric-3":   true,
+		"Parametric-3":    true,
 	}
 
 	tests := []struct {
@@ -192,7 +215,7 @@ func TestBuildEffectiveValidBlocks(t *testing.T) {
 	// A real user capture and a real coros_map.json factory capture, so this exercises
 	// the actual merged/embedded data rather than a synthetic fixture.
 	const userCaptureName = "FNDR TWDLX IN Edge BAL CAB" // user_captures.json, source: amalgamaudio
-	const factoryCaptureName = "Brit 2203 87"             // coros_map.json, is_capture: true
+	const factoryCaptureName = "Brit 2203 87"            // coros_map.json, is_capture: true
 
 	all := GetValidNativeBlocks()
 	if !all[userCaptureName] {
@@ -268,5 +291,73 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	}
 	if blocks[6].Model != FlagUnverifiedBlock("Fake Boutique Fuzz XYZ") {
 		t.Errorf("expected fabricated drive-type block to be flagged (regression: \"drive\" type was missing from gearBlockTypes), got %q", blocks[6].Model)
+	}
+}
+
+func TestFlagCaptureFormattingMismatches(t *testing.T) {
+	validBlocks := map[string]bool{
+		"Brit Plexi 100 Patch": false, // real, verified, algorithmic -- NOT a capture
+		"64 Fender Vibroverb":  true,  // real, verified capture -- dB formatting is correct here
+		"Strymon Sunset BOOST": false, // real, verified, algorithmic Boost-type block
+	}
+
+	sp := &storage.StructuredPreset{
+		Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {
+				{ID: "1", Type: "Amplifier", Model: "Brit Plexi 100 Patch", Rationale: "Classic British crunch.", Parameters: []storage.BlockParameter{
+					{Name: "Gain", Value: "+2.0 dB"},                  // mismatch: algorithmic block, dB formatting
+					{Name: "Bass", Value: "4.2"},                      // fine: plain 0-10 value
+					{Name: "Volume", Value: "7.0", ValueB: "-1.5 dB"}, // mismatch only on ValueB
+				}},
+				{ID: "2", Type: "Amplifier", Model: "64 Fender Vibroverb", Parameters: []storage.BlockParameter{
+					{Name: "Gain", Value: "+2.0 dB"}, // correct: this block really is a capture
+				}},
+				{ID: "3", Type: "Reverb", Model: "Spring Reverb", Parameters: []storage.BlockParameter{
+					{Name: "Decay", Value: "+2.0 dB"}, // not a gear-block category -- must be left alone
+				}},
+				{ID: "4", Type: "Amplifier", Model: "Some Unverified Amp", Parameters: []storage.BlockParameter{
+					{Name: "Gain", Value: "+2.0 dB"}, // unknown name -- can't determine capture status, must be left alone
+				}},
+				// A prior FlagUnverifiedStructuredBlocks pass (or any caller) may have already
+				// annotated a genuine capture's Model with its source suffix -- must still
+				// resolve back to the bare dictionary key, not be treated as an unknown name.
+				{ID: "5", Type: "Amplifier", Model: "64 Fender Vibroverb (My Capture)", Parameters: []storage.BlockParameter{
+					{Name: "Gain", Value: "+2.0 dB"}, // correct: genuinely a capture, even though annotated
+				}},
+				// Boost isn't in gearBlockTypes (no coros_map.json dictionary coverage for that
+				// category), but Rule 9 explicitly calls it out as capture-eligible.
+				{ID: "6", Type: "Boost", Model: "Strymon Sunset BOOST", Parameters: []storage.BlockParameter{
+					{Name: "Volume", Value: "+3.0 dB"}, // mismatch: algorithmic Boost block, dB formatting
+				}},
+			},
+		},
+	}
+
+	FlagCaptureFormattingMismatches(sp, validBlocks)
+
+	blocks := sp.Guitars["Guitar 1"]
+	if !strings.Contains(blocks[0].Rationale, "⚠️") {
+		t.Errorf("expected a block with a dB-formatted capture-only param on a confirmed-algorithmic block to get a Rationale warning, got %q", blocks[0].Rationale)
+	}
+	if !strings.Contains(blocks[0].Rationale, "Classic British crunch.") {
+		t.Errorf("expected the warning to be appended to the existing rationale, not replace it, got %q", blocks[0].Rationale)
+	}
+	if blocks[0].Parameters[0].Value != "+2.0 dB" || blocks[0].Parameters[2].ValueB != "-1.5 dB" {
+		t.Errorf("expected parameter Value/ValueB to be left completely untouched -- the warning must never mutate the editable source of truth, got %q / %q", blocks[0].Parameters[0].Value, blocks[0].Parameters[2].ValueB)
+	}
+	if strings.Contains(blocks[1].Rationale, "⚠️") {
+		t.Errorf("expected a confirmed real capture to get no warning, got %q", blocks[1].Rationale)
+	}
+	if strings.Contains(blocks[2].Rationale, "⚠️") {
+		t.Errorf("expected non-gear-category block (Reverb) to get no warning even with a dB-shaped value, got %q", blocks[2].Rationale)
+	}
+	if strings.Contains(blocks[3].Rationale, "⚠️") {
+		t.Errorf("expected block with unverified/unknown name to get no warning (capture status unknown), got %q", blocks[3].Rationale)
+	}
+	if strings.Contains(blocks[4].Rationale, "⚠️") {
+		t.Errorf("expected an already-annotated genuine capture name to still resolve correctly and get no warning, got %q", blocks[4].Rationale)
+	}
+	if !strings.Contains(blocks[5].Rationale, "⚠️") {
+		t.Errorf("expected a Boost-type block (not in gearBlockTypes, but capture-eligible per Rule 9) to get a warning, got %q", blocks[5].Rationale)
 	}
 }

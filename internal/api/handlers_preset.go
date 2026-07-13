@@ -186,10 +186,10 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 
 		// Reload the list
 		presets, _ := s.store.List(r.Context())
-		
+
 		w.Header().Set("Content-Type", "text/html")
 		w.Header().Set("HX-Trigger", "presetSaved")
-		
+
 		oobResponse := fmt.Sprintf(`
 			<div id="library-list-container" hx-swap-oob="true">
 				%s
@@ -198,7 +198,7 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 		`, renderPresetList(presets, false), name)
-		
+
 		w.Write([]byte(oobResponse))
 	}
 }
@@ -277,11 +277,11 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 			Payload:          p.Payload,
 			BuilderStatement: p.BuilderStatement,
 		}
-		
+
 		if len(p.ChatHistory) > 0 {
 			pCopy.ChatHistory = append([]storage.ChatMessage{}, p.ChatHistory...)
 		}
-		
+
 		if err := s.store.Save(ctx, pCopy); err != nil {
 			http.Error(w, "Failed to duplicate", http.StatusInternalServerError)
 			return
@@ -378,7 +378,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 			</div>
 			%s
 		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false, wasDraft))
-		
+
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
 	}
@@ -501,7 +501,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 				logItems += fmt.Sprintf(`<div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--accent);"><b>You requested:</b><br>%s</div>`, html.EscapeString(msg.Content))
 			}
 		}
-		
+
 		historyHtml = fmt.Sprintf(`
 		<details style="margin-top: 1.5rem; background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border); border-radius: 8px;">
 			<summary style="padding: 1rem; cursor: pointer; font-weight: 500; outline: none; user-select: none;">View ADK Processing Log</summary>
@@ -572,17 +572,17 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 					params = append(params, fmt.Sprintf("%s: %s%s", html.EscapeString(pr.Name), html.EscapeString(pr.Value), html.EscapeString(pr.Unit)))
 				}
 				paramsStr := strings.Join(params, "<br>")
-				
+
 				var title string
 				if block.Model != "" {
 					title = fmt.Sprintf("%s: %s", block.Type, block.Model)
 				} else {
 					title = block.Type
 				}
-				
+
 				// TODO: Add effect rationale into this version of the table when available in StructuredPreset.
-				sb.WriteString(fmt.Sprintf(`<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem; vertical-align: top;"><b>%s</b></td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td></tr>`, 
-					html.EscapeString(title), 
+				sb.WriteString(fmt.Sprintf(`<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem; vertical-align: top;"><b>%s</b></td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td></tr>`,
+					html.EscapeString(title),
 					paramsStr,
 					paramsStr))
 			}
@@ -993,7 +993,9 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			allowFactoryCapturesForFlag = s.appConfig.AllowFactoryCaptures
 			allowUserCapturesForFlag = s.appConfig.AllowUserCaptures
 		}
-		agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag))
+		effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+		agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
+		agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
 
 		// Append user message
 		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
@@ -1200,14 +1202,14 @@ func parseCellParametersToBadges(cellText string) string {
 	if len(parts) == 1 {
 		parts = strings.Split(cellText, "<br>")
 	}
-	
+
 	var badges []string
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue
 		}
-		
+
 		badgeClass := "badge-default"
 		lower := strings.ToLower(part)
 		if strings.Contains(lower, "state: bypass") || strings.Contains(lower, "bypass") {
@@ -1219,17 +1221,17 @@ func parseCellParametersToBadges(cellText string) string {
 		} else if strings.Contains(lower, "hpf:") || strings.Contains(lower, "lpf:") || strings.Contains(lower, "hz") || strings.Contains(lower, "khz") {
 			badgeClass = "badge-freq"
 		}
-		
+
 		badges = append(badges, fmt.Sprintf("<span class='dsp-badge %s'>%s</span>", badgeClass, part))
 	}
-	
+
 	return "<div class='dsp-badge-container'>" + strings.Join(badges, "") + "</div>"
 }
 
 // wrapCellContentInBadges parses HTML matrices and wraps individual row parameters inside dynamic container layout blocks
 func wrapCellContentInBadges(input string) string {
 	re := regexp.MustCompile(`(?i)<td([^>]*)>(.*?)</td>`)
-	
+
 	return re.ReplaceAllStringFunc(input, func(match string) string {
 		submatches := re.FindStringSubmatch(match)
 		if len(submatches) < 3 {
@@ -1237,13 +1239,12 @@ func wrapCellContentInBadges(input string) string {
 		}
 		attributes := submatches[1]
 		cellContent := submatches[2]
-		
+
 		// Skip wrapping header fields or outer structures
 		if strings.Contains(cellContent, "<table") || strings.Contains(cellContent, "<tr") || strings.Contains(cellContent, "<th") {
 			return match
 		}
-		
+
 		return fmt.Sprintf("<td%s>%s</td>", attributes, parseCellParametersToBadges(cellContent))
 	})
 }
-

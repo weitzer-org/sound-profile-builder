@@ -33,13 +33,53 @@ func agentTemperature(key string) *float32 {
 	return &t
 }
 
-// agentSearchTool returns the Google Search grounding tool for the two agents whose
-// prompts are written as if they already have live search access (Tone Historian,
-// Community Scraper). Every other agent reasons over already-gathered context and gets
-// no tool.
+// agentMaxOutputTokens caps generation length per agent role, as a safety rail against
+// runaway/repetition-loop generation -- observed directly in a Tier 1 live eval, where one
+// Acoustician call (normally ~200-300 output tokens) produced 32,775 tokens and took 95s
+// instead of ~5-9s, on a prompt that was otherwise identical in shape to eleven others that
+// ran cleanly. Caps are set generously above the largest legitimate output each role
+// produces (per observed eval data) so they never truncate a real response, only a
+// degenerate one. Agent 12 (Architect) gets the largest budget since its structured_payload
+// scales with guitar count and block count; every other agent's output is a small,
+// fixed-shape JSON object with no legitimate reason to run long.
+func agentMaxOutputTokens(key string) int32 {
+	caps := map[string]int32{
+		"1_tone_historian":    2000,
+		"2_sonic_profiler":    2000,
+		"3_community_scraper": 2000,
+		"4_coros_librarian":   3000,
+		"5_cloud_navigator":   2000,
+		"6_acoustician":       2000,
+		"7_transducer_tech":   1500,
+		"8_foh_optimizer":     1500,
+		"9_mix_engineer":      1500,
+		"10_control_mapper":   2000,
+		"11_dsp_dispatcher":   1500,
+		"12_architect":        16000,
+	}
+	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
+}
+
+// agentSearchTool returns the Google Search grounding tool for agents whose prompts are
+// written as if they already have live search access. Tier 0 wired this for the two
+// research agents (Tone Historian, Community Scraper); Tier 1 extends it to Sonic
+// Profiler, whose v3 prompt grounds saturation/reverb-character estimates against
+// documented gear specs. Combining GoogleSearch with ResponseSchema/ResponseMIMEType is
+// broadly compatible (agents 1, 3, and 2 all run it successfully; RunAgentSplit's fallback
+// loop also now degrades gracefully on the one fallback-tier model, gemini-2.5-pro, that
+// rejects the combination outright).
+//
+// Acoustician was tried here too and reverted: live-eval evidence (Tier 1 golden-set run,
+// 2026-07-12) showed its grounded call reliably blowing the 3-minute per-attempt timeout
+// on BOTH the primary and first fallback flash models across back-to-back prompts --
+// almost every golden-set prompt names a specific real amp, so Acoustician's "search
+// whenever gear is identifiable" instruction fired on nearly every run, combined with its
+// heavier nested humbucker/single_coil schema. That's a systemic latency problem, not a
+// flaky one-off, so it stays ungrounded; it still gets the QC Block Parameter Vocabulary
+// and User Capture Library context injected as plain text (cheap, no tool-call latency).
 func agentSearchTool(key string) []*genai.Tool {
 	switch key {
-	case "1_tone_historian", "3_community_scraper":
+	case "1_tone_historian", "3_community_scraper", "2_sonic_profiler":
 		return []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}}
 	default:
 		return nil
@@ -170,9 +210,9 @@ func agentResponseSchema(key string) *genai.Schema {
 
 	case "9_mix_engineer":
 		return objSchema(map[string]*genai.Schema{
-			"delay_ms":        numSchema("Delay time in milliseconds."),
-			"reverb_decay_s":  numSchema("Reverb decay time in seconds."),
-			"mix_percent":     numSchema("Wet/dry mix percentage, 0-100."),
+			"delay_ms":       numSchema("Delay time in milliseconds."),
+			"reverb_decay_s": numSchema("Reverb decay time in seconds."),
+			"mix_percent":    numSchema("Wet/dry mix percentage, 0-100."),
 		}, []string{"delay_ms", "reverb_decay_s", "mix_percent"})
 
 	case "10_control_mapper":
@@ -208,10 +248,14 @@ func effectBlockJSONSchema() map[string]any {
 					"properties": map[string]any{
 						"name":    map[string]any{"type": "string"},
 						"type":    map[string]any{"type": "string", "enum": []string{"slider", "toggle", "dropdown"}},
-						"value":   map[string]any{"type": "string", "description": "Exactly one decisive value for Scene A (Rhythm), never a range."},
+						"value":   map[string]any{"type": "string", "description": "Exactly one decisive value for Scene A (Rhythm), never a range. Basis never excuses omitting or hedging this -- always a real, usable number."},
 						"value_b": map[string]any{"type": "string", "description": "Scene B (Lead) value, ONLY if it genuinely differs from Scene A's value. Omit entirely when the two scenes share the same setting -- do not repeat the same value here."},
+						"basis": map[string]any{
+							"type": "string", "enum": []string{"confirmed_range", "real_gear_analog", "engineering_convention", "estimate"},
+							"description": "How this value was arrived at: confirmed_range = a documented device min/max is known (e.g. Global EQ +-12dB); real_gear_analog = mirrors a documented real-world amp/pedal setting; engineering_convention = a standard, physically-reasonable value with no specific documented source; estimate = best numeric judgment. Disclosure only -- never a reason to give a range or omit the value.",
+						},
 					},
-					"required": []string{"name", "type", "value"},
+					"required": []string{"name", "type", "value", "basis"},
 				},
 			},
 			"rationale": map[string]any{"type": "string", "description": "One or two sentences on why this specific block/model was chosen. This is the only place this reasoning is captured -- there is no separate prose table."},

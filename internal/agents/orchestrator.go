@@ -28,6 +28,52 @@ var embeddedCorosMap []byte
 //go:embed user_captures.json
 var embeddedUserCaptures []byte
 
+//go:embed qc_block_schema.json
+var embeddedQCBlockSchema []byte
+
+// GetQCBlockSchemaJSON returns the embedded controlled vocabulary of real Quad Cortex
+// block parameter names (see qc_block_schema.json's own _readme for provenance). It's
+// served as-is -- no parse/remarshal round trip -- since the embedded file is already
+// exactly the JSON meant to be injected into agent context.
+func GetQCBlockSchemaJSON() string {
+	return string(embeddedQCBlockSchema)
+}
+
+var qcAmpEQSchemaJSONCache string
+var qcAmpEQSchemaJSONOnce sync.Once
+
+// GetQCAmpEQSchemaJSON returns just the "amplifier" and "global_eq" categories of the QC
+// Block Parameter Vocabulary. The Acoustician is the only consumer -- per its own prompt
+// it is a "parameter tuner, not a gear selector" that only ever adjusts Amplifier block
+// Bass/Mid/Treble/Volume/Gain (plus, per one narrow rule, an optional pre-amp Parametric
+// EQ), so the other ~80% of the full file (drive/delay/reverb/compressor/gate/pitch/
+// wah/modulation/cabinet categories, none of which it can act on) was pure token waste.
+// Discovered while investigating a Tier 1 live-eval latency outlier: Acoustician's input
+// tokens had jumped ~6.6x (1.1k -> 7.4k) after the full file was injected, and on one of
+// twelve golden-set prompts that contributed to it blowing the 3-minute per-attempt
+// timeout twice before a fallback model finally succeeded ~6 minutes in.
+func GetQCAmpEQSchemaJSON() string {
+	qcAmpEQSchemaJSONOnce.Do(func() {
+		var full map[string]json.RawMessage
+		if err := json.Unmarshal(embeddedQCBlockSchema, &full); err != nil {
+			qcAmpEQSchemaJSONCache = string(embeddedQCBlockSchema) // fail safe: fall back to the full file
+			return
+		}
+		subset := make(map[string]json.RawMessage, 3)
+		for _, key := range []string{"_readme", "amplifier", "global_eq"} {
+			if v, ok := full[key]; ok {
+				subset[key] = v
+			}
+		}
+		if b, err := json.Marshal(subset); err == nil {
+			qcAmpEQSchemaJSONCache = string(b)
+		} else {
+			qcAmpEQSchemaJSONCache = string(embeddedQCBlockSchema)
+		}
+	})
+	return qcAmpEQSchemaJSONCache
+}
+
 // AgentUsage captures per-agent token, model, call-count, and latency data for one
 // pipeline run so before/after quality-vs-cost comparisons don't have to be reconstructed
 // from log lines.
@@ -97,7 +143,7 @@ func NewOrchestrator(ctx context.Context, apiKey string, gcs storage.Client, opt
 	}
 
 	useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
-	
+
 	// Build Open-LLM client (always available for hybrid "openllm:" prefixed routing)
 	url := os.Getenv("OPENLLM_API_URL")
 	if url == "" {
@@ -268,6 +314,34 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		}
 	}
 
+	// Read embedded dictionary for Agent 4. Computed before Phase 1 (rather than after, as
+	// originally written) because Tier 1 grounds Sonic Profiler's frequency/gain estimates
+	// against the same real-parameter vocabulary and user capture library the later phases
+	// already see, and Sonic Profiler now runs as part of Phase 1.
+	dictJSON := string(embeddedCorosMap)
+	if !effectiveAllowFactoryCaptures {
+		var fullMap map[string]map[string]interface{}
+		if err := json.Unmarshal(embeddedCorosMap, &fullMap); err == nil {
+			filteredMap := make(map[string]map[string]interface{})
+			for k, v := range fullMap {
+				if isCap, _ := v["is_capture"].(bool); !isCap {
+					filteredMap[k] = v
+				}
+			}
+			if b, err := json.Marshal(filteredMap); err == nil {
+				dictJSON = string(b)
+			}
+		}
+	}
+	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures)
+
+	userCapturesJSON := "[]"
+	if effectiveAllowUserCaptures {
+		userCapturesJSON = GetUserCapturesJSON()
+	}
+
+	qcBlockSchemaJSON := GetQCBlockSchemaJSON()
+
 	if onProgress != nil {
 		onProgress("Phase 1/4: Analyzing Tone Context & Physics...")
 	}
@@ -299,7 +373,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		sysPrompt, _ := o.loadPromptForAgent("2_sonic_profiler", version)
-		sonicResult, err2 = o.RunAgentSplit(ctx, "Sonic Profiler", sysPrompt, "User Request: "+prompt)
+		userContext2 := fmt.Sprintf("User Request: %s\nQC Block Parameter Vocabulary: %s\nUser Capture Library: %s", prompt, qcBlockSchemaJSON, userCapturesJSON)
+		sonicResult, err2 = o.RunAgentSplit(ctx, "Sonic Profiler", sysPrompt, userContext2)
 		logToGCS("2_sonic_profiler", sonicResult)
 	}()
 
@@ -322,29 +397,6 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 
 	log.Printf("Phase 1 Complete.")
-
-	// Read embedded dictionary for Agent 4
-	dictJSON := string(embeddedCorosMap)
-	if !effectiveAllowFactoryCaptures {
-		var fullMap map[string]map[string]interface{}
-		if err := json.Unmarshal(embeddedCorosMap, &fullMap); err == nil {
-			filteredMap := make(map[string]map[string]interface{})
-			for k, v := range fullMap {
-				if isCap, _ := v["is_capture"].(bool); !isCap {
-					filteredMap[k] = v
-				}
-			}
-			if b, err := json.Marshal(filteredMap); err == nil {
-				dictJSON = string(b)
-			}
-		}
-	}
-	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures)
-
-	userCapturesJSON := "[]"
-	if effectiveAllowUserCaptures {
-		userCapturesJSON = GetUserCapturesJSON()
-	}
 
 	if onProgress != nil {
 		onProgress("Phase 2/4: Mapping to Native CorOS Effects...")
@@ -371,7 +423,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	allowCloudCaptures, ok := constraints["allow_cloud_captures"].(bool)
 	var navigatorResult string
 	var err5 error
-	
+
 	version5 := agentConfig["5_cloud_navigator"]
 	if version5 == "off" {
 		navigatorResult = "Cloud Navigator skipped by configuration."
@@ -409,7 +461,12 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		p, _ := o.loadPromptForAgent("6_acoustician", version)
-		acousticianResult, err6 = o.RunAgentSplit(ctx, "Acoustician", p, fmt.Sprintf("Sonic Profiler: %s\nConstraints: %v", sonicResult, constraints))
+		// Only the Amp/Global-EQ subset of the vocabulary and no capture library: the
+		// Acoustician never selects or references gear/captures, only tunes numeric
+		// parameters on the Amplifier block already chosen upstream (see
+		// GetQCAmpEQSchemaJSON's doc comment for why the full file was cut down here).
+		userContext6 := fmt.Sprintf("Sonic Profiler: %s\nConstraints: %v\nQC Block Parameter Vocabulary: %s", sonicResult, constraints, GetQCAmpEQSchemaJSON())
+		acousticianResult, err6 = o.RunAgentSplit(ctx, "Acoustician", p, userContext6)
 		logToGCS("6_acoustician", acousticianResult)
 	}()
 	go func() {
@@ -496,9 +553,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 
 	// Agent 12: Architect & Evaluator formats the final breakdown
+	captureContext := SelectedCaptureContext(librarianResult, navigatorResult, effectiveAllowFactoryCaptures, effectiveAllowUserCaptures)
 	architectPrompt := "Evaluate the impact of the pipeline and format the final HTML table based strictly on the following aggregated data payload:\n\n"
-	architectPrompt += fmt.Sprintf("Constraints: %v\n\nTone: %s\nSonic: %s\nScraper: %s\nLibrarian: %s\nNavigator: %s\nAcoustician: %s\nTransducer: %s\nFOH: %s\nMix: %s\nMap: %s\nDSP: %s",
-		constraints, toneResult, sonicResult, scrapeResult, librarianResult, navigatorResult, acousticianResult, techResult, fohResult, mixResult, mapResult, dspResult)
+	architectPrompt += fmt.Sprintf("Constraints: %v\n\nTone: %s\nSonic: %s\nScraper: %s\nLibrarian: %s\nNavigator: %s\nAcoustician: %s\nTransducer: %s\nFOH: %s\nMix: %s\nMap: %s\nDSP: %s\n\nQC Block Parameter Vocabulary (for basis tagging): %s\n\nSelected Capture Details (for Rule 9 formatting -- real descriptive color for whichever captures, of any block type, were actually selected this run; empty if none were): %s",
+		constraints, toneResult, sonicResult, scrapeResult, librarianResult, navigatorResult, acousticianResult, techResult, fohResult, mixResult, mapResult, dspResult, qcBlockSchemaJSON, captureContext)
 
 	var finalResult string
 	var err12 error
@@ -553,18 +611,30 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
 	skip := false
 	switch agentRole {
-	case "Tone Historian": skip = os.Getenv("ABLATE_AGENT_1") == "true"
-	case "Sonic Profiler": skip = os.Getenv("ABLATE_AGENT_2") == "true"
-	case "Community Scraper": skip = os.Getenv("ABLATE_AGENT_3") == "true"
-	case "CorOS Librarian": skip = os.Getenv("ABLATE_AGENT_4") == "true"
-	case "Cloud Navigator": skip = os.Getenv("ABLATE_AGENT_5") == "true"
-	case "Acoustician": skip = os.Getenv("ABLATE_AGENT_6") == "true"
-	case "Transducer Tech": skip = os.Getenv("ABLATE_AGENT_7") == "true"
-	case "FOH Optimizer": skip = os.Getenv("ABLATE_AGENT_8") == "true"
-	case "Mix Engineer": skip = os.Getenv("ABLATE_AGENT_9") == "true"
-	case "Control Mapper": skip = os.Getenv("ABLATE_AGENT_10") == "true"
-	case "DSP Dispatcher": skip = os.Getenv("ABLATE_AGENT_11") == "true"
-	case "Architect & Evaluator", "Refinement Architect": skip = os.Getenv("ABLATE_AGENT_12") == "true"
+	case "Tone Historian":
+		skip = os.Getenv("ABLATE_AGENT_1") == "true"
+	case "Sonic Profiler":
+		skip = os.Getenv("ABLATE_AGENT_2") == "true"
+	case "Community Scraper":
+		skip = os.Getenv("ABLATE_AGENT_3") == "true"
+	case "CorOS Librarian":
+		skip = os.Getenv("ABLATE_AGENT_4") == "true"
+	case "Cloud Navigator":
+		skip = os.Getenv("ABLATE_AGENT_5") == "true"
+	case "Acoustician":
+		skip = os.Getenv("ABLATE_AGENT_6") == "true"
+	case "Transducer Tech":
+		skip = os.Getenv("ABLATE_AGENT_7") == "true"
+	case "FOH Optimizer":
+		skip = os.Getenv("ABLATE_AGENT_8") == "true"
+	case "Mix Engineer":
+		skip = os.Getenv("ABLATE_AGENT_9") == "true"
+	case "Control Mapper":
+		skip = os.Getenv("ABLATE_AGENT_10") == "true"
+	case "DSP Dispatcher":
+		skip = os.Getenv("ABLATE_AGENT_11") == "true"
+	case "Architect & Evaluator", "Refinement Architect":
+		skip = os.Getenv("ABLATE_AGENT_12") == "true"
 	}
 
 	if skip {
@@ -574,18 +644,30 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 
 	key := ""
 	switch agentRole {
-	case "Tone Historian": key = "1_tone_historian"
-	case "Sonic Profiler": key = "2_sonic_profiler"
-	case "Community Scraper": key = "3_community_scraper"
-	case "CorOS Librarian": key = "4_coros_librarian"
-	case "Cloud Navigator": key = "5_cloud_navigator"
-	case "Acoustician": key = "6_acoustician"
-	case "Transducer Tech": key = "7_transducer_tech"
-	case "FOH Optimizer": key = "8_foh_optimizer"
-	case "Mix Engineer": key = "9_mix_engineer"
-	case "Control Mapper": key = "10_control_mapper"
-	case "DSP Dispatcher": key = "11_dsp_dispatcher"
-	case "Architect & Evaluator", "Refinement Architect": key = "12_architect"
+	case "Tone Historian":
+		key = "1_tone_historian"
+	case "Sonic Profiler":
+		key = "2_sonic_profiler"
+	case "Community Scraper":
+		key = "3_community_scraper"
+	case "CorOS Librarian":
+		key = "4_coros_librarian"
+	case "Cloud Navigator":
+		key = "5_cloud_navigator"
+	case "Acoustician":
+		key = "6_acoustician"
+	case "Transducer Tech":
+		key = "7_transducer_tech"
+	case "FOH Optimizer":
+		key = "8_foh_optimizer"
+	case "Mix Engineer":
+		key = "9_mix_engineer"
+	case "Control Mapper":
+		key = "10_control_mapper"
+	case "DSP Dispatcher":
+		key = "11_dsp_dispatcher"
+	case "Architect & Evaluator", "Refinement Architect":
+		key = "12_architect"
 	}
 
 	modelName := os.Getenv("TARGET_MODEL")
@@ -638,11 +720,11 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 			// Check if this error is due to reaching the context window limits
 			errStr := err.Error()
 			lower := strings.ToLower(errStr)
-			isContextLimit := strings.Contains(lower, "context length") || 
-							   strings.Contains(lower, "context_length") || 
-							   strings.Contains(lower, "maximum context") || 
-							   strings.Contains(lower, "context window") ||
-							   (strings.Contains(lower, "context") && strings.Contains(lower, "limit"))
+			isContextLimit := strings.Contains(lower, "context length") ||
+				strings.Contains(lower, "context_length") ||
+				strings.Contains(lower, "maximum context") ||
+				strings.Contains(lower, "context window") ||
+				(strings.Contains(lower, "context") && strings.Contains(lower, "limit"))
 
 			if isContextLimit {
 				log.Printf("⚠️ WARNING: [%s] Open-LLM hit context window max: %v. Falling back to default production model: gemini-3.1-pro-preview", agentRole, err)
@@ -707,6 +789,25 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 			break
 		}
 
+		// Some fallback-tier models (observed: gemini-2.5-pro) reject combining a Tools
+		// entry (e.g. GoogleSearch grounding) with a JSON response mime type outright --
+		// a hard per-model API constraint, not a transient failure. Retrying the identical
+		// request against the same model with grounding dropped recovers a real (if
+		// ungrounded) response instead of burning the rest of the fallback chain on a
+		// deterministic error every one of those calls would repeat.
+		if len(genConfig.Tools) > 0 && strings.Contains(strings.ToLower(err.Error()), "tool use with a response mime type") {
+			log.Printf("[%s] Model %s rejects Tools+JSON mime type; retrying same model without grounding...", agentRole, mName)
+			degradedConfig := *genConfig
+			degradedConfig.Tools = nil
+			ctx2, cancel2 := context.WithTimeout(ctx, 3*time.Minute)
+			resp, err = o.client.Models.GenerateContent(ctx2, mName, contents, &degradedConfig)
+			cancel2()
+			if err == nil {
+				finalModelName = mName
+				break
+			}
+		}
+
 		log.Printf("[%s] Model %s failed or rate-limited: %v. Retrying next fallback...", agentRole, mName, err)
 		lastErr = err
 	}
@@ -718,6 +819,16 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 
 	if len(resp.Candidates) == 0 {
 		return "", fmt.Errorf("[%s] No response candidates from LLM", agentRole)
+	}
+
+	// A response cut off by the MaxOutputTokens cap (agentMaxOutputTokens) is truncated,
+	// invalid JSON -- silently returning resp.Text() here would hand the caller a
+	// still-succeeds-looking string that fails to parse somewhere downstream with no signal
+	// of why. Fail loudly instead: this is exactly the failure mode the cap exists to bound
+	// (a runaway generation), so hitting it is itself the signal something is wrong with
+	// this particular response, not proof the cap was set too low.
+	if resp.Candidates[0].FinishReason == genai.FinishReasonMaxTokens {
+		return "", fmt.Errorf("[%s] Response truncated at the MaxOutputTokens limit (model %s) -- output is incomplete/invalid JSON, not a usable result", agentRole, finalModelName)
 	}
 
 	// Safely extract and accumulate generated API metrics natively
@@ -735,14 +846,15 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 }
 
 // buildGenerationConfig assembles the per-agent GenerationConfig: temperature, search
-// grounding (agents 1 & 3 only), and structured JSON output. Agent 12 (Architect) uses the
+// grounding (see agentSearchTool for which agents), and structured JSON output. Agent 12 (Architect) uses the
 // raw-JSON-Schema path (ResponseJsonSchema) because its payload has guitar-name-keyed
 // dynamic objects the typed OpenAPI-subset Schema can't express; every other agent uses the
 // typed ResponseSchema.
 func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.GenerateContentConfig {
 	cfg := &genai.GenerateContentConfig{
-		Temperature: agentTemperature(key),
-		Tools:       agentSearchTool(key),
+		Temperature:     agentTemperature(key),
+		Tools:           agentSearchTool(key),
+		MaxOutputTokens: agentMaxOutputTokens(key),
 	}
 	if key == "12_architect" {
 		cfg.ResponseMIMEType = "application/json"
@@ -796,7 +908,7 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v3")
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v4")
 
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
@@ -814,16 +926,18 @@ You MUST output the following exact JSON schema:
   "structured_payload": {
     "guitars": {
       "Fender Telecaster Single Coil": [
-        { "id": "block-1", "type": "Amplifier", "model": "...", "rationale": "Why this block/model was chosen.", "parameters": [ {"name": "Gain", "type": "slider", "value": "7.0", "value_b": "8.5"} ] }
+        { "id": "block-1", "type": "Amplifier", "model": "...", "rationale": "Why this block/model was chosen.", "parameters": [ {"name": "Gain", "type": "slider", "value": "7.0", "value_b": "8.5", "basis": "engineering_convention"} ] }
       ]
     }
-  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! Every block needs "rationale"; only add "value_b" on a parameter when Scene B (Lead) genuinely differs from Scene A (Rhythm) -- omit it otherwise. */
+  }, /* The *entire* updated structured JSON data for ALL guitars explicitly (only if dsp_matrix_updated is true). This is CRITICAL for persistence! Every block needs "rationale"; only add "value_b" on a parameter when Scene B (Lead) genuinely differs from Scene A (Rhythm) -- omit it otherwise. Every parameter needs "basis": one of "confirmed_range" (documented device min/max), "real_gear_analog" (mirrors a documented real-world amp/pedal setting), "engineering_convention" (standard, physically-reasonable, no specific source), or "estimate" (best numeric judgment). Basis is disclosure only -- it never excuses giving a range or omitting a value; always pick one real, decisive number. When you change an existing parameter's value during this refinement, update its basis to match how the NEW value was arrived at; when a parameter is untouched, keep its existing basis as-is. */
   "agent_impact": ["Bullet point describing impact"]
 }
 
+QC Block Parameter Vocabulary (for basis tagging): %s
+
 EXISTING STRUCTURED PAYLOAD:
 %s
-`, p.Payload)
+`, GetQCBlockSchemaJSON(), p.Payload)
 
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
 	for _, msg := range p.ChatHistory {
