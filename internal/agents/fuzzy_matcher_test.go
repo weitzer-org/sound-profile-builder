@@ -361,3 +361,84 @@ func TestFlagCaptureFormattingMismatches(t *testing.T) {
 		t.Errorf("expected a Boost-type block (not in gearBlockTypes, but capture-eligible per Rule 9) to get a warning, got %q", blocks[5].Rationale)
 	}
 }
+
+func TestFlagIncompleteCabinetBlocks(t *testing.T) {
+	sp := &storage.StructuredPreset{
+		Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {
+				{ID: "1", Type: "Cabinet", Model: "212 UK C30 '65", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Cap Edge"},
+					{Name: "Mic 2", Value: "Cone"},
+					{Name: "Blend", Value: "60%"},
+					{Name: "High Cut", Value: "6.5 kHz"},
+				}}, // complete -- must not be flagged
+				{ID: "2", Type: "Cabinet", Model: "412 Brit 60B", Parameters: []storage.BlockParameter{
+					{Name: "High Cut", Value: "6.5 kHz"},
+					{Name: "Low Cut", Value: "80 Hz"},
+				}}, // missing all three mic-placement params -- the real regression this check exists for
+				{ID: "3", Type: "Cabinet", Model: "Some Cab", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Cap Edge"},
+					{Name: "Mic 2", Value: "Cone"},
+				}}, // missing Blend only
+				{ID: "4", Type: "Amplifier", Model: "Brit Plexi 100 Patch", Parameters: []storage.BlockParameter{
+					{Name: "Gain", Value: "5.0"},
+				}}, // not a Cabinet block -- must never be flagged by this check
+			},
+		},
+	}
+
+	FlagIncompleteCabinetBlocks(sp)
+
+	blocks := sp.Guitars["Guitar 1"]
+	if strings.Contains(blocks[0].Rationale, "⚠️") {
+		t.Errorf("expected complete Cabinet block to get no warning, got %q", blocks[0].Rationale)
+	}
+	if !strings.Contains(blocks[1].Rationale, "⚠️") {
+		t.Errorf("expected Cabinet block missing all mic-placement params to be flagged, got %q", blocks[1].Rationale)
+	}
+	if !strings.Contains(blocks[2].Rationale, "⚠️") {
+		t.Errorf("expected Cabinet block missing just Blend to still be flagged, got %q", blocks[2].Rationale)
+	}
+	if strings.Contains(blocks[3].Rationale, "⚠️") {
+		t.Errorf("expected non-Cabinet block to never be checked, got %q", blocks[3].Rationale)
+	}
+}
+
+func TestFlagLeftoverValueRanges(t *testing.T) {
+	sp := &storage.StructuredPreset{
+		Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {
+				{ID: "1", Type: "Delay", Model: "Digital Delay", Parameters: []storage.BlockParameter{
+					{Name: "Time", Type: "slider", Value: "10-15ms"},             // a genuine leftover range
+					{Name: "Feedback", Type: "slider", Value: "80 - 120 Hz"},     // range with spaces and a unit
+					{Name: "Mix", Type: "slider", Value: "45%"},                  // fine: single decisive value
+					{Name: "Gain", Type: "slider", Value: "-3.5", ValueB: "5-8"}, // ValueB is a range, Value is fine
+					{Name: "Level", Type: "slider", Value: "-2.0 dB"},            // single negative dB value -- must NOT false-positive as a range
+					{Name: "Mode", Type: "dropdown", Value: "10-15"},             // range-shaped, but not a slider -- must not be flagged
+				}},
+			},
+		},
+	}
+
+	FlagLeftoverValueRanges(sp)
+
+	block := sp.Guitars["Guitar 1"][0]
+	if !strings.Contains(block.Rationale, "Time") {
+		t.Errorf("expected the Time range to be flagged, got %q", block.Rationale)
+	}
+	if !strings.Contains(block.Rationale, "Feedback") {
+		t.Errorf("expected the Feedback range (with spaces/unit) to be flagged, got %q", block.Rationale)
+	}
+	if strings.Contains(block.Rationale, "Mix") {
+		t.Errorf("expected the single-value Mix param to not be flagged, got %q", block.Rationale)
+	}
+	if !strings.Contains(block.Rationale, "Gain (Scene B)") {
+		t.Errorf("expected only Gain's ValueB (not its Value) to be flagged as a range, got %q", block.Rationale)
+	}
+	if strings.Contains(block.Rationale, "Level") {
+		t.Errorf("expected a single negative dB value to never false-positive as a range, got %q", block.Rationale)
+	}
+	if strings.Contains(block.Rationale, "Mode") {
+		t.Errorf("expected a non-slider parameter to never be checked even if range-shaped, got %q", block.Rationale)
+	}
+}

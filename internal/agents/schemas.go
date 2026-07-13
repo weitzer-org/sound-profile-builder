@@ -25,6 +25,7 @@ func agentTemperature(key string) *float32 {
 		"10_control_mapper":   0.2,
 		"11_dsp_dispatcher":   0.15,
 		"12_architect":        0.6, // bumped from 0.3: baseline's judge-preferred prose specificity (EP-3 preamp tricks, Varitone physics) may have been a temperature effect, not a grounding effect -- testing that hypothesis directly
+		"13_critic":           0.1, // narrow fact-checking task (does prose match data), not creative -- run cold
 	}
 	t, ok := temps[key]
 	if !ok {
@@ -43,17 +44,18 @@ func agentTemperature(key string) *float32 {
 // scales with guitar count and block count; every other agent's output is a small,
 // fixed-shape JSON object with no legitimate reason to run long.
 //
-// Roughly doubled across the board as an urgent hotfix: a golden-set eval run hit a ~50%
-// truncation failure rate spread across agents that had run 12/12 clean at the original
-// values just one validated eval round earlier, with no code change to those agents in
-// between and no reported Gemini incident -- most consistent with gemini-3.5-flash (a named
-// alias, not a pinned version) having drifted toward more verbose completions server-side.
-// Doubling still leaves every cap far below the 32,775-token pathological case the caps
-// exist to catch (even the largest non-Architect cap here is ~5x below it), so this trades
-// a little more worst-case-runaway cost for restored reliability against legitimate-but-now-
-// longer output, rather than removing the safety rail. If truncations recur at these
-// values, that's real signal the underlying model-verbosity shift needs a different fix
-// (e.g. pinning a dated model version) rather than another blind doubling.
+// Roughly doubled across the board as an urgent hotfix (see hotfix/max-output-tokens-caps,
+// merged to main independently of Tier 2): a golden-set eval run hit a ~50% truncation
+// failure rate spread across agents that had run 12/12 clean at the original values just
+// one validated eval round earlier, with no code change to those agents in between and no
+// reported Gemini incident -- most consistent with gemini-3.5-flash (a named alias, not a
+// pinned version) having drifted toward more verbose completions server-side. Doubling
+// still leaves every cap far below the 32,775-token pathological case the caps exist to
+// catch (even the largest non-Architect cap here is ~5x below it), so this trades a little
+// more worst-case-runaway cost for restored reliability against legitimate-but-now-longer
+// output, rather than removing the safety rail. If truncations recur at these values,
+// that's real signal the underlying model-verbosity shift needs a different fix (e.g.
+// pinning a dated model version) rather than another blind doubling.
 func agentMaxOutputTokens(key string) int32 {
 	caps := map[string]int32{
 		"1_tone_historian":    4000,
@@ -68,6 +70,7 @@ func agentMaxOutputTokens(key string) int32 {
 		"10_control_mapper":   4000,
 		"11_dsp_dispatcher":   3000,
 		"12_architect":        16000,
+		"13_critic":           2000,
 	}
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }
@@ -237,6 +240,19 @@ func agentResponseSchema(key string) *genai.Schema {
 		return objSchema(map[string]*genai.Schema{
 			"grid_layout_map": strArraySchema("Blocks routed per physical Grid Lane."),
 		}, []string{"grid_layout_map"})
+
+	case "13_critic":
+		return objSchema(map[string]*genai.Schema{
+			"issues": {
+				Type: genai.TypeArray,
+				Items: objSchema(map[string]*genai.Schema{
+					"guitar":   strSchema("The exact guitar name this issue is under."),
+					"block_id": strSchema("The exact block id this issue is about."),
+					"issue":    strSchema("One sentence, quoting the specific contradicting text/values."),
+					"severity": {Type: genai.TypeString, Enum: []string{"high", "medium"}},
+				}, []string{"guitar", "block_id", "issue", "severity"}),
+			},
+		}, []string{"issues"})
 
 	default:
 		return nil

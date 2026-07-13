@@ -345,6 +345,8 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			}
 			effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
 			agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
+			agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
+			agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
 			agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
 
 			impactsHtml := "<ul>"
