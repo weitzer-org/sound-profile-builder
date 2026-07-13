@@ -1,0 +1,140 @@
+{
+  "_readme": "Controlled vocabulary of real Quad Cortex block parameter names, built from the official Neural DSP Quad Cortex user manual (https://www.manualslib.com/manual/3537295/Neural-Quad-Cortex.html) plus, where marked 'engineering_convention', standard guitar-amp/pedal terminology already used elsewhere in this pipeline's prompts. This file intentionally carries NO numeric ranges -- confirming real min/max values requires reading them off the physical device/Cortex Control app, which is out of scope for now (see basis field on individual preset parameters instead). Purpose: give agents a real name to reach for instead of inventing a plausible-sounding one. Every agent must still assign an actual usable value; this file only bounds vocabulary, not values.",
+
+  "amplifier": {
+    "source": "manual_confirmed",
+    "manual_ref": "Neural DSP Quad Cortex manual, p.43",
+    "parameters": [
+      { "name": "Gain", "source": "manual_confirmed", "note": "Preamp section gain amount." },
+      { "name": "Volume", "source": "manual_confirmed", "note": "Preamp section volume amount." },
+      { "name": "Bass", "source": "manual_confirmed", "note": "Low band of the amp's 3-band tonestack EQ." },
+      { "name": "Mid", "source": "manual_confirmed", "note": "Mid band of the amp's 3-band tonestack EQ." },
+      { "name": "Treble", "source": "manual_confirmed", "note": "High band of the amp's 3-band tonestack EQ." },
+      { "name": "Presence", "source": "engineering_convention", "note": "Power-amp-stage high-frequency response control; standard on most tube amp tonestacks (real name, ubiquitous on the physical amps QC blocks emulate), not independently confirmed in the manual excerpt reviewed." },
+      { "name": "Master Volume", "source": "engineering_convention", "note": "Post-preamp master volume, distinct from channel Volume on amps whose real-world analog had a separate master stage." },
+      { "name": "Bright Switch", "source": "engineering_convention", "note": "On/off bright-cap toggle present on many real amps (e.g. Fender Blackpanel); already referenced in this pipeline's Acoustician prompt." },
+      { "name": "Sag", "source": "engineering_convention", "note": "Power-supply sag/compression amount, a real Neural DSP amp-modeling control on many QC amp blocks; not independently confirmed in the manual excerpt reviewed." },
+      { "name": "Bias", "source": "engineering_convention", "note": "Power-tube bias point, affects amp block compression/breakup character; not independently confirmed in the manual excerpt reviewed." }
+    ]
+  },
+
+  "cabinet": {
+    "source": "manual_confirmed",
+    "manual_ref": "Neural DSP Quad Cortex manual, p.44",
+    "note": "Cab blocks are IR (impulse response) loaders, not a parametric multi-mic-position rig -- selection is from a factory or user-loaded impulse library, not freeform mic X/Y placement sliders. Any prompt language describing continuous mic-position parameters should be treated as an approximation of this IR-selection reality, not a literal control that exists on the device.",
+    "parameters": [
+      { "name": "Impulse Selection", "source": "manual_confirmed", "note": "Selects the loaded factory or custom IR file." },
+      { "name": "IR Loader Power", "source": "manual_confirmed", "note": "Enables/disables the IR loader section of the cab block." }
+    ]
+  },
+
+  "global_eq": {
+    "source": "manual_confirmed",
+    "manual_ref": "Neural DSP Quad Cortex manual, p.45",
+    "parameters": [
+      { "name": "Band Gain", "source": "manual_confirmed", "note": "Gain of the selected EQ band, dB." },
+      { "name": "Band Freq", "source": "manual_confirmed", "note": "Center/corner frequency of the selected EQ band, Hz." },
+      { "name": "Band On/Off", "source": "manual_confirmed", "note": "Per-band bypass toggle. 8 bands available." }
+    ]
+  },
+
+  "modulation": {
+    "source": "manual_confirmed",
+    "manual_ref": "Neural DSP Quad Cortex manual, p.46",
+    "note": "Covers Chorus/Flanger/Phaser/Tremolo/Rotary-family blocks.",
+    "parameters": [
+      { "name": "Rate", "source": "manual_confirmed", "note": "Speed of the modulation effect; also called Speed on some blocks." },
+      { "name": "Depth", "source": "manual_confirmed", "note": "Intensity of the modulation sweep." },
+      { "name": "Tempo Sync", "source": "manual_confirmed", "note": "Locks Rate to the Quad Cortex's current tempo instead of a free-running Hz value." },
+      { "name": "Mix", "source": "engineering_convention", "note": "Wet/dry blend, standard on modulation-family pedals/blocks; not independently confirmed in the manual excerpt reviewed." },
+      { "name": "Feedback", "source": "engineering_convention", "note": "Resonance/regeneration amount, standard on Flanger/Phaser-family blocks." }
+    ]
+  },
+
+  "drive": {
+    "source": "engineering_convention",
+    "note": "The manual excerpt reviewed does not enumerate per-model drive/overdrive/distortion/fuzz parameter names; QC drive blocks emulate real stompboxes and each native block generally exposes that pedal's own real control set. This is a generic fallback vocabulary for when a specific emulated pedal's real controls aren't otherwise known -- prefer a real pedal's actual control names (e.g. from coros_map.json / user_captures.json context) over these generics whenever the target block is identifiable.",
+    "parameters": [
+      { "name": "Drive", "source": "engineering_convention", "note": "Gain/distortion amount." },
+      { "name": "Tone", "source": "engineering_convention", "note": "Single-knob tone-shaping control common on simple overdrive/fuzz pedals." },
+      { "name": "Level", "source": "engineering_convention", "note": "Output level, also called Volume on some pedals." },
+      { "name": "Bass", "source": "engineering_convention" },
+      { "name": "Mid", "source": "engineering_convention" },
+      { "name": "Treble", "source": "engineering_convention" }
+    ]
+  },
+
+  "delay": {
+    "source": "engineering_convention",
+    "note": "The manual excerpt reviewed did not surface a parameter-level breakdown for delay blocks; this is standard delay-pedal/rack vocabulary.",
+    "parameters": [
+      { "name": "Time", "source": "engineering_convention", "note": "Delay time, ms or tempo-synced note division." },
+      { "name": "Feedback", "source": "engineering_convention", "note": "Number of repeats." },
+      { "name": "Mix", "source": "engineering_convention" },
+      { "name": "Mod Depth", "source": "engineering_convention", "note": "Modulation applied to the repeats, for chorus-style delays." },
+      { "name": "Mod Rate", "source": "engineering_convention" },
+      { "name": "Ping Pong", "source": "engineering_convention", "note": "Stereo alternating-channel toggle." }
+    ]
+  },
+
+  "reverb": {
+    "source": "engineering_convention",
+    "note": "The manual excerpt reviewed did not surface a parameter-level breakdown for reverb blocks; this is standard reverb vocabulary already partly referenced in this pipeline's Sonic Profiler prompt (reverb_type).",
+    "parameters": [
+      { "name": "Decay", "source": "engineering_convention", "note": "Reverb tail length, seconds." },
+      { "name": "Pre-Delay", "source": "engineering_convention", "note": "Gap before the reverb tail begins, ms." },
+      { "name": "Mix", "source": "engineering_convention" },
+      { "name": "Tone", "source": "engineering_convention", "note": "Damping/high-frequency rolloff of the tail." },
+      { "name": "Size", "source": "engineering_convention", "note": "Simulated room/space size." }
+    ]
+  },
+
+  "compressor": {
+    "source": "engineering_convention",
+    "note": "The manual excerpt reviewed did not surface a parameter-level breakdown for dynamics blocks; this is standard compressor vocabulary.",
+    "parameters": [
+      { "name": "Threshold", "source": "engineering_convention" },
+      { "name": "Ratio", "source": "engineering_convention" },
+      { "name": "Attack", "source": "engineering_convention" },
+      { "name": "Release", "source": "engineering_convention" },
+      { "name": "Gain", "source": "engineering_convention", "note": "Makeup gain." },
+      { "name": "Sustain", "source": "engineering_convention", "note": "Single-knob compression amount, common on simple pedal-style compressor blocks in lieu of separate Threshold/Ratio." }
+    ]
+  },
+
+  "noise_gate": {
+    "source": "engineering_convention",
+    "note": "This pipeline's Sonic Profiler prompt already outputs noise_gate_target_db; this is the standard control vocabulary for the block that setting feeds.",
+    "parameters": [
+      { "name": "Threshold", "source": "engineering_convention", "note": "dB level below which the gate closes." },
+      { "name": "Release", "source": "engineering_convention", "note": "Time for the gate to close after signal drops below threshold." },
+      { "name": "Reduction", "source": "engineering_convention", "note": "How much the gated signal is attenuated, dB." }
+    ]
+  },
+
+  "pitch": {
+    "source": "engineering_convention",
+    "note": "The manual excerpt reviewed did not surface a parameter-level breakdown for pitch blocks; this is standard pitch/harmony vocabulary.",
+    "parameters": [
+      { "name": "Pitch", "source": "engineering_convention", "note": "Semitone/interval shift." },
+      { "name": "Mix", "source": "engineering_convention" },
+      { "name": "Voice Detune", "source": "engineering_convention", "note": "Fine detune amount for harmony/detune-style pitch blocks." }
+    ]
+  },
+
+  "volume_pan": {
+    "source": "engineering_convention",
+    "parameters": [
+      { "name": "Level", "source": "engineering_convention" },
+      { "name": "Pan", "source": "engineering_convention" }
+    ]
+  },
+
+  "wah": {
+    "source": "engineering_convention",
+    "parameters": [
+      { "name": "Frequency", "source": "engineering_convention", "note": "Sweep/pedal position." },
+      { "name": "Q", "source": "engineering_convention", "note": "Resonance/bandwidth of the sweep filter." }
+    ]
+  }
+}

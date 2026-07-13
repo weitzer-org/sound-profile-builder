@@ -78,6 +78,92 @@ func GetUserCapturesJSON() string {
 	return userCapturesJSONCache
 }
 
+// capturedGear pairs a capture's resolved name with whatever descriptive color exists for
+// it -- a user capture's free-text Description, or a factory capture's TonalArchetype.
+type capturedGear struct {
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
+var factoryCaptureColors []capturedGear
+var parseFactoryCaptureColorsOnce sync.Once
+
+// getFactoryCaptureColors parses the embedded coros_map.json once, caching every
+// is_capture=true entry's name+tonal_archetype -- the same static-embedded-data-gets-
+// parsed-once pattern GetValidNativeBlocks/GetCategorizedAmplifiers already use in this
+// file. SelectedCaptureContext originally re-unmarshaled the full file on every call.
+func getFactoryCaptureColors() []capturedGear {
+	parseFactoryCaptureColorsOnce.Do(func() {
+		var fullMap map[string]map[string]interface{}
+		if err := json.Unmarshal(embeddedCorosMap, &fullMap); err != nil {
+			return
+		}
+		for _, props := range fullMap {
+			isCap, _ := props["is_capture"].(bool)
+			if !isCap {
+				continue
+			}
+			equiv, _ := props["coros_equivalent"].(string)
+			archetype, _ := props["tonal_archetype"].(string)
+			if equiv != "" && archetype != "" {
+				factoryCaptureColors = append(factoryCaptureColors, capturedGear{Name: equiv, Color: archetype})
+			}
+		}
+	})
+	return factoryCaptureColors
+}
+
+// SelectedCaptureContext scans the Librarian's and Navigator's raw output text (their names
+// are never run through ApplyFuzzyCorrection/resolveBlockName -- only the Architect's final
+// output is) for any known capture name and returns a compact JSON list of just the captures
+// actually selected this run, each paired with its real descriptive color. Because the scan
+// is a bare substring match against un-normalized text, a non-canonical spelling/casing in
+// Agent 4/5's raw output will simply not match and this returns less than it ideally could --
+// a silent miss, not a wrong answer (the Architect's own Rule 9 fallback covers the gap). The
+// Architect is the one agent that formats final parameters for every block type per its
+// Capture Parameters Mandate (Rule 9) -- amp, cab, drive, fuzz, boost, distortion, preamp,
+// anything is_capture can tag -- but until this existed it only knew a given block WAS a
+// capture, never anything about what made that specific capture distinctive. Scoped to
+// whatever the upstream agents actually picked (rather than the full ~100-entry combined
+// library) to keep this cheap: a handful of matches at most, not the whole catalog on
+// every run.
+//
+// allowFactoryCaptures/allowUserCaptures mirror the same toggles already threaded through
+// dictJSON/userCapturesJSON earlier in RunPipeline: when a source is disabled for this run,
+// its captures were never available for the Librarian/Navigator to select in the first
+// place, so scanning for them here too is both wasted work and a real (if narrow) leak --
+// a disabled user capture's private Description could otherwise still reach the Architect's
+// context via a coincidental substring match against unrelated text.
+func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactoryCaptures, allowUserCaptures bool) string {
+	haystack := librarianResult + "\n" + navigatorResult
+	var found []capturedGear
+
+	if allowUserCaptures {
+		for _, c := range GetUserCaptures() {
+			if c.Name != "" && c.Description != "" && strings.Contains(haystack, c.Name) {
+				found = append(found, capturedGear{Name: c.Name, Color: c.Description})
+			}
+		}
+	}
+
+	if allowFactoryCaptures {
+		for _, c := range getFactoryCaptureColors() {
+			if strings.Contains(haystack, c.Name) {
+				found = append(found, c)
+			}
+		}
+	}
+
+	if len(found) == 0 {
+		return ""
+	}
+	b, err := json.Marshal(found)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
 var userCaptureNameSet map[string]bool
 var parseUserCaptureNamesOnce sync.Once
 
@@ -265,19 +351,119 @@ func FlagUnverifiedStructuredBlocks(sp *storage.StructuredPreset, validBlocks ma
 	}
 }
 
+const captureFormattingMismatchNote = "⚠️ Verify: %s formatted as relative dB, but this block isn't a confirmed capture (expected a plain 0-10 dial value)."
+
+var relativeDBPattern = regexp.MustCompile(`(?i)^[+-]?\d+(\.\d+)?\s*dB$`)
+
+// captureOnlyParamNames are the exact five parameter names Architect Rule 9 (Capture
+// Parameters Mandate) restricts relative-dB formatting to: "Neural Captures natively
+// feature a standardized set of parameters: Gain, Bass, Mid, Treble, and Volume." Checking
+// against this list (rather than flagging any dB-shaped value on any gear-block parameter)
+// avoids false-flagging a control that's legitimately dB-native regardless of capture
+// status -- e.g. a Cabinet block's output Level trim -- which isn't one of the five names
+// the rule actually governs.
+var captureOnlyParamNames = map[string]bool{
+	"gain": true, "bass": true, "mid": true, "treble": true, "volume": true,
+}
+
+// captureEligibleBlockTypes is gearBlockTypes plus "boost" -- Rule 9 explicitly names Boost
+// alongside Amplifier/Cab/Drive/Fuzz/Distortion/Preamp as a block type captures commonly
+// appear as, but coros_map.json has zero entries with a "boost" dictionary type (boost
+// pedals are classified under "drive" there), so adding it to the shared gearBlockTypes
+// would risk flagging every real Boost block as "Unverified" in resolveBlockName's
+// name-matching path -- a different, unrelated check with its own established tradeoff.
+// This set only feeds FlagCaptureFormattingMismatches's capture-vs-formatting check, which
+// looks up the resolved name in validBlocks directly rather than requiring dictionary-type
+// coverage, so the false-positive risk that keeps gearBlockTypes narrow doesn't apply here.
+var captureEligibleBlockTypes = func() map[string]bool {
+	m := make(map[string]bool, len(gearBlockTypes)+1)
+	for k := range gearBlockTypes {
+		m[k] = true
+	}
+	m["boost"] = true
+	return m
+}()
+
+// FlagCaptureFormattingMismatches walks a StructuredPreset's gear blocks and flags any
+// block where one of the five capture-only parameter names (see captureOnlyParamNames) is
+// formatted as a relative dB adjustment but the block's resolved name is confirmed -- via
+// validBlocks, the same ground-truth lookup FlagUnverifiedStructuredBlocks already uses --
+// to be a real, verified NATIVE algorithmic model, not a capture. This is deterministic
+// *detection*, not correction: a relative-dB offset and an absolute 0-10 dial position are
+// different units with no formula between them, so there's no safe way to compute what the
+// "corrected" number should be -- prompt wording alone (Architect Rule 9) has needed two
+// rounds of tightening and still occasionally misapplies capture formatting to well-known
+// algorithmic amps.
+//
+// The warning is appended to the block's Rationale, never to Parameter.Value/ValueB.
+// Value/ValueB are the field the editable Tweaking Workspace UI treats as the live,
+// re-saveable source of truth (handleUpdateParameter writes it back with no shape
+// validation) -- annotating it risked a user silently persisting the warning text itself as
+// the permanent parameter value on their next unrelated edit. Rationale is purely
+// descriptive, already rendered in the read-only preview table, and never round-trips
+// through numeric parsing anywhere.
+//
+// Must run BEFORE FlagUnverifiedStructuredBlocks in caller order for the capture-status
+// lookup to be meaningful -- but does not depend on that order for correctness: it strips
+// any capture-source annotation via stripCaptureAnnotation first, so a name already
+// rewritten to "X (Factory Capture)"/"X (My Capture)" by a prior FlagUnverifiedStructuredBlocks
+// pass still resolves back to a lookup-able key. Skips blocks whose (stripped) name isn't in
+// validBlocks at all (unverified/fabricated names are FlagUnverifiedStructuredBlocks's
+// concern, not this function's) and blocks confirmed to genuinely be captures (dB formatting
+// is correct there).
+func FlagCaptureFormattingMismatches(sp *storage.StructuredPreset, validBlocks map[string]bool) {
+	if sp == nil {
+		return
+	}
+	for _, blocks := range sp.Guitars {
+		for i := range blocks {
+			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
+			if !captureEligibleBlockTypes[blockType] {
+				continue
+			}
+			resolvedName := stripCaptureAnnotation(blocks[i].Model)
+			isCapture, known := validBlocks[resolvedName]
+			if !known || isCapture {
+				continue
+			}
+			var mismatchedParams []string
+			for j := range blocks[i].Parameters {
+				p := blocks[i].Parameters[j]
+				if !captureOnlyParamNames[strings.ToLower(strings.TrimSpace(p.Name))] {
+					continue
+				}
+				if relativeDBPattern.MatchString(strings.TrimSpace(p.Value)) || relativeDBPattern.MatchString(strings.TrimSpace(p.ValueB)) {
+					mismatchedParams = append(mismatchedParams, p.Name)
+				}
+			}
+			if len(mismatchedParams) == 0 {
+				continue
+			}
+			note := fmt.Sprintf(captureFormattingMismatchNote, strings.Join(mismatchedParams, "/"))
+			if !strings.Contains(blocks[i].Rationale, note) {
+				if blocks[i].Rationale != "" {
+					blocks[i].Rationale += " " + note
+				} else {
+					blocks[i].Rationale = note
+				}
+			}
+		}
+	}
+}
+
 // IgnoreList contains structural block names that shouldn't be snapped to amplifiers/effects.
 var IgnoreList = map[string]bool{
-	"Noise Gate":       true,
-	"Adaptive Gate":    true,
-	"Global Gate":      true,
-	"Global Input":     true,
-	"Input / Impedance": true,
+	"Noise Gate":              true,
+	"Adaptive Gate":           true,
+	"Global Gate":             true,
+	"Global Input":            true,
+	"Input / Impedance":       true,
 	"Input: Global Impedance": true,
-	"Gate: Noise Gate": true,
-	"Lane 1 Output":    true,
-	"Lane Output":      true,
-	"Input":            true,
-	"Gate":             true,
+	"Gate: Noise Gate":        true,
+	"Lane 1 Output":           true,
+	"Lane Output":             true,
+	"Input":                   true,
+	"Gate":                    true,
 }
 
 // LevenshteinDistance calculates the minimum string edits to go from s to t.
@@ -305,9 +491,9 @@ func LevenshteinDistance(sRunes, tRunes []rune) int {
 				cost = 0
 			}
 			cur := min(
-				d[j]+1,        // deletion
-				prev+1,        // insertion
-				d[j-1]+cost,   // substitution
+				d[j]+1,      // deletion
+				prev+1,      // insertion
+				d[j-1]+cost, // substitution
 			)
 			d[j-1] = prev
 			prev = cur

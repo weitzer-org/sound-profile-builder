@@ -87,7 +87,7 @@ func (s *Server) routes() {
 	// API Routes (to be protected by Secret Manager Password)
 	s.mux.Handle("/api/preset/generate", s.authMiddleware(s.handleGeneratePreset()))
 	s.mux.Handle("/api/preset/status", s.authMiddleware(s.handleTaskStatus()))
-	
+
 	// Preset Management Routes
 	s.mux.Handle("/api/presets", s.authMiddleware(s.handleGetPresets()))
 	s.mux.Handle("/api/preset/save", s.authMiddleware(s.handleSavePreset()))
@@ -219,7 +219,7 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			"favor_captures":         favorCaptures,
 			"favor_cloud_captures":   favorCloudCaptures,
 			"allow_paid_plugins":     cfg.AllowPaidPlugins && allowPaidPlugins,
-			"available_plugins":     cfg.AvailablePlugins,
+			"available_plugins":      cfg.AvailablePlugins,
 		}
 
 		ctx := context.WithoutCancel(r.Context())
@@ -323,10 +323,10 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			htmlPayload = sanitizeJSONQuotes(htmlPayload)
 
 			var archResp struct {
-				BuilderStatement  string                  `json:"builder_statement"`
-				FinalHTMLPayload  map[string]string       `json:"final_html_payload"`
+				BuilderStatement  string                   `json:"builder_statement"`
+				FinalHTMLPayload  map[string]string        `json:"final_html_payload"`
 				StructuredPayload storage.StructuredPreset `json:"structured_payload"`
-				AgentImpact       []string                `json:"agent_impact"`
+				AgentImpact       []string                 `json:"agent_impact"`
 			}
 
 			if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
@@ -343,22 +343,24 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			if v, ok := constraints["allow_user_captures"].(bool); ok {
 				allowUserCapturesForFlag = v
 			}
-			agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag))
+			effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+			agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
+			agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
 
 			impactsHtml := "<ul>"
 			// Correctly map version strings based on the actual config map
 			agentNames := map[string]string{
-				"1_tone_historian":     "Tone Historian",
-				"2_sonic_profiler":     "Sonic Profiler",
-				"3_community_scraper":  "Community Scraper",
-				"4_coros_librarian":    "CorOS Librarian",
-				"5_cloud_navigator":    "Cloud Navigator",
-				"6_acoustician":        "Acoustician",
-				"7_transducer_tech":    "Transducer Tech",
-				"8_foh_optimizer":      "FOH Optimizer",
-				"9_mix_engineer":       "Mix Engineer",
-				"10_control_mapper":    "Control Mapper",
-				"11_dsp_dispatcher":    "DSP Dispatcher",
+				"1_tone_historian":    "Tone Historian",
+				"2_sonic_profiler":    "Sonic Profiler",
+				"3_community_scraper": "Community Scraper",
+				"4_coros_librarian":   "CorOS Librarian",
+				"5_cloud_navigator":   "Cloud Navigator",
+				"6_acoustician":       "Acoustician",
+				"7_transducer_tech":   "Transducer Tech",
+				"8_foh_optimizer":     "FOH Optimizer",
+				"9_mix_engineer":      "Mix Engineer",
+				"10_control_mapper":   "Control Mapper",
+				"11_dsp_dispatcher":   "DSP Dispatcher",
 			}
 
 			for _, imp := range archResp.AgentImpact {
@@ -526,7 +528,6 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 			%[1]s
 		`, task.Result, scope)))
 		return
-
 
 	}
 }

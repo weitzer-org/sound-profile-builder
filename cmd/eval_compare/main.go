@@ -61,7 +61,10 @@ func main() {
 		"09_BB_King", "10_Slash", "11_Mayer_Lead", "12_Bonamassa",
 	}
 
-	outDir := "/tmp/qc2-eval-full/v2"
+	outDir := os.Getenv("EVAL_OUT_DIR")
+	if outDir == "" {
+		outDir = "/tmp/qc2-eval-full/v2"
+	}
 	os.MkdirAll(outDir, 0755)
 
 	ctx := context.Background()

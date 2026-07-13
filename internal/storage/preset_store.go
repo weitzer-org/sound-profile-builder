@@ -28,6 +28,13 @@ type BlockParameter struct {
 	Value  string `json:"value"`
 	ValueB string `json:"value_b,omitempty"`
 	Unit   string `json:"unit,omitempty"`
+	// Basis discloses how confidently-real this parameter's Value is: "confirmed_range" (a
+	// documented device min/max, e.g. Global EQ's published +-12dB), "real_gear_analog" (the
+	// value mirrors a documented real-world amp/pedal setting), "engineering_convention" (a
+	// standard, physically-reasonable value with no specific documented source), or "estimate"
+	// (the model's best numeric judgment). Disclosure only -- never permission to omit, hedge,
+	// or return a range instead of a decisive number; Value must always be real and usable.
+	Basis string `json:"basis,omitempty"`
 }
 
 // EffectBlock represents a single gear block in the signal chain
