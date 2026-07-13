@@ -70,7 +70,7 @@ func agentMaxOutputTokens(key string) int32 {
 		"10_control_mapper":   4000,
 		"11_dsp_dispatcher":   3000,
 		"12_architect":        16000,
-		"13_critic":           2000,
+		"13_critic":           4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
 	}
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }

@@ -8,16 +8,21 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"google.golang.org/genai"
 )
 
-// critic_probe is a cheap, one-off validation step for the Tier 2 critic-agent ablation
-// question: before spending a full live-eval round generating fresh presets with a critic
-// agent wired into the pipeline, run the proposed critic prompt directly against the 12
-// Architect outputs already sitting on disk from the last validated Tier 1 eval round (no
-// new generation, just 12 small critic-only calls) to see whether it finds anything real.
-// If it doesn't, the full ablation isn't worth running; if it does, that's the concrete
-// evidence needed to justify the bigger investment.
+// critic_probe is a cheap, one-off/repeatable validation step for the Preset Critic agent:
+// run it directly against Architect outputs already sitting on disk (no new pipeline
+// generation) to check its findings without spending a full live-eval round. Originally
+// built to answer the Tier 2 critic-agent ablation question (does a dedicated critic catch
+// anything a deterministic check can't); kept as a standing tool for validating prompt
+// changes to prompts/13_critic.md the same cheap way -- e.g. it caught its own
+// Bypass-semantics bug this way before that fix ever reached a live eval.
+//
+// Loads the real prompts/13_critic.md via agents.LoadPrompt rather than duplicating the
+// checklist as a Go string constant, specifically so this tool and the live pipeline can
+// never drift out of sync the way an earlier hardcoded copy briefly did.
 
 type Issue struct {
 	Guitar   string `json:"guitar"`
@@ -30,16 +35,7 @@ type CriticResult struct {
 	Issues []Issue `json:"issues"`
 }
 
-const criticPrompt = `You are the Preset Critic, a fresh, skeptical second reader of an already-assembled Quad Cortex guitar preset. You do NOT re-derive the preset. Your only job is to catch internal inconsistencies between what the preset SAYS (builder_statement, block rationales) and what the preset's structured data actually DOES.
-
-Check ONLY these two things:
-1. Scene-state consistency: for each block with a "Bypass" parameter, does the actual Bypass value/value_b match what the builder_statement or that block's own rationale claims is active/inactive in Scene A (Rhythm) vs Scene B (Lead)? Flag any block where the prose says one thing and the Bypass data says the opposite.
-2. Prose-data gear consistency: does every specific piece of gear or effect the builder_statement or a block's rationale explicitly names actually appear as a real block in structured_payload, and vice versa (no block whose rationale contradicts its own listed Model field)?
-
-Do not flag anything else -- not tonal quality, not historical accuracy, not parameter value plausibility, not gear choice, not the basis field, not formatting. Those are out of scope for this check. Return an empty issues array if nothing is genuinely wrong -- do not invent an issue just to have something to report.
-
-Preset to review:
-%s`
+const criticPromptTemplate = "%s\n\nPreset to review:\n%s"
 
 func main() {
 	apiKey := os.Getenv("GEMINI_API_KEY")
@@ -49,6 +45,11 @@ func main() {
 	dir := os.Getenv("PROBE_DIR")
 	if dir == "" {
 		dir = "/tmp/qc2-eval-full/tier1"
+	}
+
+	criticSystemPrompt, err := agents.LoadPrompt("13_critic", "")
+	if err != nil {
+		log.Fatalf("failed to load prompts/13_critic.md: %v", err)
 	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{APIKey: apiKey, Backend: genai.BackendGeminiAPI})
@@ -99,7 +100,7 @@ func main() {
 			continue
 		}
 
-		prompt := fmt.Sprintf(criticPrompt, string(data))
+		prompt := fmt.Sprintf(criticPromptTemplate, criticSystemPrompt, string(data))
 		resp, err := client.Models.GenerateContent(ctx, "gemini-3.1-pro-preview", []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("critic failed for %s: %v", base, err)
