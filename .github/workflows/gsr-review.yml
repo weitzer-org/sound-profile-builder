@@ -1,0 +1,34 @@
+name: GSR Code Review
+
+# Gemini-powered automated PR review (github.com/weitzer-org/gsr), running
+# as a GitHub Action on this repo's own runner -- no diff content leaves
+# GitHub/Google. Runs alongside gemini-code-assist/CodeRabbit as another
+# free (non-Claude-quota) automated backstop to /quick-review; see
+# CLAUDE.md's Code Review section.
+#
+# Requires a repo secret GSR_GEMINI_API_KEY (Settings -> Secrets and
+# variables -> Actions) -- a Gemini API key dedicated to CI review, kept
+# separate from the app's own GEMINI_API_KEY (Fly secret) so PR-review
+# traffic doesn't share quota/billing with the deployed QC-2 pipeline.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: gsr-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: weitzer-org/gsr@main
+        with:
+          gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
+          mode: basic
+          fail-on-severity: none
