@@ -1,0 +1,63 @@
+name: GSR Deep Review (Agent Swarm)
+
+# Full GSR agent-swarm review (Architecture, Logic, Security, TechDebt,
+# Testing agents + dedup pass) -- slower/pricier than the basic-mode review
+# in gsr-review.yml that runs on every PR, so this one is opt-in only:
+# apply the "deep-review" label to a PR, or run it manually from the
+# Actions tab. Mirrors the existing /code-review high escalation pattern
+# in CLAUDE.md (reserved for large/architecturally risky changes).
+#
+# Uses the same GSR_GEMINI_API_KEY repo secret as gsr-review.yml.
+#
+# GSR's entrypoint (adk/backend/src/action-entrypoint.ts) hard-requires a
+# pull_request.number in the GITHUB_EVENT_PATH JSON and throws otherwise --
+# a workflow_dispatch event has no such field. The manual-run step below
+# works around this by writing a synthetic event file and pointing
+# GITHUB_EVENT_PATH at it for just that step; if GSR's entrypoint changes
+# this reading, only the manual-run path (not the label-triggered one)
+# would need revisiting.
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: 'PR number to review'
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: gsr-deep-review-${{ github.event.pull_request.number || inputs.pr-number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deep-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Review labeled PR
+        if: github.event_name == 'pull_request'
+        uses: weitzer-org/gsr@main
+        with:
+          gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
+          mode: subagent
+          fail-on-severity: none
+
+      - name: Build synthetic PR event for manual runs
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo '{"pull_request": {"number": ${{ inputs.pr-number }}}}' > "$RUNNER_TEMP/gsr-event.json"
+
+      - name: Review PR via manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        uses: weitzer-org/gsr@main
+        with:
+          gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
+          mode: subagent
+          fail-on-severity: none
+        env:
+          GITHUB_EVENT_PATH: ${{ format('{0}/gsr-event.json', runner.temp) }}

@@ -74,6 +74,13 @@ cheaper local pass acceptable.
   level explicitly. `medium` and `high` both run the same 8 parallel finder
   agents; the level changes candidate volume and verify aggressiveness
   (precision-biased at `medium`, recall-biased at `high`), not agent count.
+- For the same class of large/risky change, also consider **GSR's agent-swarm
+  mode** (`.github/workflows/gsr-review-deep.yml`) as a zero-Claude-quota
+  complement to `/code-review high` — apply the `deep-review` label to the PR,
+  or trigger it manually from the Actions tab (`workflow_dispatch`, needs a
+  PR number). It runs GSR's full swarm (Architecture, Logic, Security,
+  TechDebt, Testing agents + a dedup pass) instead of the `basic` single-pass
+  mode that runs automatically on every PR.
 - Reserve `/code-review ultra` (multi-agent cloud review) for substantial
   features before merge — it's billed separately, so don't run it routinely.
 - `/code-review --fix` applies findings directly if you want them auto-fixed.
