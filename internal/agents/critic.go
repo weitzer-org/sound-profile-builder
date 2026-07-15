@@ -39,8 +39,16 @@ const criticIssueNotePrefix = "⚠️ Critic: "
 // (including an ablation stub, which is not valid JSON) degrades to "no findings", not
 // an error.
 func applyCriticFindings(raw string, criticRaw string) string {
+	// A skipped/ablated critic call returns a non-JSON stub ("Ablated Output for Preset
+	// Critic."), and a truncated call can return empty -- neither is an error worth logging
+	// on every run. Only attempt to parse when the cleaned input actually looks like a JSON
+	// object; anything else degrades quietly to "no findings".
+	cleanedCritic := StripJSONFences(criticRaw)
+	if cleanedCritic == "" || cleanedCritic[0] != '{' {
+		return raw
+	}
 	var resp criticResponse
-	if err := json.Unmarshal([]byte(stripJSONFences(criticRaw)), &resp); err != nil {
+	if err := json.Unmarshal([]byte(cleanedCritic), &resp); err != nil {
 		log.Printf("[Preset Critic] response unparseable, proceeding without critic annotations: %v", err)
 		return raw
 	}
@@ -49,7 +57,7 @@ func applyCriticFindings(raw string, criticRaw string) string {
 	}
 
 	var envelope map[string]json.RawMessage
-	if err := json.Unmarshal([]byte(stripJSONFences(raw)), &envelope); err != nil {
+	if err := json.Unmarshal([]byte(StripJSONFences(raw)), &envelope); err != nil {
 		log.Printf("[Preset Critic] Architect envelope unparseable, proceeding without critic annotations: %v", err)
 		return raw
 	}

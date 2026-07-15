@@ -56,8 +56,9 @@ func main() {
 	}
 	ctx := context.Background()
 
+	temp := float32(0.1)
 	genConfig := &genai.GenerateContentConfig{
-		Temperature:      func() *float32 { t := float32(0.1); return &t }(),
+		Temperature:      &temp,
 		ResponseMIMEType: "application/json",
 		ResponseSchema:   agents.AgentResponseSchema("13_critic"),
 	}
@@ -92,7 +93,7 @@ func main() {
 		}
 
 		var result criticResult
-		if err := json.Unmarshal([]byte(resp.Text()), &result); err != nil {
+		if err := json.Unmarshal([]byte(agents.StripJSONFences(resp.Text())), &result); err != nil {
 			log.Printf("failed to parse critic output for %s: %v\nraw: %s", base, err, resp.Text())
 			continue
 		}

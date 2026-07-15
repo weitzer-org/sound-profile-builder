@@ -411,6 +411,7 @@ func TestFlagLeftoverValueRanges(t *testing.T) {
 				{ID: "1", Type: "Delay", Model: "Digital Delay", Parameters: []storage.BlockParameter{
 					{Name: "Time", Type: "slider", Value: "10-15ms"},             // a genuine leftover range
 					{Name: "Feedback", Type: "slider", Value: "80 - 120 Hz"},     // range with spaces and a unit
+					{Name: "LowCut", Type: "slider", Value: "80Hz-120Hz"},        // unit repeated on BOTH numbers
 					{Name: "Mix", Type: "slider", Value: "45%"},                  // fine: single decisive value
 					{Name: "Gain", Type: "slider", Value: "-3.5", ValueB: "5-8"}, // ValueB is a range, Value is fine
 					{Name: "Level", Type: "slider", Value: "-2.0 dB"},            // single negative dB value -- must NOT false-positive as a range
@@ -428,6 +429,9 @@ func TestFlagLeftoverValueRanges(t *testing.T) {
 	}
 	if !strings.Contains(block.Rationale, "Feedback") {
 		t.Errorf("expected the Feedback range (with spaces/unit) to be flagged, got %q", block.Rationale)
+	}
+	if !strings.Contains(block.Rationale, "LowCut") {
+		t.Errorf("expected a range with the unit repeated on both numbers to be flagged, got %q", block.Rationale)
 	}
 	if strings.Contains(block.Rationale, "Mix") {
 		t.Errorf("expected the single-value Mix param to not be flagged, got %q", block.Rationale)

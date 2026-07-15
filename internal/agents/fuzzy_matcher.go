@@ -545,13 +545,15 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) {
 
 const valueRangeNote = "⚠️ Verify: %s looks like a range (%q), but a single decisive value was required."
 
-// valueRangePattern matches two numbers separated by a hyphen (optionally with a unit
-// suffix), e.g. "10-15ms" or "80 - 120 Hz" -- the exact leftover-range shape Architect Rule
-// 6 ("NEVER output value ranges... decisively select exactly ONE specific value") forbids.
+// valueRangePattern matches two numbers separated by a hyphen, each optionally carrying a
+// unit suffix, e.g. "10-15ms", "10ms-15ms", or "80 - 120 Hz" -- the exact leftover-range
+// shape Architect Rule 6 ("NEVER output value ranges... decisively select exactly ONE
+// specific value") forbids. LLMs frequently repeat the unit on both numbers, so allowing a
+// unit on the first number too avoids missing "80Hz-120Hz"-style ranges.
 // The leading "-?" on each number means a single negative value like "-3.5" or "-2.0 dB"
 // does not match (there's no second "-number" left to complete the pattern), so this only
 // fires on genuine two-number ranges, not negative numbers.
-var valueRangePattern = regexp.MustCompile(`^-?\d+(\.\d+)?\s*-\s*-?\d+(\.\d+)?\s*[a-zA-Z%°]*$`)
+var valueRangePattern = regexp.MustCompile(`^-?\d+(\.\d+)?\s*[a-zA-Z%°]*\s*-\s*-?\d+(\.\d+)?\s*[a-zA-Z%°]*$`)
 
 // FlagLeftoverValueRanges flags any slider parameter whose Value/ValueB is still a range
 // rather than the single decisive number Rule 6 requires. Detection only, same reasoning as

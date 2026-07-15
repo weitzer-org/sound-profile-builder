@@ -18,15 +18,16 @@ import (
 // made no preset change), the input is returned unchanged aside from fence-stripping. A
 // failure to parse the outer envelope at all is returned as an error -- that's a genuine
 // schema-compliance failure, not a "nothing to render" case.
-// stripJSONFences removes the ```json ... ``` markdown fencing the model/gateway can still
+// StripJSONFences removes the ```json ... ``` markdown fencing the model/gateway can still
 // wrap structured-output responses in despite schema enforcement (matters most for the
 // Open-LLM routing branch, which isn't schema-constrained). Shared by injectRenderedHTML and
 // applyCriticFindings so both agree on what "the raw JSON envelope" is -- previously only
 // injectRenderedHTML stripped fences, so a fenced Architect response silently caused the
 // critic step to no-op (its json.Unmarshal of the still-fenced string failed and it degraded
 // to "no annotations") while injectRenderedHTML immediately afterward parsed the same string
-// fine, a confusing asymmetry.
-func stripJSONFences(raw string) string {
+// fine, a confusing asymmetry. Exported so cmd/critic_probe can mirror the exact same
+// fence-stripping the live pipeline does before unmarshaling the critic's response.
+func StripJSONFences(raw string) string {
 	clean := strings.TrimSpace(raw)
 	clean = strings.TrimPrefix(clean, "```json")
 	clean = strings.TrimPrefix(clean, "```")
@@ -35,7 +36,7 @@ func stripJSONFences(raw string) string {
 }
 
 func injectRenderedHTML(raw string) (string, error) {
-	clean := stripJSONFences(raw)
+	clean := StripJSONFences(raw)
 
 	var envelope map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(clean), &envelope); err != nil {
