@@ -29,6 +29,27 @@ func TestApplyCriticFindings_AppliesToMatchingBlock(t *testing.T) {
 	}
 }
 
+func TestApplyCriticFindings_HandlesMarkdownFencedInputs(t *testing.T) {
+	// Both the Architect envelope and the critic response can come back wrapped in ```json
+	// fences despite structured-output enforcement (notably via the un-schema-constrained
+	// Open-LLM branch). Before stripJSONFences was shared, a fenced Architect envelope made
+	// this step silently no-op while injectRenderedHTML (which did strip fences) parsed the
+	// same string fine -- so a real critic finding never reached the rendered table.
+	raw := "```json\n" + `{"builder_statement": "test", "structured_payload": {"guitars": {"Tele": [
+		{"id":"b1","type":"Drive","model":"Facial Fuzz","rationale":"Original.","parameters":[]}
+	]}}, "agent_impact": []}` + "\n```"
+	criticRaw := "```json\n" + `{"issues": [{"guitar": "Tele", "block_id": "b1", "issue": "prose contradicts data", "severity": "high"}]}` + "\n```"
+
+	out := applyCriticFindings(raw, criticRaw)
+	if !strings.Contains(out, "Critic:") {
+		t.Errorf("expected the critic note to be applied even when both inputs were markdown-fenced, got: %s", out)
+	}
+	var envelope map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(out), &envelope); err != nil {
+		t.Fatalf("expected valid (unfenced) JSON output, got parse error %v on: %s", err, out)
+	}
+}
+
 func TestApplyCriticFindings_NoIssuesLeavesInputUnchanged(t *testing.T) {
 	raw := `{"builder_statement": "test", "structured_payload": {"guitars": {"Tele": [
 		{"id":"b1","type":"Drive","model":"Facial Fuzz","rationale":"Stacked rhythm tone.","parameters":[]}

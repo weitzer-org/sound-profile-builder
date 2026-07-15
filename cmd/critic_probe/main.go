@@ -24,15 +24,13 @@ import (
 // checklist as a Go string constant, specifically so this tool and the live pipeline can
 // never drift out of sync the way an earlier hardcoded copy briefly did.
 
-type Issue struct {
-	Guitar   string `json:"guitar"`
-	BlockID  string `json:"block_id"`
-	Issue    string `json:"issue"`
-	Severity string `json:"severity"`
-}
-
-type CriticResult struct {
-	Issues []Issue `json:"issues"`
+// criticResult wraps the shared agents.CriticIssue type (the same struct the live pipeline
+// parses the critic's response into) rather than redeclaring the per-issue field shape
+// here, so a field change in the real type can't silently leave the probe parsing a stale
+// shape. The one-field wrapper is trivial and package-local only because agents' own
+// response wrapper is unexported.
+type criticResult struct {
+	Issues []agents.CriticIssue `json:"issues"`
 }
 
 const criticPromptTemplate = "%s\n\nPreset to review:\n%s"
@@ -61,25 +59,7 @@ func main() {
 	genConfig := &genai.GenerateContentConfig{
 		Temperature:      func() *float32 { t := float32(0.1); return &t }(),
 		ResponseMIMEType: "application/json",
-		ResponseSchema: &genai.Schema{
-			Type: genai.TypeObject,
-			Properties: map[string]*genai.Schema{
-				"issues": {
-					Type: genai.TypeArray,
-					Items: &genai.Schema{
-						Type: genai.TypeObject,
-						Properties: map[string]*genai.Schema{
-							"guitar":   {Type: genai.TypeString},
-							"block_id": {Type: genai.TypeString},
-							"issue":    {Type: genai.TypeString},
-							"severity": {Type: genai.TypeString, Enum: []string{"high", "medium"}},
-						},
-						Required: []string{"guitar", "block_id", "issue", "severity"},
-					},
-				},
-			},
-			Required: []string{"issues"},
-		},
+		ResponseSchema:   agents.AgentResponseSchema("13_critic"),
 	}
 
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
@@ -111,7 +91,7 @@ func main() {
 			totalOut += resp.UsageMetadata.CandidatesTokenCount
 		}
 
-		var result CriticResult
+		var result criticResult
 		if err := json.Unmarshal([]byte(resp.Text()), &result); err != nil {
 			log.Printf("failed to parse critic output for %s: %v\nraw: %s", base, err, resp.Text())
 			continue

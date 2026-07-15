@@ -259,6 +259,16 @@ func agentResponseSchema(key string) *genai.Schema {
 	}
 }
 
+// AgentResponseSchema is the exported accessor for agentResponseSchema, so out-of-package
+// callers (currently cmd/critic_probe, which drives the Preset Critic against on-disk
+// Architect output) can reuse the exact same typed response schema the live pipeline
+// enforces instead of hand-maintaining a second copy that silently drifts when a schema
+// field is added or changed. Returns nil for keys without a fixed typed schema (Agent 12,
+// or an unrecognized key).
+func AgentResponseSchema(key string) *genai.Schema {
+	return agentResponseSchema(key)
+}
+
 // effectBlockJSONSchema is the raw-JSON-Schema fragment for one EffectBlock, matching
 // storage.EffectBlock/BlockParameter exactly (id/type/model/parameters, each parameter
 // carrying name/type/value). Used inside both Architect response shapes below.

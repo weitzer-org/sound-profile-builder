@@ -40,7 +40,7 @@ const criticIssueNotePrefix = "⚠️ Critic: "
 // an error.
 func applyCriticFindings(raw string, criticRaw string) string {
 	var resp criticResponse
-	if err := json.Unmarshal([]byte(criticRaw), &resp); err != nil {
+	if err := json.Unmarshal([]byte(stripJSONFences(criticRaw)), &resp); err != nil {
 		log.Printf("[Preset Critic] response unparseable, proceeding without critic annotations: %v", err)
 		return raw
 	}
@@ -49,7 +49,7 @@ func applyCriticFindings(raw string, criticRaw string) string {
 	}
 
 	var envelope map[string]json.RawMessage
-	if err := json.Unmarshal([]byte(raw), &envelope); err != nil {
+	if err := json.Unmarshal([]byte(stripJSONFences(raw)), &envelope); err != nil {
 		log.Printf("[Preset Critic] Architect envelope unparseable, proceeding without critic annotations: %v", err)
 		return raw
 	}
@@ -76,6 +76,7 @@ func applyCriticFindings(raw string, criticRaw string) string {
 			}
 			appendRationaleNote(&blocks[i], criticIssueNotePrefix+issue.Issue)
 			applied++
+			break // block IDs are unique within a guitar; stop scanning and don't double-apply
 		}
 	}
 	if applied == 0 {

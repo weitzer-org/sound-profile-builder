@@ -1,8 +1,8 @@
 # QC-2 Multi-Agent Modeler — Project Guide
 
-Go service that orchestrates a 12-agent Google Gemini pipeline to generate
-physics-accurate Quad Cortex (QC) guitar presets, served through an HTMX
-dashboard.
+Go service that orchestrates a 13-agent Google Gemini pipeline (12 generation
+agents plus an advisory Preset Critic) to generate physics-accurate Quad
+Cortex (QC) guitar presets, served through an HTMX dashboard.
 
 ## Run locally (Docker)
 Local dev runs the app in a container with a **MinIO** (S3-compatible) store
@@ -20,8 +20,10 @@ cp .env.example .env        # first time
 ## Architecture
 - `cmd/server/main.go` — entrypoint; selects the storage backend, builds the server.
 - `internal/api` — HTTP handlers, auth middleware (HMAC session cookie), HTMX server.
-- `internal/agents` — orchestrator + 12-agent Gemini/Open-LLM pipeline
-  (`MOCK_MODE=true` returns canned data instead of calling the LLM).
+- `internal/agents` — orchestrator + 13-agent Gemini/Open-LLM pipeline
+  (12 generation agents plus a 13th advisory Preset Critic that re-reads the
+  Architect's output for prose-vs-data contradictions; `MOCK_MODE=true`
+  returns canned data instead of calling the LLM).
 - `internal/storage` — `Client` interface
   (`ReadFile`/`WriteFile`/`ListFiles`/`DeleteFile`/`Close`) with two backends:
   - `gcs.go` — Google Cloud Storage (original; **kept for a future GCP move**).
