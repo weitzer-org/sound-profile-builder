@@ -482,11 +482,99 @@ func FlagCaptureFormattingMismatches(sp *storage.StructuredPreset, validBlocks m
 				continue
 			}
 			note := fmt.Sprintf(captureFormattingMismatchNote, strings.Join(mismatchedParams, "/"))
-			if !strings.Contains(blocks[i].Rationale, note) {
-				if blocks[i].Rationale != "" {
-					blocks[i].Rationale += " " + note
-				} else {
-					blocks[i].Rationale = note
+			appendRationaleNote(&blocks[i], note)
+		}
+	}
+}
+
+// appendRationaleNote appends note to a block's Rationale if it isn't already present
+// (idempotent across repeated flag passes, mirroring FlagUnverifiedBlock's idempotency for
+// the same reason: a chat-refinement turn can echo an already-flagged block back verbatim).
+func appendRationaleNote(block *storage.EffectBlock, note string) {
+	if strings.Contains(block.Rationale, note) {
+		return
+	}
+	if block.Rationale != "" {
+		block.Rationale += " " + note
+	} else {
+		block.Rationale = note
+	}
+}
+
+const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic placement parameters (Mic 1/Mic 2/Blend)."
+
+// cabinetMicParamTokens are normalized (lowercased, whitespace-stripped) substrings that
+// identify a Cabinet block's mic-placement parameters, per Architect Rule 12 ("Every
+// Cabinet block's parameters MUST include the Transducer Tech's mic placement data").
+var cabinetMicParamTokens = []string{"mic1", "mic2", "blend"}
+
+// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing one or more of the
+// mic-placement parameters Rule 12 requires (Mic 1, Mic 2, Blend). Found as a live, real
+// regression during Tier 1 development -- the Architect silently dropped these three
+// parameters from a Cabinet block on one golden-set prompt, keeping only High/Low Cut --
+// and fixed there with a prompt rule, but prompt compliance alone already proved fallible
+// for the analogous capture-formatting case (see FlagCaptureFormattingMismatches), so this
+// gives the same completeness property a deterministic backstop. Detection only, the same
+// way as the rest of this file's Flag* functions: there's no safe default mic
+// position/blend value to fabricate on the block's behalf.
+func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) {
+	if sp == nil {
+		return
+	}
+	for _, blocks := range sp.Guitars {
+		for i := range blocks {
+			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
+			if blockType != "cab" && blockType != "cabinet" {
+				continue
+			}
+			present := make(map[string]bool, len(cabinetMicParamTokens))
+			for _, p := range blocks[i].Parameters {
+				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
+				for _, token := range cabinetMicParamTokens {
+					if strings.Contains(norm, token) {
+						present[token] = true
+					}
+				}
+			}
+			if len(present) < len(cabinetMicParamTokens) {
+				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
+			}
+		}
+	}
+}
+
+const valueRangeNote = "⚠️ Verify: %s looks like a range (%q), but a single decisive value was required."
+
+// valueRangePattern matches two numbers separated by a hyphen, each optionally carrying a
+// unit suffix, e.g. "10-15ms", "10ms-15ms", or "80 - 120 Hz" -- the exact leftover-range
+// shape Architect Rule 6 ("NEVER output value ranges... decisively select exactly ONE
+// specific value") forbids. LLMs frequently repeat the unit on both numbers, so allowing a
+// unit on the first number too avoids missing "80Hz-120Hz"-style ranges.
+// The leading "-?" on each number means a single negative value like "-3.5" or "-2.0 dB"
+// does not match (there's no second "-number" left to complete the pattern), so this only
+// fires on genuine two-number ranges, not negative numbers.
+var valueRangePattern = regexp.MustCompile(`^-?\d+(\.\d+)?\s*[a-zA-Z%°]*\s*-\s*-?\d+(\.\d+)?\s*[a-zA-Z%°]*$`)
+
+// FlagLeftoverValueRanges flags any slider parameter whose Value/ValueB is still a range
+// rather than the single decisive number Rule 6 requires. Detection only, same reasoning as
+// this file's other Flag* functions: picking one end of the range (or the midpoint) on the
+// model's behalf would be a fabricated decision this file has no basis to make.
+func FlagLeftoverValueRanges(sp *storage.StructuredPreset) {
+	if sp == nil {
+		return
+	}
+	for _, blocks := range sp.Guitars {
+		for i := range blocks {
+			for j := range blocks[i].Parameters {
+				p := blocks[i].Parameters[j]
+				if strings.ToLower(strings.TrimSpace(p.Type)) != "slider" {
+					continue
+				}
+				if v := strings.TrimSpace(p.Value); valueRangePattern.MatchString(v) {
+					appendRationaleNote(&blocks[i], fmt.Sprintf(valueRangeNote, p.Name, v))
+				}
+				if vb := strings.TrimSpace(p.ValueB); vb != "" && valueRangePattern.MatchString(vb) {
+					appendRationaleNote(&blocks[i], fmt.Sprintf(valueRangeNote, p.Name+" (Scene B)", vb))
 				}
 			}
 		}

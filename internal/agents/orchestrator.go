@@ -571,6 +571,28 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		}
 		logToGCS("12_architect", finalResult)
 
+		if onProgress != nil {
+			onProgress("Finalizing: Reviewing for Internal Consistency...")
+		}
+
+		// Preset Critic: a fresh, skeptical second read of the Architect's own output,
+		// catching prose-vs-data contradictions (Scene A/B Bypass state, rationale claims
+		// vs. actual model) that no deterministic check can -- those require judgment, not
+		// a lookup. Advisory only: a call failure here must never fail the whole
+		// generation, and its findings are appended to block Rationale, never used to
+		// silently rewrite structured_payload's actual values.
+		versionCritic := agentConfig["13_critic"]
+		if versionCritic != "off" {
+			sysPromptCritic, _ := o.loadPromptForAgent("13_critic", versionCritic)
+			criticResult, errCritic := o.RunAgentSplit(ctx, "Preset Critic", sysPromptCritic, finalResult)
+			if errCritic != nil {
+				log.Printf("[Preset Critic] call failed, proceeding without critic annotations: %v", errCritic)
+			} else {
+				logToGCS("13_critic", criticResult)
+				finalResult = applyCriticFindings(finalResult, criticResult)
+			}
+		}
+
 		if rendered, err := injectRenderedHTML(finalResult); err == nil {
 			finalResult = rendered
 		} else {
@@ -635,6 +657,8 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		skip = os.Getenv("ABLATE_AGENT_11") == "true"
 	case "Architect & Evaluator", "Refinement Architect":
 		skip = os.Getenv("ABLATE_AGENT_12") == "true"
+	case "Preset Critic":
+		skip = os.Getenv("ABLATE_AGENT_13") == "true"
 	}
 
 	if skip {
@@ -668,6 +692,8 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		key = "11_dsp_dispatcher"
 	case "Architect & Evaluator", "Refinement Architect":
 		key = "12_architect"
+	case "Preset Critic":
+		key = "13_critic"
 	}
 
 	modelName := os.Getenv("TARGET_MODEL")

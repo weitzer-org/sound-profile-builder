@@ -1,8 +1,8 @@
 # QC-2 Multi-Agent Modeler — Project Guide
 
-Go service that orchestrates a 12-agent Google Gemini pipeline to generate
-physics-accurate Quad Cortex (QC) guitar presets, served through an HTMX
-dashboard.
+Go service that orchestrates a 13-agent Google Gemini pipeline (12 generation
+agents plus an advisory Preset Critic) to generate physics-accurate Quad
+Cortex (QC) guitar presets, served through an HTMX dashboard.
 
 ## Run locally (Docker)
 Local dev runs the app in a container with a **MinIO** (S3-compatible) store
@@ -20,8 +20,10 @@ cp .env.example .env        # first time
 ## Architecture
 - `cmd/server/main.go` — entrypoint; selects the storage backend, builds the server.
 - `internal/api` — HTTP handlers, auth middleware (HMAC session cookie), HTMX server.
-- `internal/agents` — orchestrator + 12-agent Gemini/Open-LLM pipeline
-  (`MOCK_MODE=true` returns canned data instead of calling the LLM).
+- `internal/agents` — orchestrator + 13-agent Gemini/Open-LLM pipeline
+  (12 generation agents plus a 13th advisory Preset Critic that re-reads the
+  Architect's output for prose-vs-data contradictions; `MOCK_MODE=true`
+  returns canned data instead of calling the LLM).
 - `internal/storage` — `Client` interface
   (`ReadFile`/`WriteFile`/`ListFiles`/`DeleteFile`/`Close`) with two backends:
   - `gcs.go` — Google Cloud Storage (original; **kept for a future GCP move**).
@@ -52,40 +54,49 @@ In prod, secrets are injected as env vars (Fly: `fly secrets`), never committed.
 Merges to `main` auto-deploy to prod (see Deployment) and there's no CI test
 gate, so review before merging is the main safety net.
 
-- Before opening/merging a PR, run **`/code-review low`** or
-  **`/code-review medium`** against the branch diff — always pass the effort
-  level explicitly rather than relying on whatever `/code-review` defaults to
-  bare. `medium` and `high` both run the same 8 parallel finder agents; the
-  effort level changes candidate volume per agent and how aggressively
-  findings get verified (precision-biased at `medium`, recall-biased at
-  `high`), not the number of agents spawned.
-- Small/low-risk diffs (typos, config, doc tweaks): `/code-review low` is
-  enough.
-- Larger or risky changes (auth, storage backend, agent pipeline logic):
-  `/code-review high`.
+**Cost policy (Claude quota is a real constraint on this project).** The
+bundled `/code-review` spawns 8 finder agents plus up to 8 verifiers — ~17
+model calls per run, the single largest discretionary expense in the workflow.
+So it is **not** the default anymore. The default pre-merge review is the
+project's own **`/quick-review`** (`.claude/skills/quick-review/`): one inline
+pass, no sub-agents, ~1 call. The free GitHub-integrated bots
+(gemini-code-assist, CodeRabbit) review every PR at zero Claude quota and are
+the automated second opinion that makes a cheaper local pass acceptable.
+
+- **Default — every PR:** run **`/quick-review`** against the branch diff, then
+  let the GitHub bots backstop it on the open PR.
+- **Escalate to the multi-agent `/code-review high`** only for large or
+  architecturally risky changes (auth, storage backend, agent pipeline logic)
+  where the fan-out's extra recall is worth ~17 calls. Always pass the effort
+  level explicitly. `medium` and `high` both run the same 8 parallel finder
+  agents; the level changes candidate volume and verify aggressiveness
+  (precision-biased at `medium`, recall-biased at `high`), not agent count.
 - Reserve `/code-review ultra` (multi-agent cloud review) for substantial
   features before merge — it's billed separately, so don't run it routinely.
-- `/code-review --fix` applies the findings directly if you want them
-  auto-fixed instead of just reported.
+- `/code-review --fix` applies findings directly if you want them auto-fixed.
+- If a diff feels too big or risky for a single `/quick-review` pass, say so
+  and let the user decide whether to budget for the full fan-out — don't
+  quietly spawn sub-agents to compensate.
 
 ### Security review
-`/code-review`'s standard finder angles (correctness, cleanup, altitude,
-conventions) are not a substitute for an explicit security pass — they check
-whether a change does what it intends, not whether an adversary can bend it.
-A hand-rolled regex "sanitizer" for agent-authored HTML passed an internal
-`/code-review high` pass in this repo and still shipped with several XSS
-bypasses (HTML-entity-encoded schemes, attribute selectors without leading
-whitespace, dangerous attributes beyond href/src) that only surfaced once
-GitHub's automated reviewers (gemini-code-assist, CodeRabbit) looked at the
-PR with that specific lens.
+The standard review lenses (correctness, cleanup, altitude, conventions) are
+not a substitute for an explicit security pass — they check whether a change
+does what it intends, not whether an adversary can bend it. A hand-rolled regex
+"sanitizer" for agent-authored HTML passed an internal `/code-review high` pass
+in this repo and still shipped with several XSS bypasses (HTML-entity-encoded
+schemes, attribute selectors without leading whitespace, dangerous attributes
+beyond href/src) that only surfaced once GitHub's automated reviewers
+(gemini-code-assist, CodeRabbit) looked at the PR with that specific lens.
 
 - Run **`/security-review`** (project skill, `.claude/skills/security-review/`)
-  as an optional, additive pass — not a replacement for `/code-review` —
+  as an optional, additive pass — not a replacement for `/quick-review` —
   whenever a diff touches auth, secrets, storage-backend credentials, or how
   externally-influenced content (user input, Gemini/LLM output, anything
   from the agent pipeline) gets rendered, parsed, or escaped. It runs
-  adversarial finder angles (injection, auth/authz, secrets handling, supply
-  chain) that `/code-review`'s standard angles don't cover.
+  adversarial angles (injection, auth/authz, secrets handling, supply chain)
+  the standard lenses don't cover. It was rewritten to a **single inline pass
+  (no sub-agents, ~1 call)** to fit the cost policy above — same quota profile
+  as `/quick-review`, not the old multi-agent fan-out.
 - Don't hand-roll HTML sanitization, escaping, or URL-scheme filtering with
   regex — regex can't safely parse HTML. Use a real parser-based allowlist
   library (this repo uses `github.com/microcosm-cc/bluemonday`).
