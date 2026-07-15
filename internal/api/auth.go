@@ -17,7 +17,7 @@ import (
 
 const sessionCookieName = "qc_auth_session"
 const secretName = "spb-login-pw"
-const sessionDuration = 30 * 24 * time.Hour // 30 days for optimal mobile/PWA developer UX
+const sessionDuration = 24 * time.Hour
 
 // simple hashing to secure the cookie based on the SecretManager password
 func generateCookieValue(password string) string {
