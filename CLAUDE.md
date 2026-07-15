@@ -60,8 +60,11 @@ model calls per run, the single largest discretionary expense in the workflow.
 So it is **not** the default anymore. The default pre-merge review is the
 project's own **`/quick-review`** (`.claude/skills/quick-review/`): one inline
 pass, no sub-agents, ~1 call. The free GitHub-integrated bots
-(gemini-code-assist, CodeRabbit) review every PR at zero Claude quota and are
-the automated second opinion that makes a cheaper local pass acceptable.
+(gemini-code-assist, CodeRabbit) and the **GSR GitHub Action**
+(`.github/workflows/gsr-review.yml`, github.com/weitzer-org/gsr, `basic`
+mode) review every PR at zero Claude quota — GSR runs on its own Gemini API
+key, not Claude's — and are the automated second opinion that makes a
+cheaper local pass acceptable.
 
 - **Default — every PR:** run **`/quick-review`** against the branch diff, then
   let the GitHub bots backstop it on the open PR.
