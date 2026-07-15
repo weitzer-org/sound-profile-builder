@@ -1,5 +1,68 @@
 # Project Backlog & To-Do
 
+## Pipeline Quality Work — Status (as of 2026-07-15)
+
+A multi-tier effort to raise generation quality without a structural rewrite,
+evaluated each time against the same 12-prompt golden set + blind pairwise
+LLM judge. All three tiers below are merged to `main`.
+
+- **Tier 0** (PR #63) — structural fix for a real drift bug: capture-only
+  relative-dB parameter formatting was leaking onto algorithmic (non-capture)
+  Amplifier blocks. Root-caused and fixed at the source.
+- **Tier 1** (PR #69) — `qc_block_schema.json` (manual-sourced QC parameter
+  vocabulary), the `basis` confidence field on every parameter
+  (confirmed_range/real_gear_analog/engineering_convention/estimate, so a
+  value's provenance is always visible and hedging is never silent), search
+  grounding for Sonic Profiler, `SelectedCaptureContext` (capture descriptive
+  color), and `FlagCaptureFormattingMismatches` (deterministic detection of
+  the Tier 0 bug class, in case it recurs).
+- **Tier 2** (PR #71) — a detect-don't-silently-fix consistency layer:
+  `FlagIncompleteCabinetBlocks` (Rule 12 Mic 1/Mic 2/Blend) and
+  `FlagLeftoverValueRanges` (Rule 6 no ranges) deterministic checks, plus a
+  13th advisory **Preset Critic** agent (`internal/agents/critic.go`,
+  `prompts/13_critic.md`) that re-reads the Architect's own output for
+  prose-vs-data contradictions no deterministic check can catch (e.g. a
+  rationale claiming "tape echo" on a block whose model is a digital delay).
+  Findings are appended to `Rationale`, never used to mutate the editable
+  `Value`/`ValueB` fields. Validated cheaply pre-integration via
+  `cmd/critic_probe` (runs the critic against on-disk output, no new
+  generation) — this is how a Bypass-semantics false positive
+  (`Bypass: On` = bypassed in this pipeline, not the everyday reading) was
+  caught and fixed before it ever reached a live eval.
+- Also shipped alongside this track: an urgent production reliability
+  hotfix (`hotfix/max-output-tokens-caps`, PR #70) after Tier 2 development
+  surfaced a ~50% `MaxOutputTokens` truncation failure rate spread across
+  several previously-reliable agents (see the dedicated bullet under Known
+  Bugs & Investigations below).
+
+**Deliberate tradeoffs / open critiques worth knowing before extending this
+track further:**
+- The Preset Critic pattern (an agent re-reading the same model's own
+  output) is architecturally shallower than Tier 0's approach of fixing the
+  generation logic itself — a fair critique, kept as a conscious tradeoff
+  rather than a fourth prompt-tuning round.
+- The critic path has **no e2e or mock-mode test coverage** — `MOCK_MODE`
+  returns before it ever runs, so it's validated only via `critic_probe` +
+  live runs + Go unit tests on `applyCriticFindings`. Worth deciding whether
+  that's sufficient or needs a mock-mode fixture.
+- Cabinet mic-placement parameter names (`Mic 1`/`Mic 2`/`Blend` /
+  `mic_1_pos`/`mic_2_pos`/`blend_ratio`) are now hardcoded independently in
+  four places: `schemas.go`, `prompts/7_transducer_tech.md`,
+  `prompts/12_architect_v4.md`, and `fuzzy_matcher.go`'s
+  `cabinetMicParamTokens`. Low urgency (prompts and schema naturally
+  hardcode vocabulary) but worth remembering before a fifth copy appears.
+- `agentTemperature`, `agentSearchTool`, and `agentMaxOutputTokens`
+  (`internal/agents/schemas.go`) remain three independent maps with nothing
+  enforcing they stay in sync across all 13 agent keys — still not unified
+  (see the fuller entry further down).
+
+**Not yet started / natural next step:** a "Tier 3" pass on agent
+wiring/context itself (e.g. the Sonic Profiler token-bloat parity fix,
+`RefineChat`'s missing `SelectedCaptureContext`, or the Cabinet
+manual-research-vs-actual-model reconciliation) rather than another
+detection layer on top. See the relevant bullets below and issues #64-#68
+for the specific candidates and their tradeoffs.
+
 ## Features & Enhancements
 
 - **Interactive Post-Generation Tweaking**: Build a follow-up conversational thread UI/architecture where the user can chat with the Orchestrator LLM to recursively tweak the generated results, give feedback, or ask questions about the generated DSP blocks.
@@ -32,7 +95,7 @@
 - **CSRF Protection**: No CSRF protection exists on any state-changing route (save/delete/copy/rename preset, generate, chat-refine) -- confirmed zero `csrf` references anywhere in `internal/api`. The HMAC session cookie alone doesn't defend against cross-site request forgery.
 - **Rate Limiting**: No rate limiting exists on `/api/preset/generate` or `/api/preset/chat`, both of which call the paid Gemini API. Nothing currently stops a compromised session or a client-side bug from hammering either endpoint and running up API cost.
 - **Per-User Ownership Model**: `storage.Preset` has no `owner`/`user_id` field -- confirmed via grep. Every authenticated session shares one `MOCK_PASSWORD` and can view/edit/delete any preset. Decide whether this is acceptable long-term (single-team internal tool) or needs per-user scoping.
-- **Live-Mode Playwright Test Convention**: `tests/e2e/live_capture.spec.js` and `live_recheck.spec.js` (real-Gemini-data verification, used repeatedly during the mobile UX redesign work) are uncommitted with no decision made on whether they're a permanent fixture. Either commit them under a clear naming/gating convention (e.g. `*.live.spec.js`, excluded from the normal mock-mode run since they cost real API calls) or delete them.
+- [x] ~~**Live-Mode Playwright Test Convention**~~: `tests/e2e/live_capture.spec.js`, `live_recheck.spec.js`, and `builder_statement_check.spec.js` (real-Gemini-data verification) are now committed, along with their `tests/e2e/live-shots/` screenshots. Still open: no explicit naming/gating convention exists yet (e.g. a `*.live.spec.js` pattern excluded from the normal mock-mode run since these cost real API calls) -- they currently rely on being manually invoked rather than being structurally separated from the mock-mode suite.
 
 ## Known Bugs & Investigations
 
