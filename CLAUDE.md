@@ -31,6 +31,39 @@ cp .env.example .env        # first time
   - Presets and memories are JSON blobs keyed by UUID under `presets/` and `memories/`.
 - `internal/config` — loads `config.json` with env overrides.
 
+## Capture metadata (`coros_map.json` / `user_captures.json`)
+Both are embedded (`//go:embed`, `internal/agents/orchestrator.go`) — changes require a
+rebuild/redeploy, not just a file edit.
+
+- **`coros_map.json`** — the factory capture map: real-world gear name -> QC block name
+  (`coros_equivalent`), whether it's a pre-trained Neural Capture (`is_capture`), and an
+  optional `tonal_archetype` (a real descriptive tonal color, consumed by
+  `SelectedCaptureContext` in `internal/agents/fuzzy_matcher.go` to help the Architect pick
+  the right relative-dB direction/magnitude on confirmed-capture blocks per Rule 9).
+  `tonal_archetype` coverage is sparse today (~7%) — this is a known, tracked gap (see
+  TODO.md's Pipeline Quality Work section for the full history), not an oversight to fix
+  ad hoc. **Whenever new entries are added to `coros_map.json`** (e.g. after a CorOS/NanOS
+  firmware update adds new factory captures), re-run `cmd/enrich_captures` afterward to
+  research `tonal_archetype` for any of the new entries that are missing one — don't
+  hand-write it inline in the same edit. It's a two-step process by design: the tool writes
+  proposed labels (each with a citation) to a sibling draft file, never `coros_map.json`
+  directly, and a human reviews/merges them via a normal PR — see `cmd/enrich_captures`'s
+  package doc comment and TODO.md for the full rationale (constrained label vocabulary,
+  why it's offline/PR-gated rather than live).
+  - Do NOT commit a new capture entry with a guessed or hand-invented `tonal_archetype` —
+    either leave it unset until `cmd/enrich_captures` researches it, or add it yourself only
+    with a real citeable source, same bar the tool holds itself to.
+- **`user_captures.json`** — the personal/downloaded 3rd-party (Cortex Cloud) capture
+  library. Structurally different from `coros_map.json` and does **not** need the same
+  batch-enrichment process: every entry already carries a human-authored `description`
+  field (populated at curation time, not backfilled after the fact) that
+  `SelectedCaptureContext` uses directly as that capture's color — coverage is
+  already 100%, confirmed by inspecting the file directly. **When adding a new user
+  capture, write its `description` in the same edit** (a real, specific tonal
+  description — "boutique overdrive, light-gain setting," not a placeholder) rather than
+  leaving it blank for a later pass; there's no tool to catch a gap here the way there is
+  for `coros_map.json`.
+
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).
