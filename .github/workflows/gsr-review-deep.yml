@@ -24,7 +24,7 @@ name: GSR Deep Review (Agent Swarm)
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, synchronize]
 
 permissions:
   contents: read
@@ -36,7 +36,10 @@ concurrency:
 
 jobs:
   review:
-    if: github.event.label.name == 'deep-review'
+    # github.event.label is only populated for the labeled event itself, so a
+    # synchronize (new commit) run has to check the PR's current labels
+    # instead -- that's what actually re-triggers the review on fixup pushes.
+    if: contains(github.event.pull_request.labels.*.name, 'deep-review')
     runs-on: ubuntu-latest
     steps:
       - uses: weitzer-org/gsr@main
