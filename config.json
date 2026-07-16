@@ -17,7 +17,7 @@
   "project_id": "710019748844",
   "bucket_name": "weitzer-sound-builder",
   "agent_prompts": {
-    "2_sonic_profiler": "v3",
+    "2_sonic_profiler": "v4",
     "4_coros_librarian": "v2",
     "6_acoustician": "v3",
     "12_architect": "v4"
