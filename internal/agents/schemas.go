@@ -13,19 +13,20 @@ import "google.golang.org/genai"
 // research and final-assembly agents, which synthesize prose alongside data, run warmer.
 func agentTemperature(key string) *float32 {
 	temps := map[string]float32{
-		"1_tone_historian":    0.3,
-		"2_sonic_profiler":    0.2,
-		"3_community_scraper": 0.4,
-		"4_coros_librarian":   0.3,
-		"5_cloud_navigator":   0.1, // strict verbatim matching against an injected list
-		"6_acoustician":       0.15,
-		"7_transducer_tech":   0.2,
-		"8_foh_optimizer":     0.15,
-		"9_mix_engineer":      0.15,
-		"10_control_mapper":   0.2,
-		"11_dsp_dispatcher":   0.15,
-		"12_architect":        0.6, // bumped from 0.3: baseline's judge-preferred prose specificity (EP-3 preamp tricks, Varitone physics) may have been a temperature effect, not a grounding effect -- testing that hypothesis directly
-		"13_critic":           0.1, // narrow fact-checking task (does prose match data), not creative -- run cold
+		"1_tone_historian":      0.3,
+		"2_sonic_profiler":      0.2,
+		"3_community_scraper":   0.4,
+		"4_coros_librarian":     0.3,
+		"5_cloud_navigator":     0.1, // strict verbatim matching against an injected list
+		"6_acoustician":         0.15,
+		"7_transducer_tech":     0.2,
+		"8_foh_optimizer":       0.15,
+		"9_mix_engineer":        0.15,
+		"10_control_mapper":     0.2,
+		"11_dsp_dispatcher":     0.15,
+		"12_architect":          0.6, // bumped from 0.3: baseline's judge-preferred prose specificity (EP-3 preamp tricks, Varitone physics) may have been a temperature effect, not a grounding effect -- testing that hypothesis directly
+		"13_critic":             0.1, // narrow fact-checking task (does prose match data), not creative -- run cold
+		"14_capture_enrichment": 0.1, // factual research task (what does this real gear actually sound like), not creative -- run cold
 	}
 	t, ok := temps[key]
 	if !ok {
@@ -58,19 +59,20 @@ func agentTemperature(key string) *float32 {
 // pinning a dated model version) rather than another blind doubling.
 func agentMaxOutputTokens(key string) int32 {
 	caps := map[string]int32{
-		"1_tone_historian":    4000,
-		"2_sonic_profiler":    4000,
-		"3_community_scraper": 4000,
-		"4_coros_librarian":   6000,
-		"5_cloud_navigator":   4000,
-		"6_acoustician":       4000,
-		"7_transducer_tech":   3000,
-		"8_foh_optimizer":     3000,
-		"9_mix_engineer":      3000,
-		"10_control_mapper":   4000,
-		"11_dsp_dispatcher":   3000,
-		"12_architect":        16000,
-		"13_critic":           4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
+		"1_tone_historian":      4000,
+		"2_sonic_profiler":      4000,
+		"3_community_scraper":   4000,
+		"4_coros_librarian":     6000,
+		"5_cloud_navigator":     4000,
+		"6_acoustician":         4000,
+		"7_transducer_tech":     3000,
+		"8_foh_optimizer":       3000,
+		"9_mix_engineer":        3000,
+		"10_control_mapper":     4000,
+		"11_dsp_dispatcher":     3000,
+		"12_architect":          16000,
+		"13_critic":             4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
+		"14_capture_enrichment": 1000, // tiny fixed-shape output (a label, a citation, an optional justification) -- no legitimate reason to run long
 	}
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }
@@ -92,9 +94,15 @@ func agentMaxOutputTokens(key string) int32 {
 // heavier nested humbucker/single_coil schema. That's a systemic latency problem, not a
 // flaky one-off, so it stays ungrounded; it still gets the QC Block Parameter Vocabulary
 // and User Capture Library context injected as plain text (cheap, no tool-call latency).
+//
+// "14_capture_enrichment" is not a RunPipeline/RefineChat agent -- it's `cmd/enrich_captures`,
+// an offline batch tool that researches real-world gear tonal character to backfill
+// coros_map.json's tonal_archetype field (see TODO.md). Same grounding tool, same latency
+// profile as Sonic Profiler/Tone Historian/Community Scraper, just invoked outside the live
+// pipeline where an occasional slow call costs nothing (no user is waiting on it).
 func agentSearchTool(key string) []*genai.Tool {
 	switch key {
-	case "1_tone_historian", "3_community_scraper", "2_sonic_profiler":
+	case "1_tone_historian", "3_community_scraper", "2_sonic_profiler", "14_capture_enrichment":
 		return []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}}
 	default:
 		return nil
@@ -253,6 +261,15 @@ func agentResponseSchema(key string) *genai.Schema {
 				}, []string{"guitar", "block_id", "issue", "severity"}),
 			},
 		}, []string{"issues"})
+
+	case "14_capture_enrichment":
+		return objSchema(map[string]*genai.Schema{
+			"found_reliable_source":      {Type: genai.TypeBoolean, Description: "False if search did not turn up a real, citeable description of this specific gear's tonal character -- do not guess when this is false."},
+			"tonal_archetype":            {Type: genai.TypeString, Enum: []string{"British Crunch", "High-Gain Modern", "Other / Unique", "New Category"}, Description: "Pick the closest existing category (the full current vocabulary is just these three plus this escape hatch). Only use New Category if none of the others are a reasonable fit."},
+			"new_category_label":         strSchema("Only meaningful if tonal_archetype is New Category: a short (2-4 word) label in the same style as the existing categories."),
+			"new_category_justification": strSchema("Only meaningful if tonal_archetype is New Category: why none of the existing categories fit this gear."),
+			"citation":                   strSchema("The specific source (publication, forum, manufacturer page) the tonal-character claim is based on. Required whenever found_reliable_source is true."),
+		}, []string{"found_reliable_source", "tonal_archetype", "citation"})
 
 	default:
 		return nil
