@@ -2,6 +2,7 @@ package agents
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -420,5 +421,88 @@ func TestOrchestrator_RunPipeline_FavorCaptureConstraints(t *testing.T) {
 
 	if !strings.Contains(capturedBody, "FAVOR CAPTURES") {
 		t.Errorf("Expected prompt to contain 'FAVOR CAPTURES', got captured body: %s", capturedBody)
+	}
+}
+
+func TestSubsetQCBlockSchema(t *testing.T) {
+	original := embeddedQCBlockSchema
+	defer func() { embeddedQCBlockSchema = original }()
+	embeddedQCBlockSchema = []byte(`{
+		"_readme": {"version": "1.0"},
+		"global_eq": {"param": "value"},
+		"drive": {"param": "value"}
+	}`)
+
+	tests := []struct {
+		name           string
+		keys           []string
+		expectFallback bool
+		expectedKeys   []string
+	}{
+		{
+			name:         "valid subset with _readme and a real category",
+			keys:         []string{"_readme", "global_eq"},
+			expectedKeys: []string{"_readme", "global_eq"},
+		},
+		{
+			name:           "fallback when the only requested category doesn't exist",
+			keys:           []string{"_readme", "non_existent_category"},
+			expectFallback: true,
+		},
+		{
+			name:           "fallback on partial drift -- one of two requested categories missing",
+			keys:           []string{"_readme", "drive", "missing_category"},
+			expectFallback: true,
+		},
+		{
+			name:         "empty keys list has nothing to drift, so no fallback",
+			keys:         []string{},
+			expectedKeys: []string{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := subsetQCBlockSchema(tc.keys)
+
+			if tc.expectFallback {
+				if result != string(embeddedQCBlockSchema) {
+					t.Errorf("expected fallback to full schema, got: %s", result)
+				}
+				return
+			}
+
+			var parsed map[string]json.RawMessage
+			if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+				t.Fatalf("failed to parse subset JSON: %v", err)
+			}
+			if len(parsed) != len(tc.expectedKeys) {
+				t.Errorf("expected %d keys, got %d (%v)", len(tc.expectedKeys), len(parsed), parsed)
+			}
+			for _, key := range tc.expectedKeys {
+				if _, ok := parsed[key]; !ok {
+					t.Errorf("subset missing expected key: %s", key)
+				}
+			}
+		})
+	}
+}
+
+// TestGetQCSonicProfilerSchemaJSON_Integrity is a contract test against the real, embedded
+// production schema: if a category referenced here (global_eq/drive/reverb/noise_gate) ever
+// gets renamed in qc_block_schema.json, this fails loudly instead of Sonic Profiler silently
+// losing that category from its context with no test to catch it.
+func TestGetQCSonicProfilerSchemaJSON_Integrity(t *testing.T) {
+	result := GetQCSonicProfilerSchemaJSON()
+
+	var parsed map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		t.Fatalf("failed to parse Sonic Profiler schema: %v", err)
+	}
+
+	for _, key := range []string{"_readme", "global_eq", "drive", "reverb", "noise_gate"} {
+		if _, ok := parsed[key]; !ok {
+			t.Errorf("production schema is missing a category Sonic Profiler's prompt depends on: %s", key)
+		}
 	}
 }
