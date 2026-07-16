@@ -1,0 +1,49 @@
+name: GSR Deep Review (Agent Swarm)
+
+# Full GSR agent-swarm review (Architecture, Logic, Security, TechDebt,
+# Testing agents + dedup pass) -- slower/pricier than the basic-mode review
+# in gsr-review.yml that runs on every PR, so this one is opt-in only:
+# apply the "deep-review" label to a PR. Mirrors the existing
+# /code-review high escalation pattern in CLAUDE.md (reserved for
+# large/architecturally risky changes).
+#
+# Uses the same GSR_GEMINI_API_KEY repo secret as gsr-review.yml.
+#
+# No workflow_dispatch here: GSR's entrypoint
+# (adk/backend/src/action-entrypoint.ts) hard-requires a pull_request.number
+# in the GITHUB_EVENT_PATH JSON and throws otherwise. Two workaround
+# approaches were tried and both failed for platform-level reasons, verified
+# by live testing on a throwaway repo -- (1) overriding GITHUB_EVENT_PATH via
+# a step env: block, which GitHub Actions silently ignores for default env
+# vars, and (2) mutating the real event file's contents, which does persist
+# and is readable by later shell commands in the same job, but does not
+# propagate to a freshly-launched sibling container's view of that path
+# (confirmed with a throwaway alpine probe mounting the same directory).
+# The label trigger below is the only path that's actually been validated
+# end-to-end.
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: gsr-deep-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # github.event.label is only populated for the labeled event itself, so a
+    # synchronize (new commit) run has to check the PR's current labels
+    # instead -- that's what actually re-triggers the review on fixup pushes.
+    if: contains(github.event.pull_request.labels.*.name, 'deep-review')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: weitzer-org/gsr@main
+        with:
+          gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
+          mode: subagent
+          fail-on-severity: none
