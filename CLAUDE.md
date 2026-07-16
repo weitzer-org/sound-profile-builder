@@ -35,6 +35,18 @@ cp .env.example .env        # first time
 Both are embedded (`//go:embed`, `internal/agents/orchestrator.go`) — changes require a
 rebuild/redeploy, not just a file edit.
 
+**Both enrichment tools only ever research new/not-yet-covered entries, never the whole
+file again** — important since new factory captures ship with firmware updates and new
+user captures get downloaded regularly, and re-researching everything each time would
+waste API budget on records that already have a good answer. For `coros_map.json`, an
+entry with a non-empty `tonal_archetype` already IS the "done" signal (`cmd/enrich_captures`
+only targets entries where it's empty) — no extra field needed. For `user_captures.json`,
+every entry has *some* description by construction, so there's no natural empty-field
+signal; `description_verified: true` on an entry is what marks it as already covered by a
+citation-backed pass. Set it explicitly in `user_captures.json` when merging an approved
+`verified_description` from `cmd/verify_user_captures`'s draft file — a merge that doesn't
+set it will cause the next run to needlessly re-research that entry.
+
 - **`coros_map.json`** — the factory capture map: real-world gear name -> QC block name
   (`coros_equivalent`), whether it's a pre-trained Neural Capture (`is_capture`), and an
   optional `tonal_archetype` (a real descriptive tonal color, consumed by

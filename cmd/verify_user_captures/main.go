@@ -1,5 +1,5 @@
 // cmd/verify_user_captures is an offline batch tool, parallel to cmd/enrich_captures, that
-// researches real citation-backed descriptions for user_captures.json's 87 entries. Unlike
+// researches real citation-backed descriptions for user_captures.json entries. Unlike
 // coros_map.json's tonal_archetype gap, user_captures.json already has a description on
 // every entry -- but those descriptions were written by an earlier Claude Code session
 // inferring gear identity from the (often cryptic) exported capture name alone, with no
@@ -8,6 +8,13 @@
 // the existing description, to avoid anchoring) and writes both side by side in the draft
 // output for a human to compare. It never writes user_captures.json directly -- results go
 // to a sibling draft file for review via a normal PR, same process as cmd/enrich_captures.
+//
+// Only researches captures where description_verified is not yet true (see userCapture) --
+// so after new captures are downloaded and added to user_captures.json, re-running this
+// tool only researches the new ones, not the entire library again. Set
+// description_verified=true on an entry in user_captures.json when merging its approved
+// verified_description from the draft file; that's what makes future runs skip it.
+//
 // Run with: GEMINI_API_KEY=... go run ./cmd/verify_user_captures
 package main
 
@@ -23,12 +30,19 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/agents"
 )
 
-// userCapture mirrors user_captures.json's per-entry structure.
+// userCapture mirrors user_captures.json's per-entry structure. DescriptionVerified is the
+// skip signal for already-covered entries: unlike coros_map.json (where an empty
+// tonal_archetype is itself the "still needs research" marker), every user_captures.json
+// entry already has *some* description by construction, so there's no natural empty-field
+// signal -- this explicit marker is what lets a future run target only newly-added
+// captures instead of re-researching everything each time. Set it to true in
+// user_captures.json when merging an approved verified_description from the draft file.
 type userCapture struct {
-	Name        string `json:"name"`
-	BlockType   string `json:"block_type"`
-	Description string `json:"description"`
-	Source      string `json:"source"`
+	Name                string `json:"name"`
+	BlockType           string `json:"block_type"`
+	Description         string `json:"description"`
+	Source              string `json:"source"`
+	DescriptionVerified bool   `json:"description_verified,omitempty"`
 }
 
 // verificationResult is the shape of Agent 15's structured JSON output, per the schema in
@@ -69,11 +83,35 @@ func main() {
 		log.Fatalf("Failed to read %s: %v", sourcePath, err)
 	}
 
-	var captures []userCapture
-	if err := json.Unmarshal(raw, &captures); err != nil {
+	var allCaptures []userCapture
+	if err := json.Unmarshal(raw, &allCaptures); err != nil {
 		log.Fatalf("Failed to parse %s: %v", sourcePath, err)
 	}
-	log.Printf("Found %d user captures to independently verify.", len(captures))
+	log.Printf("Found %d user captures total.", len(allCaptures))
+
+	captures := filterUnverified(allCaptures)
+	if alreadyVerified := len(allCaptures) - len(captures); alreadyVerified > 0 {
+		log.Printf("%d captures already have description_verified=true -- skipping those (only new/unverified captures are researched).", alreadyVerified)
+	}
+	log.Printf("%d captures need research.", len(captures))
+
+	// Resumable: if a draft file already exists at draftPath (e.g. from a prior run that
+	// hit truncation/parse failures on some captures), load it and skip any capture name
+	// it already covers, rather than re-paying for ones that already succeeded.
+	drafts := make(map[string]draftEntry) // keyed by capture name (confirmed unique)
+	if existing, err := os.ReadFile(draftPath); err == nil {
+		if err := json.Unmarshal(existing, &drafts); err != nil {
+			log.Fatalf("Existing draft file %s is not valid JSON, refusing to overwrite blindly: %v", draftPath, err)
+		}
+		log.Printf("Loaded existing draft %s: %d captures already covered -- skipping those.", draftPath, len(drafts))
+	}
+	remaining := captures[:0]
+	for _, c := range captures {
+		if _, ok := drafts[c.Name]; !ok {
+			remaining = append(remaining, c)
+		}
+	}
+	captures = remaining
 
 	if limitStr := os.Getenv("VERIFY_LIMIT"); limitStr != "" {
 		limit, err := strconv.Atoi(limitStr)
@@ -81,11 +119,16 @@ func main() {
 			log.Fatalf("Invalid VERIFY_LIMIT %q: must be a non-negative integer", limitStr)
 		}
 		if limit < len(captures) {
-			log.Printf("VERIFY_LIMIT=%d set -- only researching the first %d of %d captures (smoke-test mode).", limit, limit, len(captures))
+			log.Printf("VERIFY_LIMIT=%d set -- only researching the first %d of %d remaining captures (smoke-test mode).", limit, limit, len(captures))
 			captures = captures[:limit]
 		} else {
-			log.Printf("VERIFY_LIMIT=%d set, but only %d captures found -- researching all of them.", limit, len(captures))
+			log.Printf("VERIFY_LIMIT=%d set, but only %d remaining captures found -- researching all of them.", limit, len(captures))
 		}
+	}
+
+	if len(captures) == 0 {
+		log.Printf("Nothing left to research -- every capture is already covered by the existing draft.")
+		return
 	}
 
 	ctx := context.Background()
@@ -100,7 +143,6 @@ func main() {
 		log.Fatalf("Failed to load User Capture Verification prompt: %v", err)
 	}
 
-	drafts := make(map[string]draftEntry) // keyed by capture name (confirmed unique)
 	skipped := 0
 
 	// Sequential, not concurrent: this is a low-frequency, one-off offline sweep with no
@@ -160,4 +202,18 @@ func main() {
 	}
 
 	log.Printf("Wrote %d verified descriptions to %s (%d skipped -- no reliable source or malformed response). Review and merge into %s manually via a normal PR.", len(drafts), draftPath, skipped, sourcePath)
+}
+
+// filterUnverified returns only the captures that haven't already been marked
+// description_verified -- so re-running this tool after new captures are added only
+// researches the new ones, not the entire library again. Set description_verified=true in
+// user_captures.json when merging an approved verified_description from the draft file.
+func filterUnverified(captures []userCapture) []userCapture {
+	unverified := make([]userCapture, 0, len(captures))
+	for _, c := range captures {
+		if !c.DescriptionVerified {
+			unverified = append(unverified, c)
+		}
+	}
+	return unverified
 }
