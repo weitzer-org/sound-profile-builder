@@ -54,15 +54,22 @@ rebuild/redeploy, not just a file edit.
     either leave it unset until `cmd/enrich_captures` researches it, or add it yourself only
     with a real citeable source, same bar the tool holds itself to.
 - **`user_captures.json`** — the personal/downloaded 3rd-party (Cortex Cloud) capture
-  library. Structurally different from `coros_map.json` and does **not** need the same
-  batch-enrichment process: every entry already carries a human-authored `description`
-  field (populated at curation time, not backfilled after the fact) that
-  `SelectedCaptureContext` uses directly as that capture's color — coverage is
-  already 100%, confirmed by inspecting the file directly. **When adding a new user
-  capture, write its `description` in the same edit** (a real, specific tonal
-  description — "boutique overdrive, light-gain setting," not a placeholder) rather than
-  leaving it blank for a later pass; there's no tool to catch a gap here the way there is
-  for `coros_map.json`.
+  library. Structurally different from `coros_map.json`: every entry already carries a
+  `description` field (coverage is 100%, confirmed by inspecting the file directly), so
+  there's no *coverage* gap the way there is for `coros_map.json`. But coverage isn't the
+  same as verified accuracy — the original 87 descriptions (commit `62ff925`) were written
+  by an earlier Claude Code session inferring gear identity from the (often cryptic,
+  Cortex-Cloud-exported) capture name alone, with no search grounding and no citation, the
+  same unverified-guess risk `coros_map.json`'s gap represented. `cmd/verify_user_captures`
+  (parallel tool to `cmd/enrich_captures`, same offline/draft-file/PR-gated process)
+  independently re-derives a citation-backed description from the name alone for every
+  entry (deliberately not shown the existing description, to avoid anchoring the new
+  answer on a possibly-wrong old one) and writes both side by side in the draft for
+  comparison — the new answer isn't assumed better, a human still judges each one.
+  **When adding a new user capture, write a real, specific `description` in the same
+  edit** (not a placeholder) and run it through `cmd/verify_user_captures` for a
+  citation-backed second opinion before treating it as settled, same bar as
+  `coros_map.json`.
 
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,

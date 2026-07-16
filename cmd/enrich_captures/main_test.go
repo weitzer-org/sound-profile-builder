@@ -50,15 +50,15 @@ func TestGroupMissingByEquivalent(t *testing.T) {
 	}
 }
 
-func TestCountMissingEntries(t *testing.T) {
+func TestCountCapturesMissingEquivalent(t *testing.T) {
 	mappings := map[string]capturedGear{
-		"a": {IsCapture: true, TonalArchetype: ""},
-		"b": {IsCapture: true, TonalArchetype: "British Crunch"},
-		"c": {IsCapture: false, TonalArchetype: ""}, // not a capture -- must not count
-		"d": {IsCapture: true, TonalArchetype: ""},
+		"a": {CorosEquivalent: "", IsCapture: true, TonalArchetype: ""},               // counts: capture, no archetype, no equivalent
+		"b": {CorosEquivalent: "Real Amp", IsCapture: true, TonalArchetype: ""},       // has an equivalent -- groupMissingByEquivalent can act on this, so it must not count here
+		"c": {CorosEquivalent: "", IsCapture: true, TonalArchetype: "British Crunch"}, // already has an archetype -- must not count
+		"d": {CorosEquivalent: "", IsCapture: false, TonalArchetype: ""},              // not a capture -- must not count
 	}
 
-	if got := countMissingEntries(mappings); got != 2 {
-		t.Errorf("Expected 2 missing capture entries, got %d", got)
+	if got := countCapturesMissingEquivalent(mappings); got != 1 {
+		t.Errorf("Expected 1 capture entry that's missing both tonal_archetype and coros_equivalent, got %d", got)
 	}
 }

@@ -29,13 +29,30 @@ system:
    answering. Do not rely on general training knowledge alone -- cite what you actually
    found.
 2. If you cannot find a real, specific, citeable source describing this gear's tonal
-   character (not just its existence), set `found_reliable_source` to false and leave the
-   rest of your answer as your best honest guess -- a false answer here is far more useful
-   than a confident-sounding fabrication, since a human will review every result before it
-   reaches production data.
-3. `citation` should name the actual source (a specific review site, forum thread,
-   manufacturer page, etc.) -- not a vague "general knowledge" or "common consensus"
-   answer.
+   character (not just its existence), set `found_reliable_source` to false -- a false
+   answer here is far more useful than a confident-sounding fabrication, since a human
+   reviews every result before it reaches production data. `tonal_archetype` and
+   `citation` are still required fields when this happens (your best honest guess for
+   `tonal_archetype` is fine -- it will be discarded), but `citation` MUST then be an
+   obviously-not-a-real-source placeholder like "No reliable source found" -- never
+   invent a specific-sounding fake source name just to fill the field.
+3. Whenever `found_reliable_source` is true, `citation` should name the actual source (a
+   specific review site, forum thread, manufacturer page, etc.) -- not a vague "general
+   knowledge" or "common consensus" answer.
 4. If you use `New Category`, `new_category_label` must be a short (2-4 word) label in the
    same style as the existing categories, and `new_category_justification` must explain
    concretely why none of the existing categories fit.
+
+# Output Format
+
+Respond with a single JSON object matching this shape:
+
+```json
+{
+  "found_reliable_source": true,
+  "tonal_archetype": "British Crunch",
+  "citation": "string, the specific source this claim is based on",
+  "new_category_label": "string, only if tonal_archetype is New Category",
+  "new_category_justification": "string, only if tonal_archetype is New Category"
+}
+```

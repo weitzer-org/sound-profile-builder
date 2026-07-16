@@ -13,20 +13,21 @@ import "google.golang.org/genai"
 // research and final-assembly agents, which synthesize prose alongside data, run warmer.
 func agentTemperature(key string) *float32 {
 	temps := map[string]float32{
-		"1_tone_historian":      0.3,
-		"2_sonic_profiler":      0.2,
-		"3_community_scraper":   0.4,
-		"4_coros_librarian":     0.3,
-		"5_cloud_navigator":     0.1, // strict verbatim matching against an injected list
-		"6_acoustician":         0.15,
-		"7_transducer_tech":     0.2,
-		"8_foh_optimizer":       0.15,
-		"9_mix_engineer":        0.15,
-		"10_control_mapper":     0.2,
-		"11_dsp_dispatcher":     0.15,
-		"12_architect":          0.6, // bumped from 0.3: baseline's judge-preferred prose specificity (EP-3 preamp tricks, Varitone physics) may have been a temperature effect, not a grounding effect -- testing that hypothesis directly
-		"13_critic":             0.1, // narrow fact-checking task (does prose match data), not creative -- run cold
-		"14_capture_enrichment": 0.1, // factual research task (what does this real gear actually sound like), not creative -- run cold
+		"1_tone_historian":             0.3,
+		"2_sonic_profiler":             0.2,
+		"3_community_scraper":          0.4,
+		"4_coros_librarian":            0.3,
+		"5_cloud_navigator":            0.1, // strict verbatim matching against an injected list
+		"6_acoustician":                0.15,
+		"7_transducer_tech":            0.2,
+		"8_foh_optimizer":              0.15,
+		"9_mix_engineer":               0.15,
+		"10_control_mapper":            0.2,
+		"11_dsp_dispatcher":            0.15,
+		"12_architect":                 0.6, // bumped from 0.3: baseline's judge-preferred prose specificity (EP-3 preamp tricks, Varitone physics) may have been a temperature effect, not a grounding effect -- testing that hypothesis directly
+		"13_critic":                    0.1, // narrow fact-checking task (does prose match data), not creative -- run cold
+		"14_capture_enrichment":        0.1, // factual research task (what does this real gear actually sound like), not creative -- run cold
+		"15_user_capture_verification": 0.1, // same factual research task, applied to user_captures.json instead of coros_map.json -- run cold
 	}
 	t, ok := temps[key]
 	if !ok {
@@ -59,20 +60,21 @@ func agentTemperature(key string) *float32 {
 // pinning a dated model version) rather than another blind doubling.
 func agentMaxOutputTokens(key string) int32 {
 	caps := map[string]int32{
-		"1_tone_historian":      4000,
-		"2_sonic_profiler":      4000,
-		"3_community_scraper":   4000,
-		"4_coros_librarian":     6000,
-		"5_cloud_navigator":     4000,
-		"6_acoustician":         4000,
-		"7_transducer_tech":     3000,
-		"8_foh_optimizer":       3000,
-		"9_mix_engineer":        3000,
-		"10_control_mapper":     4000,
-		"11_dsp_dispatcher":     3000,
-		"12_architect":          16000,
-		"13_critic":             4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
-		"14_capture_enrichment": 1000, // tiny fixed-shape output (a label, a citation, an optional justification) -- no legitimate reason to run long
+		"1_tone_historian":             4000,
+		"2_sonic_profiler":             4000,
+		"3_community_scraper":          4000,
+		"4_coros_librarian":            6000,
+		"5_cloud_navigator":            4000,
+		"6_acoustician":                4000,
+		"7_transducer_tech":            3000,
+		"8_foh_optimizer":              3000,
+		"9_mix_engineer":               3000,
+		"10_control_mapper":            4000,
+		"11_dsp_dispatcher":            3000,
+		"12_architect":                 16000,
+		"13_critic":                    4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
+		"14_capture_enrichment":        1000, // tiny fixed-shape output (a label, a citation, an optional justification) -- no legitimate reason to run long
+		"15_user_capture_verification": 1000, // tiny fixed-shape output (a description, a citation) -- no legitimate reason to run long
 	}
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }
@@ -95,14 +97,16 @@ func agentMaxOutputTokens(key string) int32 {
 // flaky one-off, so it stays ungrounded; it still gets the QC Block Parameter Vocabulary
 // and User Capture Library context injected as plain text (cheap, no tool-call latency).
 //
-// "14_capture_enrichment" is not a RunPipeline/RefineChat agent -- it's `cmd/enrich_captures`,
-// an offline batch tool that researches real-world gear tonal character to backfill
-// coros_map.json's tonal_archetype field (see TODO.md). Same grounding tool, same latency
-// profile as Sonic Profiler/Tone Historian/Community Scraper, just invoked outside the live
-// pipeline where an occasional slow call costs nothing (no user is waiting on it).
+// "14_capture_enrichment" and "15_user_capture_verification" are not RunPipeline/RefineChat
+// agents -- they're cmd/enrich_captures and cmd/verify_user_captures, offline batch tools
+// that research real-world gear tonal character to backfill coros_map.json's
+// tonal_archetype field and verify user_captures.json's descriptions, respectively (see
+// TODO.md and CLAUDE.md). Same grounding tool, same latency profile as Sonic Profiler/Tone
+// Historian/Community Scraper, just invoked outside the live pipeline where an occasional
+// slow call costs nothing (no user is waiting on it).
 func agentSearchTool(key string) []*genai.Tool {
 	switch key {
-	case "1_tone_historian", "3_community_scraper", "2_sonic_profiler", "14_capture_enrichment":
+	case "1_tone_historian", "3_community_scraper", "2_sonic_profiler", "14_capture_enrichment", "15_user_capture_verification":
 		return []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}}
 	default:
 		return nil
@@ -263,13 +267,34 @@ func agentResponseSchema(key string) *genai.Schema {
 		}, []string{"issues"})
 
 	case "14_capture_enrichment":
+		// tonal_archetype/citation are unconditionally required -- tried making them
+		// optional instead (on review feedback that requiring them could force fabricated
+		// values on a found_reliable_source=false response) and verified live: the model
+		// (gemini-3.5-flash) started omitting them even on legitimate found=true responses
+		// once they were no longer required, breaking real extraction. Reverted. The
+		// concern that motivated the change is handled differently instead: the prompt
+		// tells the model to use an honest, obviously-not-a-real-source placeholder value
+		// when found_reliable_source is false, rather than the schema allowing omission --
+		// and the Go caller (cmd/enrich_captures) discards both fields entirely whenever
+		// found_reliable_source is false, so what placeholder text ends up here never
+		// reaches the draft file regardless.
 		return objSchema(map[string]*genai.Schema{
 			"found_reliable_source":      {Type: genai.TypeBoolean, Description: "False if search did not turn up a real, citeable description of this specific gear's tonal character -- do not guess when this is false."},
-			"tonal_archetype":            {Type: genai.TypeString, Enum: []string{"British Crunch", "High-Gain Modern", "Other / Unique", "New Category"}, Description: "Pick the closest existing category (the full current vocabulary is just these three plus this escape hatch). Only use New Category if none of the others are a reasonable fit."},
+			"tonal_archetype":            {Type: genai.TypeString, Enum: []string{"British Crunch", "High-Gain Modern", "Other / Unique", "New Category"}, Description: "Pick the closest existing category (the full current vocabulary is just these three plus this escape hatch). Only use New Category if none of the others are a reasonable fit. If found_reliable_source is false, your best honest guess is fine here -- it will be discarded."},
 			"new_category_label":         strSchema("Only meaningful if tonal_archetype is New Category: a short (2-4 word) label in the same style as the existing categories."),
 			"new_category_justification": strSchema("Only meaningful if tonal_archetype is New Category: why none of the existing categories fit this gear."),
-			"citation":                   strSchema("The specific source (publication, forum, manufacturer page) the tonal-character claim is based on. Required whenever found_reliable_source is true."),
+			"citation":                   strSchema("The specific source (publication, forum, manufacturer page) the tonal-character claim is based on. If found_reliable_source is false, use a clearly-not-a-real-source placeholder like 'No reliable source found' -- never invent a specific-sounding fake source name."),
 		}, []string{"found_reliable_source", "tonal_archetype", "citation"})
+
+	case "15_user_capture_verification":
+		// Same required-fields lesson as 14_capture_enrichment above: verified_description
+		// and citation are unconditionally required, with the prompt (not the schema)
+		// responsible for keeping the false-path honest via an obvious placeholder.
+		return objSchema(map[string]*genai.Schema{
+			"found_reliable_source": {Type: genai.TypeBoolean, Description: "False if the capture's name is too cryptic/generic to identify a specific real piece of gear, or search turned up nothing reliable -- do not guess when this is false."},
+			"verified_description":  strSchema("One short sentence identifying the real gear, in the terse style of this library's existing descriptions. If found_reliable_source is false, your best honest guess is fine here -- it will be discarded."),
+			"citation":              strSchema("The specific source the description is based on. If found_reliable_source is false, use a clearly-not-a-real-source placeholder like 'No reliable source found' -- never invent a specific-sounding fake source name."),
+		}, []string{"found_reliable_source", "verified_description", "citation"})
 
 	default:
 		return nil

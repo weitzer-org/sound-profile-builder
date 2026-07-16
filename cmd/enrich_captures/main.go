@@ -19,6 +19,10 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/agents"
 )
 
+// newCategoryValue must match the "New Category" enum value in
+// internal/agents/schemas.go's "14_capture_enrichment" schema exactly.
+const newCategoryValue = "New Category"
+
 // capturedGear mirrors just the fields this tool needs from coros_map.json's per-entry
 // structure. Unlike a full round-trip rewrite of the source file, this tool only ever
 // reads coros_map.json and writes to a separate draft file, so it doesn't need to
@@ -80,13 +84,27 @@ func main() {
 		log.Printf("Every is_capture entry already has a tonal_archetype. Nothing to research.")
 		return
 	}
-	log.Printf("Found %d unique real-gear names across %d capture entries missing tonal_archetype.", len(missing), countMissingEntries(mappings))
+	actionableEntries := 0
+	for _, keys := range missing {
+		actionableEntries += len(keys)
+	}
+	unfixable := countCapturesMissingEquivalent(mappings)
+	log.Printf("Found %d unique real-gear names across %d capture entries missing tonal_archetype.", len(missing), actionableEntries)
+	if unfixable > 0 {
+		log.Printf("%d additional capture entries are missing tonal_archetype AND have no coros_equivalent recorded -- this tool cannot research those; they need manual attention.", unfixable)
+	}
 
 	names := sortedKeys(missing)
 	if limitStr := os.Getenv("ENRICH_LIMIT"); limitStr != "" {
-		if limit, err := strconv.Atoi(limitStr); err == nil && limit >= 0 && limit < len(names) {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 0 {
+			log.Fatalf("Invalid ENRICH_LIMIT %q: must be a non-negative integer", limitStr)
+		}
+		if limit < len(names) {
 			log.Printf("ENRICH_LIMIT=%d set -- only researching the first %d of %d names (smoke-test mode).", limit, limit, len(names))
 			names = names[:limit]
+		} else {
+			log.Printf("ENRICH_LIMIT=%d set, but only %d names found -- researching all of them.", limit, len(names))
 		}
 	}
 
@@ -113,34 +131,55 @@ func main() {
 
 		userPrompt := fmt.Sprintf("Research the real-world tonal character of: %s", equiv)
 		result, err := orch.RunAgentSplit(ctx, "Capture Enrichment", sysPrompt, userPrompt)
+		// Pace every call the same way regardless of outcome -- placed right after the
+		// call (not at the bottom of the loop) so an error path's `continue` can't skip
+		// it. Backoff matters most exactly when calls are failing, e.g. a degraded or
+		// rate-limited API; a sleep only the success path hits would remove it right
+		// when it's needed most.
+		time.Sleep(500 * time.Millisecond)
 		if err != nil {
 			log.Printf("  Search failed for %q: %v -- skipping", equiv, err)
-			skipped++
+			skipped += len(keys)
 			continue
 		}
 
 		var parsed enrichmentResult
 		if err := json.Unmarshal([]byte(result), &parsed); err != nil {
 			log.Printf("  Failed to parse response for %q: %v -- skipping. Raw: %s", equiv, err, result)
-			skipped++
+			skipped += len(keys)
 			continue
 		}
 
 		if !parsed.FoundReliableSource {
 			log.Printf("  No reliable source found for %q -- skipping (needs manual research).", equiv)
-			skipped++
+			skipped += len(keys)
+			continue
+		}
+
+		// tonal_archetype/citation are schema-optional (see schemas.go) precisely so the
+		// model never has to fabricate either just to produce valid JSON when it has
+		// genuinely found nothing -- so a true found_reliable_source claim paired with an
+		// empty value here is a malformed response, not a legitimate "no data" case.
+		if parsed.TonalArchetype == "" || parsed.Citation == "" {
+			log.Printf("  %q claimed a reliable source but gave an empty tonal_archetype/citation -- skipping (malformed response).", equiv)
+			skipped += len(keys)
 			continue
 		}
 
 		label := parsed.TonalArchetype
-		isNew := label == "New Category"
+		isNew := label == newCategoryValue
 		if isNew {
 			if parsed.NewCategoryLabel == "" {
 				log.Printf("  %q proposed a new category but gave no label -- skipping.", equiv)
-				skipped++
+				skipped += len(keys)
 				continue
 			}
 			label = parsed.NewCategoryLabel
+		} else {
+			// Scrub a field that should only ever be meaningful in the New Category case --
+			// don't trust that the model left it empty just because tonal_archetype wasn't
+			// New Category.
+			parsed.NewCategoryJustification = ""
 		}
 
 		entry := draftEntry{
@@ -155,9 +194,6 @@ func main() {
 			drafts[k] = entry
 		}
 		log.Printf("  -> %q (citation: %s)", label, parsed.Citation)
-
-		// Be polite to the API between sequential calls.
-		time.Sleep(500 * time.Millisecond)
 	}
 
 	out, err := json.MarshalIndent(drafts, "", "  ")
@@ -194,10 +230,14 @@ func groupMissingByEquivalent(mappings map[string]capturedGear) map[string][]str
 	return missing
 }
 
-func countMissingEntries(mappings map[string]capturedGear) int {
+// countCapturesMissingEquivalent counts is_capture entries that are missing
+// tonal_archetype AND have no coros_equivalent recorded at all -- groupMissingByEquivalent
+// can't act on these (there's no real-gear name to search for), so they'd otherwise be
+// silently absent from every count this tool reports.
+func countCapturesMissingEquivalent(mappings map[string]capturedGear) int {
 	count := 0
 	for _, v := range mappings {
-		if v.IsCapture && v.TonalArchetype == "" {
+		if v.IsCapture && v.TonalArchetype == "" && v.CorosEquivalent == "" {
 			count++
 		}
 	}

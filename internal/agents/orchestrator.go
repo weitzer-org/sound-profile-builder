@@ -736,6 +736,8 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		key = "13_critic"
 	case "Capture Enrichment":
 		key = "14_capture_enrichment"
+	case "User Capture Verification":
+		key = "15_user_capture_verification"
 	}
 
 	modelName := os.Getenv("TARGET_MODEL")
