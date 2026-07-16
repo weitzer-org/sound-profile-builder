@@ -83,7 +83,7 @@ func main() {
 			},
 		}
 
-		result, _, err := orch.RefineChat(ctx, p, e.Question)
+		result, _, err := orch.RefineChat(ctx, p, e.Question, true, true)
 		if err != nil {
 			log.Printf("Refinement failed for %s: %v", e.Name, err)
 			continue

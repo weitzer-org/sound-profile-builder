@@ -96,18 +96,47 @@ track further:**
   Community Scraper -- so a one-off fix here would be inconsistent; see the
   new backlog item below if a real pipeline-wide pass is wanted). Reasoning
   for all four is posted on the PR review thread.
-- **`RefineChat`'s missing `SelectedCaptureContext`** (not yet started) --
-  `RefineChat` doesn't re-run Librarian/Navigator, so there's no raw text to
-  scan for capture names the way `RunPipeline` does. Turns out less blocked
-  than first thought: `SelectedCaptureContext` just token-scans whatever
-  text it's given, and `RefineChat` already has `p.Payload` (the existing
-  structured preset) containing the actual selected block model names as
-  plain JSON text -- arguably better data than raw Librarian/Navigator
-  output, since it's the real final selection. The allow-flag computation
-  it needs already exists right after its call site
-  (`handlers_preset.go:990-995`), just needs moving earlier and threading
-  through. Requires a small `Orchestrator` interface signature change plus
-  updating the one call site. Next candidate to pick up.
+- **`RefineChat`'s missing `SelectedCaptureContext`** (PR #77, merged to
+  `main`) -- `RefineChat` doesn't re-run Librarian/Navigator, so it had no
+  raw text to scan for capture names the way `RunPipeline` does.
+  `SelectedCaptureContext` just token-scans whatever text it's given, and
+  `RefineChat` already has `p.Payload` (the existing structured preset)
+  containing the actual selected block model names as plain JSON text --
+  arguably better data than raw Librarian/Navigator output, since it's the
+  real final selection. Threaded `allowFactoryCaptures`/`allowUserCaptures`
+  through `RefineChat`'s signature (interface, real impl, 4 test mocks,
+  `orchestrator_test.go`, `cmd/eval_refine`) and hoisted
+  `handlers_preset.go`'s allow-flag computation above the `RefineChat` call.
+  Validated: unit tests (including a new test that inspects the actual
+  outgoing request body), a full mock-mode e2e run diffed against
+  unmodified `main` as baseline (identical pre-existing failures, no
+  regression), and an independent Opus review (no severe correctness
+  findings).
+  **Live proof-of-benefit investigation (not just safety) surfaced a real,
+  separate data-coverage gap**, not a code bug: of `coros_map.json`'s 192
+  `is_capture: true` entries, only 14 (7.3%) have any `tonal_archetype`
+  value at all, and only 3 of those 14 carry a substantive label
+  (`High-Gain Modern` x2, `British Crunch` x1) rather than the near-content-
+  free catch-all `Other / Unique`. Cross-referencing every available
+  golden-set fixture (~13 prompts x 6 model tiers) found the *only*
+  archetype-bearing capture any golden generation ever actually selects is
+  `US DLX 58` -- labeled `Other / Unique`. A live A/B (capture context on
+  vs. forced empty via a temporary env toggle, since removed) on that one
+  case showed only noise-level (~0.5dB) divergence, as expected for a
+  content-free label. A follow-up synthetic-preset A/B forcing a
+  substantively-labeled capture (`Bogna X100B Ch1` -> `High-Gain Modern`)
+  showed a more structurally interesting split -- the context-on arm
+  produced a scooped-mid/boosted-treble EQ shape consistent with that
+  archetype, the context-off arm left Mid/Treble untouched -- but at n=1
+  with no temperature pinning this is suggestive, not proof; indistinguishable
+  from ordinary sampling variance without repeat runs. Closing verdict
+  (from an Opus review of the full investigation): the fix is correct,
+  safe, and plausibly influential, but efficacy beyond that is not cheaply
+  provable given current data sparsity and is diminishing-returns to chase
+  further. **Follow-up worth doing, if this is revisited**: expand
+  `tonal_archetype` coverage in `coros_map.json` beyond the current 7.3% --
+  that's the actual bottleneck on this fix (and any future capture-color
+  work) having real-world impact, not the wiring.
 - **Cabinet manual-research-vs-actual-model reconciliation** (not yet
   started, needs a research spike before any code change) -- still an open
   question, not a wiring fix: is the real QC hardware IR-loader-only per
@@ -129,7 +158,18 @@ track further:**
   schema-bounded), but if this gets hardened it should be one deliberate
   pass across all agent context-construction call sites with a single
   consistent delimiter convention, not three ad hoc fixes accumulated
-  PR-by-PR.
+  PR-by-PR. A fourth site, arguably higher-impact than the first three:
+  GSR's deep-review on PR #77 (the `RefineChat` capture-context fix)
+  flagged `RefineChat`'s `EXISTING STRUCTURED PAYLOAD` block
+  (`internal/agents/orchestrator.go`, `refinementPrompt`), which raw-
+  interpolates `p.Payload` -- this one predates PR #77 (PR #77 only added
+  one more `%s` for `captureContext`, sourced from a controlled static
+  lookup, not user text) but is a real, distinct injection vector: unlike
+  the other three sites' LLM-generated tone-prompt text, `p.Payload` can
+  contain rationale/model text the user directly edited via the Tweaking
+  Workspace before saving. Declined as an ad hoc fix in PR #77 for the
+  same reason as the other three -- fold it into the eventual single
+  hardening pass, not a fifth one-off patch.
 - **GSR deep-review (agent-swarm) mode is now live** (PR #74, merged) --
   `.github/workflows/gsr-review-deep.yml` runs the full GSR agent swarm
   (Architecture/Logic/Security/TechDebt/Testing agents + dedup pass,
