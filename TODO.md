@@ -59,8 +59,8 @@ track further:**
 
 **Tier 3 — agent wiring/context fixes, not another detection layer:**
 
-- **Sonic Profiler token-bloat parity fix** (PR #75, `feature/sonic-profiler-token-trim`,
-  **open, not yet merged**) — Sonic Profiler's output schema (`eq_profile`/
+- **Sonic Profiler token-bloat parity fix** (PR #75, merged to `main`) —
+  Sonic Profiler's output schema (`eq_profile`/
   `suggested_low_cut_hz`/`suggested_high_cut_hz`, `saturation_style`,
   `reverb_type`, `noise_gate_target_db`) has no field that names a specific
   gear/capture, but it was receiving the full 12-category
