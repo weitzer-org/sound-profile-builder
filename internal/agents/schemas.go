@@ -73,8 +73,8 @@ func agentMaxOutputTokens(key string) int32 {
 		"11_dsp_dispatcher":            3000,
 		"12_architect":                 16000,
 		"13_critic":                    4000, // hit the same model-verbosity truncation as the other agents at 2000 (4/12 golden-set prompts) before this bump -- advisory-only design meant none of those failed the overall pipeline, but the critic contributed nothing on those runs
-		"14_capture_enrichment":        1000, // tiny fixed-shape output (a label, a citation, an optional justification) -- no legitimate reason to run long
-		"15_user_capture_verification": 1000, // tiny fixed-shape output (a description, a citation) -- no legitimate reason to run long
+		"14_capture_enrichment":        4000, // the *final* JSON shape is tiny, but this is a grounded call -- 1000 was set assuming otherwise and observably hit MaxOutputTokens truncation on ~30% (44/147) of a live full run, matching the other grounded agents' 4000 instead
+		"15_user_capture_verification": 4000, // same fix, same reasoning -- also a grounded call, also hit this cap live
 	}
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }

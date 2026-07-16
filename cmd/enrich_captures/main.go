@@ -94,18 +94,46 @@ func main() {
 		log.Printf("%d additional capture entries are missing tonal_archetype AND have no coros_equivalent recorded -- this tool cannot research those; they need manual attention.", unfixable)
 	}
 
+	// Resumable: if a draft file already exists at draftPath (e.g. from a prior run that
+	// hit truncation/parse failures on some names), load it and skip any real-gear name
+	// it already covers, rather than re-paying for names that already succeeded.
+	drafts := make(map[string]draftEntry) // keyed by original coros_map.json map key
+	alreadyCovered := make(map[string]bool)
+	if existing, err := os.ReadFile(draftPath); err == nil {
+		if err := json.Unmarshal(existing, &drafts); err != nil {
+			log.Fatalf("Existing draft file %s is not valid JSON, refusing to overwrite blindly: %v", draftPath, err)
+		}
+		for _, entry := range drafts {
+			alreadyCovered[entry.CorosEquivalent] = true
+		}
+		log.Printf("Loaded existing draft %s: %d entries already covering %d unique real-gear names -- skipping those.", draftPath, len(drafts), len(alreadyCovered))
+	}
+
 	names := sortedKeys(missing)
+	remaining := names[:0]
+	for _, equiv := range names {
+		if !alreadyCovered[equiv] {
+			remaining = append(remaining, equiv)
+		}
+	}
+	names = remaining
+
 	if limitStr := os.Getenv("ENRICH_LIMIT"); limitStr != "" {
 		limit, err := strconv.Atoi(limitStr)
 		if err != nil || limit < 0 {
 			log.Fatalf("Invalid ENRICH_LIMIT %q: must be a non-negative integer", limitStr)
 		}
 		if limit < len(names) {
-			log.Printf("ENRICH_LIMIT=%d set -- only researching the first %d of %d names (smoke-test mode).", limit, limit, len(names))
+			log.Printf("ENRICH_LIMIT=%d set -- only researching the first %d of %d remaining names (smoke-test mode).", limit, limit, len(names))
 			names = names[:limit]
 		} else {
-			log.Printf("ENRICH_LIMIT=%d set, but only %d names found -- researching all of them.", limit, len(names))
+			log.Printf("ENRICH_LIMIT=%d set, but only %d remaining names found -- researching all of them.", limit, len(names))
 		}
+	}
+
+	if len(names) == 0 {
+		log.Printf("Nothing left to research -- every actionable name is already covered by the existing draft.")
+		return
 	}
 
 	ctx := context.Background()
@@ -120,7 +148,6 @@ func main() {
 		log.Fatalf("Failed to load Capture Enrichment prompt: %v", err)
 	}
 
-	drafts := make(map[string]draftEntry) // keyed by original coros_map.json map key
 	skipped := 0
 
 	// Sequential, not concurrent: this is a low-frequency, one-off (or periodic) offline
