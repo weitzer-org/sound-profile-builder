@@ -41,18 +41,27 @@ func GetQCBlockSchemaJSON() string {
 
 // subsetQCBlockSchema returns just the given top-level categories of the embedded QC Block
 // Parameter Vocabulary, JSON-marshaled. Falls back to the full file on any parse/marshal
-// error so a schema-format change degrades to today's full-file behavior instead of
-// silently dropping data an agent actually needed.
+// error, or if none of the requested keys (besides _readme) actually matched -- e.g. a
+// category getting renamed in qc_block_schema.json without every caller's key list being
+// updated -- so a schema drift degrades to today's full-file behavior instead of silently
+// handing an agent an empty vocabulary it never noticed was missing.
 func subsetQCBlockSchema(keys []string) string {
 	var full map[string]json.RawMessage
 	if err := json.Unmarshal(embeddedQCBlockSchema, &full); err != nil {
 		return string(embeddedQCBlockSchema)
 	}
 	subset := make(map[string]json.RawMessage, len(keys))
+	matchedCategories := 0
 	for _, key := range keys {
 		if v, ok := full[key]; ok {
 			subset[key] = v
+			if key != "_readme" {
+				matchedCategories++
+			}
 		}
+	}
+	if matchedCategories == 0 {
+		return string(embeddedQCBlockSchema)
 	}
 	b, err := json.Marshal(subset)
 	if err != nil {
