@@ -57,17 +57,21 @@ gate, so review before merging is the main safety net.
 **Cost policy (Claude quota is a real constraint on this project).** The
 bundled `/code-review` spawns 8 finder agents plus up to 8 verifiers — ~17
 model calls per run, the single largest discretionary expense in the workflow.
-So it is **not** the default anymore. The default pre-merge review is the
-project's own **`/quick-review`** (`.claude/skills/quick-review/`): one inline
-pass, no sub-agents, ~1 call. The free GitHub-integrated bots
+So it is **not** the default. As of 2026-07-15, **`/quick-review` is no
+longer run automatically either** — the free GitHub-integrated bots
 (gemini-code-assist, CodeRabbit) and the **GSR GitHub Action**
 (`.github/workflows/gsr-review.yml`, github.com/weitzer-org/gsr, `basic`
 mode) review every PR at zero Claude quota — GSR runs on its own Gemini API
-key, not Claude's — and are the automated second opinion that makes a
-cheaper local pass acceptable.
+key, not Claude's — and are now the sole default gate for routine PRs.
 
-- **Default — every PR:** run **`/quick-review`** against the branch diff, then
-  let the GitHub bots backstop it on the open PR.
+- **Default — every PR:** open the PR and let GSR + gemini-code-assist +
+  CodeRabbit review it. No automatic Claude review step. Read and address
+  `security-high`/`security-critical` findings before merging regardless of
+  what else ran.
+- **Run `/quick-review` on demand, not automatically** — when you explicitly
+  want a local pass before opening a PR, or a bot finding is worth a second
+  look. Still the project's own **`/quick-review`** (`.claude/skills/quick-review/`):
+  one inline pass, no sub-agents, ~1 call.
 - **Escalate to the multi-agent `/code-review high`** only for large or
   architecturally risky changes (auth, storage backend, agent pipeline logic)
   where the fan-out's extra recall is worth ~17 calls. Always pass the effort
