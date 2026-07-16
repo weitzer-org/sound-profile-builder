@@ -57,23 +57,37 @@ gate, so review before merging is the main safety net.
 **Cost policy (Claude quota is a real constraint on this project).** The
 bundled `/code-review` spawns 8 finder agents plus up to 8 verifiers — ~17
 model calls per run, the single largest discretionary expense in the workflow.
-So it is **not** the default anymore. The default pre-merge review is the
-project's own **`/quick-review`** (`.claude/skills/quick-review/`): one inline
-pass, no sub-agents, ~1 call. The free GitHub-integrated bots
+So it is **not** the default. As of 2026-07-15, **`/quick-review` is no
+longer run automatically either** — the free GitHub-integrated bots
 (gemini-code-assist, CodeRabbit) and the **GSR GitHub Action**
 (`.github/workflows/gsr-review.yml`, github.com/weitzer-org/gsr, `basic`
 mode) review every PR at zero Claude quota — GSR runs on its own Gemini API
-key, not Claude's — and are the automated second opinion that makes a
-cheaper local pass acceptable.
+key, not Claude's — and are now the sole default gate for routine PRs.
 
-- **Default — every PR:** run **`/quick-review`** against the branch diff, then
-  let the GitHub bots backstop it on the open PR.
+- **Default — every PR:** open the PR and let GSR + gemini-code-assist +
+  CodeRabbit review it. No automatic Claude review step. Read and address
+  `security-high`/`security-critical` findings before merging regardless of
+  what else ran.
+- **Run `/quick-review` on demand, not automatically** — when you explicitly
+  want a local pass before opening a PR, or a bot finding is worth a second
+  look. Still the project's own **`/quick-review`** (`.claude/skills/quick-review/`):
+  one inline pass, no sub-agents, ~1 call.
 - **Escalate to the multi-agent `/code-review high`** only for large or
   architecturally risky changes (auth, storage backend, agent pipeline logic)
   where the fan-out's extra recall is worth ~17 calls. Always pass the effort
   level explicitly. `medium` and `high` both run the same 8 parallel finder
   agents; the level changes candidate volume and verify aggressiveness
   (precision-biased at `medium`, recall-biased at `high`), not agent count.
+- For the same class of large/risky change, also consider **GSR's agent-swarm
+  mode** (`.github/workflows/gsr-review-deep.yml`) as a zero-Claude-quota
+  complement to `/code-review high` — apply the `deep-review` label to the PR
+  to trigger it. It runs GSR's full swarm (Architecture, Logic, Security,
+  TechDebt, Testing agents + a dedup pass) instead of the `basic` single-pass
+  mode that runs automatically on every PR. Label-only, deliberately: GSR's
+  entrypoint hard-requires a real `pull_request` event payload, and a
+  `workflow_dispatch` manual-trigger path was tried and dropped after two
+  different workarounds both failed on live testing for platform-level
+  reasons (see the workflow file's comments).
 - Reserve `/code-review ultra` (multi-agent cloud review) for substantial
   features before merge — it's billed separately, so don't run it routinely.
 - `/code-review --fix` applies findings directly if you want them auto-fixed.
