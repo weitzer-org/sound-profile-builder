@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -350,6 +351,57 @@ func TestHandleChatPreset(t *testing.T) {
 	}
 	if !strings.Contains(rrRunF.Body.String(), `Execution Error:`) {
 		t.Errorf("Expected response to contain Execution Error")
+	}
+}
+
+// mockOrchestratorCapturesFlags records the allowFactoryCaptures/allowUserCaptures args
+// RefineChat was actually called with, to confirm handleChatPreset routes s.appConfig's
+// values through rather than the true/true default silently masking a wiring regression.
+type mockOrchestratorCapturesFlags struct {
+	gotAllowFactoryCaptures bool
+	gotAllowUserCaptures    bool
+}
+
+func (m *mockOrchestratorCapturesFlags) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
+	return "", &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorCapturesFlags) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *agents.TokenUsage, error) {
+	m.gotAllowFactoryCaptures = allowFactoryCaptures
+	m.gotAllowUserCaptures = allowUserCaptures
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorCapturesFlags) Close() {}
+
+// TestHandleChatPreset_RoutesAppConfigCaptureFlags confirms handleChatPreset forwards
+// s.appConfig.AllowFactoryCaptures/AllowUserCaptures into RefineChat, rather than always
+// passing the true/true default -- a regression here would silently leak disallowed
+// captures into RefineChat's context with no test failure to catch it.
+func TestHandleChatPreset_RoutesAppConfigCaptureFlags(t *testing.T) {
+	mockStorage := &mockErrorClient{mockClient: newMockClient()}
+	store := storage.NewPresetStore(mockStorage, "b")
+	store.Save(context.Background(), &storage.Preset{ID: "123", Name: "name", Payload: "none", ChatHistory: []storage.ChatMessage{{Role: "user", Content: "hey"}}})
+
+	mockOrch := &mockOrchestratorCapturesFlags{}
+	orchMaker := func(ctx context.Context, key string) (agents.OrchestratorService, error) {
+		return mockOrch, nil
+	}
+	appConfig := &config.AppConfig{AllowFactoryCaptures: false, AllowUserCaptures: true}
+	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, orchMaker, appConfig)
+
+	formData := url.Values{}
+	formData.Set("id", "123")
+	formData.Set("message", "Test Chat")
+
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/chat", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	s.handleChatPreset().ServeHTTP(rr, req)
+
+	if mockOrch.gotAllowFactoryCaptures != false {
+		t.Errorf("Expected RefineChat to receive allowFactoryCaptures=false from appConfig, got true")
+	}
+	if mockOrch.gotAllowUserCaptures != true {
+		t.Errorf("Expected RefineChat to receive allowUserCaptures=true from appConfig, got false")
 	}
 }
 

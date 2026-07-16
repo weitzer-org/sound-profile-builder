@@ -107,10 +107,13 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 // unlike RunPipeline, it never re-runs Librarian/Navigator), and that the opposite
 // allow-capture flag suppresses it, mirroring RunPipeline's existing leak-prevention rule.
 func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
+	var mu sync.Mutex
 	var lastRequestBody string
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
 		lastRequestBody = string(body)
+		mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(mockGeminiResponse))
@@ -131,6 +134,10 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 
 	promptText := func() string {
 		t.Helper()
+		mu.Lock()
+		body := lastRequestBody
+		mu.Unlock()
+
 		var reqBody struct {
 			Contents []struct {
 				Parts []struct {
@@ -138,11 +145,11 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 				} `json:"parts"`
 			} `json:"contents"`
 		}
-		if err := json.Unmarshal([]byte(lastRequestBody), &reqBody); err != nil {
+		if err := json.Unmarshal([]byte(body), &reqBody); err != nil {
 			t.Fatalf("Failed to decode outgoing LLM request body: %v", err)
 		}
 		if len(reqBody.Contents) == 0 || len(reqBody.Contents[0].Parts) == 0 {
-			t.Fatalf("Outgoing LLM request had no prompt text: %s", lastRequestBody)
+			t.Fatalf("Outgoing LLM request had no prompt text: %s", body)
 		}
 		return reqBody.Contents[0].Parts[0].Text
 	}
