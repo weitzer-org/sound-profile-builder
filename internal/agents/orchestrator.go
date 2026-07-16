@@ -153,7 +153,7 @@ func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outp
 // OrchestratorService defines the methods available on the ADK Orchestrator
 type OrchestratorService interface {
 	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(phase string)) (string, *TokenUsage, error)
-	RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error)
+	RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error)
 	Close()
 }
 
@@ -966,7 +966,7 @@ func (o *Orchestrator) Close() {
 }
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
-func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *TokenUsage, error) {
+func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
 			return mockOutput, o.Usage, nil
@@ -975,6 +975,12 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
 	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v4")
+
+	// RunPipeline scans Librarian/Navigator's raw output for capture names; RefineChat has
+	// no equivalent raw text (it never re-runs those agents), but p.Payload's structured
+	// JSON already names every selected block's real model, which is arguably better data
+	// anyway since it's the actual final selection rather than upstream candidates.
+	captureContext := SelectedCaptureContext(p.Payload, "", allowFactoryCaptures, allowUserCaptures)
 
 	refinementPrompt := fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
@@ -1001,9 +1007,11 @@ You MUST output the following exact JSON schema:
 
 QC Block Parameter Vocabulary (for basis tagging): %s
 
+Selected Capture Details (for Rule 9 formatting -- real descriptive color for whichever captures, of any block type, are present in the existing payload; empty if none): %s
+
 EXISTING STRUCTURED PAYLOAD:
 %s
-`, GetQCBlockSchemaJSON(), p.Payload)
+`, GetQCBlockSchemaJSON(), captureContext, p.Payload)
 
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
 	for _, msg := range p.ChatHistory {

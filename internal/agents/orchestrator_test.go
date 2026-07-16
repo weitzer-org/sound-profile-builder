@@ -3,6 +3,7 @@ package agents
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -89,7 +90,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 		},
 	}
 
-	res, usage, err := orch.RefineChat(ctx, p, "change it")
+	res, usage, err := orch.RefineChat(ctx, p, "change it", true, true)
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
@@ -98,6 +99,52 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 	}
 	if usage.OutputTokens <= 0 {
 		t.Errorf("Usage wasn't tracked properly")
+	}
+}
+
+// TestOrchestrator_RefineChat_InjectsSelectedCaptureContext confirms RefineChat surfaces
+// a selected capture's real descriptive color from p.Payload (the only data it has --
+// unlike RunPipeline, it never re-runs Librarian/Navigator), and that the opposite
+// allow-capture flag suppresses it, mirroring RunPipeline's existing leak-prevention rule.
+func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
+	var lastRequestBody string
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		lastRequestBody = string(body)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, _ := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
+
+	// A known factory capture from coros_map.json (is_capture: true, real tonal_archetype).
+	// getFactoryCaptureColors keys on coros_equivalent (the resolved name agents actually
+	// emit), not the JSON entry's own map key.
+	const captureName = "US DLX 58"
+	const captureColor = "Other / Unique"
+	p := &storage.Preset{
+		Payload: fmt.Sprintf(`{"guitars":{"Strat":[{"id":"block-1","type":"Amplifier","model":%q}]}}`, captureName),
+	}
+
+	_, _, err := orch.RefineChat(ctx, p, "change it", true, true)
+	if err != nil {
+		t.Fatalf("Expected RefineChat to succeed, got %v", err)
+	}
+	if !strings.Contains(lastRequestBody, captureColor) {
+		t.Errorf("Expected outgoing prompt to carry the selected capture's descriptive color %q, got: %s", captureColor, lastRequestBody)
+	}
+
+	// allowFactoryCaptures=false must suppress the capture context entirely, same leak
+	// guard SelectedCaptureContext already enforces for RunPipeline.
+	_, _, err = orch.RefineChat(ctx, p, "change it", false, true)
+	if err != nil {
+		t.Fatalf("Expected RefineChat to succeed, got %v", err)
+	}
+	if strings.Contains(lastRequestBody, captureColor) {
+		t.Errorf("Expected capture context to be suppressed when allowFactoryCaptures=false, got: %s", lastRequestBody)
 	}
 }
 
@@ -115,7 +162,7 @@ func TestOrchestrator_TimeoutsAndErrors(t *testing.T) {
 		t.Errorf("Expected pipeline to fail on timeout")
 	}
 
-	_, _, err = orch.RefineChat(ctxTimeout, &storage.Preset{}, "test")
+	_, _, err = orch.RefineChat(ctxTimeout, &storage.Preset{}, "test", true, true)
 	if err == nil {
 		t.Errorf("Expected refine chat to fail on timeout")
 	}

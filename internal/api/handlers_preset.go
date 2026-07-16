@@ -955,8 +955,15 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			ctx = context.WithValue(ctx, agents.MockModeKey, true)
 		}
 
+		allowFactoryCapturesForFlag := true
+		allowUserCapturesForFlag := true
+		if s.appConfig != nil {
+			allowFactoryCapturesForFlag = s.appConfig.AllowFactoryCaptures
+			allowUserCapturesForFlag = s.appConfig.AllowUserCaptures
+		}
+
 		// Run the chat refinement loop
-		jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage)
+		jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %v</div>`, err)))
 			return
@@ -987,12 +994,6 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
-		allowFactoryCapturesForFlag := true
-		allowUserCapturesForFlag := true
-		if s.appConfig != nil {
-			allowFactoryCapturesForFlag = s.appConfig.AllowFactoryCaptures
-			allowUserCapturesForFlag = s.appConfig.AllowUserCaptures
-		}
 		effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
 		agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 		agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)

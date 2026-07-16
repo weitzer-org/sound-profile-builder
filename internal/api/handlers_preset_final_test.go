@@ -113,7 +113,7 @@ type mockOrchestratorSuccessComplex struct {
 func (m *mockOrchestratorSuccessComplex) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
 }
-func (m *mockOrchestratorSuccessComplex) RefineChat(ctx context.Context, p *storage.Preset, userMessage string) (string, *agents.TokenUsage, error) {
+func (m *mockOrchestratorSuccessComplex) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *agents.TokenUsage, error) {
 	return `{"conversational_response": "done", "final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":["changed eq"], "dsp_matrix_updated": true}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestratorSuccessComplex) Close() {}
