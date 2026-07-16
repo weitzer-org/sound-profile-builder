@@ -129,12 +129,30 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 		Payload: fmt.Sprintf(`{"guitars":{"Strat":[{"id":"block-1","type":"Amplifier","model":%q}]}}`, captureName),
 	}
 
+	promptText := func() string {
+		t.Helper()
+		var reqBody struct {
+			Contents []struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"contents"`
+		}
+		if err := json.Unmarshal([]byte(lastRequestBody), &reqBody); err != nil {
+			t.Fatalf("Failed to decode outgoing LLM request body: %v", err)
+		}
+		if len(reqBody.Contents) == 0 || len(reqBody.Contents[0].Parts) == 0 {
+			t.Fatalf("Outgoing LLM request had no prompt text: %s", lastRequestBody)
+		}
+		return reqBody.Contents[0].Parts[0].Text
+	}
+
 	_, _, err := orch.RefineChat(ctx, p, "change it", true, true)
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
-	if !strings.Contains(lastRequestBody, captureColor) {
-		t.Errorf("Expected outgoing prompt to carry the selected capture's descriptive color %q, got: %s", captureColor, lastRequestBody)
+	if !strings.Contains(promptText(), captureColor) {
+		t.Errorf("Expected outgoing prompt to carry the selected capture's descriptive color %q, got: %s", captureColor, promptText())
 	}
 
 	// allowFactoryCaptures=false must suppress the capture context entirely, same leak
@@ -143,8 +161,8 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
-	if strings.Contains(lastRequestBody, captureColor) {
-		t.Errorf("Expected capture context to be suppressed when allowFactoryCaptures=false, got: %s", lastRequestBody)
+	if strings.Contains(promptText(), captureColor) {
+		t.Errorf("Expected capture context to be suppressed when allowFactoryCaptures=false, got: %s", promptText())
 	}
 }
 

@@ -129,7 +129,18 @@ track further:**
   schema-bounded), but if this gets hardened it should be one deliberate
   pass across all agent context-construction call sites with a single
   consistent delimiter convention, not three ad hoc fixes accumulated
-  PR-by-PR.
+  PR-by-PR. A fourth site, arguably higher-impact than the first three:
+  GSR's deep-review on PR #77 (the `RefineChat` capture-context fix)
+  flagged `RefineChat`'s `EXISTING STRUCTURED PAYLOAD` block
+  (`internal/agents/orchestrator.go`, `refinementPrompt`), which raw-
+  interpolates `p.Payload` -- this one predates PR #77 (PR #77 only added
+  one more `%s` for `captureContext`, sourced from a controlled static
+  lookup, not user text) but is a real, distinct injection vector: unlike
+  the other three sites' LLM-generated tone-prompt text, `p.Payload` can
+  contain rationale/model text the user directly edited via the Tweaking
+  Workspace before saving. Declined as an ad hoc fix in PR #77 for the
+  same reason as the other three -- fold it into the eventual single
+  hardening pass, not a fifth one-off patch.
 - **GSR deep-review (agent-swarm) mode is now live** (PR #74, merged) --
   `.github/workflows/gsr-review-deep.yml` runs the full GSR agent swarm
   (Architecture/Logic/Security/TechDebt/Testing agents + dedup pass,
