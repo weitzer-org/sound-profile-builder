@@ -6,59 +6,28 @@ import (
 	"testing"
 )
 
-func TestGroupMissingByEquivalent(t *testing.T) {
+func TestMissingKeys(t *testing.T) {
 	mappings := map[string]capturedGear{
-		// Two keys share "US DLX 58"; one already has an archetype, so both should be
-		// treated as fully known -- no search needed for either.
+		// Already has an archetype -- must be excluded.
 		"Fender Deluxe Reverb 64/65": {CorosEquivalent: "US DLX 58", IsCapture: true, TonalArchetype: "Other / Unique"},
-		"Fender Deluxe 5E2 1958":     {CorosEquivalent: "US DLX 58", IsCapture: true, TonalArchetype: ""},
 
-		// Two keys share "Iba Green"; neither has an archetype, so both should come back
-		// grouped under one missing entry.
+		// Two different keys share the same on-device block name ("Iba Green") -- both must
+		// still be researched individually, not deduped, since a shared on-device block
+		// name does not mean the same real gear (see missingKeys' doc comment).
 		"Ibanez Tube Screamer TS9": {CorosEquivalent: "Iba Green", IsCapture: true, TonalArchetype: ""},
 		"Ibanez Tube Screamer 9":   {CorosEquivalent: "Iba Green", IsCapture: true, TonalArchetype: ""},
 
 		// Not a capture at all -- must be excluded regardless of missing archetype.
 		"Some Algorithmic Amp": {CorosEquivalent: "Plexi 100 Patch", IsCapture: false, TonalArchetype: ""},
 
-		// A capture with no coros_equivalent recorded -- must be excluded, nothing to search for.
+		// A capture with no coros_equivalent recorded -- still researchable by key alone.
 		"Malformed Entry": {CorosEquivalent: "", IsCapture: true, TonalArchetype: ""},
 	}
 
-	missing := groupMissingByEquivalent(mappings)
-
-	if _, ok := missing["US DLX 58"]; ok {
-		t.Errorf("Expected US DLX 58 to be excluded (already known via a sibling entry), got: %v", missing["US DLX 58"])
-	}
-
-	gotIbaGreen := missing["Iba Green"]
-	sort.Strings(gotIbaGreen)
-	wantIbaGreen := []string{"Ibanez Tube Screamer 9", "Ibanez Tube Screamer TS9"}
-	if !reflect.DeepEqual(gotIbaGreen, wantIbaGreen) {
-		t.Errorf("Expected Iba Green to group both sibling keys, got %v, want %v", gotIbaGreen, wantIbaGreen)
-	}
-
-	if _, ok := missing["Plexi 100 Patch"]; ok {
-		t.Errorf("Expected non-capture entry to be excluded")
-	}
-	if _, ok := missing[""]; ok {
-		t.Errorf("Expected entry with no coros_equivalent to be excluded")
-	}
-
-	if len(missing) != 1 {
-		t.Errorf("Expected exactly 1 unique real-gear name needing research, got %d: %v", len(missing), missing)
-	}
-}
-
-func TestCountCapturesMissingEquivalent(t *testing.T) {
-	mappings := map[string]capturedGear{
-		"a": {CorosEquivalent: "", IsCapture: true, TonalArchetype: ""},               // counts: capture, no archetype, no equivalent
-		"b": {CorosEquivalent: "Real Amp", IsCapture: true, TonalArchetype: ""},       // has an equivalent -- groupMissingByEquivalent can act on this, so it must not count here
-		"c": {CorosEquivalent: "", IsCapture: true, TonalArchetype: "British Crunch"}, // already has an archetype -- must not count
-		"d": {CorosEquivalent: "", IsCapture: false, TonalArchetype: ""},              // not a capture -- must not count
-	}
-
-	if got := countCapturesMissingEquivalent(mappings); got != 1 {
-		t.Errorf("Expected 1 capture entry that's missing both tonal_archetype and coros_equivalent, got %d", got)
+	got := missingKeys(mappings)
+	sort.Strings(got)
+	want := []string{"Ibanez Tube Screamer 9", "Ibanez Tube Screamer TS9", "Malformed Entry"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("missingKeys() = %v, want %v", got, want)
 	}
 }

@@ -9,7 +9,8 @@
     "coros_equivalent": "Brit 2203 87",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall Super Lead 100": {
     "coros_equivalent": "Brit Plexi 100 Patch",
@@ -27,7 +28,8 @@
     "coros_equivalent": "Brit PA-EL34",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall JCM900 4100": {
     "coros_equivalent": "Brit 900 Lead",
@@ -39,13 +41,15 @@
     "coros_equivalent": "CA MkCC+",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie JP2C": {
     "coros_equivalent": "CA John's",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Dual Rectifier": {
     "coros_equivalent": "CA Duo Ch3 Vintage",
@@ -75,25 +79,29 @@
     "coros_equivalent": "CA 3Axe",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Walkabout": {
     "coros_equivalent": "CA BassWalk",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Big Block 750": {
     "coros_equivalent": "CA BigBrick750",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie M6 Carbine": {
     "coros_equivalent": "CA M6Rifle",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Fender 65 Twin Reverb": {
     "coros_equivalent": "US Twin Vibrato",
@@ -112,13 +120,15 @@
     "coros_equivalent": "US DLX 58",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Fender Princeton 65": {
     "coros_equivalent": "US Prince 65",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Fender High Power Tweed Twin 5F8-A": {
     "coros_equivalent": "US HP Tweed TWN Normal Patch",
@@ -149,7 +159,8 @@
     "coros_equivalent": "UK C10 64",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Peavey 6505": {
     "coros_equivalent": "PV-505 Rhythm",
@@ -161,7 +172,8 @@
     "coros_equivalent": "PV 505Sig",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "EVH 5150 III 100S": {
     "coros_equivalent": "EV101IIIS EL34",
@@ -180,7 +192,8 @@
     "coros_equivalent": "D-Cell Herb",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Bogner Uberschall Rev. Blue": {
     "coros_equivalent": "Bogna Uber Lead",
@@ -205,7 +218,8 @@
     "coros_equivalent": "Bogna Fish",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Soldano SLO-100": {
     "coros_equivalent": "Solo 100 Lead",
@@ -236,7 +250,8 @@
     "coros_equivalent": "Dovre 50",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Driftwood Purple Nightmare": {
     "coros_equivalent": "Drywood Purple Horror",
@@ -249,31 +264,36 @@
     "coros_equivalent": "ENG Energy",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "ENGL Savage 120": {
     "coros_equivalent": "ENG Feral 120",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Fryette Pittbull Fifty/CL": {
     "coros_equivalent": "Fryed Pit Bull 50",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Fryette SigX": {
     "coros_equivalent": "Fryed Sig10",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Naylor Duel 38": {
     "coros_equivalent": "Nailer Battle 38",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Revv Generator 120 MK3": {
     "coros_equivalent": "RV Amp G120",
@@ -286,7 +306,8 @@
     "coros_equivalent": "Gibb GA8",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Supro Thunderbolt 15": {
     "coros_equivalent": "Super Bolt",
@@ -299,25 +320,29 @@
     "coros_equivalent": "ABA MPre1",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Komet 60": {
     "coros_equivalent": "Comet 60",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Cornford Hellcat": {
     "coros_equivalent": "Corn Vixen",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Krank Rev1": {
     "coros_equivalent": "Crank Rev1",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Carvin X100B": {
     "coros_equivalent": "Cravin X100",
@@ -330,7 +355,8 @@
     "coros_equivalent": "Custom 3SE",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Metaltronix M1000": {
     "coros_equivalent": "MetalX M1K Clean",
@@ -350,31 +376,36 @@
     "coros_equivalent": "Range Rock",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Orange Rockerverb 100 MK3": {
     "coros_equivalent": "Range Rverb",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Sound City B120": {
     "coros_equivalent": "SCity B120",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Tone King Imperial MKII": {
     "coros_equivalent": "TuneRoyal MK2",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Victory Sheriff 22": {
     "coros_equivalent": "Victor Marshal",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hermansson Hiwatt Custom PA100": {
     "coros_equivalent": "Watt Custom VH",
@@ -387,13 +418,15 @@
     "coros_equivalent": "Amped SV Classic",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Ampeg SVT-2 Pro": {
     "coros_equivalent": "Amped Super Valve Pro",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Ampeg B-15N": {
     "coros_equivalent": "Amped Flip-Top 6466",
@@ -405,13 +438,15 @@
     "coros_equivalent": "Amped V5B",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Markbass Little Mark III": {
     "coros_equivalent": "Bass Mark LM3",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Gallien Krueger 800RB": {
     "coros_equivalent": "G800K",
@@ -423,13 +458,15 @@
     "coros_equivalent": "Peace BC1",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech 21 SansAmp GED-2112": {
     "coros_equivalent": "Tech41 GED12",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech 21 Bass Driver DI": {
     "coros_equivalent": "BDDI",
@@ -440,37 +477,43 @@
     "coros_equivalent": "Aggi 700",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Aguilar DB751": {
     "coros_equivalent": "Aggi 751",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Aguilar ToneHammer 500": {
     "coros_equivalent": "Aggi Hammer 500",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
-  "Darkglass Alpha\u00b7Omega 900": {
+  "Darkglass Alpha·Omega 900": {
     "coros_equivalent": "Darkglass AO900",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Microtubes 900 V2": {
     "coros_equivalent": "Darkglass MT900V2",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Orange AD200 Bass MK3": {
     "coros_equivalent": "Range AD200",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall 1960A w/ G12T-75": {
     "coros_equivalent": "412 Brit 60A G75 80s",
@@ -581,7 +624,8 @@
     "coros_equivalent": "Iba Green",
     "type": "drive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Boss SD-1 Super Overdrive": {
     "coros_equivalent": "Chief SD1",
@@ -612,7 +656,8 @@
     "coros_equivalent": "Chief HM2",
     "type": "drive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "ProCo Rat": {
     "coros_equivalent": "Rodent Drive",
@@ -668,55 +713,64 @@
     "coros_equivalent": "TW Tube Drive",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Beetronics Vezzpa": {
     "coros_equivalent": "Beehive Wasp Fuzz",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Ibanez No. 59 Standard Fuzz": {
     "coros_equivalent": "Iba Basic Fuzz",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Hallmark Nu-Fuzz": {
     "coros_equivalent": "Trademark Fuzz",
     "type": "drive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal Champ": {
     "coros_equivalent": "Love Champion",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal 5E3 Deluxe": {
     "coros_equivalent": "Love DLX",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal JTM": {
     "coros_equivalent": "Love TM",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Lovepedal OD Eleven": {
     "coros_equivalent": "Love Drive 11",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Malekko B:assmaster": {
     "coros_equivalent": "MKK Bass Lord",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Universal Audio 1176": {
     "coros_equivalent": "Legendary 87 (ST)",
@@ -737,7 +791,8 @@
     "coros_equivalent": "OC-76 Comp",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Boss CS-3 Compression Sustainer": {
     "coros_equivalent": "Chief CS3",
@@ -748,19 +803,22 @@
     "coros_equivalent": "4-Comp Custom",
     "type": "comp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Darkglass Super Symmetry": {
     "coros_equivalent": "Symmetrical Comp",
     "type": "comp",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Bogner Harlow": {
     "coros_equivalent": "Bogna Bloom",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lexicon PCM70 Circular Delay": {
     "coros_equivalent": "Circular Delay",
@@ -872,7 +930,8 @@
     "coros_equivalent": "",
     "type": "filter",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Morley Bad Horsie": {
     "coros_equivalent": "Bad Horse",
@@ -1080,7 +1139,7 @@
     "type": "cab",
     "confidence_score": 1.0
   },
-  "Fender Princeton \u201cBrownface\u201d with Celestion G10 Alnico Gold Speakers": {
+  "Fender Princeton “Brownface” with Celestion G10 Alnico Gold Speakers": {
     "coros_equivalent": "110 US PRN Gold G10",
     "type": "cab",
     "confidence_score": 1.0
@@ -1100,7 +1159,7 @@
     "type": "cab",
     "confidence_score": 1.0
   },
-  "Fender Deluxe \u201cTweed\u201d with WGS G12Q drivers": {
+  "Fender Deluxe “Tweed” with WGS G12Q drivers": {
     "coros_equivalent": "112 US DLX Tweed WGS-Q 10s",
     "type": "cab",
     "confidence_score": 1.0
@@ -1116,7 +1175,7 @@
     "confidence_score": 1.0
   },
   "Darkglass DG212N with custom Eminence neodymium drivers": {
-    "coros_equivalent": "210 Darkglass\u00ae Neo",
+    "coros_equivalent": "210 Darkglass® Neo",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1126,7 +1185,7 @@
     "confidence_score": 1.0
   },
   "Darkglass D210C with custom Eminence ceramic drivers": {
-    "coros_equivalent": "210C Darkglass\u00ae",
+    "coros_equivalent": "210C Darkglass®",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1160,7 +1219,7 @@
     "type": "cab",
     "confidence_score": 1.0
   },
-  "VOX AC30 Top Boost with Celestion Alnico \u201cSilver Bell\u201d drivers": {
+  "VOX AC30 Top Boost with Celestion Alnico “Silver Bell” drivers": {
     "coros_equivalent": "212 UK C30 '65",
     "type": "cab",
     "confidence_score": 1.0
@@ -1170,7 +1229,7 @@
     "type": "cab",
     "confidence_score": 1.0
   },
-  "Fender Cab with Celestion A-Type 12\u201d drivers": {
+  "Fender Cab with Celestion A-Type 12” drivers": {
     "coros_equivalent": "212 US A-type 00s",
     "type": "cab",
     "confidence_score": 1.0
@@ -1519,7 +1578,8 @@
     "coros_equivalent": "Darkglass VMT",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "JHS Bender 1973 London": {
     "coros_equivalent": "MK3 Silicon Fuzz",
@@ -1565,259 +1625,302 @@
     "coros_equivalent": "4-Comp Custom",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Human Gear Animato": {
     "coros_equivalent": "Anima Fuzz",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "BBE Sonic Stomp Sonic Maximizer": {
     "coros_equivalent": "BBD SonicMax",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Bogner Fish + (Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "Bogna Fish+290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
-  "Bogner \u00dcberschall": {
+  "Bogner Überschall": {
     "coros_equivalent": "Bogna Uber",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Bogner Ecstasy Blue": {
     "coros_equivalent": "Bogna X Blue",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Ch1": {
     "coros_equivalent": "Bogna X100B Ch1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Bogner Ecstasy 100B Ch2": {
     "coros_equivalent": "Bogna X100B Ch2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Ch3": {
     "coros_equivalent": "Bogna X100B Ch3",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Bogner Ecstasy 100B Power Amp EL34 New": {
     "coros_equivalent": "Bogna X100B PA NEW",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Power Amp EL34 New+Var": {
     "coros_equivalent": "Bogna X100B PA NEW+VAR",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Power Amp EL34 Old": {
     "coros_equivalent": "Bogna X100B PA OLD",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Power Amp EL34 Old+Var": {
     "coros_equivalent": "Bogna X100B PA OLD+VAR",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Preamp Ch1": {
     "coros_equivalent": "Bogna X100B Pre Ch1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Bogner Ecstasy 100B Preamp Ch2 High Gain": {
     "coros_equivalent": "Bogna X100B Pre Ch2 Hi",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Preamp Ch2 Low Gain": {
     "coros_equivalent": "Bogna X100B Pre Ch2 Lo",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Bogner Ecstasy 100B Preamp Ch3 Lead": {
     "coros_equivalent": "Bogna X100B Pre Ch3 Lead",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Bogner Ecstasy 100B Preamp Ch3 Plexi": {
     "coros_equivalent": "Bogna X100B Pre Ch3 Plexi",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall JCM800 2210": {
     "coros_equivalent": "Brit 2210",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall 2210 Power Amp EL34": {
     "coros_equivalent": "Brit 2210 PA EL34",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall Silver Jubilee 2555 Clean": {
     "coros_equivalent": "Brit 2555 Clean",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Marshall Silver Jubilee 2555 Lead": {
     "coros_equivalent": "Brit 2555 Lead",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Marshall Silver Jubilee 2555 Rhythm": {
     "coros_equivalent": "Brit 2555 Rhy",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Mesa Boogie Triaxis + Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "CA 3Axe+290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Bass 400": {
     "coros_equivalent": "CA 400",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie JP2C Ch1": {
     "coros_equivalent": "CA John's Ch1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie JP2C Ch2": {
     "coros_equivalent": "CA John's Ch2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie JP2C Ch3": {
     "coros_equivalent": "CA John's Ch3",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie M6 Carbine & Big Block 750 Mixed": {
     "coros_equivalent": "CA MixBass",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Mark III Red Stripe": {
     "coros_equivalent": "CA MkIIIRed",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "CA PA-Sim290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Quad Preamp + Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "CA Quad+290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Studio Preamp + Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "CA Studio+290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Trem-O-Verb Red Blues": {
     "coros_equivalent": "CA Tremo Blues",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Trem-O-Verb Orange Clean": {
     "coros_equivalent": "CA Tremo Clean",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mesa Boogie Trem-O-Verb Red Modern": {
     "coros_equivalent": "CA Tremo Modern",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Mesa Boogie Trem-O-Verb Orange Vintage": {
     "coros_equivalent": "CA Tremo Vintage",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Boss ODB-3": {
     "coros_equivalent": "Chief Bass Overdrive",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Boss HM-2": {
     "coros_equivalent": "Chief HM2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Carvin X100B Series IV": {
     "coros_equivalent": "Cravin X100",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Custom Audio Amplifier 3+SE + Mesa Boogie Stereo Simul-Class 2:Ninety": {
     "coros_equivalent": "Custom 3SE+290",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Diezel VH4 Ch1": {
     "coros_equivalent": "D-Cell H4 Ch1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Diezel VH4 Ch2": {
     "coros_equivalent": "D-Cell H4 Ch2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Diezel VH4 Ch3": {
     "coros_equivalent": "D-Cell H4 Ch3",
@@ -1833,43 +1936,50 @@
     "coros_equivalent": "D-Cell PA-6550",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
-  "Darkglass Alpha\u00b7Omega Ultra": {
+  "Darkglass Alpha·Omega Ultra": {
     "coros_equivalent": "",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass B7K": {
     "coros_equivalent": "Darkglass B7K",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Vintage Microtubes & B7K Mixed": {
     "coros_equivalent": "Darkglass VMT+B7K",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Vintage Ultra": {
     "coros_equivalent": "Darkglass VU",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Dean Costello Audio Heavy Metal Warfare": {
     "coros_equivalent": "DC Heavy Crusader",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Driftwood Amplifiers Purple Nightmare": {
     "coros_equivalent": "Drywood Purple Horror",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Overdrive Special by Dumble": {
     "coros_equivalent": "Dumbbell ODS",
@@ -1880,343 +1990,400 @@
     "coros_equivalent": "ENG Marty's",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "ENGL Tube Poweramp 930/60": {
     "coros_equivalent": "ENG PA-930",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "ENGL Ritchie Blackmore Signature 100": {
     "coros_equivalent": "ENG Rainbow",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "EVH 5150 IIIS EL34": {
     "coros_equivalent": "EV101IIIS EL34",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Xotic Effects BB Preamp": {
     "coros_equivalent": "Exotic BB",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Xotic Effects SL Drive": {
     "coros_equivalent": "Exotic SL",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Gamechanger Audio Plasma": {
     "coros_equivalent": "Gametrader Magma",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Ibanez Tube Screamer 9": {
     "coros_equivalent": "Iba Green",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Ibanez Sonic Distortion 9": {
     "coros_equivalent": "Iba Sonic Dist 9",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal Believe": {
     "coros_equivalent": "Love Believer",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal MKIII Tonebender": {
     "coros_equivalent": "Love Bender Mk3",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Lovepedal Fuzz Master III": {
     "coros_equivalent": "Love Fuzz Lord III",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mad Professor Golden Cello": {
     "coros_equivalent": "MadPro Golden",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Mad Professor Simple Overdrive": {
     "coros_equivalent": "MadPro SimpleOD",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Metaltronix M1000 Clean": {
     "coros_equivalent": "MetalX M1K Clean",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Metaltronix M1000 HiGain Stage 1": {
     "coros_equivalent": "MetalX M1K Stage1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Metaltronix M1000 HiGain Stage 2": {
     "coros_equivalent": "MetalX M1K Stage2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "MXR Bass Fuzz Deluxe": {
     "coros_equivalent": "MX BassFuzzDLX",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "MXR Classic Distortion": {
     "coros_equivalent": "MX ClassicOD",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Matchless Chieftain": {
     "coros_equivalent": "NoMatch Chief",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Omega Ampworks KT66 Poweramp": {
     "coros_equivalent": "OMG PA-KT66",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Otsola Mk1": {
     "coros_equivalent": "Otso Bender Mk1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Paul Reed Smith MT15": {
     "coros_equivalent": "Paul's MT16",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Pearce BC1 Bass Preamp": {
     "coros_equivalent": "Pearce Billy",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Orange Thunderverb 50": {
     "coros_equivalent": "Range Stormverb",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Reuss Musical Instruments Germanium Bender": {
     "coros_equivalent": "Reus Bender Mk2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "ProCo Rat + Ampeg SVT Classic": {
     "coros_equivalent": "Rodent+SV",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "ProCo Rat + Ampeg V-4B": {
     "coros_equivalent": "Rodent+V5B",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Revv Amplification Generator 120 MK3": {
     "coros_equivalent": "RV Amp G120",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
-  "Two Notes Supro Thunderbolt 15\u201d": {
+  "Two Notes Supro Thunderbolt 15”": {
     "coros_equivalent": "Super Bolt",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Darkglass Super Symmetry 115 GeV": {
     "coros_equivalent": "Symmetrical Comp",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Antti T-Bird": {
     "coros_equivalent": "TeaBird",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech21 Bass Driver DI": {
     "coros_equivalent": "Tech41 BDDI",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech 21 SansAmp Geddy Lee YYZ Preamp": {
     "coros_equivalent": "Tech41 GED",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech21 SansAmp PSA": {
     "coros_equivalent": "Tech41 PSA",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Tech21 VT Bass Deluxe": {
     "coros_equivalent": "Tech41 VTBassDLX",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Hallmark Guitars Nu-Fuzz": {
     "coros_equivalent": "Trademark Fuzz",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Unsound Circuitry Hyper Pozzum": {
     "coros_equivalent": "Unsound Hyper Pozzum",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Unsound Circuitry Kato": {
     "coros_equivalent": "Unsound Kato",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Unsound Circuitry Shivver": {
     "coros_equivalent": "Unsound Shivver",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Fender Hot Rod Deluxe Channel A": {
     "coros_equivalent": "US HRDLX ChA",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Fender Hot Rod Deluxe Channel B": {
     "coros_equivalent": "US HRDLX ChB",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Fender Hot Rod Deluxe Power Amp 6V6": {
     "coros_equivalent": "US HRDLX PA 6V6",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "VHT Two/Fifty/Two": {
     "coros_equivalent": "VHD PA-2502",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Victory Super Kraken": {
     "coros_equivalent": "Victor Mega Squid",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Warwick Pro Fet 5.1": {
     "coros_equivalent": "Warwitch ProF5",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Hermansson Hiwatt Custom PA100 1959": {
     "coros_equivalent": "Watt Custom 1959",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hermansson Hiwatt Custom PA100 Clean": {
     "coros_equivalent": "Watt Custom Clean",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Hermansson Hiwatt Custom PA100 Jose": {
     "coros_equivalent": "Watt Custom Jose",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hermansson Hiwatt Custom PA100 Power Amp EL34 with LoMid1": {
     "coros_equivalent": "Watt Custom LoMid1",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Hermansson Hiwatt Custom PA100 Power Amp EL34 with LoMid2": {
     "coros_equivalent": "Watt Custom LoMid2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Hermansson Hiwatt Custom PA100 Power Amp EL34 with LoMid3": {
     "coros_equivalent": "Watt Custom LoMid3",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Hiwatt Custom PA100 Preamp 1959, modded by Hermansson": {
     "coros_equivalent": "Watt Custom Pre 1959",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hiwatt Custom PA100 Preamp Clean, modded by Hermansson": {
     "coros_equivalent": "Watt Custom Pre Clean",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Hiwatt Custom PA100 Preamp Jose, modded by Hermansson": {
     "coros_equivalent": "Watt Custom Pre Jose",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hiwatt Custom PA100 Preamp VH, modded by Hermansson": {
     "coros_equivalent": "Watt Custom Pre VH",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Hermansson Hiwatt Custom PA100 VH": {
     "coros_equivalent": "Watt Custom VH",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "British Crunch"
   },
   "Cory Wong Cab 1 (M) & (ST)": {
     "coros_equivalent": "Cory Wong Cab 1 (M) & (ST)",
@@ -2264,7 +2431,8 @@
     "coros_equivalent": "Cory Wong The Big Rig Overdrive",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Cory Wong The Clean Machine": {
     "coros_equivalent": "Cory Wong The Clean Machine",
@@ -2360,7 +2528,8 @@
     "coros_equivalent": "Bogna Fish",
     "type": "modulation",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Gojira REV": {
     "coros_equivalent": "Studio Plate 70 (ST)",
@@ -2413,7 +2582,8 @@
     "coros_equivalent": "",
     "type": "utility",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Nolly Cab 1 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
@@ -2477,13 +2647,15 @@
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Nolly Overdrive-2": {
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "Nolly Reverb": {
     "coros_equivalent": "Range Rverb",
@@ -2529,7 +2701,8 @@
     "coros_equivalent": "OC-76 Comp",
     "type": "compressor",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "Other / Unique"
   },
   "Plini Crunch": {
     "coros_equivalent": "US Prince",
@@ -2593,7 +2766,8 @@
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "tonal_archetype": "High-Gain Modern"
   },
   "SLO-100 Overdrive-2": {
     "coros_equivalent": "",

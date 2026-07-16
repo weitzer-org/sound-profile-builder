@@ -218,6 +218,45 @@ track further:**
   `coros_map.json` update). Revisit the live-trigger addition then, not
   before -- it's a small additive change once the batch tool and draft
   file format exist, not a reason to delay building those.
+
+  **Merged into `coros_map.json` (188/192, 97.9% coverage) and
+  `user_captures.json` (all 87 entries `description_verified`).** An Opus
+  review of both full drafts before merge caught a real bug in
+  `cmd/enrich_captures` itself, not just bad individual labels: the tool
+  researched each entry's `coros_equivalent` (the QC's own on-device block
+  name, e.g. `"Chief Bass Overdrive"`, `"D-Cell H4 Ch2"`) instead of the
+  map key (the actual real-world gear name, e.g. `"Boss ODB-3"`,
+  `"Diezel VH4 Ch2"`) -- on-device names are often obfuscated/generic
+  enough that this usually still worked, but it produced a wrong-pedal
+  citation on `Boss ODB-3` (matched an unrelated Flattley pedal via
+  "Chief") and collapsed three unrelated captures that happen to share the
+  on-device block `"Love Drive 11"` into one shared (and wrong) citation.
+  Fixed to research by map key, with `coros_equivalent` passed only as
+  secondary disambiguating context; the fix also let the tool research 17
+  entries it previously couldn't act on at all (captures with no
+  `coros_equivalent` recorded). Four reverb captures (`Generic Spring
+  Reverb`, `Nameless Reverb`, `Nolly Reverb`, `Plini Reverb`) were left
+  without a `tonal_archetype` rather than merged -- they'd all collided
+  onto the same on-device block as an Orange Rockerverb amp mapping and
+  inherited its (amp-centric, wrong-for-reverb) label; real fix is a
+  type-specific archetype vocabulary (see "worth deriving next" below),
+  not a patched label. For `user_captures.json`, 7 of 87 re-researched
+  descriptions were rejected in favor of the existing one (regressions
+  that dropped a correct circuit/variant detail, or over-specific
+  inferences the capture name itself didn't support) -- all 87 are still
+  marked `description_verified` either way, since "verified but kept the
+  original" is still a completed review, not a skipped one.
+
+  **Worth deriving next, beyond `tonal_archetype`** (from a follow-up data
+  audit, not yet started): (1) a `channel_type` field (Clean/Crunch/Lead/
+  Rhythm) -- 53 `coros_map.json` entries already encode this in their key
+  name (e.g. `Matchless DC30 Ch1` vs `Ch2`), and it directly explains
+  mislabels like a lead channel absorbing its amp's generic archetype;
+  (2) per-`type` archetype vocabularies instead of one universal enum --
+  the current 3-value enum is really amp/drive-shaped, which is why a
+  reverb or delay block has no good answer to give it. `confidence_score`
+  was checked and ruled out as a signal: 468/469 entries are exactly
+  `1.0`, a non-discriminating default, not real per-entry confidence.
 - **Cabinet manual-research-vs-actual-model reconciliation** (not yet
   started, needs a research spike before any code change) -- still an open
   question, not a wiring fix: is the real QC hardware IR-loader-only per

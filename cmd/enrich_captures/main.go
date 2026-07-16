@@ -79,41 +79,29 @@ func main() {
 		log.Fatalf("Failed to parse %s: %v", sourcePath, err)
 	}
 
-	missing := groupMissingByEquivalent(mappings)
+	missing := missingKeys(mappings)
 	if len(missing) == 0 {
 		log.Printf("Every is_capture entry already has a tonal_archetype. Nothing to research.")
 		return
 	}
-	actionableEntries := 0
-	for _, keys := range missing {
-		actionableEntries += len(keys)
-	}
-	unfixable := countCapturesMissingEquivalent(mappings)
-	log.Printf("Found %d unique real-gear names across %d capture entries missing tonal_archetype.", len(missing), actionableEntries)
-	if unfixable > 0 {
-		log.Printf("%d additional capture entries are missing tonal_archetype AND have no coros_equivalent recorded -- this tool cannot research those; they need manual attention.", unfixable)
-	}
+	log.Printf("Found %d capture entries missing tonal_archetype.", len(missing))
 
 	// Resumable: if a draft file already exists at draftPath (e.g. from a prior run that
 	// hit truncation/parse failures on some names), load it and skip any real-gear name
 	// it already covers, rather than re-paying for names that already succeeded.
-	drafts := make(map[string]draftEntry) // keyed by original coros_map.json map key
-	alreadyCovered := make(map[string]bool)
+	drafts := make(map[string]draftEntry) // keyed by coros_map.json map key
 	if existing, err := os.ReadFile(draftPath); err == nil {
 		if err := json.Unmarshal(existing, &drafts); err != nil {
 			log.Fatalf("Existing draft file %s is not valid JSON, refusing to overwrite blindly: %v", draftPath, err)
 		}
-		for _, entry := range drafts {
-			alreadyCovered[entry.CorosEquivalent] = true
-		}
-		log.Printf("Loaded existing draft %s: %d entries already covering %d unique real-gear names -- skipping those.", draftPath, len(drafts), len(alreadyCovered))
+		log.Printf("Loaded existing draft %s: %d entries already covered -- skipping those.", draftPath, len(drafts))
 	}
 
-	names := sortedKeys(missing)
+	names := missing
 	remaining := names[:0]
-	for _, equiv := range names {
-		if !alreadyCovered[equiv] {
-			remaining = append(remaining, equiv)
+	for _, key := range names {
+		if _, ok := drafts[key]; !ok {
+			remaining = append(remaining, key)
 		}
 	}
 	names = remaining
@@ -152,11 +140,14 @@ func main() {
 
 	// Sequential, not concurrent: this is a low-frequency, one-off (or periodic) offline
 	// sweep with no user waiting, so simplicity beats throughput here.
-	for _, equiv := range names {
-		keys := missing[equiv]
-		log.Printf("Researching %q (%d capture entries)...", equiv, len(keys))
+	for _, key := range names {
+		gear := mappings[key]
+		log.Printf("Researching %q...", key)
 
-		userPrompt := fmt.Sprintf("Research the real-world tonal character of: %s", equiv)
+		userPrompt := fmt.Sprintf("Research the real-world tonal character of: %s", key)
+		if gear.CorosEquivalent != "" {
+			userPrompt += fmt.Sprintf("\n(For context only, not the research subject: this capture's on-device native block is labeled %q -- that label may be a generic or obfuscated placeholder name and is not itself a real product.)", gear.CorosEquivalent)
+		}
 		result, err := orch.RunAgentSplit(ctx, "Capture Enrichment", sysPrompt, userPrompt)
 		// Pace every call the same way regardless of outcome -- placed right after the
 		// call (not at the bottom of the loop) so an error path's `continue` can't skip
@@ -165,21 +156,21 @@ func main() {
 		// when it's needed most.
 		time.Sleep(500 * time.Millisecond)
 		if err != nil {
-			log.Printf("  Search failed for %q: %v -- skipping", equiv, err)
-			skipped += len(keys)
+			log.Printf("  Search failed for %q: %v -- skipping", key, err)
+			skipped++
 			continue
 		}
 
 		var parsed enrichmentResult
 		if err := json.Unmarshal([]byte(result), &parsed); err != nil {
-			log.Printf("  Failed to parse response for %q: %v -- skipping. Raw: %s", equiv, err, result)
-			skipped += len(keys)
+			log.Printf("  Failed to parse response for %q: %v -- skipping. Raw: %s", key, err, result)
+			skipped++
 			continue
 		}
 
 		if !parsed.FoundReliableSource {
-			log.Printf("  No reliable source found for %q -- skipping (needs manual research).", equiv)
-			skipped += len(keys)
+			log.Printf("  No reliable source found for %q -- skipping (needs manual research).", key)
+			skipped++
 			continue
 		}
 
@@ -188,8 +179,8 @@ func main() {
 		// genuinely found nothing -- so a true found_reliable_source claim paired with an
 		// empty value here is a malformed response, not a legitimate "no data" case.
 		if parsed.TonalArchetype == "" || parsed.Citation == "" {
-			log.Printf("  %q claimed a reliable source but gave an empty tonal_archetype/citation -- skipping (malformed response).", equiv)
-			skipped += len(keys)
+			log.Printf("  %q claimed a reliable source but gave an empty tonal_archetype/citation -- skipping (malformed response).", key)
+			skipped++
 			continue
 		}
 
@@ -197,8 +188,8 @@ func main() {
 		isNew := label == newCategoryValue
 		if isNew {
 			if parsed.NewCategoryLabel == "" {
-				log.Printf("  %q proposed a new category but gave no label -- skipping.", equiv)
-				skipped += len(keys)
+				log.Printf("  %q proposed a new category but gave no label -- skipping.", key)
+				skipped++
 				continue
 			}
 			label = parsed.NewCategoryLabel
@@ -209,16 +200,13 @@ func main() {
 			parsed.NewCategoryJustification = ""
 		}
 
-		entry := draftEntry{
-			CorosEquivalent:          equiv,
+		drafts[key] = draftEntry{
+			CorosEquivalent:          gear.CorosEquivalent,
 			ProposedTonalArchetype:   label,
 			IsNewCategory:            isNew,
 			NewCategoryJustification: parsed.NewCategoryJustification,
 			Citation:                 parsed.Citation,
 			Source:                   "search_grounded",
-		}
-		for _, k := range keys {
-			drafts[k] = entry
 		}
 		log.Printf("  -> %q (citation: %s)", label, parsed.Citation)
 	}
@@ -234,48 +222,22 @@ func main() {
 	log.Printf("Wrote %d proposed labels to %s (%d skipped -- no reliable source or malformed response). Review and merge into %s manually via a normal PR.", len(drafts), draftPath, skipped, sourcePath)
 }
 
-// groupMissingByEquivalent maps each real-world gear name (coros_equivalent) with no known
-// tonal_archetype to every coros_map.json key that shares it, so a single search covers
-// every entry for the same physical gear rather than researching it once per map key.
-// A coros_equivalent already labeled on ANY of its entries is treated as fully known --
-// SelectedCaptureContext only needs one archetype per real-world gear name.
-func groupMissingByEquivalent(mappings map[string]capturedGear) map[string][]string {
-	known := make(map[string]bool)
-	for _, v := range mappings {
-		if v.IsCapture && v.CorosEquivalent != "" && v.TonalArchetype != "" {
-			known[v.CorosEquivalent] = true
-		}
-	}
-
-	missing := make(map[string][]string)
+// missingKeys returns every coros_map.json map key (the real-world gear name --
+// coros_map.json's schema is real-world name -> QC on-device block name in CorosEquivalent)
+// whose is_capture entry has no tonal_archetype yet, sorted for deterministic runs. This used
+// to dedup and research by CorosEquivalent on the assumption that entries sharing an
+// on-device block name are the same physical gear -- that assumption was wrong: the QC's
+// native block names are often obfuscated/generic (e.g. "Chief Bass Overdrive" for a Boss
+// ODB-3, "Love Drive 11" shared by three unrelated captures), so researching THAT string
+// produced wrong-gear citations and collapsed distinct captures into one shared (wrong)
+// answer. Each map key is already a unique real-world gear name, so no deduping is needed.
+func missingKeys(mappings map[string]capturedGear) []string {
+	var missing []string
 	for key, v := range mappings {
-		if !v.IsCapture || v.CorosEquivalent == "" || known[v.CorosEquivalent] {
-			continue
+		if v.IsCapture && v.TonalArchetype == "" {
+			missing = append(missing, key)
 		}
-		missing[v.CorosEquivalent] = append(missing[v.CorosEquivalent], key)
 	}
+	sort.Strings(missing)
 	return missing
-}
-
-// countCapturesMissingEquivalent counts is_capture entries that are missing
-// tonal_archetype AND have no coros_equivalent recorded at all -- groupMissingByEquivalent
-// can't act on these (there's no real-gear name to search for), so they'd otherwise be
-// silently absent from every count this tool reports.
-func countCapturesMissingEquivalent(mappings map[string]capturedGear) int {
-	count := 0
-	for _, v := range mappings {
-		if v.IsCapture && v.TonalArchetype == "" && v.CorosEquivalent == "" {
-			count++
-		}
-	}
-	return count
-}
-
-func sortedKeys(m map[string][]string) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
