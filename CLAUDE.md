@@ -76,11 +76,14 @@ cheaper local pass acceptable.
   (precision-biased at `medium`, recall-biased at `high`), not agent count.
 - For the same class of large/risky change, also consider **GSR's agent-swarm
   mode** (`.github/workflows/gsr-review-deep.yml`) as a zero-Claude-quota
-  complement to `/code-review high` — apply the `deep-review` label to the PR,
-  or trigger it manually from the Actions tab (`workflow_dispatch`, needs a
-  PR number). It runs GSR's full swarm (Architecture, Logic, Security,
+  complement to `/code-review high` — apply the `deep-review` label to the PR
+  to trigger it. It runs GSR's full swarm (Architecture, Logic, Security,
   TechDebt, Testing agents + a dedup pass) instead of the `basic` single-pass
-  mode that runs automatically on every PR.
+  mode that runs automatically on every PR. Label-only, deliberately: GSR's
+  entrypoint hard-requires a real `pull_request` event payload, and a
+  `workflow_dispatch` manual-trigger path was tried and dropped after two
+  different workarounds both failed on live testing for platform-level
+  reasons (see the workflow file's comments).
 - Reserve `/code-review ultra` (multi-agent cloud review) for substantial
   features before merge — it's billed separately, so don't run it routinely.
 - `/code-review --fix` applies findings directly if you want them auto-fixed.
