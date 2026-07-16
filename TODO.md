@@ -257,6 +257,36 @@ track further:**
   reverb or delay block has no good answer to give it. `confidence_score`
   was checked and ruled out as a signal: 468/469 entries are exactly
   `1.0`, a non-discriminating default, not real per-entry confidence.
+
+  **Post-merge Opus audit of the merged files** (direct file inspection,
+  not just the draft proposals): confirmed the root-cause research-subject
+  fix actually took (cross-checked the obfuscation pattern between several
+  real names and their `coros_equivalent` values -- consistent, no repeat
+  of the substring-collision failure mode), confirmed the 4 reverb entries
+  genuinely ship with no `tonal_archetype` key at all (the bad collided
+  value never left the draft file), and confirmed all 7
+  `user_captures.json` keep-existing decisions were sound. Two issues
+  followed up on:
+  - **`Diezel VH4 Ch2`** -- its re-researched `British Crunch` citation
+    ("Diezel official VH4 product documentation") was too generic to
+    confirm it actually verified the per-channel voicing claim rather than
+    just returning the amp's landing page. Plausible on its face (the VH4
+    does split into a Ch1/Ch2 lower-gain pair vs. a Ch3/Ch4 lead pair,
+    so a "crunch" bucket for Ch2 isn't inherently wrong), but not
+    confident enough to ship -- `tonal_archetype` cleared back to unset
+    for this entry pending a real per-channel source, same treatment as
+    the 4 reverb entries.
+  - **Pre-existing data-quality issue, unrelated to this work** (found
+    during the spot-check, not introduced by it): `"Supro Thunderbolt 15"`
+    (`type: "amp"`) and `"Two Notes Supro Thunderbolt 15”"` (`type: "fx"`)
+    both map to the same on-device block (`coros_equivalent: "Super Bolt"`)
+    for what's plausibly the same physical amp, with an inconsistent
+    `type` field between them -- and the second key uses a curly
+    right-quote (`”`, U+201D) instead of a straight `"`, which would
+    silently fail to match against real device-exported capture names in
+    any exact-string lookup. Not fixed here (predates this PR, needs its
+    own look at whether they're genuinely different captures or a data
+    entry error); flagged for a follow-up pass.
 - **Cabinet manual-research-vs-actual-model reconciliation** (not yet
   started, needs a research spike before any code change) -- still an open
   question, not a wiring fix: is the real QC hardware IR-loader-only per

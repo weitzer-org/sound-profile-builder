@@ -1919,8 +1919,7 @@
     "coros_equivalent": "D-Cell H4 Ch2",
     "type": "fx",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "British Crunch"
+    "is_capture": true
   },
   "Diezel VH4 Ch3": {
     "coros_equivalent": "D-Cell H4 Ch3",
