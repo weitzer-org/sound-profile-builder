@@ -39,6 +39,40 @@ func GetQCBlockSchemaJSON() string {
 	return string(embeddedQCBlockSchema)
 }
 
+// subsetQCBlockSchema returns just the given top-level categories of the embedded QC Block
+// Parameter Vocabulary, JSON-marshaled. Falls back to the full file on any parse/marshal
+// error, or if even one of the requested categories (besides _readme) failed to match --
+// e.g. a category getting renamed in qc_block_schema.json without every caller's key list
+// being updated -- so a schema drift degrades to today's full-file behavior instead of
+// silently handing an agent a partial vocabulary it never noticed was incomplete.
+func subsetQCBlockSchema(keys []string) string {
+	var full map[string]json.RawMessage
+	if err := json.Unmarshal(embeddedQCBlockSchema, &full); err != nil {
+		return string(embeddedQCBlockSchema)
+	}
+	subset := make(map[string]json.RawMessage, len(keys))
+	expectedCategories, matchedCategories := 0, 0
+	for _, key := range keys {
+		if key != "_readme" {
+			expectedCategories++
+		}
+		if v, ok := full[key]; ok {
+			subset[key] = v
+			if key != "_readme" {
+				matchedCategories++
+			}
+		}
+	}
+	if expectedCategories > 0 && matchedCategories < expectedCategories {
+		return string(embeddedQCBlockSchema)
+	}
+	b, err := json.Marshal(subset)
+	if err != nil {
+		return string(embeddedQCBlockSchema)
+	}
+	return string(b)
+}
+
 var qcAmpEQSchemaJSONCache string
 var qcAmpEQSchemaJSONOnce sync.Once
 
@@ -54,24 +88,26 @@ var qcAmpEQSchemaJSONOnce sync.Once
 // timeout twice before a fallback model finally succeeded ~6 minutes in.
 func GetQCAmpEQSchemaJSON() string {
 	qcAmpEQSchemaJSONOnce.Do(func() {
-		var full map[string]json.RawMessage
-		if err := json.Unmarshal(embeddedQCBlockSchema, &full); err != nil {
-			qcAmpEQSchemaJSONCache = string(embeddedQCBlockSchema) // fail safe: fall back to the full file
-			return
-		}
-		subset := make(map[string]json.RawMessage, 3)
-		for _, key := range []string{"_readme", "amplifier", "global_eq"} {
-			if v, ok := full[key]; ok {
-				subset[key] = v
-			}
-		}
-		if b, err := json.Marshal(subset); err == nil {
-			qcAmpEQSchemaJSONCache = string(b)
-		} else {
-			qcAmpEQSchemaJSONCache = string(embeddedQCBlockSchema)
-		}
+		qcAmpEQSchemaJSONCache = subsetQCBlockSchema([]string{"_readme", "amplifier", "global_eq"})
 	})
 	return qcAmpEQSchemaJSONCache
+}
+
+var qcSonicProfilerSchemaJSONCache string
+var qcSonicProfilerSchemaJSONOnce sync.Once
+
+// GetQCSonicProfilerSchemaJSON returns just the categories Sonic Profiler's own output
+// schema can act on: global_eq (suggested_low_cut_hz/suggested_high_cut_hz/eq_profile),
+// drive (saturation_style), reverb (reverb_type), and noise_gate (noise_gate_target_db).
+// None of its output fields name a specific gear or capture, so (mirroring the Tier 1
+// Acoustician fix above) the other ~8 categories -- amplifier, cabinet, modulation,
+// delay, compressor, pitch, volume_pan, wah -- were pure token waste, same as the user's
+// full capture library this agent's context used to also carry (see its call site).
+func GetQCSonicProfilerSchemaJSON() string {
+	qcSonicProfilerSchemaJSONOnce.Do(func() {
+		qcSonicProfilerSchemaJSONCache = subsetQCBlockSchema([]string{"_readme", "global_eq", "drive", "reverb", "noise_gate"})
+	})
+	return qcSonicProfilerSchemaJSONCache
 }
 
 // AgentUsage captures per-agent token, model, call-count, and latency data for one
@@ -373,7 +409,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			return
 		}
 		sysPrompt, _ := o.loadPromptForAgent("2_sonic_profiler", version)
-		userContext2 := fmt.Sprintf("User Request: %s\nQC Block Parameter Vocabulary: %s\nUser Capture Library: %s", prompt, qcBlockSchemaJSON, userCapturesJSON)
+		// Only the categories Sonic Profiler's own output schema can act on, and no capture
+		// library -- it has zero output fields that name a specific gear/capture (see
+		// GetQCSonicProfilerSchemaJSON's doc comment), the same token-bloat fix already
+		// shipped for Acoustician in Tier 1.
+		userContext2 := fmt.Sprintf("User Request: %s\nQC Block Parameter Vocabulary: %s", prompt, GetQCSonicProfilerSchemaJSON())
 		sonicResult, err2 = o.RunAgentSplit(ctx, "Sonic Profiler", sysPrompt, userContext2)
 		logToGCS("2_sonic_profiler", sonicResult)
 	}()

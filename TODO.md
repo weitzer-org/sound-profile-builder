@@ -1,10 +1,11 @@
 # Project Backlog & To-Do
 
-## Pipeline Quality Work — Status (as of 2026-07-15)
+## Pipeline Quality Work — Status (as of 2026-07-16)
 
 A multi-tier effort to raise generation quality without a structural rewrite,
 evaluated each time against the same 12-prompt golden set + blind pairwise
-LLM judge. All three tiers below are merged to `main`.
+LLM judge. Tiers 0-2 are merged to `main`; Tier 3 (agent wiring/context
+fixes, as opposed to another detection layer) is in progress -- see below.
 
 - **Tier 0** (PR #63) — structural fix for a real drift bug: capture-only
   relative-dB parameter formatting was leaking onto algorithmic (non-capture)
@@ -56,12 +57,90 @@ track further:**
   enforcing they stay in sync across all 13 agent keys — still not unified
   (see the fuller entry further down).
 
-**Not yet started / natural next step:** a "Tier 3" pass on agent
-wiring/context itself (e.g. the Sonic Profiler token-bloat parity fix,
-`RefineChat`'s missing `SelectedCaptureContext`, or the Cabinet
-manual-research-vs-actual-model reconciliation) rather than another
-detection layer on top. See the relevant bullets below and issues #64-#68
-for the specific candidates and their tradeoffs.
+**Tier 3 — agent wiring/context fixes, not another detection layer:**
+
+- **Sonic Profiler token-bloat parity fix** (PR #75, `feature/sonic-profiler-token-trim`,
+  **open, not yet merged**) — Sonic Profiler's output schema (`eq_profile`/
+  `suggested_low_cut_hz`/`suggested_high_cut_hz`, `saturation_style`,
+  `reverb_type`, `noise_gate_target_db`) has no field that names a specific
+  gear/capture, but it was receiving the full 12-category
+  `qc_block_schema.json` plus the entire user capture library on every run --
+  the same token-bloat pattern already fixed for Acoustician in Tier 1.
+  Added `GetQCSonicProfilerSchemaJSON()` (scoped to
+  `global_eq`/`drive`/`reverb`/`noise_gate` only), dropped the capture
+  library from its context, shipped as `prompts/2_sonic_profiler_v4.md` per
+  the prompt-versioning convention (`v3` untouched, `config.json` pin
+  bumped). Validated against the live golden set + blind pairwise judge:
+  Sonic Profiler input tokens -72.8% (85,709 -> 23,353 across 11 comparable
+  prompts), whole-pipeline input tokens -9.2%, output/latency flat, judge
+  verdict a dead heat (5 pre-fix / 5 post-fix / 1 equal, none of the 11
+  rationales citing anything Sonic Profiler's schema actually controls).
+  `01_SRV_Clean` excluded from the comparison -- failed post-fix on
+  Acoustician hitting Gemini's `MaxOutputTokens` cap, the same
+  pre-existing flaky failure mode described below, unrelated to this
+  change. GSR's deep-review (agent-swarm) pass on this PR also flagged,
+  and this branch fixed: an invalid `//` comment inside the JSON schema
+  block and a `"-65dB"`-style string example on a numeric field (both real
+  risk only on the Open-LLM gateway route, which has no schema/
+  response-format enforcement unlike Gemini's `ResponseSchema` path; both
+  pre-existing text carried over from `v3` verbatim) and a partial-schema-
+  drift gap in `subsetQCBlockSchema`'s fallback (now falls back to the full
+  file if even one requested category is missing, not just when all are).
+  Declined from that same review pass: extracting a `SchemaProvider`
+  interface + DI and moving the `sync.Once` caches off package scope
+  (premature abstraction for a ~15-line pure function over one static
+  embedded file -- the caching pattern predates this PR, see Tier 1's
+  `GetQCAmpEQSchemaJSON`), and a prompt-injection delimiter fix scoped to
+  just this one agent (the underlying unguarded-interpolation pattern is
+  identical at two other pre-existing call sites -- Tone Historian,
+  Community Scraper -- so a one-off fix here would be inconsistent; see the
+  new backlog item below if a real pipeline-wide pass is wanted). Reasoning
+  for all four is posted on the PR review thread.
+- **`RefineChat`'s missing `SelectedCaptureContext`** (not yet started) --
+  `RefineChat` doesn't re-run Librarian/Navigator, so there's no raw text to
+  scan for capture names the way `RunPipeline` does. Turns out less blocked
+  than first thought: `SelectedCaptureContext` just token-scans whatever
+  text it's given, and `RefineChat` already has `p.Payload` (the existing
+  structured preset) containing the actual selected block model names as
+  plain JSON text -- arguably better data than raw Librarian/Navigator
+  output, since it's the real final selection. The allow-flag computation
+  it needs already exists right after its call site
+  (`handlers_preset.go:990-995`), just needs moving earlier and threading
+  through. Requires a small `Orchestrator` interface signature change plus
+  updating the one call site. Next candidate to pick up.
+- **Cabinet manual-research-vs-actual-model reconciliation** (not yet
+  started, needs a research spike before any code change) -- still an open
+  question, not a wiring fix: is the real QC hardware IR-loader-only per
+  `qc_block_schema.json`'s manual research, or does it have the continuous
+  mic-placement controls (`Mic 1`/`Mic 2`/`Blend`) every actual eval output
+  generates? Needs the Cortex Control app cross-check mentioned elsewhere
+  in this doc before either model is treated as ground truth. See issues
+  #64-#68 for the full history and tradeoffs on all three candidates.
+
+**New from this session, not yet triaged:**
+- **Pipeline-wide prompt-injection hardening** -- GSR's deep-review swarm
+  (see below) flagged unguarded user-tone-text interpolation
+  (`"User Request: " + prompt` / `fmt.Sprintf("User Request: %s...", prompt, ...)`)
+  as a prompt-injection risk on Sonic Profiler specifically, but the same
+  pattern is identical at two other call sites (Tone Historian, Community
+  Scraper, `orchestrator.go`) that predate any Tier work. Real impact is
+  low today (Sonic Profiler's search tool is Gemini's built-in `GoogleSearch`
+  grounding, not an arbitrary-fetch capability, and its output is
+  schema-bounded), but if this gets hardened it should be one deliberate
+  pass across all agent context-construction call sites with a single
+  consistent delimiter convention, not three ad hoc fixes accumulated
+  PR-by-PR.
+- **GSR deep-review (agent-swarm) mode is now live** (PR #74, merged) --
+  `.github/workflows/gsr-review-deep.yml` runs the full GSR agent swarm
+  (Architecture/Logic/Security/TechDebt/Testing agents + dedup pass,
+  `mode: subagent`) on a PR when the `deep-review` label is applied (or on
+  new commits to a PR that already has it). Opt-in only, mirrors the
+  `/code-review high` escalation pattern for large/risky changes. Runs on
+  GSR's own Gemini key, zero Claude quota. Also merged alongside it (PR
+  #76): `/quick-review` demoted from "run on every PR" to on-demand, since
+  GSR's basic-mode review (`gsr-review.yml`) already covers every PR at
+  zero Claude quota -- see the updated Code Review section of this repo's
+  `CLAUDE.md` for the current default review policy.
 
 ## Features & Enhancements
 
