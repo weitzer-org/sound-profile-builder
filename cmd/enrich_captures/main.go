@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
@@ -81,6 +82,14 @@ func main() {
 	}
 	log.Printf("Found %d unique real-gear names across %d capture entries missing tonal_archetype.", len(missing), countMissingEntries(mappings))
 
+	names := sortedKeys(missing)
+	if limitStr := os.Getenv("ENRICH_LIMIT"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit >= 0 && limit < len(names) {
+			log.Printf("ENRICH_LIMIT=%d set -- only researching the first %d of %d names (smoke-test mode).", limit, limit, len(names))
+			names = names[:limit]
+		}
+	}
+
 	ctx := context.Background()
 	orch, err := agents.NewOrchestrator(ctx, apiKey, nil)
 	if err != nil {
@@ -98,7 +107,7 @@ func main() {
 
 	// Sequential, not concurrent: this is a low-frequency, one-off (or periodic) offline
 	// sweep with no user waiting, so simplicity beats throughput here.
-	for _, equiv := range sortedKeys(missing) {
+	for _, equiv := range names {
 		keys := missing[equiv]
 		log.Printf("Researching %q (%d capture entries)...", equiv, len(keys))
 
