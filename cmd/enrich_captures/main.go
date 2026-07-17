@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -90,11 +91,17 @@ func main() {
 	// hit truncation/parse failures on some names), load it and skip any real-gear name
 	// it already covers, rather than re-paying for names that already succeeded.
 	drafts := make(map[string]draftEntry) // keyed by coros_map.json map key
-	if existing, err := os.ReadFile(draftPath); err == nil {
+	existing, err := os.ReadFile(draftPath)
+	if err == nil {
 		if err := json.Unmarshal(existing, &drafts); err != nil {
 			log.Fatalf("Existing draft file %s is not valid JSON, refusing to overwrite blindly: %v", draftPath, err)
 		}
 		log.Printf("Loaded existing draft %s: %d entries already covered -- skipping those.", draftPath, len(drafts))
+	} else if !errors.Is(err, os.ErrNotExist) {
+		// Anything other than "no draft yet" (permissions, I/O error, etc.) must not be
+		// silently treated as a fresh start -- that would overwrite an existing,
+		// merely-unreadable draft and lose whatever progress it held.
+		log.Fatalf("Failed to read existing draft %s: %v", draftPath, err)
 	}
 
 	names := missing
@@ -209,17 +216,33 @@ func main() {
 			Source:                   "search_grounded",
 		}
 		log.Printf("  -> %q (citation: %s)", label, parsed.Citation)
-	}
 
-	out, err := json.MarshalIndent(drafts, "", "  ")
-	if err != nil {
-		log.Fatalf("Failed to marshal draft output: %v", err)
-	}
-	if err := os.WriteFile(draftPath, out, 0644); err != nil {
-		log.Fatalf("Failed to write %s: %v", draftPath, err)
+		// Persist after every success, not just at the end -- a long run against a live,
+		// occasionally slow/rate-limited API can get killed by an external timeout well
+		// before it finishes (observed firsthand: a 3-minute wrapper timeout on a ~20-name
+		// run lost 100% of that run's progress because the file was only ever written
+		// once, at the bottom of the loop).
+		if err := writeDraftFile(draftPath, drafts); err != nil {
+			log.Fatalf("Failed to persist draft progress to %s: %v", draftPath, err)
+		}
 	}
 
 	log.Printf("Wrote %d proposed labels to %s (%d skipped -- no reliable source or malformed response). Review and merge into %s manually via a normal PR.", len(drafts), draftPath, skipped, sourcePath)
+}
+
+// writeDraftFile writes drafts to path atomically (write to a temp file in the same
+// directory, then rename over the target) so a crash or kill mid-write can never leave a
+// truncated or corrupt draft file behind.
+func writeDraftFile(path string, drafts map[string]draftEntry) error {
+	out, err := json.MarshalIndent(drafts, "", "  ")
+	if err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, out, 0644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 // missingKeys returns every coros_map.json map key (the real-world gear name --
