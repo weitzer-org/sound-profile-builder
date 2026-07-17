@@ -31,6 +31,58 @@ cp .env.example .env        # first time
   - Presets and memories are JSON blobs keyed by UUID under `presets/` and `memories/`.
 - `internal/config` — loads `config.json` with env overrides.
 
+## Capture metadata (`coros_map.json` / `user_captures.json`)
+Both are embedded (`//go:embed`, `internal/agents/orchestrator.go`) — changes require a
+rebuild/redeploy, not just a file edit.
+
+**Both enrichment tools only ever research new/not-yet-covered entries, never the whole
+file again** — important since new factory captures ship with firmware updates and new
+user captures get downloaded regularly, and re-researching everything each time would
+waste API budget on records that already have a good answer. For `coros_map.json`, an
+entry with a non-empty `tonal_archetype` already IS the "done" signal (`cmd/enrich_captures`
+only targets entries where it's empty) — no extra field needed. For `user_captures.json`,
+every entry has *some* description by construction, so there's no natural empty-field
+signal; `description_verified: true` on an entry is what marks it as already covered by a
+citation-backed pass. Set it explicitly in `user_captures.json` when merging an approved
+`verified_description` from `cmd/verify_user_captures`'s draft file — a merge that doesn't
+set it will cause the next run to needlessly re-research that entry.
+
+- **`coros_map.json`** — the factory capture map: real-world gear name -> QC block name
+  (`coros_equivalent`), whether it's a pre-trained Neural Capture (`is_capture`), and an
+  optional `tonal_archetype` (a real descriptive tonal color, consumed by
+  `SelectedCaptureContext` in `internal/agents/fuzzy_matcher.go` to help the Architect pick
+  the right relative-dB direction/magnitude on confirmed-capture blocks per Rule 9).
+  `tonal_archetype` coverage is sparse today (~7%) — this is a known, tracked gap (see
+  TODO.md's Pipeline Quality Work section for the full history), not an oversight to fix
+  ad hoc. **Whenever new entries are added to `coros_map.json`** (e.g. after a CorOS/NanOS
+  firmware update adds new factory captures), re-run `cmd/enrich_captures` afterward to
+  research `tonal_archetype` for any of the new entries that are missing one — don't
+  hand-write it inline in the same edit. It's a two-step process by design: the tool writes
+  proposed labels (each with a citation) to a sibling draft file, never `coros_map.json`
+  directly, and a human reviews/merges them via a normal PR — see `cmd/enrich_captures`'s
+  package doc comment and TODO.md for the full rationale (constrained label vocabulary,
+  why it's offline/PR-gated rather than live).
+  - Do NOT commit a new capture entry with a guessed or hand-invented `tonal_archetype` —
+    either leave it unset until `cmd/enrich_captures` researches it, or add it yourself only
+    with a real citeable source, same bar the tool holds itself to.
+- **`user_captures.json`** — the personal/downloaded 3rd-party (Cortex Cloud) capture
+  library. Structurally different from `coros_map.json`: every entry already carries a
+  `description` field (coverage is 100%, confirmed by inspecting the file directly), so
+  there's no *coverage* gap the way there is for `coros_map.json`. But coverage isn't the
+  same as verified accuracy — the original 87 descriptions (commit `62ff925`) were written
+  by an earlier Claude Code session inferring gear identity from the (often cryptic,
+  Cortex-Cloud-exported) capture name alone, with no search grounding and no citation, the
+  same unverified-guess risk `coros_map.json`'s gap represented. `cmd/verify_user_captures`
+  (parallel tool to `cmd/enrich_captures`, same offline/draft-file/PR-gated process)
+  independently re-derives a citation-backed description from the name alone for every
+  entry (deliberately not shown the existing description, to avoid anchoring the new
+  answer on a possibly-wrong old one) and writes both side by side in the draft for
+  comparison — the new answer isn't assumed better, a human still judges each one.
+  **When adding a new user capture, write a real, specific `description` in the same
+  edit** (not a placeholder) and run it through `cmd/verify_user_captures` for a
+  citation-backed second opinion before treating it as settled, same bar as
+  `coros_map.json`.
+
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).
