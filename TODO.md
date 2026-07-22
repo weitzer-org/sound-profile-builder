@@ -137,6 +137,156 @@ track further:**
   `tonal_archetype` coverage in `coros_map.json` beyond the current 7.3% --
   that's the actual bottleneck on this fix (and any future capture-color
   work) having real-world impact, not the wiring.
+
+  **Design session on how to close that gap (2026-07-16), not yet
+  started.** First instinct was to hand this to Ben directly as content
+  research, not an agent task -- reconsidered after the point was raised
+  that this codebase already has a proven live-search-grounding pattern
+  (Sonic Profiler's `GoogleSearch` tool, `internal/agents/orchestrator.go`)
+  that could plausibly research real gear's tonal character itself. Two
+  designs were worked through; the offline/PR-gated one below is the
+  chosen direction, the live one is documented and deliberately deferred.
+
+  *Chosen: offline batch tool, human review via normal PR, no new
+  infrastructure beyond a `cmd/` tool and one queue key.* End-to-end:
+  1. A new `cmd/enrich_captures` tool (same shape as `cmd/eval_refine`/
+     `cmd/validate_mappings`) walks every `coros_map.json` entry with
+     `is_capture: true` and no `tonal_archetype` (178 of 192 today).
+  2. For each, one Gemini call with the `GoogleSearch` tool researches
+     that specific `coros_equivalent` real-world gear name and proposes a
+     label. Output is constrained to the existing 3-value enum
+     (`British Crunch` / `High-Gain Modern` / `Other / Unique`) plus an
+     explicit "propose a new category" escape hatch that requires extra
+     justification in its own field -- prevents 178 near-synonym
+     freeform phrasings fragmenting today's small, coherent vocabulary.
+     Any capture the search can't find a real citeable source for is left
+     blank rather than guessed.
+  3. Results are written to a sibling draft file
+     (`coros_map.tonal_archetype.draft.json`), never mutating the real
+     file directly. Each draft entry carries the label, the citation/
+     source the search surfaced, and a `basis`-style confidence tag
+     (reusing this codebase's existing `manual_confirmed` /
+     `engineering_convention` convention from `qc_block_schema.json`,
+     e.g. `search_grounded_reviewed` once approved) -- `coros_map.json`
+     has no such field on its capture entries today, so this would be the
+     first time one exists there, extending a pattern proven elsewhere
+     rather than inventing a new one.
+  4. The tool's output becomes a normal branch + PR against
+     `coros_map.json`, with each proposed label, its citation, and its
+     confidence tag laid out in the PR description so a reviewer isn't
+     reading opaque JSON. Ben reviews it exactly like any other PR --
+     reads the citations, edits/rejects individual entries in the branch,
+     lets GSR/gemini-code-assist/CodeRabbit run their usual pass -- no new
+     admin UI, approve/reject button, or reviewer role needed. The
+     project's existing PR habit *is* the approval gate. This also means
+     the live generation pipeline is completely unaffected while review is
+     pending -- nothing ships until the PR merges and a new build deploys.
+  5. Re-run periodically (manually, or later via a scheduled job) to sweep
+     for newly-added captures with no label -- same mechanism, just
+     triggered again, not a different one.
+  Roughly 178 calls, bounded one-time cost, no live latency impact on any
+  real user request.
+
+  *Considered and deferred: live, on-demand derivation during actual
+  generation/refinement.* On a `SelectedCaptureContext` miss, fire one
+  grounded search for just that capture (1-3 per run, not all 192 --
+  meaningfully cheaper than the Acoustician grounding revert, which
+  blew timeouts by searching on nearly every prompt against a much
+  heavier schema). Two viable sub-designs surfaced:
+  - *Use it immediately in that same request* -- simplest, zero new
+    infrastructure, but means an unreviewed, possibly-hallucinated real-
+    gear description steers a live Rule 9 dB-formatting decision before
+    anyone has looked at it, with no visible marker distinguishing it
+    from a vetted label -- exactly the "hedging must never be silent"
+    failure mode Tier 1's `basis` field exists to prevent. Also
+    non-reproducible (same capture could get a different, possibly
+    contradictory, un-cached label in a different session) and pays the
+    same search cost every time a popular capture is used, since nothing
+    persists -- never actually closes the coverage gap, just repeats the
+    same cost against it indefinitely.
+  - *Derive live, but only ever persist as an unapproved draft; the
+    current request still falls back to today's safe "no color, general
+    knowledge" behavior* -- this is not a second mechanism, it's the same
+    queue-and-review pipeline above with a second trigger (a real cache
+    miss, in addition to a batch sweep). Doesn't cost the current request
+    any correctness risk, still requires building the same overlay-store
+    write path.
+  Deferred for now: the offline batch sweep alone already clears nearly
+  the entire backlog (178 of 192) in one pass, so the marginal value of
+  also wiring a live trigger is small until real usage patterns surface
+  gaps the batch pass missed (e.g. a brand-new capture added to a future
+  `coros_map.json` update). Revisit the live-trigger addition then, not
+  before -- it's a small additive change once the batch tool and draft
+  file format exist, not a reason to delay building those.
+
+  **Merged into `coros_map.json` (188/192, 97.9% coverage) and
+  `user_captures.json` (all 87 entries `description_verified`).** An Opus
+  review of both full drafts before merge caught a real bug in
+  `cmd/enrich_captures` itself, not just bad individual labels: the tool
+  researched each entry's `coros_equivalent` (the QC's own on-device block
+  name, e.g. `"Chief Bass Overdrive"`, `"D-Cell H4 Ch2"`) instead of the
+  map key (the actual real-world gear name, e.g. `"Boss ODB-3"`,
+  `"Diezel VH4 Ch2"`) -- on-device names are often obfuscated/generic
+  enough that this usually still worked, but it produced a wrong-pedal
+  citation on `Boss ODB-3` (matched an unrelated Flattley pedal via
+  "Chief") and collapsed three unrelated captures that happen to share the
+  on-device block `"Love Drive 11"` into one shared (and wrong) citation.
+  Fixed to research by map key, with `coros_equivalent` passed only as
+  secondary disambiguating context; the fix also let the tool research 17
+  entries it previously couldn't act on at all (captures with no
+  `coros_equivalent` recorded). Four reverb captures (`Generic Spring
+  Reverb`, `Nameless Reverb`, `Nolly Reverb`, `Plini Reverb`) were left
+  without a `tonal_archetype` rather than merged -- they'd all collided
+  onto the same on-device block as an Orange Rockerverb amp mapping and
+  inherited its (amp-centric, wrong-for-reverb) label; real fix is a
+  type-specific archetype vocabulary (see "worth deriving next" below),
+  not a patched label. For `user_captures.json`, 7 of 87 re-researched
+  descriptions were rejected in favor of the existing one (regressions
+  that dropped a correct circuit/variant detail, or over-specific
+  inferences the capture name itself didn't support) -- all 87 are still
+  marked `description_verified` either way, since "verified but kept the
+  original" is still a completed review, not a skipped one.
+
+  **Worth deriving next, beyond `tonal_archetype`** (from a follow-up data
+  audit, not yet started): (1) a `channel_type` field (Clean/Crunch/Lead/
+  Rhythm) -- 53 `coros_map.json` entries already encode this in their key
+  name (e.g. `Matchless DC30 Ch1` vs `Ch2`), and it directly explains
+  mislabels like a lead channel absorbing its amp's generic archetype;
+  (2) per-`type` archetype vocabularies instead of one universal enum --
+  the current 3-value enum is really amp/drive-shaped, which is why a
+  reverb or delay block has no good answer to give it. `confidence_score`
+  was checked and ruled out as a signal: 468/469 entries are exactly
+  `1.0`, a non-discriminating default, not real per-entry confidence.
+
+  **Post-merge Opus audit of the merged files** (direct file inspection,
+  not just the draft proposals): confirmed the root-cause research-subject
+  fix actually took (cross-checked the obfuscation pattern between several
+  real names and their `coros_equivalent` values -- consistent, no repeat
+  of the substring-collision failure mode), confirmed the 4 reverb entries
+  genuinely ship with no `tonal_archetype` key at all (the bad collided
+  value never left the draft file), and confirmed all 7
+  `user_captures.json` keep-existing decisions were sound. Two issues
+  followed up on:
+  - **`Diezel VH4 Ch2`** -- its re-researched `British Crunch` citation
+    ("Diezel official VH4 product documentation") was too generic to
+    confirm it actually verified the per-channel voicing claim rather than
+    just returning the amp's landing page. Plausible on its face (the VH4
+    does split into a Ch1/Ch2 lower-gain pair vs. a Ch3/Ch4 lead pair,
+    so a "crunch" bucket for Ch2 isn't inherently wrong), but not
+    confident enough to ship -- `tonal_archetype` cleared back to unset
+    for this entry pending a real per-channel source, same treatment as
+    the 4 reverb entries.
+  - **Pre-existing data-quality issue, unrelated to this work** (found
+    during the spot-check, not introduced by it): `"Supro Thunderbolt 15"`
+    (`type: "amp"`) and `"Two Notes Supro Thunderbolt 15”"` (`type: "fx"`)
+    both map to the same on-device block (`coros_equivalent: "Super Bolt"`)
+    for what's plausibly the same physical amp, with an inconsistent
+    `type` field between them -- and the second key uses a curly
+    right-quote (`”`, U+201D) instead of a straight `"`, which would
+    silently fail to match against real device-exported capture names in
+    any exact-string lookup. Not fixed here (predates this PR, needs its
+    own look at whether they're genuinely different captures or a data
+    entry error); flagged for a follow-up pass.
 - **Cabinet manual-research-vs-actual-model reconciliation** (not yet
   started, needs a research spike before any code change) -- still an open
   question, not a wiring fix: is the real QC hardware IR-loader-only per
