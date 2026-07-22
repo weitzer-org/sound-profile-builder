@@ -60,11 +60,11 @@ func agentMaxOutputTokens(key string) int32 {
 	caps := map[string]int32{
 		"1_tone_historian":    4000,
 		"2_sonic_profiler":    4000,
-		"3_community_scraper": 4000,
-		"4_coros_librarian":   6000,
+		"3_community_scraper": 8000,  // doubled -- truncated live during the 2026-07-22 gemini-3.6-flash candidate eval (1/39 pipeline runs, gemini-3.5-flash)
+		"4_coros_librarian":   12000, // doubled -- truncated live during the same 2026-07-22 eval (1/39 runs, gemini-3.5-flash)
 		"5_cloud_navigator":   4000,
-		"6_acoustician":       4000,
-		"7_transducer_tech":   3000,
+		"6_acoustician":       8000, // doubled -- by far the dominant failure in the 2026-07-22 eval (7/39 runs: 5 on gemini-3.5-flash, 2 on the gemini-3.6-flash candidate), consistent with its heavier nested humbucker/single_coil schema (see agentSearchTool's comment below) needing more headroom than the other Flash-tier agents. This is a targeted, evidence-based raise for the specific agents that actually failed, not another blind across-the-board doubling -- see the package comment above about not repeating that pattern a third time.
+		"7_transducer_tech":   6000, // doubled -- truncated live during the same 2026-07-22 eval (1/39 runs, gemini-3.5-flash)
 		"8_foh_optimizer":     3000,
 		"9_mix_engineer":      3000,
 		"10_control_mapper":   4000,

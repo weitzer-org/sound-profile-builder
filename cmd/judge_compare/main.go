@@ -68,7 +68,7 @@ func main() {
 	order := []string{
 		"01_SRV_Clean", "02_Chicago_Blues", "03_British_Invasion", "04_Southern_Rock",
 		"05_Clapton", "06_Gilmour", "07_Edge", "08_EVH",
-		"09_BB_King", "10_Slash", "11_Mayer_Lead", "12_Bonamassa",
+		"09_BB_King", "10_Slash", "11_Mayer_Lead", "12_Bonamassa", "13_Hard_Rock_Blues",
 	}
 
 	genConfig := &genai.GenerateContentConfig{
@@ -98,12 +98,12 @@ func main() {
 	var rows []row
 
 	for _, name := range order {
-		baselineData, err := os.ReadFile(filepath.Join(dirA, name+".json"))
+		baselineData, err := os.ReadFile(filepath.Join(dirA, name+".html"))
 		if err != nil {
 			log.Printf("skip %s: %v", name, err)
 			continue
 		}
-		tier0Data, err := os.ReadFile(filepath.Join(dirB, name+".json"))
+		tier0Data, err := os.ReadFile(filepath.Join(dirB, name+".html"))
 		if err != nil {
 			log.Printf("skip %s: %v", name, err)
 			continue
@@ -122,9 +122,9 @@ func main() {
 
 		prompt := fmt.Sprintf(`You are a master guitar tone/gear judge evaluating two AI-generated Quad Cortex presets for the same target: %q.
 
-Both are JSON objects with a builder_statement, an HTML preset table (final_html_payload), a structured_payload block list, and an agent_impact log explaining what each of 11 upstream reasoning agents contributed. Each parameter object may optionally carry "value_b" (a Scene B / Lead override, when it genuinely differs from the Scene A "value") and "basis" (one of confirmed_range/real_gear_analog/engineering_convention/estimate, disclosing how confident the parameter's value is). Both fields are a legitimate, intentional part of the schema in newer presets -- do NOT treat their presence as a hallucinated or non-standard field; only their absence in an otherwise-legitimate preset is neutral (older presets simply predate them), never count for or against a preset on its own.
+Both are the final rendered HTML preset pages produced by the pipeline (a builder statement in prose, followed by the full block table and per-block rationale, and -- where present -- an agent-impact summary of what each upstream reasoning agent contributed). Parameter rows may optionally carry a "Scene B / Lead" override value (when it genuinely differs from the Scene A value) and a basis tag (one of confirmed_range/real_gear_analog/engineering_convention/estimate, disclosing how confident that value is). Both are a legitimate, intentional part of newer presets -- do NOT treat their presence as hallucinated or non-standard; only their absence in an otherwise-legitimate preset is neutral (older presets simply predate them), never count for or against a preset on its own.
 
-Evaluate on: (1) plausibility and specificity of the tonal/historical reasoning — does it read like it's grounded in real, specific facts about the gear/artist/era, or generic/hand-wavy claims that could apply to almost any similar tone; (2) internal consistency — do the parameter choices and rationale actually support each other (including: does a block's Bypass/active state in structured_payload match what the builder_statement and rationale say is active in that scene?); (3) structural correctness — valid, complete JSON; sensible block list; no missing/malformed fields; (4) overall usefulness as an actual preset a guitarist could load and tweak.
+Evaluate on: (1) plausibility and specificity of the tonal/historical reasoning — does it read like it's grounded in real, specific facts about the gear/artist/era, or generic/hand-wavy claims that could apply to almost any similar tone; (2) internal consistency — do the parameter choices and rationale actually support each other (including: does a block's Bypass/active state in the block table match what the builder_statement and rationale say is active in that scene?); (3) structural correctness — a complete, sensible block list rendered without missing or malformed rows; (4) overall usefulness as an actual preset a guitarist could load and tweak.
 
 Preset A:
 %s
