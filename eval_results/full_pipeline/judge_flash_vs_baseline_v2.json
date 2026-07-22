@@ -1,0 +1,82 @@
+[
+  {
+    "Name": "01_SRV_Clean",
+    "Winner": "flash-3.6",
+    "Conf": 0.95,
+    "Ground": "Preset A demonstrates superb historical accuracy. Stevie Ray Vaughan famously used a 1964 Fender Vibroverb, which uniquely featured a single 15\" speaker, specifically the JBL D130F. Pairing this amp with that exact speaker and a TS808-style drive is the definitive SRV recipe. Preset B attempts to pair the Vibroverb with a '212 Too Rock EV' cabinet; while SRV did use EV speakers, Two-Rock as a company wasn't founded until 1999 (long after his passing) and is much more closely associated with John Mayer's modern Dumble-inspired tones.",
+    "Struct": "Both presets are structurally sound and appropriately use the Scene B parameter overrides to transition between rhythm and lead. Preset A correctly uses Quad Cortex algorithmic parameters (like Drive/Tone/Level for the Green 808), whereas Preset B mimics the generic 3-band EQ attached to Neural Captures, which is also technically valid but visually clunkier. No missing fields or malformed JSON.",
+    "Rationale": "Preset A wins purely on the strength of its deep, accurate gear knowledge. Nailing the 1x15 JBL D130F speaker for the Vibroverb shows a high level of domain expertise regarding Stevie Ray Vaughan's actual stage rig. Preset A also smartly adjusts the input gain and EQ staging differently for single coils versus humbuckers. Preset B drifts into anachronistic territory with the Two-Rock cabinet and feels slightly less cohesive."
+  },
+  {
+    "Name": "02_Chicago_Blues",
+    "Winner": "flash-3.6",
+    "Conf": 0.85,
+    "Ground": "Preset A demonstrates deep grounding in actual Quad Cortex ecosystem naming conventions, specifically with the capture 'Fender 57 Deluxe - T8 I4 M12', which perfectly mirrors how Neural DSP labels knob/mic positions on their factory captures. Preset B's cab name ('FNDR TWDLX IN Edge BAL CAB') feels like a somewhat garbled hallucination of an IR file name rather than a standard QC asset. While Preset B's purist approach of relying entirely on amp gain is historically accurate for the 50s, A's inclusion of a TS-style pedal is highly practical for a modern guitarist chasing that target.",
+    "Struct": "Both presets feature flawless JSON/HTML structure with well-formed tables, accurately mapped parameters, and solid use of the basis tags. Preset A correctly maps the Bypass toggles between Scene A and Scene B, establishing clear Rhythm/Lead state changes.",
+    "Rationale": "Preset A wins for its hyper-realistic grounding in QC-specific factory capture nomenclature and its highly practical layout. The way it compensates for pickup types (cutting bass and padding volume for humbuckers, pushing volume for single coils) shows excellent acoustic reasoning. While Preset B's 'no-pedals, just amp gain' scene switching is historically clever, A provides a slightly more fully-featured and gig-ready rig with its dedicated drive block."
+  },
+  {
+    "Name": "04_Southern_Rock",
+    "Winner": "baseline",
+    "Conf": 5,
+    "Ground": "Preset B utilizes a highly specific and historically accurate trick for southern rock slide tone (Lowell George's dual-1176 series compression, more recently popularized by the Origin Effects SlideRig). Preset A is a solid but much more generic Tweed/TS/Fuzz rig.",
+    "Struct": "Both presets are structurally flawless and make excellent use of the JSON schema, per-scene parameter differences, and basis tags. Preset B impressively includes an inline Critic warning for the delay model discrepancy.",
+    "Rationale": "Preset B stands out by showing a deeper understanding of the specific sub-genre's gear history, explicitly employing the series compression trick essential for endless, clean slide sustain. Furthermore, the guitar-specific EQ adjustments on the capture block and the use of Utility blocks for input/output gain staging demonstrate excellent programming technique. The self-correction (Critic warning) regarding the Circular Delay vs. Tape Delay is a great example of the pipeline's internal logic surfacing properly."
+  },
+  {
+    "Name": "06_Gilmour",
+    "Winner": "baseline",
+    "Conf": 0.95,
+    "Ground": "Preset A includes a compressor, which is a hallmark of Gilmour's sustain-heavy lead tone, whereas Preset B completely omits compression in favor of a noise gate. Preset A's parameter values are correctly formatted with units (Hz, ms, %, dB), whereas Preset B strips these units (e.g., '100.0', '375.0') and hallucinates verbose conversational strings into the Cab mic dropdowns ('Cap Edge, 1.5 inches distance (Shure SM57)').",
+    "Struct": "Preset A structurally provides complete parameter rows with correct unit designations and explicit Bypass states for its FX blocks. Preset B is missing units across multiple blocks (Delay, Reverb, EQ frequencies) and injects parentheticals into what should be exact dropdown values for the Cabinet block.",
+    "Rationale": "Preset A delivers a more accurate Gilmour rig by incorporating the essential compressor block before the fuzz, alongside properly formatted UI values. It leverages a high-headroom neural capture and handles the guitar variations elegantly via input/output gain offsets. Preset B suffers from formatting degradation, stripping essential units from parameters, and missing the necessary compression stage for this specific artist's tone."
+  },
+  {
+    "Name": "07_Edge",
+    "Winner": "baseline",
+    "Conf": 5,
+    "Ground": "Preset B exhibits phenomenal grounding, correctly identifying The Edge's signature Korg SDD-3000 and TC 2290 delays and translating them to the QC's Circular Delay and Chorus 229T. Furthermore, it accurately reflects the Quad Cortex UI by using +/- dB values for the Neural Capture's EQ/Gain, whereas Preset A hallucinates that the native 'Iba Green' algorithm is a Capture and incorrectly gives it dB parameters.",
+    "Struct": "Both presets render valid JSON and well-structured HTML. Preset A has a minor structural discrepancy by applying Capture-style dB values to an algorithmic drive block. Preset B omits the explicit mic model name in its Cabinet block value (e.g., 'Cap Edge' instead of 'Dynamic 57 - Cap Edge'), but this is a very minor formatting detail.",
+    "Rationale": "Preset B is the clear winner for its superior historical accuracy and platform-specific knowledge. It correctly relies on a Neural Capture for the AC30 (citing the real-world community consensus that the early native AC30 algorithms were harsh) and flawlessly maps the parameters using the correct +/- dB scale found on QC captures. Its nuanced adjustments between the Telecaster and ES-339 show an advanced understanding of how to balance single coils and humbuckers."
+  },
+  {
+    "Name": "08_EVH",
+    "Winner": "baseline",
+    "Conf": 0.95,
+    "Ground": "Both presets correctly identify the '68 Plexi, EP-3 preamp, MXR modulation, and Greenback speakers crucial to the EVH 'Brown Sound'. However, Preset B exhibits deeper historical grounding by specifically referencing the 'Sunset Sound plate reverb' (famous for Van Halen I), and accurately keeping the EP-3 preamp engaged at all times in both scenes (as Eddie used it for its buffer/tonal coloration, not just as a switched boost). Preset B's approach to the Single Coil vs. Humbucker adjustment is also more realistic, utilizing gain and EQ offsets rather than Preset A's heavy-handed -10dB output cut.",
+    "Struct": "Both presets are structurally sound. They correctly utilize the `value` and `value_b` schema for Scene A/B transitions. Preset B correctly denotes active blocks with 'Bypass: Off' and explicitly models the scene-dependent parameter morphs (like Reverb decay/mix and Amp gain/level increasing for the lead scene). Units are applied cleanly.",
+    "Rationale": "Preset B is the superior preset due to its meticulous historical accuracy (Sunset Sound reverb, always-on EP-3 preamp) and more practical parameter tuning. The adjustments made to adapt the Plexi to a Telecaster (increasing gain and mids while softening the treble) demonstrate an excellent understanding of how to translate a humbucker-centric tone to single coils without relying on extreme volume padding."
+  },
+  {
+    "Name": "09_BB_King",
+    "Winner": "baseline",
+    "Conf": 0.9,
+    "Ground": "Both presets demonstrate excellent historical grounding for B.B. King's tone. They correctly identify the need for high-headroom American cleans (Fender Twin), and both employ a parametric EQ to simulate the signature midrange 'honk' associated with his ES-355/Varitone setup. Both also brilliantly adjust input levels (via the compressor) to balance the high-output ES-339 humbuckers against the Telecaster's single coils.",
+    "Struct": "Preset A adheres strictly to standard schema formatting by keeping its parameter values as raw numeric strings (e.g., '-3.0', '120', '2.2'). Preset B appends unit text directly into the JSON value fields (e.g., '-3.0 dB', '125 ms', '15%'), which is generally poor practice for numeric slider fields in structured schemas and can break downstream parsing or UI mapping.",
+    "Rationale": "Both presets are incredibly strong in terms of tonal logic, routing, and fulfilling the dual-guitar requirements. They both understand the target artist and implement specific, historically plausible techniques to achieve the sound. However, Preset A wins on structural execution because it leaves units out of the numeric value fields in the JSON payload, making it safer for machine parsing. Preset A also provides very clean Quad Cortex model naming (e.g., 'Spring' vs 'Spring Reverb')."
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "flash-3.6",
+    "Conf": 0.95,
+    "Ground": "Both presets exhibit an astonishing level of detail and domain knowledge, even correctly distinguishing between Quad Cortex 'Capture' parameter schemas (which use +/- dB values for gain and EQ) and 'Amp Model' parameter schemas (which use 0-10 values). Preset A wisely selects the 'Brit 2555 Lead' (Silver Jubilee), which is Slash's most iconic signature amplifier, and includes a Wah block—essential for playing his most famous solos. Preset B's selection of the JCM800 2203 is also historically accurate, but pairing it with a Tube Screamer (Green 808) leans a bit more toward a generic hard-rock/metal boost than Slash's typical rig (which relies more on amp gain or an EQ boost).",
+    "Struct": "Both presets are structurally flawless. The JSON payloads are well-formed, the tables render properly, block states are perfectly aligned with the builder statements and agent rationales (e.g., Bypass toggling correctly between Scene A and Scene B), and the parameter overrides for the different guitar pickups are thoughtful and highly realistic.",
+    "Rationale": "Preset A takes the win for selecting the Silver Jubilee capture, which is deeply synonymous with Slash's signature tone, and for including the Wah pedal, a critical element of his most famous lead work. The parameter balancing between the ES-339 humbuckers and the Telecaster single coils is highly logical, reducing gain and boosting tone for the neck humbucker while pushing the amp harder for the Telecaster. Both are master-class generations, but A captures the specific artist target slightly better."
+  },
+  {
+    "Name": "11_Mayer_Lead",
+    "Winner": "baseline",
+    "Conf": 0.95,
+    "Ground": "Preset A demonstrates exceptional grounding in both John Mayer's historical gear (Keeley-modded BD-2, Katana Clean Boost, Two-Rock SSS/Custom Reverb, Celestion G12-65s, SM57/R-121 mic combo) and the realities of the Quad Cortex ecosystem. Recognizing that the QC lacks a built-in Keeley Katana, Preset A intelligently substitutes a Graphic-9 block for a neutral volume push, and relies on plausible Neural Capture names (e.g., 'Keeley Mod BD-2 3', 'Two Rock SSS EQ1') for the heavily boutique/modded gear. Preset B uses a somewhat hallucinated model name ('Chief BD2' - likely confusing the 'Chief OD' Bluesbreaker model with a BD-2) and contradicts its own 'tube spring' goal by assigning a Studio Plate reverb.",
+    "Struct": "Both presets are structurally sound. JSON is valid, schema is followed, and the HTML matrices perfectly match the structured payload. Scene B parameter overrides and basis tags are correctly implemented in both.",
+    "Rationale": "Preset A is the clear winner due to its superior historical accuracy and practical application of Quad Cortex routing/models. It accurately identifies Mayer's signal chain and makes incredibly smart adaptations for the QC (using a Graphic EQ to emulate the Katana's clean boost, using a specific BD-2 capture). Furthermore, Preset A's guitar-specific adaptations are fantastic—cutting input gain and pushing treble on the Two-Rock for humbuckers to prevent muddy clipping, while pushing gain and low-mids for single coils to fatten them up. This reflects a deep, functional understanding of how to build a mix-ready preset."
+  },
+  {
+    "Name": "12_Bonamassa",
+    "Winner": "flash-3.6",
+    "Conf": 5,
+    "Ground": "Preset A accurately leverages specific native Quad Cortex models (Dumbbell ODS, 212 Too Rock EV, Circular Delay) and maps them to historically correct real-world facts (Bonamassa's use of EVM12L speakers, Dumble 'Rock' mode). Preset B relies heavily on a fabricated Neural Capture ('ODS Joe Lead') and bypasses the cab entirely as a workaround.",
+    "Struct": "Both presets are structurally immaculate. Both successfully implement the new 'Scene B / Lead' parameter overrides and the 'basis' tags in the structured payload, and render the HTML correctly.",
+    "Rationale": "Preset A is the superior choice because it uses known, factory-native Quad Cortex models to achieve the target tone rather than relying on a fabricated Neural Capture. Its inclusion of the 'Mode: Rock' parameter for the Dumbbell ODS and the exact '212 Too Rock EV' cabinet perfectly align with the device's actual architecture and Joe Bonamassa's real-world rig. Additionally, Preset A uses a very professional preset-building technique by employing a dedicated Utility Volume block to offset the input differences between the Humbucker and Single Coil guitars, ensuring the sensitive Dumble amp model is hit with the correct signal level without needing to radically alter the amp's EQ per guitar."
+  }
+]

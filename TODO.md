@@ -332,6 +332,106 @@ track further:**
   zero Claude quota -- see the updated Code Review section of this repo's
   `CLAUDE.md` for the current default review policy.
 
+## Gemini 3.6 Flash Migration — Status (as of 2026-07-22)
+
+`gemini-3.6-flash` is a live, callable model (confirmed via a direct API call)
+and a real latency win over both models it could replace -- but two live eval
+rounds via `cmd/eval_full_pipeline` + blind pairwise judging via
+`cmd/judge_compare` (judge stays `gemini-3.1-pro-preview` for both
+comparisons, including the Pro-tier one where it's also a candidate, to keep
+the grading rubric identical across both -- a known, deliberate tradeoff, not
+an oversight) found a real, reproducible quality gap. **Not adopted** in
+either production tier pending the fixes below.
+
+- **What was tested** (`feature/gemini-3.6-flash-quality-gap` branch):
+  `cmd/eval_full_pipeline` was rewritten from a uniform "one model for all 12
+  agents" sweep to three named routing scenarios that mirror how production
+  actually splits agents -- `baseline` (Pro tier agents 1/12 on
+  `gemini-3.1-pro-preview`, Flash tier agents 2-11/13 on `gemini-3.5-flash`),
+  `flash-tier-candidate` (same Pro tier, Flash tier swapped to
+  `gemini-3.6-flash`), and `pro-tier-candidate` (Pro tier swapped to
+  `gemini-3.6-flash`, Flash tier unchanged). `cmd/eval_subagent` was
+  similarly narrowed to the 3 agents (Tone Historian, Sonic Profiler,
+  Community Scraper) whose input doesn't depend on another agent's output,
+  so they can be isolated without running the full pipeline.
+  `cmd/judge_compare` needed two compatibility fixes to work against current
+  output at all: it still expected `.json` files matching a dead output
+  format from an earlier pipeline version, not the `.html` files
+  `RunPipeline`/`cmd/eval_full_pipeline` actually produce today, and its
+  hardcoded 12-item query list was missing the 13th golden-set query.
+- **Latency**: `gemini-3.6-flash` was ~11-24% faster than the model it
+  replaced in both tiers, with token usage roughly flat. Not the deciding
+  factor -- quality was prioritized over this win, per the decision below.
+- **Quality** (combined across both eval rounds): Flash tier is close to a
+  wash (10 baseline / 9 candidate wins) with no clear case either way; Pro
+  tier favors baseline clearly (11 baseline / 5 candidate / 1 equal) -- do
+  not move Tone Historian/Architect to `gemini-3.6-flash` without closing the
+  gap below first.
+- **Root cause #1 (blocking)**: `gemini-3.6-flash` recurrently describes a
+  native/algorithmic overdrive block ("Iba Green") as a Neural Capture in its
+  rationale text -- a description-vs-implementation contradiction serious
+  enough that the existing Preset Critic agent flags it. Reproduced 4
+  separate times across both eval rounds and both tiers, 3 of those on the
+  exact same golden-set query (`07_Edge`) -- a specific, reproducible defect,
+  not judge noise.
+- **Root cause #2 (blocking)**: `gemini-3.6-flash` recurrently embeds units
+  directly into numeric JSON parameter fields (e.g. `"-3.0 dB"` instead of
+  `-3.0`), a schema-discipline regression that risks breaking downstream
+  parsing. Reproduced independently in both eval rounds on the same query
+  (`09_BB_King`).
+- **Reliability caveat, partially addressed**: Acoustician was truncating at
+  `MaxOutputTokens` on ~7/39 pipeline runs in the first eval round (both on
+  `gemini-3.5-flash` and on the `gemini-3.6-flash` candidate). Doubling the
+  caps for the 4 agents that actually failed (`agentMaxOutputTokens` in
+  `internal/agents/schemas.go`: `3_community_scraper`, `4_coros_librarian`,
+  `6_acoustician`, `7_transducer_tech`) cut the second round's failures to
+  4/39 -- but all 4 were still Acoustician, split evenly across both models,
+  even at the doubled cap. Per this same file's own comment (added during
+  the prior `hotfix/max-output-tokens-caps` round), recurrence *after* a
+  doubling is itself signal that this needs a different fix (e.g. detecting
+  and retrying on a degenerate repetition pattern, matching the original
+  32,775-token pathological-case observation the caps exist to catch) rather
+  than a third blind doubling.
+- **Judge-reliability caveat, with concrete verified examples (not just
+  "verdicts vary" per issue #68)**: two separate judge verdicts were checked
+  against this repo's own ground truth and found to rest on a judge
+  hallucination, not a real quality difference -- it called `"ODS Joe Lead"`
+  (a real, `description_verified: true` entry in `user_captures.json`)
+  "fabricated," and separately called `"Circular Delay"` (referenced
+  unremarked-upon as a normal QC block in multiple other judge rationales in
+  this same eval) an "Axe-Fx exclusive model." Some fraction of any single
+  judge tally rests on the judge's own factual error.
+
+**Action items before reconsidering adoption:**
+
+- [ ] Root-cause the Iba-Green/Neural-Capture mislabeling on `07_Edge` --
+  reproducible on demand (4/4 occurrences so far), so isolate it via a
+  single-agent Architect call (`cmd/eval_subagent`-style) rather than a full
+  pipeline run before attempting a prompt fix. Likely a prompt-level
+  ambiguity in how `gemini-3.6-flash` specifically distinguishes captures
+  from modeled blocks, since neither `gemini-3.5-flash` nor
+  `gemini-3.1-pro-preview` showed this pattern in either eval round.
+- [ ] Fix or guard against the units-embedded-in-numeric-fields regression --
+  either a schema-level guard (reject/strip non-numeric characters in
+  `Value`/`ValueB` before render) or a targeted prompt instruction; needs its
+  own isolated repro before deciding which.
+- [ ] Investigate Acoustician's remaining `MaxOutputTokens` truncation as a
+  repetition-loop bug rather than raising `agentMaxOutputTokens["6_acoustician"]`
+  a third time -- e.g. capture and inspect one truncated raw response to
+  confirm degenerate repetition vs. genuinely longer legitimate output.
+- [ ] Once the above are addressed, re-run the same three-scenario eval
+  (`cmd/eval_full_pipeline`) and re-judge (`cmd/judge_compare`, judge stays
+  `gemini-3.1-pro-preview` for both comparisons per the decision above) before
+  any routing change.
+- [ ] Given the two verified judge-hallucination cases above, consider
+  spot-checking a sample of judge verdicts against `coros_map.json`/
+  `user_captures.json` ground truth before trusting a close-call tally --
+  ties into the broader judge-methodology fix already tracked in issue #68.
+- [ ] Only after a clean quality run: update the production routing defaults
+  in `RunAgentSplit` (`internal/agents/orchestrator.go`, ~line 750) and add
+  `gemini-3.6-flash` to `getFallbackChain` (currently absent as a fallback
+  target for any primary model).
+
 ## Features & Enhancements
 
 - **Interactive Post-Generation Tweaking**: Build a follow-up conversational thread UI/architecture where the user can chat with the Orchestrator LLM to recursively tweak the generated results, give feedback, or ask questions about the generated DSP blocks.
