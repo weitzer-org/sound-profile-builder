@@ -11,6 +11,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
 )
 
 // eval_compare (Tier-0 side) runs the same golden prompt set as the baseline worktree
@@ -41,25 +42,10 @@ func main() {
 	}
 	log.Printf("Using agent_prompts (version pins): %v", cfg.AgentPrompts)
 
-	queries := map[string]string{
-		"01_SRV_Clean":        "Clean funk blues tone. Stevie Ray Vaughan style with high headroom. Wants to push it with a TS808.",
-		"02_Chicago_Blues":    "Chicago Blues style. Warm Chess Records style overdrive into a small combo amp. Slightly gritty but clean platform.",
-		"03_British_Invasion": "Early British Invasion tone. Vox AC30/JTM45 chime and edge of breakup. Punchy mids, sparkle.",
-		"04_Southern_Rock":    "Southern Rock slide style. Dual lead humbuckers into a cranked American Tweed amp. Singing sustain.",
-		"05_Clapton":          "Vintage Cream-era Clapton tone. Rolled-off Les Paul tone knobs into a cranked Marshall.",
-		"06_Gilmour":          "David Gilmour preset using a Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, and a massive Plate Reverb.",
-		"07_Edge":             "The Edge style chime. 1964 Vox AC30 edge-of-breakup with rhythmic dotted-eighth delays.",
-		"08_EVH":              "Van Halen Brown Sound. Hot-rodded 1968 Marshall Plexi, variac sag, plate reverb.",
-		"09_BB_King":          "BB King Lucile tone. High-headroom American Twin Reverb clean platform.",
-		"10_Slash":            "Guns N' Roses Slash lead. Les Paul neck pickup into a hot JCM800 with standard delay.",
-		"11_Mayer_Lead":       "John Mayer Trio Lead. Smooth Two-Rock/Dumble platform, mid-scooped clean with a subtle drive push.",
-		"12_Bonamassa":        "Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.",
-	}
-	order := []string{
-		"01_SRV_Clean", "02_Chicago_Blues", "03_British_Invasion", "04_Southern_Rock",
-		"05_Clapton", "06_Gilmour", "07_Edge", "08_EVH",
-		"09_BB_King", "10_Slash", "11_Mayer_Lead", "12_Bonamassa",
-	}
+	// Shared with every other cmd/eval_* tool -- previously a locally duplicated 12-query
+	// copy that had drifted from the other tools' 13-query set (missing "13_Hard_Rock_Blues").
+	queries := evalfixtures.GoldenQueries()
+	order := evalfixtures.GoldenQueryOrder()
 
 	outDir := os.Getenv("EVAL_OUT_DIR")
 	if outDir == "" {
@@ -80,13 +66,7 @@ func main() {
 		}
 		orch.AgentModels = cfg.AgentModels
 
-		constraints := map[string]interface{}{
-			"single_amp_mode":        true,
-			"allow_cloud_captures":   false,
-			"allow_factory_captures": true,
-			"favor_captures":         true,
-			"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
-		}
+		constraints := evalfixtures.DefaultConstraints()
 
 		var phaseEvents []struct {
 			Phase string

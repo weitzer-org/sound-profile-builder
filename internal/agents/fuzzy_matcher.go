@@ -378,10 +378,16 @@ func FlagUnverifiedBlock(name string) string {
 // the same resolveBlockName policy ApplyFuzzyCorrection applies to the HTML draft view,
 // so a fabricated block name doesn't survive a preset save unflagged, and a real capture
 // is always labeled with its source and shown under its exact name.
-func FlagUnverifiedStructuredBlocks(sp *storage.StructuredPreset, validBlocks map[string]bool) {
+//
+// Returns the number of blocks that ended up flagged unverified (i.e. not found in
+// validBlocks -- coros_map.json/user_captures.json's combined ground truth), for callers
+// that want a quality signal alongside the mutation (e.g. RunMechanicalQualityChecks).
+// Existing callers that ignore the return value are unaffected.
+func FlagUnverifiedStructuredBlocks(sp *storage.StructuredPreset, validBlocks map[string]bool) int {
 	if sp == nil {
-		return
+		return 0
 	}
+	flagged := 0
 	for _, blocks := range sp.Guitars {
 		for i := range blocks {
 			if strings.TrimSpace(blocks[i].Model) == "" {
@@ -389,8 +395,12 @@ func FlagUnverifiedStructuredBlocks(sp *storage.StructuredPreset, validBlocks ma
 			}
 			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
 			blocks[i].Model = resolveBlockName(blocks[i].Model, blockType, validBlocks)
+			if strings.HasSuffix(blocks[i].Model, unverifiedSuffix) {
+				flagged++
+			}
 		}
 	}
+	return flagged
 }
 
 const captureFormattingMismatchNote = "⚠️ Verify: %s formatted as relative dB, but this block isn't a confirmed capture (expected a plain 0-10 dial value)."
@@ -453,10 +463,14 @@ var captureEligibleBlockTypes = func() map[string]bool {
 // validBlocks at all (unverified/fabricated names are FlagUnverifiedStructuredBlocks's
 // concern, not this function's) and blocks confirmed to genuinely be captures (dB formatting
 // is correct there).
-func FlagCaptureFormattingMismatches(sp *storage.StructuredPreset, validBlocks map[string]bool) {
+// Returns the number of blocks flagged for a capture/algorithmic formatting mismatch, for
+// callers that want a quality signal alongside the mutation (e.g. RunMechanicalQualityChecks).
+// Existing callers that ignore the return value are unaffected.
+func FlagCaptureFormattingMismatches(sp *storage.StructuredPreset, validBlocks map[string]bool) int {
 	if sp == nil {
-		return
+		return 0
 	}
+	flagged := 0
 	for _, blocks := range sp.Guitars {
 		for i := range blocks {
 			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
@@ -483,8 +497,10 @@ func FlagCaptureFormattingMismatches(sp *storage.StructuredPreset, validBlocks m
 			}
 			note := fmt.Sprintf(captureFormattingMismatchNote, strings.Join(mismatchedParams, "/"))
 			appendRationaleNote(&blocks[i], note)
+			flagged++
 		}
 	}
+	return flagged
 }
 
 // appendRationaleNote appends note to a block's Rationale if it isn't already present
@@ -517,10 +533,14 @@ var cabinetMicParamTokens = []string{"mic1", "mic2", "blend"}
 // gives the same completeness property a deterministic backstop. Detection only, the same
 // way as the rest of this file's Flag* functions: there's no safe default mic
 // position/blend value to fabricate on the block's behalf.
-func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) {
+// Returns the number of Cabinet blocks flagged incomplete, for callers that want a quality
+// signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing callers that
+// ignore the return value are unaffected.
+func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 	if sp == nil {
-		return
+		return 0
 	}
+	flagged := 0
 	for _, blocks := range sp.Guitars {
 		for i := range blocks {
 			blockType := strings.ToLower(strings.TrimSpace(blocks[i].Type))
@@ -538,9 +558,11 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) {
 			}
 			if len(present) < len(cabinetMicParamTokens) {
 				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
+				flagged++
 			}
 		}
 	}
+	return flagged
 }
 
 const valueRangeNote = "⚠️ Verify: %s looks like a range (%q), but a single decisive value was required."
@@ -559,10 +581,14 @@ var valueRangePattern = regexp.MustCompile(`^-?\d+(\.\d+)?\s*[a-zA-Z%°]*\s*-\s*
 // rather than the single decisive number Rule 6 requires. Detection only, same reasoning as
 // this file's other Flag* functions: picking one end of the range (or the midpoint) on the
 // model's behalf would be a fabricated decision this file has no basis to make.
-func FlagLeftoverValueRanges(sp *storage.StructuredPreset) {
+// Returns the number of Value/ValueB fields flagged as leftover ranges, for callers that
+// want a quality signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing
+// callers that ignore the return value are unaffected.
+func FlagLeftoverValueRanges(sp *storage.StructuredPreset) int {
 	if sp == nil {
-		return
+		return 0
 	}
+	flagged := 0
 	for _, blocks := range sp.Guitars {
 		for i := range blocks {
 			for j := range blocks[i].Parameters {
@@ -572,13 +598,16 @@ func FlagLeftoverValueRanges(sp *storage.StructuredPreset) {
 				}
 				if v := strings.TrimSpace(p.Value); valueRangePattern.MatchString(v) {
 					appendRationaleNote(&blocks[i], fmt.Sprintf(valueRangeNote, p.Name, v))
+					flagged++
 				}
 				if vb := strings.TrimSpace(p.ValueB); vb != "" && valueRangePattern.MatchString(vb) {
 					appendRationaleNote(&blocks[i], fmt.Sprintf(valueRangeNote, p.Name+" (Scene B)", vb))
+					flagged++
 				}
 			}
 		}
 	}
+	return flagged
 }
 
 // IgnoreList contains structural block names that shouldn't be snapped to amplifiers/effects.

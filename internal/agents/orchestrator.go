@@ -114,17 +114,19 @@ func GetQCSonicProfilerSchemaJSON() string {
 // pipeline run so before/after quality-vs-cost comparisons don't have to be reconstructed
 // from log lines.
 type AgentUsage struct {
-	InputTokens  int32
-	OutputTokens int32
-	Model        string
-	Calls        int
-	LatencyMs    int64
+	InputTokens    int32
+	OutputTokens   int32
+	ThinkingTokens int32 // Gemini 3.x's invisible reasoning-token spend; 0 for models/calls that don't think
+	Model          string
+	Calls          int
+	LatencyMs      int64
 }
 
 // TokenUsage rigidly aggregates exact API volume metadata
 type TokenUsage struct {
 	InputTokens    int32
 	OutputTokens   int32
+	ThinkingTokens int32 // see AgentUsage.ThinkingTokens; billed as output by Gemini, tracked separately here for thinking-budget evals
 	ModelsUsed     map[string]int
 	PerAgent       map[string]*AgentUsage
 	TotalLatencyMs int64
@@ -132,7 +134,7 @@ type TokenUsage struct {
 }
 
 // recordAgentUsage accumulates one agent call's token/latency data under agentRole.
-func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outputTokens int32, latencyMs int64) {
+func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outputTokens, thinkingTokens int32, latencyMs int64) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if u.PerAgent == nil {
@@ -145,6 +147,7 @@ func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outp
 	}
 	a.InputTokens += inputTokens
 	a.OutputTokens += outputTokens
+	a.ThinkingTokens += thinkingTokens
 	a.Model = model
 	a.Calls++
 	a.LatencyMs += latencyMs
@@ -163,9 +166,39 @@ type Orchestrator struct {
 	Usage          *TokenUsage
 	gcs            storage.Client
 	AgentModels    map[string]string // Added for per-agent model configuration
+	ThinkingBudget *int32            // nil = provider/model default; explicit 0 disables thinking (Gemini 3.x). Applies to every Gemini call this orchestrator makes -- eval tooling for per-model thinking-budget sweeps, not a per-agent override.
 	useOpenLLM     bool
 	openLLMClient  *OpenLLMClient
 	openLLMTimeout time.Duration
+
+	// lastArchitectJSON is the raw (pre-HTML-render) Architect+Critic JSON from the most
+	// recent RunPipeline/RefineChat call, set right before injectRenderedHTML overwrites it.
+	// Lets eval tooling run RunMechanicalQualityChecks (FlagUnverifiedStructuredBlocks etc.)
+	// without RunPipeline's return signature changing -- same side-channel pattern as Usage.
+	// Unexported (unlike Usage, which needs direct field access for its own internal mutex
+	// bookkeeping) so lastArchitectJSONMu is the only path to it -- an exported field
+	// alongside an internal mutex would let any caller bypass the lock entirely, defeating
+	// the point of having one (GSR finding on PR #84). Production usage is always one
+	// Orchestrator per HTTP request (see cmd/server/main.go's orchMaker), never shared across
+	// concurrent RunPipeline calls, so the mutex is defense-in-depth rather than a fix for an
+	// observed race.
+	lastArchitectJSON   string
+	lastArchitectJSONMu sync.Mutex
+}
+
+// setLastArchitectJSON writes the lastArchitectJSON side-channel under lastArchitectJSONMu.
+func (o *Orchestrator) setLastArchitectJSON(raw string) {
+	o.lastArchitectJSONMu.Lock()
+	o.lastArchitectJSON = raw
+	o.lastArchitectJSONMu.Unlock()
+}
+
+// LastArchitectJSON reads the lastArchitectJSON side-channel under lastArchitectJSONMu. See
+// its doc comment for what it is and why it's guarded.
+func (o *Orchestrator) LastArchitectJSON() string {
+	o.lastArchitectJSONMu.Lock()
+	defer o.lastArchitectJSONMu.Unlock()
+	return o.lastArchitectJSON
 }
 
 // NewOrchestrator initializes the Gemini ADK client or the Open-LLM REST client
@@ -267,6 +300,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	if isMock {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
+			o.setLastArchitectJSON(mockOutput)
 			return mockOutput, o.Usage, nil
 		} else {
 			log.Printf("Warning: Failed to read mock file testdata/e2e_mocks/architect_generate.json: %v", err)
@@ -633,6 +667,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			}
 		}
 
+		o.setLastArchitectJSON(finalResult)
+
 		if rendered, err := injectRenderedHTML(finalResult); err == nil {
 			finalResult = rendered
 		} else {
@@ -903,13 +939,14 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 
 	// Safely extract and accumulate generated API metrics natively
 	if resp.UsageMetadata != nil {
-		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, finalModelName, latencyMs)
+		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Thinking=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, finalModelName, latencyMs)
 		o.Usage.mu.Lock()
 		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
 		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
+		o.Usage.ThinkingTokens += resp.UsageMetadata.ThoughtsTokenCount
 		o.Usage.ModelsUsed[finalModelName]++
 		o.Usage.mu.Unlock()
-		o.Usage.recordAgentUsage(agentRole, finalModelName, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, latencyMs)
+		o.Usage.recordAgentUsage(agentRole, finalModelName, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, latencyMs)
 	}
 
 	return resp.Text(), nil
@@ -925,6 +962,9 @@ func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.Gener
 		Temperature:     agentTemperature(key),
 		Tools:           agentSearchTool(key),
 		MaxOutputTokens: agentMaxOutputTokens(key),
+	}
+	if o.ThinkingBudget != nil {
+		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingBudget: o.ThinkingBudget}
 	}
 	if key == "12_architect" {
 		cfg.ResponseMIMEType = "application/json"
@@ -973,6 +1013,7 @@ func (o *Orchestrator) Close() {
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
+			o.setLastArchitectJSON(mockOutput)
 			return mockOutput, o.Usage, nil
 		}
 	}
@@ -1033,6 +1074,8 @@ EXISTING STRUCTURED PAYLOAD:
 	if err != nil {
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
 	}
+
+	o.setLastArchitectJSON(finalResult)
 
 	if rendered, err := injectRenderedHTML(finalResult); err == nil {
 		finalResult = rendered
