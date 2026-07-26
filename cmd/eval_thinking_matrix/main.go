@@ -183,7 +183,13 @@ func main() {
 
 				orch, err := agents.NewOrchestrator(ctx, geminiKey, nil)
 				if err != nil {
-					log.Fatalf("Failed to init orchestrator: %v", err)
+					// Recorded as a failed cell, not log.Fatalf: this can be a transient
+					// network/client-construction hiccup, and crashing the whole (potentially
+					// multi-hour) matrix over one cell defeats the incremental-write design's
+					// whole purpose of surviving a single bad cell (GSR finding on PR #84).
+					log.Printf("  ❌ failed to init orchestrator: %v", err)
+					outcomes = append(outcomes, runOutcome{Error: err.Error()})
+					continue
 				}
 				orch.AgentModels = map[string]string{
 					"1_tone_historian": cfg.Model, "2_sonic_profiler": cfg.Model, "3_community_scraper": cfg.Model,

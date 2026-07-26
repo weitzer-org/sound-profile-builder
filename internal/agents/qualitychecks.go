@@ -80,9 +80,10 @@ func (r MechanicalQualityReport) IsClean() bool {
 // FlagCaptureFormattingMismatches's doc comment requires running before
 // FlagUnverifiedStructuredBlocks rewrites block names with capture-source annotations.
 //
-// Operates on a local copy of the parsed StructuredPreset -- unlike the production call sites,
-// callers here are scoring a finished generation, not preparing one for display/save, so there
-// is no reason to mutate anything the caller holds.
+// Operates on the freshly-unmarshaled StructuredPreset -- unlike the production call sites,
+// which mutate a preset already held by a caller, this one owns the only reference to it
+// (nothing else has seen rawArchitectJSON's parsed form yet), so there's no copy to make and
+// no caller state to protect from the Flag* functions' in-place mutation.
 func RunMechanicalQualityChecks(rawArchitectJSON string, validBlocks map[string]bool) MechanicalQualityReport {
 	var report MechanicalQualityReport
 
@@ -104,7 +105,7 @@ func RunMechanicalQualityChecks(rawArchitectJSON string, validBlocks map[string]
 		report.ParseError = "structured_payload missing or null"
 		return report
 	}
-	sp := *envelope.StructuredPayload
+	sp := envelope.StructuredPayload
 
 	for _, blocks := range sp.Guitars {
 		report.TotalBlocks += len(blocks)
@@ -113,10 +114,10 @@ func RunMechanicalQualityChecks(rawArchitectJSON string, validBlocks map[string]
 		}
 	}
 
-	report.CaptureFormattingMismatches = FlagCaptureFormattingMismatches(&sp, validBlocks)
-	report.IncompleteCabinetBlocks = FlagIncompleteCabinetBlocks(&sp)
-	report.LeftoverValueRanges = FlagLeftoverValueRanges(&sp)
-	report.UnverifiedBlocks = FlagUnverifiedStructuredBlocks(&sp, validBlocks)
+	report.CaptureFormattingMismatches = FlagCaptureFormattingMismatches(sp, validBlocks)
+	report.IncompleteCabinetBlocks = FlagIncompleteCabinetBlocks(sp)
+	report.LeftoverValueRanges = FlagLeftoverValueRanges(sp)
+	report.UnverifiedBlocks = FlagUnverifiedStructuredBlocks(sp, validBlocks)
 
 	return report
 }

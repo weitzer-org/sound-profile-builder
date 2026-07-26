@@ -1075,6 +1075,8 @@ EXISTING STRUCTURED PAYLOAD:
 		return "", o.Usage, fmt.Errorf("Refinement failure: %v", err)
 	}
 
+	o.setLastArchitectJSON(finalResult)
+
 	if rendered, err := injectRenderedHTML(finalResult); err == nil {
 		finalResult = rendered
 	} else {
