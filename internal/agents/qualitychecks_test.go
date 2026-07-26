@@ -14,6 +14,26 @@ func TestRunMechanicalQualityChecks_ParseError(t *testing.T) {
 	}
 }
 
+// A missing or explicitly-null structured_payload must be flagged as a ParseError, not scored
+// as a flawless 0-defect run -- see the doc comment in RunMechanicalQualityChecks for why a
+// value-typed field can't distinguish these cases (PR #84 review finding).
+func TestRunMechanicalQualityChecks_MissingStructuredPayload(t *testing.T) {
+	for name, raw := range map[string]string{
+		"key absent entirely": `{"builder_statement": "..."}`,
+		"explicit JSON null":  `{"structured_payload": null}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			report := RunMechanicalQualityChecks(raw, map[string]bool{})
+			if report.ParseError == "" {
+				t.Fatalf("expected ParseError for %s, got a scored report: %+v", name, report)
+			}
+			if report.TotalDefects() != 0 {
+				t.Errorf("expected zero defect counts alongside a parse error, got %+v", report)
+			}
+		})
+	}
+}
+
 func TestRunMechanicalQualityChecks_Clean(t *testing.T) {
 	validBlocks := map[string]bool{"US Twin Vibrato": true, "Any Cab": false}
 	raw := `{"structured_payload": {"guitars": {"Guitar 1": [

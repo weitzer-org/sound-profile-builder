@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -92,9 +93,15 @@ func main() {
 	outDir := flag.String("out", "eval_results/thinking_matrix", "output directory for the report")
 	flag.Parse()
 
+	if *reps < 1 {
+		log.Fatalf("-reps must be >= 1, got %d", *reps)
+	}
+
+	goldenQueries := evalfixtures.GoldenQueries()
+
 	var queryNames []string
 	if *allQueries {
-		queryNames = evalfixtures.GoldenQueryOrder
+		queryNames = evalfixtures.GoldenQueryOrder()
 	} else {
 		queryNames = strings.Split(*queriesFlag, ",")
 		for i := range queryNames {
@@ -102,7 +109,7 @@ func main() {
 		}
 	}
 	for _, name := range queryNames {
-		if _, ok := evalfixtures.GoldenQueries[name]; !ok {
+		if _, ok := goldenQueries[name]; !ok {
 			log.Fatalf("unknown query name %q -- see evalfixtures.GoldenQueryOrder for valid names", name)
 		}
 	}
@@ -168,7 +175,7 @@ func main() {
 
 	for _, cfg := range configs {
 		for _, qName := range queryNames {
-			query := evalfixtures.GoldenQueries[qName]
+			query := goldenQueries[qName]
 			var outcomes []runOutcome
 
 			for rep := 0; rep < *reps; rep++ {
@@ -199,11 +206,19 @@ func main() {
 					out.InputTokens = usage.InputTokens
 					out.OutputTokens = usage.OutputTokens
 					out.ThinkingTokens = usage.ThinkingTokens
+					// Collect every model other than the one requested, not just the last one a
+					// (non-deterministic) map iteration happens to land on -- a single pipeline run
+					// can fall back to more than one distinct model across its ~13 agent calls, and
+					// silently dropping all but one would defeat the whole point of this check
+					// (catching fallback-masked "successes").
+					var fallbacks []string
 					for servedModel := range usage.ModelsUsed {
 						if servedModel != cfg.Model {
-							out.ServedByOther = servedModel
+							fallbacks = append(fallbacks, servedModel)
 						}
 					}
+					sort.Strings(fallbacks)
+					out.ServedByOther = strings.Join(fallbacks, ",")
 					out.Report = agents.RunMechanicalQualityChecks(orch.LastArchitectJSON, validBlocks)
 					if out.Report.ParseError != "" {
 						log.Printf("  ⚠️  %.1fs | mechanical-check parse error: %s", latency, out.Report.ParseError)
@@ -288,10 +303,15 @@ func filterConfigs(configs []thinkingConfig, keep func(thinkingConfig) bool) []t
 	return out
 }
 
+// truncate flattens s to a single line, escapes markdown table delimiters, and shortens it to
+// at most n runes (not bytes -- error text can carry multi-byte UTF-8 like curly quotes or
+// em-dashes, and a byte-index slice can split one and corrupt the output).
 func truncate(s string, n int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
-	if len(s) <= n {
+	s = strings.ReplaceAll(s, "|", "-")
+	runes := []rune(s)
+	if len(runes) <= n {
 		return s
 	}
-	return s[:n] + "…"
+	return string(runes[:n]) + "…"
 }

@@ -44,8 +44,8 @@ func main() {
 
 	// Shared with every other cmd/eval_* tool -- previously a locally duplicated 12-query
 	// copy that had drifted from the other tools' 13-query set (missing "13_Hard_Rock_Blues").
-	queries := evalfixtures.GoldenQueries
-	order := evalfixtures.GoldenQueryOrder
+	queries := evalfixtures.GoldenQueries()
+	order := evalfixtures.GoldenQueryOrder()
 
 	outDir := os.Getenv("EVAL_OUT_DIR")
 	if outDir == "" {

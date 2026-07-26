@@ -86,8 +86,8 @@ func main() {
 	}
 
 	// The 13 Standard Archetype Evaluation Queries (shared with every other cmd/eval_* tool)
-	evalQueries := evalfixtures.GoldenQueries
-	queryNamesOrdered := evalfixtures.GoldenQueryOrder
+	evalQueries := evalfixtures.GoldenQueries()
+	queryNamesOrdered := evalfixtures.GoldenQueryOrder()
 
 	reportDir := "eval_results/subagent"
 	if err := os.MkdirAll(reportDir, 0755); err != nil {

@@ -167,10 +167,21 @@ type Orchestrator struct {
 	gcs               storage.Client
 	AgentModels       map[string]string // Added for per-agent model configuration
 	ThinkingBudget    *int32            // nil = provider/model default; explicit 0 disables thinking (Gemini 3.x). Applies to every Gemini call this orchestrator makes -- eval tooling for per-model thinking-budget sweeps, not a per-agent override.
-	LastArchitectJSON string            // raw (pre-HTML-render) Architect+Critic JSON from the most recent RunPipeline call, set right before injectRenderedHTML overwrites it. Lets eval tooling run RunMechanicalQualityChecks (FlagUnverifiedStructuredBlocks etc.) without RunPipeline's return signature changing -- same side-channel pattern as Usage. Not concurrency-safe across parallel RunPipeline calls on one Orchestrator instance, same constraint as reusing Usage that way.
+	LastArchitectJSON string            // raw (pre-HTML-render) Architect+Critic JSON from the most recent RunPipeline/RefineChat call, set right before injectRenderedHTML overwrites it. Lets eval tooling run RunMechanicalQualityChecks (FlagUnverifiedStructuredBlocks etc.) without RunPipeline's return signature changing -- same side-channel pattern as Usage. Guarded by lastArchitectJSONMu; production usage is always one Orchestrator per HTTP request (see cmd/server/main.go's orchMaker), never shared across concurrent RunPipeline calls, so the mutex is defense-in-depth rather than a fix for an observed race.
 	useOpenLLM        bool
 	openLLMClient     *OpenLLMClient
 	openLLMTimeout    time.Duration
+
+	lastArchitectJSONMu sync.Mutex
+}
+
+// setLastArchitectJSON writes the LastArchitectJSON side-channel under lastArchitectJSONMu.
+// See the field's doc comment for why this is defense-in-depth rather than a fix for an
+// observed race: production always uses one Orchestrator per HTTP request.
+func (o *Orchestrator) setLastArchitectJSON(raw string) {
+	o.lastArchitectJSONMu.Lock()
+	o.LastArchitectJSON = raw
+	o.lastArchitectJSONMu.Unlock()
 }
 
 // NewOrchestrator initializes the Gemini ADK client or the Open-LLM REST client
@@ -272,6 +283,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	if isMock {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
+			o.setLastArchitectJSON(mockOutput)
 			return mockOutput, o.Usage, nil
 		} else {
 			log.Printf("Warning: Failed to read mock file testdata/e2e_mocks/architect_generate.json: %v", err)
@@ -638,7 +650,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			}
 		}
 
-		o.LastArchitectJSON = finalResult
+		o.setLastArchitectJSON(finalResult)
 
 		if rendered, err := injectRenderedHTML(finalResult); err == nil {
 			finalResult = rendered
@@ -984,6 +996,7 @@ func (o *Orchestrator) Close() {
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
+			o.setLastArchitectJSON(mockOutput)
 			return mockOutput, o.Usage, nil
 		}
 	}

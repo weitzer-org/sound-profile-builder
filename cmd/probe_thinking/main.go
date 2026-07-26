@@ -20,7 +20,11 @@ import (
 // cmd/eval_subagent makes for the same reason) against every {model, budget} pair and reports
 // success/failure, latency, and reported ThoughtsTokenCount for each.
 func main() {
-	ctx := context.Background()
+	// Bounded so a single stalled Gemini call can't hang the whole probe indefinitely --
+	// 12 cells at up to 3 minutes each (RunAgentSplit's own per-attempt timeout) is a
+	// generous but finite ceiling.
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Minute)
+	defer cancel()
 
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiKey == "" {
@@ -121,10 +125,14 @@ func main() {
 
 func int32Ptr(v int32) *int32 { return &v }
 
+// truncate flattens s to a single line and shortens it to at most n runes (not bytes -- error
+// text can carry multi-byte UTF-8 like curly quotes or em-dashes, and a byte-index slice can
+// split one and corrupt the output).
 func truncate(s string, n int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
-	if len(s) <= n {
+	runes := []rune(s)
+	if len(runes) <= n {
 		return s
 	}
-	return s[:n] + "…"
+	return string(runes[:n]) + "…"
 }

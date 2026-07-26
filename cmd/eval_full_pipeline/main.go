@@ -115,12 +115,12 @@ func main() {
 	}
 
 	// The 13 Standard Archetype Evaluation Queries (shared with every other cmd/eval_* tool)
-	evalQueries := evalfixtures.GoldenQueries
+	evalQueries := evalfixtures.GoldenQueries()
 	constraints := evalfixtures.DefaultConstraints()
 
 	results := []PipelineRunResult{}
 
-	queryNamesOrdered := evalfixtures.GoldenQueryOrder
+	queryNamesOrdered := evalfixtures.GoldenQueryOrder()
 
 	baseOutDir := "eval_results/full_pipeline"
 

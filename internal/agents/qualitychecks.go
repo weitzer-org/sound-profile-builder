@@ -72,13 +72,23 @@ func RunMechanicalQualityChecks(rawArchitectJSON string, validBlocks map[string]
 
 	clean := StripJSONFences(rawArchitectJSON)
 	var envelope struct {
-		StructuredPayload storage.StructuredPreset `json:"structured_payload"`
+		StructuredPayload *storage.StructuredPreset `json:"structured_payload"`
 	}
 	if err := json.Unmarshal([]byte(clean), &envelope); err != nil {
 		report.ParseError = err.Error()
 		return report
 	}
-	sp := envelope.StructuredPayload
+	// A pointer (not a value) so a response missing structured_payload entirely, or
+	// carrying it as an explicit JSON null, is distinguishable from a genuinely present-but-
+	// empty payload -- both unmarshal a value-typed field to the same zero value, which would
+	// otherwise report a broken/truncated generation as a flawless "0 defects" run (GSR/
+	// CodeRabbit finding on PR #84: a value type here can't tell "nothing to check" apart
+	// from "there was nothing here to check in the first place").
+	if envelope.StructuredPayload == nil {
+		report.ParseError = "structured_payload missing or null"
+		return report
+	}
+	sp := *envelope.StructuredPayload
 
 	for _, blocks := range sp.Guitars {
 		report.TotalBlocks += len(blocks)
