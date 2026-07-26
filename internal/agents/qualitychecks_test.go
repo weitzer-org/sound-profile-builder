@@ -12,6 +12,11 @@ func TestRunMechanicalQualityChecks_ParseError(t *testing.T) {
 	if report.TotalDefects() != 0 {
 		t.Errorf("expected zero defect counts alongside a parse error, got %+v", report)
 	}
+	// The exact footgun IsClean() exists to prevent: TotalDefects()==0 alone can't
+	// distinguish "nothing was wrong" from "nothing was checked" (GSR finding on PR #84).
+	if report.IsClean() {
+		t.Error("expected IsClean() to be false for a parse error, even though TotalDefects()==0")
+	}
 }
 
 // A missing or explicitly-null structured_payload must be flagged as a ParseError, not scored
@@ -57,6 +62,9 @@ func TestRunMechanicalQualityChecks_Clean(t *testing.T) {
 	}
 	if got := report.TotalDefects(); got != 0 {
 		t.Errorf("expected a clean preset to have zero defects, got %d (%+v)", got, report)
+	}
+	if !report.IsClean() {
+		t.Errorf("expected IsClean() to be true for a genuinely clean, successfully-parsed report, got %+v", report)
 	}
 }
 

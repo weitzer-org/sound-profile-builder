@@ -219,7 +219,7 @@ func main() {
 					}
 					sort.Strings(fallbacks)
 					out.ServedByOther = strings.Join(fallbacks, ",")
-					out.Report = agents.RunMechanicalQualityChecks(orch.LastArchitectJSON, validBlocks)
+					out.Report = agents.RunMechanicalQualityChecks(orch.LastArchitectJSON(), validBlocks)
 					if out.Report.ParseError != "" {
 						log.Printf("  ⚠️  %.1fs | mechanical-check parse error: %s", latency, out.Report.ParseError)
 					} else {
@@ -304,8 +304,9 @@ func filterConfigs(configs []thinkingConfig, keep func(thinkingConfig) bool) []t
 }
 
 // truncate flattens s to a single line, escapes markdown table delimiters, and shortens it to
-// at most n runes (not bytes -- error text can carry multi-byte UTF-8 like curly quotes or
-// em-dashes, and a byte-index slice can split one and corrupt the output).
+// at most n runes total, including the trailing ellipsis (not bytes -- error text can carry
+// multi-byte UTF-8 like curly quotes or em-dashes, and a byte-index slice can split one and
+// corrupt the output).
 func truncate(s string, n int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
 	s = strings.ReplaceAll(s, "|", "-")
@@ -313,5 +314,8 @@ func truncate(s string, n int) string {
 	if len(runes) <= n {
 		return s
 	}
-	return string(runes[:n]) + "…"
+	if n <= 0 {
+		return ""
+	}
+	return string(runes[:n-1]) + "…"
 }

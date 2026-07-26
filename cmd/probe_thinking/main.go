@@ -117,7 +117,10 @@ func main() {
 		}
 		servedCol := "-"
 		if r.ServedByOther != "" {
-			servedCol = "⚠️ " + r.ServedByOther
+			// Plain-ASCII prefix, not an emoji: fmt's %-Ns width pads by byte count, and a
+			// multi-byte emoji (e.g. "⚠️") would visually misalign this column even though
+			// the byte-width math is technically satisfied.
+			servedCol = "FALLBACK:" + r.ServedByOther
 		}
 		fmt.Printf("%-24s %-16s %9.2fs %8d %8d %10d %-22s %s\n", r.Model, r.Budget, r.LatencySec, r.InputTokens, r.OutputTokens, r.ThinkingTokens, servedCol, errCol)
 	}
@@ -125,14 +128,17 @@ func main() {
 
 func int32Ptr(v int32) *int32 { return &v }
 
-// truncate flattens s to a single line and shortens it to at most n runes (not bytes -- error
-// text can carry multi-byte UTF-8 like curly quotes or em-dashes, and a byte-index slice can
-// split one and corrupt the output).
+// truncate flattens s to a single line and shortens it to at most n runes total, including the
+// trailing ellipsis (not bytes -- error text can carry multi-byte UTF-8 like curly quotes or
+// em-dashes, and a byte-index slice can split one and corrupt the output).
 func truncate(s string, n int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
 	runes := []rune(s)
 	if len(runes) <= n {
 		return s
 	}
-	return string(runes[:n]) + "…"
+	if n <= 0 {
+		return ""
+	}
+	return string(runes[:n-1]) + "…"
 }

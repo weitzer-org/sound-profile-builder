@@ -29,9 +29,16 @@ import (
 // gate and mostly measures this pipeline's ordinary parameter formatting, not a defect.
 
 // MechanicalQualityReport is a deterministic, judge-free quality signal for one generation's
-// raw (pre-HTML) Architect+Critic JSON output (Orchestrator.LastArchitectJSON after a
+// raw (pre-HTML) Architect+Critic JSON output (Orchestrator.LastArchitectJSON() after a
 // RunPipeline call). Every field except ParseError and TotalBlocks is a defect count -- lower
 // is better, 0 across the board is a clean run.
+//
+// A non-empty ParseError means none of the checks ran at all -- there was nothing to check,
+// not "nothing wrong was found" -- so every defect count is also 0 in that case. Callers MUST
+// check ParseError before trusting TotalDefects()/IsClean() as a quality signal: a broken or
+// truncated generation and a genuinely flawless one are otherwise indistinguishable by count
+// alone (GSR finding on PR #84). IsClean() checks both for exactly this reason -- prefer it
+// over a bare TotalDefects()==0 comparison.
 type MechanicalQualityReport struct {
 	// ParseError is non-empty if structured_payload didn't even parse as valid JSON in the
 	// expected shape -- every other field is zero when this is set, since there was nothing
@@ -49,12 +56,21 @@ type MechanicalQualityReport struct {
 
 // TotalDefects sums every defect count into one headline number for a quick per-config
 // comparison; the individual fields remain available for root-causing which check drove it.
+// Meaningless on its own when ParseError is set -- see the struct's doc comment -- callers
+// wanting a single pass/fail read should use IsClean() instead.
 func (r MechanicalQualityReport) TotalDefects() int {
 	return r.UnverifiedBlocks + r.CaptureFormattingMismatches + r.IncompleteCabinetBlocks +
 		r.LeftoverValueRanges + r.CriticIssues
 }
 
-// RunMechanicalQualityChecks parses rawArchitectJSON (Orchestrator.LastArchitectJSON) and runs
+// IsClean reports whether this generation both parsed successfully and had zero defects --
+// the safe, single-call replacement for a bare TotalDefects()==0 check, which would otherwise
+// treat a ParseError (nothing was checked) the same as a genuinely flawless run.
+func (r MechanicalQualityReport) IsClean() bool {
+	return r.ParseError == "" && r.TotalDefects() == 0
+}
+
+// RunMechanicalQualityChecks parses rawArchitectJSON (Orchestrator.LastArchitectJSON()) and runs
 // every deterministic Flag* check against it, using validBlocks as the ground truth (typically
 // BuildEffectiveValidBlocks's output, sourced from coros_map.json + user_captures.json).
 //

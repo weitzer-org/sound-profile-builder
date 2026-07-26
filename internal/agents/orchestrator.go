@@ -162,26 +162,43 @@ type OrchestratorService interface {
 
 // Orchestrator manages the 12-agent pipeline through 4 execution phases
 type Orchestrator struct {
-	client            *genai.Client
-	Usage             *TokenUsage
-	gcs               storage.Client
-	AgentModels       map[string]string // Added for per-agent model configuration
-	ThinkingBudget    *int32            // nil = provider/model default; explicit 0 disables thinking (Gemini 3.x). Applies to every Gemini call this orchestrator makes -- eval tooling for per-model thinking-budget sweeps, not a per-agent override.
-	LastArchitectJSON string            // raw (pre-HTML-render) Architect+Critic JSON from the most recent RunPipeline/RefineChat call, set right before injectRenderedHTML overwrites it. Lets eval tooling run RunMechanicalQualityChecks (FlagUnverifiedStructuredBlocks etc.) without RunPipeline's return signature changing -- same side-channel pattern as Usage. Guarded by lastArchitectJSONMu; production usage is always one Orchestrator per HTTP request (see cmd/server/main.go's orchMaker), never shared across concurrent RunPipeline calls, so the mutex is defense-in-depth rather than a fix for an observed race.
-	useOpenLLM        bool
-	openLLMClient     *OpenLLMClient
-	openLLMTimeout    time.Duration
+	client         *genai.Client
+	Usage          *TokenUsage
+	gcs            storage.Client
+	AgentModels    map[string]string // Added for per-agent model configuration
+	ThinkingBudget *int32            // nil = provider/model default; explicit 0 disables thinking (Gemini 3.x). Applies to every Gemini call this orchestrator makes -- eval tooling for per-model thinking-budget sweeps, not a per-agent override.
+	useOpenLLM     bool
+	openLLMClient  *OpenLLMClient
+	openLLMTimeout time.Duration
 
+	// lastArchitectJSON is the raw (pre-HTML-render) Architect+Critic JSON from the most
+	// recent RunPipeline/RefineChat call, set right before injectRenderedHTML overwrites it.
+	// Lets eval tooling run RunMechanicalQualityChecks (FlagUnverifiedStructuredBlocks etc.)
+	// without RunPipeline's return signature changing -- same side-channel pattern as Usage.
+	// Unexported (unlike Usage, which needs direct field access for its own internal mutex
+	// bookkeeping) so lastArchitectJSONMu is the only path to it -- an exported field
+	// alongside an internal mutex would let any caller bypass the lock entirely, defeating
+	// the point of having one (GSR finding on PR #84). Production usage is always one
+	// Orchestrator per HTTP request (see cmd/server/main.go's orchMaker), never shared across
+	// concurrent RunPipeline calls, so the mutex is defense-in-depth rather than a fix for an
+	// observed race.
+	lastArchitectJSON   string
 	lastArchitectJSONMu sync.Mutex
 }
 
-// setLastArchitectJSON writes the LastArchitectJSON side-channel under lastArchitectJSONMu.
-// See the field's doc comment for why this is defense-in-depth rather than a fix for an
-// observed race: production always uses one Orchestrator per HTTP request.
+// setLastArchitectJSON writes the lastArchitectJSON side-channel under lastArchitectJSONMu.
 func (o *Orchestrator) setLastArchitectJSON(raw string) {
 	o.lastArchitectJSONMu.Lock()
-	o.LastArchitectJSON = raw
+	o.lastArchitectJSON = raw
 	o.lastArchitectJSONMu.Unlock()
+}
+
+// LastArchitectJSON reads the lastArchitectJSON side-channel under lastArchitectJSONMu. See
+// its doc comment for what it is and why it's guarded.
+func (o *Orchestrator) LastArchitectJSON() string {
+	o.lastArchitectJSONMu.Lock()
+	defer o.lastArchitectJSONMu.Unlock()
+	return o.lastArchitectJSON
 }
 
 // NewOrchestrator initializes the Gemini ADK client or the Open-LLM REST client
