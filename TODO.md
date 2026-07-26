@@ -287,14 +287,19 @@ track further:**
     any exact-string lookup. Not fixed here (predates this PR, needs its
     own look at whether they're genuinely different captures or a data
     entry error); flagged for a follow-up pass.
-- **Cabinet manual-research-vs-actual-model reconciliation** (not yet
-  started, needs a research spike before any code change) -- still an open
+- **Cabinet manual-research-vs-actual-model reconciliation** -- still an open
   question, not a wiring fix: is the real QC hardware IR-loader-only per
   `qc_block_schema.json`'s manual research, or does it have the continuous
   mic-placement controls (`Mic 1`/`Mic 2`/`Blend`) every actual eval output
   generates? Needs the Cortex Control app cross-check mentioned elsewhere
-  in this doc before either model is treated as ground truth. See issues
-  #64-#68 for the full history and tradeoffs on all three candidates.
+  in this doc before either model is treated as ground truth. Tracked in
+  [issue #81](https://github.com/weitzer-org/sound-profile-builder/issues/81).
+  Split out into its own issue,
+  [#82](https://github.com/weitzer-org/sound-profile-builder/issues/82): new
+  evidence that this isn't just an open modeling question but an active,
+  severe (85-90%) compliance failure against the pipeline's own current
+  Rule 12, independent of which hardware model eventually wins -- see the
+  eval-infrastructure section above.
 
 **New from this session, not yet triaged:**
 - **Pipeline-wide prompt-injection hardening** -- GSR's deep-review swarm
@@ -431,6 +436,123 @@ either production tier pending the fixes below.
   in `RunAgentSplit` (`internal/agents/orchestrator.go`, ~line 750) and add
   `gemini-3.6-flash` to `getFallbackChain` (currently absent as a fallback
   target for any primary model).
+
+### Thinking-budget eval infrastructure (2026-07-25)
+
+Precursor work for testing `gemini-3.5-flash`/`gemini-3.6-flash`/
+`gemini-3.1-pro-preview` at different thinking levels, prompted by comparing
+this project's eval tooling against `job_tracker`'s more mature
+`internal/eval` harness (same-domain precedent: it already ran this exact
+3-model + thinking-budget-sweep comparison for its own scoring feature).
+
+- **Wired `ThinkingConfig` into the orchestrator** (`Orchestrator.ThinkingBudget
+  *int32`, applied in `buildGenerationConfig`; `nil`=provider default, explicit
+  `0`=disable) -- previously absent entirely, so "test at different thinking
+  levels" wasn't yet a knob that existed in production code. `ThinkingTokens`
+  is now tracked alongside `InputTokens`/`OutputTokens` in `TokenUsage`/
+  `AgentUsage` (Gemini bills thinking tokens as output, so this is needed for
+  any future cost comparison).
+- **Live-probed (`cmd/probe_thinking`) which of the three models actually
+  honor the budget.** Only `gemini-3.5-flash` can genuinely disable thinking
+  (`budget=0`); both `gemini-3.6-flash` and `gemini-3.1-pro-preview` reject it
+  outright (`400 INVALID_ARGUMENT: "This model only works in thinking mode"`).
+  `gemini-3.6-flash` additionally has **no working fallback** at `budget=0`
+  (its only fallback, `gemini-2.5-pro` via `getFallbackChain`'s default case,
+  rejects it too). `gemini-3.1-pro-preview`'s fallback chain does include
+  `gemini-3.5-flash`, which *does* accept `budget=0` -- so a naive test of
+  that cell silently substitutes a different model and reports a false
+  success; `cmd/probe_thinking` tracks the actually-served model
+  (`TokenUsage.ModelsUsed`) specifically to catch this.
+- **Rejected replicating `job_tracker`'s ground-truth/AUC approach** --
+  "relevant/not_relevant" job labels have no clean analog for "is this a good
+  guitar tone." Instead added a judge-free, deterministic quality signal
+  (`internal/agents/qualitychecks.go`, `RunMechanicalQualityChecks`) built
+  from the same `Flag*` checks the API layer already runs in production
+  (`FlagUnverifiedStructuredBlocks`, `FlagCaptureFormattingMismatches`,
+  `FlagIncompleteCabinetBlocks`, `FlagLeftoverValueRanges`, all now also
+  returning a defect count). This exists specifically because
+  `cmd/judge_compare`'s blind pairwise LLM judge is the weakest link in this
+  repo's eval story (issue #68) and doesn't scale to a multi-model x
+  multi-budget matrix anyway (pairwise comparisons grow combinatorially).
+  `Orchestrator` exposes the raw pre-HTML-render Architect+Critic JSON as
+  `LastArchitectJSON` (a side-channel, like `Usage`) so eval tooling can run
+  these checks without changing `RunPipeline`'s return signature.
+  - A `FlagUnitsEmbeddedInNumericFields` check (flagging e.g. `"-3.0 dB"`
+    instead of `-3.0`) was added, then **removed after live evidence
+    showed it was wrong**: it fired 25-45 times per generation, and a live
+    diagnostic run showed why -- it was flagging normal, expected
+    formatting this pipeline already produces everywhere (graphic-EQ dB
+    sliders, Mix/Blend percentages, reverb Decay in seconds), not the
+    actual regression. That regression is specifically dB-relative
+    formatting on one of the five capture-only parameter names on a block
+    confirmed to be algorithmic, not a capture -- already correctly caught,
+    capture-status-gated, by `FlagCaptureFormattingMismatches`. Caught
+    during the first live matrix run (which was stopped and restarted once
+    this was found and fixed, rather than let ~6 hours of live runs
+    complete with a contaminated headline `TotalDefects` metric).
+- **Consolidated the golden query set** (`internal/evalfixtures`), previously
+  copy-pasted across `cmd/eval_compare`, `cmd/eval_full_pipeline`, and
+  `cmd/eval_subagent` -- `cmd/eval_compare`'s copy had silently drifted to 12
+  queries (missing `13_Hard_Rock_Blues`), now fixed by construction.
+- **New tool: `cmd/eval_thinking_matrix`** runs the real full pipeline across
+  a `{model, thinking budget}` grid (excluding the confirmed-invalid `budget=0`
+  cells above) and scores each output with `RunMechanicalQualityChecks`.
+  Defaults are deliberately cost-conservative: `-dry-run=true` by default (this
+  repo has no per-token pricing table the way `job_tracker` does, so call count
+  is the only cost lever), and `-queries` defaults to the 3 golden-set prompts
+  already tied to known regressions (`07_Edge`, `08_EVH`, `09_BB_King`) rather
+  than the full 13. `-models`/`-budgets` filter the grid for a cheaper partial
+  run. Validated end-to-end with 2 live smoke-test cells (1 config x 1 query x
+  1 rep each) -- both ran clean, and the per-check breakdown the report prints
+  correctly explained the observed defect count both times.
+- **Full matrix run completed 2026-07-26** (`-all-queries -reps=1`, 130 cells,
+  121 succeeded, $25.85 total per Gemini Developer API list pricing). Full
+  writeup and evidence: [issue #80](https://github.com/weitzer-org/sound-profile-builder/issues/80).
+  Headline findings, in priority order:
+  1. **Cabinet mic-placement completeness (Mic 1/Mic 2/Blend) is missing on
+     85-90% of Cabinet blocks across all three models uniformly** (avg
+     1.73-1.84 incomplete out of a max 2 per run) -- not a model-comparison
+     signal at all, a systemic prompt/schema bug that dominates every
+     model's "defects" count and should be root-caused independent of any
+     routing decision. Tracked in
+     [issue #82](https://github.com/weitzer-org/sound-profile-builder/issues/82)
+     (the compliance bug itself) and
+     [issue #81](https://github.com/weitzer-org/sound-profile-builder/issues/81)
+     (the pre-existing open question about `qc_block_schema.json`'s Cabinet
+     entry contradicting this same mic-placement model -- split into its
+     own issue since it's an independent question from whether the pipeline
+     complies with its own current rule).
+  2. After controlling for (1), **`gemini-3.1-pro-preview` -- the current
+     production Pro-tier model -- had 3.8x more Critic-flagged
+     self-contradictions and 6.1x more unverified/fabricated block names
+     than `gemini-3.5-flash`** in this single-rep comparison. Caveat: n=1
+     rep, and `3.5-flash` failed more often (survivorship bias on its own
+     average) -- see issue #80 for the full caveat and a repeated-rep
+     re-run recommendation before trusting the exact magnitude.
+  3. **Higher thinking budgets correlate with more Critic flags for
+     `gemini-3.6-flash` and `gemini-3.1-pro-preview` specifically** (clean,
+     monotonic ~2x-per-budget-step increase for both) but not for
+     `gemini-3.5-flash` -- thinking budget is not a free quality lever here.
+  4. `gemini-3.6-flash` had **zero truncation failures across all 39 of its
+     cells** (vs. `gemini-3.1-pro-preview` 5.1%, `gemini-3.5-flash` 13.5%,
+     the latter matching this doc's already-tracked verbosity/truncation
+     history). 3 of `gemini-3.5-flash`'s 7 failures happened even at
+     `budget=0` (thinking disabled), ruling out "thinking competing for
+     output-token headroom" as the mechanism -- confirms genuine response
+     verbosity, not a thinking/output tradeoff artifact.
+  - Does **not** confirm or refute the two specific blocking bugs from the
+    original `gemini-3.6-flash` candidate-routing eval above (Iba-Green
+    mislabeling, the narrower original units-embedded regression) -- those
+    remain open per the action items above.
+- **Eval framework overview + robustness gaps**, written up after the above:
+  [issue #83](https://github.com/weitzer-org/sound-profile-builder/issues/83).
+  Headline gap: no trustworthy subjective-quality signal exists (`judge_compare`'s
+  instability, #68, is still unaddressed) -- the mechanical checks catch
+  structural/factual defects but say nothing about whether a preset actually
+  sounds right. Also flags zero test coverage on the eval tools themselves
+  (two bugs in `eval_thinking_matrix`'s own report code had to be caught live
+  this session, see above) and the fragmented `cmd/eval_*` family as
+  concrete, prioritized follow-ups.
 
 ## Features & Enhancements
 
