@@ -47,3 +47,5 @@ jobs:
           gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
           mode: subagent
           fail-on-severity: none
+          usage-report-url: https://gsr-code-review.fly.dev/api/usage/ingest
+          usage-report-key: ${{ secrets.USAGE_REPORT_KEY }}

@@ -10,6 +10,13 @@ name: GSR Code Review
 # variables -> Actions) -- a Gemini API key dedicated to CI review, kept
 # separate from the app's own GEMINI_API_KEY (Fly secret) so PR-review
 # traffic doesn't share quota/billing with the deployed QC-2 pipeline.
+#
+# usage-report-url/usage-report-key opt this repo into GSR's centralized
+# usage reporting (off by default for every other consumer) -- the shared
+# secret was handed to this repo specifically by the GSR maintainer, same
+# distribution model as GSR_GEMINI_API_KEY above. Every run also always
+# writes its own usage summary to this workflow run's Job Summary
+# regardless of these two inputs; see weitzer-org/gsr's ACTION.md.
 
 on:
   pull_request:
@@ -32,3 +39,5 @@ jobs:
           gemini-api-key: ${{ secrets.GSR_GEMINI_API_KEY }}
           mode: basic
           fail-on-severity: none
+          usage-report-url: https://gsr-code-review.fly.dev/api/usage/ingest
+          usage-report-key: ${{ secrets.USAGE_REPORT_KEY }}
