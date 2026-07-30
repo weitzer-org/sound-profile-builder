@@ -184,6 +184,16 @@ type Orchestrator struct {
 	// observed race.
 	lastArchitectJSON   string
 	lastArchitectJSONMu sync.Mutex
+
+	// UsageBucket is an optional bucket name for durable per-call token/
+	// latency/cost/error analytics (see usage_recorder.go). Empty by
+	// default — set it post-construction (cmd/server/main.go's orchMaker)
+	// to enable recording. Every cmd/eval_*/cmd/enrich_captures/
+	// cmd/verify_user_captures tool constructs an Orchestrator with gcs=nil
+	// anyway (see NewOrchestrator's callers), so recordUsage's nil-safety on
+	// both gcs and an empty bucket means those tools simply never record,
+	// with no signature change required on their end.
+	UsageBucket string
 }
 
 // setLastArchitectJSON writes the lastArchitectJSON side-channel under lastArchitectJSONMu.
@@ -821,8 +831,14 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		defer cancel1()
 
 		log.Printf("[%s] Dispatching Open-LLM request (Model: %s, Timeout: %s)...", agentRole, actualModelName, timeout)
+		openLLMStart := time.Now()
 		content, promptTokens, completionTokens, err := o.openLLMClient.Generate(ctx1, systemPrompt, userPrompt, actualModelName)
+		openLLMLatencyMs := time.Since(openLLMStart).Milliseconds()
 		if err != nil {
+			recordUsage(ctx, o.gcs, o.UsageBucket, UsageRecord{
+				Provider: "openllm", CallType: agentRole, Model: actualModelName,
+				LatencyMS: openLLMLatencyMs, Success: false, ErrorKind: classifyError(err),
+			})
 			// Check if this error is due to reaching the context window limits
 			errStr := err.Error()
 			lower := strings.ToLower(errStr)
@@ -843,6 +859,11 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 				return "", fmt.Errorf("[%s] Open-LLM failure: %w", agentRole, err)
 			}
 		} else {
+			recordUsage(ctx, o.gcs, o.UsageBucket, UsageRecord{
+				Provider: "openllm", CallType: agentRole, Model: actualModelName,
+				InputTokens: promptTokens, OutputTokens: completionTokens,
+				LatencyMS: openLLMLatencyMs, Success: true,
+			})
 			// Accumulate metrics natively
 			o.Usage.mu.Lock()
 			o.Usage.InputTokens += promptTokens
@@ -887,11 +908,14 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		}
 
 		ctx1, cancel1 := context.WithTimeout(ctx, 3*time.Minute)
+		attemptStart := time.Now()
 		resp, err = o.client.Models.GenerateContent(ctx1, mName, contents, genConfig)
+		attemptLatencyMs := time.Since(attemptStart).Milliseconds()
 		cancel1()
 
 		if err == nil {
 			finalModelName = mName
+			recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, nil)
 			break
 		}
 
@@ -906,14 +930,18 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 			degradedConfig := *genConfig
 			degradedConfig.Tools = nil
 			ctx2, cancel2 := context.WithTimeout(ctx, 3*time.Minute)
+			degradedStart := time.Now()
 			resp, err = o.client.Models.GenerateContent(ctx2, mName, contents, &degradedConfig)
+			attemptLatencyMs = time.Since(degradedStart).Milliseconds() // overwrite: this attempt's real latency, not the original grounded one
 			cancel2()
 			if err == nil {
 				finalModelName = mName
+				recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, nil)
 				break
 			}
 		}
 
+		recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, nil, err)
 		log.Printf("[%s] Model %s failed or rate-limited: %v. Retrying next fallback...", agentRole, mName, err)
 		lastErr = err
 	}
