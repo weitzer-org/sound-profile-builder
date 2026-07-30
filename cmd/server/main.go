@@ -101,7 +101,17 @@ func main() {
 	store := storage.NewPresetStore(storeClient, bucket)
 	memoryStore := storage.NewMemoryStore(storeClient, bucket)
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
-		return agents.NewOrchestrator(ic, key, storeClient)
+		orch, err := agents.NewOrchestrator(ic, key, storeClient)
+		if err != nil {
+			return nil, err
+		}
+		// Enables durable per-call token/latency/cost/error analytics (see
+		// internal/agents/usage_recorder.go) -- left unset for every other
+		// caller of NewOrchestrator (cmd/eval_*, cmd/enrich_captures, etc.),
+		// which construct an Orchestrator with gcs=nil anyway and have no
+		// durability requirement for this data.
+		orch.UsageBucket = bucket
+		return orch, nil
 	}
 
 	// Initialize Server

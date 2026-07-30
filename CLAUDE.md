@@ -88,6 +88,17 @@ set it will cause the next run to needlessly re-research that entry.
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).
 See `.env.example`.
 
+**Usage analytics.** Every real agent call funnels through `Orchestrator.
+RunAgentSplit` (`internal/agents/orchestrator.go`), which is wrapped by
+`recordAttemptUsage`/`recordUsage` (`internal/agents/usage_recorder.go`) to
+persist a per-call token/latency/cost/success record to the same bucket
+under `usage/<date>/`. See `usage_analytics_reference.md` for the schema and
+query recipes (`cmd/usage_report`, or raw `jq`-over-S3/GCS) — read that
+before answering any "what's our token spend/error rate" question instead of
+re-deriving the storage layout. `usage_recorder.go`'s `geminiPriceTable`
+mirrors `job_tracker`'s `internal/scoring/pricing.go` — keep both in sync
+when Gemini prices change.
+
 ## Secrets & auth
 Setting `MOCK_PASSWORD` uses a local secret fetcher (skips GCP Secret Manager)
 and becomes the dashboard login password; `GEMINI_API_KEY` supplies the LLM key.
