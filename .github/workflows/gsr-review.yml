@@ -17,6 +17,16 @@ name: GSR Code Review
 # distribution model as GSR_GEMINI_API_KEY above. Every run also always
 # writes its own usage summary to this workflow run's Job Summary
 # regardless of these two inputs; see weitzer-org/gsr's ACTION.md.
+#
+# feedback-loop: respond + feedback-post: true opts this repo into GSR's
+# PR-comment feedback loop end to end -- GSR classifies replies to its own
+# prior findings and, once adjudicator confidence clears
+# feedback-min-confidence (default 0.7), posts a real rebuttal reply in that
+# PR thread (capped at feedback-max-replies per run). feedback-report-url/
+# feedback-report-key report classification/adjudication outcomes back to
+# GSR the same opt-in way usage-report-url/usage-report-key do above, using
+# the GSR_FEEDBACK_KEY secret (handed to this repo the same way
+# USAGE_REPORT_KEY was).
 
 on:
   pull_request:
@@ -28,7 +38,10 @@ permissions:
 
 concurrency:
   group: gsr-review-${{ github.ref }}
-  cancel-in-progress: true
+  # cancel-in-progress: false -- two rapid pushes must not cancel an
+  # in-flight run that's mid-way through posting a feedback-loop rebuttal;
+  # per pr-comment-feedback-loop-design.md §7.1.
+  cancel-in-progress: false
 
 jobs:
   review:
@@ -41,3 +54,7 @@ jobs:
           fail-on-severity: none
           usage-report-url: https://gsr-code-review.fly.dev/api/usage/ingest
           usage-report-key: ${{ secrets.USAGE_REPORT_KEY }}
+          feedback-loop: respond
+          feedback-post: true
+          feedback-report-url: https://gsr-code-review.fly.dev/api/findings/feedback
+          feedback-report-key: ${{ secrets.GSR_FEEDBACK_KEY }}

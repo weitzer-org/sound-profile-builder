@@ -7,7 +7,10 @@ name: GSR Deep Review (Agent Swarm)
 # /code-review high escalation pattern in CLAUDE.md (reserved for
 # large/architecturally risky changes).
 #
-# Uses the same GSR_GEMINI_API_KEY repo secret as gsr-review.yml.
+# Uses the same GSR_GEMINI_API_KEY repo secret as gsr-review.yml, and the
+# same feedback-loop: respond / feedback-post: true / GSR_FEEDBACK_KEY
+# wiring -- a deep-review-labeled PR gets live GSR rebuttals just like a
+# basic-mode one.
 #
 # No workflow_dispatch here: GSR's entrypoint
 # (adk/backend/src/action-entrypoint.ts) hard-requires a pull_request.number
@@ -32,7 +35,10 @@ permissions:
 
 concurrency:
   group: gsr-deep-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # cancel-in-progress: false -- two rapid pushes must not cancel an
+  # in-flight run that's mid-way through posting a feedback-loop rebuttal;
+  # per pr-comment-feedback-loop-design.md §7.1.
+  cancel-in-progress: false
 
 jobs:
   review:
@@ -49,3 +55,7 @@ jobs:
           fail-on-severity: none
           usage-report-url: https://gsr-code-review.fly.dev/api/usage/ingest
           usage-report-key: ${{ secrets.USAGE_REPORT_KEY }}
+          feedback-loop: respond
+          feedback-post: true
+          feedback-report-url: https://gsr-code-review.fly.dev/api/findings/feedback
+          feedback-report-key: ${{ secrets.GSR_FEEDBACK_KEY }}
