@@ -158,6 +158,22 @@ key, not Claude's — and are now the sole default gate for routine PRs.
   and let the user decide whether to budget for the full fan-out — don't
   quietly spawn sub-agents to compensate.
 
+### Responding to GSR's PR comments
+`gsr-review.yml`/`gsr-review-deep.yml` run GSR's PR-comment feedback loop
+(`feedback-loop: respond`, `feedback-post: true`) — GSR reads replies to its
+own findings and can post a rebuttal back if it disagrees. That loop only has
+something to classify if a reply exists in the first place, so when GSR
+leaves findings on a PR you're working on, reply to at least the
+`security-high`/`security-critical`/`Architecture`/`Logic` ones inline (fix
+and say so, or push back with a concrete reason) rather than leaving them
+unaddressed — don't just silently fix-and-merge. If GSR's feedback loop then
+posts a rebuttal to your reply, engage with that too instead of treating it
+as the last word or as noise: at least one more round (concede, or restate
+why the original reply stands) before moving on. Unlike gemini-code-assist/
+CodeRabbit comments (background automation this repo treats as a second
+opinion, not something to chase proactively), GSR is this project's own
+dogfooded tool — its findings and rebuttals are worth a real reply.
+
 ### Security review
 The standard review lenses (correctness, cleanup, altitude, conventions) are
 not a substitute for an explicit security pass — they check whether a change
