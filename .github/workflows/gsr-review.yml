@@ -38,7 +38,10 @@ permissions:
 
 concurrency:
   group: gsr-review-${{ github.ref }}
-  cancel-in-progress: true
+  # cancel-in-progress: false -- two rapid pushes must not cancel an
+  # in-flight run that's mid-way through posting a feedback-loop rebuttal;
+  # per pr-comment-feedback-loop-design.md §7.1.
+  cancel-in-progress: false
 
 jobs:
   review:
