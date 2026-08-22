@@ -98,6 +98,19 @@ func (m *mockOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, us
 }
 func (m *mockOrchestrator) Close() {}
 
+// withAuthAndCSRF attaches a valid session cookie and a matching CSRF
+// cookie/header pair to req, as a real logged-in browser would after
+// handleProcessLogin issues both. Tests that exercise routes through
+// s.mux (and therefore through authMiddleware's CSRF check) need this;
+// tests that call a handler function directly don't go through the
+// middleware and don't need it.
+func withAuthAndCSRF(req *http.Request) *http.Request {
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: "test-csrf-token"})
+	req.Header.Set(csrfHeaderName, "test-csrf-token")
+	return req
+}
+
 func setupTestServer() (*Server, *mockClient, *mockSecretFetcher, *mockOrchestrator) {
 	client := newMockClient()
 	store := storage.NewPresetStore(client, "test-bucket")

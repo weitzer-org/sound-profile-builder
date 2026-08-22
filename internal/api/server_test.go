@@ -51,7 +51,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	formData.Set("prompt", "Make it sound huge")
 	reqPost, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqPost.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	reqPost.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	withAuthAndCSRF(reqPost)
 
 	rrSuccess := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrSuccess, reqPost)
@@ -67,7 +67,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockSM.err = fmt.Errorf("sm error")
 	reqErr, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqErr.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	reqErr.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	withAuthAndCSRF(reqErr)
 	rrErr := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrErr, reqErr)
 	if rrErr.Code != http.StatusInternalServerError {
@@ -79,7 +79,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockOrch.err = fmt.Errorf("orch factory error")
 	reqOrchGen, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqOrchGen.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	reqOrchGen.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	withAuthAndCSRF(reqOrchGen)
 	rrOrchGen := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrOrchGen, reqOrchGen)
 	if !strings.Contains(rrOrchGen.Body.String(), "Initializing ADK Pipeline") {
@@ -90,7 +90,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	mockOrch.err = fmt.Errorf("pipeline execution fail") // Caught internally, rendered as grid-matrix
 	reqPipe, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqPipe.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	reqPipe.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	withAuthAndCSRF(reqPipe)
 	rrPipe := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrPipe, reqPipe)
 	if !strings.Contains(rrPipe.Body.String(), "Initializing ADK Pipeline") {
@@ -106,7 +106,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	}
 	reqBadJson, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
 	reqBadJson.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	reqBadJson.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	withAuthAndCSRF(reqBadJson)
 	rrBadJson := httptest.NewRecorder()
 	s.mux.ServeHTTP(rrBadJson, reqBadJson)
 	if rrBadJson.Code != http.StatusOK {

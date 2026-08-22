@@ -55,6 +55,11 @@ func (s *Server) handleGetMemories() http.HandlerFunc {
 // handleDeleteMemory deletes a rule and re-renders the list
 func (s *Server) handleDeleteMemory() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		ctx := r.Context()
 		id := r.URL.Query().Get("id")
 		if id == "" {

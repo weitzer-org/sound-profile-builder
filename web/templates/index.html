@@ -1570,6 +1570,17 @@
     <div id="toast-container"></div>
 
     <script>
+        // CSRF: htmx doesn't read cookies itself, so mirror the
+        // (non-HttpOnly) qc_csrf_token cookie set at login into a header on
+        // every htmx request. The server's double-submit check compares
+        // this header against the same cookie.
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            const match = document.cookie.match(/(?:^|;\s*)qc_csrf_token=([^;]+)/);
+            if (match) {
+                event.detail.headers['X-CSRF-Token'] = decodeURIComponent(match[1]);
+            }
+        });
+
         function switchToLibraryView() {
             // Wait for HTMX to start the request, then switch view to show progress
             setTimeout(() => {

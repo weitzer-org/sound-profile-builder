@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 func TestAuthMiddleware_NoCookie(t *testing.T) {
@@ -70,11 +71,13 @@ func TestProcessLogin_Success(t *testing.T) {
 	}
 
 	cookies := rr.Result().Cookies()
-	var authCookie *http.Cookie
+	var authCookie, csrfCookie *http.Cookie
 	for _, c := range cookies {
-		if c.Name == sessionCookieName {
+		switch c.Name {
+		case sessionCookieName:
 			authCookie = c
-			break
+		case csrfCookieName:
+			csrfCookie = c
 		}
 	}
 	if authCookie == nil {
@@ -85,6 +88,112 @@ func TestProcessLogin_Success(t *testing.T) {
 	}
 	if !validateCookieValue(authCookie.Value, "mock-secret") {
 		t.Errorf("failed to validate generated cookie")
+	}
+
+	if csrfCookie == nil {
+		t.Fatalf("expected cookie %s not set", csrfCookieName)
+	}
+	if csrfCookie.Value == "" {
+		t.Errorf("expected non-empty CSRF token")
+	}
+	if csrfCookie.HttpOnly {
+		t.Errorf("CSRF cookie must not be HttpOnly -- client JS needs to read it to set the header")
+	}
+}
+
+func TestAuthMiddleware_CSRF_MissingToken(t *testing.T) {
+	mockAuth := &mockSecretFetcher{}
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+		return nil, nil
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/preset/delete", strings.NewReader("id=x"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	// No CSRF cookie or header set.
+	rr := httptest.NewRecorder()
+
+	server.mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden with no CSRF token, got %d", rr.Code)
+	}
+}
+
+func TestAuthMiddleware_CSRF_MismatchedToken(t *testing.T) {
+	mockAuth := &mockSecretFetcher{}
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+		return nil, nil
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/preset/delete", strings.NewReader("id=x"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: "cookie-value"})
+	req.Header.Set(csrfHeaderName, "different-header-value")
+	rr := httptest.NewRecorder()
+
+	server.mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden with mismatched CSRF token, got %d", rr.Code)
+	}
+}
+
+func TestAuthMiddleware_CSRF_ValidToken(t *testing.T) {
+	mockAuth := &mockSecretFetcher{}
+	client := newMockClient()
+	store := storage.NewPresetStore(client, "b")
+	server := NewServer(store, nil, client, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+		return nil, nil
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/preset/delete", strings.NewReader("id=x"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	withAuthAndCSRF(req)
+	rr := httptest.NewRecorder()
+
+	server.mux.ServeHTTP(rr, req)
+
+	if rr.Code == http.StatusForbidden {
+		t.Errorf("did not expect 403 Forbidden with a matching CSRF token, got body: %s", rr.Body.String())
+	}
+}
+
+func TestAuthMiddleware_CSRF_NotRequiredForGET(t *testing.T) {
+	server, _, _, _ := setupTestServer()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/presets", nil)
+	req.AddCookie(&http.Cookie{Name: sessionCookieName, Value: generateCookieValue("mock-secret")})
+	// No CSRF cookie/header -- GET must not require one.
+	rr := httptest.NewRecorder()
+
+	server.mux.ServeHTTP(rr, req)
+
+	if rr.Code == http.StatusForbidden {
+		t.Errorf("GET requests should not require a CSRF token, got 403")
+	}
+}
+
+func TestCSRFTokenValid(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/x", nil)
+	if csrfTokenValid(req) {
+		t.Errorf("expected false with no cookie or header set")
+	}
+
+	req.AddCookie(&http.Cookie{Name: csrfCookieName, Value: "token-abc"})
+	if csrfTokenValid(req) {
+		t.Errorf("expected false with cookie set but no header")
+	}
+
+	req.Header.Set(csrfHeaderName, "token-abc")
+	if !csrfTokenValid(req) {
+		t.Errorf("expected true with matching cookie and header")
+	}
+
+	req.Header.Set(csrfHeaderName, "token-xyz")
+	if csrfTokenValid(req) {
+		t.Errorf("expected false with mismatched cookie and header")
 	}
 }
 

@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -37,19 +39,24 @@ type Server struct {
 	apiKeyMu    sync.RWMutex
 	tasks       map[string]*TaskState
 	tasksMu     sync.RWMutex
+	// rateLimiters holds one token bucket per client IP, shared by every
+	// rateLimitMiddleware-wrapped route (see ratelimit.go).
+	rateLimiters   map[string]*rate.Limiter
+	rateLimitersMu sync.Mutex
 }
 
 // NewServer initializes a new Server and its routes.
 func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, client storage.Client, smFetcher storage.SecretFetcher, orchMaker func(ctx context.Context, apiKey string) (agents.OrchestratorService, error), appConfig *config.AppConfig) *Server {
 	s := &Server{
-		mux:         http.NewServeMux(),
-		store:       store,
-		memoryStore: memoryStore,
-		client:      client,
-		smFetcher:   smFetcher,
-		orchMaker:   orchMaker,
-		appConfig:   appConfig,
-		tasks:       make(map[string]*TaskState),
+		mux:          http.NewServeMux(),
+		store:        store,
+		memoryStore:  memoryStore,
+		client:       client,
+		smFetcher:    smFetcher,
+		orchMaker:    orchMaker,
+		appConfig:    appConfig,
+		tasks:        make(map[string]*TaskState),
+		rateLimiters: make(map[string]*rate.Limiter),
 	}
 	s.routes()
 	return s
@@ -84,8 +91,14 @@ func (s *Server) routes() {
 	// HTMX Frontend Routes
 	s.mux.Handle("/", s.authMiddleware(s.handleIndex()))
 
+	// Gemini/OpenLLM-backed routes: metered API calls behind a shared
+	// password, rate-limited per client IP so a looping client (or a leaked
+	// session) can't run up the bill. Generous burst -- this stops a
+	// runaway loop, it isn't meant to police normal interactive retries.
+	llmRateLimit := s.rateLimitMiddleware(rate.Every(2*time.Second), 10)
+
 	// API Routes (to be protected by Secret Manager Password)
-	s.mux.Handle("/api/preset/generate", s.authMiddleware(s.handleGeneratePreset()))
+	s.mux.Handle("/api/preset/generate", s.authMiddleware(llmRateLimit(s.handleGeneratePreset())))
 	s.mux.Handle("/api/preset/status", s.authMiddleware(s.handleTaskStatus()))
 
 	// Preset Management Routes
@@ -95,7 +108,7 @@ func (s *Server) routes() {
 	s.mux.Handle("/api/preset/copy_ui", s.authMiddleware(s.handleCopyPresetUI()))
 	s.mux.Handle("/api/preset/copy", s.authMiddleware(s.handleCopyPreset()))
 	s.mux.Handle("/api/preset/view", s.authMiddleware(s.handleViewPreset()))
-	s.mux.Handle("/api/preset/chat", s.authMiddleware(s.handleChatPreset()))
+	s.mux.Handle("/api/preset/chat", s.authMiddleware(llmRateLimit(s.handleChatPreset())))
 	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
 	s.mux.Handle("/api/preset/update_parameter", s.authMiddleware(s.handleUpdateParameter()))
 	s.mux.Handle("/api/preset/remove_block", s.authMiddleware(s.handleRemoveBlock()))

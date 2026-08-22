@@ -1,5 +1,5 @@
 
-	<div id="workspace-wrapper" class="workspace-wrapper">
+	<div id="workspace-wrapper-test-preset" class="workspace-wrapper">
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
 			
 			<div class="library-preset-header-actions" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem;">
@@ -21,13 +21,13 @@
 			</div>
 		
 		</div>
-		
+
 		
 		<div class="card chat-control-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
-			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" hx-indicator="#chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
+			<form hx-post="/api/preset/chat" hx-target="closest .workspace-wrapper" hx-swap="outerHTML" hx-indicator="#chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
 				<input type="hidden" name="id" value="test-preset">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
