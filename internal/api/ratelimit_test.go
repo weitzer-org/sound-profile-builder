@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -140,5 +141,40 @@ func TestClientIP(t *testing.T) {
 	req.RemoteAddr = "not-a-host-port"
 	if got := clientIP(req); got != "not-a-host-port" {
 		t.Errorf("expected raw fallback %q, got %q", "not-a-host-port", got)
+	}
+}
+
+func TestClientIP_PrefersFlyClientIPHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/x", nil)
+	req.RemoteAddr = "192.0.2.5:54321" // what RemoteAddr looks like behind Fly's proxy -- not the real caller
+	req.Header.Set("Fly-Client-IP", "203.0.113.99")
+
+	if got := clientIP(req); got != "203.0.113.99" {
+		t.Errorf("expected Fly-Client-IP to take precedence over RemoteAddr, got %q", got)
+	}
+}
+
+func TestRateLimitMiddleware_CapsMapSizeUnderChurn(t *testing.T) {
+	s, _, _, _ := setupTestServer()
+	handler := s.rateLimitMiddleware(rate.Every(time.Hour), 1)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// Simulate many distinct clients within one sweep window (the sweeper
+	// never fires in a unit test), enough to exceed maxRateLimiterEntries,
+	// and confirm the map never grows past that bound.
+	for i := 0; i < maxRateLimiterEntries+50; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/x", nil)
+		req.RemoteAddr = fmt.Sprintf("10.0.%d.%d:1234", (i>>8)&0xFF, i&0xFF) // unique per i
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+	}
+
+	s.rateLimitersMu.Lock()
+	size := len(s.rateLimiters)
+	s.rateLimitersMu.Unlock()
+
+	if size > maxRateLimiterEntries {
+		t.Errorf("expected rateLimiters to stay capped at %d entries, got %d", maxRateLimiterEntries, size)
 	}
 }

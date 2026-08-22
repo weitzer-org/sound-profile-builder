@@ -20,6 +20,11 @@ type rateLimiterEntry struct {
 const rateLimiterTTL = 10 * time.Minute
 const rateLimiterSweepInterval = 5 * time.Minute
 
+// maxRateLimiterEntries hard-bounds s.rateLimiters regardless of how fast
+// distinct client IPs show up between sweeps -- the periodic sweep alone
+// only bounds steady-state size, not a burst within one sweep interval.
+const maxRateLimiterEntries = 10000
+
 // rateLimitMiddleware throttles requests per client IP using a token
 // bucket, so a looping client (or a leaked session) can't hammer a metered
 // Gemini/OpenLLM-backed endpoint for free. Deliberately generous (burst
@@ -36,6 +41,9 @@ func (s *Server) rateLimitMiddleware(limit rate.Limit, burst int) func(http.Hand
 			s.rateLimitersMu.Lock()
 			entry, ok := s.rateLimiters[key]
 			if !ok {
+				if len(s.rateLimiters) >= maxRateLimiterEntries {
+					s.evictOldestRateLimiterLocked()
+				}
 				entry = &rateLimiterEntry{limiter: rate.NewLimiter(limit, burst)}
 				s.rateLimiters[key] = entry
 			}
@@ -50,6 +58,25 @@ func (s *Server) rateLimitMiddleware(limit rate.Limit, burst int) func(http.Hand
 
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+// evictOldestRateLimiterLocked removes the least-recently-seen entry to
+// make room for a new one once maxRateLimiterEntries is reached. Caller
+// must hold rateLimitersMu.
+func (s *Server) evictOldestRateLimiterLocked() {
+	var oldestKey string
+	var oldestSeen time.Time
+	first := true
+	for key, entry := range s.rateLimiters {
+		if first || entry.lastSeen.Before(oldestSeen) {
+			oldestKey = key
+			oldestSeen = entry.lastSeen
+			first = false
+		}
+	}
+	if !first {
+		delete(s.rateLimiters, oldestKey)
 	}
 }
 
@@ -83,9 +110,21 @@ func (s *Server) sweepRateLimiters(now time.Time) {
 	}
 }
 
-// clientIP extracts the host portion of r.RemoteAddr, falling back to the
-// raw value if it isn't in host:port form (e.g. in some test harnesses).
+// clientIP identifies the real client for rate-limiting purposes.
+//
+// In prod (fly.toml's [http_service]) every request reaches this process
+// through Fly's edge proxy, so r.RemoteAddr is the proxy's connection, not
+// the caller's -- every user would otherwise share one bucket. Fly's edge
+// sets Fly-Client-IP itself (https://fly.io/docs/networking/request-headers/)
+// on everything it forwards, overwriting any client-supplied value, so it's
+// safe to trust here: this app has no other ingress path in prod. Local dev
+// (go run / MOCK_MODE, no Fly proxy in front) never sees that header, so it
+// falls back to r.RemoteAddr's host portion, raw if that isn't host:port
+// form (e.g. in some test harnesses).
 func clientIP(r *http.Request) string {
+	if flyIP := r.Header.Get("Fly-Client-IP"); flyIP != "" {
+		return flyIP
+	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
