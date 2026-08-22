@@ -64,15 +64,26 @@ func (s *Server) rateLimitMiddleware(limit rate.Limit, burst int) func(http.Hand
 // evictOldestRateLimiterLocked removes the least-recently-seen entry to
 // make room for a new one once maxRateLimiterEntries is reached. Caller
 // must hold rateLimitersMu.
+// evictionSampleSize bounds evictOldestRateLimiterLocked to an O(1) scan
+// instead of walking the full map -- Go's randomized map iteration order
+// gives a free random sample, so picking the oldest of a small sample
+// approximates true LRU without the lock-contention cost of a full pass.
+const evictionSampleSize = 10
+
 func (s *Server) evictOldestRateLimiterLocked() {
 	var oldestKey string
 	var oldestSeen time.Time
 	first := true
+	sampled := 0
 	for key, entry := range s.rateLimiters {
 		if first || entry.lastSeen.Before(oldestSeen) {
 			oldestKey = key
 			oldestSeen = entry.lastSeen
 			first = false
+		}
+		sampled++
+		if sampled >= evictionSampleSize {
+			break
 		}
 	}
 	if !first {

@@ -87,14 +87,14 @@ test('Agent Progress and Table Verification', async ({ page }) => {
   // Wait for the HTMX swap to settle completely to avoid "detached element" errors
   await page.waitForTimeout(2000);
   
-  const libChatInput = page.locator('#library-editor-workspace #chat-input');
+  const libChatInput = page.locator('#library-editor-workspace .chat-input');
   await libChatInput.click();
   await libChatInput.pressSequentially('Add more delay', { delay: 50 });
-  
-  await page.click('#library-editor-workspace #chat-submit-btn');
+
+  await page.click('#library-editor-workspace .chat-submit-btn');
 
   // Assert that progress area (button spinner) fires
-  await expect(page.locator('#library-editor-workspace #chat-submit-btn.htmx-indicator')).toBeVisible();
+  await expect(page.locator('#library-editor-workspace .chat-submit-btn.htmx-indicator')).toBeVisible();
   
   // Take screenshot of library progress
   await page.screenshot({ path: 'tests/e2e/output/progress_6_lib_adj_running.png' });

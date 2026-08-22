@@ -96,7 +96,17 @@ func isStateChangingMethod(method string) bool {
 // proxy (fly.toml sets force_https) sets X-Forwarded-Proto on everything it
 // forwards, so prod cookies still get Secure.
 func isRequestSecure(r *http.Request) bool {
-	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+	if r.TLS != nil {
+		return true
+	}
+	// X-Forwarded-Proto can be a comma-separated list if the request
+	// crossed more than one proxy hop, and case is not guaranteed.
+	for _, proto := range strings.Split(r.Header.Get("X-Forwarded-Proto"), ",") {
+		if strings.EqualFold(strings.TrimSpace(proto), "https") {
+			return true
+		}
+	}
+	return false
 }
 
 // TODO: Integrate with Google Authentication (OAuth2/OIDC) at a later time.
@@ -192,6 +202,19 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 		if submittedPassword == expectedPassword {
 			secure := isRequestSecure(r)
 
+			// Generate the CSRF token before writing any cookies: if this
+			// fails after the session cookie is already on the response,
+			// http.Error can't retract that Set-Cookie header, leaving the
+			// client with a valid session but no CSRF cookie -- every
+			// subsequent state-changing request would then fail CSRF
+			// validation with no clue why.
+			csrfToken, err := generateCSRFToken()
+			if err != nil {
+				log.Printf("Failed to generate CSRF token: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+
 			// Issue secure cookie
 			cookieValue := generateCookieValue(expectedPassword)
 			http.SetCookie(w, &http.Cookie{
@@ -208,12 +231,6 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 			// cookie. Deliberately NOT HttpOnly -- index.html's
 			// htmx:configRequest listener reads it to set the X-CSRF-Token
 			// header on every state-changing request.
-			csrfToken, err := generateCSRFToken()
-			if err != nil {
-				log.Printf("Failed to generate CSRF token: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
 			http.SetCookie(w, &http.Cookie{
 				Name:     csrfCookieName,
 				Value:    csrfToken,
