@@ -85,6 +85,51 @@ func TestRateLimitMiddleware_PerClientIP(t *testing.T) {
 	}
 }
 
+func TestSweepRateLimiters_EvictsStaleNotFresh(t *testing.T) {
+	s, _, _, _ := setupTestServer()
+	now := time.Now()
+
+	s.rateLimiters = map[string]*rateLimiterEntry{
+		"stale":  {limiter: rate.NewLimiter(rate.Every(time.Hour), 1), lastSeen: now.Add(-rateLimiterTTL - time.Minute)},
+		"fresh":  {limiter: rate.NewLimiter(rate.Every(time.Hour), 1), lastSeen: now.Add(-time.Minute)},
+		"border": {limiter: rate.NewLimiter(rate.Every(time.Hour), 1), lastSeen: now.Add(-rateLimiterTTL + time.Minute)},
+	}
+
+	s.sweepRateLimiters(now)
+
+	if _, ok := s.rateLimiters["stale"]; ok {
+		t.Errorf("expected stale entry (last seen beyond TTL) to be evicted")
+	}
+	if _, ok := s.rateLimiters["fresh"]; !ok {
+		t.Errorf("expected fresh entry to survive the sweep")
+	}
+	if _, ok := s.rateLimiters["border"]; !ok {
+		t.Errorf("expected entry just inside the TTL to survive the sweep")
+	}
+}
+
+func TestRateLimitMiddleware_UpdatesLastSeen(t *testing.T) {
+	s, _, _, _ := setupTestServer()
+	handler := s.rateLimitMiddleware(rate.Every(time.Hour), 5)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/x", nil)
+	req.RemoteAddr = "203.0.113.40:1234"
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	s.rateLimitersMu.Lock()
+	entry, ok := s.rateLimiters["203.0.113.40"]
+	s.rateLimitersMu.Unlock()
+	if !ok {
+		t.Fatalf("expected an entry to be recorded for the client IP")
+	}
+	if time.Since(entry.lastSeen) > time.Minute {
+		t.Errorf("expected lastSeen to be updated to roughly now, got %v", entry.lastSeen)
+	}
+}
+
 func TestClientIP(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/x", nil)
 	req.RemoteAddr = "192.0.2.5:54321"

@@ -56,6 +56,7 @@ func (s *Server) handleGetMemories() http.HandlerFunc {
 func (s *Server) handleDeleteMemory() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
+			w.Header().Set("Allow", http.MethodDelete)
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			return
 		}

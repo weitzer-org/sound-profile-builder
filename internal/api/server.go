@@ -40,9 +40,11 @@ type Server struct {
 	tasks       map[string]*TaskState
 	tasksMu     sync.RWMutex
 	// rateLimiters holds one token bucket per client IP, shared by every
-	// rateLimitMiddleware-wrapped route (see ratelimit.go).
-	rateLimiters   map[string]*rate.Limiter
-	rateLimitersMu sync.Mutex
+	// rateLimitMiddleware-wrapped route (see ratelimit.go). Swept
+	// periodically (rateLimiterSweepOnce) so it doesn't grow unbounded.
+	rateLimiters         map[string]*rateLimiterEntry
+	rateLimitersMu       sync.Mutex
+	rateLimiterSweepOnce sync.Once
 }
 
 // NewServer initializes a new Server and its routes.
@@ -56,7 +58,7 @@ func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, cli
 		orchMaker:    orchMaker,
 		appConfig:    appConfig,
 		tasks:        make(map[string]*TaskState),
-		rateLimiters: make(map[string]*rate.Limiter),
+		rateLimiters: make(map[string]*rateLimiterEntry),
 	}
 	s.routes()
 	return s
@@ -84,6 +86,7 @@ func (s *Server) routes() {
 		} else if r.Method == http.MethodPost {
 			s.handleProcessLogin()(w, r)
 		} else {
+			w.Header().Set("Allow", "GET, POST")
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
@@ -135,6 +138,7 @@ func (s *Server) handleIndex() http.HandlerFunc {
 func (s *Server) handleGeneratePreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			return
 		}

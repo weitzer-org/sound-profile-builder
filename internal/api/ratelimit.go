@@ -3,9 +3,22 @@ package api
 import (
 	"net"
 	"net/http"
+	"time"
 
 	"golang.org/x/time/rate"
 )
+
+// rateLimiterEntry pairs a client's token bucket with when it was last
+// used, so the sweeper (see sweepRateLimiters) can evict buckets for
+// clients that stopped showing up instead of growing s.rateLimiters
+// forever.
+type rateLimiterEntry struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+const rateLimiterTTL = 10 * time.Minute
+const rateLimiterSweepInterval = 5 * time.Minute
 
 // rateLimitMiddleware throttles requests per client IP using a token
 // bucket, so a looping client (or a leaked session) can't hammer a metered
@@ -13,16 +26,21 @@ import (
 // well above normal interactive use) -- the goal is to stop a runaway loop,
 // not to police normal retries.
 func (s *Server) rateLimitMiddleware(limit rate.Limit, burst int) func(http.Handler) http.Handler {
+	s.startRateLimiterSweeper()
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := clientIP(r)
+			now := time.Now()
 
 			s.rateLimitersMu.Lock()
-			limiter, ok := s.rateLimiters[key]
+			entry, ok := s.rateLimiters[key]
 			if !ok {
-				limiter = rate.NewLimiter(limit, burst)
-				s.rateLimiters[key] = limiter
+				entry = &rateLimiterEntry{limiter: rate.NewLimiter(limit, burst)}
+				s.rateLimiters[key] = entry
 			}
+			entry.lastSeen = now
+			limiter := entry.limiter
 			s.rateLimitersMu.Unlock()
 
 			if !limiter.Allow() {
@@ -32,6 +50,36 @@ func (s *Server) rateLimitMiddleware(limit rate.Limit, burst int) func(http.Hand
 
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+// startRateLimiterSweeper starts (once per Server) a background goroutine
+// that periodically evicts rate limiter entries for clients that haven't
+// been seen in a while, so s.rateLimiters doesn't grow without bound over
+// the life of a long-running process.
+func (s *Server) startRateLimiterSweeper() {
+	s.rateLimiterSweepOnce.Do(func() {
+		go func() {
+			ticker := time.NewTicker(rateLimiterSweepInterval)
+			defer ticker.Stop()
+			for now := range ticker.C {
+				s.sweepRateLimiters(now)
+			}
+		}()
+	})
+}
+
+// sweepRateLimiters removes entries last used before now-rateLimiterTTL.
+// Split out from startRateLimiterSweeper's ticker loop so tests can drive
+// eviction deterministically instead of waiting on a real ticker.
+func (s *Server) sweepRateLimiters(now time.Time) {
+	cutoff := now.Add(-rateLimiterTTL)
+	s.rateLimitersMu.Lock()
+	defer s.rateLimitersMu.Unlock()
+	for key, entry := range s.rateLimiters {
+		if entry.lastSeen.Before(cutoff) {
+			delete(s.rateLimiters, key)
+		}
 	}
 }
 

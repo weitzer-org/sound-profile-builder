@@ -99,6 +99,57 @@ func TestProcessLogin_Success(t *testing.T) {
 	if csrfCookie.HttpOnly {
 		t.Errorf("CSRF cookie must not be HttpOnly -- client JS needs to read it to set the header")
 	}
+	if strings.Contains(csrfCookie.Value, "=") {
+		t.Errorf("expected an unpadded (RawURLEncoding) CSRF token with no '=' to avoid breaking naive client-side cookie parsers, got %q", csrfCookie.Value)
+	}
+
+	// Plain HTTP request (no TLS, no X-Forwarded-Proto) -- matches local
+	// MOCK_MODE dev -- so neither cookie should be marked Secure, or the
+	// browser would refuse to store/send them over http://localhost.
+	if authCookie.Secure {
+		t.Errorf("expected session cookie not Secure over a plain HTTP request")
+	}
+	if csrfCookie.Secure {
+		t.Errorf("expected CSRF cookie not Secure over a plain HTTP request")
+	}
+}
+
+func TestProcessLogin_SetsSecureCookiesBehindTLSProxy(t *testing.T) {
+	mockAuth := &mockSecretFetcher{}
+	server := NewServer(nil, nil, nil, mockAuth, func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+		return nil, nil
+	}, nil)
+
+	formData := strings.NewReader("password=mock-secret")
+	req := httptest.NewRequest(http.MethodPost, "/login", formData)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("X-Forwarded-Proto", "https") // what Fly's edge proxy sets
+	rr := httptest.NewRecorder()
+
+	server.mux.ServeHTTP(rr, req)
+
+	for _, c := range rr.Result().Cookies() {
+		if !c.Secure {
+			t.Errorf("expected cookie %s to be Secure behind a TLS-terminating proxy", c.Name)
+		}
+	}
+}
+
+func TestIsRequestSecure(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/x", nil)
+	if isRequestSecure(req) {
+		t.Errorf("expected false for a plain HTTP request with no TLS and no forwarded-proto header")
+	}
+
+	req.Header.Set("X-Forwarded-Proto", "https")
+	if !isRequestSecure(req) {
+		t.Errorf("expected true when X-Forwarded-Proto is https")
+	}
+
+	req.Header.Set("X-Forwarded-Proto", "http")
+	if isRequestSecure(req) {
+		t.Errorf("expected false when X-Forwarded-Proto is http")
+	}
 }
 
 func TestAuthMiddleware_CSRF_MissingToken(t *testing.T) {

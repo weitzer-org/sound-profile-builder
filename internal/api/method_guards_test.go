@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -75,8 +76,10 @@ func TestHandleSavePreset_EscapesNameInToast(t *testing.T) {
 	s, _, _, _ := setupTestServer()
 
 	payload := `<script>alert(1)</script>`
-	req := httptest.NewRequest(http.MethodPost, "/api/preset/save", strings.NewReader(
-		"preset_name="+payload+"&payload=ok"))
+	form := url.Values{}
+	form.Set("preset_name", payload)
+	form.Set("payload", "ok")
+	req := httptest.NewRequest(http.MethodPost, "/api/preset/save", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 	s.handleSavePreset().ServeHTTP(rr, req)
@@ -96,11 +99,15 @@ func TestHandleRenamePreset_EscapesNameInToast(t *testing.T) {
 	s := NewServer(store, nil, mockStorage, &mockSecretFetcher{}, nil, nil)
 
 	p := &storage.Preset{Name: "Old Name", Payload: "none"}
-	store.Save(context.Background(), p)
+	if err := store.Save(context.Background(), p); err != nil {
+		t.Fatalf("failed to seed preset: %v", err)
+	}
 
 	payload := `<script>alert(1)</script>`
-	req := httptest.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(
-		"id="+p.ID+"&preset_name="+payload))
+	form := url.Values{}
+	form.Set("id", p.ID)
+	form.Set("preset_name", payload)
+	req := httptest.NewRequest(http.MethodPost, "/api/preset/rename", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 	s.handleRenamePreset().ServeHTTP(rr, req)

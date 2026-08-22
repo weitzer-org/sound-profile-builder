@@ -65,7 +65,7 @@ func generateCSRFToken() (string, error) {
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	return base64.URLEncoding.EncodeToString(b), nil
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
 // csrfTokenValid checks the double-submit CSRF token: the X-CSRF-Token
@@ -88,6 +88,15 @@ func csrfTokenValid(r *http.Request) bool {
 // free per HTTP semantics.
 func isStateChangingMethod(method string) bool {
 	return method != http.MethodGet && method != http.MethodHead && method != http.MethodOptions
+}
+
+// isRequestSecure reports whether r arrived over HTTPS, directly or via a
+// TLS-terminating proxy. Local dev (MOCK_MODE over plain http://localhost)
+// has neither r.TLS nor this header, so cookies stay usable there; Fly's
+// proxy (fly.toml sets force_https) sets X-Forwarded-Proto on everything it
+// forwards, so prod cookies still get Secure.
+func isRequestSecure(r *http.Request) bool {
+	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
 // TODO: Integrate with Google Authentication (OAuth2/OIDC) at a later time.
@@ -181,6 +190,8 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 		expectedPassword = strings.TrimSpace(expectedPassword)
 
 		if submittedPassword == expectedPassword {
+			secure := isRequestSecure(r)
+
 			// Issue secure cookie
 			cookieValue := generateCookieValue(expectedPassword)
 			http.SetCookie(w, &http.Cookie{
@@ -188,6 +199,7 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 				Value:    cookieValue,
 				Path:     "/",
 				HttpOnly: true,
+				Secure:   secure,
 				MaxAge:   int(sessionDuration.Seconds()),
 				SameSite: http.SameSiteLaxMode,
 			})
@@ -207,6 +219,7 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 				Value:    csrfToken,
 				Path:     "/",
 				HttpOnly: false,
+				Secure:   secure,
 				MaxAge:   int(sessionDuration.Seconds()),
 				SameSite: http.SameSiteLaxMode,
 			})
