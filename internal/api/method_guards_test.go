@@ -151,3 +151,29 @@ func TestRenderTweakingWorkspaceHTML_UniqueWorkspaceWrapperID(t *testing.T) {
 		t.Errorf("did not expect the chat form to still target the shared #workspace-wrapper id")
 	}
 }
+
+// The "Rename" button's onclick used to interpolate html.EscapeString(p.Name)
+// directly into a single-quoted inline JS string
+// (`...value = '%s';`). html.EscapeString is correct for an HTML attribute
+// context, but the browser HTML-decodes the attribute value BEFORE the JS
+// engine parses the onclick handler -- so a name containing a single quote
+// (e.g. `';alert(1);//`) decoded back to a real `'` and broke out of the JS
+// string, executing arbitrary script. Fixed by moving the name into a
+// data-preset-name attribute (a pure HTML-attribute context, no JS
+// re-parsing involved) and reading it via this.dataset.presetName instead.
+func TestRenderTweakingWorkspaceHTML_RenameButtonNoInlineJSBreakout(t *testing.T) {
+	payload := `';alert(document.cookie);//`
+	p := &storage.Preset{ID: "preset-1", Name: payload, Payload: "none"}
+
+	html := renderTweakingWorkspaceHTML(p, false, false)
+
+	if strings.Contains(html, `value = '`+payload+`'`) {
+		t.Errorf("preset name must not be interpolated raw into an inline JS string literal, got: %s", html)
+	}
+	if !strings.Contains(html, `data-preset-name="`) {
+		t.Errorf("expected the preset name to be carried via a data-preset-name attribute instead, got: %s", html)
+	}
+	if !strings.Contains(html, `this.dataset.presetName`) {
+		t.Errorf("expected the onclick handler to read the name via this.dataset.presetName, got: %s", html)
+	}
+}

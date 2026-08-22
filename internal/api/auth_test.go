@@ -128,10 +128,24 @@ func TestProcessLogin_SetsSecureCookiesBehindTLSProxy(t *testing.T) {
 
 	server.mux.ServeHTTP(rr, req)
 
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", rr.Code)
+	}
+
+	var authCookie, csrfCookie *http.Cookie
 	for _, c := range rr.Result().Cookies() {
-		if !c.Secure {
-			t.Errorf("expected cookie %s to be Secure behind a TLS-terminating proxy", c.Name)
+		switch c.Name {
+		case sessionCookieName:
+			authCookie = c
+		case csrfCookieName:
+			csrfCookie = c
 		}
+	}
+	if authCookie == nil || csrfCookie == nil {
+		t.Fatal("expected session and CSRF cookies")
+	}
+	if !authCookie.Secure || !csrfCookie.Secure {
+		t.Error("expected session and CSRF cookies to be Secure behind a TLS-terminating proxy")
 	}
 }
 
