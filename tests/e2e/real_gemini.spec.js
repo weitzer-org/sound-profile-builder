@@ -37,7 +37,7 @@ test('Real Gemini API Test', async ({ page }) => {
   console.log('Starting Adjustment: make it grittier');
   const chatInput = page.locator('.chat-input').first();
   await chatInput.fill('make it grittier');
-  await page.click('.chat-submit-btn');
+  await page.locator('.chat-submit-btn').first().click();
 
   // Wait for response (wait up to 3 minutes)
   // Wait for the submit button to stop showing the spinner (HTMX removes htmx-request)
@@ -86,7 +86,7 @@ test('Real Gemini API Test', async ({ page }) => {
   const libChatInput = page.locator('#library-editor-workspace .chat-input').first();
   await libChatInput.waitFor({ state: 'visible', timeout: 15000 });
   await libChatInput.fill('add a delay');
-  await page.click('#library-editor-workspace .chat-submit-btn');
+  await page.locator('#library-editor-workspace .chat-submit-btn').first().click();
 
   // Wait for response
   await expect(page.locator('#library-editor-workspace .chat-submit-btn').first()).not.toHaveClass(/htmx-request/, { timeout: 180000 });

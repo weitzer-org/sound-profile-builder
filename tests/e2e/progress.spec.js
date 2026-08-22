@@ -91,7 +91,7 @@ test('Agent Progress and Table Verification', async ({ page }) => {
   await libChatInput.click();
   await libChatInput.pressSequentially('Add more delay', { delay: 50 });
 
-  await page.click('#library-editor-workspace .chat-submit-btn');
+  await page.locator('#library-editor-workspace .chat-submit-btn').first().click();
 
   // Assert that progress area (button spinner) fires
   await expect(page.locator('#library-editor-workspace .chat-submit-btn.htmx-indicator')).toBeVisible();
