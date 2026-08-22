@@ -99,11 +99,16 @@ func isRequestSecure(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
 	}
-	// X-Forwarded-Proto can be a comma-separated list if the request
-	// crossed more than one proxy hop, and case is not guaranteed.
-	for _, proto := range strings.Split(r.Header.Get("X-Forwarded-Proto"), ",") {
-		if strings.EqualFold(strings.TrimSpace(proto), "https") {
-			return true
+	// A single value can itself be a comma-separated list if the request
+	// crossed more than one proxy hop, case is not guaranteed, AND a
+	// client-supplied header and a trusted proxy's own header can coexist
+	// as separate header lines (Header.Get only ever returns the first) --
+	// check every line and every comma-separated entry within each.
+	for _, val := range r.Header.Values("X-Forwarded-Proto") {
+		for _, proto := range strings.Split(val, ",") {
+			if strings.EqualFold(strings.TrimSpace(proto), "https") {
+				return true
+			}
 		}
 	}
 	return false

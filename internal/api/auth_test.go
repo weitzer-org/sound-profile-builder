@@ -150,6 +150,22 @@ func TestIsRequestSecure(t *testing.T) {
 	if isRequestSecure(req) {
 		t.Errorf("expected false when X-Forwarded-Proto is http")
 	}
+
+	// Comma-separated list within one header line (multi-hop proxy chain).
+	req.Header.Set("X-Forwarded-Proto", "http, HTTPS")
+	if !isRequestSecure(req) {
+		t.Errorf("expected true when https appears anywhere in a comma-separated, mixed-case list")
+	}
+
+	// Two separate header lines (e.g. a client-injected value the trusted
+	// proxy didn't overwrite, just appended its own alongside) --
+	// Header.Get would only see the first; Header.Values must see both.
+	req.Header.Del("X-Forwarded-Proto")
+	req.Header.Add("X-Forwarded-Proto", "http")
+	req.Header.Add("X-Forwarded-Proto", "https")
+	if !isRequestSecure(req) {
+		t.Errorf("expected true when https appears in a later X-Forwarded-Proto header line, not just the first")
+	}
 }
 
 func TestAuthMiddleware_CSRF_MissingToken(t *testing.T) {
