@@ -2,7 +2,9 @@ package api
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"log"
@@ -16,6 +18,8 @@ import (
 )
 
 const sessionCookieName = "qc_auth_session"
+const csrfCookieName = "qc_csrf_token"
+const csrfHeaderName = "X-CSRF-Token"
 const secretName = "spb-login-pw"
 const sessionDuration = 24 * time.Hour
 
@@ -49,6 +53,65 @@ func validateCookieValue(cookieValue, password string) bool {
 	expectedSignature := base64.URLEncoding.EncodeToString(mac.Sum(nil))
 
 	return hmac.Equal([]byte(parts[1]), []byte(expectedSignature))
+}
+
+// generateCSRFToken produces a random token for the double-submit CSRF
+// cookie. It carries no secret of its own (a CSRF attacker can trigger a
+// cross-site request but, unlike the session cookie's contents, can't read
+// the browser's cookie jar to put this value in a header) -- the security
+// property comes entirely from requiring the header and cookie to match.
+func generateCSRFToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+// csrfTokenValid checks the double-submit CSRF token: the X-CSRF-Token
+// header (set on every htmx request client-side, see index.html) must match
+// the qc_csrf_token cookie. Only called for state-changing methods.
+func csrfTokenValid(r *http.Request) bool {
+	cookie, err := r.Cookie(csrfCookieName)
+	if err != nil || cookie.Value == "" {
+		return false
+	}
+	headerToken := r.Header.Get(csrfHeaderName)
+	if headerToken == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(headerToken)) == 1
+}
+
+// isStateChangingMethod reports whether r's method can mutate state and
+// therefore needs a CSRF check -- GET/HEAD/OPTIONS are assumed side-effect
+// free per HTTP semantics.
+func isStateChangingMethod(method string) bool {
+	return method != http.MethodGet && method != http.MethodHead && method != http.MethodOptions
+}
+
+// isRequestSecure reports whether r arrived over HTTPS, directly or via a
+// TLS-terminating proxy. Local dev (MOCK_MODE over plain http://localhost)
+// has neither r.TLS nor this header, so cookies stay usable there; Fly's
+// proxy (fly.toml sets force_https) sets X-Forwarded-Proto on everything it
+// forwards, so prod cookies still get Secure.
+func isRequestSecure(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+	// A single value can itself be a comma-separated list if the request
+	// crossed more than one proxy hop, case is not guaranteed, AND a
+	// client-supplied header and a trusted proxy's own header can coexist
+	// as separate header lines (Header.Get only ever returns the first) --
+	// check every line and every comma-separated entry within each.
+	for _, val := range r.Header.Values("X-Forwarded-Proto") {
+		for _, proto := range strings.Split(val, ",") {
+			if strings.EqualFold(strings.TrimSpace(proto), "https") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // TODO: Integrate with Google Authentication (OAuth2/OIDC) at a later time.
@@ -90,6 +153,11 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			} else {
 				http.Redirect(w, r, "/login", http.StatusFound)
 			}
+			return
+		}
+
+		if isStateChangingMethod(r.Method) && !csrfTokenValid(r) {
+			http.Error(w, "Invalid or missing CSRF token", http.StatusForbidden)
 			return
 		}
 
@@ -137,6 +205,21 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 		expectedPassword = strings.TrimSpace(expectedPassword)
 
 		if submittedPassword == expectedPassword {
+			secure := isRequestSecure(r)
+
+			// Generate the CSRF token before writing any cookies: if this
+			// fails after the session cookie is already on the response,
+			// http.Error can't retract that Set-Cookie header, leaving the
+			// client with a valid session but no CSRF cookie -- every
+			// subsequent state-changing request would then fail CSRF
+			// validation with no clue why.
+			csrfToken, err := generateCSRFToken()
+			if err != nil {
+				log.Printf("Failed to generate CSRF token: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
+			}
+
 			// Issue secure cookie
 			cookieValue := generateCookieValue(expectedPassword)
 			http.SetCookie(w, &http.Cookie{
@@ -144,6 +227,21 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 				Value:    cookieValue,
 				Path:     "/",
 				HttpOnly: true,
+				Secure:   secure,
+				MaxAge:   int(sessionDuration.Seconds()),
+				SameSite: http.SameSiteLaxMode,
+			})
+
+			// Issue the CSRF double-submit cookie alongside the session
+			// cookie. Deliberately NOT HttpOnly -- index.html's
+			// htmx:configRequest listener reads it to set the X-CSRF-Token
+			// header on every state-changing request.
+			http.SetCookie(w, &http.Cookie{
+				Name:     csrfCookieName,
+				Value:    csrfToken,
+				Path:     "/",
+				HttpOnly: false,
+				Secure:   secure,
 				MaxAge:   int(sessionDuration.Seconds()),
 				SameSite: http.SameSiteLaxMode,
 			})

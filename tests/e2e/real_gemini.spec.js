@@ -35,13 +35,13 @@ test('Real Gemini API Test', async ({ page }) => {
 
   // === Case 2: Adjustment ===
   console.log('Starting Adjustment: make it grittier');
-  const chatInput = page.locator('#chat-input').first();
+  const chatInput = page.locator('.chat-input').first();
   await chatInput.fill('make it grittier');
-  await page.click('#chat-submit-btn');
-  
+  await page.locator('.chat-submit-btn').first().click();
+
   // Wait for response (wait up to 3 minutes)
   // Wait for the submit button to stop showing the spinner (HTMX removes htmx-request)
-  const submitBtn = page.locator('#chat-submit-btn');
+  const submitBtn = page.locator('.chat-submit-btn');
   await expect(submitBtn).not.toHaveClass(/htmx-request/, { timeout: 180000 });
   
   // Also wait for the table to be visible again just in case
@@ -83,13 +83,13 @@ test('Real Gemini API Test', async ({ page }) => {
 
   // === Case 5: Adjustment in Library ===
   console.log('Making another adjustment in library');
-  const libChatInput = page.locator('#library-editor-workspace #chat-input').first();
+  const libChatInput = page.locator('#library-editor-workspace .chat-input').first();
   await libChatInput.waitFor({ state: 'visible', timeout: 15000 });
   await libChatInput.fill('add a delay');
-  await page.click('#library-editor-workspace #chat-submit-btn');
-  
+  await page.locator('#library-editor-workspace .chat-submit-btn').first().click();
+
   // Wait for response
-  await expect(page.locator('#library-editor-workspace #chat-submit-btn').first()).not.toHaveClass(/htmx-request/, { timeout: 180000 });
+  await expect(page.locator('#library-editor-workspace .chat-submit-btn').first()).not.toHaveClass(/htmx-request/, { timeout: 180000 });
   await page.locator('#library-editor-workspace .grid-matrix').first().waitFor({ state: 'visible', timeout: 30000 });
   
   await page.evaluate(() => { const h = document.querySelector('.nav-header'); if(h) h.style.position = 'static'; });

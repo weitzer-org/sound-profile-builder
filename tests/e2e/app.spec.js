@@ -57,8 +57,8 @@ test('QC-2 HTMX Dashboard UI Integration Test', async ({ page }) => {
   await expect(page.locator('.workspace-wrapper h2').first()).toContainText('Awesome Hendrix Tone', { timeout: 10000 });
 
   // 2. Adjust Preset (Wait for adjustment form to appear in workspace)
-  await page.fill('#chat-input', 'Make it brighter.');
-  await page.click('#chat-submit-btn');
+  await page.locator('.chat-input').first().fill('Make it brighter.');
+  await page.locator('.chat-submit-btn').first().click();
   
   // Wait for model chat log to appear
   await expect(page.locator('#view-generator .workspace-wrapper').first()).toContainText('Make it brighter.');

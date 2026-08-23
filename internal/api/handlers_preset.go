@@ -162,6 +162,12 @@ func (s *Server) handleGetPresets() http.HandlerFunc {
 
 func (s *Server) handleSavePreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form config", http.StatusBadRequest)
 			return
@@ -197,7 +203,7 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 			<div id="toast-container" hx-swap-oob="beforeend:body">
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
-		`, renderPresetList(presets, false), name)
+		`, renderPresetList(presets, false), html.EscapeString(name))
 
 		w.Write([]byte(oobResponse))
 	}
@@ -205,6 +211,12 @@ func (s *Server) handleSavePreset() http.HandlerFunc {
 
 func (s *Server) handleDeletePreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form config", http.StatusBadRequest)
 			return
@@ -251,6 +263,12 @@ func (s *Server) handleCopyPresetUI() http.HandlerFunc {
 
 func (s *Server) handleCopyPreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form config", http.StatusBadRequest)
 			return
@@ -312,6 +330,12 @@ func (s *Server) handleCopyPreset() http.HandlerFunc {
 
 func (s *Server) handleDeleteDraftPreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form config", http.StatusBadRequest)
 			return
@@ -337,6 +361,12 @@ func (s *Server) handleDeleteDraftPreset() http.HandlerFunc {
 
 func (s *Server) handleRenamePreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form config", http.StatusBadRequest)
 			return
@@ -377,7 +407,7 @@ func (s *Server) handleRenamePreset() http.HandlerFunc {
 				<div class="toast show">Successfully saved "%s"!</div>
 			</div>
 			%s
-		`, renderPresetList(presets, false), name, renderTweakingWorkspaceHTML(p, false, wasDraft))
+		`, renderPresetList(presets, false), html.EscapeString(name), renderTweakingWorkspaceHTML(p, false, wasDraft))
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(oobResponse))
@@ -539,7 +569,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 					</form>
 				</div>
 				<div id="title-actions-%[2]s" class="preset-title-actions-buttons" style="display: flex; gap: 0.5rem; align-items: center;">
-					<button type="button" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.parentElement.style.display='none'; document.querySelector('#rename-form-%[2]s input[name=preset_name]').value = '%[1]s';" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--accent); border: none; border-radius: 8px; color: white; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Rename</button>
+					<button type="button" data-preset-name="%[1]s" onclick="document.getElementById('rename-form-%[2]s').style.display='flex'; this.parentElement.style.display='none'; document.querySelector('#rename-form-%[2]s input[name=preset_name]').value = this.dataset.presetName;" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--accent); border: none; border-radius: 8px; color: white; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Rename</button>
 					<button onclick="window.location.reload()" style="width: auto; padding: 0.5rem 1.25rem; font-size: 1rem; font-weight: 500; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-dark)'">Back / Exit</button>
 				</div>
 			</div>
@@ -789,17 +819,17 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
 			%s
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
-			<form hx-post="/api/preset/chat" hx-target="#workspace-wrapper" hx-swap="outerHTML" hx-indicator="#chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #chat-input, button[type='submit']">
-				<input type="hidden" name="id" value="%s">
+			<form hx-post="/api/preset/chat" hx-target="closest .workspace-wrapper" hx-swap="outerHTML" hx-indicator="find .chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #workspace-wrapper-%[2]s .chat-input, #workspace-wrapper-%[2]s .chat-submit-btn">
+				<input type="hidden" name="id" value="%[2]s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-					<textarea name="message" id="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
+					<textarea name="message" class="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
 					<button type="button" class="builder-statement-text" aria-expanded="false" onclick="this.classList.toggle('expanded'); this.setAttribute('aria-expanded', this.classList.contains('expanded'));" style="display: block; width: 100%%; text-align: left; background: none; border: none; margin: 0; padding: 0.25rem 0 0 0; font: inherit; cursor: pointer; font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
 						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
 					</button>
 				</div>
 				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
 				<!-- TODO: Implement a visual pulsing border on the DSP Matrix container when a refinement is in-progress, and a green success flash when complete to make the system state more obvious to the user. -->
-				<button id="chat-submit-btn" type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;" class="htmx-indicator">
+				<button type="submit" style="width: auto; height: 48px; padding: 0 1.25rem; border-radius: 8px;" class="chat-submit-btn htmx-indicator">
 					<span class="spinner"></span>
 					<span class="btn-text">Adjust</span>
 				</button>
@@ -829,11 +859,11 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 	}
 
 	return fmt.Sprintf(`
-	<div id="workspace-wrapper" class="workspace-wrapper">
+	<div id="workspace-wrapper-%s" class="workspace-wrapper">
 		<div class="card" style="padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 12px;">
 			%s
 		</div>
-		
+
 		%s
 
 		<div class="tweaking-workspace" style="display: flex; flex-direction: column;">
@@ -857,7 +887,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			</div>
 		</div>
 	</div>
-	`, headerHtml, controlPanelHtml, viewEditToggleHtml, matrixContainerHtml, historyHtml)
+	`, html.EscapeString(p.ID), headerHtml, controlPanelHtml, viewEditToggleHtml, matrixContainerHtml, historyHtml)
 }
 
 func (s *Server) handleViewPreset() http.HandlerFunc {
@@ -889,6 +919,12 @@ func (s *Server) handleViewPreset() http.HandlerFunc {
 
 func (s *Server) handleChatPreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Bad form input", http.StatusBadRequest)
 			return
@@ -1066,6 +1102,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 func (s *Server) handleUpdateParameter() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			return
 		}
@@ -1149,6 +1186,7 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 func (s *Server) handleRemoveBlock() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			return
 		}
