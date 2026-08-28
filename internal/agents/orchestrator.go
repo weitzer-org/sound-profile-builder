@@ -39,6 +39,44 @@ func GetQCBlockSchemaJSON() string {
 	return string(embeddedQCBlockSchema)
 }
 
+// filterEmbeddedCorosMap returns the coros_map.json Dictionary injected into Agent 4's
+// (CorOS Librarian) context, filtered per this run's constraints. allowFactoryCaptures
+// drops every is_capture:true entry, as before. filterPlugins additionally drops any
+// entry tagged required_plugin (a device belonging to a paid Neural DSP Archetype plugin,
+// e.g. "Plini", "John Mayer") unless allowedPlugins[requiredPlugin] is set -- so a plugin
+// the user doesn't own never appears as an option for the Librarian to pick, rather than
+// being merely discouraged by the "AVAILABLE PLUGINS: ..." prompt line. Returns the raw
+// embedded bytes unchanged when neither filter is active, and falls back to them on any
+// parse/marshal error.
+func filterEmbeddedCorosMap(raw []byte, allowFactoryCaptures bool, filterPlugins bool, allowedPlugins map[string]bool) string {
+	if allowFactoryCaptures && !filterPlugins {
+		return string(raw)
+	}
+	var fullMap map[string]map[string]interface{}
+	if err := json.Unmarshal(raw, &fullMap); err != nil {
+		return string(raw)
+	}
+	filteredMap := make(map[string]map[string]interface{})
+	for k, v := range fullMap {
+		if !allowFactoryCaptures {
+			if isCap, _ := v["is_capture"].(bool); isCap {
+				continue
+			}
+		}
+		if filterPlugins {
+			if reqPlugin, _ := v["required_plugin"].(string); reqPlugin != "" && !allowedPlugins[reqPlugin] {
+				continue
+			}
+		}
+		filteredMap[k] = v
+	}
+	b, err := json.Marshal(filteredMap)
+	if err != nil {
+		return string(raw)
+	}
+	return string(b)
+}
+
 // subsetQCBlockSchema returns just the given top-level categories of the embedded QC Block
 // Parameter Vocabulary, JSON-marshaled. Falls back to the full file on any parse/marshal
 // error, or if even one of the requested categories (besides _readme) failed to match --
@@ -323,13 +361,25 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]\n\n" + prompt
 	}
 
-	allowPaidPlugins, ok := constraints["allow_paid_plugins"].(bool)
-	if ok && !allowPaidPlugins {
+	// pluginsFilterActive/allowedPlugins gate every required_plugin-tagged coros_map.json
+	// entry (dictJSON below and GetCategorizedAmplifiers) the same way the prompt text
+	// does, so an unowned plugin's devices (e.g. Plini, Gojira) are never offered as an
+	// option in the first place rather than merely discouraged by a prompt sentence. When
+	// the "allow_paid_plugins" constraint is absent entirely (older callers, tests), no
+	// filtering happens -- unchanged from the pre-existing prompt-only behavior.
+	allowPaidPlugins, hasAllowPaidPlugins := constraints["allow_paid_plugins"].(bool)
+	pluginsFilterActive := hasAllowPaidPlugins
+	allowedPlugins := map[string]bool{}
+	if hasAllowPaidPlugins && !allowPaidPlugins {
 		prompt = "[GLOBAL USER CONFIG FLAG: NO PAID PLUGINS. The generated preset MUST NOT use any paid plugins.]\n\n" + prompt
-	} else if ok && allowPaidPlugins {
-		availablePlugins, ok := constraints["available_plugins"].([]string)
-		if ok && len(availablePlugins) > 0 {
-			prompt = fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(availablePlugins, ", ")) + prompt
+	} else if hasAllowPaidPlugins && allowPaidPlugins {
+		if availablePlugins, ok := constraints["available_plugins"].([]string); ok {
+			for _, p := range availablePlugins {
+				allowedPlugins[p] = true
+			}
+			if len(availablePlugins) > 0 {
+				prompt = fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(availablePlugins, ", ")) + prompt
+			}
 		}
 	}
 
@@ -398,22 +448,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	// originally written) because Tier 1 grounds Sonic Profiler's frequency/gain estimates
 	// against the same real-parameter vocabulary and user capture library the later phases
 	// already see, and Sonic Profiler now runs as part of Phase 1.
-	dictJSON := string(embeddedCorosMap)
-	if !effectiveAllowFactoryCaptures {
-		var fullMap map[string]map[string]interface{}
-		if err := json.Unmarshal(embeddedCorosMap, &fullMap); err == nil {
-			filteredMap := make(map[string]map[string]interface{})
-			for k, v := range fullMap {
-				if isCap, _ := v["is_capture"].(bool); !isCap {
-					filteredMap[k] = v
-				}
-			}
-			if b, err := json.Marshal(filteredMap); err == nil {
-				dictJSON = string(b)
-			}
-		}
-	}
-	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures)
+	dictJSON := filterEmbeddedCorosMap(embeddedCorosMap, effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
+	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
 
 	userCapturesJSON := "[]"
 	if effectiveAllowUserCaptures {

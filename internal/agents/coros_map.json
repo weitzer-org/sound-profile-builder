@@ -225,7 +225,8 @@
     "coros_equivalent": "Solo 100 Lead",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "SLO-100"
   },
   "Friedman HBE100": {
     "coros_equivalent": "Freeman 100 Rhythm",
@@ -495,14 +496,14 @@
     "tonal_archetype": "Other / Unique"
   },
   "Darkglass Alpha·Omega 900": {
-    "coros_equivalent": "Darkglass AO900",
+    "coros_equivalent": "Douglas AO900",
     "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true,
     "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Microtubes 900 V2": {
-    "coros_equivalent": "Darkglass MT900V2",
+    "coros_equivalent": "Douglas MT900V2",
     "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true,
@@ -927,7 +928,7 @@
     "confidence_score": 1.0
   },
   "Lovetone Meatball": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Love Meat",
     "type": "filter",
     "confidence_score": 1.0,
     "is_capture": true,
@@ -1540,8 +1541,8 @@
     "confidence_score": 1.0
   },
   "Dunlop Cry Baby Wah From Hell": {
-    "coros_equivalent": "",
-    "type": "fx",
+    "coros_equivalent": "Crying Wah From Hell",
+    "type": "wah",
     "confidence_score": 1.0
   },
   "Xotic RC Bass Booster": {
@@ -1570,12 +1571,12 @@
     "confidence_score": 1.0
   },
   "Darkglass Microtubes B3K": {
-    "coros_equivalent": "Microtubes B3K",
+    "coros_equivalent": "Douglas MT 3K",
     "type": "fx",
     "confidence_score": 1.0
   },
   "Darkglass Vintage Microtubes": {
-    "coros_equivalent": "Darkglass VMT",
+    "coros_equivalent": "Douglas VMT",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true,
@@ -1939,28 +1940,28 @@
     "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Alpha·Omega Ultra": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Douglas AOU",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true,
     "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass B7K": {
-    "coros_equivalent": "Darkglass B7K",
+    "coros_equivalent": "Douglas B7K",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true,
     "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Vintage Microtubes & B7K Mixed": {
-    "coros_equivalent": "Darkglass VMT+B7K",
+    "coros_equivalent": "Douglas VMT+B7K",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true,
     "tonal_archetype": "High-Gain Modern"
   },
   "Darkglass Vintage Ultra": {
-    "coros_equivalent": "Darkglass VU",
+    "coros_equivalent": "Douglas VU",
     "type": "fx",
     "confidence_score": 1.0,
     "is_capture": true,
@@ -2387,401 +2388,591 @@
   "Cory Wong Cab 1 (M) & (ST)": {
     "coros_equivalent": "Cory Wong Cab 1 (M) & (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 2 (M) & (ST)": {
     "coros_equivalent": "Cory Wong Cab 2 (M) & (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 3 (M) & (ST)": {
     "coros_equivalent": "Cory Wong Cab 3 (M) & (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong D.I. Funk Console": {
     "coros_equivalent": "Cory Wong D.I. Funk Console",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong Delay-y-y": {
     "coros_equivalent": "Cory Wong Delay-y-y",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The 4th Position Compressor": {
     "coros_equivalent": "Cory Wong The 4th Position Compressor",
     "type": "compressor",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The 80s": {
     "coros_equivalent": "Cory Wong The 80s",
     "type": "modulation",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Amp Snob": {
     "coros_equivalent": "Cory Wong The Amp Snob",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Big Rig Overdrive": {
     "coros_equivalent": "Cory Wong The Big Rig Overdrive",
     "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Clean Machine": {
     "coros_equivalent": "Cory Wong The Clean Machine",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Postal Service": {
     "coros_equivalent": "Cory Wong The Postal Service",
     "type": "filter",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Tuber": {
     "coros_equivalent": "",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Wash": {
     "coros_equivalent": "Studio Plate 70 (ST)",
     "type": "reverb",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong The Wash Shimmer": {
     "coros_equivalent": "Blossom (ST)",
     "type": "reverb",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Cory Wong Wah": {
     "coros_equivalent": "Crying Wah",
     "type": "wah",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Cory Wong"
   },
   "Fortin Nameless": {
     "coros_equivalent": "Brit PA-EL34",
     "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "British Crunch"
+    "tonal_archetype": "British Crunch",
+    "required_plugin": "Nameless"
   },
   "Gojira Cab 1 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira Cab 2 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira Cab 3 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira CHR": {
     "coros_equivalent": "Chief CS3",
     "type": "modulation",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira CLN": {
     "coros_equivalent": "Chief CS3",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Gojira"
   },
   "Gojira DLY (ST)": {
     "coros_equivalent": "Dual (ST)",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira DRT": {
     "coros_equivalent": "Chief DS1",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira HOT": {
     "coros_equivalent": "Chief MT",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Gojira"
   },
   "Gojira OCT": {
     "coros_equivalent": "Chief OC2",
     "type": "pitch",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira OD": {
     "coros_equivalent": "Chief OD1",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira PHSR": {
     "coros_equivalent": "Bogna Fish",
     "type": "modulation",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "Gojira"
   },
   "Gojira REV": {
     "coros_equivalent": "Studio Plate 70 (ST)",
     "type": "reverb",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira REV Shimmer": {
     "coros_equivalent": "Rage Booster",
     "type": "reverb",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Gojira RST": {
     "coros_equivalent": "Chief CS3",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Gojira"
   },
   "Gojira WOW": {
     "coros_equivalent": "Bubba Wah",
     "type": "pitch",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Gojira"
   },
   "Nameless Cab (M) & (S)": {
     "coros_equivalent": "Single (M) Lite",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nameless"
   },
   "Nameless Delay": {
     "coros_equivalent": "Circular Delay",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nameless"
   },
   "Nameless Grind": {
     "coros_equivalent": "CA Tremo Red",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nameless"
   },
   "Nameless Hexdrive": {
     "coros_equivalent": "Obsessive Drive",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nameless"
   },
   "Nameless Reverb": {
     "coros_equivalent": "Range Rverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "required_plugin": "Nameless"
   },
   "Nameless Zuul": {
     "coros_equivalent": "",
     "type": "utility",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Nameless"
   },
   "Nolly Cab 1 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Cab 2 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Cab 3 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Cab 4 (M) & (ST)": {
     "coros_equivalent": "Solid State Comp (ST)",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Clean": {
     "coros_equivalent": "Brit 900 Clean",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "British Crunch"
+    "tonal_archetype": "British Crunch",
+    "required_plugin": "Nolly"
   },
   "Nolly Compressor": {
     "coros_equivalent": "Opto Comp (S/C)",
     "type": "compressor",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Crunch": {
     "coros_equivalent": "US Prince",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Nolly"
   },
   "Nolly Delay-1 (M)": {
     "coros_equivalent": "Dual (M)",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Delay-2": {
     "coros_equivalent": "",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Graphic-9": {
     "coros_equivalent": "Plugin Graphic-9",
     "type": "eq",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Nolly"
   },
   "Nolly Lead": {
     "coros_equivalent": "PV-505 Lead",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "Nolly"
   },
   "Nolly Overdrive-1": {
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Nolly"
   },
   "Nolly Overdrive-2": {
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "Nolly"
   },
   "Nolly Reverb": {
     "coros_equivalent": "Range Rverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "required_plugin": "Nolly"
   },
   "Nolly Rhythm": {
     "coros_equivalent": "PV-505 Rhythm",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Nolly"
   },
   "Parallax": {
     "coros_equivalent": "CA 3Axe",
     "type": "amp",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Parallax"
   },
   "Parallax Cab (M) & (ST)": {
     "coros_equivalent": "Dual (M) Lite",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Parallax"
   },
   "Plini Cab (M) & (ST)": {
     "coros_equivalent": "Single (M) Lite",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Chorus": {
     "coros_equivalent": "Dream Chorus",
     "type": "modulation",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Clean": {
     "coros_equivalent": "Plugin Blend",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Plini"
   },
   "Plini Comp": {
     "coros_equivalent": "OC-76 Comp",
     "type": "compressor",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Plini"
   },
   "Plini Crunch": {
     "coros_equivalent": "US Prince",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "Other / Unique"
+    "tonal_archetype": "Other / Unique",
+    "required_plugin": "Plini"
   },
   "Plini Delay (ST)": {
     "coros_equivalent": "Single (ST)",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Drive": {
     "coros_equivalent": "Myth Drive",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Lead": {
     "coros_equivalent": "PV-505 Lead",
     "type": "amp",
     "confidence_score": 1.0,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "Plini"
   },
   "Plini Octaver": {
     "coros_equivalent": "Poly Octaver",
     "type": "pitch",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Pre Delay (M)": {
     "coros_equivalent": "Single (M)",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "Plini"
   },
   "Plini Reverb": {
     "coros_equivalent": "Range Rverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true
+    "is_capture": true,
+    "required_plugin": "Plini"
   },
   "SLO-100 Cab (M) & (ST)": {
     "coros_equivalent": "Solo 100 Crunch Bright",
     "type": "cab",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Chorus": {
     "coros_equivalent": "Dream Chorus",
     "type": "modulation",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Compressor": {
     "coros_equivalent": "",
     "type": "compressor",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Delay": {
     "coros_equivalent": "",
     "type": "delay",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Overdrive-1": {
     "coros_equivalent": "Love Drive 11",
     "type": "overdrive",
     "confidence_score": 1.0,
     "is_capture": true,
-    "tonal_archetype": "High-Gain Modern"
+    "tonal_archetype": "High-Gain Modern",
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Overdrive-2": {
     "coros_equivalent": "",
     "type": "overdrive",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "SLO-100 Reverb": {
     "coros_equivalent": "",
     "type": "reverb",
-    "confidence_score": 1.0
+    "confidence_score": 1.0,
+    "required_plugin": "SLO-100"
   },
   "Dumbleland Special": {
     "coros_equivalent": "Dumbbell ODS",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Boutique Custom"
+  },
+  "Darkglass Electronics Hyper Luminal": {
+    "coros_equivalent": "Douglas Shining Comp (M)",
+    "type": "compressor",
+    "confidence_score": 1.0
+  },
+  "Oto Machines Bam Space Generator": {
+    "coros_equivalent": "Vintage Digital",
+    "type": "reverb",
+    "confidence_score": 1.0
+  },
+  "John Mayer Justa Boost": {
+    "coros_equivalent": "John Mayer Justa Boost",
+    "type": "overdrive",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Antelope Filter": {
+    "coros_equivalent": "John Mayer Antelope Filter",
+    "type": "filter",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Halfman OD": {
+    "coros_equivalent": "John Mayer Halfman OD",
+    "type": "overdrive",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Tealbreaker": {
+    "coros_equivalent": "John Mayer Tealbreaker",
+    "type": "overdrive",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Millipede Delay": {
+    "coros_equivalent": "John Mayer Millipede Delay",
+    "type": "delay",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Harmonic Tremolo": {
+    "coros_equivalent": "John Mayer Harmonic Tremolo",
+    "type": "modulation",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Spring Reverb": {
+    "coros_equivalent": "John Mayer Spring Reverb",
+    "type": "reverb",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Smooth Operator": {
+    "coros_equivalent": "John Mayer Smooth Operator",
+    "type": "amp",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Headroom Hero": {
+    "coros_equivalent": "John Mayer Headroom Hero",
+    "type": "amp",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Signature 83": {
+    "coros_equivalent": "John Mayer Signature 83",
+    "type": "amp",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Three-In-One": {
+    "coros_equivalent": "John Mayer Three-In-One",
+    "type": "amp",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Smooth Operator Cab": {
+    "coros_equivalent": "John Mayer Smooth Operator Cab",
+    "type": "cab",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Headroom Hero Cab": {
+    "coros_equivalent": "John Mayer Headroom Hero Cab",
+    "type": "cab",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Signature 83 Cab": {
+    "coros_equivalent": "John Mayer Signature 83 Cab",
+    "type": "cab",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Compressor": {
+    "coros_equivalent": "John Mayer Compressor",
+    "type": "compressor",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Dream Delay (ST)": {
+    "coros_equivalent": "John Mayer Dream Delay (ST)",
+    "type": "delay",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Studio Verb Hall": {
+    "coros_equivalent": "John Mayer Studio Verb Hall",
+    "type": "reverb",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
+  },
+  "John Mayer Studio Verb Plate": {
+    "coros_equivalent": "John Mayer Studio Verb Plate",
+    "type": "reverb",
+    "confidence_score": 1.0,
+    "required_plugin": "John Mayer"
   }
 }

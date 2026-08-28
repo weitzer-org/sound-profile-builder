@@ -7,6 +7,29 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
+func TestGetCategorizedAmplifiers_PluginFiltering(t *testing.T) {
+	// "John Mayer Smooth Operator" (coros_map.json, type "amp", required_plugin "John
+	// Mayer") only belongs on the menu when the caller owns that plugin. "Brit 2203" is a
+	// plain non-plugin amp and must never be affected by plugin filtering.
+	withoutOwnership := GetCategorizedAmplifiers(true, true, map[string]bool{})
+	if strings.Contains(withoutOwnership, "John Mayer Smooth Operator") {
+		t.Errorf("expected John Mayer's amp hidden when the plugin isn't in allowedPlugins")
+	}
+	if !strings.Contains(withoutOwnership, "Brit 2203") {
+		t.Errorf("expected a plain non-plugin amp to survive plugin filtering")
+	}
+
+	withOwnership := GetCategorizedAmplifiers(true, true, map[string]bool{"John Mayer": true})
+	if !strings.Contains(withOwnership, "John Mayer Smooth Operator") {
+		t.Errorf("expected John Mayer's amp present once the plugin is in allowedPlugins")
+	}
+
+	unfiltered := GetCategorizedAmplifiers(true, false, nil)
+	if !strings.Contains(unfiltered, "John Mayer Smooth Operator") {
+		t.Errorf("expected plugin entries present when filterPlugins is false")
+	}
+}
+
 func TestContainsAsToken(t *testing.T) {
 	tests := []struct {
 		haystack string
