@@ -37,6 +37,62 @@ var mockGeminiResponse = `{
   }
 }`
 
+func TestFilterEmbeddedCorosMap(t *testing.T) {
+	raw := []byte(`{
+		"Native Thing": {"coros_equivalent": "Native Thing", "type": "amp"},
+		"Real Capture": {"coros_equivalent": "Real Capture", "type": "amp", "is_capture": true},
+		"Plini Clean": {"coros_equivalent": "Plini Clean", "type": "amp", "required_plugin": "Plini"}
+	}`)
+
+	unmarshal := func(t *testing.T, s string) map[string]map[string]interface{} {
+		t.Helper()
+		var m map[string]map[string]interface{}
+		if err := json.Unmarshal([]byte(s), &m); err != nil {
+			t.Fatalf("filterEmbeddedCorosMap returned invalid JSON: %v\n%s", err, s)
+		}
+		return m
+	}
+
+	t.Run("no filters", func(t *testing.T) {
+		got := unmarshal(t, filterEmbeddedCorosMap(raw, true, false, nil))
+		for _, name := range []string{"Native Thing", "Real Capture", "Plini Clean"} {
+			if _, ok := got[name]; !ok {
+				t.Errorf("expected %q present with no filters active", name)
+			}
+		}
+	})
+
+	t.Run("factory captures disallowed", func(t *testing.T) {
+		got := unmarshal(t, filterEmbeddedCorosMap(raw, false, false, nil))
+		if _, ok := got["Real Capture"]; ok {
+			t.Errorf("expected is_capture entry dropped when allowFactoryCaptures=false")
+		}
+		if _, ok := got["Native Thing"]; !ok {
+			t.Errorf("expected non-capture entry to survive allowFactoryCaptures=false")
+		}
+		if _, ok := got["Plini Clean"]; !ok {
+			t.Errorf("plugin filter is off; required_plugin entry should not be affected by the capture toggle")
+		}
+	})
+
+	t.Run("plugin not owned", func(t *testing.T) {
+		got := unmarshal(t, filterEmbeddedCorosMap(raw, true, true, map[string]bool{}))
+		if _, ok := got["Plini Clean"]; ok {
+			t.Errorf("expected required_plugin entry dropped when its plugin isn't in allowedPlugins")
+		}
+		if _, ok := got["Native Thing"]; !ok {
+			t.Errorf("expected plain entry with no required_plugin to survive plugin filtering")
+		}
+	})
+
+	t.Run("plugin owned", func(t *testing.T) {
+		got := unmarshal(t, filterEmbeddedCorosMap(raw, true, true, map[string]bool{"Plini": true}))
+		if _, ok := got["Plini Clean"]; !ok {
+			t.Errorf("expected required_plugin entry to survive when its plugin is in allowedPlugins")
+		}
+	})
+}
+
 func TestOrchestrator_RunPipeline_Success(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

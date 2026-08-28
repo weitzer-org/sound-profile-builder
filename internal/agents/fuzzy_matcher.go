@@ -673,18 +673,28 @@ func min(a, b, c int) int {
 	return m
 }
 
-var categorizedAmpsWithCapturesCache string
-var categorizedAmpsWithoutCapturesCache string
+// ampMenuEntry is one amplifier's parsed coros_map.json record, cached once so per-request
+// filtering (factory-capture toggle, plugin ownership) never re-parses the embedded JSON.
+type ampMenuEntry struct {
+	Name           string
+	IsCapture      bool
+	RequiredPlugin string
+}
+
+var ampMenuBuckets map[string][]ampMenuEntry
 var parseAmpsOnce sync.Once
 
 // GetCategorizedAmplifiers reads the embedded JSON and creates a formatted Markdown menu
 // grouping all available distinct amplifier names by their tonal archetype for LLM injection.
-func GetCategorizedAmplifiers(allowFactoryCaptures bool) string {
+// allowFactoryCaptures drops is_capture:true entries; when filterPlugins is true, any entry
+// tagged required_plugin (a plugin archetype's device, e.g. "Plini", "John Mayer") is dropped
+// unless allowedPlugins[requiredPlugin] is set -- mirrors the dictJSON filtering in
+// RunPipeline so the Architect never sees an amp model gated behind a plugin the user
+// doesn't own alongside the ones it can actually route through.
+func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, allowedPlugins map[string]bool) string {
 	parseAmpsOnce.Do(func() {
+		ampMenuBuckets = make(map[string][]ampMenuEntry)
 		var corosData map[string]map[string]interface{}
-		bucketsWithCaptures := make(map[string]map[string]bool)
-		bucketsWithoutCaptures := make(map[string]map[string]bool)
-
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
 			for _, props := range corosData {
 				if t, ok := props["type"].(string); ok && t == "amp" {
@@ -694,43 +704,43 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool) string {
 							arch = "Other / Unique"
 						}
 						isCap, _ := props["is_capture"].(bool)
-
-						if bucketsWithCaptures[arch] == nil {
-							bucketsWithCaptures[arch] = make(map[string]bool)
-						}
-						bucketsWithCaptures[arch][equiv] = true
-
-						if !isCap {
-							if bucketsWithoutCaptures[arch] == nil {
-								bucketsWithoutCaptures[arch] = make(map[string]bool)
-							}
-							bucketsWithoutCaptures[arch][equiv] = true
-						}
+						reqPlugin, _ := props["required_plugin"].(string)
+						ampMenuBuckets[arch] = append(ampMenuBuckets[arch], ampMenuEntry{
+							Name: equiv, IsCapture: isCap, RequiredPlugin: reqPlugin,
+						})
 					}
 				}
 			}
 		}
-
-		buildMenu := func(buckets map[string]map[string]bool) string {
-			var sb strings.Builder
-			sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
-			for archetype, amps := range buckets {
-				sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
-				for amp := range amps {
-					sb.WriteString(fmt.Sprintf("- %s\n", amp))
-				}
-			}
-			return sb.String()
-		}
-
-		categorizedAmpsWithCapturesCache = buildMenu(bucketsWithCaptures)
-		categorizedAmpsWithoutCapturesCache = buildMenu(bucketsWithoutCaptures)
 	})
 
-	if allowFactoryCaptures {
-		return categorizedAmpsWithCapturesCache
+	var sb strings.Builder
+	sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
+	for archetype, amps := range ampMenuBuckets {
+		seen := make(map[string]bool)
+		var names []string
+		for _, a := range amps {
+			if !allowFactoryCaptures && a.IsCapture {
+				continue
+			}
+			if filterPlugins && a.RequiredPlugin != "" && !allowedPlugins[a.RequiredPlugin] {
+				continue
+			}
+			if seen[a.Name] {
+				continue
+			}
+			seen[a.Name] = true
+			names = append(names, a.Name)
+		}
+		if len(names) == 0 {
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
+		for _, name := range names {
+			sb.WriteString(fmt.Sprintf("- %s\n", name))
+		}
 	}
-	return categorizedAmpsWithoutCapturesCache
+	return sb.String()
 }
 
 // isSkippableValue reports whether a value is a structural UI element or an obviously

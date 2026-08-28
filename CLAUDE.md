@@ -51,8 +51,15 @@ set it will cause the next run to needlessly re-research that entry.
   (`coros_equivalent`), whether it's a pre-trained Neural Capture (`is_capture`), and an
   optional `tonal_archetype` (a real descriptive tonal color, consumed by
   `SelectedCaptureContext` in `internal/agents/fuzzy_matcher.go` to help the Architect pick
-  the right relative-dB direction/magnitude on confirmed-capture blocks per Rule 9).
-  `tonal_archetype` coverage is sparse today (~7%) — this is a known, tracked gap (see
+  the right relative-dB direction/magnitude on confirmed-capture blocks per Rule 9). An
+  entry for a device that ships inside a paid Neural DSP Archetype plugin (Plini, Gojira,
+  Cory Wong, John Mayer, ...) also carries `required_plugin` (the short name as it appears
+  in `config.json`'s `available_plugins`) — `Orchestrator.RunPipeline` and
+  `GetCategorizedAmplifiers` (`internal/agents/orchestrator.go`,
+  `internal/agents/fuzzy_matcher.go`) use it to strip that entry out of the Librarian's
+  Dictionary/amp menu entirely when the user doesn't own the plugin, rather than relying
+  on the "AVAILABLE PLUGINS: ..." prompt line alone to discourage it.
+  `tonal_archetype` coverage is sparse today (~51%) — this is a known, tracked gap (see
   TODO.md's Pipeline Quality Work section for the full history), not an oversight to fix
   ad hoc. **Whenever new entries are added to `coros_map.json`** (e.g. after a CorOS/NanOS
   firmware update adds new factory captures), re-run `cmd/enrich_captures` afterward to
