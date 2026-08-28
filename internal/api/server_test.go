@@ -8,8 +8,10 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -85,7 +87,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 	if !strings.Contains(rrOrchGen.Body.String(), "Initializing ADK Pipeline") {
 		t.Errorf("Expected polling button for orch init fail async")
 	}
-	
+
 	// 5. Orchestrator Execution Pipeline Error
 	mockOrch.err = fmt.Errorf("pipeline execution fail") // Caught internally, rendered as grid-matrix
 	reqPipe, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
@@ -119,6 +121,7 @@ func TestServer_HandleGeneratePreset(t *testing.T) {
 }
 
 type badJsonOrchestrator struct{}
+
 func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
@@ -126,6 +129,89 @@ func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset,
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) Close() {}
+
+// mockOrchestratorCapturesConstraints records the constraints map RunPipeline was
+// actually invoked with, over a channel since handleGeneratePreset calls RunPipeline
+// from an internal goroutine (the HTTP response returns a polling placeholder
+// immediately -- see server.go's "go func() { ... orch.RunPipeline(...) ... }()").
+type mockOrchestratorCapturesConstraints struct {
+	constraintsCh chan map[string]interface{}
+}
+
+func (m *mockOrchestratorCapturesConstraints) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
+	m.constraintsCh <- constraints
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorCapturesConstraints) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *agents.TokenUsage, error) {
+	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
+}
+func (m *mockOrchestratorCapturesConstraints) Close() {}
+
+// TestServer_HandleGeneratePreset_ForwardsAvailablePluginsFromConfig is the API-level
+// proof that owning the John Mayer plugin actually reaches the pipeline through the real
+// HTTP surface, not just internal Go call graphs: it POSTs to /api/preset/generate
+// through s.mux (the full middleware chain -- auth, CSRF, rate limiting, form parsing --
+// exactly as a real browser request would hit it), backed by a config.AppConfig shaped
+// exactly like the real config.json (AllowPaidPlugins: true, AvailablePlugins: ["Cory
+// Wong", "John Mayer"]), and asserts the constraints map handleGeneratePreset built from
+// that config and handed to RunPipeline actually carries "John Mayer" in
+// available_plugins. Complements (does not replace) the deeper
+// TestOrchestrator_RunPipeline_JohnMayerPluginAvailable pipeline-level test, which picks
+// up from a hand-built constraints map and proves it reaches the outgoing LLM request --
+// this test proves the HTTP layer actually builds that map correctly from config in the
+// first place, closing the last link in the chain from config.json to the LLM request.
+func TestServer_HandleGeneratePreset_ForwardsAvailablePluginsFromConfig(t *testing.T) {
+	client := newMockClient()
+	store := storage.NewPresetStore(client, "test-bucket")
+	sf := &mockSecretFetcher{}
+	mockOrch := &mockOrchestratorCapturesConstraints{constraintsCh: make(chan map[string]interface{}, 1)}
+	orchMaker := func(ctx context.Context, key string) (agents.OrchestratorService, error) {
+		return mockOrch, nil
+	}
+	appConfig := &config.AppConfig{
+		SingleAmpMode:        true,
+		AllowFactoryCaptures: true,
+		AllowUserCaptures:    true,
+		AllowPaidPlugins:     true,
+		AvailablePlugins:     []string{"Cory Wong", "John Mayer"},
+	}
+	s := NewServer(store, nil, client, sf, orchMaker, appConfig)
+
+	formData := url.Values{}
+	formData.Set("prompt", "Warm blues tone")
+	req, _ := http.NewRequest(http.MethodPost, "/api/preset/generate", strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	withAuthAndCSRF(req)
+
+	rr := httptest.NewRecorder()
+	s.mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK from POST /api/preset/generate, got %d: %s", rr.Code, rr.Body.String())
+	}
+
+	select {
+	case constraints := <-mockOrch.constraintsCh:
+		got, ok := constraints["available_plugins"].([]string)
+		if !ok {
+			t.Fatalf("expected available_plugins to be a []string in constraints, got %T: %v", constraints["available_plugins"], constraints["available_plugins"])
+		}
+		found := false
+		for _, p := range got {
+			if p == "John Mayer" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("expected the real HTTP API request to forward config.json's John Mayer plugin ownership into RunPipeline's constraints, got available_plugins=%v", got)
+		}
+		if allowPaid, _ := constraints["allow_paid_plugins"].(bool); !allowPaid {
+			t.Errorf("expected allow_paid_plugins=true to reach RunPipeline")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for the async generate handler to invoke RunPipeline")
+	}
+}
 
 func TestServer_HandleTaskStatus(t *testing.T) {
 	s, _, _, _ := setupTestServer()
