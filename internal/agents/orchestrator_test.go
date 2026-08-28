@@ -127,6 +127,79 @@ func TestOrchestrator_RunPipeline_Success(t *testing.T) {
 	}
 }
 
+// TestOrchestrator_RunPipeline_JohnMayerPluginAvailable is the real end-to-end proof that
+// owning the "John Mayer" plugin (config.json's available_plugins, exactly as server.go
+// forwards it into RunPipeline's constraints) actually reaches the outgoing LLM request --
+// not just that the filtering helpers return the right thing in isolation, but that the
+// full RunPipeline call graph wires ownership through to what the CorOS Librarian agent
+// (internal/agents/prompts/4_coros_librarian_v2.md) is told it may pick from. Also proves
+// the negative: a plugin NOT in available_plugins (Gojira/Plini here, standing in for
+// every plugin the user hasn't purchased) never reaches that request at all, which is the
+// actual bug this was written to catch -- prior to the required_plugin gating, every
+// plugin's devices were present regardless of ownership.
+//
+// A browser/Playwright e2e run can't observe this: the dashboard has no UI that renders
+// available_plugins (only the blanket "Allow Paid Plugins" checkbox), and ?mock=true
+// short-circuits RunPipeline before it ever builds the Dictionary or calls Gemini. This is
+// the meaningful "prove it reaches production behavior" test for this feature.
+func TestOrchestrator_RunPipeline_JohnMayerPluginAvailable(t *testing.T) {
+	var mu sync.Mutex
+	var requestBodies []string
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		requestBodies = append(requestBodies, string(body))
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockGeminiResponse))
+	}))
+	defer mockServer.Close()
+
+	ctx := context.Background()
+	orch, err := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(mockServer.URL), WithHTTPClient(mockServer.Client()))
+	if err != nil {
+		t.Fatalf("Failed to init orchestrator: %v", err)
+	}
+	defer orch.Close()
+
+	// Mirrors exactly what internal/api/server.go builds from config.json for a real
+	// generate request (see the "constraints := map[string]interface{}{...}" block around
+	// server.go:230), not a synthetic minimal set -- allow_paid_plugins: true and
+	// available_plugins holding the two plugins actually owned today.
+	constraints := map[string]interface{}{
+		"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
+		"single_amp_mode":        true,
+		"allow_cloud_captures":   false,
+		"allow_factory_captures": true,
+		"allow_user_captures":    true,
+		"favor_captures":         false,
+		"favor_cloud_captures":   false,
+		"allow_paid_plugins":     true,
+		"available_plugins":      []string{"Cory Wong", "John Mayer"},
+	}
+
+	if _, _, err := orch.RunPipeline(ctx, "test prompt", constraints, nil, nil); err != nil {
+		t.Fatalf("Expected pipeline to succeed, got %v", err)
+	}
+
+	mu.Lock()
+	combined := strings.Join(requestBodies, "\n---\n")
+	mu.Unlock()
+
+	// Positive: an owned plugin's device must reach the Dictionary text sent to the LLM.
+	if !strings.Contains(combined, "John Mayer Smooth Operator") {
+		t.Errorf("expected an owned John Mayer plugin device in the outgoing request(s), got none. Bodies:\n%s", combined)
+	}
+
+	// Negative: a device belonging to a plugin NOT in available_plugins must never appear.
+	for _, unowned := range []string{"Gojira CLN", "Plini Clean", "Nolly Clean"} {
+		if strings.Contains(combined, unowned) {
+			t.Errorf("expected unowned plugin device %q to be filtered out of every outgoing request, but it was present", unowned)
+		}
+	}
+}
+
 func TestOrchestrator_RefineChat_Success(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
