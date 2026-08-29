@@ -240,12 +240,19 @@ review comment.
 
 **Standing corollaries** — these have each burned a real session:
 
-- **Always `--paginate`.** Any list from a paged API (`gh api`, S3 `ListObjects`,
-  GitHub REST) is incomplete until proven otherwise. Never conclude "there are
-  no new comments/findings/objects" from an unpaginated call.
-- **Never quote a value from `.env`, `.env.example`, or docs without checking
-  it isn't a placeholder.** `https://<account-id>.r2.cloudflarestorage.com` is
-  not an endpoint.
+- **Exhaust every page.** Any list from a paged API is incomplete until proven
+  otherwise — never conclude "there are no new comments/findings/objects" from
+  a single call. The mechanism differs per client, so check which one you are
+  using rather than assuming a flag applies: `gh api` needs an explicit
+  `--paginate` (its default page size of 30 is what hid 12 real comments);
+  the AWS CLI's `s3api` list operations paginate automatically unless you pass
+  `--no-paginate`; an SDK `ListObjectsV2` needs its own continuation-token loop.
+- **Check a value from `.env`, `.env.example`, or docs before relying on it —
+  and never paste the raw value anywhere.** A placeholder like
+  `https://<account-id>.r2.cloudflarestorage.com` is not an endpoint; but a
+  value that *isn't* a placeholder is usually a live secret. Report the derived
+  fact ("the endpoint is real, not the template") or a masked form — never the
+  value itself, in a message, commit, log, or PR comment.
 - **Measurements must be apples-to-apples.** If numbers are compared across
   runs, confirm identical denominators and identical inclusion criteria before
   reporting a delta. Summing over per-run success sets of different sizes is
@@ -295,7 +302,11 @@ goes past its second review round, keep a scratch ledger (e.g.
 re-triaging anything. Two rules:
 
 - A finding already declined **with posted rationale** gets a pointer back to
-  that rationale, not a fresh analysis.
+  that rationale, not a fresh analysis — but only while the code that rationale
+  rested on is unchanged. If a later commit touched that behavior, the old
+  verdict is stale and the finding must be verified again rather than
+  auto-declined; a ledger that suppresses a real regression is worse than no
+  ledger.
 - A genuinely new finding gets verified against the current code before it is
   believed — bot reviewers re-anchor line numbers on old comment IDs, so a
   changed line number is not evidence of a new finding.
