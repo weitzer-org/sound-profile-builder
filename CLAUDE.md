@@ -209,6 +209,97 @@ beyond href/src) that only surfaced once GitHub's automated reviewers
   `security-critical` findings before merging regardless of what level of
   `/code-review` already ran.
 
+## Verification discipline (read before asserting anything)
+
+Nearly every significant error in this project's history has the same shape:
+**a confident claim about a system outside the repo, used as a load-bearing
+premise, never actually checked.** The reasoning was fine; the input was
+invented. Real cases: an Apify "150-result-per-run minimum" that does not
+exist; `parseFloat("0..7")` claimed to return `NaN` (it returns `0`) and
+posted as a PR review comment; `gh api .../comments` treated as complete when
+the default page size of 30 hid 12 real comments; `process.env = X` in tests
+dismissed as a false positive across several review rounds when it was a real
+bug; `location == "United States"` read as implying remote; two Cloudflare
+accounts declared different because a real value was compared against a
+**placeholder** in `.env`.
+
+**The rule.** Before a claim about anything outside this repo becomes
+load-bearing — third-party pricing or billing mechanics, an API's pagination
+or rate limits, language/runtime/library semantics, what a log line proves,
+what an env var actually resolves to, what another service can reach on the
+network — either:
+
+1. **Run something that demonstrates it** and quote the output, or
+2. **Label it explicitly as an unverified assumption** in the same sentence,
+   so it is visible when the conclusion is judged.
+
+Never silently pick option 3 (assert it and move on). A one-line command beats
+a paragraph of plausible inference, and costs a second:
+`node -e 'console.log(parseFloat("0..7"))'` would have prevented a wrong
+review comment.
+
+**Standing corollaries** — these have each burned a real session:
+
+- **Always `--paginate`.** Any list from a paged API (`gh api`, S3 `ListObjects`,
+  GitHub REST) is incomplete until proven otherwise. Never conclude "there are
+  no new comments/findings/objects" from an unpaginated call.
+- **Never quote a value from `.env`, `.env.example`, or docs without checking
+  it isn't a placeholder.** `https://<account-id>.r2.cloudflarestorage.com` is
+  not an endpoint.
+- **Measurements must be apples-to-apples.** If numbers are compared across
+  runs, confirm identical denominators and identical inclusion criteria before
+  reporting a delta. Summing over per-run success sets of different sizes is
+  not a baseline.
+- **Say what a test run actually establishes.** "Tests pass" is not "this is
+  proven correct." Name the suite that ran and what it does not cover.
+- **Before dismissing a review finding as a false positive, reproduce the
+  claim.** Write the three-line script. This is the single highest-value place
+  to spend ten seconds — a wrong dismissal gets posted publicly and stands.
+
+## Escalating to another model
+
+**Sonnet 5 is the main build model.** Escalation is by *trigger*, not by
+consulting a phase table mid-task — a table nobody opens never fires.
+
+Call `Agent` with `subagent_type: "opus-verifier"` (model pinned to Opus in
+`~/.claude/agents/opus-verifier.md`) when **any** of these is true:
+
+- A plan, diagnosis, or cost estimate rests on a premise about an external
+  system you have **not executed**.
+- You are comparing measurements across runs and the conclusion depends on the
+  comparison being valid.
+- You are about to **dismiss a review finding as a false positive**, or to
+  post a rebuttal to a bot reviewer.
+- You are about to make an **irreversible or expensive** change: a schema or
+  data migration, anything touching auth or secrets, or a change that spends
+  real API money.
+- The user asks for "an opus subagent" in any phrasing. (A `UserPromptSubmit`
+  hook injects a reminder, but do not rely on it.)
+
+Use `subagent_type: "fable-reviewer"` for simplification and "is there a
+fundamentally easier way" questions, and whenever the user asks for Fable.
+
+Both agent definitions pin their own model. If you spawn a plain `Agent`
+instead, you **must** pass `model: "opus"` / `model: "fable"` explicitly — a
+bare `Agent` call silently inherits Sonnet, which defeats the entire point.
+Hand the subagent full context; it starts cold. Report where it disagreed with
+you, not just its conclusion.
+
+## Review-round triage ledger
+
+Bot-review rounds are where misinterpretation concentrates, and PRs here have
+run **six rounds** with real findings buried among stale re-posts. When a PR
+goes past its second review round, keep a scratch ledger (e.g.
+`/tmp/pr-<n>-triage.md`, not committed) with one row per finding ID:
+`id | verdict (fixed / declined / duplicate) | the evidence`. Consult it before
+re-triaging anything. Two rules:
+
+- A finding already declined **with posted rationale** gets a pointer back to
+  that rationale, not a fresh analysis.
+- A genuinely new finding gets verified against the current code before it is
+  believed — bot reviewers re-anchor line numbers on old comment IDs, so a
+  changed line number is not evidence of a new finding.
+
 ## Deployment
 - **Fly.io** (chosen runtime): `fly.toml`; secrets via `fly secrets`; storage =
   Cloudflare R2 (S3 backend). Scales to zero.
