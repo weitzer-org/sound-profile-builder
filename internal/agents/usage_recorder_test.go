@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"sync"
 	"testing"
@@ -151,12 +153,12 @@ func TestUsageObjectKey_Format(t *testing.T) {
 }
 
 func TestRecordUsage_NilStorage_NoPanic(t *testing.T) {
-	recordUsage(context.Background(), nil, "bucket", UsageRecord{CallType: "Test"})
+	recordUsage(context.Background(), nil, "bucket", nil, UsageRecord{CallType: "Test"})
 }
 
 func TestRecordUsage_EmptyBucket_NoOp(t *testing.T) {
 	fake := newFakeStorageClient()
-	recordUsage(context.Background(), fake, "", UsageRecord{CallType: "Test"})
+	recordUsage(context.Background(), fake, "", nil, UsageRecord{CallType: "Test"})
 	if fake.count() != 0 {
 		t.Errorf("expected no write when bucket is empty, got %d objects", fake.count())
 	}
@@ -164,7 +166,7 @@ func TestRecordUsage_EmptyBucket_NoOp(t *testing.T) {
 
 func TestRecordUsage_WritesRecord(t *testing.T) {
 	fake := newFakeStorageClient()
-	recordUsage(context.Background(), fake, "test-bucket", UsageRecord{
+	recordUsage(context.Background(), fake, "test-bucket", nil, UsageRecord{
 		Provider: "gemini", CallType: "Tone Historian", Model: "gemini-3.1-pro-preview",
 		InputTokens: 100, OutputTokens: 20, LatencyMS: 500, Success: true,
 	})
@@ -183,9 +185,35 @@ func TestRecordUsage_WritesRecord(t *testing.T) {
 func TestRecordUsage_WriteFailure_DoesNotPanic(t *testing.T) {
 	fake := newFakeStorageClient()
 	fake.writeErr = errors.New("network down")
-	recordUsage(context.Background(), fake, "test-bucket", UsageRecord{CallType: "Test", Success: true})
+	recordUsage(context.Background(), fake, "test-bucket", nil, UsageRecord{CallType: "Test", Success: true})
 	if fake.count() != 0 {
 		t.Errorf("expected no object written on failure, got %d", fake.count())
+	}
+}
+
+func TestRecordAttemptUsage_ReturnsImmediatelyEvenWithASlowReporterAttached(t *testing.T) {
+	block := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-block // never unblocks during this test
+	}))
+	defer func() {
+		close(block)
+		srv.Close()
+	}()
+
+	fake := newFakeStorageClient()
+	o := &Orchestrator{gcs: fake, UsageBucket: "test-bucket", Reporter: NewUsageReporter(srv.URL, "test-shared-secret", "weitzer-org/sound-profile-builder")}
+
+	done := make(chan struct{})
+	go func() {
+		recordAttemptUsage(context.Background(), o, "Tone Historian", "gemini-3.1-pro-preview", 500, nil, errors.New("429 rate limited"))
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(1 * time.Second):
+		t.Fatal("recordAttemptUsage blocked on a slow attached Reporter instead of returning immediately")
 	}
 }
 

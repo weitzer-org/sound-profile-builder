@@ -100,6 +100,22 @@ func main() {
 
 	store := storage.NewPresetStore(storeClient, bucket)
 	memoryStore := storage.NewMemoryStore(storeClient, bucket)
+
+	// GSR_USAGE_INGEST_URL/GSR_USAGE_INGEST_KEY report this project's own
+	// native Gemini usage to GSR's hosted usage dashboard -- opt-in exactly
+	// like GSR's own EVALUATOR_SHARED_SECRET convention: absent means
+	// silently disabled, not a startup error, since this is a supplementary
+	// analytics side-channel, not a primary feature. One Reporter per
+	// process, shared by every Orchestrator orchMaker builds, the same way
+	// storeClient is shared -- constructing one per request would defeat its
+	// bounded worker pool.
+	var usageReporter *agents.UsageReporter
+	if ingestURL := os.Getenv("GSR_USAGE_INGEST_URL"); ingestURL != "" {
+		if ingestKey := os.Getenv("GSR_USAGE_INGEST_KEY"); ingestKey != "" {
+			usageReporter = agents.NewUsageReporter(ingestURL, ingestKey, "weitzer-org/sound-profile-builder")
+		}
+	}
+
 	orchMaker := func(ic context.Context, key string) (agents.OrchestratorService, error) {
 		orch, err := agents.NewOrchestrator(ic, key, storeClient)
 		if err != nil {
@@ -111,6 +127,7 @@ func main() {
 		// which construct an Orchestrator with gcs=nil anyway and have no
 		// durability requirement for this data.
 		orch.UsageBucket = bucket
+		orch.Reporter = usageReporter
 		return orch, nil
 	}
 

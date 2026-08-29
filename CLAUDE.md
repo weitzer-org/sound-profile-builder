@@ -104,7 +104,11 @@ query recipes (`cmd/usage_report`, or raw `jq`-over-S3/GCS) — read that
 before answering any "what's our token spend/error rate" question instead of
 re-deriving the storage layout. `usage_recorder.go`'s `geminiPriceTable`
 mirrors `job_tracker`'s `internal/scoring/pricing.go` — keep both in sync
-when Gemini prices change.
+when Gemini prices change. `internal/agents/usage_reporter.go`'s
+`UsageReporter` also optionally pushes this same data to the GSR
+code-review project's hosted usage dashboard (`GSR_USAGE_INGEST_URL`/
+`GSR_USAGE_INGEST_KEY`, see `.env.example`) — opt-in, non-blocking, filtered
+to `provider=="gemini"` only.
 
 ## Secrets & auth
 Setting `MOCK_PASSWORD` uses a local secret fetcher (skips GCP Secret Manager)

@@ -232,6 +232,14 @@ type Orchestrator struct {
 	// both gcs and an empty bucket means those tools simply never record,
 	// with no signature change required on their end.
 	UsageBucket string
+
+	// Reporter, when set, also pushes each recorded UsageRecord to GSR's
+	// hosted usage dashboard (see usage_reporter.go) — nil by default,
+	// meaning reporting is opt-in exactly like GSR's own
+	// EVALUATOR_SHARED_SECRET convention: absent means silently disabled,
+	// not an error. UsageReporter.Report is itself nil-safe, so recordUsage
+	// never needs to nil-check this field.
+	Reporter *UsageReporter
 }
 
 // setLastArchitectJSON writes the lastArchitectJSON side-channel under lastArchitectJSONMu.
@@ -871,7 +879,7 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		content, promptTokens, completionTokens, err := o.openLLMClient.Generate(ctx1, systemPrompt, userPrompt, actualModelName)
 		openLLMLatencyMs := time.Since(openLLMStart).Milliseconds()
 		if err != nil {
-			recordUsage(ctx, o.gcs, o.UsageBucket, UsageRecord{
+			recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, UsageRecord{
 				Provider: "openllm", CallType: agentRole, Model: actualModelName,
 				LatencyMS: openLLMLatencyMs, Success: false, ErrorKind: classifyError(err),
 			})
@@ -895,7 +903,7 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 				return "", fmt.Errorf("[%s] Open-LLM failure: %w", agentRole, err)
 			}
 		} else {
-			recordUsage(ctx, o.gcs, o.UsageBucket, UsageRecord{
+			recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, UsageRecord{
 				Provider: "openllm", CallType: agentRole, Model: actualModelName,
 				InputTokens: promptTokens, OutputTokens: completionTokens,
 				LatencyMS: openLLMLatencyMs, Success: true,

@@ -55,6 +55,35 @@ their own real latency.
 - The `countTokens`-style pre-flight calls other sibling projects might have
   don't apply here; this repo has none in the agent path.
 
+### Also reported to GSR's hosted usage dashboard
+
+Beyond writing to this project's own bucket (below), every recorded
+`UsageRecord` is also, optionally, pushed to the GSR code-review project's
+own hosted usage dashboard (`internal/agents/usage_reporter.go`'s
+`UsageReporter`, wired into `Orchestrator.Reporter` in `cmd/server/main.go`)
+— so this project's native Gemini usage shows up there too, tagged
+`repository: "weitzer-org/sound-profile-builder"` (the real GitHub slug,
+**not** this repo's Go module path, `github.com/weitzer-org/sound-builder`)
+and classified under GSR's `"product"` workload (distinct from the
+`"review"` usage GSR's own GitHub Action already reports when it reviews a
+PR here — see that project's `usage_analytics_reference.md`).
+
+- **Opt-in, not automatic**: only active when both `GSR_USAGE_INGEST_URL`
+  and `GSR_USAGE_INGEST_KEY` are set (see `.env.example`) — absent means
+  silently disabled, the same convention GSR itself uses for its own
+  optional secrets. Neither is set by default, even in production.
+- **`"openllm"`-provider records are filtered out before ever reaching
+  GSR** — GSR's ingest endpoint only accepts `provider == "gemini"`.
+- **Best-effort and non-blocking**: reports go through a small bounded
+  worker pool (a fixed number of goroutines draining a bounded channel),
+  never the agent-pipeline request path itself. A report still queued when
+  the process exits (deploy, restart) is lost — an accepted tradeoff for a
+  side-channel that must never slow down or fail a real pipeline request.
+- This project's own bucket (below) remains the authoritative source for
+  its own usage — the GSR dashboard is a convenience aggregate view across
+  GSR, `tools/eval`, job_tracker, and this project, not a replacement for
+  `cmd/usage_report` against this project's own data.
+
 ## Where the data lives
 
 ```

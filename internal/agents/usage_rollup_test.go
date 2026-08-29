@@ -52,8 +52,8 @@ func TestListUsageRecords_AggregateRoundTrip(t *testing.T) {
 	fake := newFakeStorageClient()
 	ctx := context.Background()
 
-	recordUsage(ctx, fake, "test-bucket", UsageRecord{CallType: "Tone Historian", Provider: "gemini", Model: "x", Success: true})
-	recordUsage(ctx, fake, "test-bucket", UsageRecord{CallType: "Tone Historian", Provider: "gemini", Model: "x", Success: false, ErrorKind: "timeout"})
+	recordUsage(ctx, fake, "test-bucket", nil, UsageRecord{CallType: "Tone Historian", Provider: "gemini", Model: "x", Success: true})
+	recordUsage(ctx, fake, "test-bucket", nil, UsageRecord{CallType: "Tone Historian", Provider: "gemini", Model: "x", Success: false, ErrorKind: "timeout"})
 
 	// Both records land under today's date, whatever that is when the test
 	// runs, so discover it via ListFiles under the usage/ root instead of
