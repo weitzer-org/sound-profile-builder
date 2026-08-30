@@ -89,6 +89,8 @@ func classifyError(err error) string {
 		return "timeout"
 	case strings.Contains(msg, "unavailable") || strings.Contains(msg, "internal error") || strings.Contains(msg, "server error"):
 		return "unavailable"
+	case strings.Contains(msg, "maxoutputtokens"):
+		return "max_tokens_truncated"
 	default:
 		return "api_error"
 	}
@@ -109,10 +111,11 @@ func usageObjectKey(t time.Time) string {
 
 // recordAttemptUsage builds and persists a UsageRecord for one real Gemini
 // attempt inside RunAgentSplit's fallback-chain retry loop — success (resp
-// non-nil, err nil) or failure (resp nil, err non-nil). A small helper
-// rather than inlining at each of RunAgentSplit's three call sites (primary
-// attempt, degraded-retry attempt, final failure) to keep the token/cost
-// extraction logic in one place.
+// non-nil, err nil), a hard failure (resp nil, err non-nil), or a truncated
+// response now treated as a retryable failure (resp AND err both non-nil --
+// the call completed and burned real tokens, it just isn't a usable result).
+// A small helper rather than inlining at each of RunAgentSplit's call sites
+// to keep the token/cost extraction logic in one place.
 func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model string, latencyMs int64, resp *genai.GenerateContentResponse, err error) {
 	rec := UsageRecord{
 		Provider:  "gemini",
@@ -123,7 +126,11 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 	}
 	if err != nil {
 		rec.ErrorKind = classifyError(err)
-	} else if resp != nil && resp.UsageMetadata != nil {
+	}
+	// Tokens/cost are real whenever the API actually returned a response, even
+	// a truncated one being treated as a failure above -- a burned 8000-token
+	// runaway generation must show up as spend, not silently zero out.
+	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
