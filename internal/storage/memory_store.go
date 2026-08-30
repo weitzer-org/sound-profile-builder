@@ -177,6 +177,24 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 		}
 	}
 
+	// A fully-resolved empty result (no .json objects under the prefix) must
+	// still be cached as a non-nil, zero-length slice: s.cache == nil is this
+	// store's "not yet loaded" sentinel (see the fast paths above), so leaving
+	// memories == nil here would make every later List() treat a genuinely
+	// empty store as still uncached and pay the full ListFiles+GetObject cost
+	// on every single call forever.
+	if memories == nil {
+		memories = make([]*Memory, 0)
+	}
+
+	// Clone before publishing to s.cache below: once s.cache = memories runs,
+	// memories and s.cache alias the same backing array, so reading memories
+	// again afterward (e.g. for this call's own return value) would race
+	// against a concurrent Save/Delete mutating that array through s.cache.
+	// Cloning it now, while it's still a purely local, unaliased value, avoids
+	// that regardless of whether this call ends up winning the publish below.
+	res := cloneMemories(memories)
+
 	// Only cache a load that fetched every object cleanly. A transient failure
 	// on a single GetObject (network blip, eventual-consistency gap right after
 	// a write) would otherwise get cached as if it were the true state and keep
@@ -197,7 +215,7 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 		}
 		s.mu.Unlock()
 	}
-	return cloneMemories(memories), nil
+	return res, nil
 }
 
 // Delete removes a memory rule from storage

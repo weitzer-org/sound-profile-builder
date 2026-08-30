@@ -327,3 +327,37 @@ func TestMemoryStore_List_ConcurrentSaveDuringColdLoadIsNotPermanentlyLost(t *te
 		t.Errorf("expected the memory saved during the in-flight cold load to be visible on a later List() (got %d memories, none matching id %s) -- the stale pre-Save snapshot was cached instead of being discarded", len(memories), m.ID)
 	}
 }
+
+// TestMemoryStore_List_CachesEmptyResult guards a store with zero memories
+// (a fresh install, or every rule deleted): the loop that builds `memories`
+// never appends anything in this case, so it stays nil, and s.cache == nil is
+// this store's "not yet loaded" sentinel -- without normalizing to a non-nil
+// empty slice before publishing, a genuinely empty store would look
+// indistinguishable from an unloaded one and pay the full ListFiles round
+// trip on every single List() call forever, never actually caching.
+// mockCacheStorageClient is defined in preset_store_test.go (same package).
+func TestMemoryStore_List_CachesEmptyResult(t *testing.T) {
+	ctx := context.Background()
+	mockClient := &mockCacheStorageClient{
+		mockStorageClient: newMockStorageClient(),
+	}
+	store := NewMemoryStore(mockClient, "test-bucket")
+
+	memories, err := store.List(ctx)
+	if err != nil {
+		t.Fatalf("first List: %v", err)
+	}
+	if len(memories) != 0 {
+		t.Fatalf("expected 0 memories, got %d", len(memories))
+	}
+	if mockClient.listCalls != 1 {
+		t.Fatalf("expected 1 ListFiles call after the first List(), got %d", mockClient.listCalls)
+	}
+
+	if _, err := store.List(ctx); err != nil {
+		t.Fatalf("second List: %v", err)
+	}
+	if mockClient.listCalls != 1 {
+		t.Errorf("expected the empty result to have been cached -- still 1 ListFiles call after a second List(), got %d", mockClient.listCalls)
+	}
+}
