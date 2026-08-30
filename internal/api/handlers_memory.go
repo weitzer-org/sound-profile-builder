@@ -13,7 +13,13 @@ import (
 // handleGetMemories returns HTML fragments for the Memory Rules tab
 func (s *Server) handleGetMemories() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 500*time.Millisecond)
+		// MemoryStore.List is now cached (see internal/storage/memory_store.go), so
+		// this deadline is only ever paid on a cold-start first load: a ListFiles
+		// call plus one sequential GetObject per memory, measured at ~1.3s for 5
+		// memories against R2 -- 500ms reliably lost that race and made every
+		// post-deploy dashboard load show "Failed to load rules" until some other
+		// request happened to prime the cache first.
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 		memories, err := s.memoryStore.List(ctx)
 		if err != nil {

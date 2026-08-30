@@ -957,6 +957,29 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		attemptLatencyMs := time.Since(attemptStart).Milliseconds()
 		cancel1()
 
+		// A response cut off by the MaxOutputTokens cap (agentMaxOutputTokens) is
+		// truncated, invalid JSON -- observed live going from a normal ~230-token
+		// Acoustician output to 6785 tokens (near the 8000 cap) on an
+		// otherwise-unremarkable prompt, a degenerate/runaway generation rather
+		// than evidence the cap is too low (see agentMaxOutputTokens's package
+		// comment). err == nil here, so treating this as success would hand the
+		// caller unusable JSON with no signal why; treat it as a failed attempt
+		// instead and fall through to the next candidate in the chain, the same
+		// as a real API error -- the immediately-preceding successful run of this
+		// exact agent/model pairing shows a retry has a real chance of recovering.
+		// resp is guaranteed non-nil whenever err == nil in this SDK (it's allocated
+		// unconditionally before any success return; every error path returns nil,
+		// err instead) -- verified against google.golang.org/genai's generateContent.
+		// The resp != nil guard here is defensive anyway: cheap, and it stops this
+		// from becoming a nil-dereference panic if that invariant ever changes.
+		if err == nil && resp != nil && len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason == genai.FinishReasonMaxTokens {
+			truncErr := fmt.Errorf("[%s] response truncated at the MaxOutputTokens limit (model %s) -- output is incomplete/invalid JSON, not a usable result", agentRole, mName)
+			recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, truncErr)
+			log.Printf("[%s] Model %s hit MaxOutputTokens (degenerate/runaway generation): %v. Retrying next fallback...", agentRole, mName, truncErr)
+			lastErr = truncErr
+			continue
+		}
+
 		if err == nil {
 			finalModelName = mName
 			recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, nil)
@@ -970,6 +993,10 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		// ungrounded) response instead of burning the rest of the fallback chain on a
 		// deterministic error every one of those calls would repeat.
 		if len(genConfig.Tools) > 0 && strings.Contains(strings.ToLower(err.Error()), "tool use with a response mime type") {
+			// Record the original grounded failure before resp/err/attemptLatencyMs
+			// below get overwritten by the degraded retry -- otherwise this attempt
+			// (a real, billed API call) never reaches usage accounting at all.
+			recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, nil, err)
 			log.Printf("[%s] Model %s rejects Tools+JSON mime type; retrying same model without grounding...", agentRole, mName)
 			degradedConfig := *genConfig
 			degradedConfig.Tools = nil
@@ -978,6 +1005,13 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 			resp, err = o.client.Models.GenerateContent(ctx2, mName, contents, &degradedConfig)
 			attemptLatencyMs = time.Since(degradedStart).Milliseconds() // overwrite: this attempt's real latency, not the original grounded one
 			cancel2()
+			if err == nil && resp != nil && len(resp.Candidates) > 0 && resp.Candidates[0].FinishReason == genai.FinishReasonMaxTokens {
+				truncErr := fmt.Errorf("[%s] response truncated at the MaxOutputTokens limit (model %s) -- output is incomplete/invalid JSON, not a usable result", agentRole, mName)
+				recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, truncErr)
+				log.Printf("[%s] Model %s hit MaxOutputTokens (degenerate/runaway generation): %v. Retrying next fallback...", agentRole, mName, truncErr)
+				lastErr = truncErr
+				continue
+			}
 			if err == nil {
 				finalModelName = mName
 				recordAttemptUsage(ctx, o, agentRole, mName, attemptLatencyMs, resp, nil)
@@ -999,15 +1033,10 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		return "", fmt.Errorf("[%s] No response candidates from LLM", agentRole)
 	}
 
-	// A response cut off by the MaxOutputTokens cap (agentMaxOutputTokens) is truncated,
-	// invalid JSON -- silently returning resp.Text() here would hand the caller a
-	// still-succeeds-looking string that fails to parse somewhere downstream with no signal
-	// of why. Fail loudly instead: this is exactly the failure mode the cap exists to bound
-	// (a runaway generation), so hitting it is itself the signal something is wrong with
-	// this particular response, not proof the cap was set too low.
-	if resp.Candidates[0].FinishReason == genai.FinishReasonMaxTokens {
-		return "", fmt.Errorf("[%s] Response truncated at the MaxOutputTokens limit (model %s) -- output is incomplete/invalid JSON, not a usable result", agentRole, finalModelName)
-	}
+	// A MaxOutputTokens-truncated response is now caught and retried inside the
+	// fallback loop above (see the FinishReasonMaxTokens checks there) instead of
+	// here -- by this point resp is guaranteed to not be one, since the loop only
+	// sets finalModelName on a non-truncated success.
 
 	// Safely extract and accumulate generated API metrics natively
 	if resp.UsageMetadata != nil {
