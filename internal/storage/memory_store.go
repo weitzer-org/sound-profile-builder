@@ -40,6 +40,20 @@ func NewMemoryStore(client Client, bucket string) *MemoryStore {
 	}
 }
 
+// cloneMemories returns an independent copy of ms, both the slice and each Memory
+// it points to. s.cache must never be handed out directly: the RWMutex only
+// guards the read of the s.cache field itself, and once a slice/pointer escapes
+// past RUnlock a concurrent Save/Delete mutating that same backing array (or the
+// pointed-to Memory) races with a caller still reading it.
+func cloneMemories(ms []*Memory) []*Memory {
+	out := make([]*Memory, len(ms))
+	for i, m := range ms {
+		clone := *m
+		out[i] = &clone
+	}
+	return out
+}
+
 // Save creates or updates a memory rule
 func (s *MemoryStore) Save(ctx context.Context, m *Memory) error {
 	if m.ID == "" {
@@ -64,16 +78,20 @@ func (s *MemoryStore) Save(ctx context.Context, m *Memory) error {
 	defer s.mu.Unlock()
 
 	if s.cache != nil {
+		// Store our own copy, not the caller's pointer -- m is caller-owned and
+		// mutating it after Save returns must not silently corrupt the cache
+		// (see cloneMemories).
+		cached := *m
 		found := false
-		for i, cached := range s.cache {
-			if cached.ID == m.ID {
-				s.cache[i] = m
+		for i, existing := range s.cache {
+			if existing.ID == m.ID {
+				s.cache[i] = &cached
 				found = true
 				break
 			}
 		}
 		if !found {
-			s.cache = append(s.cache, m)
+			s.cache = append(s.cache, &cached)
 		}
 	}
 
@@ -103,7 +121,7 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	s.mu.RLock()
 	if s.cache != nil {
 		defer s.mu.RUnlock()
-		return s.cache, nil
+		return cloneMemories(s.cache), nil
 	}
 	s.mu.RUnlock()
 
@@ -112,7 +130,7 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 
 	// Check again after acquiring write lock
 	if s.cache != nil {
-		return s.cache, nil
+		return cloneMemories(s.cache), nil
 	}
 
 	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
@@ -121,21 +139,34 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	}
 
 	var memories []*Memory
+	complete := true // every object under the prefix loaded and parsed cleanly
 	for _, f := range files {
 		if strings.HasSuffix(f, ".json") {
 			data, err := s.client.ReadFile(ctx, s.bucket, f)
 			if err != nil {
+				complete = false
 				continue
 			}
 			var m Memory
 			if err := json.Unmarshal(data, &m); err == nil {
 				memories = append(memories, &m)
+			} else {
+				complete = false
 			}
 		}
 	}
 
-	s.cache = memories
-	return memories, nil
+	// Only cache a load that fetched every object cleanly. A transient failure
+	// on a single GetObject (network blip, eventual-consistency gap right after
+	// a write) would otherwise get cached as if it were the true state and keep
+	// serving that same incomplete list from every subsequent request until the
+	// process restarts, even after storage recovers. The single-call return
+	// still surfaces the best-effort partial list rather than an error, same as
+	// before this cache was added.
+	if complete {
+		s.cache = memories
+	}
+	return cloneMemories(memories), nil
 }
 
 // Delete removes a memory rule from storage
