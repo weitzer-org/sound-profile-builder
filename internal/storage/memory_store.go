@@ -126,12 +126,21 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	s.mu.RUnlock()
 
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Check again after acquiring write lock
+	// Check again after acquiring the lock -- a concurrent cold load may have
+	// already finished while we were waiting for it.
 	if s.cache != nil {
-		return cloneMemories(s.cache), nil
+		res := cloneMemories(s.cache)
+		s.mu.Unlock()
+		return res, nil
 	}
+	// Release the lock before the network I/O below: ListFiles+N sequential
+	// GetObjects can run for seconds, and holding s.mu across that would block
+	// every other Save/Delete/List for the duration -- the mutex must only
+	// protect the s.cache field itself, not the fetch that populates it. A cold
+	// start can now run this fetch more than once concurrently (no coalescing);
+	// accepted as a one-time cost on process boot rather than added complexity
+	// (e.g. singleflight) this single-tenant dashboard doesn't need.
+	s.mu.Unlock()
 
 	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
 	if err != nil {
@@ -164,7 +173,14 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	// still surfaces the best-effort partial list rather than an error, same as
 	// before this cache was added.
 	if complete {
-		s.cache = memories
+		s.mu.Lock()
+		// Only set the cache if a concurrent load hasn't already populated it --
+		// blindly overwriting could revert past a Save/Delete that landed on the
+		// winning cache in the window between that load finishing and this one.
+		if s.cache == nil {
+			s.cache = memories
+		}
+		s.mu.Unlock()
 	}
 	return cloneMemories(memories), nil
 }

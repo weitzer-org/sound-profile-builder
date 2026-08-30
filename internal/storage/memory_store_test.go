@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestMemoryStore_CRUD(t *testing.T) {
@@ -198,4 +199,59 @@ func TestMemoryStore_ConcurrentListAndMutation(t *testing.T) {
 	}
 	close(stop)
 	wg.Wait()
+}
+
+// blockingListStorageClient blocks ListFiles until the test signals proceed --
+// stands in for the real several-seconds-of-network-latency ListFiles+GetObject
+// sequence a cold List() load makes against R2.
+type blockingListStorageClient struct {
+	*mockStorageClient
+	proceed chan struct{}
+}
+
+func (m *blockingListStorageClient) ListFiles(ctx context.Context, bucket, prefix string) ([]string, error) {
+	<-m.proceed
+	return m.mockStorageClient.ListFiles(ctx, bucket, prefix)
+}
+
+// TestMemoryStore_List_DoesNotBlockConcurrentSaveDuringIO guards against holding
+// s.mu across List's network I/O: previously the write lock stayed held for the
+// entire ListFiles+GetObject sequence, so a concurrent Save (or Delete, or
+// another List) would stall for however long that fetch took -- multiple seconds
+// against real object storage.
+func TestMemoryStore_List_DoesNotBlockConcurrentSaveDuringIO(t *testing.T) {
+	ctx := context.Background()
+	client := &blockingListStorageClient{
+		mockStorageClient: newMockStorageClient(),
+		proceed:           make(chan struct{}),
+	}
+	store := NewMemoryStore(client, "test-bucket")
+
+	listDone := make(chan error, 1)
+	go func() {
+		_, err := store.List(ctx)
+		listDone <- err
+	}()
+
+	// Give the List goroutine time to reach ListFiles and block on `proceed`.
+	time.Sleep(50 * time.Millisecond)
+
+	saveDone := make(chan error, 1)
+	go func() {
+		saveDone <- store.Save(ctx, &Memory{Artist: "Concurrent"})
+	}()
+
+	select {
+	case err := <-saveDone:
+		if err != nil {
+			t.Fatalf("Save failed: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Save blocked while List's ListFiles call was still in flight -- the cache lock is being held across network I/O")
+	}
+
+	close(client.proceed)
+	if err := <-listDone; err != nil {
+		t.Fatalf("List failed: %v", err)
+	}
 }
