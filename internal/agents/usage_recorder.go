@@ -129,20 +129,25 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
 		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.OutputTokens, rec.ThinkingTokens)
 	}
-	recordUsage(ctx, o.gcs, o.UsageBucket, rec)
+	recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, rec)
 }
 
-// recordUsage best-effort persists rec to gcs under bucket — it never
-// returns an error, and is nil-safe on both gcs and an empty bucket (most
-// cmd/eval_*/cmd/enrich_captures tools construct an Orchestrator with
-// gcs=nil and never set UsageBucket, since they have no durability
-// requirement for this data). A broken/unreachable/absent store must never
-// turn a dropped analytics record into a failed agent call.
-func recordUsage(ctx context.Context, gcs storage.Client, bucket string, rec UsageRecord) {
+// recordUsage best-effort persists rec to gcs under bucket, and — when
+// reporter is non-nil — pushes it to GSR's hosted usage dashboard too (see
+// usage_reporter.go's UsageReporter.Report, itself nil-safe so callers never
+// need to nil-check reporter). Neither path returns an error: this is
+// nil-safe on gcs/an empty bucket too (most cmd/eval_*/cmd/enrich_captures
+// tools construct an Orchestrator with gcs=nil and never set UsageBucket,
+// since they have no durability requirement for this data) — a broken/
+// unreachable/absent store must never turn a dropped analytics record into
+// a failed agent call.
+func recordUsage(ctx context.Context, gcs storage.Client, bucket string, reporter *UsageReporter, rec UsageRecord) {
+	rec.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
+	reporter.Report(rec)
+
 	if gcs == nil || bucket == "" {
 		return
 	}
-	rec.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
 	data, err := json.Marshal(rec)
 	if err != nil {
 		log.Printf("usage: marshaling record: %v", err)
