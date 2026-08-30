@@ -201,17 +201,21 @@ func TestMemoryStore_ConcurrentListAndMutation(t *testing.T) {
 	wg.Wait()
 }
 
-// blockingListStorageClient blocks ListFiles until the test signals proceed --
-// stands in for the real several-seconds-of-network-latency ListFiles+GetObject
-// sequence a cold List() load makes against R2.
+// blockingListStorageClient stands in for the real several-seconds-of-network-
+// latency ListFiles+GetObject sequence a cold List() load makes against R2:
+// ListFiles enumerates immediately (so its result reflects a snapshot taken at
+// call time, same as a real ListObjectsV2), then blocks returning that result
+// until the test signals proceed -- simulating a fetch that's in flight but
+// hasn't yet reached the point of writing back to the cache.
 type blockingListStorageClient struct {
 	*mockStorageClient
 	proceed chan struct{}
 }
 
 func (m *blockingListStorageClient) ListFiles(ctx context.Context, bucket, prefix string) ([]string, error) {
+	files, err := m.mockStorageClient.ListFiles(ctx, bucket, prefix)
 	<-m.proceed
-	return m.mockStorageClient.ListFiles(ctx, bucket, prefix)
+	return files, err
 }
 
 // TestMemoryStore_List_DoesNotBlockConcurrentSaveDuringIO guards against holding
@@ -253,5 +257,73 @@ func TestMemoryStore_List_DoesNotBlockConcurrentSaveDuringIO(t *testing.T) {
 	close(client.proceed)
 	if err := <-listDone; err != nil {
 		t.Fatalf("List failed: %v", err)
+	}
+}
+
+// TestMemoryStore_List_ConcurrentSaveDuringColdLoadIsNotPermanentlyLost guards
+// against the race releasing the lock during I/O introduced: a Save landing
+// after ListFiles enumerated (so the in-flight fetch's snapshot doesn't include
+// it) but before that fetch writes back to s.cache used to go unnoticed --
+// Save only touches s.cache when it's already non-nil, so the fetch would then
+// see s.cache == nil and cache its now-stale snapshot, permanently hiding the
+// Save until process restart. The epoch counter must catch this and skip
+// caching that snapshot instead.
+func TestMemoryStore_List_ConcurrentSaveDuringColdLoadIsNotPermanentlyLost(t *testing.T) {
+	ctx := context.Background()
+	base := newMockStorageClient()
+
+	// Seed one pre-existing memory via a throwaway store sharing the same
+	// backing data, written before the racy client below is even constructed.
+	// This matters: without it, the in-flight fetch's stale snapshot would be
+	// empty, and caching an empty (nil) slice is indistinguishable from not
+	// caching at all -- the bug this test targets only manifests when the
+	// stale cached snapshot is a real, non-empty, truthy value that a later
+	// List() can wrongly keep serving instead of retrying.
+	seed := NewMemoryStore(base, "test-bucket")
+	if err := seed.Save(ctx, &Memory{Artist: "Pre-existing"}); err != nil {
+		t.Fatalf("seeding: %v", err)
+	}
+
+	client := &blockingListStorageClient{
+		mockStorageClient: base,
+		proceed:           make(chan struct{}),
+	}
+	store := NewMemoryStore(client, "test-bucket")
+
+	listDone := make(chan error, 1)
+	go func() {
+		_, err := store.List(ctx)
+		listDone <- err
+	}()
+
+	// Give the List goroutine time to enumerate ListFiles (a 1-item snapshot,
+	// taken before the Save below) and block before returning it.
+	time.Sleep(50 * time.Millisecond)
+
+	m := &Memory{Artist: "Landed During Cold Load"}
+	if err := store.Save(ctx, m); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	close(client.proceed)
+	if err := <-listDone; err != nil {
+		t.Fatalf("first List failed: %v", err)
+	}
+
+	// The first List()'s own return value legitimately missed the concurrent
+	// Save -- it's a snapshot taken before the write. What must not happen is
+	// that snapshot getting cached, hiding the Save from every later request.
+	memories, err := store.List(ctx)
+	if err != nil {
+		t.Fatalf("second List failed: %v", err)
+	}
+	found := false
+	for _, mm := range memories {
+		if mm.ID == m.ID {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected the memory saved during the in-flight cold load to be visible on a later List() (got %d memories, none matching id %s) -- the stale pre-Save snapshot was cached instead of being discarded", len(memories), m.ID)
 	}
 }

@@ -28,7 +28,17 @@ type MemoryStore struct {
 	bucket string
 	prefix string
 	cache  []*Memory
-	mu     sync.RWMutex
+	// epoch increments inside the lock on every Save/Delete, whether or not
+	// s.cache is currently populated. List's cold load runs its network I/O
+	// with the lock released (see List), so a Save/Delete can land while a
+	// load is in flight; without this, that mutation would go unrecorded (it
+	// only touches s.cache when s.cache != nil) and the load would then
+	// overwrite s.cache == nil with a now-stale snapshot that's permanently
+	// missing it. Comparing the epoch captured before the fetch against the
+	// current epoch before committing the result detects that and skips the
+	// write instead, so the next List() retries the fetch.
+	epoch uint64
+	mu    sync.RWMutex
 }
 
 // NewMemoryStore creates a new memory store scoped to 'memories/' prefix
@@ -77,6 +87,7 @@ func (s *MemoryStore) Save(ctx context.Context, m *Memory) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.epoch++
 	if s.cache != nil {
 		// Store our own copy, not the caller's pointer -- m is caller-owned and
 		// mutating it after Save returns must not silently corrupt the cache
@@ -140,6 +151,7 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	// start can now run this fetch more than once concurrently (no coalescing);
 	// accepted as a one-time cost on process boot rather than added complexity
 	// (e.g. singleflight) this single-tenant dashboard doesn't need.
+	loadEpoch := s.epoch
 	s.mu.Unlock()
 
 	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
@@ -174,10 +186,13 @@ func (s *MemoryStore) List(ctx context.Context) ([]*Memory, error) {
 	// before this cache was added.
 	if complete {
 		s.mu.Lock()
-		// Only set the cache if a concurrent load hasn't already populated it --
-		// blindly overwriting could revert past a Save/Delete that landed on the
-		// winning cache in the window between that load finishing and this one.
-		if s.cache == nil {
+		// Only set the cache if nothing else has: a concurrent load may have
+		// already populated it (s.cache != nil), or a concurrent Save/Delete may
+		// have landed while we were fetching (s.epoch != loadEpoch) -- in the
+		// latter case our snapshot is missing that mutation, so leave the cache
+		// unset and let the next List() retry the fetch rather than caching a
+		// permanently-stale result.
+		if s.cache == nil && s.epoch == loadEpoch {
 			s.cache = memories
 		}
 		s.mu.Unlock()
@@ -195,10 +210,18 @@ func (s *MemoryStore) Delete(ctx context.Context, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.epoch++
 	if s.cache != nil {
 		for i, m := range s.cache {
 			if m.ID == id {
-				s.cache = append(s.cache[:i], s.cache[i+1:]...)
+				// Zero the vacated tail slot before truncating -- shifting left
+				// with append alone shrinks the length but leaves the backing
+				// array's now-unreachable-by-index last slot still pointing at
+				// the deleted *Memory, keeping it alive for the GC as long as
+				// this backing array is (i.e. until the next append reuses it).
+				copy(s.cache[i:], s.cache[i+1:])
+				s.cache[len(s.cache)-1] = nil
+				s.cache = s.cache[:len(s.cache)-1]
 				break
 			}
 		}
