@@ -1,0 +1,12 @@
+# Managed by weitzer-org/claude-config (sync-project.sh). Do not edit.
+# Last content change synced from claude-config commit 5531711d299b
+agents/fable-reviewer.md
+agents/opus-verifier.md
+agents/planner.md
+agents/pr-triage.md
+agents/reviewer.md
+agents/scout.md
+agents/security-reviewer.md
+agents/test-runner.md
+rules/claude-config/agent-routing.md
+rules/claude-config/verification-discipline.md
