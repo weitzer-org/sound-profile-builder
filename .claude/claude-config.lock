@@ -1,5 +1,5 @@
 # Managed by weitzer-org/claude-config (sync-project.sh). Do not edit.
-# Last content change synced from claude-config commit 5531711d299b
+# Last content change synced from claude-config commit 0de3c665122c
 agents/fable-reviewer.md
 agents/opus-verifier.md
 agents/planner.md

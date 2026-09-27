@@ -55,7 +55,8 @@ review comment.
 When a PR goes past its second review round, keep a scratch ledger
 (`/tmp/pr-<n>-triage.md`, not committed) with one row per finding ID:
 `id | verdict (fixed / declined / duplicate) | the evidence`. Consult it
-before re-triaging anything. The `pr-triage` agent maintains this format.
+before re-triaging anything. The `pr-triage` agent returns ledger rows in
+this format for you to save.
 
 - A finding already declined **with posted rationale** gets a pointer back
   to that rationale, but only while the code that rationale rested on is

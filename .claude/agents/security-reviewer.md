@@ -17,8 +17,13 @@ trace each untrusted input from where it enters to where it is used. Angles:
   log injection, SSRF, and XSS, including LLM-generated HTML or Markdown.
   Watch for entity-encoded schemes (`&#106;avascript:`), attributes beyond
   `href`/`src`, and CSS or `style` vectors.
-- **Hand-rolled sanitizers**: any regex that filters HTML, URLs, or shell
-  input is a finding in itself. Recommend a parser-based allowlist library.
+- **Hand-rolled sanitizers**: treat any regex that filters HTML, URLs, or
+  shell input as a priority target and try to build a concrete bypass
+  (encoded schemes, case and whitespace variants, nested or unclosed tags).
+  Report it with the bypass when you find one. If you can't, regex over HTML
+  is still worth a `low` finding with the exploit line "unproven; regex
+  cannot parse HTML", recommending a parser-based allowlist library. Anchored
+  allowlist regexes over simple tokens (IDs, enums, hex) are fine.
 - **AuthN/AuthZ**: missing checks on new routes, IDOR on UUID-keyed
   resources, cookie flags, HMAC or compare timing, and session fixation.
 - **Secrets**: secrets in code, logs, error messages, or client responses;
