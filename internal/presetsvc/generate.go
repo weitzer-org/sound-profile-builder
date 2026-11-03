@@ -201,12 +201,14 @@ func (s *Service) runGenerate(ctx context.Context, lr *liveRun, runID, apiKey, p
 		modelsList += fmt.Sprintf("%s (%d), ", m, count)
 	}
 
+	// NOTE: the whitespace inside this raw string is persisted into the draft's chat
+	// history and rendered verbatim; keep it byte-identical to the original handler's.
 	tokenStatsHtml := ""
 	if tokenUsage != nil {
 		tokenStatsHtml = fmt.Sprintf(`
-					<div class="card" style="margin-top: 1rem; font-family: monospace; color: #a1a1aa;">
-						<strong>Pipeline AI Processing Tokens:</strong> Input: %d | Output: %d | Models: %s
-					</div>`, tokenUsage.InputTokens, tokenUsage.OutputTokens, strings.TrimSuffix(modelsList, ", "))
+				<div class="card" style="margin-top: 1rem; font-family: monospace; color: #a1a1aa;">
+					<strong>Pipeline AI Processing Tokens:</strong> Input: %d | Output: %d | Models: %s
+				</div>`, tokenUsage.InputTokens, tokenUsage.OutputTokens, strings.TrimSuffix(modelsList, ", "))
 	}
 
 	initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
