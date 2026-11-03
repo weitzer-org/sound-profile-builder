@@ -592,19 +592,34 @@ func TestMCPEndToEnd(t *testing.T) {
 	seedPreset(t, h, "p-2-alpha", "Alpha Preset")
 	itSeedDraft(t, h, "p-1-draft")
 
-	t.Logf("== list_presets {}\n%s", itText(t, itCall(t, cs, listToolName, nil)))
+	// Every step is asserted, not only logged, so the transcript is also a regression test.
+	call := func(tool string, args map[string]any, wantErr bool) string {
+		t.Helper()
+		res := itCall(t, cs, tool, args)
+		text := itText(t, res)
+		t.Logf("== %s %v (isError=%v)\n%s", tool, args, res.IsError, text)
+		if res.IsError != wantErr {
+			t.Fatalf("%s %v: isError = %v, want %v: %s", tool, args, res.IsError, wantErr, text)
+		}
+		return text
+	}
 
-	t.Logf("== get_preset {p-2-alpha}\n%s", itText(t, itCall(t, cs, getToolName, map[string]any{"preset_id": "p-2-alpha"})))
-
-	res := itCall(t, cs, saveToolName, map[string]any{"preset_id": "p-1-draft", "name": "Gain Staging Lead"})
-	t.Logf("== save_preset {p-1-draft, Gain Staging Lead}\n%s (isError=%v)", itText(t, res), res.IsError)
-
-	t.Logf("== list_presets {include_drafts:false}\n%s",
-		itText(t, itCall(t, cs, listToolName, map[string]any{"include_drafts": false})))
-
-	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-1-draft", "format": "xml"})
-	t.Logf("== get_preset {p-1-draft, format:xml}\n%s (isError=%v)", itText(t, res), res.IsError)
-
-	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-1-draft"})
-	t.Logf("== get_preset {p-1-draft}\n%s (isError=%v)", itText(t, res), res.IsError)
+	if text := call(listToolName, nil, false); !strings.Contains(text, "`p-2-alpha`") || !strings.Contains(itLineFor(text, "p-1-draft"), "[draft]") {
+		t.Errorf("list_presets should show both presets with the draft marked:\n%s", text)
+	}
+	if text := call(getToolName, map[string]any{"preset_id": "p-2-alpha"}, false); !strings.Contains(text, "## Alpha Preset") || !strings.Contains(text, "### Fender Telecaster Single Coil") {
+		t.Errorf("get_preset markdown incomplete:\n%s", text)
+	}
+	if text := call(saveToolName, map[string]any{"preset_id": "p-1-draft", "name": "Gain Staging Lead"}, false); !strings.Contains(text, "Gain Staging Lead") {
+		t.Errorf("save_preset did not confirm the new name:\n%s", text)
+	}
+	if text := call(listToolName, map[string]any{"include_drafts": false}, false); !strings.Contains(text, "Gain Staging Lead") || strings.Contains(text, "[draft]") {
+		t.Errorf("after save the preset is listed by its new name and no draft remains:\n%s", text)
+	}
+	if text := call(getToolName, map[string]any{"preset_id": "p-1-draft", "format": "xml"}, true); !strings.Contains(text, "markdown") {
+		t.Errorf("a bad format should name the valid ones:\n%s", text)
+	}
+	if text := call(getToolName, map[string]any{"preset_id": "p-1-draft"}, false); !strings.Contains(text, "## Gain Staging Lead") {
+		t.Errorf("get_preset should show the renamed preset:\n%s", text)
+	}
 }

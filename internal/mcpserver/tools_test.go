@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"testing"
 
@@ -32,8 +31,9 @@ func TestToolError(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var logs bytes.Buffer
+			prev := log.Writer()
 			log.SetOutput(&logs)
-			defer log.SetOutput(os.Stderr)
+			defer log.SetOutput(prev)
 
 			got := toolError("test_tool", tc.err)
 			if got == nil {
