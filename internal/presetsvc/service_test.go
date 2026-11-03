@@ -1,0 +1,562 @@
+package presetsvc
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"reflect"
+	"sort"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/runs"
+	"github.com/weitzer-org/sound-builder/internal/storage"
+)
+
+const testBucket = "b"
+
+// ---- fixtures ---------------------------------------------------------------
+
+var (
+	fixturesOnce   sync.Once
+	fixtureGen     []byte
+	fixtureRefine  []byte
+	fixtureLoadErr error
+)
+
+// loadFixtures reads the architect mocks once; they are shared read-only.
+func loadFixtures(t *testing.T) ([]byte, []byte) {
+	t.Helper()
+	fixturesOnce.Do(func() {
+		fixtureGen, fixtureLoadErr = os.ReadFile("../../testdata/e2e_mocks/architect_generate.json")
+		if fixtureLoadErr != nil {
+			return
+		}
+		fixtureRefine, fixtureLoadErr = os.ReadFile("../../testdata/e2e_mocks/architect_refine.json")
+	})
+	if fixtureLoadErr != nil {
+		t.Fatalf("loading e2e mocks: %v", fixtureLoadErr)
+	}
+	return fixtureGen, fixtureRefine
+}
+
+// ---- fake storage.Client ----------------------------------------------------
+
+// memClient is a mutex-guarded in-memory object store: bucket -> object -> bytes.
+type memClient struct {
+	mu   sync.Mutex
+	objs map[string]map[string][]byte
+}
+
+func newMemClient() *memClient {
+	return &memClient{objs: make(map[string]map[string][]byte)}
+}
+
+func (c *memClient) ReadFile(_ context.Context, bucket, object string) ([]byte, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	data, ok := c.objs[bucket][object]
+	if !ok {
+		return nil, fmt.Errorf("object not found: %s/%s", bucket, object)
+	}
+	return append([]byte(nil), data...), nil
+}
+
+func (c *memClient) WriteFile(_ context.Context, bucket, object string, data []byte) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.objs[bucket] == nil {
+		c.objs[bucket] = make(map[string][]byte)
+	}
+	c.objs[bucket][object] = append([]byte(nil), data...)
+	return nil
+}
+
+// ListFiles returns object names (not bucket-qualified) with the given prefix.
+func (c *memClient) ListFiles(_ context.Context, bucket, prefix string) ([]string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	var names []string
+	for name := range c.objs[bucket] {
+		if strings.HasPrefix(name, prefix) {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names, nil
+}
+
+func (c *memClient) DeleteFile(_ context.Context, bucket, object string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.objs[bucket], object)
+	return nil
+}
+
+func (c *memClient) Close() {}
+
+func (c *memClient) has(bucket, object string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, ok := c.objs[bucket][object]
+	return ok
+}
+
+// ---- fake storage.SecretFetcher --------------------------------------------
+
+type fakeSecrets struct {
+	key string
+	err error // when set, GetPassword fails with it
+}
+
+func (f *fakeSecrets) GetPassword(_ context.Context, _, _ string) (string, error) {
+	if f.err != nil {
+		return "", f.err
+	}
+	return f.key, nil
+}
+
+func (f *fakeSecrets) Close() {}
+
+// ---- fake agents.OrchestratorService ---------------------------------------
+
+// fakeOrch returns the architect fixtures. While a gate is held, RunPipeline and
+// RefineChat block until the test releases it. With emitLoop set, the pipeline
+// keeps reporting distinct phases on a short ticker until released, so a
+// WaitRunChange that starts at any moment still sees a change.
+type fakeOrch struct {
+	gen    []byte
+	refine []byte
+
+	mu       sync.Mutex
+	gate     chan struct{} // nil means never block
+	emitLoop bool
+	released bool
+}
+
+// hold makes subsequent pipeline calls block until release.
+func (f *fakeOrch) hold(emitLoop bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.gate = make(chan struct{})
+	f.emitLoop = emitLoop
+	f.released = false
+}
+
+// release unblocks held calls. Safe to call repeatedly or with no gate.
+func (f *fakeOrch) release() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.gate != nil && !f.released {
+		close(f.gate)
+		f.released = true
+	}
+}
+
+// block reports "Phase X" through onProgress (when given) and then waits on the
+// gate, if one is held.
+func (f *fakeOrch) block(onProgress func(string)) {
+	f.mu.Lock()
+	gate, loop := f.gate, f.emitLoop
+	f.mu.Unlock()
+	if gate == nil {
+		return
+	}
+	if onProgress != nil {
+		onProgress("Phase X")
+	}
+	if !loop || onProgress == nil {
+		<-gate
+		return
+	}
+	tick := time.NewTicker(5 * time.Millisecond)
+	defer tick.Stop()
+	for i := 2; ; i++ {
+		select {
+		case <-gate:
+			return
+		case <-tick.C:
+			onProgress(fmt.Sprintf("Phase X %d", i))
+		}
+	}
+}
+
+func (f *fakeOrch) RunPipeline(_ context.Context, _ string, _ map[string]interface{}, _ map[string]string, onProgress func(phase string)) (string, *agents.TokenUsage, error) {
+	f.block(onProgress)
+	return string(f.gen), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil
+}
+
+func (f *fakeOrch) RefineChat(_ context.Context, _ *storage.Preset, _ string, _, _ bool) (string, *agents.TokenUsage, error) {
+	f.block(nil)
+	return string(f.refine), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil
+}
+
+func (f *fakeOrch) Close() {}
+
+// ---- harness ----------------------------------------------------------------
+
+type harness struct {
+	svc      *Service
+	client   *memClient
+	store    *storage.PresetStore
+	memories *storage.MemoryStore
+	orch     *fakeOrch
+	secrets  *fakeSecrets
+	orchErr  error // when set, OrchMaker fails with it
+}
+
+// newHarness builds a Service over fakes. Any held fake is released, and the
+// Service's run slots drained, at test cleanup so no goroutine stays blocked.
+func newHarness(t *testing.T) *harness {
+	t.Helper()
+	gen, refine := loadFixtures(t)
+	h := &harness{
+		client:  newMemClient(),
+		orch:    &fakeOrch{gen: gen, refine: refine},
+		secrets: &fakeSecrets{key: "key"},
+	}
+	h.store = storage.NewPresetStore(h.client, testBucket)
+	h.memories = storage.NewMemoryStore(h.client, testBucket)
+	h.svc = New(Deps{
+		Store:    h.store,
+		Memories: h.memories,
+		Client:   h.client,
+		Bucket:   testBucket,
+		Secrets:  func() storage.SecretFetcher { return h.secrets },
+		OrchMaker: func(context.Context, string) (agents.OrchestratorService, error) {
+			if h.orchErr != nil {
+				return nil, h.orchErr
+			}
+			return h.orch, nil
+		},
+		Config: func() *config.AppConfig { return nil },
+	})
+	t.Cleanup(func() {
+		h.orch.release()
+		waitIdle(t, h.svc)
+	})
+	return h
+}
+
+// waitIdle waits until every run slot has been released, i.e. no pipeline
+// goroutine is still executing.
+func waitIdle(t *testing.T, s *Service) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for len(s.sem) > 0 {
+		if time.Now().After(deadline) {
+			t.Errorf("%d run slot(s) still held after 5s", len(s.sem))
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+func generate(t *testing.T, h *harness, o GenerateOptions) string {
+	t.Helper()
+	id, err := h.svc.StartGenerate(context.Background(), "warm lead tone", o)
+	if err != nil {
+		t.Fatalf("StartGenerate: %v", err)
+	}
+	return id
+}
+
+// ---- tests ------------------------------------------------------------------
+
+func TestGenerateCompletes(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	runID := generate(t, h, GenerateOptions{Mock: true, Source: runs.SourceMCP})
+	if !strings.HasPrefix(runID, "gen-") {
+		t.Errorf("run ID %q does not start with gen-", runID)
+	}
+
+	rec, err := h.svc.WaitRun(ctx, runID, 10*time.Second)
+	if err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	if rec.Status != runs.StatusComplete {
+		t.Fatalf("status = %q (error %q), want complete", rec.Status, rec.Error)
+	}
+	if rec.PresetID == "" {
+		t.Fatal("completed record has no PresetID")
+	}
+	if !rec.Mock {
+		t.Error("record.Mock = false, want true")
+	}
+
+	p, err := h.store.Get(ctx, rec.PresetID)
+	if err != nil {
+		t.Fatalf("store.Get(%s): %v", rec.PresetID, err)
+	}
+	if want := []string{runID}; !reflect.DeepEqual(p.RunIDs, want) {
+		t.Errorf("preset.RunIDs = %v, want %v", p.RunIDs, want)
+	}
+
+	stored, err := h.svc.Runs().Get(ctx, runID)
+	if err != nil {
+		t.Fatalf("Runs().Get: %v", err)
+	}
+	if stored.Status != runs.StatusComplete {
+		t.Errorf("persisted status = %q, want complete", stored.Status)
+	}
+	if !h.client.has(testBucket, "runs/"+runID+".json") {
+		t.Errorf("runs/%s.json was not written to storage", runID)
+	}
+}
+
+func TestConcurrencyCapReturnsErrBusyAndReleasesSlots(t *testing.T) {
+	t.Setenv("MCP_MAX_CONCURRENT_RUNS", "2")
+	h := newHarness(t)
+	ctx := context.Background()
+	opts := GenerateOptions{Mock: true}
+
+	h.orch.hold(false)
+	id1 := generate(t, h, opts)
+	id2 := generate(t, h, opts)
+
+	if _, err := h.svc.StartGenerate(ctx, "third", opts); !errors.Is(err, ErrBusy) {
+		t.Fatalf("third StartGenerate err = %v, want ErrBusy", err)
+	}
+
+	h.orch.release()
+	for _, id := range []string{id1, id2} {
+		rec, err := h.svc.WaitRun(ctx, id, 10*time.Second)
+		if err != nil {
+			t.Fatalf("WaitRun(%s): %v", id, err)
+		}
+		if rec.Status != runs.StatusComplete {
+			t.Fatalf("run %s status = %q (error %q), want complete", id, rec.Status, rec.Error)
+		}
+	}
+	waitIdle(t, h.svc)
+
+	id3, err := h.svc.StartGenerate(ctx, "after release", opts)
+	if err != nil {
+		t.Fatalf("StartGenerate after release: %v", err)
+	}
+	rec, err := h.svc.WaitRun(ctx, id3, 10*time.Second)
+	if err != nil {
+		t.Fatalf("WaitRun(%s): %v", id3, err)
+	}
+	if rec.Status != runs.StatusComplete {
+		t.Errorf("run %s status = %q, want complete", id3, rec.Status)
+	}
+}
+
+// WaitRun must wake as soon as the run finishes, not sleep until max.
+func TestWaitRunWakesOnCompletion(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	h.orch.hold(false)
+	runID := generate(t, h, GenerateOptions{Mock: true})
+
+	type result struct {
+		rec *runs.RunRecord
+		err error
+	}
+	done := make(chan result, 1)
+	go func() {
+		rec, err := h.svc.WaitRun(ctx, runID, 10*time.Second)
+		done <- result{rec, err}
+	}()
+
+	released := time.Now()
+	h.orch.release()
+
+	var res result
+	select {
+	case res = <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("WaitRun did not return after the run completed")
+	}
+	if elapsed := time.Since(released); elapsed > 2*time.Second {
+		t.Errorf("WaitRun returned %v after completion, want well under 2s", elapsed)
+	}
+	if res.err != nil {
+		t.Fatalf("WaitRun: %v", res.err)
+	}
+	if res.rec.Status != runs.StatusComplete {
+		t.Errorf("status = %q, want complete", res.rec.Status)
+	}
+}
+
+// WaitRunChange must return on the first phase event while the run still runs.
+// The fake emits phases on a ticker while held, so whichever phase lands after
+// the wait starts wakes it promptly.
+func TestWaitRunChangeWakesOnPhase(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	h.orch.hold(true)
+	runID := generate(t, h, GenerateOptions{Mock: true})
+
+	start := time.Now()
+	rec, err := h.svc.WaitRunChange(ctx, runID, 10*time.Second)
+	elapsed := time.Since(start)
+	if err != nil {
+		t.Fatalf("WaitRunChange: %v", err)
+	}
+	if elapsed > 2*time.Second {
+		t.Errorf("WaitRunChange took %v, want it to return on the first phase change", elapsed)
+	}
+	if rec.Status != runs.StatusRunning {
+		t.Errorf("status = %q, want running", rec.Status)
+	}
+	if !strings.HasPrefix(rec.Phase, "Phase X") {
+		t.Errorf("phase = %q, want a \"Phase X\" change", rec.Phase)
+	}
+}
+
+// WaitRun with a short max on a blocked run returns the running record after
+// about max.
+func TestWaitRunTimesOutWhileRunning(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	h.orch.hold(false)
+	runID := generate(t, h, GenerateOptions{Mock: true})
+
+	const max = 50 * time.Millisecond
+	start := time.Now()
+	rec, err := h.svc.WaitRun(ctx, runID, max)
+	elapsed := time.Since(start)
+	if err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	if rec.Status != runs.StatusRunning {
+		t.Errorf("status = %q, want running", rec.Status)
+	}
+	if elapsed < max {
+		t.Errorf("WaitRun returned after %v, before max %v", elapsed, max)
+	}
+	if elapsed > 2*time.Second {
+		t.Errorf("WaitRun returned after %v, want about %v", elapsed, max)
+	}
+}
+
+func TestRefineAppendsRunID(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	p := &storage.Preset{Name: "Warm Lead"}
+	if err := h.store.Save(ctx, p); err != nil {
+		t.Fatalf("store.Save: %v", err)
+	}
+
+	runID, err := h.svc.StartRefine(ctx, p.ID, "make it brighter", true)
+	if err != nil {
+		t.Fatalf("StartRefine: %v", err)
+	}
+	if !strings.HasPrefix(runID, "chat-") {
+		t.Errorf("run ID %q does not start with chat-", runID)
+	}
+
+	rec, err := h.svc.WaitRun(ctx, runID, 10*time.Second)
+	if err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	if rec.Status != runs.StatusComplete {
+		t.Fatalf("status = %q (error %q), want complete", rec.Status, rec.Error)
+	}
+	if rec.ParentPresetID != p.ID {
+		t.Errorf("ParentPresetID = %q, want %q", rec.ParentPresetID, p.ID)
+	}
+
+	got, err := h.store.Get(ctx, p.ID)
+	if err != nil {
+		t.Fatalf("store.Get: %v", err)
+	}
+	if want := []string{runID}; !reflect.DeepEqual(got.RunIDs, want) {
+		t.Errorf("preset.RunIDs = %v, want %v", got.RunIDs, want)
+	}
+}
+
+func TestRefineUnknownPresetIsLookupError(t *testing.T) {
+	h := newHarness(t)
+
+	_, err := h.svc.StartRefine(context.Background(), "no-such-preset", "make it brighter", true)
+	var lookup *LookupError
+	if !errors.As(err, &lookup) {
+		t.Fatalf("StartRefine err = %v (%T), want *LookupError", err, err)
+	}
+}
+
+func TestMissingCredentialsIsPublicError(t *testing.T) {
+	t.Setenv("USE_OPENLLM", "")
+	t.Setenv("GEMINI_API_KEY_NAME", "")
+	os.Unsetenv("GEMINI_API_KEY_NAME")
+
+	h := newHarness(t)
+	h.secrets.err = errors.New("secret not found")
+
+	_, err := h.svc.StartGenerate(context.Background(), "warm lead tone", GenerateOptions{Mock: true})
+	var creds *CredentialsError
+	if !errors.As(err, &creds) {
+		t.Fatalf("StartGenerate err = %v (%T), want *CredentialsError", err, err)
+	}
+	if creds.Public != "Missing Secure AI Credentials" {
+		t.Errorf("Public = %q, want %q", creds.Public, "Missing Secure AI Credentials")
+	}
+}
+
+func TestOrchestratorInitFailureRecordsErrKindInit(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	h.orchErr = errors.New("adk unavailable")
+
+	runID := generate(t, h, GenerateOptions{Mock: true})
+	rec, err := h.svc.WaitRun(ctx, runID, 10*time.Second)
+	if err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	if rec.Status != runs.StatusError {
+		t.Fatalf("status = %q, want error", rec.Status)
+	}
+
+	res, ok := h.svc.Result(runID)
+	if !ok {
+		t.Fatal("Result: run not cached")
+	}
+	if res.ErrKind != ErrKindInit {
+		t.Errorf("ErrKind = %q, want %q", res.ErrKind, ErrKindInit)
+	}
+	if res.Preset != nil {
+		t.Errorf("Preset = %+v, want nil for a failed run", res.Preset)
+	}
+}
+
+func TestAbandonActiveMarksBlockedRun(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+
+	h.orch.hold(false)
+	runID := generate(t, h, GenerateOptions{Mock: true})
+
+	if n := h.svc.AbandonActive("x"); n != 1 {
+		t.Fatalf("AbandonActive returned %d, want 1", n)
+	}
+
+	rec, err := h.svc.Run(ctx, runID)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if rec.Status != runs.StatusAbandoned {
+		t.Errorf("in-memory status = %q, want abandoned", rec.Status)
+	}
+
+	stored, err := h.svc.Runs().Get(ctx, runID)
+	if err != nil {
+		t.Fatalf("Runs().Get: %v", err)
+	}
+	if stored.Status != runs.StatusAbandoned {
+		t.Errorf("persisted status = %q, want abandoned", stored.Status)
+	}
+}
