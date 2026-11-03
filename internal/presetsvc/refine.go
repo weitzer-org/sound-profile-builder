@@ -57,6 +57,7 @@ func (s *Service) startRefine(ctx context.Context, presetID, message string, moc
 	s.mu.Unlock()
 	if p, err = s.d.Store.Get(context.WithoutCancel(ctx), presetID); err != nil {
 		s.endRefine(presetID)
+		s.release() // the run never started, so give its slot back too
 		return "", &LookupError{Err: err}
 	}
 

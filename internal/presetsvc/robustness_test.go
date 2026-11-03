@@ -176,3 +176,77 @@ func TestMockRunRecordsAgentTracesAndPromptLogs(t *testing.T) {
 		}
 	}
 }
+
+// readFailingClient serves reads normally until armed, then fails every read of a
+// preset, so the re-read inside StartRefine (after the guard is taken) can fail.
+type readFailingClient struct {
+	*memClient
+	armed atomic.Bool
+}
+
+func (c *readFailingClient) ReadFile(ctx context.Context, bucket, object string) ([]byte, error) {
+	if c.armed.Load() && strings.HasPrefix(object, "presets/") {
+		return nil, errors.New("storage read failed")
+	}
+	return c.memClient.ReadFile(ctx, bucket, object)
+}
+
+// If the preset can't be re-read once the per-preset guard is held, StartRefine must
+// release both the guard and its run slot; otherwise repeated failures would exhaust
+// the concurrency cap and wedge that preset.
+func TestRefineStartFailureReleasesGuardAndSlot(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	p := &storage.Preset{Name: "A"}
+	if err := h.store.Save(ctx, p); err != nil {
+		t.Fatal(err)
+	}
+
+	// The first read (existence check) succeeds; the re-read under the guard fails.
+	rc := &readFailingClient{memClient: h.client}
+	reads := &atomic.Int32{}
+	h.svc.d.Store = storage.NewPresetStore(&countingReadClient{readFailingClient: rc, n: reads}, testBucket)
+	rc.armed.Store(true)
+	// First Get must pass, so let exactly one read through.
+	reads.Store(-1)
+
+	_, err := h.svc.StartRefine(ctx, p.ID, "brighter", true)
+	var lookup *LookupError
+	if !errors.As(err, &lookup) {
+		t.Fatalf("StartRefine err = %v, want *LookupError from the failed re-read", err)
+	}
+	if got := len(h.svc.sem); got != 0 {
+		t.Errorf("run slots in use = %d, want 0 (the failed start must give its slot back)", got)
+	}
+	h.svc.mu.Lock()
+	_, stuck := h.svc.refining[p.ID]
+	h.svc.mu.Unlock()
+	if stuck {
+		t.Error("per-preset guard still held after the failed start")
+	}
+
+	// And the preset is usable again.
+	rc.armed.Store(false)
+	h.svc.d.Store = h.store
+	id, err := h.svc.StartRefine(ctx, p.ID, "again", true)
+	if err != nil {
+		t.Fatalf("refine after the failed start: %v", err)
+	}
+	if rec, _ := h.svc.WaitRun(ctx, id, 10*time.Second); rec == nil || rec.Status != runs.StatusComplete {
+		t.Fatalf("follow-up refine = %+v", rec)
+	}
+}
+
+// countingReadClient lets the first preset read through (n starts at -1: the existence
+// check) and fails the next, via the armed flag of the embedded client.
+type countingReadClient struct {
+	*readFailingClient
+	n *atomic.Int32
+}
+
+func (c *countingReadClient) ReadFile(ctx context.Context, bucket, object string) ([]byte, error) {
+	if strings.HasPrefix(object, "presets/") && c.n.Add(1) == 0 {
+		return c.memClient.ReadFile(ctx, bucket, object) // the first read passes
+	}
+	return c.readFailingClient.ReadFile(ctx, bucket, object)
+}
