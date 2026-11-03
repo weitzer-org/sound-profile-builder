@@ -135,6 +135,9 @@ func New(d Deps) *Service {
 	}
 }
 
+// Presets exposes the preset store, for read-only front ends (the MCP tools).
+func (s *Service) Presets() *storage.PresetStore { return s.d.Store }
+
 // Runs exposes the run store (for readers of persisted logs).
 func (s *Service) Runs() *runs.Store { return s.runs }
 
@@ -364,6 +367,16 @@ func (s *Service) Save(ctx context.Context, presetID, name string) (*storage.Pre
 	name = strings.TrimSpace(name)
 	if presetID == "" || name == "" {
 		return nil, errors.New("preset id and name are required")
+	}
+	// A refinement reads the preset, changes it and writes it back whole, so a
+	// rename landing in between would be lost (or would undo the refinement).
+	// This check is advisory, not atomic: it narrows the window, it does not
+	// close it (storage has no conditional writes).
+	s.mu.Lock()
+	_, busy := s.refining[presetID]
+	s.mu.Unlock()
+	if busy {
+		return nil, ErrPresetBusy
 	}
 	p, err := s.d.Store.Get(ctx, presetID)
 	if err != nil {

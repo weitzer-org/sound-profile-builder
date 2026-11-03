@@ -94,6 +94,17 @@ func (s *Server) Service() *presetsvc.Service { return s.svc }
 // http.Server (graceful shutdown).
 func (s *Server) Handler() http.Handler { return s.mux }
 
+// Mux returns the server's route table, so another front end (the MCP server)
+// can register its own routes on the same listener.
+func (s *Server) Mux() *http.ServeMux { return s.mux }
+
+// RateLimit returns the per-IP limiter the metered (Gemini-backed) UI routes
+// use. Other front ends wrap their routes with this same middleware rather than
+// building a second limiter, so every route draws from the same buckets.
+func (s *Server) RateLimit() func(http.Handler) http.Handler {
+	return s.rateLimitMiddleware(rate.Every(2*time.Second), 10)
+}
+
 // routes registers all the HTTP handlers for the application.
 func (s *Server) routes() {
 	// PWA Manifest and Service Worker (Public endpoints)
@@ -128,7 +139,7 @@ func (s *Server) routes() {
 	// password, rate-limited per client IP so a looping client (or a leaked
 	// session) can't run up the bill. Generous burst -- this stops a
 	// runaway loop, it isn't meant to police normal interactive retries.
-	llmRateLimit := s.rateLimitMiddleware(rate.Every(2*time.Second), 10)
+	llmRateLimit := s.RateLimit()
 
 	// API Routes (to be protected by Secret Manager Password)
 	s.mux.Handle("/api/preset/generate", s.authMiddleware(llmRateLimit(s.handleGeneratePreset())))
