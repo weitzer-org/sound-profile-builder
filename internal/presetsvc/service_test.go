@@ -490,7 +490,6 @@ func TestRefineUnknownPresetIsLookupError(t *testing.T) {
 func TestMissingCredentialsIsPublicError(t *testing.T) {
 	t.Setenv("USE_OPENLLM", "")
 	t.Setenv("GEMINI_API_KEY_NAME", "")
-	os.Unsetenv("GEMINI_API_KEY_NAME")
 
 	h := newHarness(t)
 	h.secrets.err = errors.New("secret not found")
