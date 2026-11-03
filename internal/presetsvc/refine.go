@@ -222,5 +222,8 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		return
 	}
 
+	lr.mu.Lock()
+	lr.reply, lr.dspUpdated = archResp.ConversationalResponse, archResp.DSPMatrixUpdated
+	lr.mu.Unlock()
 	s.succeed(lr, p)
 }

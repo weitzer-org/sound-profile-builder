@@ -115,3 +115,23 @@ func (s *Store) WriteLog(ctx context.Context, runID, name string, data []byte) e
 	}
 	return s.client.WriteFile(ctx, s.bucket, fmt.Sprintf("logs/%s/%s", runID, name), data)
 }
+
+// logNamePattern restricts per-agent log file names to what the Recorder writes
+// (<prompt_key>.json, .system.md, .input.txt): no slashes, dots-only or spaces.
+var logNamePattern = regexp.MustCompile(`^[A-Za-z0-9_]{1,64}\.(json|system\.md|input\.txt)$`)
+
+// ReadLog reads logs/<run_id>/<name> from the same bucket the run records live
+// in. (The pipeline's own logToGCS resolves its bucket from GCS_BUCKET_NAME /
+// S3_BUCKET; the two agree in every supported deployment.) ErrInvalidID is
+// returned if runID or name could address another object, ErrNotFound if the
+// object is missing.
+func (s *Store) ReadLog(ctx context.Context, runID, name string) ([]byte, error) {
+	if !ValidID(runID) || !logNamePattern.MatchString(name) {
+		return nil, ErrInvalidID
+	}
+	data, err := s.client.ReadFile(ctx, s.bucket, fmt.Sprintf("logs/%s/%s", runID, name))
+	if err != nil {
+		return nil, fmt.Errorf("%w: logs/%s/%s: %v", ErrNotFound, runID, name, err)
+	}
+	return data, nil
+}

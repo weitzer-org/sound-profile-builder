@@ -102,6 +102,10 @@ type RunResult struct {
 	Record  runs.RunRecord
 	Preset  *storage.Preset // set once the run completes
 	ErrKind string          // set when the run failed
+	// Refine runs only: the Architect's conversational_response and whether it
+	// changed the DSP matrix. Empty/false for generate runs.
+	Reply            string
+	DSPMatrixUpdated bool
 }
 
 // Service runs and tracks presets' LLM runs.
@@ -209,6 +213,9 @@ type liveRun struct {
 	preset  *storage.Preset
 	errKind string
 	doneAt  time.Time
+
+	reply      string // refine only
+	dspUpdated bool   // refine only
 }
 
 func newLiveRun(rec *runs.Recorder) *liveRun {
@@ -336,7 +343,7 @@ func (s *Service) Result(runID string) (*RunResult, bool) {
 		return nil, false
 	}
 	lr.mu.Lock()
-	res := &RunResult{Preset: lr.preset, ErrKind: lr.errKind}
+	res := &RunResult{Preset: lr.preset, ErrKind: lr.errKind, Reply: lr.reply, DSPMatrixUpdated: lr.dspUpdated}
 	lr.mu.Unlock()
 	res.Record = lr.rec.Snapshot()
 	return res, true
