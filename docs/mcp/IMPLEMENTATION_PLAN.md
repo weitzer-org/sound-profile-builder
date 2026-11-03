@@ -52,13 +52,11 @@ These are order-of-magnitude estimates, not measurements.
 
 ## Phase 0: Spikes (resolve PRD §8 before coding)
 
-**0.1 (You, ~2 min, no code): Step 2 of the claude.ai connector dialog.**
-Step 1 only asks for a name and URL. Enter any placeholder (for example
-`https://example.com/mcp`) and continue to **Step 2**. Check whether
-**No sign-in** offers a **Request headers** section; the docs say it's a beta
-shown only to some accounts (PRD §8.1). Then cancel. If it's there, the setup
-docs lead with the header form; if not, with the URL-path form. The server
-supports both (DESIGN §4), so this doesn't block coding.
+**0.1 (Done, 2026-11-03): claude.ai connector dialog.** Step 2 offers Sign in
+now / Sign in when needed / **No sign-in**, plus **Request headers** (up to
+four, stored securely, never shown again) and a Transport selector
+(Streamable HTTP by default). The setup docs lead with the header form. Step 1
+probes the URL first; DESIGN §4 says how the server answers that probe.
 
 **0.2 (Done, no further work): pipeline duration.** Measured from
 `eval_results/full_pipeline/full_pipeline_gemini36_benchmark_report.md`:
@@ -107,7 +105,7 @@ and capped at 2 concurrent.
 | 2.1 | `go get github.com/modelcontextprotocol/go-sdk@v1.8.0`; `internal/mcpserver`: `Mount(mux, svc, cfg)`, stateless `NewStreamableHTTPHandler`, `/mcp` + `/mcp/{token}` routes, `RequireToken` middleware, fail-closed when `MCP_TOKEN` is unset or short, existing rate limiter wrapped around both routes | **Sonnet** | DESIGN §4, §5, §6 | `curl` with no token → 401; with token → MCP `initialize` OK |
 | 2.2 | Tools: `list_presets`, `get_preset`, `save_preset` (with annotations and model-facing descriptions) | **Sonnet** | DESIGN §5.1 | Integration test (2.5) passes |
 | 2.3 | `mcpserver/render.go`: `StructuredPreset` → Markdown, plus golden test against `testdata/e2e_mocks/architect_generate.json` | **Haiku** (card below) | DESIGN §5.4 | Golden test green; output reviewed by eye once in the PR |
-| 2.4 | Auth tests: header/path × missing/wrong/short/correct, `MCP_TOKEN_NEXT` accepted, and a captured `log` output that never contains the token | **Haiku** | DESIGN §4, §7 | green |
+| 2.4 | Auth tests: header/path × missing/wrong/short/correct, `MCP_TOKEN_NEXT` accepted, a captured `log` output that never contains the token, the 401 has no `resource_metadata`, and the `/.well-known/oauth-*` paths return 404 | **Haiku** | DESIGN §4, §7 | green |
 | 2.5 | Integration test harness: Go SDK client over `httptest.NewServer` in mock mode; initialize → `tools/list` → `list_presets` → `get_preset` → `save_preset` | **Haiku** | DESIGN §7 | green; Phase 3 extends it |
 | 2.6 | `/security-review` on the branch diff | **Opus, inline (~1 call)** | CLAUDE.md "Security review" | Findings fixed or answered in the PR |
 | 2.7 | `test-runner` full suites → PR → `deep-review` label → bot rounds | **Haiku → Sonnet** | | as 1.6/1.7 |
@@ -160,13 +158,15 @@ Phase 0.1 found claude.ai supports, and give the Claude Code form
 
 1. `fly secrets set MCP_TOKEN=$(openssl rand -hex 32)`. Merging to `main`
    auto-deploys.
-2. In claude.ai → Settings → Connectors → Add custom connector. Step 1: name
-   `QC-2 Modeler`, URL `https://<app>.fly.dev/mcp`. Step 2: **No sign-in**.
-   - **If Request headers is offered:** add a header named `authorization`
-     with the value `Bearer <token>`. Type the `Bearer ` prefix yourself;
-     Claude doesn't add it.
-   - **Otherwise:** go back and change the URL to
-     `https://<app>.fly.dev/mcp/<token>`, with no header.
+2. In claude.ai → Settings → Connectors → Add custom connector:
+   - **Step 1:** name `QC-2 Modeler`, URL `https://<app>.fly.dev/mcp`. The
+     probe will get a 401 with no OAuth metadata. Click **Continue anyway**.
+   - **Step 2:** choose **No sign-in**. Under **Request headers**, set the
+     name to `authorization` and the value to `Bearer <token>`. Type the
+     `Bearer ` prefix yourself. Leave Transport on Streamable HTTP.
+   - **If the dialog won't continue, or insists on OAuth:** remove the
+     connector and add it again with URL `https://<app>.fly.dev/mcp/<token>`
+     and no header. Then record that result in DESIGN §4.
    - Auth can't be edited later. To rotate, remove the connector and add it
      again (DESIGN §4).
 3. Walk through J1–J5 from the PRD in a real chat. This is the only step that

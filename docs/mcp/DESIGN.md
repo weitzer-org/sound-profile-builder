@@ -224,12 +224,12 @@ The token is accepted in either form:
      headers** entry with name `authorization` and value
      `Bearer <MCP_TOKEN>`. You must type the `Bearer ` prefix yourself, because
      Claude sends the value exactly as entered. The token is stored encrypted
-     as the connector's credential. The feature is beta and only some accounts
-     have it (PRD §8.1).
+     as the connector's credential and is never shown again, so keep a copy in
+     a password manager. The feature is beta; this account has it (PRD §8.1).
    - **Claude Code:** `claude mcp add --transport http --header ...`.
    - **Claude API MCP connector:** `authorization_token`.
-2. **Fallback:** a secret path segment, `/mcp/<MCP_TOKEN>`. Use this only if
-   the account doesn't see Request headers. The connector is added as
+2. **Fallback:** a secret path segment, `/mcp/<MCP_TOKEN>`. Use this for any
+   client that can't set headers. claude.ai on this account doesn't need it. The connector is added as
    **No sign-in** with a URL that is itself the credential, the same model as a
    Slack incoming-webhook URL. Anthropic doesn't document URL-embedded
    credentials, but it needs nothing from Claude beyond fetching the URL it was
@@ -240,6 +240,23 @@ Either way, **auth settings can't be edited after the connector is added**
 (official docs). Rotation therefore means: set `MCP_TOKEN_NEXT`, remove the
 connector and add it again with the new value, then promote the new token to
 `MCP_TOKEN`.
+
+**The connector-dialog probe.** Step 1 of claude.ai's dialog connects to the URL
+and "looks up sign-in settings" before you can enter the header, so in header
+mode the probe always arrives without a token. The server must not make that
+look like OAuth:
+
+- The 401 carries a bare `WWW-Authenticate: Bearer realm="qc2-mcp"`, with
+  **no** `resource_metadata` parameter. That parameter is what points an MCP
+  client at an OAuth flow.
+- `/.well-known/oauth-protected-resource` (including the `/mcp` path
+  variant) and `/.well-known/oauth-authorization-server` return a plain
+  `404`, so there is no sign-in provider to find.
+- Expected result: the probe reports the server as unreachable or unclear. You
+  click **Continue anyway**, choose **No sign-in**, and add the header. If
+  claude.ai instead insists on OAuth, use the path-token form, whose probe
+  succeeds. This has to be confirmed once in Plan Phase 6, because it can only
+  be observed against the live server.
 
 Middleware (`mcpserver.RequireToken`):
 
@@ -268,7 +285,10 @@ Middleware (`mcpserver.RequireToken`):
   `MCP_TOKEN_NEXT` is accepted alongside `MCP_TOKEN` during a swap.
 - **Upgrade path:** the middleware takes a `TokenVerifier`-shaped func. Moving to
   OAuth later means swapping it for the SDK's `auth.RequireBearerToken` with a
-  JWT verifier and serving protected-resource metadata. No tool code changes.
+  JWT verifier and serving protected-resource metadata in place of today's 404s.
+  No tool code changes. The dialog offers CIMD ("Use Claude's published
+  identity", no client registration needed) as its recommended OAuth client
+  mode, so that would be the one to target.
 
 **Residual risks, accepted for v1:**
 

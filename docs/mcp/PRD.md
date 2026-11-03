@@ -117,7 +117,7 @@ arguments. It gives Claude a reusable starting template for J1.
 
 | Area | Requirement |
 |------|-------------|
-| Auth | A single `MCP_TOKEN` secret of at least 32 random bytes. The server accepts it as `Authorization: Bearer` (preferred: claude.ai Request headers, Claude Code `--header`) **or** as a secret URL path segment (fallback if this account doesn't have the beta header feature). See DESIGN §4. If the token is unset, the MCP routes are not mounted |
+| Auth | A single `MCP_TOKEN` secret of at least 32 random bytes. The server accepts it as `Authorization: Bearer` (primary: claude.ai Request headers, confirmed on this account; Claude Code `--header`) **or** as a secret URL path segment (fallback for clients that can't set headers). See DESIGN §4. If the token is unset, the MCP routes are not mounted |
 | Cost safety | MCP runs share the existing per-IP LLM rate limiter, plus a cap on concurrent pipeline runs (default 2). A leaked token must not be able to run up an unbounded Gemini bill |
 | Latency | A tool call never blocks for more than 200 s, safely under claude.ai's 240 s per-call limit (§8). A typical run (~138 s) therefore finishes in **one** `generate_preset` call. Runs that go longer, for example because of model fallbacks, continue through `get_run_status` |
 | Durability | Run state and logs persist to the bucket through `storage.Client`, so they survive Fly scale-to-zero and restarts. A run interrupted by a machine stop shows up as `abandoned`, not `running` forever |
@@ -152,9 +152,16 @@ Each item says how it was checked, per `verification-discipline.md`.
      ([claude-ai-mcp#112](https://github.com/anthropics/claude-ai-mcp/issues/112),
      2026-08-31) says it is available to Pro, Max and Team accounts.
 
-   **Still open:** whether *this* account sees the Request headers section on
-   Step 2 of the dialog. The secret-URL-path form stays as the fallback. URL
-   credentials are not documented by Anthropic either way.
+   **Confirmed on this account (2026-11-03):** Step 2 of the dialog shows
+   **Request headers**: "Sent with every request… Values are stored securely
+   and never shown again. You can add up to four." The header form is
+   therefore the primary method. The secret-URL-path form stays as a fallback
+   for clients without header support. Anthropic doesn't document URL
+   credentials either way.
+   Step 1 of the dialog **probes the URL** ("Connecting to the server" →
+   "Looking up sign-in settings" → "Checking the sign-in provider") before any
+   header can be entered, and offers "Continue anyway" when the probe fails.
+   DESIGN §4 covers how the server answers that probe.
 2. **Resources and prompts are supported.** Verified from
    [claude.com/docs/connectors/building](https://claude.com/docs/connectors/building):
    "Your server can expose these to Claude: Tools, prompts, and resources".
