@@ -196,15 +196,16 @@ func (s *Service) runGenerate(ctx context.Context, lr *liveRun, runID, apiKey, p
 	}
 	impactsHtml += "</ul>"
 
-	modelsList := ""
-	for m, count := range tokenUsage.ModelsUsed {
-		modelsList += fmt.Sprintf("%s (%d), ", m, count)
-	}
-
-	// NOTE: the whitespace inside this raw string is persisted into the draft's chat
-	// history and rendered verbatim; keep it byte-identical to the original handler's.
+	// A nil TokenUsage (an orchestrator with no usage to report) just omits the
+	// stats card. The raw-string whitespace is persisted into the draft's chat
+	// history and rendered verbatim, so keep it byte-identical to the original
+	// handler's.
 	tokenStatsHtml := ""
 	if tokenUsage != nil {
+		modelsList := ""
+		for m, count := range tokenUsage.ModelsUsed {
+			modelsList += fmt.Sprintf("%s (%d), ", m, count)
+		}
 		tokenStatsHtml = fmt.Sprintf(`
 				<div class="card" style="margin-top: 1rem; font-family: monospace; color: #a1a1aa;">
 					<strong>Pipeline AI Processing Tokens:</strong> Input: %d | Output: %d | Models: %s

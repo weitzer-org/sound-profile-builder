@@ -2,8 +2,12 @@ package presetsvc
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/runs"
 )
 
 // The draft preset's first model chat message embeds HTML (agent impacts plus a
@@ -33,5 +37,36 @@ func TestGenerateDraftChatHistoryIntroIsByteStable(t *testing.T) {
 	got := p.ChatHistory[1].Content
 	if len(got) < len(wantTail) || got[len(got)-len(wantTail):] != wantTail {
 		t.Errorf("token-stats HTML changed.\n got tail: %q\nwant tail: %q", got[max(0, len(got)-len(wantTail)-20):], wantTail)
+	}
+}
+
+// nilUsageOrch reports no TokenUsage, as an orchestrator without usage data would.
+type nilUsageOrch struct{ *fakeOrch }
+
+func (o nilUsageOrch) RunPipeline(ctx context.Context, p string, c map[string]interface{}, a map[string]string, f func(string)) (string, *agents.TokenUsage, error) {
+	out, _, err := o.fakeOrch.RunPipeline(ctx, p, c, a, f)
+	return out, nil, err
+}
+
+// A nil TokenUsage used to nil-dereference (tokenUsage.ModelsUsed was read before
+// the nil check); the run must complete with just no stats card.
+func TestGenerateWithNilTokenUsageCompletes(t *testing.T) {
+	h := newHarness(t)
+	h.svc.d.OrchMaker = func(context.Context, string) (agents.OrchestratorService, error) {
+		return nilUsageOrch{h.orch}, nil
+	}
+	ctx := context.Background()
+
+	runID := generate(t, h, GenerateOptions{Mock: true})
+	rec, err := h.svc.WaitRun(ctx, runID, 10*time.Second)
+	if err != nil || rec.Status != runs.StatusComplete {
+		t.Fatalf("run = %+v, err = %v; want complete", rec, err)
+	}
+	p, err := h.store.Get(ctx, rec.PresetID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(p.ChatHistory[1].Content, "Pipeline AI Processing Tokens") {
+		t.Error("stats card rendered although no token usage was reported")
 	}
 }
