@@ -29,6 +29,13 @@ type Recorder struct {
 	persisted uint64 // highest version written; guarded by persistMu
 
 	logWG sync.WaitGroup // in-flight prompt-log writes
+
+	// settled is closed once the terminal transition is fully finished (prompt
+	// logs landed, terminal record persisted). The in-memory status flips to
+	// terminal first, so a poller that sees it must wait on Settled() before
+	// treating the run's storage artifacts as durable.
+	settled     chan struct{}
+	settledOnce sync.Once
 }
 
 var _ agents.RunObserver = (*Recorder)(nil)
@@ -48,8 +55,18 @@ func NewRecorder(store *Store, rec RunRecord) *Recorder {
 	if rec.Agents == nil {
 		rec.Agents = map[string]*AgentTrace{}
 	}
-	return &Recorder{store: store, rec: rec.Clone()}
+	r := &Recorder{store: store, rec: rec.Clone(), settled: make(chan struct{})}
+	if r.rec.Status != StatusRunning {
+		r.markSettled()
+	}
+	return r
 }
+
+func (r *Recorder) markSettled() { r.settledOnce.Do(func() { close(r.settled) }) }
+
+// Settled returns a channel closed once the run is terminal AND its logs and
+// terminal record have been written (or given up on).
+func (r *Recorder) Settled() <-chan struct{} { return r.settled }
 
 // SetOnChange registers fn, called (outside the lock) after every mutation.
 // presetsvc uses it to wake long-pollers.
@@ -272,6 +289,7 @@ func (r *Recorder) finish(status, errMsg, presetID string, waitLogs, retry bool)
 		// Persist the terminal state BEFORE waking waiters, so anyone woken by
 		// the change (WaitRun) and then reading storage sees the same status.
 		r.flushTerminal(retry)
+		r.markSettled()
 	}
 	if cb != nil {
 		cb()

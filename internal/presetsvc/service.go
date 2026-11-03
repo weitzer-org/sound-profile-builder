@@ -366,6 +366,17 @@ func (s *Service) wait(ctx context.Context, runID string, max time.Duration, unt
 		// still wakes us.
 		ch := lr.changeChan()
 		snap := lr.rec.Snapshot()
+		if snap.Status != runs.StatusRunning && untilDone {
+			// The status flips before prompt logs and the terminal record are
+			// written; wait for them so a returned run is fully durable.
+			select {
+			case <-lr.rec.Settled():
+			case <-timer.C:
+			case <-ctx.Done():
+			}
+			fresh := lr.rec.Snapshot()
+			return &fresh, nil
+		}
 		if snap.Status != runs.StatusRunning || max <= 0 {
 			return &snap, nil
 		}
