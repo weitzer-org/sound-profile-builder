@@ -34,7 +34,7 @@ export USE_OPENLLM="true"
 export MOCK_PASSWORD="bluesmusic"
 
 # Launch the server
-go run cmd/server/main.go
+go run ./cmd/server
 ```
 
 *That's it! Your local sound builder server will load the master token from Secret Manager under the name `open-llm-api-auth-secret` and route requests directly to the live Cloud Run endpoint at `https://open-llm-gateway-710019748844.us-central1.run.app/v1`.*
@@ -67,7 +67,7 @@ export OPENLLM_API_URL="http://localhost:8080/v1"
 export OPENLLM_API_KEY="open-llm-dev-token"
 export OPENLLM_MODEL="mock-qwen-model"
 export MOCK_PASSWORD="bluesmusic"
-go run cmd/server/main.go
+go run ./cmd/server
 ```
 
 ---

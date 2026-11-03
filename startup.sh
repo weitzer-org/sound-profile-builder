@@ -69,4 +69,4 @@ echo "===================================================="
 echo "    Starting QC-2 Backend Server on Port $PORT      "
 echo "    Running at: http://localhost:$PORT              "
 echo "===================================================="
-go run cmd/server/main.go
+go run ./cmd/server
