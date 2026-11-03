@@ -644,3 +644,30 @@ func TestDecodeStructuredHandlesEnvelopeBareAndLegacy(t *testing.T) {
 		}
 	}
 }
+
+// GetPreset returns a fresh object: the store's Get decodes from storage on every
+// call and never hands out its cache, so a caller may change the result freely.
+func TestGetPresetReturnsAnIndependentObject(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	if err := h.store.Save(ctx, &storage.Preset{ID: "g1", Name: "Orig", Payload: "{}", RunIDs: []string{"r1"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := h.svc.ListPresets(ctx, true); err != nil { // populate the store's cache too
+		t.Fatal(err)
+	}
+	a, err := h.svc.GetPreset(ctx, "g1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.Name = "MUTATED"
+	a.RunIDs[0] = "MUTATED"
+	b, _ := h.svc.GetPreset(ctx, "g1")
+	if b.Name != "Orig" || b.RunIDs[0] != "r1" {
+		t.Fatalf("mutating one GetPreset result leaked into the next: %+v", b)
+	}
+	listed, _ := h.svc.ListPresets(ctx, true)
+	if listed[0].Name != "Orig" || listed[0].RunIDs[0] != "r1" {
+		t.Fatalf("mutating a GetPreset result reached the cache: %+v", listed[0])
+	}
+}
