@@ -52,24 +52,23 @@ These are order-of-magnitude estimates, not measurements.
 
 ## Phase 0: Spikes (resolve PRD §8 before coding)
 
-**0.1 (You, ~5 min, no code): the claude.ai connector dialog.**
-In claude.ai → Settings → Connectors → *Add custom connector*, check whether
-there is a field for a custom request header or bearer token (possibly under
-*Advanced settings*). Write down Yes or No. This decides which form the setup
-docs lead with. Either way the server supports both (DESIGN §4), so nothing
-here blocks coding.
+**0.1 (You, ~2 min, no code): Step 2 of the claude.ai connector dialog.**
+Step 1 only asks for a name and URL. Enter any placeholder (for example
+`https://example.com/mcp`) and continue to **Step 2**. Check whether
+**No sign-in** offers a **Request headers** section; the docs say it's a beta
+shown only to some accounts (PRD §8.1). Then cancel. If it's there, the setup
+docs lead with the header form; if not, with the URL-path form. The server
+supports both (DESIGN §4), so this doesn't block coding.
 
-**0.2 (Haiku `test-runner`-style agent, or you): pipeline duration.**
-Use `cmd/usage_report` (see `usage_analytics_reference.md`) to get
-p50/p95 wall-clock for real pipeline runs over the last 30 days. If per-run
-grouping isn't available, take the span from first to last record per
-~1-minute burst. Output: two numbers. They set the default `wait_seconds`
-and `RUN_ABANDON_AFTER`. If the data isn't there, keep the defaults (45 s /
-15 min) and note them as unverified.
+**0.2 (Done, no further work): pipeline duration.** Measured from
+`eval_results/full_pipeline/full_pipeline_gemini36_benchmark_report.md`:
+117–166 s, mean about 138 s, under prod routing (PRD §8.3). That sets
+`wait_seconds` (200 / 120) and `RUN_ABANDON_AFTER` (10 min). Optional
+follow-up: once PR 1 ships, read the real durations from `runs/*.json` and
+retune.
 
-**0.3 (deferred to Phase 6): resources and prompts in claude.ai.**
-This can only be observed once the connector is live. Tools are the main path
-regardless.
+**0.3 (Done, via docs): resources and prompts.** claude.ai supports them
+(PRD §8.2). Confirm once in Phase 6 that they show up in the attach menu.
 
 ## Phase 1: PR 1, `presetsvc` extraction + run log (no MCP yet)
 
@@ -82,6 +81,7 @@ and capped at 2 concurrent.
 | 1.1 | Create `internal/runs`: `RunRecord`, `RunEvent`, `AgentTrace`, `Store` (Get/Put through `storage.Client` at `runs/<id>.json`), `Recorder` (implements observer, mutex, debounced persist, abandonment check) | **Sonnet** | DESIGN §3.1–3.2 | Compiles; 1.4 tests pass with `-race` |
 | 1.2 | `agents` hook: `RunObserver`, `WithRunObserver`/`WithRunID`/`RunIDFrom`; call sites in `RunAgentSplit` (start, attempt beside `recordAttemptUsage`, done) and `RunPipeline` (`onProgress` sites, critic); `execID` from ctx; move `agentNames` → exported `AgentRoleKeys` with the 3 missing entries; mock-mode canned replay | **Sonnet** | DESIGN §3.3 | Existing `internal/agents` tests unchanged and green; nil observer = zero behaviour change |
 | 1.3 | Create `internal/presetsvc`: move the generate goroutine body and the API-key resolution out of `server.go`/`handlers_preset.go`; `StartGenerate`/`StartRefine`/`Save`/`Run`/`WaitRun`; semaphore; in-memory run cache with eviction; `Preset.RunIDs` field. Rewire `handleGeneratePreset`, `handleChatPreset` and `handleTaskStatus` to call it, **emitting byte-identical HTML** | **Sonnet** | DESIGN §2 | `go test ./internal/api/...` green with no test edits beyond constructor wiring |
+| 1.3b | SIGTERM handler in `cmd/server/main.go` (`signal.NotifyContext` → `http.Server.Shutdown`, plus `presetsvc.AbandonActive("server stopped mid-run…")` with a flush), replacing the bare `ListenAndServe` | **Haiku** (small and well specified) | DESIGN §3.3 "Graceful stop" | A test sends a cancel to the shutdown context and the active mock run reads back `abandoned` |
 | 1.4 | Unit tests for `internal/runs`: concurrent `OnAgentDone` from 3 goroutines, persist round-trip on the fake client, abandonment flip, event `Seq` monotonic | **Haiku** (card below) | DESIGN §3, §7 | `go test -race ./internal/runs/...` green |
 | 1.5 | Unit tests for `presetsvc`: mock-mode generate reaches `complete` with `PresetID` set and `RunIDs` linked; third concurrent start returns `ErrBusy`; `WaitRun` wakes on state change before the timeout | **Haiku** | DESIGN §2 | green |
 | 1.6 | Run the full unit suite + Playwright e2e in the container; report failures only | **`test-runner` (Haiku)** | CLAUDE.md "Tests" | Both green; output quoted in the PR |
@@ -160,10 +160,15 @@ Phase 0.1 found claude.ai supports, and give the Claude Code form
 
 1. `fly secrets set MCP_TOKEN=$(openssl rand -hex 32)`. Merging to `main`
    auto-deploys.
-2. In claude.ai → Connectors → Add custom connector:
-   - **If headers are supported:** URL `https://<app>.fly.dev/mcp`, with header
-     `Authorization: Bearer <token>`.
-   - **Otherwise:** URL `https://<app>.fly.dev/mcp/<token>` and no auth.
+2. In claude.ai → Settings → Connectors → Add custom connector. Step 1: name
+   `QC-2 Modeler`, URL `https://<app>.fly.dev/mcp`. Step 2: **No sign-in**.
+   - **If Request headers is offered:** add a header named `authorization`
+     with the value `Bearer <token>`. Type the `Bearer ` prefix yourself;
+     Claude doesn't add it.
+   - **Otherwise:** go back and change the URL to
+     `https://<app>.fly.dev/mcp/<token>`, with no header.
+   - Auth can't be edited later. To rotate, remove the connector and add it
+     again (DESIGN §4).
 3. Walk through J1–J5 from the PRD in a real chat. This is the only step that
    spends real Gemini money, about one full pipeline run plus one refine.
 4. Record Phase 0.3: do resources and prompts appear in claude.ai? If they
@@ -178,7 +183,7 @@ Phase 0.1 found claude.ai supports, and give the Claude Code form
 |---|---|---|
 | The presetsvc refactor changes UI HTML subtly | Med | "Byte-identical HTML" acceptance on 1.3; Playwright suite; GSR deep-review |
 | An observer hook races in concurrent phases | Med | Mutex in `Recorder`; `-race` tests (1.4) |
-| Fly stops the machine mid-run | Med (unverified) | Long-polls keep connections open; abandonment detection; runs are resumable to *view*, not to *finish*, and that's acceptable |
+| Fly stops the machine mid-run | Med (per a summary of Fly's docs: the proxy only sees inbound requests) | A 200 s first wait covers a typical run inside one open request; "poll in the same turn" tool wording; SIGTERM handler marks runs `abandoned` immediately; a run can be *viewed* after a stop but not *finished*, which is acceptable |
 | URL token leaks through a log | Low–Med | Fixed route labels in logs; log-capture test (2.4); rotation via `MCP_TOKEN_NEXT` |
-| Tool results too large for claude.ai | Med (unverified limit) | Paging with a 20 k default; index mode first |
+| Tool results too large for claude.ai | Low (documented limit ~150k chars) | Paging with a 40 k default and 120 k max; index mode first |
 | Claude model mis-sequences tools (e.g. double generate) | Med | Model-facing tool descriptions; `ErrBusy` guard |

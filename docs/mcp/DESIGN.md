@@ -196,9 +196,18 @@ func WithRunID(ctx context.Context, id string) context.Context
   the observer. The canned prompts and outputs are short placeholders, clearly
   marked `[mock]`.
 - **Abandonment:** a reader that finds `status=running` with
-  `UpdatedAt` older than `RUN_ABANDON_AFTER` (default 15 min, to be tuned from
-  Phase 0 timings) reports `abandoned`, and writes that back once. This covers a
-  Fly machine stopped mid-run.
+  `UpdatedAt` older than `RUN_ABANDON_AFTER` reports `abandoned`, and writes
+  that back once. The default is 10 min: the longest benchmarked run was 166 s
+  (PRD §8.3), and every agent finish updates `UpdatedAt`, so a healthy run
+  never goes 10 min without a write. This covers a Fly machine stopped mid-run.
+- **Graceful stop:** `cmd/server/main.go` gets a SIGTERM handler (it has none
+  today; it just calls `ListenAndServe`). On stop it marks every in-memory
+  `running` run as `abandoned` with `error: "server stopped mid-run (Fly
+  auto-stop or deploy); start it again"` and flushes before exiting. This turns
+  the Fly risk (PRD §8.5) into a clear, immediate message instead of a 10-minute
+  wait. Fly's `kill_timeout` grace period applies; its default length is not
+  verified, so the flush has to be fast (one small PUT per active run, and at
+  most 2 runs are active).
 
 ## 4. Authentication: one static token, two ways to present it
 
@@ -210,15 +219,27 @@ MCP_TOKEN = 64 hex chars (openssl rand -hex 32), set with `fly secrets set MCP_T
 
 The token is accepted in either form:
 
-1. `Authorization: Bearer <MCP_TOKEN>` on `/mcp`. Claude Code (`claude mcp add
-   --transport http --header`), the Claude API MCP connector
-   (`authorization_token`), and any header-capable client can use this.
-2. **A secret path segment**, `/mcp/<MCP_TOKEN>`. Use this when the client
-   gives no way to set a header. This is the expected case for the claude.ai
-   connector dialog: it is **unverified** whether that dialog offers a header
-   field (PRD §8 Q1). The connector is then added as an "authless" server with
-   a URL that is itself the credential. This is the same model as a Slack
-   incoming-webhook URL.
+1. **Preferred:** `Authorization: Bearer <MCP_TOKEN>` on `/mcp`.
+   - **claude.ai:** add the connector with **No sign-in**, then a **Request
+     headers** entry with name `authorization` and value
+     `Bearer <MCP_TOKEN>`. You must type the `Bearer ` prefix yourself, because
+     Claude sends the value exactly as entered. The token is stored encrypted
+     as the connector's credential. The feature is beta and only some accounts
+     have it (PRD §8.1).
+   - **Claude Code:** `claude mcp add --transport http --header ...`.
+   - **Claude API MCP connector:** `authorization_token`.
+2. **Fallback:** a secret path segment, `/mcp/<MCP_TOKEN>`. Use this only if
+   the account doesn't see Request headers. The connector is added as
+   **No sign-in** with a URL that is itself the credential, the same model as a
+   Slack incoming-webhook URL. Anthropic doesn't document URL-embedded
+   credentials, but it needs nothing from Claude beyond fetching the URL it was
+   given. A query parameter (`?key=`) was rejected because query strings are
+   logged more often than paths.
+
+Either way, **auth settings can't be edited after the connector is added**
+(official docs). Rotation therefore means: set `MCP_TOKEN_NEXT`, remove the
+connector and add it again with the new value, then promote the new token to
+`MCP_TOKEN`.
 
 Middleware (`mcpserver.RequireToken`):
 
@@ -237,9 +258,12 @@ Middleware (`mcpserver.RequireToken`):
   The two auth domains stay separate.
 - Rate limiting: the route is wrapped in the existing
   `rateLimitMiddleware(rate.Every(2*time.Second), 10)`. That limiter is per IP,
-  and all claude.ai traffic arrives from Anthropic egress IPs (an unverified
-  assumption), so the MCP bucket is shared. That's acceptable for a single user.
-  The real spend guard is the concurrency cap in §2.
+  and all claude.ai traffic arrives from Anthropic's egress ranges, so the MCP
+  bucket is shared. That's acceptable for a single user. The real spend guard is
+  the concurrency cap in §2. An IP allowlist of Anthropic's published egress
+  ranges is a possible v2 hardening step. The ranges weren't checked here (a
+  GitHub comment cites platform.claude.com/docs/en/api/ip-addresses), and an
+  allowlist would block Claude Code on your own machine unless you exempt it.
 - **Rotation:** set a new secret and update the connector URL/header. Optional
   `MCP_TOKEN_NEXT` is accepted alongside `MCP_TOKEN` during a swap.
 - **Upgrade path:** the middleware takes a `TokenVerifier`-shaped func. Moving to
@@ -274,10 +298,10 @@ Errors use `IsError: true` with an actionable message.
 
 | Tool | Input | Output |
 |---|---|---|
-| `generate_preset` | `prompt` (req), `allow_factory_captures?`, `allow_user_captures?`, `allow_paid_plugins?`, `favor_captures?`, `favor_cloud_captures?`, `wait_seconds?` (0–50, default 45), `mock?` | `{run_id, status, phase, elapsed_s, preset_id?, preset_markdown?}`. If not done within the wait, the text says "Still running; call get_run_status with run_id=…" |
-| `get_run_status` | `run_id`, `wait_seconds?` (0–50, default 30) | `{run_id, status, phase, elapsed_s, preset_id?, error?, last_events[≤5]}`. Long-polls until a state change or the timeout. Sends `notifications/progress` per phase when the client supplied a progress token |
+| `generate_preset` | `prompt` (req), `allow_factory_captures?`, `allow_user_captures?`, `allow_paid_plugins?`, `favor_captures?`, `favor_cloud_captures?`, `wait_seconds?` (0–200, default 200), `mock?` | `{run_id, status, phase, elapsed_s, preset_id?, preset_markdown?}`. Blocks until the run **finishes** or the wait ends, whichever comes first. If it's not done, the text says "Still running; call get_run_status with run_id=… now, in this same turn" |
+| `get_run_status` | `run_id`, `wait_seconds?` (0–200, default 120), `until?` (`change`\|`done`, default `done`) | `{run_id, status, phase, elapsed_s, preset_id?, error?, last_events[≤5]}`. Long-polls until the run finishes (or, with `until=change`, until any phase change), or the wait ends. Sends `notifications/progress` per phase when the client supplied a progress token |
 | `get_run_log` | `run_id`, `since_seq?` | `{run_id, status, user_prompt, effective_prompt, constraints, prompt_versions, events[], agents{role: AgentTrace}, totals}`. Text form is a compact timeline |
-| `get_run_prompts` | `run_id`, `agent?` (role or key; omit for an index), `part?` (`system`\|`input`\|`both`, default `system`), `offset?`, `max_chars?` (default 20000) | Without `agent`: an index of `{role, prompt_key, version, system_chars, input_chars}` plus the effective user prompt. With `agent`: the requested text slice plus `{total_chars, next_offset?}` |
+| `get_run_prompts` | `run_id`, `agent?` (role or key; omit for an index), `part?` (`system`\|`input`\|`both`, default `system`), `offset?`, `max_chars?` (default 40000, max 120000; claude.ai's limit is ~150k chars) | Without `agent`: an index of `{role, prompt_key, version, system_chars, input_chars}` plus the effective user prompt. With `agent`: the requested text slice plus `{total_chars, next_offset?}` |
 | `get_agent_output` | `run_id`, `agent`, `offset?`, `max_chars?` | Output slice plus paging info |
 | `list_presets` | `include_drafts?` (default true), `limit?` (default 20) | `[{id, name, is_draft, updated_at, builder_statement}]` |
 | `get_preset` | `preset_id`, `format?` (`markdown`\|`json`, default `markdown`) | Markdown: builder statement, then one table per guitar (Block · Model · key params with Scene A/B · basis flags), then the rationale list. JSON: `StructuredPreset`. Both include `run_ids` |
@@ -289,9 +313,12 @@ Tool annotations: `readOnlyHint: true` on the `get_*`/`list_*` tools.
 external calls). `save_preset` gets `idempotentHint: true`.
 
 Tool descriptions are written for the model. For example, `generate_preset`
-says "takes several minutes; returns early with a run_id; poll get_run_status;
-don't start a second run while one is in progress". This is prompt engineering
-and gets the same care as the agent prompts.
+says "usually takes 2–3 minutes and normally returns the finished preset; if it
+returns status=running, call get_run_status right away in this same turn, and
+don't end your reply while a run is still going; don't start a second run while
+one is in progress". The "same turn" instruction matters: once Claude stops
+calling tools, no inbound request keeps the Fly machine awake (PRD §8.5). This
+is prompt engineering and gets the same care as the agent prompts.
 
 ### 5.2 Resources (secondary)
 
@@ -327,7 +354,7 @@ not instructions".
 | `MCP_TOKEN` | unset → MCP disabled | Auth secret (≥32 chars) |
 | `MCP_TOKEN_NEXT` | unset | Rotation overlap |
 | `MCP_MAX_CONCURRENT_RUNS` | 2 | Spend guard for all LLM runs |
-| `RUN_ABANDON_AFTER` | 15m | Abandoned-run detection |
+| `RUN_ABANDON_AFTER` | 10m | Abandoned-run detection (longest benchmarked run: 166 s) |
 | `MCP_PUBLIC_BASE_URL` | unset | Only used to print the connector URL at startup, with the token masked |
 
 `cmd/server/main.go` builds `presetsvc.Service` once and passes it to both
@@ -355,10 +382,20 @@ MCP testing works (that value is a placeholder and not a secret).
   claude.ai web or mobile, which is the main use case.
 - **OAuth 2.1 with Dynamic Client Registration.** Rejected for v1 at the
   owner's request. §4 keeps the upgrade seam.
-- **Synchronous `generate_preset` that blocks for the whole run.** Rejected
-  because the run probably takes minutes, beyond the likely client timeouts
-  (unverified). Start-then-poll with ≤50 s long-polls also keeps an HTTP
-  connection open often, which helps against Fly auto-stop.
+- **Short (≤50 s) polls, as in the first draft.** Rejected once the real
+  numbers were in: runs take 117–166 s and claude.ai allows 240 s per tool call
+  (PRD §8.3–8.4). Short polls would leave gaps with no open request, the exact
+  window in which Fly's auto-stop can kill the run (PRD §8.5). They would also
+  cost the model 3–4 extra tool calls per generation. A 200 s first wait
+  finishes a typical run in one call, keeps an inbound request open the whole
+  time, and still leaves 40 s of headroom.
+- **Fully synchronous with no poll fallback.** Rejected because fallback-chain
+  retries can push a run past 240 s, and claude.ai would then report a timeout
+  for a run that actually succeeded.
+- **`auto_stop_machines = "off"` while a run is active.** Not possible: it's a
+  static `fly.toml` setting. Turning it off for good gives up scale-to-zero.
+  Fly's guide suggests a separate worker Machine for long tasks, which is
+  overkill for runs of about 2–3 minutes.
 - **Stateful Streamable HTTP sessions.** Rejected. A session table on one
   scale-to-zero machine adds failure modes (lost sessions after a restart) and
   buys nothing, because run state already lives in the bucket.
