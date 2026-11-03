@@ -12,7 +12,7 @@ COPY . .
 RUN go mod tidy
 
 # Build application securely isolated inside the Linux host safely bypassing macOS Santa policies
-RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
 
 # Minimal distroless runtime execution stage 
 FROM gcr.io/distroless/static-debian11
