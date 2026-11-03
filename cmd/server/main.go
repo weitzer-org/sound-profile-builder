@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
@@ -140,7 +143,11 @@ func main() {
 	}
 
 	log.Printf("QC-2 Backend listening at: http://localhost:%s\n", port)
-	if err := server.Start(":" + port); err != nil {
+	// SIGTERM (Fly stop/deploy) or Ctrl-C triggers a graceful stop; see serve.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+	srv := &http.Server{Addr: ":" + port, Handler: server.Handler()}
+	if err := serve(ctx, srv, server.Service()); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
