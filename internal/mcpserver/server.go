@@ -56,7 +56,7 @@ func Mount(mux *http.ServeMux, svc *presetsvc.Service, cfg Config, limit func(ht
 	mux.Handle("/mcp/{token}", limit(RequireToken(cfg, routePath)(h)))
 	// Anything deeper under /mcp/ is never a valid MCP endpoint; answer exactly
 	// like an unauthenticated request instead of falling through to the UI.
-	mux.Handle("/mcp/", limit(RequireToken(Config{}, routeOther)(h)))
+	mux.Handle("/mcp/", limit(http.HandlerFunc(rejectOther)))
 
 	// There is no OAuth here, so say so plainly: a bare 404 on every discovery
 	// document (DESIGN §4), not the UI's login redirect.

@@ -2,6 +2,7 @@ package mcpserver
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -448,5 +449,14 @@ func TestVerifier(t *testing.T) {
 	}
 	if (&verifier{}).ok("") {
 		t.Error("zero-value verifier accepted the empty string")
+	}
+}
+
+func TestConfigNeverPrintsSecrets(t *testing.T) {
+	c := Config{Token: testToken, TokenNext: "NEXT" + testToken}
+	for _, f := range []string{"%v", "%+v", "%#v", "%s"} {
+		if out := fmt.Sprintf(f, c); strings.Contains(out, testToken) {
+			t.Errorf("format %s leaked the token", f)
+		}
 	}
 }

@@ -37,6 +37,11 @@ func ConfigFromEnv() Config {
 	}
 }
 
+// String and GoString redact the secrets, so a stray %v/%+v/%#v of a Config (a
+// log line, a panic message, a test failure) can never print them.
+func (c Config) String() string   { return "mcpserver.Config{Token:[redacted] TokenNext:[redacted]}" }
+func (c Config) GoString() string { return c.String() }
+
 // Enabled reports whether a usable token is configured.
 func (c Config) Enabled() bool { return len(c.Token) >= MinTokenLen }
 
@@ -87,6 +92,13 @@ func deny(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", `Bearer realm="qc2-mcp"`)
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusUnauthorized)
+}
+
+// rejectOther answers anything under /mcp/ that is not a valid endpoint with the
+// same bare 401 as a failed authentication, whatever the credentials.
+func rejectOther(w http.ResponseWriter, _ *http.Request) {
+	log.Printf("mcp: rejected request route=%s reason=not_an_endpoint", routeOther)
+	deny(w)
 }
 
 // RequireToken guards next with the static MCP token, accepted either as
