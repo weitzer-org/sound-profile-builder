@@ -923,8 +923,10 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 				obs.OnAttempt(agentRole, actualModelName, openLLMLatencyMs, nil)
 			}
 			if ci := callInfoFrom(ctx); ci != nil {
-				ci.model = modelName
-				ci.usage = AgentUsage{InputTokens: promptTokens, OutputTokens: completionTokens, Model: modelName, Calls: 1, LatencyMs: openLLMLatencyMs}
+				// actualModelName (prefix stripped), to match OnAttempt and the usage record above;
+				// o.Usage.ModelsUsed deliberately keeps the full modelName and is unchanged.
+				ci.model = actualModelName
+				ci.usage = AgentUsage{InputTokens: promptTokens, OutputTokens: completionTokens, Model: actualModelName, Calls: 1, LatencyMs: openLLMLatencyMs}
 			}
 			// Accumulate metrics natively
 			o.Usage.mu.Lock()

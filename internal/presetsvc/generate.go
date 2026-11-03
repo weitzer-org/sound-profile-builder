@@ -213,6 +213,10 @@ func (s *Service) runGenerate(ctx context.Context, lr *liveRun, runID, apiKey, p
 
 	initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
 
+	// Deliberately a map, not presetPayload: json.Marshal sorts map keys, so this
+	// persists {"legacy_html":…,"structured":…}, byte-for-byte what the original
+	// handler wrote. presetPayload (refine) writes structured first. Don't unify
+	// without a migration decision; both orders decode identically.
 	combinedPayload := map[string]interface{}{
 		"structured":  archResp.StructuredPayload,
 		"legacy_html": archResp.FinalHTMLPayload,
