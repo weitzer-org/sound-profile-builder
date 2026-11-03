@@ -173,7 +173,8 @@ func TestIntegration_ToolsList(t *testing.T) {
 		byName[tool.Name] = tool
 		names = append(names, tool.Name)
 	}
-	want := []string{listToolName, getToolName, saveToolName}
+	want := []string{listToolName, getToolName, saveToolName,
+		generateToolName, refineToolName, statusToolName, logToolName, promptsToolName, outputToolName}
 	if len(res.Tools) != len(want) {
 		t.Fatalf("tools = %v, want exactly %v", names, want)
 	}
@@ -532,8 +533,8 @@ func TestIntegration_AuthPathToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListTools over path token: %v", err)
 	}
-	if len(res.Tools) != 3 {
-		t.Errorf("path-token session sees %d tools, want 3", len(res.Tools))
+	if len(res.Tools) != 9 {
+		t.Errorf("path-token session sees %d tools, want 9", len(res.Tools))
 	}
 }
 
