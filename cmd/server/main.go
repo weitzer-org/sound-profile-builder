@@ -11,6 +11,7 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/mcpserver"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -136,6 +137,11 @@ func main() {
 
 	// Initialize Server
 	server := api.NewServer(store, memoryStore, storeClient, smFetcher, orchMaker, cfg)
+
+	// MCP front end on the same mux. It shares the UI's per-IP rate limiter and
+	// the same preset service (and so the same concurrency cap). Without a usable
+	// MCP_TOKEN its routes reject everything; the UI is unaffected.
+	mcpserver.Mount(server.Mux(), server.Service(), mcpserver.ConfigFromEnv(), server.RateLimit())
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -2,10 +2,12 @@ package presetsvc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -555,5 +557,149 @@ func TestAbandonActiveMarksBlockedRun(t *testing.T) {
 	}
 	if stored.Status != runs.StatusAbandoned {
 		t.Errorf("persisted status = %q, want abandoned", stored.Status)
+	}
+}
+
+// Save must refuse while a refinement of the same preset is in flight (the
+// refinement would otherwise overwrite the rename, or the rename the refinement).
+func TestSaveIsRefusedWhileThePresetIsBeingRefined(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	p := &storage.Preset{ID: "p1", Name: "Draft Preset", Payload: "{}"}
+	if err := h.store.Save(ctx, p); err != nil {
+		t.Fatal(err)
+	}
+
+	h.svc.mu.Lock()
+	h.svc.refining[p.ID] = struct{}{}
+	h.svc.mu.Unlock()
+	if _, err := h.svc.Save(ctx, p.ID, "Named"); !errors.Is(err, ErrPresetBusy) {
+		t.Fatalf("Save during a refine: err = %v, want ErrPresetBusy", err)
+	}
+	if got, _ := h.store.Get(ctx, p.ID); got.Name != "Draft Preset" {
+		t.Errorf("a refused Save must not rename: name = %q", got.Name)
+	}
+
+	h.svc.mu.Lock()
+	delete(h.svc.refining, p.ID)
+	h.svc.mu.Unlock()
+	if got, err := h.svc.Save(ctx, p.ID, "Named"); err != nil || got.Name != "Named" {
+		t.Fatalf("Save after the refine ended: %v, %v", got, err)
+	}
+}
+
+// ListPresets hands back copies: writing through a result must not reach the store's cache.
+func TestListPresetsReturnsCopiesNewestFirstWithoutDrafts(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	for _, p := range []*storage.Preset{
+		{ID: "a", Name: "Alpha", Payload: "{}", RunIDs: []string{"r1"}},
+		{ID: "b", Name: "Draft Preset", Payload: "{}"},
+		{ID: "c", Name: "Gamma", Payload: "{}"},
+	} {
+		if err := h.store.Save(ctx, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := h.svc.ListPresets(ctx, false)
+	if err != nil || len(got) != 2 {
+		t.Fatalf("ListPresets(false) = %d presets, err %v; want 2 (draft left out)", len(got), err)
+	}
+	if all, _ := h.svc.ListPresets(ctx, true); len(all) != 3 {
+		t.Errorf("ListPresets(true) = %d presets, want 3", len(all))
+	}
+	for i := range got {
+		got[i].Name = "MUTATED"
+		if len(got[i].RunIDs) > 0 {
+			got[i].RunIDs[0] = "MUTATED"
+		}
+	}
+	again, _ := h.svc.ListPresets(ctx, false)
+	for _, p := range again {
+		if p.Name == "MUTATED" || (len(p.RunIDs) > 0 && p.RunIDs[0] == "MUTATED") {
+			t.Fatalf("mutating a ListPresets result reached the store cache: %+v", p)
+		}
+	}
+	if _, err := h.svc.GetPreset(ctx, "nope"); err == nil {
+		t.Error("GetPreset of a missing ID must fail")
+	} else if _, ok := err.(*LookupError); !ok {
+		t.Errorf("GetPreset error = %T, want *LookupError", err)
+	}
+}
+
+func TestDecodeStructuredHandlesEnvelopeBareAndLegacy(t *testing.T) {
+	guitars := `{"guitars":{"Strat":[{"id":"b1","type":"Amplifier","model":"Plexi","parameters":[]}]}}`
+	for name, tc := range map[string]struct {
+		payload string
+		ok      bool
+	}{
+		"envelope":    {`{"structured":` + guitars + `,"legacy_html":{"Strat":"<div>x</div>"}}`, true},
+		"bare":        {guitars, true},
+		"legacy only": {`{"Strat":"<div>x</div>"}`, false},
+		"legacy env":  {`{"structured":{"guitars":{}},"legacy_html":{"Strat":"x"}}`, false},
+		"garbage":     {`not json`, false},
+		"empty":       {``, false},
+	} {
+		sp, ok := DecodeStructured(tc.payload)
+		if ok != tc.ok || (ok && len(sp.Guitars["Strat"]) != 1) {
+			t.Errorf("%s: ok=%v guitars=%v, want ok=%v", name, ok, sp.Guitars, tc.ok)
+		}
+	}
+}
+
+// GetPreset returns a fresh object: the store's Get decodes from storage on every
+// call and never hands out its cache, so a caller may change the result freely.
+func TestGetPresetReturnsAnIndependentObject(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	if err := h.store.Save(ctx, &storage.Preset{ID: "g1", Name: "Orig", Payload: "{}", RunIDs: []string{"r1"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := h.svc.ListPresets(ctx, true); err != nil { // populate the store's cache too
+		t.Fatal(err)
+	}
+	a, err := h.svc.GetPreset(ctx, "g1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a.Name = "MUTATED"
+	a.RunIDs[0] = "MUTATED"
+	b, _ := h.svc.GetPreset(ctx, "g1")
+	if b.Name != "Orig" || b.RunIDs[0] != "r1" {
+		t.Fatalf("mutating one GetPreset result leaked into the next: %+v", b)
+	}
+	listed, _ := h.svc.ListPresets(ctx, true)
+	if listed[0].Name != "Orig" || listed[0].RunIDs[0] != "r1" {
+		t.Fatalf("mutating a GetPreset result reached the cache: %+v", listed[0])
+	}
+}
+
+// Ordering is by UpdatedAt (newest first) and only then by ID. Objects are written
+// straight into the fake bucket with explicit timestamps, so no sleeping is needed.
+func TestListPresetsOrdersByUpdatedAtThenID(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	for _, p := range []storage.Preset{
+		{ID: "a-oldest", Name: "Old", Payload: "{}", UpdatedAt: "2026-01-01T00:00:00Z"},
+		{ID: "z-newest", Name: "New", Payload: "{}", UpdatedAt: "2026-03-01T00:00:00Z"},
+		{ID: "m-tie-2", Name: "T2", Payload: "{}", UpdatedAt: "2026-02-01T00:00:00Z"},
+		{ID: "b-tie-1", Name: "T1", Payload: "{}", UpdatedAt: "2026-02-01T00:00:00Z"},
+	} {
+		data, _ := json.Marshal(p)
+		if err := h.client.WriteFile(ctx, testBucket, "presets/"+p.ID+".json", data); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := h.svc.ListPresets(ctx, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for _, p := range got {
+		ids = append(ids, p.ID)
+	}
+	want := []string{"z-newest", "b-tie-1", "m-tie-2", "a-oldest"}
+	if !slices.Equal(ids, want) {
+		t.Fatalf("order = %v, want %v", ids, want)
 	}
 }

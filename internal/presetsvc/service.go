@@ -9,10 +9,13 @@ package presetsvc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -133,6 +136,65 @@ func New(d Deps) *Service {
 		live:     make(map[string]*liveRun),
 		refining: make(map[string]struct{}),
 	}
+}
+
+// DraftName is the name an unsaved generated preset carries until Save renames it.
+const DraftName = "Draft Preset"
+
+// GetPreset loads one preset. The result is a fresh object the caller may keep
+// or change. A failed lookup is a *LookupError.
+func (s *Service) GetPreset(ctx context.Context, id string) (*storage.Preset, error) {
+	p, err := s.d.Store.Get(ctx, id)
+	if err != nil {
+		return nil, &LookupError{Err: err}
+	}
+	return p, nil
+}
+
+// DecodeStructured extracts the structured signal chain from a stored
+// Preset.Payload, which is either the {structured, legacy_html} envelope or a
+// bare StructuredPreset. ok is false for legacy-only presets (HTML per guitar,
+// no block data). Knowledge of the payload format lives here, next to the
+// service that writes it, so front ends never parse it themselves.
+func DecodeStructured(payload string) (sp storage.StructuredPreset, ok bool) {
+	var env struct {
+		Structured storage.StructuredPreset `json:"structured"`
+	}
+	if json.Unmarshal([]byte(payload), &env) == nil && len(env.Structured.Guitars) > 0 {
+		return env.Structured, true
+	}
+	if json.Unmarshal([]byte(payload), &sp) == nil && len(sp.Guitars) > 0 {
+		return sp, true
+	}
+	return storage.StructuredPreset{}, false
+}
+
+// ListPresets returns copies of the stored presets, newest first (ties broken by
+// ID), leaving out drafts unless includeDrafts. The store's cache shares its
+// *Preset values with every caller of List, so this hands back values (with their
+// slices cloned): changing a result can never corrupt the cache.
+func (s *Service) ListPresets(ctx context.Context, includeDrafts bool) ([]storage.Preset, error) {
+	all, err := s.d.Store.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]storage.Preset, 0, len(all))
+	for _, p := range all {
+		if !includeDrafts && p.Name == DraftName {
+			continue
+		}
+		cp := *p
+		cp.RunIDs = slices.Clone(p.RunIDs)
+		cp.ChatHistory = slices.Clone(p.ChatHistory)
+		out = append(out, cp)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].UpdatedAt != out[j].UpdatedAt { // RFC3339 UTC sorts lexically
+			return out[i].UpdatedAt > out[j].UpdatedAt
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out, nil
 }
 
 // Runs exposes the run store (for readers of persisted logs).
@@ -364,6 +426,16 @@ func (s *Service) Save(ctx context.Context, presetID, name string) (*storage.Pre
 	name = strings.TrimSpace(name)
 	if presetID == "" || name == "" {
 		return nil, errors.New("preset id and name are required")
+	}
+	// A refinement reads the preset, changes it and writes it back whole, so a
+	// rename landing in between would be lost (or would undo the refinement).
+	// This check is advisory, not atomic: it narrows the window, it does not
+	// close it (storage has no conditional writes).
+	s.mu.Lock()
+	_, busy := s.refining[presetID]
+	s.mu.Unlock()
+	if busy {
+		return nil, ErrPresetBusy
 	}
 	p, err := s.d.Store.Get(ctx, presetID)
 	if err != nil {

@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
 	github.com/google/uuid v1.6.0
 	github.com/microcosm-cc/bluemonday v1.0.27
+	github.com/modelcontextprotocol/go-sdk v1.8.0
 	golang.org/x/time v0.15.0
 	google.golang.org/api v0.272.0
 	google.golang.org/genai v1.63.0
@@ -51,13 +52,17 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
 	github.com/googleapis/gax-go/v2 v2.18.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
+	github.com/segmentio/asm v1.1.3 // indirect
+	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0 // indirect
