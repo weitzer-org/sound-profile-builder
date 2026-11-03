@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,6 +36,15 @@ const finishedRunTTL = time.Hour
 
 // ErrBusy means the concurrency cap is reached; the caller should retry later.
 var ErrBusy = errors.New("another run is in progress; try again shortly")
+
+// ErrPresetBusy means a refinement of the same preset is still running. Refinements
+// read the preset, change it and save it whole, so two at once would silently
+// drop one of the changes.
+var ErrPresetBusy = errors.New("this preset is already being refined; wait for that change to finish before sending another")
+
+// abandonDeadline bounds how long AbandonActive waits for its flushes; a stopping
+// server has little time and must not block on a stalled storage backend.
+var abandonDeadline = 4 * time.Second
 
 // Error kinds recorded on a failed run (RunResult.ErrKind), so front ends can
 // word the same failure their own way without parsing messages.
@@ -100,8 +110,9 @@ type Service struct {
 	keyMu    sync.RWMutex
 	keyCache string
 
-	mu   sync.Mutex
-	live map[string]*liveRun
+	mu       sync.Mutex
+	live     map[string]*liveRun
+	refining map[string]struct{} // preset IDs with a refinement in flight
 }
 
 // New builds a Service. The concurrency cap comes from MCP_MAX_CONCURRENT_RUNS
@@ -116,10 +127,11 @@ func New(d Deps) *Service {
 		}
 	}
 	return &Service{
-		d:    d,
-		runs: runs.NewStore(d.Client, d.Bucket),
-		sem:  make(chan struct{}, max),
-		live: make(map[string]*liveRun),
+		d:        d,
+		runs:     runs.NewStore(d.Client, d.Bucket),
+		sem:      make(chan struct{}, max),
+		live:     make(map[string]*liveRun),
+		refining: make(map[string]struct{}),
 	}
 }
 
@@ -314,7 +326,9 @@ func (s *Service) wait(ctx context.Context, runID string, max time.Duration, unt
 // AbandonActive marks every still-running run abandoned with msg and flushes
 // each record. Called on shutdown so a stopped server reports a clear verdict
 // immediately instead of leaving runs to look alive until the staleness
-// threshold. It returns how many runs were marked.
+// threshold. The runs are flushed in parallel and the whole call is bounded by
+// abandonDeadline, so a stalled storage backend can't hold up the shutdown. It
+// returns how many runs were marked.
 func (s *Service) AbandonActive(msg string) int {
 	s.mu.Lock()
 	all := make([]*liveRun, 0, len(s.live))
@@ -322,14 +336,27 @@ func (s *Service) AbandonActive(msg string) int {
 		all = append(all, lr)
 	}
 	s.mu.Unlock()
-	n := 0
+
+	var n atomic.Int32
+	var wg sync.WaitGroup
 	for _, lr := range all {
-		if lr.rec.Abandon(msg) {
-			lr.markDone()
-			n++
-		}
+		wg.Add(1)
+		go func(lr *liveRun) {
+			defer wg.Done()
+			if lr.rec.Abandon(msg) {
+				lr.markDone()
+				n.Add(1)
+			}
+		}(lr)
 	}
-	return n
+	done := make(chan struct{})
+	go func() { wg.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(abandonDeadline):
+		log.Printf("presetsvc: AbandonActive still flushing after %s; shutting down anyway", abandonDeadline)
+	}
+	return int(n.Load())
 }
 
 // Save names a preset (e.g. promotes "Draft Preset" to a saved name).

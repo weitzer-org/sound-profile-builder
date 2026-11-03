@@ -33,7 +33,10 @@ const (
 	EventInfo          = "info"
 )
 
-// Usage is an aggregate of token and call counts.
+// Usage is an aggregate of token and call counts. Like agents.TokenUsage it counts
+// each agent call's winning attempt; tokens burned by failed fallback attempts are
+// recorded per attempt in the usage/ analytics records (recordAttemptUsage), and
+// AgentTrace.Attempts shows how many attempts a call took.
 type Usage struct {
 	InputTokens    int32 `json:"input_tokens"`
 	OutputTokens   int32 `json:"output_tokens"`
@@ -100,6 +103,11 @@ func (r *RunRecord) Clone() RunRecord {
 	if r.Constraints != nil {
 		c.Constraints = make(map[string]any, len(r.Constraints))
 		for k, v := range r.Constraints {
+			// Slices would otherwise stay shared with the live constraints (and the
+			// config's plugin list), so a reader mutating a snapshot could race.
+			if ss, ok := v.([]string); ok {
+				v = append([]string(nil), ss...)
+			}
 			c.Constraints[k] = v
 		}
 	}

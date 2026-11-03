@@ -44,6 +44,22 @@ func (s *Service) startRefine(ctx context.Context, presetID, message string, moc
 		return "", ErrBusy
 	}
 
+	// One refinement per preset at a time (see ErrPresetBusy). Re-read the preset
+	// once the guard is held so the run starts from the latest saved state, not
+	// from whatever it was before an earlier refinement finished.
+	s.mu.Lock()
+	if _, busy := s.refining[presetID]; busy {
+		s.mu.Unlock()
+		s.release()
+		return "", ErrPresetBusy
+	}
+	s.refining[presetID] = struct{}{}
+	s.mu.Unlock()
+	if p, err = s.d.Store.Get(context.WithoutCancel(ctx), presetID); err != nil {
+		s.endRefine(presetID)
+		return "", &LookupError{Err: err}
+	}
+
 	cfg := s.config()
 	versions := map[string]string{}
 	if cfg != nil {
@@ -67,13 +83,21 @@ func (s *Service) startRefine(ctx context.Context, presetID, message string, moc
 		ParentPresetID: presetID,
 	}, isMock(mock))
 
-	go s.runRefine(runCtx, lr, runID, apiKey, p, message)
+	go s.runRefine(runCtx, lr, runID, presetID, apiKey, p, message)
 	return runID, nil
 }
 
+// endRefine releases a preset's in-flight refinement guard.
+func (s *Service) endRefine(presetID string) {
+	s.mu.Lock()
+	delete(s.refining, presetID)
+	s.mu.Unlock()
+}
+
 // runRefine is the former body of handleChatPreset after credential lookup.
-func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, apiKey string, p *storage.Preset, userMessage string) {
+func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, apiKey string, p *storage.Preset, userMessage string) {
 	defer s.release()
+	defer s.endRefine(presetID)
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Refinement panic for %s: %v", runID, r)
@@ -189,9 +213,12 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, apiKey stri
 
 	p.RunIDs = append(p.RunIDs, runID)
 
-	// Save the state
+	// Save the state. A failed save must not report success: the run would claim a
+	// change that isn't stored, and the caller would render an unsaved preset.
 	if err := s.d.Store.Save(ctx, p); err != nil {
 		log.Printf("Failed to save refined preset %s: %v", p.ID, err)
+		s.fail(lr, ErrKindStorage, fmt.Sprintf("Storage Error: %v", err))
+		return
 	}
 
 	s.succeed(lr, p)

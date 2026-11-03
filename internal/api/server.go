@@ -265,7 +265,13 @@ func (s *Server) taskView(ctx context.Context, id string) (TaskState, bool) {
 	}
 	var preset *storage.Preset
 	if rec.Status == runs.StatusComplete && rec.PresetID != "" && s.store != nil {
-		preset, _ = s.store.Get(ctx, rec.PresetID)
+		var err error
+		if preset, err = s.store.Get(ctx, rec.PresetID); err != nil {
+			// The run did finish; only loading its result failed (storage hiccup, or the
+			// preset was deleted). Say that, rather than "no longer available".
+			log.Printf("taskView: run %s completed but preset %s could not be loaded: %v", id, rec.PresetID, err)
+			return TaskState{Status: "error", Error: "The run finished, but its result could not be loaded just now. Open it from your library, or try again in a moment."}, true
+		}
 	}
 	return s.viewFromRecord(*rec, preset, strings.HasPrefix(id, "chat-")), true
 }

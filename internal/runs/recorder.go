@@ -119,21 +119,26 @@ func (r *Recorder) Flush() error {
 	return nil
 }
 
-// OnPhase records a progress phase. A repeat of the current phase is ignored,
-// since both the observer and the legacy onProgress callback may report it.
+// OnPhase records a progress phase. A repeat of the current phase is ignored
+// entirely (no version bump, no wake-up), since both the observer and the legacy
+// onProgress callback report each phase and WaitRunChange must only fire on a
+// real change.
 func (r *Recorder) OnPhase(phase string) {
-	changed := false
-	r.mutate(func(rec *RunRecord) {
-		if rec.Phase == phase {
-			return
-		}
-		changed = true
-		rec.Phase = phase
-		r.addEvent(rec, RunEvent{Type: EventPhase, Msg: phase})
-	})
-	if changed {
-		_ = r.Flush()
+	r.mu.Lock()
+	if r.rec.Phase == phase {
+		r.mu.Unlock()
+		return
 	}
+	r.rec.Phase = phase
+	r.addEvent(&r.rec, RunEvent{Type: EventPhase, Msg: phase})
+	r.rec.UpdatedAt = time.Now().UTC()
+	r.version++
+	cb := r.onChange
+	r.mu.Unlock()
+	if cb != nil {
+		cb()
+	}
+	_ = r.Flush()
 }
 
 // OnInfo records a free-form note.
@@ -200,6 +205,10 @@ func (r *Recorder) OnAttempt(role, model string, latencyMs int64, err error) {
 				Msg: fmt.Sprintf("%s attempt on %s failed: %v", role, model, err)})
 		}
 	})
+	// Heartbeat: every attempt is capped at 3 minutes, so persisting after each one
+	// keeps UpdatedAt well inside the abandonment threshold however long a
+	// fallback chain runs.
+	_ = r.Flush()
 }
 
 // OnAgentDone closes the agent's trace, folds its usage into the totals and
@@ -236,7 +245,7 @@ func (r *Recorder) SetEffectivePrompt(p string) {
 
 // finish moves a running record to a terminal status. It reports whether the
 // transition happened (a run already terminal is left alone).
-func (r *Recorder) finish(status, errMsg, presetID string) bool {
+func (r *Recorder) finish(status, errMsg, presetID string, waitLogs, retry bool) bool {
 	did := false
 	cb := r.apply(func(rec *RunRecord) {
 		if rec.Status != StatusRunning {
@@ -257,10 +266,12 @@ func (r *Recorder) finish(status, errMsg, presetID string) bool {
 		r.addEvent(rec, RunEvent{Type: EventInfo, Msg: msg})
 	})
 	if did {
-		r.logWG.Wait() // status is terminal now, so no new log writes register; let in-flight ones land
+		if waitLogs {
+			r.logWG.Wait() // status is terminal now, so no new log writes register; let in-flight ones land
+		}
 		// Persist the terminal state BEFORE waking waiters, so anyone woken by
 		// the change (WaitRun) and then reading storage sees the same status.
-		_ = r.Flush()
+		r.flushTerminal(retry)
 	}
 	if cb != nil {
 		cb()
@@ -269,10 +280,36 @@ func (r *Recorder) finish(status, errMsg, presetID string) bool {
 }
 
 // Complete marks the run successful and links the resulting preset.
-func (r *Recorder) Complete(presetID string) bool { return r.finish(StatusComplete, "", presetID) }
+func (r *Recorder) Complete(presetID string) bool {
+	return r.finish(StatusComplete, "", presetID, true, true)
+}
 
 // Fail marks the run failed.
-func (r *Recorder) Fail(errMsg string) bool { return r.finish(StatusError, errMsg, "") }
+func (r *Recorder) Fail(errMsg string) bool { return r.finish(StatusError, errMsg, "", true, true) }
 
-// Abandon marks a still-running run abandoned (e.g. on shutdown).
-func (r *Recorder) Abandon(errMsg string) bool { return r.finish(StatusAbandoned, errMsg, "") }
+// Abandon marks a still-running run abandoned (e.g. on shutdown). It is built
+// for a tight deadline: it does not wait for in-flight prompt-log writes and
+// makes a single flush attempt.
+func (r *Recorder) Abandon(errMsg string) bool {
+	return r.finish(StatusAbandoned, errMsg, "", false, false)
+}
+
+// flushTerminal persists a terminal record. A transient storage error would
+// otherwise leave runs/<id>.json reading "running" (and later "abandoned") for
+// a run that finished, so completion and failure retry a few times.
+func (r *Recorder) flushTerminal(retry bool) {
+	attempts := 1
+	if retry {
+		attempts = 3
+	}
+	var err error
+	for i := 0; i < attempts; i++ {
+		if err = r.Flush(); err == nil {
+			return
+		}
+		if i < attempts-1 {
+			time.Sleep(time.Duration(i+1) * 100 * time.Millisecond)
+		}
+	}
+	log.Printf("runs: terminal state of the run was not persisted after %d attempt(s): %v", attempts, err)
+}

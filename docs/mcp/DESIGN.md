@@ -378,7 +378,7 @@ not instructions".
 | `MCP_PUBLIC_BASE_URL` | unset | Only used to print the connector URL at startup, with the token masked |
 
 `cmd/server/main.go` builds `presetsvc.Service` once and passes it to both
-`api.NewServer` and `mcpserver.Mount(mux, svc, cfg)`. `docker-compose.yml` and
+`api.NewServer` and `mcpserver.Mount(mux, svc, cfg, limit)` (`limit` is the API server's own per-IP rate-limit middleware, so UI and MCP requests draw from the same buckets). `docker-compose.yml` and
 `.env.example` get `MCP_TOKEN=dev-token-change-me-0123456789abcdef` so local
 MCP testing works (that value is a placeholder and not a secret).
 

@@ -31,12 +31,16 @@ func TestGenerateDraftChatHistoryIntroIsByteStable(t *testing.T) {
 		t.Fatalf("chat history has %d messages, want 2", len(p.ChatHistory))
 	}
 
-	const wantTail = "<br><br>\n\t\t\t\t<div class=\"card\" style=\"margin-top: 1rem; font-family: monospace; color: #a1a1aa;\">\n" +
+	// The whole intro, agent-impact list included: it is what the original handler
+	// wrote (verified by diffing the original and new servers' output), and the
+	// impact list is the part with real logic (agent names, prompt versions).
+	const wantIntro = "Preset structure successfully laid out based on your requirements.\n" +
+		"<i><ul><li><strong>Tone Historian (v1):</strong> Agent 1 (Tone Historian): Did stuff based on Make it brighter.</li></ul></i><br><br>" +
+		"\n\t\t\t\t<div class=\"card\" style=\"margin-top: 1rem; font-family: monospace; color: #a1a1aa;\">\n" +
 		"\t\t\t\t\t<strong>Pipeline AI Processing Tokens:</strong> Input: 0 | Output: 0 | Models: \n" +
 		"\t\t\t\t</div>"
-	got := p.ChatHistory[1].Content
-	if len(got) < len(wantTail) || got[len(got)-len(wantTail):] != wantTail {
-		t.Errorf("token-stats HTML changed.\n got tail: %q\nwant tail: %q", got[max(0, len(got)-len(wantTail)-20):], wantTail)
+	if got := p.ChatHistory[1].Content; got != wantIntro {
+		t.Errorf("draft intro changed.\n got: %q\nwant: %q", got, wantIntro)
 	}
 }
 

@@ -92,6 +92,19 @@ func TestTaskView(t *testing.T) {
 		}
 	})
 
+	t.Run("completed run whose preset cannot be loaded says so", func(t *testing.T) {
+		s, _, _, _ := setupTestServer()
+		now := time.Now().UTC()
+		rec := &runs.RunRecord{ID: "gen-orphan-1", Kind: runs.KindGenerate, Status: runs.StatusComplete, PresetID: "no-such-preset", CreatedAt: now, UpdatedAt: now}
+		if err := s.svc.Runs().Put(ctx, rec); err != nil {
+			t.Fatal(err)
+		}
+		v, ok := s.taskView(ctx, rec.ID)
+		if !ok || v.Status != "error" || !strings.Contains(v.Error, "could not be loaded") {
+			t.Errorf("got (%+v, %v), want the finished-but-unloadable message", v, ok)
+		}
+	})
+
 	t.Run("live run completes and renders the draft", func(t *testing.T) {
 		s, _, _, _ := setupTestServer()
 		t.Setenv("MCP_MAX_CONCURRENT_RUNS", "10")

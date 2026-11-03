@@ -902,6 +902,8 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %s</div>`, html.EscapeString(err.Error()))))
 			case errors.As(err, &credErr):
 				w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
+			case errors.Is(err, presetsvc.ErrPresetBusy):
+				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">This preset is still being refined. Wait for that change to finish, then send your next message.</div>`))
 			case errors.Is(err, presetsvc.ErrBusy):
 				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">Another run is already in progress. Please try again in a moment.</div>`))
 			default:

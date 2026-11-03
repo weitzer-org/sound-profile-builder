@@ -102,7 +102,7 @@ and capped at 2 concurrent.
 
 | # | Task | Who | Spec | Accept when |
 |---|---|---|---|---|
-| 2.1 | `go get github.com/modelcontextprotocol/go-sdk@v1.8.0`; `internal/mcpserver`: `Mount(mux, svc, cfg)`, stateless `NewStreamableHTTPHandler`, `/mcp` + `/mcp/{token}` routes, `RequireToken` middleware, fail-closed when `MCP_TOKEN` is unset or short, existing rate limiter wrapped around both routes | **Sonnet** | DESIGN §4, §5, §6 | `curl` with no token → 401; with token → MCP `initialize` OK |
+| 2.1 | `go get github.com/modelcontextprotocol/go-sdk@v1.8.0`; `internal/mcpserver`: `Mount(mux, svc, cfg, limit)` (`limit` = the API server's rate-limit middleware, shared, not a second limiter), stateless `NewStreamableHTTPHandler`, `/mcp` + `/mcp/{token}` routes, `RequireToken` middleware, fail-closed when `MCP_TOKEN` is unset or short, existing rate limiter wrapped around both routes | **Sonnet** | DESIGN §4, §5, §6 | `curl` with no token → 401; with token → MCP `initialize` OK |
 | 2.2 | Tools: `list_presets`, `get_preset`, `save_preset` (with annotations and model-facing descriptions) | **Sonnet** | DESIGN §5.1 | Integration test (2.5) passes |
 | 2.3 | `mcpserver/render.go`: `StructuredPreset` → Markdown, plus golden test against `testdata/e2e_mocks/architect_generate.json` | **Haiku** (card below) | DESIGN §5.4 | Golden test green; output reviewed by eye once in the PR |
 | 2.4 | Auth tests: header/path × missing/wrong/short/correct, `MCP_TOKEN_NEXT` accepted, a captured `log` output that never contains the token, the 401 has no `resource_metadata`, and the `/.well-known/oauth-*` paths return 404 | **Haiku** | DESIGN §4, §7 | green |
