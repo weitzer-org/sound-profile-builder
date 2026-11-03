@@ -26,3 +26,9 @@ tests/e2e/output/demo/
 main
 /server
  
+
+# Built binaries / downloaded tools (were committed by accident; ~250MB, made CI checkout take ~3min)
+/eval
+/eval_binary
+/judge
+/k6-*/
