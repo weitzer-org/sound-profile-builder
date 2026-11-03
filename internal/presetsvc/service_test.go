@@ -2,10 +2,12 @@ package presetsvc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -669,5 +671,35 @@ func TestGetPresetReturnsAnIndependentObject(t *testing.T) {
 	listed, _ := h.svc.ListPresets(ctx, true)
 	if listed[0].Name != "Orig" || listed[0].RunIDs[0] != "r1" {
 		t.Fatalf("mutating a GetPreset result reached the cache: %+v", listed[0])
+	}
+}
+
+// Ordering is by UpdatedAt (newest first) and only then by ID. Objects are written
+// straight into the fake bucket with explicit timestamps, so no sleeping is needed.
+func TestListPresetsOrdersByUpdatedAtThenID(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	for _, p := range []storage.Preset{
+		{ID: "a-oldest", Name: "Old", Payload: "{}", UpdatedAt: "2026-01-01T00:00:00Z"},
+		{ID: "z-newest", Name: "New", Payload: "{}", UpdatedAt: "2026-03-01T00:00:00Z"},
+		{ID: "m-tie-2", Name: "T2", Payload: "{}", UpdatedAt: "2026-02-01T00:00:00Z"},
+		{ID: "b-tie-1", Name: "T1", Payload: "{}", UpdatedAt: "2026-02-01T00:00:00Z"},
+	} {
+		data, _ := json.Marshal(p)
+		if err := h.client.WriteFile(ctx, testBucket, "presets/"+p.ID+".json", data); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := h.svc.ListPresets(ctx, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for _, p := range got {
+		ids = append(ids, p.ID)
+	}
+	want := []string{"z-newest", "b-tie-1", "m-tie-2", "a-oldest"}
+	if !slices.Equal(ids, want) {
+		t.Fatalf("order = %v, want %v", ids, want)
 	}
 }

@@ -210,12 +210,13 @@ func TestIntegration_ListPresets(t *testing.T) {
 	h := newTestService(t)
 	cs := newMCPSession(t, h.svc)
 
-	// Save order sets UpdatedAt, which has one-second resolution in RFC3339.
-	seedPreset(t, h, "p-alpha", "Alpha Preset")
-	time.Sleep(1100 * time.Millisecond)
-	seedPreset(t, h, "p-beta", "Beta Preset")
-	time.Sleep(1100 * time.Millisecond)
-	itSeedDraft(t, h, "p-draft")
+	// Ordering is by UpdatedAt, newest first, ties broken by ID. These IDs are chosen so
+	// that the newest preset also has the lowest ID: the expected order is then the same
+	// whether or not the seeds land in the same second, so no sleeping is needed. The
+	// UpdatedAt ordering itself is pinned by presetsvc.TestListPresetsOrdersByUpdatedAtThenID.
+	seedPreset(t, h, "p-3-alpha", "Alpha Preset")
+	seedPreset(t, h, "p-2-beta", "Beta Preset")
+	itSeedDraft(t, h, "p-1-draft")
 
 	// Default: all three, newest first.
 	res := itCall(t, cs, listToolName, nil)
@@ -224,14 +225,14 @@ func TestIntegration_ListPresets(t *testing.T) {
 	}
 	text := itText(t, res)
 	t.Logf("list_presets{}:\n%s", text)
-	if got, want := itTextIDs(text), []string{"p-draft", "p-beta", "p-alpha"}; !slices.Equal(got, want) {
+	if got, want := itTextIDs(text), []string{"p-1-draft", "p-2-beta", "p-3-alpha"}; !slices.Equal(got, want) {
 		t.Fatalf("text order = %v, want newest first %v", got, want)
 	}
 	if !strings.Contains(text, dataNotice) {
 		t.Errorf("list text lacks data notice")
 	}
-	if !strings.Contains(itLineFor(text, "p-draft"), "[draft]") {
-		t.Errorf("draft line not marked [draft]: %q", itLineFor(text, "p-draft"))
+	if !strings.Contains(itLineFor(text, "p-1-draft"), "[draft]") {
+		t.Errorf("draft line not marked [draft]: %q", itLineFor(text, "p-1-draft"))
 	}
 
 	// Structured content decodes to the same fields as the text.
@@ -242,7 +243,7 @@ func TestIntegration_ListPresets(t *testing.T) {
 	var sIDs []string
 	for _, p := range out.Presets {
 		sIDs = append(sIDs, p.ID)
-		if p.ID == "p-draft" && !p.IsDraft {
+		if p.ID == "p-1-draft" && !p.IsDraft {
 			t.Errorf("structured is_draft false for draft")
 		}
 		if line := itLineFor(text, p.ID); !strings.Contains(line, p.Name) {
@@ -257,7 +258,7 @@ func TestIntegration_ListPresets(t *testing.T) {
 	res = itCall(t, cs, listToolName, map[string]any{"include_drafts": false})
 	text = itText(t, res)
 	t.Logf("list_presets{include_drafts:false}:\n%s", text)
-	if strings.Contains(text, "p-draft") {
+	if strings.Contains(text, "p-1-draft") {
 		t.Errorf("draft still listed with include_drafts=false")
 	}
 	if got := itTextIDs(text); len(got) != 2 {
@@ -275,8 +276,8 @@ func TestIntegration_ListPresets(t *testing.T) {
 	if !strings.Contains(text, "Showing 1 of 3") {
 		t.Errorf("limit=1 text lacks truncation note:\n%s", text)
 	}
-	if len(out.Presets) == 1 && out.Presets[0].ID != "p-draft" {
-		t.Errorf("limit=1 returned %s, want newest p-draft", out.Presets[0].ID)
+	if len(out.Presets) == 1 && out.Presets[0].ID != "p-1-draft" {
+		t.Errorf("limit=1 returned %s, want newest p-1-draft", out.Presets[0].ID)
 	}
 }
 
@@ -588,23 +589,22 @@ func TestMCPEndToEnd(t *testing.T) {
 			tool.Annotations.ReadOnlyHint, tool.Annotations.IdempotentHint)
 	}
 
-	seedPreset(t, h, "p-alpha", "Alpha Preset")
-	time.Sleep(1100 * time.Millisecond)
-	itSeedDraft(t, h, "p-draft")
+	seedPreset(t, h, "p-2-alpha", "Alpha Preset")
+	itSeedDraft(t, h, "p-1-draft")
 
 	t.Logf("== list_presets {}\n%s", itText(t, itCall(t, cs, listToolName, nil)))
 
-	t.Logf("== get_preset {p-alpha}\n%s", itText(t, itCall(t, cs, getToolName, map[string]any{"preset_id": "p-alpha"})))
+	t.Logf("== get_preset {p-2-alpha}\n%s", itText(t, itCall(t, cs, getToolName, map[string]any{"preset_id": "p-2-alpha"})))
 
-	res := itCall(t, cs, saveToolName, map[string]any{"preset_id": "p-draft", "name": "Gain Staging Lead"})
-	t.Logf("== save_preset {p-draft, Gain Staging Lead}\n%s (isError=%v)", itText(t, res), res.IsError)
+	res := itCall(t, cs, saveToolName, map[string]any{"preset_id": "p-1-draft", "name": "Gain Staging Lead"})
+	t.Logf("== save_preset {p-1-draft, Gain Staging Lead}\n%s (isError=%v)", itText(t, res), res.IsError)
 
 	t.Logf("== list_presets {include_drafts:false}\n%s",
 		itText(t, itCall(t, cs, listToolName, map[string]any{"include_drafts": false})))
 
-	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-draft", "format": "xml"})
-	t.Logf("== get_preset {p-draft, format:xml}\n%s (isError=%v)", itText(t, res), res.IsError)
+	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-1-draft", "format": "xml"})
+	t.Logf("== get_preset {p-1-draft, format:xml}\n%s (isError=%v)", itText(t, res), res.IsError)
 
-	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-draft"})
-	t.Logf("== get_preset {p-draft}\n%s (isError=%v)", itText(t, res), res.IsError)
+	res = itCall(t, cs, getToolName, map[string]any{"preset_id": "p-1-draft"})
+	t.Logf("== get_preset {p-1-draft}\n%s (isError=%v)", itText(t, res), res.IsError)
 }

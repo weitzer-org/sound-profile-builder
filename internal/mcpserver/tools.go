@@ -189,7 +189,10 @@ func getPreset(svc *presetsvc.Service) mcp.ToolHandlerFor[getInput, getOutput] {
 		var text string
 		if format == formatJSON {
 			out.Preset = &sp
-			raw, _ := json.MarshalIndent(sp, "", "  ")
+			raw, err := json.MarshalIndent(sp, "", "  ")
+			if err != nil {
+				return nil, getOutput{}, toolError(getToolName, fmt.Errorf("marshaling preset: %w", err))
+			}
 			text = dataNotice + "\n\n```json\n" + string(raw) + "\n```"
 		} else {
 			text = dataNotice + "\n\n" + RenderPresetMarkdown(p, sp)
