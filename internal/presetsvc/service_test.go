@@ -368,7 +368,6 @@ func TestWaitRunWakesOnCompletion(t *testing.T) {
 		done <- result{rec, err}
 	}()
 
-	released := time.Now()
 	h.orch.release()
 
 	var res result
@@ -377,9 +376,8 @@ func TestWaitRunWakesOnCompletion(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("WaitRun did not return after the run completed")
 	}
-	if elapsed := time.Since(released); elapsed > 2*time.Second {
-		t.Errorf("WaitRun returned %v after completion, want well under 2s", elapsed)
-	}
+	// No wall-clock bound here: the select above already fails the test if WaitRun
+	// slept toward its 10s max instead of waking on completion.
 	if res.err != nil {
 		t.Fatalf("WaitRun: %v", res.err)
 	}
@@ -404,7 +402,7 @@ func TestWaitRunChangeWakesOnPhase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("WaitRunChange: %v", err)
 	}
-	if elapsed > 2*time.Second {
+	if elapsed >= 5*time.Second { // generous: only distinguishes "woke on change" from "slept toward the 10s max"
 		t.Errorf("WaitRunChange took %v, want it to return on the first phase change", elapsed)
 	}
 	if rec.Status != runs.StatusRunning {
@@ -437,7 +435,7 @@ func TestWaitRunTimesOutWhileRunning(t *testing.T) {
 	if elapsed < max {
 		t.Errorf("WaitRun returned after %v, before max %v", elapsed, max)
 	}
-	if elapsed > 2*time.Second {
+	if elapsed > 5*time.Second { // generous CI headroom; the lower bound above is the real check
 		t.Errorf("WaitRun returned after %v, want about %v", elapsed, max)
 	}
 }

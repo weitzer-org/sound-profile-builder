@@ -28,7 +28,6 @@ type RunObserver interface {
 
 type runObserverKey struct{}
 type runIDKey struct{}
-type callInfoKey struct{}
 
 // WithRunObserver returns ctx carrying o. A nil o returns ctx unchanged.
 func WithRunObserver(ctx context.Context, o RunObserver) context.Context {
@@ -55,17 +54,12 @@ func runObserverFrom(ctx context.Context) RunObserver {
 	return o
 }
 
-// callInfo is filled in by the success paths of runAgentSplit so the
-// RunAgentSplit wrapper can hand the observer the winning model and token
-// usage. It only exists when an observer is attached.
+// callInfo carries the winning model and token usage out of runAgentSplit to
+// the RunAgentSplit wrapper, which hands them to the observer. runAgentSplit
+// takes it as an explicit parameter; nil (no observer) skips the bookkeeping.
 type callInfo struct {
 	model string
 	usage AgentUsage
-}
-
-func callInfoFrom(ctx context.Context) *callInfo {
-	ci, _ := ctx.Value(callInfoKey{}).(*callInfo)
-	return ci
 }
 
 // AgentRoleKeys maps an agent role (the string passed to RunAgentSplit) to its

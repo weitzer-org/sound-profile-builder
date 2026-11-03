@@ -791,16 +791,17 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
 	obs := runObserverFrom(ctx)
 	if obs == nil {
-		return o.runAgentSplit(ctx, agentRole, systemPrompt, userPrompt)
+		return o.runAgentSplit(ctx, agentRole, systemPrompt, userPrompt, nil)
 	}
 	obs.OnAgentStart(agentRole, systemPrompt, userPrompt)
 	ci := &callInfo{}
-	out, err := o.runAgentSplit(context.WithValue(ctx, callInfoKey{}, ci), agentRole, systemPrompt, userPrompt)
+	out, err := o.runAgentSplit(ctx, agentRole, systemPrompt, userPrompt, ci)
 	obs.OnAgentDone(agentRole, ci.model, out, ci.usage, err)
 	return out, err
 }
 
-func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
+// runAgentSplit is RunAgentSplit's body. ci, when non-nil, receives the winning model and usage.
+func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string, ci *callInfo) (string, error) {
 	skip := false
 	switch agentRole {
 	case "Tone Historian":
@@ -922,7 +923,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 			if obs := runObserverFrom(ctx); obs != nil {
 				obs.OnAttempt(agentRole, actualModelName, openLLMLatencyMs, nil)
 			}
-			if ci := callInfoFrom(ctx); ci != nil {
+			if ci != nil {
 				// actualModelName (prefix stripped), to match OnAttempt and the usage record above;
 				// o.Usage.ModelsUsed deliberately keeps the full modelName and is unchanged.
 				ci.model = actualModelName
@@ -1059,7 +1060,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 	// sets finalModelName on a non-truncated success.
 
 	// Safely extract and accumulate generated API metrics natively
-	if ci := callInfoFrom(ctx); ci != nil {
+	if ci != nil {
 		ci.model = finalModelName
 		ci.usage = AgentUsage{Model: finalModelName, Calls: 1, LatencyMs: latencyMs}
 		if resp.UsageMetadata != nil {

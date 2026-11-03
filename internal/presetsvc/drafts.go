@@ -44,18 +44,27 @@ func CleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storag
 
 	draftCount := 0
 	var finalPresets []*storage.Preset
+	var stale []string
 	for _, p := range presets {
 		if p.Name == "Draft Preset" {
 			draftCount++
 			if draftCount > 3 {
-				// Background deletion to prevent blocking HTTP response
-				go func(id string) {
-					store.Delete(context.Background(), id)
-				}(p.ID)
+				stale = append(stale, p.ID)
 				continue
 			}
 		}
 		finalPresets = append(finalPresets, p)
+	}
+	if len(stale) > 0 {
+		// One background goroutine deletes them in turn: the response isn't blocked,
+		// and a large backlog can't fan out into a burst of concurrent storage calls.
+		// Best-effort and idempotent, so a stop mid-way just leaves the rest for the
+		// next cleanup.
+		go func(ids []string) {
+			for _, id := range ids {
+				store.Delete(context.Background(), id)
+			}
+		}(stale)
 	}
 	return finalPresets
 }

@@ -899,7 +899,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			var credErr *presetsvc.CredentialsError
 			switch {
 			case errors.As(err, &lookupErr):
-				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %v</div>`, err)))
+				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %s</div>`, html.EscapeString(err.Error()))))
 			case errors.As(err, &credErr):
 				w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
 			case errors.Is(err, presetsvc.ErrBusy):
@@ -935,7 +935,7 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			case presetsvc.ErrKindSerialize:
 				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">Serialization Error! Check server logs.</div>`))
 			default:
-				w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %v</div>`, rec.Error)))
+				w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %s</div>`, html.EscapeString(rec.Error))))
 			}
 			return
 		}
