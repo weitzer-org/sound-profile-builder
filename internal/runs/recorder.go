@@ -27,6 +27,8 @@ type Recorder struct {
 
 	persistMu sync.Mutex
 	persisted uint64 // highest version written; guarded by persistMu
+
+	logWG sync.WaitGroup // in-flight prompt-log writes
 }
 
 var _ agents.RunObserver = (*Recorder)(nil)
@@ -157,18 +159,24 @@ func (r *Recorder) OnAgentStart(role, systemPrompt, userPrompt string) {
 	if r.store == nil || key == "" {
 		return
 	}
-	// Prompt logs are written once per agent. Failures are logged, never fatal.
-	ctx, cancel := context.WithTimeout(context.Background(), persistTimeout)
-	defer cancel()
+	// Prompt logs are written once per agent, off the agent's critical path (the
+	// Librarian's input alone is ~100 KB). finish() waits for them, so they are
+	// durable before the run reads as terminal. Failures are logged, never fatal.
 	r.mu.Lock()
 	id := r.rec.ID
 	r.mu.Unlock()
-	if err := r.store.WriteLog(ctx, id, key+".system.md", []byte(systemPrompt)); err != nil {
-		log.Printf("runs: write system prompt log %s/%s: %v", id, key, err)
-	}
-	if err := r.store.WriteLog(ctx, id, key+".input.txt", []byte(userPrompt)); err != nil {
-		log.Printf("runs: write input log %s/%s: %v", id, key, err)
-	}
+	r.logWG.Add(1)
+	go func() {
+		defer r.logWG.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), persistTimeout)
+		defer cancel()
+		if err := r.store.WriteLog(ctx, id, key+".system.md", []byte(systemPrompt)); err != nil {
+			log.Printf("runs: write system prompt log %s/%s: %v", id, key, err)
+		}
+		if err := r.store.WriteLog(ctx, id, key+".input.txt", []byte(userPrompt)); err != nil {
+			log.Printf("runs: write input log %s/%s: %v", id, key, err)
+		}
+	}()
 }
 
 // OnAttempt counts a fallback-chain attempt and logs failed ones.
@@ -218,6 +226,7 @@ func (r *Recorder) SetEffectivePrompt(p string) {
 // finish moves a running record to a terminal status. It reports whether the
 // transition happened (a run already terminal is left alone).
 func (r *Recorder) finish(status, errMsg, presetID string) bool {
+	r.logWG.Wait() // prompt logs land before the run reads as terminal
 	did := false
 	r.mutate(func(rec *RunRecord) {
 		if rec.Status != StatusRunning {

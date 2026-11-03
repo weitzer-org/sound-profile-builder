@@ -37,6 +37,10 @@ func TestServer_HandleIndex(t *testing.T) {
 }
 
 func TestServer_HandleGeneratePreset(t *testing.T) {
+	// This test fires several generate requests back to back without waiting for
+	// the earlier async runs to finish; raise the (spend-guard) concurrency cap
+	// so it exercises request handling rather than the cap.
+	t.Setenv("MCP_MAX_CONCURRENT_RUNS", "10")
 	s, _, mockSM, mockOrch := setupTestServer()
 
 	// 1. Method Not Allowed

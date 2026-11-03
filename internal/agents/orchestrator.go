@@ -430,6 +430,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: FAVOR CLOUD CAPTURES. The generated preset should actively prioritize using entries from the User Capture Library (the user's own downloaded Cortex Cloud captures) over built-in algorithmic component models and factory captures when possible.]\n\n" + prompt
 	}
 
+	// Let an observer that cares learn the prompt as actually sent (after the flag prefixes).
+	if es, ok := obs.(interface{ SetEffectivePrompt(string) }); ok {
+		es.SetEffectivePrompt(prompt)
+	}
+
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
 	execID := RunIDFrom(ctx)
