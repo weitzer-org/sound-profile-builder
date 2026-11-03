@@ -60,6 +60,10 @@ type Preset struct {
 	ChatHistory      []ChatMessage `json:"chat_history,omitempty"`
 	CreatedAt        string        `json:"created_at"`
 	UpdatedAt        string        `json:"updated_at"`
+	// RunIDs links the preset to the run log of the generate run that created
+	// it, then each refine run that changed it (runs/<id>.json). Old presets
+	// simply have none.
+	RunIDs []string `json:"run_ids,omitempty"`
 }
 
 // Client defines the interface for underlying storage operations
@@ -88,6 +92,9 @@ func NewPresetStore(client Client, bucket string) *PresetStore {
 		prefix: "presets/",
 	}
 }
+
+// Bucket returns the bucket this store reads and writes.
+func (s *PresetStore) Bucket() string { return s.bucket }
 
 // Save creates or overwrites a preset
 func (s *PresetStore) Save(ctx context.Context, p *Preset) error {

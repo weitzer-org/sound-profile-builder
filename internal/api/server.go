@@ -2,12 +2,11 @@ package api
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +15,8 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/presetsvc"
+	"github.com/weitzer-org/sound-builder/internal/runs"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -35,10 +36,14 @@ type Server struct {
 	smFetcher   storage.SecretFetcher
 	orchMaker   func(ctx context.Context, apiKey string) (agents.OrchestratorService, error)
 	appConfig   *config.AppConfig
-	apiKeyCache string
-	apiKeyMu    sync.RWMutex
-	tasks       map[string]*TaskState
-	tasksMu     sync.RWMutex
+	// svc owns generation/refinement runs, the concurrency cap and the run log.
+	svc *presetsvc.Service
+	// tasks is a render-side override consulted by handleTaskStatus before it
+	// asks svc: an entry here wins. Nothing in production writes to it any more
+	// (runs live in svc); it remains because existing tests drive
+	// handleTaskStatus through it.
+	tasks   map[string]*TaskState
+	tasksMu sync.RWMutex
 	// rateLimiters holds one token bucket per client IP, shared by every
 	// rateLimitMiddleware-wrapped route (see ratelimit.go). Swept
 	// periodically (rateLimiterSweepOnce) so it doesn't grow unbounded.
@@ -60,9 +65,34 @@ func NewServer(store *storage.PresetStore, memoryStore *storage.MemoryStore, cli
 		tasks:        make(map[string]*TaskState),
 		rateLimiters: make(map[string]*rateLimiterEntry),
 	}
+	bucket := ""
+	if store != nil {
+		bucket = store.Bucket()
+	}
+	// The dependencies are read through closures, not copied, so a later
+	// reassignment of s.smFetcher / s.orchMaker / s.appConfig (tests do this)
+	// is seen by the service.
+	s.svc = presetsvc.New(presetsvc.Deps{
+		Store:    store,
+		Memories: memoryStore,
+		Client:   client,
+		Bucket:   bucket,
+		Secrets:  func() storage.SecretFetcher { return s.smFetcher },
+		OrchMaker: func(ctx context.Context, apiKey string) (agents.OrchestratorService, error) {
+			return s.orchMaker(ctx, apiKey)
+		},
+		Config: func() *config.AppConfig { return s.appConfig },
+	})
 	s.routes()
 	return s
 }
+
+// Service returns the preset service backing the generate/refine handlers.
+func (s *Server) Service() *presetsvc.Service { return s.svc }
+
+// Handler returns the server's root handler, for callers that manage their own
+// http.Server (graceful shutdown).
+func (s *Server) Handler() http.Handler { return s.mux }
 
 // routes registers all the HTTP handlers for the application.
 func (s *Server) routes() {
@@ -134,6 +164,16 @@ func (s *Server) handleIndex() http.HandlerFunc {
 	}
 }
 
+// formOn reports whether any submitted value of a checkbox field is "on".
+func formOn(vals []string) bool {
+	for _, v := range vals {
+		if v == "on" {
+			return true
+		}
+	}
+	return false
+}
+
 // handleGeneratePreset kicks off the Gemini ADK Phase 1 Orchestrator.
 func (s *Server) handleGeneratePreset() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -155,306 +195,37 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 			return
 		}
 
-		allowFactoryCaptures := true
-		if vals, ok := r.Form["allow_factory_captures"]; ok {
-			allowFactoryCaptures = false
-			for _, v := range vals {
-				if v == "on" {
-					allowFactoryCaptures = true
-					break
-				}
+		// A checkbox absent from the form means "not specified" (the service
+		// applies its default); present means on iff one of its values is "on".
+		opts := presetsvc.GenerateOptions{Mock: r.FormValue("mock") == "true", Source: runs.SourceUI}
+		for field, dst := range map[string]**bool{
+			"allow_factory_captures": &opts.AllowFactoryCaptures,
+			"allow_user_captures":    &opts.AllowUserCaptures,
+			"allow_paid_plugins":     &opts.AllowPaidPlugins,
+			"favor_captures":         &opts.FavorCaptures,
+			"favor_cloud_captures":   &opts.FavorCloudCaptures,
+		} {
+			if vals, ok := r.Form[field]; ok {
+				v := formOn(vals)
+				*dst = &v
 			}
 		}
 
-		allowUserCaptures := true
-		if vals, ok := r.Form["allow_user_captures"]; ok {
-			allowUserCaptures = false
-			for _, v := range vals {
-				if v == "on" {
-					allowUserCaptures = true
-					break
-				}
+		taskID, err := s.svc.StartGenerate(r.Context(), prompt, opts)
+		if err != nil {
+			var credErr *presetsvc.CredentialsError
+			switch {
+			case errors.As(err, &credErr):
+				http.Error(w, credErr.Public, http.StatusInternalServerError)
+			case errors.Is(err, presetsvc.ErrBusy):
+				w.Header().Set("Retry-After", "30")
+				http.Error(w, "Another generation is already running. Please try again in a moment.", http.StatusTooManyRequests)
+			default:
+				log.Printf("Failed to start generation: %v", err)
+				http.Error(w, "Failed to start generation", http.StatusInternalServerError)
 			}
+			return
 		}
-
-		allowPaidPlugins := true
-		if vals, ok := r.Form["allow_paid_plugins"]; ok {
-			allowPaidPlugins = false
-			for _, v := range vals {
-				if v == "on" {
-					allowPaidPlugins = true
-					break
-				}
-			}
-		}
-
-		cfg := s.appConfig
-		if cfg == nil {
-			cfg = &config.AppConfig{
-				SingleAmpMode:        true,
-				AllowCloudCaptures:   false,
-				AllowFactoryCaptures: true,
-				AllowUserCaptures:    true,
-				AllowPaidPlugins:     true,
-			}
-		}
-
-		favorCaptures := false
-		if cfg != nil {
-			favorCaptures = cfg.FavorCaptures
-		}
-		if vals, ok := r.Form["favor_captures"]; ok {
-			favorCaptures = false
-			for _, v := range vals {
-				if v == "on" {
-					favorCaptures = true
-					break
-				}
-			}
-		}
-
-		favorCloudCaptures := false
-		if cfg != nil {
-			favorCloudCaptures = cfg.FavorCloudCaptures
-		}
-		if vals, ok := r.Form["favor_cloud_captures"]; ok {
-			favorCloudCaptures = false
-			for _, v := range vals {
-				if v == "on" {
-					favorCloudCaptures = true
-					break
-				}
-			}
-		}
-
-		constraints := map[string]interface{}{
-			"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
-			"single_amp_mode":        cfg.SingleAmpMode,
-			"allow_cloud_captures":   cfg.AllowCloudCaptures,
-			"allow_factory_captures": cfg.AllowFactoryCaptures && allowFactoryCaptures,
-			"allow_user_captures":    cfg.AllowUserCaptures && allowUserCaptures,
-			"favor_captures":         favorCaptures,
-			"favor_cloud_captures":   favorCloudCaptures,
-			"allow_paid_plugins":     cfg.AllowPaidPlugins && allowPaidPlugins,
-			"available_plugins":      cfg.AvailablePlugins,
-		}
-
-		ctx := context.WithoutCancel(r.Context())
-		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
-			ctx = context.WithValue(ctx, agents.MockModeKey, true)
-		}
-
-		s.apiKeyMu.RLock()
-		apiKey := s.apiKeyCache
-		s.apiKeyMu.RUnlock()
-
-		if apiKey == "" {
-			s.apiKeyMu.Lock()
-			if s.apiKeyCache == "" {
-				projectID := "710019748844"
-				if s.appConfig != nil && s.appConfig.ProjectID != "" {
-					projectID = s.appConfig.ProjectID
-				}
-
-				useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
-				var key string
-				var err error
-
-				if useOpenLLM {
-					key = os.Getenv("OPENLLM_API_KEY")
-					if key == "" {
-						secretName := "open-llm-api-auth-secret"
-						key, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
-						if err != nil {
-							s.apiKeyMu.Unlock()
-							log.Printf("Failed to fetch Open-LLM API key from Secret Manager: %v", err)
-							http.Error(w, "Missing Secure Open-LLM Credentials", http.StatusInternalServerError)
-							return
-						}
-					}
-				} else {
-					secretName := os.Getenv("GEMINI_API_KEY_NAME")
-					if secretName == "" {
-						secretName = "gsr-gemini-api-key"
-					}
-					key, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
-					if err != nil {
-						s.apiKeyMu.Unlock()
-						log.Printf("Failed to fetch Gemini API key: %v", err)
-						http.Error(w, "Missing Secure AI Credentials", http.StatusInternalServerError)
-						return
-					}
-				}
-				key = strings.TrimSpace(key)
-				if key == "" {
-					s.apiKeyMu.Unlock()
-					log.Printf("Security alert: Loaded or fetched dynamic key is blank/empty!")
-					http.Error(w, "Invalid Secure AI Credentials Configuration", http.StatusInternalServerError)
-					return
-				}
-				s.apiKeyCache = key
-			}
-			apiKey = s.apiKeyCache
-			s.apiKeyMu.Unlock()
-		}
-
-		taskID := fmt.Sprintf("gen-%d", time.Now().UnixNano())
-
-		s.tasksMu.Lock()
-		s.tasks[taskID] = &TaskState{
-			Status: "running",
-			Phase:  "Initializing ADK Pipeline...",
-		}
-		s.tasksMu.Unlock()
-
-		go func() {
-			orch, err := s.orchMaker(ctx, apiKey)
-			if err != nil {
-				log.Printf("Failed to initialize Orchestrator: %v", err)
-				s.updateTaskError(taskID, fmt.Sprintf("Failed to initialize ADK: %v", err))
-				return
-			}
-			defer orch.Close()
-
-			htmlPayload, tokenUsage, err := orch.RunPipeline(ctx, prompt, constraints, cfg.AgentPrompts, func(phase string) {
-				s.tasksMu.Lock()
-				if task, ok := s.tasks[taskID]; ok {
-					task.Phase = phase
-				}
-				s.tasksMu.Unlock()
-			})
-
-			if err != nil {
-				log.Printf("Orchestrator generation failure: %v", err)
-				s.updateTaskError(taskID, fmt.Sprintf("Pipeline Execution Error: %v", err))
-				return
-			}
-
-			htmlPayload = strings.TrimSpace(htmlPayload)
-			htmlPayload = strings.TrimPrefix(htmlPayload, "```json")
-			htmlPayload = strings.TrimPrefix(htmlPayload, "```")
-			htmlPayload = strings.TrimSuffix(htmlPayload, "```")
-			htmlPayload = strings.TrimSpace(htmlPayload)
-
-			// Sanitize raw literal quotes within string properties to prevent decoding crashes
-			htmlPayload = sanitizeJSONQuotes(htmlPayload)
-
-			var archResp struct {
-				BuilderStatement  string                   `json:"builder_statement"`
-				FinalHTMLPayload  map[string]string        `json:"final_html_payload"`
-				StructuredPayload storage.StructuredPreset `json:"structured_payload"`
-				AgentImpact       []string                 `json:"agent_impact"`
-			}
-
-			if err := json.Unmarshal([]byte(htmlPayload), &archResp); err != nil {
-				log.Printf("Failed to decode architect output: %v", err)
-				s.updateTaskError(taskID, fmt.Sprintf("Serialization Error: %v", err))
-				return
-			}
-
-			allowFactoryCapturesForFlag := true
-			if v, ok := constraints["allow_factory_captures"].(bool); ok {
-				allowFactoryCapturesForFlag = v
-			}
-			allowUserCapturesForFlag := true
-			if v, ok := constraints["allow_user_captures"].(bool); ok {
-				allowUserCapturesForFlag = v
-			}
-			effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
-			agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
-			agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
-			agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
-			agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
-
-			impactsHtml := "<ul>"
-			// Correctly map version strings based on the actual config map
-			agentNames := map[string]string{
-				"1_tone_historian":    "Tone Historian",
-				"2_sonic_profiler":    "Sonic Profiler",
-				"3_community_scraper": "Community Scraper",
-				"4_coros_librarian":   "CorOS Librarian",
-				"5_cloud_navigator":   "Cloud Navigator",
-				"6_acoustician":       "Acoustician",
-				"7_transducer_tech":   "Transducer Tech",
-				"8_foh_optimizer":     "FOH Optimizer",
-				"9_mix_engineer":      "Mix Engineer",
-				"10_control_mapper":   "Control Mapper",
-				"11_dsp_dispatcher":   "DSP Dispatcher",
-			}
-
-			for _, imp := range archResp.AgentImpact {
-				processedImp := imp
-				// Find which agent this line belongs to and append version
-				for key, name := range agentNames {
-					if strings.Contains(imp, name) {
-						version := "v1"
-						if v, ok := cfg.AgentPrompts[key]; ok && v != "" {
-							version = v
-						}
-						if !strings.Contains(imp, "v2") && !strings.Contains(imp, "v1") {
-							newHeader := fmt.Sprintf("<strong>Agent %s (%s):</strong>", name, version)
-							processedImp = strings.Replace(imp, "<strong>Agent", newHeader, 1)
-							// If the LLM didn't use the strong Agent format, just append it
-							if processedImp == imp {
-								processedImp = fmt.Sprintf("<strong>%s (%s):</strong> %s", name, version, imp)
-							}
-						}
-					}
-				}
-				impactsHtml += "<li>" + processedImp + "</li>"
-			}
-			impactsHtml += "</ul>"
-
-			modelsList := ""
-			for m, count := range tokenUsage.ModelsUsed {
-				modelsList += fmt.Sprintf("%s (%d), ", m, count)
-			}
-
-			tokenStatsHtml := ""
-			if tokenUsage != nil {
-				tokenStatsHtml = fmt.Sprintf(`
-				<div class="card" style="margin-top: 1rem; font-family: monospace; color: #a1a1aa;">
-					<strong>Pipeline AI Processing Tokens:</strong> Input: %d | Output: %d | Models: %s
-				</div>`, tokenUsage.InputTokens, tokenUsage.OutputTokens, strings.TrimSuffix(modelsList, ", "))
-			}
-
-			initialAgentIntro := fmt.Sprintf(`<i>%s</i><br><br>%s`, impactsHtml, tokenStatsHtml)
-
-			combinedPayload := map[string]interface{}{
-				"structured":  archResp.StructuredPayload,
-				"legacy_html": archResp.FinalHTMLPayload,
-			}
-			payloadBytes, err := json.Marshal(combinedPayload)
-			if err != nil {
-				s.updateTaskError(taskID, fmt.Sprintf("Payload Serialization Error: %v", err))
-				return
-			}
-
-			draftPreset := &storage.Preset{
-				Name:             "Draft Preset",
-				Payload:          string(payloadBytes),
-				BuilderStatement: archResp.BuilderStatement,
-				ChatHistory: []storage.ChatMessage{
-					{Role: "user", Content: prompt},
-					{Role: "model", Content: "Preset structure successfully laid out based on your requirements.\n" + initialAgentIntro},
-				},
-			}
-
-			if err := s.store.Save(ctx, draftPreset); err != nil {
-				s.updateTaskError(taskID, fmt.Sprintf("Storage Error: %v", err))
-				return
-			}
-
-			bgCtx := context.WithoutCancel(ctx)
-			go cleanUpOldDrafts(bgCtx, s.store)
-
-			s.tasksMu.Lock()
-			if task, ok := s.tasks[taskID]; ok {
-				task.Status = "complete"
-				task.Result = renderTweakingWorkspaceHTML(draftPreset, false, false)
-			}
-			s.tasksMu.Unlock()
-		}()
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(fmt.Sprintf(`
@@ -469,6 +240,52 @@ func (s *Server) handleGeneratePreset() http.HandlerFunc {
 	}
 }
 
+// taskView resolves a task ID to the state handleTaskStatus renders. The
+// tasks override map wins; otherwise the run comes from the preset service,
+// from memory first and then from its persisted record.
+func (s *Server) taskView(ctx context.Context, id string) (TaskState, bool) {
+	s.tasksMu.RLock()
+	task, ok := s.tasks[id]
+	var copied TaskState
+	if ok {
+		copied = *task
+	}
+	s.tasksMu.RUnlock()
+	if ok {
+		return copied, true
+	}
+
+	if res, ok := s.svc.Result(id); ok {
+		return s.viewFromRecord(res.Record, res.Preset, strings.HasPrefix(id, "chat-")), true
+	}
+
+	rec, err := s.svc.Run(ctx, id)
+	if err != nil {
+		return TaskState{}, false
+	}
+	var preset *storage.Preset
+	if rec.Status == runs.StatusComplete && rec.PresetID != "" && s.store != nil {
+		preset, _ = s.store.Get(ctx, rec.PresetID)
+	}
+	return s.viewFromRecord(*rec, preset, strings.HasPrefix(id, "chat-")), true
+}
+
+func (s *Server) viewFromRecord(rec runs.RunRecord, preset *storage.Preset, isChat bool) TaskState {
+	switch rec.Status {
+	case runs.StatusRunning:
+		return TaskState{Status: "running", Phase: rec.Phase}
+	case runs.StatusComplete:
+		if preset == nil {
+			return TaskState{Status: "error", Error: "Result is no longer available; open it from your library."}
+		}
+		// Generated drafts render interactive; refinements render static,
+		// exactly as handleChatPreset's own response does.
+		return TaskState{Status: "complete", Result: renderTweakingWorkspaceHTML(preset, false, isChat)}
+	default: // error, abandoned
+		return TaskState{Status: "error", Error: rec.Error}
+	}
+}
+
 func (s *Server) handleTaskStatus() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
@@ -477,17 +294,14 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 			return
 		}
 
-		s.tasksMu.RLock()
-		task, ok := s.tasks[id]
-		s.tasksMu.RUnlock()
-
+		view, ok := s.taskView(r.Context(), id)
 		if !ok {
 			http.Error(w, "Task not found", http.StatusNotFound)
 			return
 		}
+		task := &view
 
 		w.Header().Set("Content-Type", "text/html")
-
 		isChat := strings.HasPrefix(id, "chat-")
 		scope := r.URL.Query().Get("scope")
 		if scope == "" {
@@ -549,13 +363,4 @@ func (s *Server) handleTaskStatus() http.HandlerFunc {
 		return
 
 	}
-}
-
-func (s *Server) updateTaskError(taskID, errMsg string) {
-	s.tasksMu.Lock()
-	if task, ok := s.tasks[taskID]; ok {
-		task.Status = "error"
-		task.Error = errMsg
-	}
-	s.tasksMu.Unlock()
 }
