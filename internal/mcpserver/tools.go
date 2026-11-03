@@ -157,23 +157,6 @@ type getOutput struct {
 	Preset           *storage.StructuredPreset `json:"preset,omitempty"` // format=json only
 }
 
-// decodeStructured pulls the StructuredPreset out of a stored Payload, which
-// is either the {structured, legacy_html} envelope or a bare StructuredPreset
-// (older presets hold only legacy HTML and have no structured data).
-func decodeStructured(payload string) (storage.StructuredPreset, bool) {
-	var env struct {
-		Structured storage.StructuredPreset `json:"structured"`
-	}
-	if json.Unmarshal([]byte(payload), &env) == nil && len(env.Structured.Guitars) > 0 {
-		return env.Structured, true
-	}
-	var sp storage.StructuredPreset
-	if json.Unmarshal([]byte(payload), &sp) == nil && len(sp.Guitars) > 0 {
-		return sp, true
-	}
-	return storage.StructuredPreset{}, false
-}
-
 func getPreset(svc *presetsvc.Service) mcp.ToolHandlerFor[getInput, getOutput] {
 	return func(ctx context.Context, _ *mcp.CallToolRequest, in getInput) (*mcp.CallToolResult, getOutput, error) {
 		if err := validPresetID(in.PresetID); err != nil {
@@ -190,7 +173,7 @@ func getPreset(svc *presetsvc.Service) mcp.ToolHandlerFor[getInput, getOutput] {
 		if err != nil {
 			return nil, getOutput{}, toolError(getToolName, err)
 		}
-		sp, ok := decodeStructured(p.Payload)
+		sp, ok := presetsvc.DecodeStructured(p.Payload)
 		if !ok {
 			return nil, getOutput{}, errors.New("This preset predates structured presets and has no block data this tool can read. Open it in the web UI instead.")
 		}

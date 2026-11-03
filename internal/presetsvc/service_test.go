@@ -624,3 +624,23 @@ func TestListPresetsReturnsCopiesNewestFirstWithoutDrafts(t *testing.T) {
 		t.Errorf("GetPreset error = %T, want *LookupError", err)
 	}
 }
+
+func TestDecodeStructuredHandlesEnvelopeBareAndLegacy(t *testing.T) {
+	guitars := `{"guitars":{"Strat":[{"id":"b1","type":"Amplifier","model":"Plexi","parameters":[]}]}}`
+	for name, tc := range map[string]struct {
+		payload string
+		ok      bool
+	}{
+		"envelope":    {`{"structured":` + guitars + `,"legacy_html":{"Strat":"<div>x</div>"}}`, true},
+		"bare":        {guitars, true},
+		"legacy only": {`{"Strat":"<div>x</div>"}`, false},
+		"legacy env":  {`{"structured":{"guitars":{}},"legacy_html":{"Strat":"x"}}`, false},
+		"garbage":     {`not json`, false},
+		"empty":       {``, false},
+	} {
+		sp, ok := DecodeStructured(tc.payload)
+		if ok != tc.ok || (ok && len(sp.Guitars["Strat"]) != 1) {
+			t.Errorf("%s: ok=%v guitars=%v, want ok=%v", name, ok, sp.Guitars, tc.ok)
+		}
+	}
+}

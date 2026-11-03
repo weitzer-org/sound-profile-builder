@@ -9,6 +9,7 @@ package presetsvc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -148,6 +149,24 @@ func (s *Service) GetPreset(ctx context.Context, id string) (*storage.Preset, er
 		return nil, &LookupError{Err: err}
 	}
 	return p, nil
+}
+
+// DecodeStructured extracts the structured signal chain from a stored
+// Preset.Payload, which is either the {structured, legacy_html} envelope or a
+// bare StructuredPreset. ok is false for legacy-only presets (HTML per guitar,
+// no block data). Knowledge of the payload format lives here, next to the
+// service that writes it, so front ends never parse it themselves.
+func DecodeStructured(payload string) (sp storage.StructuredPreset, ok bool) {
+	var env struct {
+		Structured storage.StructuredPreset `json:"structured"`
+	}
+	if json.Unmarshal([]byte(payload), &env) == nil && len(env.Structured.Guitars) > 0 {
+		return env.Structured, true
+	}
+	if json.Unmarshal([]byte(payload), &sp) == nil && len(sp.Guitars) > 0 {
+		return sp, true
+	}
+	return storage.StructuredPreset{}, false
 }
 
 // ListPresets returns copies of the stored presets, newest first (ties broken by
