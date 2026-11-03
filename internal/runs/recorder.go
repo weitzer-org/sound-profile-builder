@@ -66,16 +66,22 @@ func (r *Recorder) Snapshot() RunRecord {
 	return r.rec.Clone()
 }
 
-// mutate applies fn under the lock, stamps UpdatedAt, bumps the version, and
-// notifies. It returns whether the caller should persist.
-func (r *Recorder) mutate(fn func(rec *RunRecord)) {
+// apply runs fn under the lock, stamps UpdatedAt and bumps the version. It
+// returns the change callback for the caller to invoke once it is ready to wake
+// waiters (finish() persists first, so a woken waiter never reads stale state).
+func (r *Recorder) apply(fn func(rec *RunRecord)) func() {
 	r.mu.Lock()
 	fn(&r.rec)
 	r.rec.UpdatedAt = time.Now().UTC()
 	r.version++
 	cb := r.onChange
 	r.mu.Unlock()
-	if cb != nil {
+	return cb
+}
+
+// mutate applies fn and notifies waiters immediately.
+func (r *Recorder) mutate(fn func(rec *RunRecord)) {
+	if cb := r.apply(fn); cb != nil {
 		cb()
 	}
 }
@@ -228,7 +234,7 @@ func (r *Recorder) SetEffectivePrompt(p string) {
 func (r *Recorder) finish(status, errMsg, presetID string) bool {
 	r.logWG.Wait() // prompt logs land before the run reads as terminal
 	did := false
-	r.mutate(func(rec *RunRecord) {
+	cb := r.apply(func(rec *RunRecord) {
 		if rec.Status != StatusRunning {
 			return
 		}
@@ -247,7 +253,12 @@ func (r *Recorder) finish(status, errMsg, presetID string) bool {
 		r.addEvent(rec, RunEvent{Type: EventInfo, Msg: msg})
 	})
 	if did {
+		// Persist the terminal state BEFORE waking waiters, so anyone woken by
+		// the change (WaitRun) and then reading storage sees the same status.
 		_ = r.Flush()
+	}
+	if cb != nil {
+		cb()
 	}
 	return did
 }
