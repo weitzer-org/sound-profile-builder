@@ -117,6 +117,9 @@ func usageObjectKey(t time.Time) string {
 // A small helper rather than inlining at each of RunAgentSplit's call sites
 // to keep the token/cost extraction logic in one place.
 func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model string, latencyMs int64, resp *genai.GenerateContentResponse, err error) {
+	if obs := runObserverFrom(ctx); obs != nil {
+		obs.OnAttempt(agentRole, model, latencyMs, err)
+	}
 	rec := UsageRecord{
 		Provider:  "gemini",
 		CallType:  agentRole,

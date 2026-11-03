@@ -1,0 +1,192 @@
+{
+  "generate": [
+    {
+      "type": "phase",
+      "msg": "Phase 1/4: Analyzing Tone Context & Physics..."
+    },
+    {
+      "type": "agent",
+      "role": "Tone Historian",
+      "model": "gemini-3.1-pro-preview",
+      "latency_ms": 4200,
+      "system": "[mock] system prompt for Tone Historian",
+      "input": "[mock] user-side prompt for Tone Historian",
+      "output": "[mock] canned output from Tone Historian",
+      "input_tokens": 1800,
+      "output_tokens": 420
+    },
+    {
+      "type": "agent",
+      "role": "Sonic Profiler",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 3100,
+      "system": "[mock] system prompt for Sonic Profiler",
+      "input": "[mock] user-side prompt for Sonic Profiler",
+      "output": "[mock] canned output from Sonic Profiler",
+      "input_tokens": 1500,
+      "output_tokens": 380
+    },
+    {
+      "type": "agent",
+      "role": "Community Scraper",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 3600,
+      "system": "[mock] system prompt for Community Scraper",
+      "input": "[mock] user-side prompt for Community Scraper",
+      "output": "[mock] canned output from Community Scraper",
+      "input_tokens": 1400,
+      "output_tokens": 350
+    },
+    {
+      "type": "phase",
+      "msg": "Phase 2/4: Mapping to Native CorOS Effects..."
+    },
+    {
+      "type": "agent",
+      "role": "CorOS Librarian",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 5200,
+      "system": "[mock] system prompt for CorOS Librarian",
+      "input": "[mock] user-side prompt for CorOS Librarian",
+      "output": "[mock] canned output from CorOS Librarian",
+      "input_tokens": 26000,
+      "output_tokens": 900
+    },
+    {
+      "type": "agent",
+      "role": "Cloud Navigator",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 2800,
+      "system": "[mock] system prompt for Cloud Navigator",
+      "input": "[mock] user-side prompt for Cloud Navigator",
+      "output": "[mock] canned output from Cloud Navigator",
+      "input_tokens": 9000,
+      "output_tokens": 300
+    },
+    {
+      "type": "phase",
+      "msg": "Phase 3/4: Calculating FOH & Room EQ Balances..."
+    },
+    {
+      "type": "agent",
+      "role": "Acoustician",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 2500,
+      "system": "[mock] system prompt for Acoustician",
+      "input": "[mock] user-side prompt for Acoustician",
+      "output": "[mock] canned output from Acoustician",
+      "input_tokens": 2200,
+      "output_tokens": 260
+    },
+    {
+      "type": "agent",
+      "role": "Transducer Tech",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 2400,
+      "system": "[mock] system prompt for Transducer Tech",
+      "input": "[mock] user-side prompt for Transducer Tech",
+      "output": "[mock] canned output from Transducer Tech",
+      "input_tokens": 2100,
+      "output_tokens": 250
+    },
+    {
+      "type": "agent",
+      "role": "FOH Optimizer",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 2600,
+      "system": "[mock] system prompt for FOH Optimizer",
+      "input": "[mock] user-side prompt for FOH Optimizer",
+      "output": "[mock] canned output from FOH Optimizer",
+      "input_tokens": 2300,
+      "output_tokens": 270
+    },
+    {
+      "type": "phase",
+      "msg": "Phase 4/4: Constructing Final DSP Routing Matrix..."
+    },
+    {
+      "type": "agent",
+      "role": "Mix Engineer",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 3000,
+      "system": "[mock] system prompt for Mix Engineer",
+      "input": "[mock] user-side prompt for Mix Engineer",
+      "output": "[mock] canned output from Mix Engineer",
+      "input_tokens": 3200,
+      "output_tokens": 500
+    },
+    {
+      "type": "agent",
+      "role": "Control Mapper",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 2900,
+      "system": "[mock] system prompt for Control Mapper",
+      "input": "[mock] user-side prompt for Control Mapper",
+      "output": "[mock] canned output from Control Mapper",
+      "input_tokens": 3300,
+      "output_tokens": 480
+    },
+    {
+      "type": "agent",
+      "role": "DSP Dispatcher",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 3300,
+      "system": "[mock] system prompt for DSP Dispatcher",
+      "input": "[mock] user-side prompt for DSP Dispatcher",
+      "output": "[mock] canned output from DSP Dispatcher",
+      "input_tokens": 3400,
+      "output_tokens": 520
+    },
+    {
+      "type": "phase",
+      "msg": "Finalizing: Rendering Interactive Workspace UI..."
+    },
+    {
+      "type": "agent",
+      "role": "Architect & Evaluator",
+      "model": "gemini-3.1-pro-preview",
+      "latency_ms": 21000,
+      "system": "[mock] system prompt for Architect & Evaluator",
+      "input": "[mock] user-side prompt for Architect & Evaluator",
+      "output": "[mock] canned output from Architect & Evaluator",
+      "input_tokens": 9000,
+      "output_tokens": 6500
+    },
+    {
+      "type": "phase",
+      "msg": "Finalizing: Reviewing for Internal Consistency..."
+    },
+    {
+      "type": "agent",
+      "role": "Preset Critic",
+      "model": "gemini-3.5-flash",
+      "latency_ms": 4800,
+      "system": "[mock] system prompt for Preset Critic",
+      "input": "[mock] user-side prompt for Preset Critic",
+      "output": "[mock] canned output from Preset Critic",
+      "input_tokens": 6800,
+      "output_tokens": 300
+    },
+    {
+      "type": "info",
+      "msg": "Preset Critic reviewed the Architect output; advisory findings applied to block rationale."
+    }
+  ],
+  "refine": [
+    {
+      "type": "phase",
+      "msg": "Refining: Architect is applying your feedback..."
+    },
+    {
+      "type": "agent",
+      "role": "Refinement Architect",
+      "model": "gemini-3.1-pro-preview",
+      "latency_ms": 15000,
+      "system": "[mock] system prompt for Refinement Architect",
+      "input": "[mock] user-side prompt for Refinement Architect",
+      "output": "[mock] canned output from Refinement Architect",
+      "input_tokens": 8000,
+      "output_tokens": 5200
+    }
+  ]
+}

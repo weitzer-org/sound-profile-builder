@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"log"
 	"math"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -16,61 +16,17 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/presetsvc"
+	"github.com/weitzer-org/sound-builder/internal/runs"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 const presetBucketName = "weitzer-sound-builder"
 
 // cleanUpOldDrafts returns the current presets but permanently deletes any "Draft Preset" entries beyond the 3 newest.
+// The implementation lives in presetsvc, which also runs it after each generation.
 func cleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storage.Preset {
-	presets, err := store.List(ctx)
-	if err != nil {
-		return presets
-	}
-
-	type timedPreset struct {
-		p *storage.Preset
-		t time.Time
-	}
-	var timed []timedPreset
-	for _, p := range presets {
-		t, err := time.Parse(time.RFC3339, p.UpdatedAt)
-		if err != nil {
-			t = time.Time{}
-		}
-		timed = append(timed, timedPreset{p: p, t: t})
-	}
-
-	sort.Slice(timed, func(i, j int) bool {
-		if timed[i].t.Equal(timed[j].t) {
-			return timed[i].p.Name < timed[j].p.Name
-		}
-		return timed[i].t.After(timed[j].t)
-	})
-
-	var sortedPresets []*storage.Preset
-	for _, tp := range timed {
-		sortedPresets = append(sortedPresets, tp.p)
-	}
-	presets = sortedPresets
-
-	draftCount := 0
-	var finalPresets []*storage.Preset
-	for _, p := range presets {
-		if p.Name == "Draft Preset" {
-			draftCount++
-			if draftCount > 3 {
-				// Background deletion to prevent blocking HTTP response
-				go func(id string) {
-					store.Delete(context.Background(), id)
-				}(p.ID)
-				continue
-			}
-		}
-		finalPresets = append(finalPresets, p)
-	}
-	return finalPresets
+	return presetsvc.CleanUpOldDrafts(ctx, store)
 }
 
 // renderPresetList returning HTML fragment for HTMX
@@ -937,162 +893,56 @@ func (s *Server) handleChatPreset() http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithoutCancel(r.Context())
-		p, err := s.store.Get(ctx, id)
+		runID, err := s.svc.StartRefine(r.Context(), id, userMessage, r.FormValue("mock") == "true")
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %v</div>`, err)))
-			return
-		}
-
-		var projectID string
-		if s.appConfig != nil {
-			projectID = s.appConfig.ProjectID
-		}
-		if projectID == "" {
-			projectID = "710019748844" // Default fallback
-		}
-		var apiKey string
-		useOpenLLM := os.Getenv("USE_OPENLLM") == "true"
-		if useOpenLLM {
-			apiKey = os.Getenv("OPENLLM_API_KEY")
-			if apiKey == "" {
-				secretName := "open-llm-api-auth-secret"
-				var err error
-				apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
-				if err != nil {
-					log.Printf("Failed to fetch Open-LLM API key from Secret Manager: %v", err)
-					w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
-					return
-				}
-			}
-		} else {
-			secretName := os.Getenv("GEMINI_API_KEY_NAME")
-			if secretName == "" {
-				secretName = "gsr-gemini-api-key" // Default fallback
-			}
-			var err error
-			apiKey, err = s.smFetcher.GetPassword(ctx, projectID, secretName)
-			if err != nil {
-				log.Printf("Failed to fetch Gemini API key: %v", err)
+			var lookupErr *presetsvc.LookupError
+			var credErr *presetsvc.CredentialsError
+			switch {
+			case errors.As(err, &lookupErr):
+				w.Write([]byte(fmt.Sprintf(`<div style="color:#ef4444;">Lookup Error: %s</div>`, html.EscapeString(err.Error()))))
+			case errors.As(err, &credErr):
 				w.Write([]byte(`<div style="color:#ef4444;">Secure AI Authentication Error. Please contact administrator.</div>`))
-				return
+			case errors.Is(err, presetsvc.ErrPresetBusy):
+				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">This preset is still being refined. Wait for that change to finish, then send your next message.</div>`))
+			case errors.Is(err, presetsvc.ErrBusy):
+				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">Another run is already in progress. Please try again in a moment.</div>`))
+			default:
+				log.Printf("Failed to start refinement: %v", err)
+				w.Write([]byte(`<div style="color:#ef4444;">Pipeline Initialization Error. Please contact administrator.</div>`))
 			}
-		}
-
-		orch, err := s.orchMaker(ctx, apiKey)
-		if err != nil {
-			log.Printf("Failed to initialize Orchestrator service: %v", err)
-			w.Write([]byte(`<div style="color:#ef4444;">Pipeline Initialization Error. Please contact administrator.</div>`))
-			return
-		}
-		defer orch.Close()
-
-		if r.FormValue("mock") == "true" || os.Getenv("MOCK_MODE") == "true" {
-			ctx = context.WithValue(ctx, agents.MockModeKey, true)
-		}
-
-		allowFactoryCapturesForFlag := true
-		allowUserCapturesForFlag := true
-		if s.appConfig != nil {
-			allowFactoryCapturesForFlag = s.appConfig.AllowFactoryCaptures
-			allowUserCapturesForFlag = s.appConfig.AllowUserCaptures
-		}
-
-		// Run the chat refinement loop
-		jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
-		if err != nil {
-			w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %v</div>`, err)))
 			return
 		}
 
-		// Strip markdown if exists
-		jsonResponse = strings.TrimSpace(jsonResponse)
-		jsonResponse = strings.TrimPrefix(jsonResponse, "```json")
-		jsonResponse = strings.TrimPrefix(jsonResponse, "```")
-		jsonResponse = strings.TrimSuffix(jsonResponse, "```")
-		jsonResponse = strings.TrimSpace(jsonResponse)
-
-		// Sanitize raw literal quotes within string properties to prevent decoding crashes
-		jsonResponse = sanitizeJSONQuotes(jsonResponse)
-
-		var archResp struct {
-			ConversationalResponse string                   `json:"conversational_response"`
-			BuilderStatement       string                   `json:"builder_statement"`
-			DSPMatrixUpdated       bool                     `json:"dsp_matrix_updated"`
-			StructuredPayload      storage.StructuredPreset `json:"structured_payload"`
-			FinalHTMLPayload       map[string]string        `json:"final_html_payload"`
-			AgentImpact            []string                 `json:"agent_impact"`
+		// The chat UI expects the finished workspace in this very response, so
+		// wait for the run. It keeps going if the client disconnects.
+		var rec *runs.RunRecord
+		for {
+			rec, err = s.svc.WaitRun(r.Context(), runID, 30*time.Second)
+			if err != nil || rec.Status != runs.StatusRunning {
+				break
+			}
 		}
-
-		if err := json.Unmarshal([]byte(jsonResponse), &archResp); err != nil {
-			log.Printf("Failed to unmarshal chat architect: %v, raw: %s", err, jsonResponse)
-			w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Serialization Error! Check server logs.</div>`)))
+		if err != nil || rec == nil {
+			return
+		}
+		res, ok := s.svc.Result(runID)
+		if rec.Status != runs.StatusComplete || !ok || res.Preset == nil {
+			errKind := ""
+			if ok {
+				errKind = res.ErrKind
+			}
+			switch errKind {
+			case presetsvc.ErrKindInit:
+				w.Write([]byte(`<div style="color:#ef4444;">Pipeline Initialization Error. Please contact administrator.</div>`))
+			case presetsvc.ErrKindSerialize:
+				w.Write([]byte(`<div class="toast show" style="background:#ef4444;">Serialization Error! Check server logs.</div>`))
+			default:
+				w.Write([]byte(fmt.Sprintf(`<div class="toast show" style="background:#ef4444;">Execution Error: %s</div>`, html.EscapeString(rec.Error))))
+			}
 			return
 		}
 
-		effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
-		agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
-		agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
-		agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
-		agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
-
-		// Append user message
-		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})
-
-		// Append architect response including impacts
-		assistantContent := archResp.ConversationalResponse
-		if archResp.DSPMatrixUpdated && len(archResp.AgentImpact) > 0 {
-			assistantContent += "\n\n**Impact:**\n"
-			for _, imp := range archResp.AgentImpact {
-				assistantContent += "- " + imp + "\n"
-			}
-		}
-
-		p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "model", Content: assistantContent})
-
-		if archResp.DSPMatrixUpdated && archResp.BuilderStatement != "" {
-			p.BuilderStatement = archResp.BuilderStatement
-		}
-
-		if archResp.DSPMatrixUpdated {
-			if len(archResp.StructuredPayload.Guitars) > 0 {
-				// Preserve the {structured, legacy_html} envelope (same shape
-				// handleGeneratePreset writes) so the just-rendered HTML -- including
-				// the per-block Rationale and Scene B values injectRenderedHTML just
-				// computed -- survives the refinement instead of being dropped, which
-				// would otherwise silently fall back to the legacy renderer's
-				// rationale-blind, single-scene table on the next view.
-				payloadBytes, err := json.Marshal(presetPayload{
-					Structured: archResp.StructuredPayload,
-					LegacyHTML: archResp.FinalHTMLPayload,
-				})
-				if err != nil {
-					log.Printf("Failed to marshal structured payload: %v", err)
-				} else {
-					p.Payload = string(payloadBytes)
-				}
-
-				// Auto-Capture Learned Rule
-				m := &storage.Memory{
-					Artist:     p.Name, // Topic context
-					Critique:   userMessage,
-					Action:     strings.Join(archResp.AgentImpact, "; "),
-					BasePreset: p.ID,
-				}
-				if err := s.memoryStore.Save(ctx, m); err != nil {
-					log.Printf("Failed to save learned rule: %v", err)
-				} else {
-					log.Printf("Successfully saved learned rule for %s", p.Name)
-				}
-			} else {
-				log.Printf("Warning: Agent returned empty StructuredPayload despite DSPMatrixUpdated=true. Skipping overwrite.")
-			}
-		}
-
-		// Save the state
-		s.store.Save(ctx, p)
-
-		finalDOM := renderTweakingWorkspaceHTML(p, false, true)
+		finalDOM := renderTweakingWorkspaceHTML(res.Preset, false, true)
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(finalDOM))
