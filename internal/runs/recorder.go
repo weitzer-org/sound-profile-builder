@@ -153,25 +153,30 @@ func (r *Recorder) trace(rec *RunRecord, role string) *AgentTrace {
 
 // OnAgentStart opens the agent's trace and stores the exact prompts sent.
 func (r *Recorder) OnAgentStart(role, systemPrompt, userPrompt string) {
-	var key string
+	var key, id string
+	logIt := false
 	r.mutate(func(rec *RunRecord) {
 		t := r.trace(rec, role)
 		t.Status = "running"
 		t.SystemPromptChars = len(systemPrompt)
 		t.InputChars = len(userPrompt)
 		key = t.PromptKey
+		id = rec.ID
 		r.addEvent(rec, RunEvent{Type: EventAgentStart, Agent: role, Msg: role + " started"})
+		// Register the log write under the lock, and only while the run is still
+		// running: finish() flips the status under the same lock before it Waits,
+		// so no Add can race that Wait (e.g. shutdown abandoning a live run).
+		if r.store != nil && key != "" && rec.Status == StatusRunning {
+			r.logWG.Add(1)
+			logIt = true
+		}
 	})
-	if r.store == nil || key == "" {
+	if !logIt {
 		return
 	}
 	// Prompt logs are written once per agent, off the agent's critical path (the
 	// Librarian's input alone is ~100 KB). finish() waits for them, so they are
 	// durable before the run reads as terminal. Failures are logged, never fatal.
-	r.mu.Lock()
-	id := r.rec.ID
-	r.mu.Unlock()
-	r.logWG.Add(1)
 	go func() {
 		defer r.logWG.Done()
 		ctx, cancel := context.WithTimeout(context.Background(), persistTimeout)
@@ -232,7 +237,6 @@ func (r *Recorder) SetEffectivePrompt(p string) {
 // finish moves a running record to a terminal status. It reports whether the
 // transition happened (a run already terminal is left alone).
 func (r *Recorder) finish(status, errMsg, presetID string) bool {
-	r.logWG.Wait() // prompt logs land before the run reads as terminal
 	did := false
 	cb := r.apply(func(rec *RunRecord) {
 		if rec.Status != StatusRunning {
@@ -253,6 +257,7 @@ func (r *Recorder) finish(status, errMsg, presetID string) bool {
 		r.addEvent(rec, RunEvent{Type: EventInfo, Msg: msg})
 	})
 	if did {
+		r.logWG.Wait() // status is terminal now, so no new log writes register; let in-flight ones land
 		// Persist the terminal state BEFORE waking waiters, so anyone woken by
 		// the change (WaitRun) and then reading storage sees the same status.
 		_ = r.Flush()

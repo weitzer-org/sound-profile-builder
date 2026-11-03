@@ -157,7 +157,7 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 	s.mu.RLock()
 	if s.cache != nil {
 		defer s.mu.RUnlock()
-		return s.cache, nil
+		return append([]*Preset(nil), s.cache...), nil
 	}
 	s.mu.RUnlock()
 
@@ -166,7 +166,7 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 
 	// Check again after acquiring write lock
 	if s.cache != nil {
-		return s.cache, nil
+		return append([]*Preset(nil), s.cache...), nil
 	}
 
 	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
@@ -189,7 +189,7 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 	}
 
 	s.cache = presets
-	return presets, nil
+	return append([]*Preset(nil), presets...), nil
 }
 
 // Delete removes a preset from storage
