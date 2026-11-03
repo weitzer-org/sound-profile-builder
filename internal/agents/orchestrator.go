@@ -354,9 +354,24 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		isMock = true
 	}
 
+	// Mirror every progress phase to the run observer (nil observer: no-op).
+	obs := runObserverFrom(ctx)
+	if obs != nil {
+		innerProgress := onProgress
+		onProgress = func(phase string) {
+			obs.OnPhase(phase)
+			if innerProgress != nil {
+				innerProgress(phase)
+			}
+		}
+	}
+
 	if isMock {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_generate.json"); err == nil {
 			o.setLastArchitectJSON(mockOutput)
+			if obs != nil {
+				replayMockRun(obs, "generate")
+			}
 			return mockOutput, o.Usage, nil
 		} else {
 			log.Printf("Warning: Failed to read mock file testdata/e2e_mocks/architect_generate.json: %v", err)
@@ -417,7 +432,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	log.Printf("Starting ADK Pipeline for prompt: %s\n", prompt)
 
-	execID := fmt.Sprintf("%d", time.Now().UnixNano())
+	execID := RunIDFrom(ctx)
+	if execID == "" {
+		execID = fmt.Sprintf("%d", time.Now().UnixNano())
+	}
 	gcs := o.gcs
 
 	logToGCS := func(agentNum string, result string) {
@@ -718,6 +736,9 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			} else {
 				logToGCS("13_critic", criticResult)
 				finalResult = applyCriticFindings(finalResult, criticResult)
+				if obs != nil {
+					obs.OnInfo("Preset Critic reviewed the Architect output; advisory findings applied to block rationale.")
+				}
 			}
 		}
 
@@ -759,8 +780,22 @@ func (o *Orchestrator) RunAgent(ctx context.Context, agentRole string, prompt st
 	return o.RunAgentSplit(ctx, agentRole, "", prompt)
 }
 
-// RunAgentSplit executes a prompt with separate system and user prompts using the configured backend (Gemini or Open-LLM)
+// RunAgentSplit executes a prompt with separate system and user prompts using the configured backend (Gemini or Open-LLM).
+// When ctx carries a RunObserver it is told about the call's start and end; with no
+// observer this is a straight pass-through to runAgentSplit.
 func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
+	obs := runObserverFrom(ctx)
+	if obs == nil {
+		return o.runAgentSplit(ctx, agentRole, systemPrompt, userPrompt)
+	}
+	obs.OnAgentStart(agentRole, systemPrompt, userPrompt)
+	ci := &callInfo{}
+	out, err := o.runAgentSplit(context.WithValue(ctx, callInfoKey{}, ci), agentRole, systemPrompt, userPrompt)
+	obs.OnAgentDone(agentRole, ci.model, out, ci.usage, err)
+	return out, err
+}
+
+func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, systemPrompt, userPrompt string) (string, error) {
 	skip := false
 	switch agentRole {
 	case "Tone Historian":
@@ -796,39 +831,7 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 		return fmt.Sprintf("Ablated Output for %s.", agentRole), nil
 	}
 
-	key := ""
-	switch agentRole {
-	case "Tone Historian":
-		key = "1_tone_historian"
-	case "Sonic Profiler":
-		key = "2_sonic_profiler"
-	case "Community Scraper":
-		key = "3_community_scraper"
-	case "CorOS Librarian":
-		key = "4_coros_librarian"
-	case "Cloud Navigator":
-		key = "5_cloud_navigator"
-	case "Acoustician":
-		key = "6_acoustician"
-	case "Transducer Tech":
-		key = "7_transducer_tech"
-	case "FOH Optimizer":
-		key = "8_foh_optimizer"
-	case "Mix Engineer":
-		key = "9_mix_engineer"
-	case "Control Mapper":
-		key = "10_control_mapper"
-	case "DSP Dispatcher":
-		key = "11_dsp_dispatcher"
-	case "Architect & Evaluator", "Refinement Architect":
-		key = "12_architect"
-	case "Preset Critic":
-		key = "13_critic"
-	case "Capture Enrichment":
-		key = "14_capture_enrichment"
-	case "User Capture Verification":
-		key = "15_user_capture_verification"
-	}
+	key := AgentRoleKeys[agentRole]
 
 	modelName := os.Getenv("TARGET_MODEL")
 	if modelName == "" {
@@ -883,6 +886,9 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 				Provider: "openllm", CallType: agentRole, Model: actualModelName,
 				LatencyMS: openLLMLatencyMs, Success: false, ErrorKind: classifyError(err),
 			})
+			if obs := runObserverFrom(ctx); obs != nil {
+				obs.OnAttempt(agentRole, actualModelName, openLLMLatencyMs, err)
+			}
 			// Check if this error is due to reaching the context window limits
 			errStr := err.Error()
 			lower := strings.ToLower(errStr)
@@ -908,6 +914,13 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 				InputTokens: promptTokens, OutputTokens: completionTokens,
 				LatencyMS: openLLMLatencyMs, Success: true,
 			})
+			if obs := runObserverFrom(ctx); obs != nil {
+				obs.OnAttempt(agentRole, actualModelName, openLLMLatencyMs, nil)
+			}
+			if ci := callInfoFrom(ctx); ci != nil {
+				ci.model = modelName
+				ci.usage = AgentUsage{InputTokens: promptTokens, OutputTokens: completionTokens, Model: modelName, Calls: 1, LatencyMs: openLLMLatencyMs}
+			}
 			// Accumulate metrics natively
 			o.Usage.mu.Lock()
 			o.Usage.InputTokens += promptTokens
@@ -1039,6 +1052,16 @@ func (o *Orchestrator) RunAgentSplit(ctx context.Context, agentRole string, syst
 	// sets finalModelName on a non-truncated success.
 
 	// Safely extract and accumulate generated API metrics natively
+	if ci := callInfoFrom(ctx); ci != nil {
+		ci.model = finalModelName
+		ci.usage = AgentUsage{Model: finalModelName, Calls: 1, LatencyMs: latencyMs}
+		if resp.UsageMetadata != nil {
+			ci.usage.InputTokens = resp.UsageMetadata.PromptTokenCount
+			ci.usage.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
+			ci.usage.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
+		}
+	}
+
 	if resp.UsageMetadata != nil {
 		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Thinking=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, finalModelName, latencyMs)
 		o.Usage.mu.Lock()
@@ -1115,6 +1138,9 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
 			o.setLastArchitectJSON(mockOutput)
+			if obs := runObserverFrom(ctx); obs != nil {
+				replayMockRun(obs, "refine")
+			}
 			return mockOutput, o.Usage, nil
 		}
 	}
