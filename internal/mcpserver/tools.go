@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -19,7 +18,7 @@ import (
 )
 
 const (
-	draftName        = "Draft Preset"
+	draftName        = presetsvc.DraftName
 	defaultListLimit = 20
 	maxListLimit     = 100
 	maxNameRunes     = 100
@@ -107,27 +106,10 @@ func listPresets(svc *presetsvc.Service) mcp.ToolHandlerFor[listInput, listOutpu
 		if limit > maxListLimit {
 			limit = maxListLimit
 		}
-		all, err := svc.Presets().List(ctx)
+		picked, err := svc.ListPresets(ctx, in.IncludeDrafts == nil || *in.IncludeDrafts)
 		if err != nil {
 			return nil, listOutput{}, toolError(listToolName, err)
 		}
-		includeDrafts := in.IncludeDrafts == nil || *in.IncludeDrafts
-
-		// List returns a copy of the slice but shares the *Preset values with the
-		// store's cache: read them, never write through them.
-		picked := make([]*storage.Preset, 0, len(all))
-		for _, p := range all {
-			if !includeDrafts && p.Name == draftName {
-				continue
-			}
-			picked = append(picked, p)
-		}
-		sort.SliceStable(picked, func(i, j int) bool {
-			if picked[i].UpdatedAt != picked[j].UpdatedAt { // RFC3339 UTC sorts lexically
-				return picked[i].UpdatedAt > picked[j].UpdatedAt
-			}
-			return picked[i].ID < picked[j].ID
-		})
 
 		out := listOutput{Presets: []presetSummary{}, Total: len(picked), Truncated: len(picked) > limit}
 		if out.Truncated {
@@ -204,10 +186,9 @@ func getPreset(svc *presetsvc.Service) mcp.ToolHandlerFor[getInput, getOutput] {
 		if format != formatMarkdown && format != formatJSON {
 			return nil, getOutput{}, errors.New("format must be 'markdown' or 'json'.")
 		}
-		// Get returns a fresh object (not the cache), so reading it is safe.
-		p, err := svc.Presets().Get(ctx, in.PresetID)
+		p, err := svc.GetPreset(ctx, in.PresetID)
 		if err != nil {
-			return nil, getOutput{}, toolError(getToolName, &presetsvc.LookupError{Err: err})
+			return nil, getOutput{}, toolError(getToolName, err)
 		}
 		sp, ok := decodeStructured(p.Payload)
 		if !ok {

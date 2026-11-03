@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -223,7 +224,7 @@ func TestIntegration_ListPresets(t *testing.T) {
 	}
 	text := itText(t, res)
 	t.Logf("list_presets{}:\n%s", text)
-	if got, want := itTextIDs(text), []string{"p-draft", "p-beta", "p-alpha"}; strings.Join(got, ",") != strings.Join(want, ",") {
+	if got, want := itTextIDs(text), []string{"p-draft", "p-beta", "p-alpha"}; !slices.Equal(got, want) {
 		t.Fatalf("text order = %v, want newest first %v", got, want)
 	}
 	if !strings.Contains(text, dataNotice) {
@@ -248,7 +249,7 @@ func TestIntegration_ListPresets(t *testing.T) {
 			t.Errorf("text line %q does not carry structured name %q", line, p.Name)
 		}
 	}
-	if strings.Join(sIDs, ",") != strings.Join(itTextIDs(text), ",") {
+	if !slices.Equal(sIDs, itTextIDs(text)) {
 		t.Errorf("structured order %v != text order %v", sIDs, itTextIDs(text))
 	}
 

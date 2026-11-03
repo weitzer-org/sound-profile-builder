@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -135,8 +137,46 @@ func New(d Deps) *Service {
 	}
 }
 
-// Presets exposes the preset store, for read-only front ends (the MCP tools).
-func (s *Service) Presets() *storage.PresetStore { return s.d.Store }
+// DraftName is the name an unsaved generated preset carries until Save renames it.
+const DraftName = "Draft Preset"
+
+// GetPreset loads one preset. The result is a fresh object the caller may keep
+// or change. A failed lookup is a *LookupError.
+func (s *Service) GetPreset(ctx context.Context, id string) (*storage.Preset, error) {
+	p, err := s.d.Store.Get(ctx, id)
+	if err != nil {
+		return nil, &LookupError{Err: err}
+	}
+	return p, nil
+}
+
+// ListPresets returns copies of the stored presets, newest first (ties broken by
+// ID), leaving out drafts unless includeDrafts. The store's cache shares its
+// *Preset values with every caller of List, so this hands back values (with their
+// slices cloned): changing a result can never corrupt the cache.
+func (s *Service) ListPresets(ctx context.Context, includeDrafts bool) ([]storage.Preset, error) {
+	all, err := s.d.Store.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]storage.Preset, 0, len(all))
+	for _, p := range all {
+		if !includeDrafts && p.Name == DraftName {
+			continue
+		}
+		cp := *p
+		cp.RunIDs = slices.Clone(p.RunIDs)
+		cp.ChatHistory = slices.Clone(p.ChatHistory)
+		out = append(out, cp)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].UpdatedAt != out[j].UpdatedAt { // RFC3339 UTC sorts lexically
+			return out[i].UpdatedAt > out[j].UpdatedAt
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out, nil
+}
 
 // Runs exposes the run store (for readers of persisted logs).
 func (s *Service) Runs() *runs.Store { return s.runs }

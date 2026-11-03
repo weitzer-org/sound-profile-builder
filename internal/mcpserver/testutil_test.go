@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -99,7 +100,7 @@ func newTestService(t *testing.T) *svcHarness {
 // seedPreset stores a preset whose Payload is the architect mock's structured_payload.
 func seedPreset(t *testing.T, h *svcHarness, id, name string) *storage.Preset {
 	t.Helper()
-	raw, err := os.ReadFile("../../testdata/e2e_mocks/architect_generate.json")
+	raw, err := os.ReadFile(filepath.Join(findRepoRoot(t), "testdata", "e2e_mocks", "architect_generate.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
