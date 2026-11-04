@@ -12,6 +12,7 @@ package main
 //	            Passing proves (a) schema and (b) tools (tool engagement is checked from
 //	            GroundingMetadata, not assumed). If it fails, or the model chose not to search,
 //	            -followup runs the schema-only / tools-only calls to localise the failure.
+//	tools, forced  extra checks: search alone; schema+search with a prompt that forces a live lookup
 //	thinking    (d)  ThinkingBudget 512 / 2048 / 0 (the "default" cell is schematools' own call,
 //	            whose ThoughtsTokenCount is reported).
 //	maxtokens   (e)  MaxOutputTokens=64 against a prompt that asks for far more; expect MAX_TOKENS.
@@ -77,6 +78,12 @@ func BuildGrid(models, checks []string, followup bool) []Cell {
 			if followup {
 				grid = append(grid, Cell{Model: m, Check: "schema", Followup: true}, Cell{Model: m, Check: "tools", Followup: true})
 			}
+		}
+		if want["tools"] {
+			grid = append(grid, Cell{Model: m, Check: "tools"})
+		}
+		if want["forced"] {
+			grid = append(grid, Cell{Model: m, Check: "forced"})
 		}
 		if want["thinking"] {
 			for _, b := range []int32{512, 2048, 0} {
@@ -169,7 +176,7 @@ func Evaluate(cell Cell, expectedServed string, resp *genai.GenerateContentRespo
 	case "resolve":
 		r.Pass = true
 		r.Verdict = "OK (served " + resp.ModelVersion + ")"
-	case "schema", "schematools":
+	case "schema", "schematools", "forced":
 		var v struct {
 			Answer string `json:"answer"`
 			Source string `json:"source"`
@@ -178,7 +185,7 @@ func Evaluate(cell Cell, expectedServed string, resp *genai.GenerateContentRespo
 		switch {
 		case !r.SchemaValid:
 			r.Verdict = "FAIL: response did not parse into the requested schema"
-		case cell.Check == "schematools" && !r.ToolEngaged:
+		case (cell.Check == "schematools" || cell.Check == "forced") && !r.ToolEngaged:
 			// Schema honored, but search not shown to have run: (b) is unproven here.
 			r.Verdict = "PARTIAL: schema ok, tool accepted but no grounding metadata (search not shown to run)"
 		default:
@@ -234,6 +241,10 @@ func requestFor(cell Cell) (string, *genai.GenerateContentConfig) {
 	case "schematools":
 		cfg.ResponseMIMEType, cfg.ResponseSchema, cfg.Tools = "application/json", schema, search
 		return searchPrompt, cfg
+	case "forced":
+		// Same shape as schematools, but the prompt demands a live lookup of something a model cannot know.
+		cfg.ResponseMIMEType, cfg.ResponseSchema, cfg.Tools = "application/json", schema, search
+		return "You MUST use Google Search for this; do not answer from memory. Find the title of the most recent post on the official Go blog (go.dev/blog) and its publication date. Reply as JSON with 'answer' (title and date) and 'source' (the URL you used).", cfg
 	case "schema":
 		cfg.ResponseMIMEType, cfg.ResponseSchema = "application/json", schema
 		return "What is the capital of France? Reply as JSON with 'answer' and 'source' (any reference you would cite).", cfg
