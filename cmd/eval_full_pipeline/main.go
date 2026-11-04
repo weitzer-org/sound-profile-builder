@@ -106,8 +106,9 @@ func main() {
 	}
 	defer orch.Close()
 
+	now := time.Now().UTC() // one clock read for both the directory name and the manifest batch id
 	if *outDir == "" {
-		stamp := time.Now().UTC().Format("20060102T150405Z")
+		stamp := now.Format("20060102T150405Z")
 		if *smoke {
 			stamp = "smoke-" + stamp
 		}
@@ -127,7 +128,7 @@ func main() {
 
 	// The manifest is the batch's identity (plan §2 principle 5): the Phase 2 report/cost tools
 	// refuse to compare runs that do not share it.
-	manifest := BuildManifest(selected, queryNames, *reps, *smoke, *includeSkipped, time.Now().UTC())
+	manifest := BuildManifest(selected, queryNames, *reps, *smoke, *includeSkipped, now)
 	if err := evalcheck.WriteManifest(*outDir, manifest); err != nil {
 		log.Fatalf("manifest: %v", err)
 	}

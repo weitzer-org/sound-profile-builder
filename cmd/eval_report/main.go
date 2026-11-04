@@ -122,7 +122,10 @@ func criticSample(rep *evalreport.Report, n int, seed int64) {
 				all = append(all, item{r.Key().String(), cn})
 			}
 		}
-		sort.Slice(all, func(i, j int) bool { return all[i].key+all[i].note.BlockID < all[j].key+all[j].note.BlockID })
+		sort.Slice(all, func(i, j int) bool {
+			a, b := all[i], all[j]
+			return a.key+"\x00"+a.note.Guitar+"\x00"+a.note.BlockID+"\x00"+a.note.Note < b.key+"\x00"+b.note.Guitar+"\x00"+b.note.BlockID+"\x00"+b.note.Note
+		})
 		rand.New(rand.NewSource(seed)).Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 		fmt.Printf("\n  %s: %d flags in total, sampling %d\n", s.ID, len(all), min(n, len(all)))
 		for i := 0; i < len(all) && i < n; i++ {

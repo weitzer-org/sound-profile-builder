@@ -171,7 +171,7 @@ func TestRender_WhatIfIsSeparateAndLabelled(t *testing.T) {
 }
 
 func TestParseAssume(t *testing.T) {
-	for _, bad := range []string{"", "m", "m=1", "m=a/b", "=1/2", "m=0/1", "m=-1/2"} {
+	for _, bad := range []string{"", "m", "m=1", "m=a/b", "=1/2", "m=0/1", "m=-1/2", "m=0.75abc/3.75", "m=1/2x"} {
 		if _, _, err := ParseAssume(bad); err == nil {
 			t.Errorf("ParseAssume(%q) should fail", bad)
 		}

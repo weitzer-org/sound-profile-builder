@@ -57,7 +57,7 @@ func main() {
 	if *scen != "" {
 		only = map[string]bool{}
 		for _, s := range strings.Split(*scen, ",") {
-			only[strings.ToUpper(strings.TrimSpace(s))] = true
+			only[strings.TrimSpace(s)] = true
 		}
 	}
 	outs, skipped := evalcritic.Plan(b, only, *includeUnscoreable)

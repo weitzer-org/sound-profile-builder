@@ -51,7 +51,7 @@ func Render(w io.Writer, ex *Extrapolation, batchID string, smoke bool, assume m
 	} else {
 		fmt.Fprintf(w, "  Projected total: UNKNOWN. Priced part only (LOWER BOUND, not a budget): >= %s\n", Money(ex.KnownLowerBound))
 		fmt.Fprintln(w, "  Left out of that figure:")
-		for _, why := range ex.IncompleteBecaus {
+		for _, why := range ex.IncompleteBecause {
 			fmt.Fprintln(w, "    -", why)
 		}
 	}

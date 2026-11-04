@@ -16,6 +16,7 @@ package evalcost
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
@@ -138,10 +139,11 @@ func ParseAssume(spec string) (string, Hypothetical, error) {
 	if !ok || !ok2 || strings.TrimSpace(model) == "" {
 		return "", h, fmt.Errorf("-assume %q: want model=inputPerM/outputPerM", spec)
 	}
-	if _, err := fmt.Sscanf(in, "%g", &h.Input); err != nil {
+	var err error
+	if h.Input, err = strconv.ParseFloat(strings.TrimSpace(in), 64); err != nil {
 		return "", h, fmt.Errorf("-assume %q: bad input price: %v", spec, err)
 	}
-	if _, err := fmt.Sscanf(out, "%g", &h.Output); err != nil {
+	if h.Output, err = strconv.ParseFloat(strings.TrimSpace(out), 64); err != nil {
 		return "", h, fmt.Errorf("-assume %q: bad output price: %v", spec, err)
 	}
 	if h.Input <= 0 || h.Output <= 0 {
@@ -180,13 +182,13 @@ type ScenarioCost struct {
 
 // Extrapolation is the whole matrix.
 type Extrapolation struct {
-	Scenarios        []ScenarioCost
-	FullRuns         int
-	KnownLowerBound  float64
-	Complete         bool // false when any scenario's cost is partial/unknown
-	IncompleteBecaus []string
-	SpentSmokeKnown  float64
-	Basis            Basis
+	Scenarios         []ScenarioCost
+	FullRuns          int
+	KnownLowerBound   float64
+	Complete          bool // false when any scenario's cost is partial/unknown
+	IncompleteBecause []string
+	SpentSmokeKnown   float64
+	Basis             Basis
 }
 
 // Extrapolate prices each scenario of a smoke batch and scales the per-run mean to
@@ -232,7 +234,7 @@ func Extrapolate(b *evalcheck.Batch, fullRunsPerScenario int, basis Basis) (*Ext
 		if len(repCosts) == 0 {
 			sc.Status = "NO_REPRESENTATIVE_RUN"
 			ex.Complete = false
-			ex.IncompleteBecaus = append(ex.IncompleteBecaus, ms.ID+": no successful integrity-clean smoke run to measure (its cost is UNKNOWN, not $0)")
+			ex.IncompleteBecause = append(ex.IncompleteBecause, ms.ID+": no successful integrity-clean smoke run to measure (its cost is UNKNOWN, not $0)")
 			ex.Scenarios = append(ex.Scenarios, sc)
 			continue
 		}
@@ -247,7 +249,7 @@ func Extrapolate(b *evalcheck.Batch, fullRunsPerScenario int, basis Basis) (*Ext
 		if sc.Status != "KNOWN" {
 			ex.Complete = false
 			why := ms.ID + ": " + sc.Status + " (excludes " + strings.Join(sc.PerRun.SortedModels(), ", ") + ")"
-			ex.IncompleteBecaus = append(ex.IncompleteBecaus, why)
+			ex.IncompleteBecause = append(ex.IncompleteBecause, why)
 		}
 		ex.KnownLowerBound += sc.Projected.KnownUSD
 		ex.Scenarios = append(ex.Scenarios, sc)

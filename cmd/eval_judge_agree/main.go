@@ -82,6 +82,13 @@ func main() {
 		}
 		if prev, ok := byCand[cand]; ok {
 			prev.Items = append(prev.Items, res.Items...)
+			// Several files per candidate (one per rep): accumulate row counts and warnings; a
+			// position-bias rate cannot be pooled without raw counts, so it becomes n/a.
+			prev.JudgeA.Rows += res.JudgeA.Rows
+			prev.JudgeB.Rows += res.JudgeB.Rows
+			prev.JudgeA.Warnings = dedupe(append(prev.JudgeA.Warnings, res.JudgeA.Warnings...))
+			prev.JudgeB.Warnings = dedupe(append(prev.JudgeB.Warnings, res.JudgeB.Warnings...))
+			prev.JudgeA.FirstPresentedRate, prev.JudgeB.FirstPresentedRate = -1, -1
 		} else {
 			byCand[cand] = res
 			order = append(order, cand)
@@ -212,4 +219,16 @@ func rate2(r float64) string {
 		return "n/a"
 	}
 	return fmt.Sprintf("%.2f", r)
+}
+
+func dedupe(ss []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, s := range ss {
+		if !seen[s] {
+			seen[s] = true
+			out = append(out, s)
+		}
+	}
+	return out
 }

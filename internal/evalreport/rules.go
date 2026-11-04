@@ -251,7 +251,9 @@ func (r *Report) cheaperAndFaster(s, base *ScenarioStats) (cheaper, faster cmp) 
 
 func costWord(c evalcost.RunCost) string { return strings.ToLower(c.Status()) }
 
-// meanCost averages per-run costs (known part and unpriced volumes).
+// meanCost pools per-run costs: KnownUSD is the MEAN per run; Calls, token counts and the
+// per-model Unpriced volumes are POOLED TOTALS over all runs (so Status() stays exact, with no
+// rounding). Divide those by len(cs) for a per-run figure (costCell does).
 func meanCost(cs []evalcost.RunCost) evalcost.RunCost {
 	out := evalcost.RunCost{Unpriced: map[string]evalcost.ModelTokens{}}
 	if len(cs) == 0 {
@@ -260,9 +262,15 @@ func meanCost(cs []evalcost.RunCost) evalcost.RunCost {
 	for _, c := range cs {
 		out.KnownUSD += c.KnownUSD
 		out.Calls += c.Calls
+		out.Input += c.Input
+		out.Output += c.Output
+		out.Thinking += c.Thinking
 		for k, v := range c.Unpriced {
 			m := out.Unpriced[k]
 			m.Calls += v.Calls
+			m.Input += v.Input
+			m.Output += v.Output
+			m.Thinking += v.Thinking
 			out.Unpriced[k] = m
 		}
 	}

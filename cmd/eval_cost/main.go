@@ -52,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ex, err := evalcost.Extrapolate(b, *queries**reps, basis)
+	ex, err := evalcost.Extrapolate(b, (*queries)*(*reps), basis)
 	if err != nil {
 		log.Fatal(err)
 	}
