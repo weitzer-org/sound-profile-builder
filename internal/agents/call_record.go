@@ -11,9 +11,10 @@ import (
 // EvalNoFallbackEnv is the eval-only switch that disables getFallbackChain (and the
 // "retry without grounding" degrade path in runAgentSplit). Production never sets it.
 //
-// Why it exists: getFallbackChain routes any unrecognized model to gemini-2.5-pro, and the
-// gemini-3.x chains end in it too, so an eval of a new candidate that fails (or truncates)
-// can silently be scored on a completely different model. With this set to "true" a failed
+// Why it exists: the gemini-3.x production chains end in gemini-2.5-pro (and, before the
+// unknown-model default became "no fallback", so did every unrecognized model), so an eval
+// of a candidate that fails (or truncates) can silently be scored on a completely different
+// model. With this set to "true" a failed
 // candidate call fails visibly instead. See docs/eval/gemini-model-upgrade-test-plan.md §3 0.1.
 const EvalNoFallbackEnv = "EVAL_NO_FALLBACK"
 
