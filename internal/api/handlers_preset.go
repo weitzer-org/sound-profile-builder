@@ -534,6 +534,28 @@ func pillToggleStyle(active bool) string {
 	return "color: var(--text-sub);"
 }
 
+// guitarTabID turns a guitar name into an id fragment that is safe to splice
+// unescaped into id="tab-..." and onclick="switchTab(this, 'tab-...')": only
+// [a-z0-9-] survive. Spaces become "-" and every other character is dropped (the
+// old code already dropped "/"), so ordinary names such as "Gibson ES-339
+// Humbuckers" keep exactly their previous id. Guitar names come from the
+// Architect's output (and, over MCP, from the caller), so they are untrusted.
+func guitarTabID(name string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(name) {
+		switch {
+		case r == ' ':
+			b.WriteByte('-')
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '-':
+			b.WriteRune(r)
+		}
+	}
+	if b.Len() == 0 {
+		return "guitar"
+	}
+	return b.String()
+}
+
 // renderTweakingWorkspaceHTML constructs the Side-by-Side editing view for a Preset
 func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic bool) string {
 	// TODO: Make the conversational response from the agent more visible in the UI.
@@ -660,8 +682,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 				first = false
 			}
 
-			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
-			safeId = strings.ReplaceAll(safeId, "/", "")
+			safeId := guitarTabID(guitarName)
 
 			tabsHtml += fmt.Sprintf(`
 				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>
@@ -689,8 +710,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 				first = false
 			}
 
-			safeId := strings.ReplaceAll(strings.ToLower(guitarName), " ", "-")
-			safeId = strings.ReplaceAll(safeId, "/", "")
+			safeId := guitarTabID(guitarName)
 
 			tabsHtml += fmt.Sprintf(`
 				<button class="tab-btn %s" onclick="switchTab(this, 'tab-%s')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">%s</button>

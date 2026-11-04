@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -321,7 +322,6 @@ func validGuitars(in []string) ([]string, error) {
 		return nil, fmt.Errorf("guitars must have %d to %d entries, got %d. %s", minGuitars, maxGuitars, len(in), guitarsFieldHelp)
 	}
 	out := make([]string, 0, len(in))
-	seen := make(map[string]bool, len(in))
 	for i, raw := range in {
 		g, err := validText(fmt.Sprintf("guitars[%d]", i), raw, maxGuitarRunes)
 		if err != nil {
@@ -332,11 +332,10 @@ func validGuitars(in []string) ([]string, error) {
 				return nil, fmt.Errorf("guitars[%d] may only contain letters, digits, spaces and - . + ( ) , / (no quotes, apostrophes, symbols or line breaks); write \"Gibson Les Paul 59\" rather than \"'59\".", i)
 			}
 		}
-		key := strings.ToLower(g)
-		if seen[key] {
+		// EqualFold, not ToLower equality: ToLower leaves final sigma "ς" distinct from "σ".
+		if slices.ContainsFunc(out, func(prev string) bool { return strings.EqualFold(prev, g) }) {
 			return nil, fmt.Errorf("guitars[%d] repeats %q. List each guitar once.", i, g)
 		}
-		seen[key] = true
 		out = append(out, g)
 	}
 	return out, nil

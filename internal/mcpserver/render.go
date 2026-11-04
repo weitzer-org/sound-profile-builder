@@ -13,6 +13,11 @@ import (
 // is Basis=="estimate". The leading backslash keeps it from parsing as a list item.
 const estimateFootnote = `\* = estimated value`
 
+// estimateMark follows an estimated value. It is escaped like the legend: a raw
+// "*" after a value ending in punctuation ("15%*") can open emphasis that a later
+// marker in the same cell closes, italicising the text and losing both markers.
+const estimateMark = `\*`
+
 var (
 	htmlEscaper       = strings.NewReplacer("<", "&lt;", ">", "&gt;")
 	orderedListMarker = regexp.MustCompile(`^\d+[.)]( |$)`)
@@ -138,8 +143,8 @@ func formatParam(prm storage.BlockParameter) (a, b string, differs, est bool) {
 
 	est = prm.Basis == "estimate"
 	if est {
-		a += "*"
-		b += "*"
+		a += estimateMark
+		b += estimateMark
 	}
 	return a, b, differs, est
 }
