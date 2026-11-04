@@ -24,8 +24,17 @@ const (
 	partBoth   = "both"
 
 	maxEchoedPromptRunes = 1500
-	beginData            = "<<<BEGIN GENERATED DATA>>>"
-	endData              = "<<<END GENERATED DATA>>>"
+
+	// maxStructuredPromptRunes bounds user_prompt/effective_prompt in a
+	// structured (JSON) result. It matches generate_preset's/refine_preset's
+	// own input ceiling (maxPromptRunes/maxMessageRunes, both 4000), so an
+	// MCP-submitted prompt is never truncated here -- only a UI-originated run,
+	// whose web form has no such limit, can reach this cap (CodeRabbit review,
+	// PR #107: the smaller maxEchoedPromptRunes used in the inline text summary
+	// would otherwise truncate even a validly-sized MCP prompt).
+	maxStructuredPromptRunes = 4000
+	beginData                = "<<<BEGIN GENERATED DATA>>>"
+	endData                  = "<<<END GENERATED DATA>>>"
 )
 
 // ---- reading helpers (shared by the tools and the resources) ----
@@ -40,10 +49,10 @@ const (
 // web form has no such limit) can reach this cap in practice.
 func boundedPrompt(s string) (string, int) {
 	total := utf8.RuneCountInString(s)
-	if total <= maxEchoedPromptRunes {
+	if total <= maxStructuredPromptRunes {
 		return s, 0 // not truncated: omit the redundant count (its field is omitempty)
 	}
-	return truncateRunes(s, maxEchoedPromptRunes), total
+	return truncateRunes(s, maxStructuredPromptRunes), total
 }
 
 // keyVersion renders "key" or "key, vN" depending on whether a version is known.
