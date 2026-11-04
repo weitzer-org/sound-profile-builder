@@ -19,6 +19,7 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 	"github.com/weitzer-org/sound-builder/internal/runs"
 	"github.com/weitzer-org/sound-builder/internal/storage"
+	nethtml "golang.org/x/net/html"
 )
 
 const presetBucketName = "weitzer-sound-builder"
@@ -435,6 +436,67 @@ func sanitizeAgentHTML(input string) string {
 	return legacyHTMLPolicy.Sanitize(input)
 }
 
+// chatHTMLPolicy sanitises model-written chat-log text (the "Agent process"
+// entries in a preset's ChatHistory) at render time, so presets stored before
+// the fix are covered too. Deliberately separate from legacyHTMLPolicy: chat
+// text needs i/ul/li (the generate run stores "<i><ul><li><strong>Agent X
+// (v2):</strong> ...") but never tables, links or images. The only attribute
+// allowed is class="card" on div (the token-stats card), matched exactly;
+// inline style is dropped and the card's look is restored by a CSS rule in
+// index.html instead of trusting model- or storage-controlled style text.
+var chatHTMLPolicy = newChatHTMLPolicy()
+
+func newChatHTMLPolicy() *bluemonday.Policy {
+	p := bluemonday.NewPolicy()
+	p.AllowElements("i", "ul", "li", "strong", "b", "em", "br", "div")
+	p.AllowAttrs("class").Matching(regexp.MustCompile(`^card$`)).OnElements("div")
+	return p
+}
+
+// sanitizeChatHTML allowlists the markup, then requires the result to be
+// balanced. bluemonday filters tags but does not close or drop unmatched ones,
+// so a message ending in "<div class=\"card\">" or containing a stray "</div>"
+// would otherwise swallow or close the surrounding log markup (UI spoofing,
+// not script execution). An unbalanced message is shown as escaped plain text
+// instead. Benign balanced content is returned exactly as bluemonday emits it.
+func sanitizeChatHTML(input string) string {
+	out := chatHTMLPolicy.Sanitize(input)
+	if !htmlTagsBalanced(out) {
+		return html.EscapeString(input)
+	}
+	return out
+}
+
+// htmlTagsBalanced reports whether every start tag in s has a matching end tag
+// in order (void <br> excluded), using the HTML tokenizer rather than regexes.
+func htmlTagsBalanced(s string) bool {
+	var stack []string
+	z := nethtml.NewTokenizer(strings.NewReader(s))
+	for {
+		switch z.Next() {
+		case nethtml.ErrorToken:
+			return len(stack) == 0
+		// A self-closing "<div/>" is a plain open tag to a browser (the slash is
+		// ignored on non-void elements), so it must be balanced like any start tag.
+		case nethtml.StartTagToken, nethtml.SelfClosingTagToken:
+			nameBytes, _ := z.TagName()
+			if tagName := string(nameBytes); tagName != "br" {
+				stack = append(stack, tagName)
+			}
+		case nethtml.EndTagToken:
+			nameBytes, _ := z.TagName()
+			tagName := string(nameBytes)
+			if tagName == "br" {
+				continue
+			}
+			if len(stack) == 0 || stack[len(stack)-1] != tagName {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+		}
+	}
+}
+
 func sanitizeLegacyMatrices(in map[string]string) map[string]string {
 	out := make(map[string]string, len(in))
 	for guitar, rawHTML := range in {
@@ -482,7 +544,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		var logItems string
 		for _, msg := range p.ChatHistory {
 			if msg.Role == "model" {
-				logItems += fmt.Sprintf(`<div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);"><b>Agent process:</b><br>%s</div>`, strings.ReplaceAll(msg.Content, "\n", "<br>"))
+				logItems += fmt.Sprintf(`<div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);"><b>Agent process:</b><br>%s</div>`, strings.ReplaceAll(sanitizeChatHTML(msg.Content), "\n", "<br>"))
 			} else {
 				logItems += fmt.Sprintf(`<div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--accent);"><b>You requested:</b><br>%s</div>`, html.EscapeString(msg.Content))
 			}
