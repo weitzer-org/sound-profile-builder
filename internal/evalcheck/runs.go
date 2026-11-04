@@ -93,6 +93,7 @@ type RunRecord struct {
 	IntegrityIssues  []string       `json:"integrity_issues,omitempty"`    // human-readable mismatches
 	MaxTokensByAgent map[string]int `json:"max_tokens_by_agent,omitempty"` // MAX_TOKENS finish reasons per agent (incl. retried attempts)
 	CallsFile        string         `json:"calls_file,omitempty"`
+	BatchID          string         `json:"batch_id,omitempty"` // manifest.json's batch_id; the Phase 2 tools refuse to mix batches
 }
 
 // ReadRunRecords loads runs.jsonl.

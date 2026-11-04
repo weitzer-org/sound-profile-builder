@@ -40,9 +40,18 @@ func main() {
 	includeSkipped := flag.Bool("include-skipped", false, "also run scenarios marked skipped (e.g. S3 once pro-latest resolves to the baseline Pro model)")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results will NOT be scoreable)")
 	argonNoSearch := flag.Bool("argon-no-search", false, "keep agents 1,2,3 off Argon in A1/A2/A3 (use if the Phase 0.5 probe shows Argon cannot use GoogleSearch)")
-	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
+	smoke := flag.Bool("smoke", false, "plan §5 cost-gate smoke pass: "+SmokeQuery+" x 1 rep x every selected scenario (8 executable runs for the full set). Cannot be combined with -queries/-reps. Then run: go run ./cmd/eval_cost -root <out>")
+	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, or .../smoke-<UTC timestamp> with -smoke; a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
 
+	if *smoke {
+		explicit := map[string]bool{}
+		flag.Visit(func(f *flag.Flag) { explicit[f.Name] = true })
+		var err error
+		if *queriesFlag, *reps, err = ApplySmoke(explicit, *queriesFlag, *reps); err != nil {
+			log.Fatal(err)
+		}
+	}
 	if *reps < 1 {
 		log.Fatal("-reps must be >= 1")
 	}
@@ -58,6 +67,9 @@ func main() {
 	}
 	plan := MakePlan(selected, len(queryNames), *reps, *includeSkipped)
 
+	if *smoke {
+		fmt.Printf("SMOKE PASS (plan §5 cost gate): %s x 1 rep x every selected scenario\n", SmokeQuery)
+	}
 	fmt.Printf("Plan: %d scenarios x %d queries x %d reps\n", plan.Scenarios, plan.Queries, plan.Reps)
 	for _, s := range selected {
 		note := ""
@@ -95,7 +107,11 @@ func main() {
 	defer orch.Close()
 
 	if *outDir == "" {
-		*outDir = filepath.Join("eval_results", "full_pipeline_gemini_upgrade", time.Now().UTC().Format("20060102T150405Z"))
+		stamp := time.Now().UTC().Format("20060102T150405Z")
+		if *smoke {
+			stamp = "smoke-" + stamp
+		}
+		*outDir = filepath.Join("eval_results", "full_pipeline_gemini_upgrade", stamp)
 	}
 	if _, err := os.Stat(filepath.Join(*outDir, "runs.jsonl")); err == nil {
 		log.Fatalf("%s already has runs.jsonl; pick a fresh -out so earlier outputs are not overwritten (a failed rerun would otherwise leave stale HTML that eval_checks still scores)", *outDir)
@@ -108,6 +124,13 @@ func main() {
 		log.Fatal(err)
 	}
 	defer runsFile.Close()
+
+	// The manifest is the batch's identity (plan §2 principle 5): the Phase 2 report/cost tools
+	// refuse to compare runs that do not share it.
+	manifest := BuildManifest(selected, queryNames, *reps, *smoke, *includeSkipped, time.Now().UTC())
+	if err := evalcheck.WriteManifest(*outDir, manifest); err != nil {
+		log.Fatalf("manifest: %v", err)
+	}
 
 	constraints := evalfixtures.DefaultConstraints()
 	var records []evalcheck.RunRecord
@@ -129,7 +152,7 @@ func main() {
 				orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
 				start := time.Now()
 				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, cfg.AgentPrompts, nil)
-				rec := evalcheck.RunRecord{Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
+				rec := evalcheck.RunRecord{BatchID: manifest.BatchID, Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
 				if runErr != nil {
 					rec.Error = runErr.Error()
 				} else {

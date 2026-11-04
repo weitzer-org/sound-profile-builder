@@ -234,3 +234,52 @@ func disputesIdentity(n string) bool {
 	}
 	return false
 }
+
+// StripCriticNotes removes the "⚠️ Critic: ..." notes the pipeline's own Critic appended to a
+// rationale, keeping the Architect's prose and any other warnings. The uniform re-critic (plan
+// §6.2.1) feeds outputs back to a Critic with these removed, so it never sees another model's
+// opinion.
+func StripCriticNotes(rationale string) string {
+	parts := strings.Split(rationale, "⚠️")
+	var b strings.Builder
+	b.WriteString(parts[0])
+	for _, p := range parts[1:] {
+		if strings.HasPrefix(strings.TrimSpace(p), "Critic:") {
+			continue
+		}
+		b.WriteString("⚠️")
+		b.WriteString(p)
+	}
+	return strings.TrimSpace(b.String())
+}
+
+// CriticNote is one "⚠️ Critic: ..." finding baked into an output, with the ground truth a human
+// needs to rule on it (plan §7 Critic rule: of 30 sampled flags, how many are true contradictions).
+type CriticNote struct {
+	Guitar, BlockID, Model, Type string
+	Note                         string
+	Class                        string // ClassifyCriticNote
+	KnownBlock                   bool   // the block name is in coros_map.json / user_captures.json
+	MapSaysCapture               bool   // ground truth is_capture (meaningful only when KnownBlock)
+}
+
+// CriticNotes lists the pipeline Critic's notes in one output envelope.
+func CriticNotes(envelopeJSON string, validBlocks map[string]bool) []CriticNote {
+	var env struct {
+		StructuredPayload *storage.StructuredPreset `json:"structured_payload"`
+	}
+	if err := json.Unmarshal([]byte(agents.StripJSONFences(envelopeJSON)), &env); err != nil || env.StructuredPayload == nil {
+		return nil
+	}
+	var out []CriticNote
+	for guitar, blocks := range env.StructuredPayload.Guitars {
+		for _, b := range blocks {
+			isCap, known := validBlocks[agents.NormalizeBlockName(b.Model)]
+			_, notes := splitCriticNotes(b.Rationale)
+			for _, n := range notes {
+				out = append(out, CriticNote{Guitar: guitar, BlockID: b.ID, Model: b.Model, Type: b.Type, Note: n, Class: ClassifyCriticNote(n), KnownBlock: known, MapSaysCapture: isCap})
+			}
+		}
+	}
+	return out
+}
