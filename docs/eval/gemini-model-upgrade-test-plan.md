@@ -1,6 +1,6 @@
 # Gemini Model Upgrade — Test Plan
 
-Status: **Phase 0 code done; 0.3/0.4 resolved; 0.5 capability probe awaiting sign-off** · Written 2026-11-04 · Owner: bweitzer
+Status: **Phase 0 complete except one open question (combined schema+search grounding, see 0.5)** · Written 2026-11-04 · Owner: bweitzer
 
 ## 1. Goal
 
@@ -54,8 +54,8 @@ No quality evaluation happens until all of these are done.
 | 0.1 | **Eval no-fallback mode.** Add an env flag (e.g. `EVAL_NO_FALLBACK=true`) that makes `getFallbackChain` return nil, so a failed candidate call fails visibly. | `orchestrator.go` | A forced-bad model ID fails rather than silently serving `gemini-2.5-pro` |
 | 0.2 | **Record the served model per call.** Capture `GenerateContentResponse.ModelVersion` plus `FinishReason` per agent call in eval output. Today only `TokenUsage.ModelsUsed` (requested-name counts) is recorded. | orchestrator + `cmd/eval_full_pipeline` | Report has a per-call `served_model` / `finish_reason` column |
 | 0.3 | **Resolve `gemini-pro-latest`.** Make one call and read `ModelVersion`. If it is `gemini-3.1-pro-preview`, drop scenario S3. If it's something newer, pin the resolved ID, not the alias. | one-off | Resolved ID written into this doc |
-| 0.4 | **Check the baseline is really what we think.** Confirm `gemini-3.5-flash` responses report a 3.5 `ModelVersion`. A search result claimed it auto-routes to 3.6; `models.list` shows a distinct `3.5-flash-05-2026` version, but no call has confirmed it yet. | one-off | Baseline's served model confirmed |
-| 0.5 | **Capability probe** (extend `cmd/probe_thinking`) for each candidate. Probe: (a) `responseSchema` structured output; (b) the `GoogleSearch` tool, needed by agents 1, 2, 3, 14, 15 (`agentSearchTool`); (c) schema + tools combined, which `gemini-2.5-pro` rejects (see orchestrator ~line 1020); (d) `ThinkingBudget` default / 512 / 2048 / 0; (e) `MaxOutputTokens` honored. | `cmd/probe_thinking` | A pass/fail matrix. A candidate that fails (a) is out. One that fails (b) is excluded from agents 1/2/3 |
+| 0.4 | **Done: baseline is NOT 3.5** (3 calls) | `gemini-3.5-flash` reported `ModelVersion: gemini-3.6-flash` in the first call, in the repeat, and in all 5 later 0.5 cells (7 of 7); the control call to `gemini-3.6-flash` reports `gemini-3.6-flash`. `models.get` still lists 3.5-flash as version `3.5-flash-05-2026`, so the id is silently served by 3.6. Production's Flash tier is therefore 3.6 Flash. |
+| 0.5 | **Done (28 calls; follow-ups for 2 models cut by the cap)** | Matrix below. All 5 probed models were served as requested (3.5-flash as 3.6, pinned). |
 | 0.6 | **Pricing entries.** Add the candidates to `geminiPriceTable` (`usage_recorder.go`) and keep `job_tracker`'s `internal/scoring/pricing.go` in sync. Use official prices when available. Until then, record tokens and compute cost afterwards, and mark any figure as unverified. | `usage_recorder.go` | No candidate's cost records as $0 |
 | 0.7 | **Parameterize the eval tools.** `eval_full_pipeline` gets `-scenarios`, `-queries`, `-reps`, and `-dry-run` (default true, like `eval_thinking_matrix`). `judge_compare` gets a `JUDGE_MODEL` env var and randomizes A/B position per query, if it doesn't already. | `cmd/` | `-dry-run` prints the run count for every scenario in §5 |
 | 0.8 | **Deterministic checker** (new `cmd/eval_checks` or a function in `eval_full_pipeline`). Over each run's output, count: (i) non-numeric `Value`/`ValueB` (the units-in-numbers regression); (ii) Critic-flagged contradictions by type, especially "capture claimed on a modeled block" (the Iba Green regression); (iii) block names changed by `ApplyFuzzyCorrection`, a proxy for invented block names (add a counter if one isn't exposed); (iv) `MAX_TOKENS` finish reasons per agent; (v) pipeline success/failure. | new | Running it on the July `eval_results/full_pipeline` outputs reproduces the July defect counts |
@@ -88,17 +88,37 @@ No quality evaluation happens until all of these are done.
 
 Other checker output on July data: unverified (invented) gear names appear even in baseline and flash-tier runs (`1x15 JBL D130F IR`, `1x8 US Tweed Cab`, `Two Rock 2x12`), so §6.1's "fuzzy-corrected names ≤ S0" gate has real signal.
 
-#### Proposed 0.5 grid (awaiting sign-off)
+#### 0.5 capability matrix (run 2026-11-04; raw JSON: `eval_results/capability_probe/phase0_matrix_20261104.json`)
 
-5 models (`gemini-pro-latest` is not probed separately; it is `gemini-3.1-pro-preview`) × {schema+tools combined, thinking 512 / 2048 / 0, MaxOutputTokens=64} = **25 calls**, plus up to 10 conditional follow-ups (schema-only / tools-only, only when the combined call fails or does not show search ran), plus 2 `resolve` calls (a repeat on `gemini-3.5-flash` and a control on `gemini-3.6-flash`). 2 calls are already spent (0.3, 0.4). Hard cap via `-max-calls`.
+Call budget used: 32 (0.3: 1, 0.4: 3, 0.5: 28). `gemini-pro-latest` was not probed separately: it is `gemini-3.1-pro-preview`. Every cell records the served model; all matched except `gemini-3.5-flash`, which is served as `gemini-3.6-flash` (expected value pinned for that row).
+
+| Model (served as) | (a) responseSchema | (b) GoogleSearch alone | (c) schema + search in one call | (d) budget 512 / 2048 / 0 | (e) MaxOutputTokens=64 |
+|---|---|---|---|---|---|
+| `gemini-4-argon` | pass | **pass** (grounding metadata present) | accepted, **search not shown to run** | all accepted; 0 thinking tokens at every budget | pass (out=64) |
+| `gemini-3.8-flash` | pass | **pass** | accepted, search not shown to run | all accepted; 0 / 114 / 0 thinking tokens | pass, but cap consumed by thinking (out=0, thinking=61) |
+| `gemini-3.5-flash-lite` | pass | **pass** | accepted, search not shown to run | 512, 2048 ok; **0 rejected** | pass (out=60) |
+| `gemini-3.1-pro-preview` | pass | not run (cut by cap) | accepted, search not shown to run | 512, 2048 ok; **0 rejected** | pass, cap consumed by thinking (out=0, thinking=60) |
+| `gemini-3.5-flash` (served 3.6) | pass | not run (cut by cap) | accepted, search not shown to run | all ok incl. 0 (0 thinking tokens) | pass, cap consumed by thinking (out=0, thinking=61) |
+
+Raw errors for the failures:
+- `gemini-3.5-flash-lite`, budget=0: `Error 400, Message: Request contains an invalid argument., Status: INVALID_ARGUMENT`
+- `gemini-3.1-pro-preview`, budget=0: `Error 400, Message: Budget 0 is invalid. This model only works in thinking mode., Status: INVALID_ARGUMENT`
+
+How to read this:
+- **No candidate hard-fails a must-have capability** (a)/(b): structured output works on all, and GoogleSearch alone works on all three candidates it was run on, **including Argon**.
+- **(c) is unproven for every model, baselines included.** The combined call was accepted (no 400, unlike the `gemini-2.5-pro` rejection noted in the orchestrator) and returned schema-valid JSON, but no response carried grounding metadata, including `gemini-3.1-pro-preview` and `gemini-3.5-flash`, which production uses this way for agents 1-3. Two readings fit the data and the cap prevented separating them: (1) with a JSON schema set, these models skip search silently, i.e. agents 1-3 may be effectively ungrounded in production today; or (2) the probe prompt did not trigger a search. A tools-only call on the baselines plus a search-forcing combined prompt would settle it (about 4 calls). **So "Argon can be used on agents 1/2/3" is: the tool is supported, but combined-call grounding is not demonstrated for Argon or anything else.**
+- **Thinking:** `budget=0` is rejected by `gemini-3.1-pro-preview` and `gemini-3.5-flash-lite`, accepted by Argon, 3.8 Flash and 3.5/3.6 Flash (0 thinking tokens). The trivial probe prompt makes 512/2048 weak evidence (thinking stayed below budget, Argon reported 0 thinking tokens at all budgets); it shows "accepted", not "tuned".
+- **MaxOutputTokens:** honored by all, but on thinking models the cap includes thinking tokens, so a tight cap can yield empty output with `MAX_TOKENS`. Relevant to Acoustician-style truncations.
+- Argon's output limit and thinking behaviour need more than this probe to characterise; its 32,768 limit was not exercised.
 
 #### Corrections to this plan found in Phase 0
 
 1. **§3 0.8(i) / §6.1 "0 non-numeric `Value`/`ValueB`" is unsatisfiable.** `value` is a free string in the Architect schema and the prompt prescribes unit-bearing values; July's *baseline* outputs contain ~390 of them. (TODO.md already recorded that a blanket units check was removed for this reason.) The checker reports it as a reference number only; the gated defect is Rule 9 formatting vs. capture status. R2 should be redefined that way.
 2. **§3 0.8(iii) "names changed by `ApplyFuzzyCorrection`" always counts 0.** The output envelope is JSON-marshalled with `<` escaped as `\u003c`, so `ApplyFuzzyCorrection`'s `<td` regex never matches (demonstrated: a typo injected into a July output survived it). The checker counts snapped/unverified gear names over `structured_payload` instead. Whether `ApplyFuzzyCorrection` being a no-op in `RunPipeline` is a production bug is outside this PR.
 3. **R1 (§4) as written is probably a false premise.** See the Iba Green row above; the reproducible July defect is the `UK C30 TopBoost`/Rule 9 pattern. Redefine R1 as "capture claimed or dB-formatted on a block the map says is not a capture", on `07_Edge` and `05_Clapton`.
-4. **The baseline may not be 3.5 Flash** (0.4). If confirmed, S0's Flash tier is 3.6 Flash, July's "3.5 vs 3.6" comparison was partly 3.6 against itself, and §6.1's served-model gate (served == requested) would fail S0 itself. Needs a decision before Phase 2: pin the baseline to the served id, or request `gemini-3.6-flash` explicitly.
-5. The Critic is not ground truth: it disputed a real capture (Iba Green) twice in July.
+4. **The baseline is not 3.5 Flash** (0.4, 7 of 7 calls). S0's Flash tier is really 3.6 Flash; July's "3.5 vs 3.6" Flash-tier comparison was 3.6 against itself, and §6.1's served-model gate (served == requested) would fail S0. **Decision: keep requesting `gemini-3.5-flash` in S0 (it is what production sends) and record the pinned served id `gemini-3.6-flash` as its expected value** (`Pins` in `eval_full_pipeline`), so the gate stays meaningful for every scenario. Report S0 as "production Flash tier (served: 3.6 Flash)" and treat S1 (3.8) as 3.8-vs-3.6. Also note 3.5 Flash's deprecation is moot if it already aliases 3.6.
+5. §3 0.5(c): the schema+tools combination is accepted by every model but search was never shown to run with a schema set, baselines included (see matrix).
+6. The Critic is not ground truth: it disputed a real capture (Iba Green) twice in July.
 
 Run 0.8 against the July outputs **before** using it on new data. That's how we
 know the checker sees the defects it's supposed to catch.

@@ -99,3 +99,16 @@ func TestSelect(t *testing.T) {
 		t.Fatal("unknown query must error")
 	}
 }
+
+func TestScenarios_BaselineFlashPinnedToServedModel(t *testing.T) {
+	for _, s := range BuildScenarios(false) {
+		if s.Pins[modelFlashBaseline] != flashBaselineServed {
+			t.Errorf("%s: gemini-3.5-flash must be pinned to its served id", s.ID)
+		}
+	}
+	for _, s := range BuildScenarios(false) {
+		if s.ID == "S3" && s.Pins[modelProLatest] != proLatestResolved {
+			t.Error("S3 lost its pro-latest pin")
+		}
+	}
+}

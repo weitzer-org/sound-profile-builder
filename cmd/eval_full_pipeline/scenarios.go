@@ -17,6 +17,11 @@ const (
 
 	// proLatestResolved is what gemini-pro-latest was served as on 2026-11-04 (plan item 0.3).
 	proLatestResolved = "gemini-3.1-pro-preview"
+
+	// flashBaselineServed is what gemini-3.5-flash is actually served as (Phase 0.4: 7 of 7
+	// calls reported ModelVersion gemini-3.6-flash). Scenarios keep REQUESTING 3.5-flash (what
+	// production sends) and expect it to be served as this id.
+	flashBaselineServed = "gemini-3.6-flash"
 )
 
 // Agent prompt keys by production tier (internal/agents RunAgentSplit routing).
@@ -78,7 +83,7 @@ func BuildScenarios(argonNoSearch bool) []Scenario {
 	for _, k := range mechanicalKeys {
 		lite[k] = modelLite
 	}
-	return []Scenario{
+	scenarios := []Scenario{
 		{ID: "S0", Label: "Baseline", AgentModels: build(base, nil)},
 		{ID: "S1", Label: "Flash tier -> 3.8 Flash", AgentModels: build(routing{modelProBaseline, modelFlash38, modelFlashBaseline}, nil)},
 		{ID: "S2", Label: "Pro tier -> 3.8 Flash", AgentModels: build(routing{modelFlash38, modelFlashBaseline, modelFlashBaseline}, nil)},
@@ -92,6 +97,15 @@ func BuildScenarios(argonNoSearch bool) []Scenario {
 		{ID: "A2", Label: "Argon Pro tier only", AgentModels: keepGroundedOnBaseline(build(routing{modelArgon, modelFlashBaseline, modelFlashBaseline}, nil))},
 		{ID: "A3", Label: "Argon Flash tier only", AgentModels: keepGroundedOnBaseline(build(routing{modelProBaseline, modelArgon, modelFlashBaseline}, nil))},
 	}
+	// Every scenario that sends gemini-3.5-flash expects it to be served as 3.6 Flash.
+	for i := range scenarios {
+		pins := map[string]string{modelFlashBaseline: flashBaselineServed}
+		for k, v := range scenarios[i].Pins {
+			pins[k] = v
+		}
+		scenarios[i].Pins = pins
+	}
+	return scenarios
 }
 
 // SelectScenarios filters by comma-separated IDs (empty = all, in plan order). Unknown IDs are an error.
