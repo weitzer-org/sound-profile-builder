@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 )
@@ -180,8 +181,8 @@ func (r *Recorder) OnAgentStart(role, systemPrompt, userPrompt string) {
 	r.mutate(func(rec *RunRecord) {
 		t := r.trace(rec, role)
 		t.Status = "running"
-		t.SystemPromptChars = len(systemPrompt)
-		t.InputChars = len(userPrompt)
+		t.SystemPromptChars = utf8.RuneCountInString(systemPrompt)
+		t.InputChars = utf8.RuneCountInString(userPrompt)
 		key = t.PromptKey
 		id = rec.ID
 		r.addEvent(rec, RunEvent{Type: EventAgentStart, Agent: role, Msg: role + " started"})
@@ -231,14 +232,26 @@ func (r *Recorder) OnAttempt(role, model string, latencyMs int64, err error) {
 // OnAgentDone closes the agent's trace, folds its usage into the totals and
 // persists the record.
 func (r *Recorder) OnAgentDone(role, model, output string, u agents.AgentUsage, err error) {
+	var key, id string
+	logOut := false
 	r.mutate(func(rec *RunRecord) {
 		t := r.trace(rec, role)
+		// The pipeline's own logToGCS writes <key>.json for real generate runs.
+		// Mock runs call no agents and refine runs never reach logToGCS, so the
+		// recorder writes the output log for those, giving every run the same
+		// logs/<run_id>/<key>.json layout (DESIGN §3.2).
+		if r.store != nil && err == nil && t.PromptKey != "" && rec.Status == StatusRunning &&
+			(rec.Mock || rec.Kind == KindRefine) {
+			key, id = t.PromptKey, rec.ID
+			r.logWG.Add(1)
+			logOut = true
+		}
 		t.Model = model
 		t.InputTokens = u.InputTokens
 		t.OutputTokens = u.OutputTokens
 		t.ThinkingTokens = u.ThinkingTokens
 		t.LatencyMs = u.LatencyMs
-		t.OutputChars = len(output)
+		t.OutputChars = utf8.RuneCountInString(output)
 		rec.Totals.InputTokens += u.InputTokens
 		rec.Totals.OutputTokens += u.OutputTokens
 		rec.Totals.ThinkingTokens += u.ThinkingTokens
@@ -252,6 +265,16 @@ func (r *Recorder) OnAgentDone(role, model, output string, u agents.AgentUsage, 
 		t.Status = "done"
 		r.addEvent(rec, RunEvent{Type: EventAgentDone, Agent: role, Model: model, LatencyMs: u.LatencyMs, Msg: role + " finished"})
 	})
+	if logOut {
+		go func() {
+			defer r.logWG.Done()
+			ctx, cancel := context.WithTimeout(context.Background(), persistTimeout)
+			defer cancel()
+			if werr := r.store.WriteLog(ctx, id, key+".json", []byte(output)); werr != nil {
+				log.Printf("runs: write output log %s/%s: %v", id, key, werr)
+			}
+		}()
+	}
 	_ = r.Flush()
 }
 

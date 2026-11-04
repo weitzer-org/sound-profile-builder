@@ -177,6 +177,10 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		p.BuilderStatement = archResp.BuilderStatement
 	}
 
+	// dspSaved tracks whether p.Payload was actually replaced below, so a
+	// reply never claims the matrix changed when the response had no guitars
+	// or failed to marshal and the old payload was kept.
+	dspSaved := false
 	if archResp.DSPMatrixUpdated {
 		if len(archResp.StructuredPayload.Guitars) > 0 {
 			// Preserve the {structured, legacy_html} envelope (same shape
@@ -193,6 +197,7 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 				log.Printf("Failed to marshal structured payload: %v", err)
 			} else {
 				p.Payload = string(payloadBytes)
+				dspSaved = true
 			}
 
 			// Auto-Capture Learned Rule
@@ -222,5 +227,8 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		return
 	}
 
+	lr.mu.Lock()
+	lr.reply, lr.dspUpdated = archResp.ConversationalResponse, dspSaved
+	lr.mu.Unlock()
 	s.succeed(lr, p)
 }

@@ -55,7 +55,8 @@ fly secrets set \
   S3_ACCESS_KEY_ID=... \
   S3_SECRET_ACCESS_KEY=... \
   S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com \
-  S3_BUCKET=<your-r2-bucket>
+  S3_BUCKET=<your-r2-bucket> \
+  MCP_TOKEN=$(openssl rand -hex 32)
 ```
 
 Storage is Cloudflare R2 via the S3-compatible backend (`STORAGE_BACKEND=s3`, set in `fly.toml`'s `[env]`); the app scales to zero when idle and wakes in ~1-2s on the next request (`fly.toml`'s `[http_service]`).
@@ -65,6 +66,50 @@ To set up the auto-deploy CI itself in a new environment, add a `FLY_API_TOKEN` 
 fly tokens create deploy -x 999999h
 # then add it under GitHub -> Settings -> Secrets and variables -> Actions
 ```
+
+## 🔌 MCP server (Claude connector)
+
+The app exposes an MCP server at `/mcp`, so claude.ai or Claude Code can generate, refine, read and save presets, and inspect run logs and prompts. It runs in the same process as the web UI and shares its rate limit and concurrency cap.
+
+**Enable it** by setting `MCP_TOKEN` (at least 32 characters; generate one with `openssl rand -hex 32`). If `MCP_TOKEN` is unset or too short, MCP is disabled and every request is rejected. Locally, `.env.example` and `docker-compose.yml` already set a placeholder token.
+
+**Connect claude.ai (header form, preferred):**
+1. Settings → Connectors → Add custom connector.
+2. URL: `https://<app>.fly.dev/mcp`. The first probe gets a 401 with no OAuth metadata. Click **Continue anyway**.
+3. Choose **No sign-in**. Under **Request headers**, set the name to `authorization` and the value to `Bearer <token>`. Type the `Bearer ` prefix yourself.
+4. Keep Transport on Streamable HTTP.
+
+Auth settings can't be edited after the connector is added. To rotate, set `MCP_TOKEN_NEXT` on the app, remove and re-add the connector with the new token, then promote it to `MCP_TOKEN`.
+
+**Connect Claude Code:**
+```bash
+claude mcp add --transport http qc2 https://<app>.fly.dev/mcp --header "Authorization: Bearer $MCP_TOKEN"
+```
+
+**Fallback for clients that can't set headers:** use the URL `https://<app>.fly.dev/mcp/<token>` with no header. The URL itself is the credential, so treat it like a password.
+
+**Local:** `http://localhost:8080/mcp` with the placeholder token from `.env.example`.
+
+**Tools:**
+- `list_presets`: list saved presets and drafts.
+- `get_preset`: read one preset as Markdown or JSON.
+- `save_preset`: rename a draft to save it.
+- `generate_preset`: start a generation run and wait for the result.
+- `refine_preset`: apply a refinement to an existing preset.
+- `get_run_status`: check or long-poll a run's progress.
+- `get_run_log`: fetch a run's timeline, prompts and totals.
+- `get_run_prompts`: read the prompts sent to each agent, in slices.
+- `get_agent_output`: read one agent's output, in slices.
+
+**Resources:**
+- `qc://runs/{run_id}/log`: the run log.
+- `qc://runs/{run_id}/prompts/{prompt_key}`: one agent's system and input prompts.
+- `qc://presets/{preset_id}`: a preset.
+- `qc://prompt-templates/{prompt_key}/{version}`: a prompt template version.
+
+**Prompt:** `design_tone` takes an optional song, artist, guitar and notes, asks Claude to clarify missing tone details, then calls `generate_preset`.
+
+Full design: [docs/mcp/DESIGN.md](docs/mcp/DESIGN.md).
 
 ## 🗄️ Legacy / Future Deployment (Google Cloud Run)
 

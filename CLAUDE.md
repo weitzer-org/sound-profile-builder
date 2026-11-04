@@ -95,6 +95,15 @@ set it will cause the next run to needlessly re-research that entry.
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).
 See `.env.example`.
 
+## MCP server
+- `internal/mcpserver` is mounted in the same process by `cmd/server/main.go` on `/mcp` and `/mcp/{token}`.
+- Token auth only: `MCP_TOKEN` (≥32 chars). Unset or short = MCP disabled (routes reject everything). `MCP_TOKEN_NEXT` is accepted during rotation.
+- It shares the UI's per-IP rate limiter (`server.RateLimit()`) and `presetsvc`'s concurrency cap (`MCP_MAX_CONCURRENT_RUNS`).
+- Run records and logs go through `storage.Client`: `runs/<run_id>.json` and `logs/<run_id>/`.
+- `mock=true` or `MOCK_MODE=true` replays `testdata/e2e_mocks/run_events.json`, so every tool can be tested without Gemini.
+- Integration tests use the Go SDK client over `httptest` (`internal/mcpserver/*_test.go`).
+- Connector setup: the header form (`authorization: Bearer <token>`) comes first. The `/mcp/<token>` path form is the fallback. See README "MCP server" and `docs/mcp/` for details.
+
 **Usage analytics.** Every real agent call funnels through `Orchestrator.
 RunAgentSplit` (`internal/agents/orchestrator.go`), which is wrapped by
 `recordAttemptUsage`/`recordUsage` (`internal/agents/usage_recorder.go`) to
