@@ -14,12 +14,13 @@ import (
 // three bespoke structs, since the aggregation is identical. Mirrors
 // internal/usage.Bucket in the sibling job_tracker project.
 type UsageBucketStats struct {
-	Calls        int     `json:"calls"`
-	SuccessCount int     `json:"successCount"`
-	FailureCount int     `json:"failureCount"`
-	InputTokens  int32   `json:"inputTokens"`
-	OutputTokens int32   `json:"outputTokens"`
-	CostUSD      float64 `json:"costUsd"`
+	Calls         int     `json:"calls"`
+	SuccessCount  int     `json:"successCount"`
+	FailureCount  int     `json:"failureCount"`
+	InputTokens   int32   `json:"inputTokens"`
+	OutputTokens  int32   `json:"outputTokens"`
+	CostUSD       float64 `json:"costUsd"`
+	UnpricedCalls int     `json:"unpricedCalls,omitempty"` // calls on models with no price-table entry; their cost is NOT in CostUSD
 }
 
 // UsageRollup is a day's aggregated usage — the persisted counterpart of
@@ -35,8 +36,9 @@ type UsageRollup struct {
 	TotalOutputTokens   int32 `json:"totalOutputTokens"`
 	TotalThinkingTokens int32 `json:"totalThinkingTokens"`
 
-	TotalCostUSD float64 `json:"totalCostUsd"`
-	AvgLatencyMS float64 `json:"avgLatencyMs"`
+	TotalCostUSD  float64 `json:"totalCostUsd"`
+	UnpricedCalls int     `json:"unpricedCalls,omitempty"` // see UsageBucketStats.UnpricedCalls
+	AvgLatencyMS  float64 `json:"avgLatencyMs"`
 
 	ByCallType  map[string]*UsageBucketStats `json:"byCallType,omitempty"`
 	ByModel     map[string]*UsageBucketStats `json:"byModel,omitempty"`
@@ -91,6 +93,9 @@ func addToUsageBucket(m map[string]*UsageBucketStats, key string, rec UsageRecor
 	b.InputTokens += rec.InputTokens
 	b.OutputTokens += rec.OutputTokens
 	b.CostUSD += rec.CostUSD
+	if rec.CostUnknown {
+		b.UnpricedCalls++
+	}
 }
 
 // AggregateUsage summarizes records into a UsageRollup for date. Pure/
@@ -120,6 +125,9 @@ func AggregateUsage(date string, records []UsageRecord) UsageRollup {
 		r.TotalOutputTokens += rec.OutputTokens
 		r.TotalThinkingTokens += rec.ThinkingTokens
 		r.TotalCostUSD += rec.CostUSD
+		if rec.CostUnknown {
+			r.UnpricedCalls++
+		}
 		totalLatencyMs += rec.LatencyMS
 
 		addToUsageBucket(r.ByCallType, rec.CallType, rec)

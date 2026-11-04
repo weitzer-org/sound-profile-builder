@@ -1,0 +1,32 @@
+[
+  {
+    "model": "gemini-3.5-flash",
+    "check": "resolve",
+    "pass": false,
+    "verdict": "FAIL: served model \"gemini-3.6-flash\" != expected \"gemini-3.5-flash\" (NOT scored)",
+    "served_model": "gemini-3.6-flash",
+    "expected_served": "gemini-3.5-flash",
+    "served_ok": false,
+    "finish_reason": "STOP",
+    "input_tokens": 8,
+    "output_tokens": 1,
+    "thinking_tokens": 60,
+    "latency_sec": 1.589870478,
+    "text_snippet": "ok"
+  },
+  {
+    "model": "gemini-3.6-flash",
+    "check": "resolve",
+    "pass": true,
+    "verdict": "OK (served gemini-3.6-flash)",
+    "served_model": "gemini-3.6-flash",
+    "expected_served": "gemini-3.6-flash",
+    "served_ok": true,
+    "finish_reason": "STOP",
+    "input_tokens": 8,
+    "output_tokens": 1,
+    "thinking_tokens": 100,
+    "latency_sec": 1.347812124,
+    "text_snippet": "ok"
+  }
+]

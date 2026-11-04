@@ -55,6 +55,14 @@ func main() {
 	if outFile == "" {
 		outFile = "/tmp/qc2-judge-results.json"
 	}
+	// JUDGE_MODEL selects the judge (default: the historical gemini-3.1-pro-preview). Plan §6.2
+	// judges with TWO models and counts only verdicts both agree on, so the model must be a
+	// parameter; it is recorded in the output so a result file always says who judged it.
+	judgeModel := os.Getenv("JUDGE_MODEL")
+	if judgeModel == "" {
+		judgeModel = "gemini-3.1-pro-preview"
+	}
+	log.Printf("judge model: %s", judgeModel)
 	if labelA == labelB {
 		log.Fatalf("LABEL_A and LABEL_B must be distinct (both %q) -- winCount's map keys would collapse into one, silently conflating both sides' win tallies", labelA)
 	}
@@ -88,12 +96,15 @@ func main() {
 
 	winCount := map[string]int{labelA: 0, labelB: 0, "Equal": 0}
 	type row struct {
-		Name      string
-		Winner    string
-		Conf      float64
-		Ground    string
-		Struct    string
-		Rationale string
+		Name        string
+		Winner      string
+		Conf        float64
+		Ground      string
+		Struct      string
+		Rationale   string
+		Judge       string // JUDGE_MODEL that produced this verdict
+		JudgeServed string // API-reported ModelVersion actually served (may differ from Judge)
+		SwappedAB   bool   // true when the presentation order was [labelB as "A", labelA as "B"]
 	}
 	var rows []row
 
@@ -109,6 +120,10 @@ func main() {
 			continue
 		}
 
+		// Per-query coin flip for which side is shown as "A" (position bias control). The
+		// outcome is recorded in each row so position bias can be audited afterwards.
+		// isTier0A (historical name) == "labelB is shown as Preset A", i.e. the order is SWAPPED relative
+		// to (labelA, labelB). Recorded as-is in row.SwappedAB below.
 		isTier0A := rand.Float32() > 0.5
 		var aData, bData []byte
 		var aLabel, bLabel string
@@ -134,7 +149,7 @@ Preset B:
 
 Respond with your structured judgement.`, name, string(aData), string(bData))
 
-		resp, err := client.Models.GenerateContent(ctx, "gemini-3.1-pro-preview", []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
+		resp, err := client.Models.GenerateContent(ctx, judgeModel, []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("judge failed for %s: %v", name, err)
 			continue
@@ -153,7 +168,7 @@ Respond with your structured judgement.`, name, string(aData), string(bData))
 			winner = bLabel
 		}
 		winCount[winner]++
-		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale})
+		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale, judgeModel, resp.ModelVersion, isTier0A})
 		log.Printf("⚖️ %s -> %s (conf %.2f)", name, winner, j.Confidence)
 	}
 

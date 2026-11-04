@@ -155,7 +155,11 @@ func printRollup(r agents.UsageRollup) {
 	fmt.Printf("=== %s ===\n", r.Date)
 	fmt.Printf("Calls: %d (success=%d, failure=%d)\n", r.TotalCalls, r.SuccessCount, r.FailureCount)
 	fmt.Printf("Tokens: input=%d output=%d thinking=%d\n", r.TotalInputTokens, r.TotalOutputTokens, r.TotalThinkingTokens)
-	fmt.Printf("Cost: $%.4f\n", r.TotalCostUSD)
+	if r.UnpricedCalls > 0 {
+		fmt.Printf("Cost: $%.4f (EXCLUDES %d calls on models with no known price -- cost unknown, not $0)\n", r.TotalCostUSD, r.UnpricedCalls)
+	} else {
+		fmt.Printf("Cost: $%.4f\n", r.TotalCostUSD)
+	}
 	fmt.Printf("Avg latency: %.0fms\n", r.AvgLatencyMS)
 
 	if len(r.ByCallType) > 0 {
@@ -182,8 +186,15 @@ func printRollup(r agents.UsageRollup) {
 func printBuckets(m map[string]*agents.UsageBucketStats) {
 	for _, k := range sortedKeys(m) {
 		b := m[k]
-		fmt.Printf("  %-20s calls=%-5d success=%-5d failure=%-5d input=%-8d output=%-8d cost=$%.4f\n",
-			k, b.Calls, b.SuccessCount, b.FailureCount, b.InputTokens, b.OutputTokens, b.CostUSD)
+		cost := fmt.Sprintf("$%.4f", b.CostUSD)
+		if b.UnpricedCalls > 0 {
+			cost = "unknown"
+			if b.UnpricedCalls < b.Calls {
+				cost = fmt.Sprintf("$%.4f+%d unpriced", b.CostUSD, b.UnpricedCalls)
+			}
+		}
+		fmt.Printf("  %-20s calls=%-5d success=%-5d failure=%-5d input=%-8d output=%-8d cost=%s\n",
+			k, b.Calls, b.SuccessCount, b.FailureCount, b.InputTokens, b.OutputTokens, cost)
 	}
 }
 
