@@ -114,7 +114,7 @@ func main() {
 			toFreeze = append(toFreeze, q)
 		}
 	}
-	const upstreamAgents = 11 // agents 1-11, one attempt each
+	const upstreamAgents = 10 // agents 1-11 minus the bypassed Cloud Navigator, one attempt each
 	freezeMin, freezeMax := 0, 0
 	if *stage != "run" {
 		freezeMin, freezeMax = len(toFreeze)*upstreamAgents, len(toFreeze)*upstreamAgents*(*freezeAttempts)
@@ -126,7 +126,7 @@ func main() {
 	fmt.Printf("Plan (stage=%s): queries=%v models=%v (control=%s) reps=%d\n", *stage, queries, models, control, *reps)
 	if *stage != "run" {
 		fmt.Printf("  freeze: %d of %d queries need freezing %v (already frozen: reused, 0 calls)\n", len(toFreeze), len(queries), toFreeze)
-		fmt.Printf("          = %d upstream calls (11 agents x %d queries); up to %d if every query needs its %d-attempt retry\n", freezeMin, len(toFreeze), freezeMax, *freezeAttempts)
+		fmt.Printf("          = %d upstream calls (10 API-calling upstream agents x %d queries); up to %d if every query needs its %d-attempt retry\n", freezeMin, len(toFreeze), freezeMax, *freezeAttempts)
 	}
 	if *stage != "freeze" {
 		fmt.Printf("  run:    %d models x %d queries x %d reps = %d Architect calls, + up to %d Critic calls (one per successful Architect call; Critic on %s)\n", len(models), len(queries), *reps, runJobs, runJobs, modelFlashBaseline)
@@ -208,7 +208,7 @@ func main() {
 	for i, j := range jobs {
 		// Gate: once the control's runs are all done, require it to pass before any candidate spend.
 		if !*noStop && j.Model != control && (i == 0 || jobs[i-1].Model == control) {
-			ok, why := ControlOK(Judge(results, []string{control}, *reps), control)
+			ok, why := ControlOK(JudgeFor(results, []string{control}, *reps, queries), control)
 			if !ok {
 				log.Printf("STOP: control %s did not pass R1/R2 -- the check or the freeze is broken, or the control has the defect. No candidate was run. %v", control, why)
 				stopped = true
@@ -222,7 +222,7 @@ func main() {
 		}
 		log.Printf("[%d/%d] %s %s rep%d arch_ok=%v finish=%s served=%s scoreable=%v defect=%v", i+1, len(jobs), j.Model, j.Query, j.Rep, res.ArchSuccess, res.ArchFinish, res.ArchServed, res.Scoreable, res.CaptureDefect)
 	}
-	md := Markdown(results, models, *reps)
+	md := Markdown(results, models, *reps, queries)
 	if stopped {
 		md = "**STOPPED: the control did not pass; no candidate conclusions.**\n\n" + md
 	}
@@ -257,9 +257,9 @@ func freezeQuery(ctx context.Context, orch *agents.Orchestrator, cfg *config.App
 			ok = false
 			issues = append(issues, fmt.Sprintf("pipeline never reached the Architect: %v", runErr))
 		}
-		if len(obs.Upstream) != upstreamCount {
+		if missing := missingUpstream(obs.Upstream); len(missing) > 0 {
 			ok = false
-			issues = append(issues, fmt.Sprintf("expected %d upstream outputs, got %d", upstreamCount, len(obs.Upstream)))
+			issues = append(issues, fmt.Sprintf("missing upstream outputs from: %s", strings.Join(missing, ", ")))
 		}
 		if !ok {
 			lastIssues = issues
@@ -278,8 +278,25 @@ func freezeQuery(ctx context.Context, orch *agents.Orchestrator, cfg *config.App
 	return fmt.Errorf("no usable freeze after %d attempt(s): %s", attempts, strings.Join(lastIssues, "; "))
 }
 
-// upstreamCount is agents 1-11, all of which must produce a frozen output.
-const upstreamCount = 11
+// requiredUpstream are the agents that always call the API. Cloud Navigator (5) is bypassed with
+// a canned string when allow_cloud_captures is false (it is in evalfixtures.DefaultConstraints),
+// so it makes no call and has no frozen output; its text is still inside the frozen Architect prompt.
+var requiredUpstream = []string{"Tone Historian", "Sonic Profiler", "Community Scraper", "CorOS Librarian",
+	"Acoustician", "Transducer Tech", "FOH Optimizer", "Mix Engineer", "Control Mapper", "DSP Dispatcher"}
+
+func missingUpstream(got []UpstreamOutput) []string {
+	have := map[string]bool{}
+	for _, u := range got {
+		have[u.Role] = true
+	}
+	var miss []string
+	for _, r := range requiredUpstream {
+		if !have[r] {
+			miss = append(miss, r)
+		}
+	}
+	return miss
+}
 
 func runOne(ctx context.Context, orch *agents.Orchestrator, cfg *config.AppConfig, valid map[string]bool, fz *Frozen, j Job, outDir string) RunResult {
 	res := RunResult{Model: j.Model, Query: j.Query, Rep: j.Rep}

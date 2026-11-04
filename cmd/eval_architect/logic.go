@@ -146,9 +146,29 @@ type RuleVerdict struct {
 // otherwise INCONCLUSIVE if any run was unscoreable or fewer runs exist than wantPerQuery x queries
 // (a missing run is not a pass); otherwise PASS.
 func Judge(results []RunResult, models []string, wantPerQuery int) []RuleVerdict {
+	return JudgeFor(results, models, wantPerQuery, nil)
+}
+
+// JudgeFor is Judge restricted to the queries actually selected for the run (nil = all rule
+// queries). A rule none of whose queries were selected is omitted; one with only some selected is
+// judged on those, so a subset run cannot be flagged INCONCLUSIVE for queries it never asked for.
+func JudgeFor(results []RunResult, models []string, wantPerQuery int, selected []string) []RuleVerdict {
+	sel := map[string]bool{}
+	for _, q := range selected {
+		sel[q] = true
+	}
 	var out []RuleVerdict
 	for _, m := range models {
-		for _, rule := range Rules() {
+		for _, full := range Rules() {
+			rule := RRule{ID: full.ID}
+			for _, q := range full.Queries {
+				if selected == nil || sel[q] {
+					rule.Queries = append(rule.Queries, q)
+				}
+			}
+			if len(rule.Queries) == 0 {
+				continue
+			}
 			v := RuleVerdict{Model: m, Rule: rule.ID, PerQuery: map[string][2]int{}, ExpectedRunsPerRule: wantPerQuery * len(rule.Queries)}
 			for _, q := range rule.Queries {
 				for _, r := range results {
@@ -244,12 +264,12 @@ func Stats(results []RunResult, models []string) []ModelStats {
 }
 
 // Markdown renders the verdict and secondary tables.
-func Markdown(results []RunResult, models []string, reps int) string {
+func Markdown(results []RunResult, models []string, reps int, selected []string) string {
 	var sb strings.Builder
 	sb.WriteString("# Phase 1B: Architect known-regression repros\n\n")
 	sb.WriteString("Upstream agents 1-11 are frozen once per query on baseline models; only the Architect (agent 12) changes, with the Critic on baseline. Defect = `capture_claim_on_modeled > 0` or `capture_db_on_modeled > 0` (internal/evalcheck). A run is scoreable only if the Architect call succeeded, was served by the requested model in one attempt, and parsed.\n\n")
 	sb.WriteString("| Model | Rule | defect runs / scoreable (expected) | per query (defect/scoreable) | Verdict |\n| :-- | :-- | --: | :-- | :-- |\n")
-	for _, v := range Judge(results, models, reps) {
+	for _, v := range JudgeFor(results, models, reps, selected) {
 		var qs []string
 		for _, r := range Rules() {
 			if r.ID != v.Rule {

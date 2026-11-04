@@ -101,3 +101,27 @@ func TestFreezeObserverCapturesAndCancels(t *testing.T) {
 	}
 	var _ agents.RunObserver = o
 }
+
+func TestMissingUpstream(t *testing.T) {
+	var got []UpstreamOutput
+	for _, r := range requiredUpstream {
+		got = append(got, UpstreamOutput{Role: r})
+	}
+	if m := missingUpstream(got); len(m) != 0 {
+		t.Fatalf("complete set flagged: %v", m)
+	}
+	if m := missingUpstream(got[1:]); len(m) != 1 || m[0] != "Tone Historian" {
+		t.Fatalf("got %v", m)
+	}
+}
+
+func TestJudgeForSubset(t *testing.T) {
+	rs := []RunResult{run("c", "07_Edge", true, false)}
+	vs := JudgeFor(rs, []string{"c"}, 1, []string{"07_Edge"})
+	if len(vs) != 1 || vs[0].Rule != "R1" || vs[0].Verdict != Pass {
+		t.Fatalf("%+v", vs)
+	}
+	if ok, _ := ControlOK(vs, "c"); !ok {
+		t.Fatal("subset control should pass")
+	}
+}
