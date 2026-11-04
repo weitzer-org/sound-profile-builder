@@ -1,0 +1,19 @@
+[
+  {
+    "model": "gemini-4-argon",
+    "check": "forced",
+    "pass": true,
+    "verdict": "OK",
+    "served_model": "gemini-4-argon",
+    "expected_served": "gemini-4-argon",
+    "served_ok": true,
+    "finish_reason": "STOP",
+    "input_tokens": 433,
+    "output_tokens": 83,
+    "thinking_tokens": 0,
+    "latency_sec": 9.02906805,
+    "tool_engaged": true,
+    "schema_valid": true,
+    "text_snippet": "{\"answer\": \"A new Go API for JSON (published 4 November 2026)\", \"source\": \"https://go.dev/blog\"} "
+  }
+]
