@@ -1,6 +1,6 @@
 # Gemini Model Upgrade — Test Plan
 
-Status: **Phase 0 complete; Phase 1A complete; Phase 1B STOPPED at the control gate (see Phase 1 results) and awaiting an owner decision** · Written 2026-11-04 · Owner: bweitzer
+Status: **Phase 0 complete; Phase 1A complete; Phase 1B complete (control failed R1, so candidates were compared against the control's own rate; see Phase 1 results)** · Written 2026-11-04 · Owner: bweitzer
 
 ## 1. Goal
 
@@ -180,7 +180,7 @@ Raw data: `eval_results/phase1/subagent/` (`calls.jsonl`, one record per call in
 - **Grounding (measured, not assumed):** the production baselines were grounded on 0/26 (agent 1), 0/26 (agent 2) and 6/26 (agent 3) calls, so agents 1 and 2 are effectively **not grounded in production today** despite `agentSearchTool`, and agent 3 only 23% of the time. Argon grounded 3/26, 3/26, 4/26, at or above baseline. So grounding does not stop Argon from staying on agents 1 and 3. Caveat: this tool sends the raw query without the pipeline's `[GLOBAL USER CONFIG FLAG ...]` prefixes, one sample per cell, and `grounded` means search queries or chunks present in the response metadata.
 - Strict exit rule, no tolerance: at n=26 one call is ~4 points. No other candidate had a single schema failure, truncation or served-model issue.
 
-### 1B: Architect repros, STOPPED at the control gate
+### 1B: Architect repros (control gate tripped; candidates then run on the owner's approval)
 
 Frozen upstream: agents 1-11 once per query on baseline (`frozen/`). Control = `gemini-3.1-pro-preview`, 5 reps per query, Critic on baseline, all 15 runs scoreable and served as requested.
 
@@ -191,21 +191,37 @@ Frozen upstream: agents 1-11 once per query on baseline (`frozen/`). Control = `
 
 The tool stopped before any candidate was run, as required. I inspected the evidence: the flagged values are on `UK C30 TopBoost`, a modeled amp (`is_capture: false`), so the check is correct, and the frozen prompt is the production one (the Librarian mandated the amp, and the Rule 9 capture list contained only `Iba Green`). **The control model itself has the defect at 2/5, so R1 as a zero-defect pass bar is unsatisfiable for the baseline, and the July attribution of this pattern to 3.6 Flash was never isolated from the baseline's own rate** (The retained July baseline 07_Edge output had 0 such values, but that is a single run, which says little about a rate near 2/5; unverified either way beyond that.) Smoke pass (n=1, not a conclusion): control 0/1, Argon 0/1, 3.8 Flash 1/1 defect on 07_Edge; all served as requested, no MAX_TOKENS.
 
+**Candidate runs (run after the stop, with `-no-stop-on-control-failure`; same frozen upstream, 5 reps per query; raw: `eval_results/phase1/architect/candidates/`)**
+
+| Model | R1 `07_Edge` defect runs / scoreable | R2 `09_BB_King` + `05_Clapton` | Architect MAX_TOKENS | Failed runs | Fuzzy-snapped / unverified names | served as requested |
+|---|--:|--:|--:|--|--:|--|
+| `gemini-3.1-pro-preview` (control) | **2 / 5** | 0 / 10 | 0 | none | 0 / 0 | 15/15 |
+| `gemini-4-argon` | **4 / 4** | 0 / 10 | 0 | 1 transient connection reset (`07_Edge` rep2; infrastructure, not a model fault; unscoreable) | 0 / 0 | 14/14 answered |
+| `gemini-3.8-flash` | **5 / 5** | 0 / 9 | **1** (`09_BB_King` rep5: 15,359 of 16,000 tokens went to thinking, 627 to output) | that truncation | 0 / 0 | 15/15 |
+
+Every defect is the same pattern as the control's: relative-dB Volume on `UK C30 TopBoost` (4 values per run, 3 in one 3.8 Flash run). No capture-claim defects (`capture_claim_on_modeled` = 0 everywhere). On R1 the candidates are at 100% against the control's 40%, but with n = 4-5 per cell that is not statistically distinguishable (Fisher exact, two-sided, computed in this session: control 2/5 vs Argon 4/4 p = 0.17; vs 3.8 Flash 5/5 p = 0.17). R2 shows no signal for any model. Critic flags: control 1 (earlier snapshot), Argon 0, 3.8 Flash 2.
+
 ### 1C: Phase 1 exit report
 
 **Dropped candidates (and why)**
 - Sonic Profiler (2) on `gemini-4-argon`: schema valid 16/26 vs 26/26 baseline, 10/26 truncated (exit rule).
 - Sonic Profiler (2) on `gemini-3.5-flash-lite`: schema valid 24/26, 2/26 truncated (exit rule).
 - `gemini-pro-latest` and S3: served as `gemini-3.1-pro-preview` (Phase 0.3).
-- Nothing was dropped on R1/R2 or a must-have capability: no candidate was run on the Architect past the smoke, and no candidate failed a Phase 0.5 capability.
+- `gemini-4-argon` and `gemini-3.8-flash` on the Architect (agent 12): both fail R1 as the plan defines it (any defective `07_Edge` run), 4/4 and 5/5. **Caveat that the plan's literal rule does not handle:** the control also fails R1 (2/5), so the rule as written would drop the baseline too. I applied it to the candidates anyway because they are at or above the control's rate, and recommend the drop from agent 12 for that reason, but the evidence for "worse than baseline" is directional, not significant (p = 0.17). The defect is Architect-specific, so I did NOT drop either from agent 1 (1A evidence only): the plan says "dropped from the Pro tier" (agents 1 and 12); splitting it is a judgment call for the owner.
+- `gemini-3.8-flash` additionally truncated once on the Architect (1/15, thinking consumed the 16,000-token cap), which is worse than the control's 0/15 on the Phase 2 truncation gate.
+- No candidate failed a Phase 0.5 must-have capability.
 
-**Scenarios surviving into Phase 2 (provisional, pending the 1B decision)**
-- S1 (Flash tier -> 3.8 Flash): survives. 3.8 passed 1A on agents 2 and 3.
-- S2 (Pro tier -> 3.8 Flash): survives. Agent 1 passed 1A; agent 12 is undecided (1B).
-- S4 (Lite on 8, 10, 11): survives, but Lite was only screened on agents 2 and 3 (dropped on 2), not on 8/10/11; Phase 2 is its first test there.
-- S5 (Critic -> Argon): survives (Critic not screened in Phase 1).
-- A1, A2, A3: survive **with a change**: Argon must stay off agent 2 (keep it on `gemini-3.5-flash`). Agents 1 and 3 may take Argon. `BuildScenarios`' `-argon-no-search` flag is all-or-nothing for agents 1-3 and does not express this; Phase 2 needs a per-agent override first.
-- S0 baseline always.
+**Scenarios surviving into Phase 2**
+- S0 baseline: always.
+- S1 (Flash tier -> 3.8 Flash): survives (3.8 passed 1A on agents 2 and 3; its Architect result is irrelevant here because the Pro tier stays on baseline).
+- S2 (Pro tier -> 3.8 Flash): **dropped** (3.8 fails R1 on agent 12 and truncated once). A variant with 3.8 on agent 1 only is possible but is not a plan scenario.
+- S3: dropped (alias resolves to the baseline Pro model).
+- S4 (Lite on 8, 10, 11): survives; Lite was only screened on agents 2 and 3 (and dropped on 2), so Phase 2 is its first test on 8/10/11.
+- S5 (Critic -> Argon): survives (the Architect is on baseline there; the Critic was not screened in Phase 1).
+- A1 (Argon everywhere): **dropped** (Argon on agent 12 fails R1; on agent 2 fails the 1A exit rule).
+- A2 (Argon Pro tier only): **dropped** (same agent-12 failure).
+- A3 (Argon Flash tier only): survives, **with a change**: Argon must stay off agent 2 (keep `gemini-3.5-flash`). `BuildScenarios`' `-argon-no-search` is all-or-nothing for agents 1-3 and cannot express this; Phase 2 needs a per-agent override first.
+- Net: Phase 2 would run S0, S1, S4, S5, A3 (5 scenarios x 13 queries x 2 reps = 130 pipeline runs, not 234). Not started, as instructed.
 
 **Can Argon stay on agents 1/2/3?** Agents 1 and 3: yes on the evidence above (valid, no truncation, grounds at or above baseline). Agent 2: no (truncation/schema failures).
 
@@ -215,7 +231,10 @@ The tool stopped before any candidate was run, as required. I inspected the evid
 3. Production agents 1 and 2 are effectively ungrounded (0/26), contradicting the premise in the prompts and in `agentSearchTool`'s comments; a decision for the owner, outside this PR.
 4. The 1A tool and the Architect freeze both resolve prompts through production code (`PromptForAgent`), so no `_flash` prompt variant exists today; if one is added, the freeze flags `prompt_matches_frozen`.
 
-**Open decision for the owner (spend not yet approved):** continue 1B by running the two candidates (`gemini-4-argon`, `gemini-3.8-flash`) with `-no-stop-on-control-failure`, judging them against the control's 2/5 on R1 and 0/10 on R2: 30 Architect + up to 30 Critic calls. Recommended, since the check is validated on real evidence. Alternative: a larger control sample first to pin its rate down.
+**Open decisions for the owner**
+1. Whether to treat the R1 result as a drop (recommended) given that the baseline itself has the defect at 2/5; alternatively raise the control and candidate sample sizes (about 15 more Architect + Critic calls per model on `07_Edge`) to separate 40% from 100%.
+2. Whether the `UK C30 TopBoost` volume-in-dB defect, now shown to exist on every model including production's, should be fixed in the Architect prompt or enforced in post-processing, independent of any model change. This is a product bug, not only an eval criterion.
+3. Whether to split the Pro tier (agent 1 candidates stay alive, agent 12 candidates dropped).
 
 ## 5. Phase 2 — Full-pipeline routing scenarios
 
