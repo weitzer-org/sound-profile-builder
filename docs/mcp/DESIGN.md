@@ -318,13 +318,13 @@ Errors use `IsError: true` with an actionable message.
 
 | Tool | Input | Output |
 |---|---|---|
-| `generate_preset` | `prompt` (req), `allow_factory_captures?`, `allow_user_captures?`, `allow_paid_plugins?`, `favor_captures?`, `favor_cloud_captures?`, `wait_seconds?` (0–200, default 200), `mock?` | `{run_id, status, phase, elapsed_s, preset_id?, preset_markdown?}`. Blocks until the run **finishes** or the wait ends, whichever comes first. If it's not done, the text says "Still running; call get_run_status with run_id=… now, in this same turn" |
+| `generate_preset` | `prompt` (req), `allow_factory_captures?`, `allow_user_captures?`, `allow_paid_plugins?`, `favor_captures?`, `favor_cloud_captures?`, MCP-only: `guitars?` (1–3 names, ≤60 chars each, default pair if omitted), `single_amp_mode?`, `allow_cloud_captures?` (request wins over `config.json`), `wait_seconds?` (0–200, default 200), `mock?` | `{run_id, status, phase, elapsed_s, preset_id?, preset_markdown?}`. Blocks until the run **finishes** or the wait ends, whichever comes first. If it's not done, the text says "Still running; call get_run_status with run_id=… now, in this same turn" |
 | `get_run_status` | `run_id`, `wait_seconds?` (0–200, default 120), `until?` (`change`\|`done`, default `done`) | `{run_id, status, phase, elapsed_s, preset_id?, error?, last_events[≤5]}`. Long-polls until the run finishes (or, with `until=change`, until any phase change), or the wait ends. Sends `notifications/progress` per phase when the client supplied a progress token |
 | `get_run_log` | `run_id`, `since_seq?` | `{run_id, status, user_prompt, effective_prompt, constraints, prompt_versions, events[], agents{role: AgentTrace}, totals}`. Text form is a compact timeline |
 | `get_run_prompts` | `run_id`, `agent?` (role or key; omit for an index), `part?` (`system`\|`input`\|`both`, default `system`), `offset?`, `max_chars?` (default 40000, max 120000; claude.ai's limit is ~150k chars) | Without `agent`: an index of `{role, prompt_key, version, system_chars, input_chars}` plus the effective user prompt. With `agent`: the requested text slice plus `{total_chars, next_offset?}` |
 | `get_agent_output` | `run_id`, `agent`, `offset?`, `max_chars?` | Output slice plus paging info |
 | `list_presets` | `include_drafts?` (default true), `limit?` (default 20) | `[{id, name, is_draft, updated_at, builder_statement}]` |
-| `get_preset` | `preset_id`, `format?` (`markdown`\|`json`, default `markdown`) | Markdown: builder statement, then one table per guitar (Block · Model · key params with Scene A/B · basis flags), then the rationale list. JSON: `StructuredPreset`. Both include `run_ids` |
+| `get_preset` | `preset_id`, `format?` (`markdown`\|`json`, default `markdown`) | Markdown: builder statement, then one table per guitar (`# · Block · Model · Scene A (Rhythm) · Scene B (Lead)`, `same as A` when B is identical, `*` on estimated values), then the rationale list. JSON: `StructuredPreset`. Both include `run_ids` |
 | `refine_preset` | `preset_id`, `message`, `wait_seconds?`, `mock?` | Same shape as `generate_preset`. Adds `conversational_response` and `dsp_matrix_updated` |
 | `save_preset` | `preset_id`, `name` | `{id, name}`. Renames the draft in place so `cleanUpOldDrafts` (which keys on `Name == "Draft Preset"`) no longer targets it. This matches `handleRenamePreset`'s semantics (Get → set Name → Save). It does **not** match `handleSavePreset`, which creates a new preset from a form payload. Rejects the literal name `Draft Preset` |
 
@@ -350,6 +350,29 @@ backed by the same functions as the tools:
 - `qc://presets/{preset_id}`
 - `qc://prompt-templates/{prompt_key}/{version}`: the static library through
   `agents.LoadPrompt`, so a template can be viewed without a run
+
+- `qc://style/preset-display`: a static, ≤40-line guide for presenting a preset
+  in chat (`internal/mcpserver/style/preset-display.md`, embedded). Resources may
+  not be auto-attached in claude.ai, so `instructions` also carries a two-line
+  summary; both are checked by `TestStyleResource`.
+
+**UI parity.** `generate_preset` must expose every option on the UI's tone
+prompt form (`form#gen-prompt-form` in `web/templates/index.html`).
+`parity_test.go` parses that form and fails if a `name=` is not a `generateInput`
+json tag, and checks that omitting each checkbox parameter yields the UI's
+default (its `checked` state) under the shipped `config.json`. MCP-only fields
+are listed in that test's allowlist: `wait_seconds`, `mock`, `guitars`,
+`single_amp_mode`, `allow_cloud_captures`.
+
+**MCP-only options.** `guitars` is untrusted text that reaches LLM prompts and
+becomes JSON keys, so `validGuitars` trims, caps (1–3 entries, ≤60 runes),
+rejects control/line-separator/format characters and case-insensitive
+duplicates, and returns an actionable tool error. `single_amp_mode` and
+`allow_cloud_captures` are request-wins (`nil` ⇒ config), unlike the `allow_*`
+flags where config is a ceiling: `config.json` ships `allow_cloud_captures=false`,
+so a ceiling would make the parameter impossible to turn on. `refine_preset`
+does not rebuild constraints: it feeds the stored preset to the Architect, whose
+guitars are the keys already in that preset, so nothing needs threading.
 
 ### 5.3 Prompt
 

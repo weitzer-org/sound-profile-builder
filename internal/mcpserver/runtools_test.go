@@ -40,7 +40,7 @@ func newMockService(t *testing.T) *svcHarness {
 		},
 		Config: func() *config.AppConfig { return nil },
 	})
-	return &svcHarness{svc: svc, store: store}
+	return &svcHarness{svc: svc, store: store, client: client}
 }
 
 func TestRunTools_MockGenerateAndLogs(t *testing.T) {

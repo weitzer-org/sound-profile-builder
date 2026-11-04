@@ -14,6 +14,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 // wrongToken is a well-formed (64 chars) token that is not testToken.
@@ -302,7 +303,7 @@ func TestIntegration_GetPresetMarkdown(t *testing.T) {
 	for _, want := range []string{
 		"## Session Lead",
 		"### Fender Telecaster Single Coil",
-		"| # | Block | Model | Settings (A / B) |",
+		"| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |",
 		dataNotice,
 		"Run IDs: gen-1, refine-1",
 	} {
@@ -622,5 +623,25 @@ func TestMCPEndToEnd(t *testing.T) {
 	}
 	if text := call(getToolName, map[string]any{"preset_id": "p-1-draft"}, false); !strings.Contains(text, "## Gain Staging Lead") {
 		t.Errorf("get_preset should show the renamed preset:\n%s", text)
+	}
+}
+
+// get_preset keeps a differing Scene B through storage, decode and render
+// (the seeded architect mock has no value_b, so every B cell reads "same as A").
+func TestIntegration_GetPresetShowsDifferingSceneB(t *testing.T) {
+	h := newTestService(t)
+	payload := `{"guitars":{"Strat":[{"id":"b1","type":"Amplifier","model":"Plexi","parameters":[` +
+		`{"name":"Gain","type":"slider","value":"4","value_b":"7"},` +
+		`{"name":"Bass","type":"slider","value":"5"}]}]}}`
+	if err := h.store.Save(t.Context(), &storage.Preset{ID: "p-ab", Name: "AB", Payload: payload}); err != nil {
+		t.Fatal(err)
+	}
+	cs := newMCPSession(t, h.svc)
+	res := itCall(t, cs, getToolName, map[string]any{"preset_id": "p-ab"})
+	if res.IsError {
+		t.Fatalf("get_preset failed: %s", itText(t, res))
+	}
+	if want := "| Gain 4; Bass 5 | Gain 7; Bass 5 |"; !strings.Contains(itText(t, res), want) {
+		t.Errorf("get_preset markdown lacks %q:\n%s", want, itText(t, res))
 	}
 }

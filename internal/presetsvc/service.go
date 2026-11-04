@@ -76,10 +76,19 @@ func (e *LookupError) Error() string { return e.Err.Error() }
 func (e *LookupError) Unwrap() error { return e.Err }
 
 // GenerateOptions tunes one generate run. Nil pointers mean "use the config
-// default" (for the allow_* switches: allowed, further limited by config).
+// default" (for AllowFactoryCaptures/AllowUserCaptures/AllowPaidPlugins:
+// allowed, further limited by config, i.e. config is a ceiling).
+//
+// Guitars, SingleAmpMode and AllowCloudCaptures are MCP-only: the UI form has
+// no control for them, so the UI leaves them zero and gets the old behavior.
+// Unlike the allow_* switches above, SingleAmpMode and AllowCloudCaptures are
+// request-wins (see buildConstraints). Guitars is NOT validated here; the MCP
+// layer validates it before it gets this far.
 type GenerateOptions struct {
 	AllowFactoryCaptures, AllowUserCaptures, AllowPaidPlugins *bool
 	FavorCaptures, FavorCloudCaptures                         *bool
+	SingleAmpMode, AllowCloudCaptures                         *bool
+	Guitars                                                   []string // nil/empty = DefaultGuitars()
 	Mock                                                      bool
 	Source                                                    string // "ui" | "mcp"
 }

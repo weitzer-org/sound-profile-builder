@@ -40,14 +40,27 @@ func pick(v *bool, def bool) bool {
 	return *v
 }
 
+// DefaultGuitars is the guitar pair every UI run uses, and what an MCP run gets
+// when it names none. A fresh slice each call, so callers cannot alias it.
+func DefaultGuitars() []string {
+	return []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"}
+}
+
 // buildConstraints turns GenerateOptions plus config into the constraints map
 // RunPipeline consumes. (Moved from handleGeneratePreset; same keys and value
 // types, since the pipeline and its tests type-assert them.)
 func buildConstraints(cfg *config.AppConfig, o GenerateOptions) map[string]interface{} {
+	guitars := DefaultGuitars()
+	if len(o.Guitars) > 0 {
+		guitars = append([]string(nil), o.Guitars...)
+	}
 	return map[string]interface{}{
-		"guitars":                []string{"Gibson ES-339 Humbuckers", "Fender Telecaster Single Coil"},
-		"single_amp_mode":        cfg.SingleAmpMode,
-		"allow_cloud_captures":   cfg.AllowCloudCaptures,
+		"guitars": guitars,
+		// Request wins, config is only the default. (Not a ceiling like the
+		// allow_* flags below: config.json ships allow_cloud_captures=false, so
+		// a ceiling would make the MCP parameter impossible to turn on.)
+		"single_amp_mode":        pick(o.SingleAmpMode, cfg.SingleAmpMode),
+		"allow_cloud_captures":   pick(o.AllowCloudCaptures, cfg.AllowCloudCaptures),
 		"allow_factory_captures": cfg.AllowFactoryCaptures && pick(o.AllowFactoryCaptures, true),
 		"allow_user_captures":    cfg.AllowUserCaptures && pick(o.AllowUserCaptures, true),
 		"favor_captures":         pick(o.FavorCaptures, cfg.FavorCaptures),
@@ -55,6 +68,12 @@ func buildConstraints(cfg *config.AppConfig, o GenerateOptions) map[string]inter
 		"allow_paid_plugins":     cfg.AllowPaidPlugins && pick(o.AllowPaidPlugins, true),
 		"available_plugins":      cfg.AvailablePlugins,
 	}
+}
+
+// BuildConstraints exposes buildConstraints so other packages' tests (the MCP
+// UI-parity test) can check what a given option set resolves to.
+func BuildConstraints(cfg *config.AppConfig, o GenerateOptions) map[string]interface{} {
+	return buildConstraints(cfg, o)
 }
 
 // StartGenerate creates a run record, launches the pipeline in a detached

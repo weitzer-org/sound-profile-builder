@@ -94,7 +94,7 @@ claude mcp add --transport http qc2 https://<app>.fly.dev/mcp --header "Authoriz
 - `list_presets`: list saved presets and drafts.
 - `get_preset`: read one preset as Markdown or JSON.
 - `save_preset`: rename a draft to save it.
-- `generate_preset`: start a generation run and wait for the result.
+- `generate_preset`: start a generation run and wait for the result. It accepts every option on the web UI's tone prompt form (`allow_factory_captures`, `allow_paid_plugins`, `allow_user_captures` = "Use My Capture Library", `favor_captures`, `favor_cloud_captures` = "Favor My Capture Library"), plus three **MCP-only** options with no UI checkbox: `guitars` (1-3 names; omit for the default Gibson ES-339 + Fender Telecaster pair), `single_amp_mode` and `allow_cloud_captures` (both: the request value wins, omit to use `config.json`). A test (`internal/mcpserver/parity_test.go`) fails if the UI form gains a field MCP lacks.
 - `refine_preset`: apply a refinement to an existing preset.
 - `get_run_status`: check or long-poll a run's progress.
 - `get_run_log`: fetch a run's timeline, prompts and totals.
@@ -106,6 +106,7 @@ claude mcp add --transport http qc2 https://<app>.fly.dev/mcp --header "Authoriz
 - `qc://runs/{run_id}/prompts/{prompt_key}`: one agent's system and input prompts.
 - `qc://presets/{preset_id}`: a preset.
 - `qc://prompt-templates/{prompt_key}/{version}`: a prompt template version.
+- `qc://style/preset-display`: the house style for showing a preset in chat (one table per guitar, separate Scene A / Scene B columns, estimate marker, rationales and warnings, then refine/save). The server `instructions` carry a short version of it.
 
 **Prompt:** `design_tone` takes an optional song, artist, guitar and notes, asks Claude to clarify missing tone details, then calls `generate_preset`.
 

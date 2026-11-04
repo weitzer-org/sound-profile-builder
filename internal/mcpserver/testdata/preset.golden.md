@@ -4,12 +4,12 @@ The primary objective remains to enhance the top-end presence and edge of the to
 
 ### Fender Telecaster Single Coil
 
-| # | Block | Model | Settings (A / B) |
-|---|---|---|---|
-| 1 | Amplifier | Tweed | Gain 5.0 |
+| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |
+|---|---|---|---|---|
+| 1 | Amplifier | Tweed | Gain 5.0 | same as A |
 
 ### Gibson ES-339 Humbuckers
 
-| # | Block | Model | Settings (A / B) |
-|---|---|---|---|
-| 1 | Amplifier | Plexi | Drive 6.0 |
+| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |
+|---|---|---|---|---|
+| 1 | Amplifier | Plexi | Drive 6.0 | same as A |
