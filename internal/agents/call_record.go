@@ -44,6 +44,13 @@ type CallRecord struct {
 	OutputTokens   int32  `json:"output_tokens,omitempty"`
 	ThinkingTokens int32  `json:"thinking_tokens,omitempty"`
 	LatencyMs      int64  `json:"latency_ms"`
+	// Grounded is true when the response carries Google Search grounding evidence: at least one
+	// web search query or grounding chunk in Candidate.GroundingMetadata. A request can ask for
+	// the GoogleSearch tool and still get Grounded=false (the model chose not to search, or
+	// skips search when a response schema is set -- see the Phase 0 capability matrix), so this
+	// is the only honest signal that an agent was actually grounded.
+	Grounded      bool `json:"grounded"`
+	SearchQueries int  `json:"search_queries,omitempty"` // len(GroundingMetadata.WebSearchQueries)
 }
 
 // responseServedModel / responseFinishReason pull the two fields out of a response, nil-safe.
@@ -61,6 +68,19 @@ func responseFinishReason(resp *genai.GenerateContentResponse) string {
 	return string(resp.Candidates[0].FinishReason)
 }
 
+// responseGrounding reports whether the first candidate carries grounding evidence, and how many
+// search queries the model issued. nil-safe.
+func responseGrounding(resp *genai.GenerateContentResponse) (grounded bool, queries int) {
+	if resp == nil || len(resp.Candidates) == 0 || resp.Candidates[0] == nil {
+		return false, 0
+	}
+	gm := resp.Candidates[0].GroundingMetadata
+	if gm == nil {
+		return false, 0
+	}
+	return len(gm.WebSearchQueries) > 0 || len(gm.GroundingChunks) > 0, len(gm.WebSearchQueries)
+}
+
 // NewCallRecord builds a CallRecord from one attempt's outcome.
 func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.GenerateContentResponse, err error) CallRecord {
 	rec := CallRecord{
@@ -75,6 +95,7 @@ func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.Gene
 		// as the advisory Preset Critic swallow this, so it must not read as a clean call.
 		rec.Success, rec.Error = false, "response has no candidates"
 	}
+	rec.Grounded, rec.SearchQueries = responseGrounding(resp)
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount

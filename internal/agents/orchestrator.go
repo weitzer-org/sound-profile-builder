@@ -1136,6 +1136,14 @@ func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.Gener
 }
 
 // loadPromptForAgent loads the prompt for a given agent, falling back to flash version if applicable and available.
+// PromptForAgent is the exported form of loadPromptForAgent for eval tooling: it resolves the
+// system prompt exactly as RunPipeline does for the model currently routed to key in
+// o.AgentModels (including the "_flash" variant selection, should such files ever be added), so
+// single-agent evals cannot drift from production prompt selection.
+func (o *Orchestrator) PromptForAgent(key, version string) (string, error) {
+	return o.loadPromptForAgent(key, version)
+}
+
 func (o *Orchestrator) loadPromptForAgent(key string, version string) (string, error) {
 	model := "gemini-3.1-pro-preview" // default
 	if o.AgentModels != nil {

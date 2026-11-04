@@ -131,3 +131,27 @@ func TestNewCallRecord_NoCandidatesIsFailure(t *testing.T) {
 		t.Fatalf("a response with no candidates must not read as success: %+v", rec)
 	}
 }
+
+func TestNewCallRecord_Grounded(t *testing.T) {
+	mk := func(gm *genai.GroundingMetadata) *genai.GenerateContentResponse {
+		return &genai.GenerateContentResponse{ModelVersion: "m", Candidates: []*genai.Candidate{{FinishReason: genai.FinishReasonStop, GroundingMetadata: gm}}}
+	}
+	cases := []struct {
+		name     string
+		resp     *genai.GenerateContentResponse
+		grounded bool
+		queries  int
+	}{
+		{"nil response", nil, false, 0},
+		{"no metadata (tool requested, model did not search)", mk(nil), false, 0},
+		{"empty metadata", mk(&genai.GroundingMetadata{}), false, 0},
+		{"search queries", mk(&genai.GroundingMetadata{WebSearchQueries: []string{"a", "b"}}), true, 2},
+		{"chunks only", mk(&genai.GroundingMetadata{GroundingChunks: []*genai.GroundingChunk{{}}}), true, 0},
+	}
+	for _, c := range cases {
+		rec := NewCallRecord("Tone Historian", "m", 1, c.resp, nil)
+		if rec.Grounded != c.grounded || rec.SearchQueries != c.queries {
+			t.Errorf("%s: grounded=%v queries=%d, want %v/%d", c.name, rec.Grounded, rec.SearchQueries, c.grounded, c.queries)
+		}
+	}
+}
