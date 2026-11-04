@@ -199,7 +199,15 @@ The tool stopped before any candidate was run, as required. I inspected the evid
 | `gemini-4-argon` | **4 / 4** | 0 / 10 | 0 | 1 transient connection reset (`07_Edge` rep2; infrastructure, not a model fault; unscoreable) | 0 / 0 | 14/14 answered |
 | `gemini-3.8-flash` | **5 / 5** | 0 / 9 | **1** (`09_BB_King` rep5: 15,359 of 16,000 tokens went to thinking, 627 to output) | that truncation | 0 / 0 | 15/15 |
 
-Every defect is the same pattern as the control's: relative-dB Volume on `UK C30 TopBoost` (4 values per run, 3 in one 3.8 Flash run). No capture-claim defects (`capture_claim_on_modeled` = 0 everywhere). On R1 the candidates are at 100% against the control's 40%, but with n = 4-5 per cell that is not statistically distinguishable (Fisher exact, two-sided, computed in this session: control 2/5 vs Argon 4/4 p = 0.17; vs 3.8 Flash 5/5 p = 0.17). R2 shows no signal for any model. Critic flags: control 1 (earlier snapshot), Argon 0, 3.8 Flash 2.
+**Follow-up sample, run on the owner's instruction to bias toward upgrading unless a candidate is clearly worse (15 more `07_Edge` reps per model, same frozen upstream; raw: `eval_results/phase1/architect/extra_edge_*`). Pooled with the first 5, 20 runs per model:**
+
+| Model | `07_Edge` defect runs / scoreable | rate | Architect MAX_TOKENS on `07_Edge` | unscoreable |
+|---|--:|--:|--:|---|
+| `gemini-3.1-pro-preview` (control) | 3 / 20 | 15% | 0 | 0 |
+| `gemini-4-argon` | 18 / 19 | 95% | 0 | 1 connection reset (`07_Edge`; infrastructure) |
+| `gemini-3.8-flash` | 17 / 20 | 85% | 0 | 0 |
+
+Fisher exact, two-sided, each candidate vs the control: p < 0.001 for both (computed in this session). The earlier "not distinguishable" reading was a small-sample artifact: with 20 runs the candidates are clearly worse than the production Pro model on R1. Every defect is the same pattern: relative-dB Volume on `UK C30 TopBoost`; no capture-claim defects anywhere. R2 (`09_BB_King`, `05_Clapton`) was not extended: 0 defects for all three models in 5 reps per query (3.8 Flash: 9 scoreable because of one truncation).
 
 ### 1C: Phase 1 exit report
 
@@ -207,7 +215,7 @@ Every defect is the same pattern as the control's: relative-dB Volume on `UK C30
 - Sonic Profiler (2) on `gemini-4-argon`: schema valid 16/26 vs 26/26 baseline, 10/26 truncated (exit rule).
 - Sonic Profiler (2) on `gemini-3.5-flash-lite`: schema valid 24/26, 2/26 truncated (exit rule).
 - `gemini-pro-latest` and S3: served as `gemini-3.1-pro-preview` (Phase 0.3).
-- `gemini-4-argon` and `gemini-3.8-flash` on the Architect (agent 12): both fail R1 as the plan defines it (any defective `07_Edge` run), 4/4 and 5/5. **Caveat that the plan's literal rule does not handle:** the control also fails R1 (2/5), so the rule as written would drop the baseline too. I applied it to the candidates anyway because they are at or above the control's rate, and recommend the drop from agent 12 for that reason, but the evidence for "worse than baseline" is directional, not significant (p = 0.17). The defect is Architect-specific, so I did NOT drop either from agent 1 (1A evidence only): the plan says "dropped from the Pro tier" (agents 1 and 12); splitting it is a judgment call for the owner.
+- `gemini-4-argon` and `gemini-3.8-flash` on the Architect (agent 12): both fail R1 as the plan defines it (any defective `07_Edge` run), 4/4 and 5/5. **The control also trips R1 (3/20 = 15%), so a zero-defect bar would drop the baseline too; the decision rests on the comparison instead: both candidates are clearly worse than the control (95% and 85% vs 15%, p < 0.001), after the owner asked for a larger sample because the bias is to upgrade unless a candidate is clearly worse. It is clear.** The defect is Architect-specific, so I did NOT drop either from agent 1 (1A evidence only): the plan says "dropped from the Pro tier" (agents 1 and 12); splitting it is a judgment call for the owner.
 - `gemini-3.8-flash` additionally truncated once on the Architect (1/15, thinking consumed the 16,000-token cap), which is worse than the control's 0/15 on the Phase 2 truncation gate.
 - No candidate failed a Phase 0.5 must-have capability.
 
@@ -231,10 +239,10 @@ Every defect is the same pattern as the control's: relative-dB Volume on `UK C30
 3. Production agents 1 and 2 are effectively ungrounded (0/26), contradicting the premise in the prompts and in `agentSearchTool`'s comments; a decision for the owner, outside this PR.
 4. The 1A tool and the Architect freeze both resolve prompts through production code (`PromptForAgent`), so no `_flash` prompt variant exists today; if one is added, the freeze flags `prompt_matches_frozen`.
 
-**Open decisions for the owner**
-1. Whether to treat the R1 result as a drop (recommended) given that the baseline itself has the defect at 2/5; alternatively raise the control and candidate sample sizes (about 15 more Architect + Critic calls per model on `07_Edge`) to separate 40% from 100%.
-2. Whether the `UK C30 TopBoost` volume-in-dB defect, now shown to exist on every model including production's, should be fixed in the Architect prompt or enforced in post-processing, independent of any model change. This is a product bug, not only an eval criterion.
-3. Whether to split the Pro tier (agent 1 candidates stay alive, agent 12 candidates dropped).
+**Owner decisions (2026-11-04)**
+1. More Architect samples were requested; done (above). Result: Argon and 3.8 Flash are clearly worse than the control on R1, so both stay dropped from agent 12.
+2. Split the Pro tier: agreed. Agent 1 candidates (Argon, 3.8 Flash) stay alive on the 1A evidence; agent 12 candidates are dropped.
+3. The `UK C30 TopBoost` volume-in-dB defect (also present in production's own model at ~15%) will NOT be fixed as part of this work.
 
 ## 5. Phase 2 — Full-pipeline routing scenarios
 
