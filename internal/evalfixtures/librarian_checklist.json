@@ -1,5 +1,5 @@
 {
-  "status": "DRAFT - awaiting owner approval. Do not score against this until the owner has signed off.",
+  "status": "APPROVED by owner 2026-11-04. Changes need owner sign-off.",
   "doc": {
     "purpose": "Deterministic, judge-free quality checklist for the 13 golden queries. Scored by code against (a) the CorOS Librarian's chosen block names and (b) the final preset's block models. No LLM involved.",
     "how_rules_work": "Each rule matches case-insensitive regex patterns against the chosen block NAMES. 'require' passes if at least one chosen name matches; 'forbid' fails if any does. 'scope' restricts which names are considered: 'amp' = names classified as amps (coros_map type 'amp', or a user capture whose block_type is 'amp' or 'full_rig'); 'any' = every chosen name. A pattern of the form '@archetype:<name>' expands to every amp in coros_map.json with that tonal_archetype; '@type:<t>' expands to every catalog entry of that type.",

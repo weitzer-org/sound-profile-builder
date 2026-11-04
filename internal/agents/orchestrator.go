@@ -519,6 +519,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		userCapturesJSON = GetUserCapturesJSON()
 	}
 
+	librarianStatic := buildLibrarianStaticCatalog(dictJSON, ampMenu, userCapturesJSON)
+
 	qcBlockSchemaJSON := GetQCBlockSchemaJSON()
 
 	if onProgress != nil {
@@ -534,6 +536,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	go func() {
 		defer wg1.Done()
+		if ov := phase1OverrideFrom(ctx); ov != nil {
+			toneResult = ov.Tone
+			return
+		}
 		version := agentConfig["1_tone_historian"]
 		if version == "off" {
 			toneResult = "Tone Historian skipped by configuration."
@@ -546,6 +552,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	go func() {
 		defer wg1.Done()
+		if ov := phase1OverrideFrom(ctx); ov != nil {
+			sonicResult = ov.Sonic
+			return
+		}
 		version := agentConfig["2_sonic_profiler"]
 		if version == "off" {
 			sonicResult = "Sonic Profiler skipped by configuration."
@@ -563,6 +573,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	go func() {
 		defer wg1.Done()
+		if ov := phase1OverrideFrom(ctx); ov != nil {
+			scrapeResult = ov.Scrape
+			return
+		}
 		version := agentConfig["3_community_scraper"]
 		if version == "off" {
 			scrapeResult = "Community Scraper skipped by configuration."
@@ -581,6 +595,15 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 
 	log.Printf("Phase 1 Complete.")
 
+	// Eval hooks (see phase1_hooks.go): record what the Librarian is about to be fed,
+	// and optionally stop here. Inert unless the caller put the matching values in ctx.
+	if c := phase1CaptureFrom(ctx); c != nil {
+		*c = Phase1Result{Tone: toneResult, Sonic: sonicResult, Scrape: scrapeResult, LibrarianStatic: librarianStatic}
+	}
+	if stopAfterPhase1(ctx) {
+		return "", o.Usage, ErrStoppedAfterPhase1
+	}
+
 	if onProgress != nil {
 		onProgress("Phase 2/4: Mapping to Native CorOS Effects...")
 	}
@@ -594,7 +617,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		librarianResult = "CorOS Librarian skipped by configuration."
 	} else {
 		sysPrompt4, _ := o.loadPromptForAgent("4_coros_librarian", version4)
-		userContext4 := buildLibrarianContext(buildLibrarianStaticCatalog(dictJSON, ampMenu, userCapturesJSON), toneResult, scrapeResult, constraints)
+		userContext4 := buildLibrarianContext(librarianStatic, toneResult, scrapeResult, constraints)
 		librarianResult, err4 = o.RunAgentSplit(ctx, "CorOS Librarian", sysPrompt4, userContext4)
 		if err4 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
