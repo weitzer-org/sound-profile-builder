@@ -45,8 +45,10 @@ func ParseBenchmarkReport(path string) ([]RunFailure, error) {
 		if strings.HasPrefix(line, "| Scenario | Metric") {
 			cols := strings.Split(line, "|")
 			scenarios = nil
-			for _, c := range cols[3 : len(cols)-1] {
-				scenarios = append(scenarios, strings.TrimSpace(c))
+			if len(cols) >= 4 { // malformed header rows are skipped, not a panic
+				for _, c := range cols[3 : len(cols)-1] {
+					scenarios = append(scenarios, strings.TrimSpace(c))
+				}
 			}
 			continue
 		}

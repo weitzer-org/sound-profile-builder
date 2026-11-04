@@ -30,6 +30,13 @@ func IsRelativeDB(v string) bool { return relativeDBPattern.MatchString(strings.
 // StripCaptureAnnotation is the exported form of stripCaptureAnnotation.
 func StripCaptureAnnotation(s string) string { return stripCaptureAnnotation(s) }
 
+// NormalizeBlockName reduces a block model name to its ground-truth lookup key: capture
+// annotation, any "unverified" marker FlagUnverifiedBlock appended, and surrounding whitespace
+// removed. Shared so the stats and the eval checker can never normalize differently.
+func NormalizeBlockName(s string) string {
+	return strings.TrimSpace(strings.TrimSuffix(stripCaptureAnnotation(s), unverifiedSuffix))
+}
+
 // BlockNameStats counts, over gear-category blocks only (see gearBlockTypes for why other
 // categories are out of scope), how the pipeline's verification policy treats each block name:
 //
@@ -63,7 +70,7 @@ func BlockNameStatsFor(sp *storage.StructuredPreset, validBlocks map[string]bool
 			if !gearBlockTypes[strings.ToLower(strings.TrimSpace(blocks[i].Type))] {
 				continue
 			}
-			name := strings.TrimSpace(strings.TrimSuffix(stripCaptureAnnotation(blocks[i].Model), unverifiedSuffix))
+			name := NormalizeBlockName(blocks[i].Model)
 			if name == "" || isSkippableValue(name) {
 				continue
 			}

@@ -212,3 +212,29 @@ func TestAssessCalls(t *testing.T) {
 		t.Fatalf("MAX_TOKENS not counted: %v", mt)
 	}
 }
+
+func TestSplitCriticNotes_KeepsOrganicWarningEmoji(t *testing.T) {
+	prose, notes := splitCriticNotes("Great lead boost ⚠️ watch clipping. ⚠️ Verify: x ⚠️ Critic: bad claim")
+	if !strings.Contains(prose, "watch clipping") || strings.Contains(prose, "Verify") || len(notes) != 1 || notes[0] != "bad claim" {
+		t.Fatalf("prose=%q notes=%v", prose, notes)
+	}
+}
+
+func TestClaimsCapture_MultibytePrefix(t *testing.T) {
+	// Curly quotes/accents right before the claim must not corrupt the negation look-back.
+	if !claimsCapture("Réglé “à l’ancienne” — a Factory Neural Capture of the amp.") {
+		t.Error("missed claim after multibyte text")
+	}
+	if claimsCapture("Réglé “à l’ancienne” — not a Factory Neural Capture.") {
+		t.Error("negation lost after multibyte text")
+	}
+}
+
+func TestCheck_NormalizesUnverifiedSuffixAndWhitespace(t *testing.T) {
+	valid := agents.BuildEffectiveValidBlocks(true, true)
+	name := "  UK C30 TopBoost  "
+	r := Check(envelope(t, name, "Amplifier", "Factory Neural Capture.", map[string]string{"name": "Gain", "value": "+1.0 dB"}), valid)
+	if r.CaptureClaimOnModeled != 1 || r.CaptureDBOnModeled != 1 {
+		t.Fatalf("whitespace must not mask defects: %+v", r)
+	}
+}

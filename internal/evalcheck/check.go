@@ -84,7 +84,7 @@ func Check(envelopeJSON string, validBlocks map[string]bool) Report {
 	for guitar, blocks := range sp.Guitars {
 		for _, b := range blocks {
 			r.Blocks++
-			name := agents.StripCaptureAnnotation(b.Model)
+			name := agents.NormalizeBlockName(b.Model)
 			isCap, known := validBlocks[name]
 			prose, notes := splitCriticNotes(b.Rationale)
 
@@ -153,11 +153,10 @@ func (r *Report) example(format string, args ...any) {
 // Capture.
 func claimsCapture(prose string) bool {
 	for _, loc := range captureClaim.FindAllStringIndex(prose, -1) {
-		start := loc[0] - 45
-		if start < 0 {
-			start = 0
-		}
-		if !negation.MatchString(prose[start:loc[0]]) {
+		// negation is anchored at the end of the prefix and bounds its own look-back
+		// ([^.;]{0,40}), so the whole prefix is passed: no byte-offset slicing that could split a
+		// UTF-8 rune or chop a negation word in half.
+		if !negation.MatchString(prose[:loc[0]]) {
 			return true
 		}
 	}
@@ -168,13 +167,22 @@ func claimsCapture(prose string) bool {
 // "⚠️ Critic: ..." notes. Other "⚠️ Verify" warnings are dropped from both.
 func splitCriticNotes(rationale string) (prose string, criticNotes []string) {
 	parts := strings.Split(rationale, "⚠️")
-	prose = strings.TrimSpace(parts[0])
+	var pb strings.Builder
+	pb.WriteString(parts[0])
 	for _, p := range parts[1:] {
-		if strings.HasPrefix(strings.TrimSpace(p), "Critic:") {
-			criticNotes = append(criticNotes, strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(p), "Critic:")))
+		t := strings.TrimSpace(p)
+		switch {
+		case strings.HasPrefix(t, "Critic:"):
+			criticNotes = append(criticNotes, strings.TrimSpace(strings.TrimPrefix(t, "Critic:")))
+		case strings.HasPrefix(t, "Verify"):
+			// injected Verify warning: dropped from prose
+		default:
+			// the model's own use of the warning emoji: keep it in the prose
+			pb.WriteString("⚠️")
+			pb.WriteString(p)
 		}
 	}
-	return prose, criticNotes
+	return strings.TrimSpace(pb.String()), criticNotes
 }
 
 // ClassifyCriticNote buckets a Critic finding by keyword. Order matters: the first rule that

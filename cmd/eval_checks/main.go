@@ -52,10 +52,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		scen := parts[0]
-		if len(parts) > 2 {
-			scen = strings.Join(parts[:len(parts)-1], "/")
-		}
+		scen := parts[0] // always the scenario ID; rep<N> dirs aggregate into it (matches runs.jsonl)
 		files = append(files, fileReport{scen, strings.TrimSuffix(parts[len(parts)-1], ".html"), p, evalcheck.Check(string(b), valid)})
 		return nil
 	})
