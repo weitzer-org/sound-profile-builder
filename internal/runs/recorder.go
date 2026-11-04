@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 )
@@ -163,8 +164,8 @@ func (r *Recorder) OnAgentStart(role, systemPrompt, userPrompt string) {
 	r.mutate(func(rec *RunRecord) {
 		t := r.trace(rec, role)
 		t.Status = "running"
-		t.SystemPromptChars = len(systemPrompt)
-		t.InputChars = len(userPrompt)
+		t.SystemPromptChars = utf8.RuneCountInString(systemPrompt)
+		t.InputChars = utf8.RuneCountInString(userPrompt)
 		key = t.PromptKey
 		id = rec.ID
 		r.addEvent(rec, RunEvent{Type: EventAgentStart, Agent: role, Msg: role + " started"})
@@ -233,7 +234,7 @@ func (r *Recorder) OnAgentDone(role, model, output string, u agents.AgentUsage, 
 		t.OutputTokens = u.OutputTokens
 		t.ThinkingTokens = u.ThinkingTokens
 		t.LatencyMs = u.LatencyMs
-		t.OutputChars = len(output)
+		t.OutputChars = utf8.RuneCountInString(output)
 		rec.Totals.InputTokens += u.InputTokens
 		rec.Totals.OutputTokens += u.OutputTokens
 		rec.Totals.ThinkingTokens += u.ThinkingTokens

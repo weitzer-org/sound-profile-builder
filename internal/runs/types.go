@@ -91,7 +91,7 @@ type AgentTrace struct {
 	ThinkingTokens    int32  `json:"thinking_tokens"`
 	LatencyMs         int64  `json:"latency_ms"`
 	Attempts          int    `json:"attempts"`
-	SystemPromptChars int    `json:"system_prompt_chars"` // so clients know how much to page
+	SystemPromptChars int    `json:"system_prompt_chars"` // characters (runes), so clients know how much to page
 	InputChars        int    `json:"input_chars"`
 	OutputChars       int    `json:"output_chars"`
 	Error             string `json:"error,omitempty"`

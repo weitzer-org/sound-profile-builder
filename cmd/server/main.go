@@ -131,6 +131,9 @@ func main() {
 		// which construct an Orchestrator with gcs=nil anyway and have no
 		// durability requirement for this data.
 		orch.UsageBucket = bucket
+		// Agent output logs go to the run store's bucket too, so get_agent_output
+		// reads them from where presetsvc's run store (and its prompt logs) live.
+		orch.LogBucket = bucket
 		orch.Reporter = usageReporter
 		return orch, nil
 	}

@@ -233,6 +233,13 @@ type Orchestrator struct {
 	// with no signature change required on their end.
 	UsageBucket string
 
+	// LogBucket, when set, is the bucket logToGCS writes per-agent outputs
+	// (logs/<run_id>/<key>.json) to. cmd/server/main.go sets it to the same
+	// bucket as the run store, so the MCP log readers find every log there.
+	// Empty keeps the old lookup: GCS_BUCKET_NAME, then S3_BUCKET, then the
+	// built-in default.
+	LogBucket string
+
 	// Reporter, when set, also pushes each recorded UsageRecord to GSR's
 	// hosted usage dashboard (see usage_reporter.go) — nil by default,
 	// meaning reporting is opt-in exactly like GSR's own
@@ -460,7 +467,10 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 			go func(aNum, res string) {
 				// Detach context to ensure logging finishes even if main pipeline is cancelled
 				bgCtx := context.WithoutCancel(ctx)
-				bucket := os.Getenv("GCS_BUCKET_NAME")
+				bucket := o.LogBucket
+				if bucket == "" {
+					bucket = os.Getenv("GCS_BUCKET_NAME")
+				}
 				if bucket == "" {
 					bucket = os.Getenv("S3_BUCKET") // track the active S3/R2 bucket when set
 				}
