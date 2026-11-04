@@ -8,18 +8,32 @@ import (
 	"google.golang.org/genai"
 )
 
-func TestGetFallbackChain_DefaultUnchanged(t *testing.T) {
-	t.Setenv(EvalNoFallbackEnv, "")
-	cases := map[string][]string{
-		"gemini-3.1-pro-preview": {"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"},
-		"gemini-3.5-flash":       {"gemini-3-flash-preview", "gemini-2.5-pro"},
-		"gemini-2.5-pro":         nil,
-		"gemini-4-argon":         {"gemini-2.5-pro"}, // the silent-substitution hazard EVAL_NO_FALLBACK exists for
-		"totally-bogus-model":    {"gemini-2.5-pro"},
-	}
-	for model, want := range cases {
-		if got := getFallbackChain(model); !reflect.DeepEqual(got, want) {
-			t.Errorf("getFallbackChain(%q) = %v, want %v", model, got, want)
+// fallbackChainCases is the full expected routing table (EVAL_NO_FALLBACK unset). The first
+// four rows are the existing production chains and must not change; the next four are the
+// explicit chains for models that can now be a primary; the last two are unknown models.
+var fallbackChainCases = map[string][]string{
+	// existing production chains -- unchanged
+	"gemini-3.1-pro-preview": {"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"},
+	"gemini-3.5-flash":       {"gemini-3-flash-preview", "gemini-2.5-pro"},
+	"gemini-3-flash-preview": {"gemini-2.5-pro"},
+	"gemini-2.5-pro":         nil,
+	// candidate primaries
+	"gemini-4-argon":        {"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview"},
+	"gemini-3.8-flash":      {"gemini-3.5-flash", "gemini-3-flash-preview"},
+	"gemini-3.5-flash-lite": {"gemini-3.5-flash", "gemini-3-flash-preview"},
+	"gemini-3.6-flash":      {"gemini-3-flash-preview"},
+	// unknown: no fallback, never a guessed model
+	"totally-bogus-model": nil,
+	"":                    nil,
+}
+
+func TestGetFallbackChain_Table(t *testing.T) {
+	for _, v := range []string{"", "false", "1", "yes"} { // anything but "true" is production behavior
+		t.Setenv(EvalNoFallbackEnv, v)
+		for model, want := range fallbackChainCases {
+			if got := getFallbackChain(model); !reflect.DeepEqual(got, want) {
+				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want %v", v, model, got, want)
+			}
 		}
 	}
 }
@@ -27,17 +41,39 @@ func TestGetFallbackChain_DefaultUnchanged(t *testing.T) {
 func TestGetFallbackChain_EvalNoFallback(t *testing.T) {
 	for _, v := range []string{"true", "TRUE", " true "} {
 		t.Setenv(EvalNoFallbackEnv, v)
-		for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-4-argon", "totally-bogus-model"} {
-			if got := getFallbackChain(m); got != nil {
-				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want nil", v, m, got)
+		for model := range fallbackChainCases {
+			if got := getFallbackChain(model); got != nil {
+				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want nil", v, model, got)
 			}
 		}
 	}
-	// Only the literal "true" enables it; anything else keeps production behavior.
-	for _, v := range []string{"false", "1", "yes", ""} {
-		t.Setenv(EvalNoFallbackEnv, v)
-		if getFallbackChain("gemini-4-argon") == nil {
-			t.Errorf("EVAL_NO_FALLBACK=%q must not disable fallback", v)
+}
+
+// The unknown-model default must never name a model, and no candidate primary may be
+// slipped into a production chain as a fallback target (that decision belongs to the eval).
+func TestGetFallbackChain_Invariants(t *testing.T) {
+	t.Setenv(EvalNoFallbackEnv, "")
+	for _, m := range []string{"totally-bogus-model", "", "gemini-5-unreleased", "GEMINI-3.5-FLASH"} {
+		if got := getFallbackChain(m); len(got) != 0 {
+			t.Errorf("unknown model %q must have no fallback, got %v", m, got)
+		}
+	}
+	candidates := []string{"gemini-4-argon", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"}
+	production := []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"}
+	for _, p := range production {
+		for _, target := range getFallbackChain(p) {
+			for _, c := range candidates {
+				if target == c {
+					t.Errorf("production chain for %q must not target candidate %q", p, c)
+				}
+			}
+		}
+	}
+	for _, c := range candidates {
+		for _, target := range getFallbackChain(c) {
+			if target == "gemini-2.5-pro" || target == c {
+				t.Errorf("candidate %q chain must not contain %q: %v", c, target, getFallbackChain(c))
+			}
 		}
 	}
 }

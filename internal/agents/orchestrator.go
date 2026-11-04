@@ -781,6 +781,20 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 //
 // With EVAL_NO_FALLBACK=true (eval tooling only, see EvalNoFallbackEnv) it returns nil for
 // every model, so a failing candidate fails visibly instead of being scored on a fallback.
+//
+// An unrecognized model gets NO fallback (nil), not a guessed one: the old default routed
+// every unknown model to gemini-2.5-pro, which may be shut down (UNVERIFIED -- see
+// docs/eval/gemini-model-upgrade-test-plan.md §10) and silently substitutes a different
+// model for the one that was asked for. A failure now surfaces as "All fallback models
+// failed" for the model that was actually requested. Every model that can be a primary must
+// therefore have an explicit case below.
+//
+// The four candidate primaries (gemini-4-argon, gemini-3.8-flash, gemini-3.5-flash-lite,
+// gemini-3.6-flash) have chains of their own but are deliberately NOT fallback targets of
+// the production chains above them: promoting one is an eval decision, not a routing side
+// effect. Their chains reuse only models already present in production chains, never
+// gemini-2.5-pro. gemini-3.6-flash omits gemini-3.5-flash because the latter was observed to
+// be served as the former (TODO.md, 7 of 7 calls), so retrying it would not be a fallback.
 func getFallbackChain(primaryModel string) []string {
 	if evalNoFallback() {
 		return nil
@@ -794,8 +808,14 @@ func getFallbackChain(primaryModel string) []string {
 		return []string{"gemini-2.5-pro"}
 	case "gemini-2.5-pro":
 		return nil
+	case "gemini-4-argon":
+		return []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview"}
+	case "gemini-3.8-flash", "gemini-3.5-flash-lite":
+		return []string{"gemini-3.5-flash", "gemini-3-flash-preview"}
+	case "gemini-3.6-flash":
+		return []string{"gemini-3-flash-preview"}
 	default:
-		return []string{"gemini-2.5-pro"}
+		return nil
 	}
 }
 
