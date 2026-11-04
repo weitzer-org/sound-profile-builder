@@ -82,7 +82,8 @@ func toolError(tool string, err error) error {
 
 func validRunID(id string) error {
 	if !runs.ValidID(id) {
-		return errors.New("run_id must be a run ID as returned by generate_preset or refine_preset (e.g. gen-<uuid>).")
+		// A userError, so toolError passes it through when loadRun's callers wrap it.
+		return userErr("run_id must be a run ID as returned by generate_preset or refine_preset (e.g. gen-<uuid>).")
 	}
 	return nil
 }
