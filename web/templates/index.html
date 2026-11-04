@@ -81,6 +81,15 @@
             margin-bottom: 2rem;
         }
 
+        /* Token-stats card inside the processing log. Its look used to come from a
+           stored inline style, which the chat sanitiser now strips (issue #105); the
+           attribute selector matches the log container's existing inline style. */
+        div[style*="max-height: 400px"] > div > div.card {
+            margin-top: 1rem;
+            font-family: monospace;
+            color: #a1a1aa;
+        }
+
         h2 {
             font-size: 1.5rem;
             font-weight: 600;

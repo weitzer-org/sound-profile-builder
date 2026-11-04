@@ -325,3 +325,79 @@ func TestSanitizeAgentHTML(t *testing.T) {
 		})
 	}
 }
+
+func TestSanitizeChatHTML_XSS(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		wantGone []string
+		wantKept []string
+	}{
+		{"script tag", `ok<script>alert(1)</script>`, []string{"<script", "alert(1)"}, []string{"ok"}},
+		{"img onerror", `<img src=x onerror=alert(1)>`, []string{"<img", "onerror"}, nil},
+		{"svg onload", `<svg onload=alert(1)>`, []string{"<svg", "onload"}, nil},
+		{"svg slash attr no whitespace", `<svg/onload=alert(1)>`, []string{"<svg", "onload"}, nil},
+		{"javascript href", `<a href="javascript:alert(1)">x</a>`, []string{"<a", "href", "javascript"}, []string{"x"}},
+		{"entity-encoded javascript href", `<a href="jav&#x61;script:alert(1)">x</a>`, []string{"<a", "href", "script:"}, []string{"x"}},
+		{"data uri anchor", `<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>`, []string{"<a", "data:"}, []string{"x"}},
+		{"style url", `<div style="background:url(javascript:alert(1))">x</div>`, []string{"style", "javascript"}, []string{"x"}},
+		{"style expression", `<strong style="width:expression(alert(1))">x</strong>`, []string{"style", "expression"}, []string{"<strong>x</strong>"}},
+		{"iframe", `<iframe src="https://evil.example"></iframe>`, []string{"<iframe", "evil.example"}, nil},
+		{"event handler on allowed tag", `<strong onmouseover="alert(1)">x</strong>`, []string{"onmouseover"}, []string{"<strong>x</strong>"}},
+		{"non-card class", `<div class="x" onclick="alert(1)">x</div>`, []string{"class", "onclick"}, []string{"x"}},
+		{"object data", `<object data="javascript:alert(1)"></object>`, []string{"<object", "data="}, nil},
+		{"inline-closing quote attr injection", `<i title="a"onmouseover="alert(1)">x</i>`, []string{"onmouseover", "title"}, []string{"<i>x</i>"}},
+		{"unclosed card div is escaped", `ok<div class="card">swallows the rest`, []string{"<div"}, []string{"&lt;div"}},
+		{"stray close tag cannot break out of the log", `</div></details><div class="card">fake`, []string{"<div", "</div"}, []string{"&lt;/div&gt;"}},
+		{"less-than in prose survives as text", "gain 3 < 5 and 7 > 2\n**Impact:**\n- x -> y", []string{"<5"}, []string{"3 &lt; 5", "7 &gt; 2", "**Impact:**", "x -&gt; y"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			out := sanitizeChatHTML(tc.input)
+			for _, s := range tc.wantGone {
+				if strings.Contains(out, s) {
+					t.Errorf("expected %q stripped, got: %s", s, out)
+				}
+			}
+			for _, s := range tc.wantKept {
+				if !strings.Contains(out, s) {
+					t.Errorf("expected %q kept, got: %s", s, out)
+				}
+			}
+		})
+	}
+}
+
+// The shapes presetsvc writes today must render unchanged (plain text with no
+// entity characters is byte-identical; the card keeps its class).
+func TestSanitizeChatHTML_BenignShapesUnchanged(t *testing.T) {
+	gen := "Preset structure successfully laid out based on your requirements.\n" +
+		"<i><ul><li><strong>Agent Tone (v2):</strong> Boosted mids</li></ul></i><br><br>" +
+		"\n\t\t\t\t<div class=\"card\">\n\t\t\t\t\t<strong>Pipeline AI Processing Tokens:</strong> Input: 10 | Output: 5 | Models: gemini (3)\n\t\t\t\t</div>"
+	refine := "Raised the gain.\n\n**Impact:**\n- <strong>Agent Amp (v2):</strong> gain up\n"
+	for name, in := range map[string]string{"generate": gen, "refine": refine} {
+		if out := sanitizeChatHTML(in); out != in {
+			t.Errorf("%s shape changed:\n in: %q\nout: %q", name, in, out)
+		}
+	}
+	// The stored token card carries an inline style; it is dropped, class kept.
+	stored := `<div class="card" style="margin-top: 1rem; font-family: monospace;">x</div>`
+	if got, want := sanitizeChatHTML(stored), `<div class="card">x</div>`; got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+
+func TestRenderTweakingWorkspaceHTML_ModelChatIsSanitised(t *testing.T) {
+	p := &storage.Preset{ID: "p1", Name: "N", Payload: `{}`, ChatHistory: []storage.ChatMessage{
+		{Role: "model", Content: "hi<script>alert(1)</script><img src=x onerror=alert(2)>\n<strong>ok</strong>"},
+	}}
+	out := renderTweakingWorkspaceHTML(p, false, false)
+	for _, bad := range []string{"<script>alert(1)", "onerror"} {
+		if strings.Contains(out, bad) {
+			t.Errorf("rendered output contains %q", bad)
+		}
+	}
+	if !strings.Contains(out, "<br><strong>ok</strong>") {
+		t.Errorf("benign markup/newline lost")
+	}
+}
