@@ -145,7 +145,12 @@ func (r *Report) applyRule(s *ScenarioStats, tier string, gates Gates, q Quality
 	switch tier {
 	case "pro":
 		// all three conditions
-	case "flash", "mechanical":
+	case "mechanical":
+		// §7 has no cost clause for this tier (plan doc, ambiguity 15), so cost/latency are shown
+		// for information only and never change the verdict.
+		cheaper, faster := r.cheaperAndFaster(s, r.Scenario(r.BaselineID))
+		res.Note = "Informational (not part of the §7 rule): cost: " + cheaper.detail + "; latency: " + faster.detail + "."
+	case "flash":
 		// "quality is not worse (tie is acceptable)" == defect <= S0 AND judge wins >= losses.
 		if tier == "flash" {
 			base := r.Scenario(r.BaselineID)
@@ -165,7 +170,7 @@ func (r *Report) applyRule(s *ScenarioStats, tier string, gates Gates, q Quality
 	res.Verdict = decide(res.Lines, tier)
 	if res.Verdict == Adopt && q.JudgeProvisional {
 		res.Verdict = Provisional
-		res.Note = "judge verdicts are provisional until the spot-check review is complete"
+		res.Note = strings.TrimSpace(res.Note + " Judge verdicts are provisional until the spot-check review is complete.")
 	}
 	return res
 }

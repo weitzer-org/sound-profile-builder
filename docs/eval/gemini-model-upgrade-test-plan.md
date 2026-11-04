@@ -280,7 +280,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
 **DECISION** wants an explicit yes/no from the owner.
 
 1. **234 → 208.** §5's cost-gate "multiply by 234" includes S3, which is skipped. The matrix is 208.
-2. **Which model id prices a call? DECISION.** `gemini-3.5-flash` is *served* as `gemini-3.6-flash`
+2. **Which model id prices a call? Decided (default requested).** `gemini-3.5-flash` is *served* as `gemini-3.6-flash`
    (Phase 0.4) and the table prices them differently ($9.00 vs $7.50 per M output). Which one Google
    bills is unverified. `eval_cost` and `eval_report` price by the *requested* id by default
    (matches the `usage/` records) and accept `-price-basis served`.
@@ -292,7 +292,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
 5. **§6.1 "R1 = 0".** Implemented as an absolute 0 on every scenario *including S0*. Under the
    redefinition (Phase 0 correction 3) R1 = `capture_claim_on_modeled`, R2 = `capture_db_on_modeled`.
    If S0 itself shows R1 > 0, S0 fails its own gate and the tool says so but does not block the batch.
-6. **§6.1 "fuzzy-corrected names ≤ S0". DECISION.** `ApplyFuzzyCorrection` is a no-op (Phase 0
+6. **§6.1 "fuzzy-corrected names ≤ S0". Decided (snapped + unverified).** `ApplyFuzzyCorrection` is a no-op (Phase 0
    correction 2), so the gate uses *snapped + unverified* gear names per scoreable output. The
    literal "snapped only" would let a candidate invent names too far from any real block to snap.
 7. **§6.2.1 "Critic defect count".** = number of re-critic findings that point at a real
@@ -315,7 +315,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
    Unpaired, unusable (winner outside the label set, or A/B mapping inconsistent with the raw
    preference), and runs excluded for integrity are reported, never counted. Judging the same
    model twice, or two requests served by the same model, is refused.
-10. **§6.2.2 judge "non-contestant". DECISION.** The plan's judge #1, `gemini-3.1-pro-preview`, is
+10. **§6.2.2 judge "non-contestant". Decided (note, not refusal).** The plan's judge #1, `gemini-3.1-pro-preview`, is
     itself S0's Pro tier, so it is a contestant in every comparison; only judge #2 is
     non-contestant. `eval_judge_agree` prints a self-preference note when a judge is routed into S0
     or the candidate; it does not refuse.
@@ -335,7 +335,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
     "3.5 Flash is deprecated" may be moot if it aliases 3.6.
 15. **§7 Mechanical (S4) has no cost clause**, although §5 asks "cheaper mechanical agents?".
     Implemented literally: an S4 that ties on quality is ADOPT even if Lite saves nothing, and
-    Lite has no official price so savings cannot be measured today. **DECISION:** add a cost clause?
+    Lite has no official price so savings cannot be measured today. The report now prints the cost and latency comparison next to the verdict as information only; adding a real cost clause to the rule remains a **DECISION** for the owner.
 16. **§7 Critic rule** ("of 30 sampled flags, how many are true contradictions") is manual:
     `eval_report -critic-sample 30` prints a seeded sample of the pipeline Critic's flags (S0 and
     Critic-tier scenarios) with the `coros_map.json`/`user_captures.json` ground truth next to each.
@@ -343,7 +343,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
     pricing or a non-provisional id; it treats the ids in `-provisional-models` (default
     `gemini-4-argon`) as provisional and caps any would-be ADOPT to UNDETERMINED ("preview signal
     only"). Argon is also absent from `geminiPriceTable`, so its cost is UNKNOWN.
-18. **§7 A1/A2/A3 "wins". DECISION.** Interpreted as: all gates pass, defects ≤ S0, and agreed
+18. **§7 A1/A2/A3 "wins". Decided (this definition).** Interpreted as: all gates pass, defects ≤ S0, and agreed
     judge wins strictly exceed losses. Attribution then follows the plan's text.
 19. **p50/p95 pipeline latency** are nearest-rank over *scoreable* runs. With 26 runs p95 is the
     second-slowest run, so it is noisy.

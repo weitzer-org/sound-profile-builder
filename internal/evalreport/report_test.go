@@ -429,8 +429,8 @@ func TestSection7Rules(t *testing.T) {
 		t.Errorf("S2 pro = %s %+v", v.Verdict, v.Lines)
 	}
 	// Mechanical (S4): lite is unpriced but cost is irrelevant for this rule; ties on quality -> ADOPT.
-	if v := verdict("S4", "mechanical"); v.Verdict != Adopt {
-		t.Errorf("S4 mechanical = %s %+v", v.Verdict, v.Lines)
+	if v := verdict("S4", "mechanical"); v.Verdict != Adopt || !strings.Contains(v.Note, "not part of the §7 rule") || len(v.Lines) != 3 {
+		t.Errorf("S4 mechanical = %s %q %+v (cost/latency must be informational, not gating lines)", v.Verdict, v.Note, v.Lines)
 	}
 	// Critic (S5): not mechanizable, and Argon is provisional.
 	if v := verdict("S5", "critic"); v.Verdict != Manual || !strings.Contains(v.Note, "PREVIEW SIGNAL") {
