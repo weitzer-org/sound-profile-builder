@@ -177,11 +177,14 @@ func Evaluate(cell Cell, expectedServed string, resp *genai.GenerateContentRespo
 		r.Pass = true
 		r.Verdict = "OK (served " + resp.ModelVersion + ")"
 	case "schema", "schematools", "forced":
-		var v struct {
-			Answer string `json:"answer"`
-			Source string `json:"source"`
+		// Decode into a map: encoding/json's struct decoding matches keys case-insensitively, which
+		// would accept {"Answer":...} for a schema that requires lowercase "answer".
+		var v map[string]any
+		if json.Unmarshal([]byte(text), &v) == nil {
+			ans, _ := v["answer"].(string)
+			src, _ := v["source"].(string)
+			r.SchemaValid = ans != "" && src != ""
 		}
-		r.SchemaValid = json.Unmarshal([]byte(text), &v) == nil && v.Answer != "" && v.Source != ""
 		switch {
 		case !r.SchemaValid:
 			r.Verdict = "FAIL: response did not parse into the requested schema"
@@ -201,6 +204,10 @@ func Evaluate(cell Cell, expectedServed string, resp *genai.GenerateContentRespo
 	case "thinking":
 		b := *cell.Budget
 		switch {
+		case resp.UsageMetadata == nil:
+			r.Verdict = "FAIL: no usage metadata, thinking tokens not measurable"
+		case r.FinishReason != string(genai.FinishReasonStop):
+			r.Verdict = fmt.Sprintf("FAIL: generation did not complete (finish_reason=%q)", r.FinishReason)
 		case b == 0 && r.ThinkingTokens != 0:
 			r.Verdict = fmt.Sprintf("FAIL: budget=0 accepted but model still used %d thinking tokens", r.ThinkingTokens)
 		case b > 0 && r.ThinkingTokens > b:
@@ -210,10 +217,12 @@ func Evaluate(cell Cell, expectedServed string, resp *genai.GenerateContentRespo
 		}
 	case "maxtokens":
 		switch {
+		case resp.UsageMetadata == nil:
+			r.Verdict = "FAIL: no usage metadata, cap not measurable"
 		case r.FinishReason != string(genai.FinishReasonMaxTokens):
 			r.Verdict = fmt.Sprintf("FAIL: finish_reason=%s, expected MAX_TOKENS (cap not honored / prompt too short)", r.FinishReason)
-		case r.OutputTokens > maxTokensCap:
-			r.Verdict = fmt.Sprintf("FAIL: MAX_TOKENS but %d output tokens > cap %d", r.OutputTokens, maxTokensCap)
+		case r.OutputTokens+r.ThinkingTokens > maxTokensCap: // the cap includes thinking tokens
+			r.Verdict = fmt.Sprintf("FAIL: MAX_TOKENS but out %d + thinking %d > cap %d", r.OutputTokens, r.ThinkingTokens, maxTokensCap)
 		default:
 			r.Pass, r.Verdict = true, fmt.Sprintf("OK (out=%d thinking=%d)", r.OutputTokens, r.ThinkingTokens)
 		}
@@ -279,9 +288,10 @@ func main() {
 			pins[a] = b
 		}
 	}
-	for _, m := range models {
-		if strings.HasSuffix(m, "-latest") && pins[m] == "" && !onlyResolve(*checksFlag) {
-			log.Fatalf("%s is an alias; resolve it first (-checks resolve) and pass -pin %s=<resolved id> so its served model can be verified", m, m)
+	known := map[string]bool{"resolve": true, "schematools": true, "schema": true, "tools": true, "forced": true, "thinking": true, "maxtokens": true}
+	for _, c := range splitList(*checksFlag) {
+		if !known[c] {
+			log.Fatalf("unknown check %q (known: resolve,schematools,schema,tools,forced,thinking,maxtokens)", c)
 		}
 	}
 
@@ -297,6 +307,11 @@ func main() {
 	if *dryRun {
 		fmt.Println("\nDRY RUN -- no Gemini calls made. Pass -dry-run=false to execute.")
 		return
+	}
+	for _, m := range models {
+		if strings.HasSuffix(m, "-latest") && pins[m] == "" && !onlyResolve(*checksFlag) {
+			log.Fatalf("%s is an alias; resolve it first (-checks resolve) and pass -pin %s=<resolved id> so its served model can be verified", m, m)
+		}
 	}
 
 	key := os.Getenv("GEMINI_API_KEY")

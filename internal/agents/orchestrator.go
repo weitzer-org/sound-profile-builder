@@ -908,7 +908,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 		openLLMLatencyMs := time.Since(openLLMStart).Milliseconds()
 		if err != nil {
 			recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, UsageRecord{
-				Provider: "openllm", CallType: agentRole, Model: actualModelName,
+				Provider: "openllm", CallType: agentRole, Model: actualModelName, CostUnknown: true,
 				LatencyMS: openLLMLatencyMs, Success: false, ErrorKind: classifyError(err),
 			})
 			if obs := runObserverFrom(ctx); obs != nil {
@@ -935,7 +935,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 			}
 		} else {
 			recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, UsageRecord{
-				Provider: "openllm", CallType: agentRole, Model: actualModelName,
+				Provider: "openllm", CallType: agentRole, Model: actualModelName, CostUnknown: true,
 				InputTokens: promptTokens, OutputTokens: completionTokens,
 				LatencyMS: openLLMLatencyMs, Success: true,
 			})

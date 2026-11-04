@@ -112,3 +112,10 @@ func TestScenarios_BaselineFlashPinnedToServedModel(t *testing.T) {
 		}
 	}
 }
+
+func TestSelectQueries_DedupesNames(t *testing.T) {
+	q, err := SelectQueries(evalfixtures.GoldenQueryOrder(), evalfixtures.GoldenQueries(), "07_Edge,07_Edge, 09_BB_King")
+	if err != nil || len(q) != 2 {
+		t.Fatalf("got %v, %v", q, err)
+	}
+}

@@ -129,6 +129,10 @@ func ReadRunRecords(path string) ([]RunRecord, error) {
 func AssessCalls(calls []agents.CallRecord, expectedByKey, pins map[string]string) (ok bool, issues []string, maxTokens map[string]int) {
 	maxTokens = map[string]int{}
 	ok = true
+	if len(calls) == 0 {
+		// e.g. MOCK_MODE=true returns canned output without any model call: nothing was measured.
+		return false, []string{"no model calls were recorded (mock mode?); nothing to score"}, maxTokens
+	}
 	for _, c := range calls {
 		if c.FinishReason == "MAX_TOKENS" {
 			maxTokens[c.Agent]++

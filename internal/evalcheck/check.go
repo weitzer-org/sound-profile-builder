@@ -59,7 +59,8 @@ var (
 	// A deliberate claim that THIS block is a capture. Bare "capture" is not enough: it is also
 	// a verb ("to capture warmth") and is used for other blocks ("pairs with the Hiwatt capture").
 	captureClaim = regexp.MustCompile(`(?i)\b(?:factory|neural|pre-?trained|snapshot)(?:[ -]+(?:neural|factory|pre-?trained))*[ -]+capture\b`)
-	negation     = regexp.MustCompile(`(?i)(?:\bnot\b|\bnor\b|\bn't\b|rather than|instead of|\bnon-?|unlike|\bno\b)[^.;]{0,40}$`)
+	negation     = regexp.MustCompile(`(?i)(?:\bnot\b|\bnor\b|n't\b|rather than|instead of|\bnon-?|unlike|\bno\b)[^.;]{0,40}$`)
+	notOnly      = regexp.MustCompile(`(?i)\bnot only\b`)
 )
 
 // Check parses one output envelope and runs every check. validBlocks is typically
@@ -75,8 +76,16 @@ func Check(envelopeJSON string, validBlocks map[string]bool) Report {
 		r.ParseError = err.Error()
 		return r
 	}
-	if env.StructuredPayload == nil || len(env.StructuredPayload.Guitars) == 0 {
-		r.ParseError = "structured_payload missing, null or empty"
+	if env.StructuredPayload == nil {
+		r.ParseError = "structured_payload missing or null"
+		return r
+	}
+	total := 0
+	for _, blocks := range env.StructuredPayload.Guitars {
+		total += len(blocks)
+	}
+	if total == 0 { // guitars absent, or present with only empty/null block lists
+		r.ParseError = "structured_payload has no blocks"
 		return r
 	}
 	sp := env.StructuredPayload
@@ -156,7 +165,8 @@ func claimsCapture(prose string) bool {
 		// negation is anchored at the end of the prefix and bounds its own look-back
 		// ([^.;]{0,40}), so the whole prefix is passed: no byte-offset slicing that could split a
 		// UTF-8 rune or chop a negation word in half.
-		if !negation.MatchString(prose[:loc[0]]) {
+		// "Not only an amp, this is a Neural Capture" asserts the claim: don't let "not only" read as a denial.
+		if !negation.MatchString(notOnly.ReplaceAllString(prose[:loc[0]], "also")) {
 			return true
 		}
 	}
@@ -190,8 +200,10 @@ func splitCriticNotes(rationale string) (prose string, criticNotes []string) {
 func ClassifyCriticNote(note string) string {
 	n := strings.ToLower(note)
 	switch {
-	case strings.Contains(n, "capture"):
+	case strings.Contains(n, "capture") && disputesIdentity(n):
 		return "capture_claim"
+	case strings.Contains(n, "capture"):
+		return "capture_other" // e.g. a parameter-format note on a capture; not a dispute of its identity
 	case strings.Contains(n, "bypass"):
 		return "bypass_state"
 	case strings.Contains(n, "single coil") || strings.Contains(n, "single-coil") || strings.Contains(n, "humbucker") || strings.Contains(n, "guitar"):
@@ -210,4 +222,15 @@ func snippet(s string) string {
 		return string(r[:109]) + "…"
 	}
 	return s
+}
+
+// disputesIdentity reports whether a (lowercased) Critic note argues about WHAT the block is
+// (native vs capture), as opposed to commenting on a capture's parameters.
+func disputesIdentity(n string) bool {
+	for _, w := range []string{"native", "algorithmic", "modeled", "modelled", "not a ", "isn't", "is not", "rather than", "instead of", "describes the block", "described as", "claims", "labeled", "labelled", "actually"} {
+		if strings.Contains(n, w) {
+			return true
+		}
+	}
+	return false
 }

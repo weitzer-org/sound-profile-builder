@@ -117,7 +117,7 @@ How to read this:
 1. **§3 0.8(i) / §6.1 "0 non-numeric `Value`/`ValueB`" is unsatisfiable.** `value` is a free string in the Architect schema and the prompt prescribes unit-bearing values; July's *baseline* outputs contain ~390 of them. (TODO.md already recorded that a blanket units check was removed for this reason.) The checker reports it as a reference number only; the gated defect is Rule 9 formatting vs. capture status. R2 should be redefined that way.
 2. **§3 0.8(iii) "names changed by `ApplyFuzzyCorrection`" always counts 0.** The output envelope is JSON-marshalled with `<` escaped as `\u003c`, so `ApplyFuzzyCorrection`'s `<td` regex never matches (demonstrated: a typo injected into a July output survived it). The checker counts snapped/unverified gear names over `structured_payload` instead. Whether `ApplyFuzzyCorrection` being a no-op in `RunPipeline` is a production bug is outside this PR.
 3. **R1 (§4) as written is probably a false premise.** See the Iba Green row above; the reproducible July defect is the `UK C30 TopBoost`/Rule 9 pattern. Redefine R1 as "capture claimed or dB-formatted on a block the map says is not a capture", on `07_Edge` and `05_Clapton`.
-4. **The baseline is not 3.5 Flash** (0.4, 7 of 7 calls). S0's Flash tier is really 3.6 Flash; July's "3.5 vs 3.6" Flash-tier comparison was 3.6 against itself, and §6.1's served-model gate (served == requested) would fail S0. **Decision: keep requesting `gemini-3.5-flash` in S0 (it is what production sends) and record the pinned served id `gemini-3.6-flash` as its expected value** (`Pins` in `eval_full_pipeline`), so the gate stays meaningful for every scenario. Report S0 as "production Flash tier (served: 3.6 Flash)" and treat S1 (3.8) as 3.8-vs-3.6. Also note 3.5 Flash's deprecation is moot if it already aliases 3.6.
+4. **The baseline is not 3.5 Flash** (0.4, 7 of 7 calls). S0's Flash tier is really 3.6 Flash; if the alias behaved the same in July (no July call recorded a served model, so this is unknown, not confirmed), July's "3.5 vs 3.6" Flash-tier comparison was 3.6 against itself; and §6.1's served-model gate (served == requested) would fail S0. **Decision: keep requesting `gemini-3.5-flash` in S0 (it is what production sends) and record the pinned served id `gemini-3.6-flash` as its expected value** (`Pins` in `eval_full_pipeline`), so the gate stays meaningful for every scenario. Report S0 as "production Flash tier (served: 3.6 Flash)" and treat S1 (3.8) as 3.8-vs-3.6. Also note 3.5 Flash's deprecation is moot if it already aliases 3.6.
 5. §3 0.5(c): the schema+tools combination is accepted by every model but search was never shown to run with a schema set, baselines included (see matrix).
 6. The Critic is not ground truth: it disputed a real capture (Iba Green) twice in July.
 
@@ -147,7 +147,7 @@ stay on baseline; only the Architect model changes. 5 reps each.
 | Repro | Query | Pass condition |
 |---|---|---|
 | R1 Iba Green described as a Neural Capture | `07_Edge` | 0/5 runs flagged (3.6 Flash: reproduced 4×) |
-| R2 Units inside numeric fields | `09_BB_King` | 0/5 runs with a non-numeric `Value`/`ValueB` |
+| R2 Rule 9 dB formatting on a non-capture block (the checker's `capture_db_on_modeled`; replaces "units inside numeric fields", see Phase 0 correction 1) | `09_BB_King`, `05_Clapton` | 0/5 runs with `capture_db_on_modeled > 0` |
 
 Run for `gemini-4-argon`, `gemini-3.8-flash`, `gemini-pro-latest`*, and the baseline
 as a control. The baseline must pass both, or the check itself is broken.
@@ -197,7 +197,7 @@ raise any cap during this eval (principle 5).
 |---|---|
 | Served-model integrity | 100% of calls served by the requested model (any fallback = failed call) |
 | Pipeline success rate | ≥ S0's rate in the same batch |
-| Schema validity | 100% of Architect outputs parse; 0 non-numeric `Value`/`ValueB` |
+| Schema validity | 100% of Architect outputs parse (no `ParseError`); `capture_db_on_modeled` and `modeled_style_on_capture` both 0. The raw non-numeric/unit-bearing count is reported for reference but is **not** a gate (Phase 0 correction 1) |
 | Truncation (`MAX_TOKENS`) | ≤ S0, per agent |
 | R1 capture-mislabel | 0 occurrences across all runs |
 | Fuzzy-corrected block names | ≤ S0 (more corrections = more invented block names) |

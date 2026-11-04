@@ -17,6 +17,10 @@ import (
 // candidate call fails visibly instead. See docs/eval/gemini-model-upgrade-test-plan.md §3 0.1.
 const EvalNoFallbackEnv = "EVAL_NO_FALLBACK"
 
+// EvalNoFallbackEnabled is the exported form of evalNoFallback, so eval tools gate on exactly
+// the same parsing (trimmed, case-insensitive "true") the orchestrator uses.
+func EvalNoFallbackEnabled() bool { return evalNoFallback() }
+
 // evalNoFallback reports whether EVAL_NO_FALLBACK=true. Read per call (not cached) so tests
 // can flip it with t.Setenv and eval tools can set it before constructing anything.
 func evalNoFallback() bool {
@@ -66,6 +70,10 @@ func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.Gene
 	}
 	if err != nil {
 		rec.Error = err.Error()
+	} else if resp != nil && len(resp.Candidates) == 0 {
+		// The SDK returned no error but there is nothing to use (e.g. a safety block). Callers such
+		// as the advisory Preset Critic swallow this, so it must not read as a clean call.
+		rec.Success, rec.Error = false, "response has no candidates"
 	}
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount

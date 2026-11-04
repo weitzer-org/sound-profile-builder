@@ -157,9 +157,12 @@ func TestValidationAgainstJulyOutputs(t *testing.T) {
 
 func TestValidationJulyTruncations(t *testing.T) {
 	path := filepath.Join("..", "..", "eval_results", "full_pipeline", "full_pipeline_gemini36_benchmark_report.md")
+	if _, err := os.Stat(path); err != nil {
+		t.Skip("July report not present")
+	}
 	fails, err := ParseBenchmarkReport(path)
 	if err != nil {
-		t.Skip("July report not present")
+		t.Fatalf("committed July report failed to parse: %v", err)
 	}
 	if len(fails) != 4 {
 		t.Fatalf("want 4 failed runs, got %d: %+v", len(fails), fails)
@@ -236,5 +239,40 @@ func TestCheck_NormalizesUnverifiedSuffixAndWhitespace(t *testing.T) {
 	r := Check(envelope(t, name, "Amplifier", "Factory Neural Capture.", map[string]string{"name": "Gain", "value": "+1.0 dB"}), valid)
 	if r.CaptureClaimOnModeled != 1 || r.CaptureDBOnModeled != 1 {
 		t.Fatalf("whitespace must not mask defects: %+v", r)
+	}
+}
+
+func TestClaimsCapture_ContractionsAndNotOnly(t *testing.T) {
+	if claimsCapture("This isn't a Neural Capture, it is algorithmic.") || claimsCapture("It doesn't behave like a Factory Capture.") {
+		t.Error("contractions must count as denial")
+	}
+	if !claimsCapture("Not only an amp, this is a Neural Capture of the original.") {
+		t.Error(`"not only" must not read as a denial`)
+	}
+}
+
+func TestCheck_EmptyBlockListsAreParseErrors(t *testing.T) {
+	valid := agents.BuildEffectiveValidBlocks(true, true)
+	for _, in := range []string{`{"structured_payload":{"guitars":{"G":[]}}}`, `{"structured_payload":{"guitars":{"G":null}}}`} {
+		if r := Check(in, valid); r.ParseError == "" {
+			t.Errorf("%s must be a parse error, not a clean 0-defect run", in)
+		}
+	}
+}
+
+func TestClassifyCriticNote_ParameterNotesAreNotIdentityDisputes(t *testing.T) {
+	if got := ClassifyCriticNote("Capture Gain must use relative dB, but the value is a plain number"); got != "capture_other" {
+		t.Errorf("got %s", got)
+	}
+	valid := agents.BuildEffectiveValidBlocks(true, true)
+	r := Check(envelope(t, "Iba Green", "Overdrive", "ok ⚠️ Critic: Capture Gain must use relative dB."), valid)
+	if r.CriticCaptureContradictsMap != 0 || r.CriticByType["capture_other"] != 1 {
+		t.Fatalf("%+v", r)
+	}
+}
+
+func TestAssessCalls_ZeroCallsIsNotClean(t *testing.T) {
+	if ok, issues, _ := AssessCalls(nil, map[string]string{"12_architect": "m"}, nil); ok || len(issues) == 0 {
+		t.Fatal("a run with no recorded model calls (mock mode) must not be integrity_ok")
 	}
 }

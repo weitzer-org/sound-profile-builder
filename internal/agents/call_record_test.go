@@ -124,3 +124,10 @@ func TestServedModelMatches(t *testing.T) {
 		}
 	}
 }
+
+func TestNewCallRecord_NoCandidatesIsFailure(t *testing.T) {
+	rec := NewCallRecord("Preset Critic", "gemini-3.5-flash", 5, &genai.GenerateContentResponse{ModelVersion: "gemini-3.6-flash"}, nil)
+	if rec.Success || rec.Error == "" {
+		t.Fatalf("a response with no candidates must not read as success: %+v", rec)
+	}
+}

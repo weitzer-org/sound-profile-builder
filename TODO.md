@@ -411,8 +411,8 @@ either production tier pending the fixes below.
 > (1) `coros_map.json` and Architect Rule 9 both treat `Iba Green` as a *capture*, so "Iba Green described as a
 > Neural Capture" is not a defect by the repo's own ground truth; the reproducible `07_Edge` defect in the retained
 > outputs is `UK C30 TopBoost` (a modeled amp) described/formatted as a capture. (2) A live call to `gemini-3.5-flash`
-> reported `ModelVersion: gemini-3.6-flash` in 7 of 7 calls (confirmed), which means the July
-> "3.5 vs 3.6" comparison was partly 3.6 against itself.
+> reported `ModelVersion: gemini-3.6-flash` in 7 of 7 calls. No July call recorded a served model, so whether the
+> July "3.5 vs 3.6" comparison was partly 3.6 against itself is unknown, not confirmed.
 
 **Action items before reconsidering adoption:**
 

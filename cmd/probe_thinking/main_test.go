@@ -98,3 +98,31 @@ func TestGridCount_ProposedPhase05(t *testing.T) {
 		t.Fatalf("guaranteed=%d max=%d, want 25/35", g, m)
 	}
 }
+
+func TestEvaluate_SchemaKeysAreCaseSensitive(t *testing.T) {
+	c := Cell{Model: "m", Check: "schematools"}
+	if r := Evaluate(c, "m", resp("m", genai.FinishReasonStop, `{"Answer":"1.27","Source":"go.dev"}`, 0, 5, true), nil); r.Pass || r.SchemaValid {
+		t.Fatalf("wrong-case keys must not satisfy the schema: %+v", r)
+	}
+}
+
+func TestEvaluate_RejectsUnmeasurableAndIncomplete(t *testing.T) {
+	noUsage := &genai.GenerateContentResponse{ModelVersion: "m", Candidates: []*genai.Candidate{{FinishReason: genai.FinishReasonStop}}}
+	if r := Evaluate(Cell{Model: "m", Check: "thinking", Budget: zero()}, "m", noUsage, nil); r.Pass {
+		t.Fatalf("thinking without usage metadata must fail: %+v", r)
+	}
+	if r := Evaluate(Cell{Model: "m", Check: "maxtokens"}, "m", &genai.GenerateContentResponse{ModelVersion: "m", Candidates: []*genai.Candidate{{FinishReason: genai.FinishReasonMaxTokens}}}, nil); r.Pass {
+		t.Fatalf("maxtokens without usage metadata must fail: %+v", r)
+	}
+	blocked := resp("m", genai.FinishReasonSafety, "", 0, 0, false)
+	if r := Evaluate(Cell{Model: "m", Check: "thinking", Budget: zero()}, "m", blocked, nil); r.Pass {
+		t.Fatalf("safety-blocked response must not pass thinking: %+v", r)
+	}
+}
+
+func TestEvaluate_MaxTokensCountsThinking(t *testing.T) {
+	// out 40 + thinking 40 = 80 > 64: the cap includes thinking, so this is not honored.
+	if r := Evaluate(Cell{Model: "m", Check: "maxtokens"}, "m", resp("m", genai.FinishReasonMaxTokens, "x", 40, 40, false), nil); r.Pass {
+		t.Fatalf("out+thinking over the cap must fail: %+v", r)
+	}
+}

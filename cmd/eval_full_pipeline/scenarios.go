@@ -147,11 +147,13 @@ func SelectQueries(order []string, known map[string]string, names string) ([]str
 		return order, nil
 	}
 	var out []string
+	seen := map[string]bool{}
 	for _, n := range strings.Split(names, ",") {
 		n = strings.TrimSpace(n)
-		if n == "" {
+		if n == "" || seen[n] { // duplicates would overwrite their own output files
 			continue
 		}
+		seen[n] = true
 		if _, ok := known[n]; !ok {
 			return nil, fmt.Errorf("unknown query %q (see evalfixtures.GoldenQueryOrder)", n)
 		}

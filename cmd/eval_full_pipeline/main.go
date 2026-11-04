@@ -40,7 +40,7 @@ func main() {
 	includeSkipped := flag.Bool("include-skipped", false, "also run scenarios marked skipped (e.g. S3 once pro-latest resolves to the baseline Pro model)")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results will NOT be scoreable)")
 	argonNoSearch := flag.Bool("argon-no-search", false, "keep agents 1,2,3 off Argon in A1/A2/A3 (use if the Phase 0.5 probe shows Argon cannot use GoogleSearch)")
-	outDir := flag.String("out", "eval_results/full_pipeline_gemini_upgrade", "output directory")
+	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
 
 	if *reps < 1 {
@@ -76,7 +76,7 @@ func main() {
 		return
 	}
 
-	if !strings.EqualFold(os.Getenv(agents.EvalNoFallbackEnv), "true") && !*allowFallback {
+	if !agents.EvalNoFallbackEnabled() && !*allowFallback {
 		log.Fatalf("%s=true is required for live runs (otherwise a failed candidate is silently scored on a fallback model). Set it, or pass -allow-fallback to override.", agents.EvalNoFallbackEnv)
 	}
 	key := os.Getenv("GEMINI_API_KEY")
@@ -94,6 +94,12 @@ func main() {
 	}
 	defer orch.Close()
 
+	if *outDir == "" {
+		*outDir = filepath.Join("eval_results", "full_pipeline_gemini_upgrade", time.Now().UTC().Format("20060102T150405Z"))
+	}
+	if _, err := os.Stat(filepath.Join(*outDir, "runs.jsonl")); err == nil {
+		log.Fatalf("%s already has runs.jsonl; pick a fresh -out so earlier outputs are not overwritten (a failed rerun would otherwise leave stale HTML that eval_checks still scores)", *outDir)
+	}
 	if err := os.MkdirAll(*outDir, 0o755); err != nil {
 		log.Fatal(err)
 	}

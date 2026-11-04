@@ -38,10 +38,30 @@ func main() {
 	flag.Parse()
 
 	valid := agents.BuildEffectiveValidBlocks(true, true)
+	// Outputs from runs that failed the served-model integrity check must never be scored: they may
+	// come from a fallback model. Match by path against runs.jsonl's output_file.
+	excluded := map[string]bool{}
+	var recs []evalcheck.RunRecord
+	if *runs != "" {
+		var err error
+		if recs, err = evalcheck.ReadRunRecords(*runs); err != nil {
+			log.Fatalf("runs: %v", err)
+		}
+		for _, r := range recs {
+			if r.OutputFile != "" && !r.IntegrityOK {
+				excluded[filepath.Clean(r.OutputFile)] = true
+			}
+		}
+	}
+	skipped := 0
 	var files []fileReport
 	err := filepath.WalkDir(*root, func(p string, d os.DirEntry, err error) error {
 		if err != nil || d.IsDir() || !strings.HasSuffix(p, ".html") {
 			return err
+		}
+		if excluded[filepath.Clean(p)] {
+			skipped++
+			return nil
 		}
 		rel, _ := filepath.Rel(*root, p)
 		parts := strings.Split(filepath.ToSlash(rel), "/")
@@ -101,7 +121,11 @@ func main() {
 		}
 	}
 
-	fmt.Printf("=== deterministic checks over %d outputs in %s ===\n\n", len(files), *root)
+	fmt.Printf("=== deterministic checks over %d outputs in %s ===\n", len(files), *root)
+	if skipped > 0 {
+		fmt.Printf("EXCLUDED %d outputs whose run failed served-model integrity (integrity_ok=false in runs.jsonl)\n", skipped)
+	}
+	fmt.Println()
 	fmt.Println("DEFECT counters (ground-truth gated) and REFERENCE counters (ungated, not a pass/fail signal)")
 	fmt.Printf("%-24s %4s %5s | %8s %8s %9s %7s %8s | %9s %9s | %7s %6s\n",
 		"scenario", "runs", "block", "capDB/mod", "modStyle", "capClaim", "snapped", "unverif", "critic", "criticVsMap", "REF:nonNum", "REF:unit")
@@ -160,10 +184,6 @@ func main() {
 		fmt.Printf("  truncations by agent: %v\n", trunc)
 	}
 	if *runs != "" {
-		recs, err := evalcheck.ReadRunRecords(*runs)
-		if err != nil {
-			log.Fatalf("runs: %v", err)
-		}
 		fmt.Printf("\nrun records (%s): %d\n", *runs, len(recs))
 		type rs struct {
 			n, ok, integ int
