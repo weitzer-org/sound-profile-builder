@@ -348,6 +348,8 @@ func TestSanitizeChatHTML_XSS(t *testing.T) {
 		{"object data", `<object data="javascript:alert(1)"></object>`, []string{"<object", "data="}, nil},
 		{"inline-closing quote attr injection", `<i title="a"onmouseover="alert(1)">x</i>`, []string{"onmouseover", "title"}, []string{"<i>x</i>"}},
 		{"unclosed card div is escaped", `ok<div class="card">swallows the rest`, []string{"<div"}, []string{"&lt;div"}},
+		{"self-closing card div is an open tag to a browser", `a<div class="card"/>swallows the rest`, []string{"<div"}, []string{"&lt;div"}},
+		{"self-closing b is an open tag to a browser", `a<b/>bold forever`, []string{"<b"}, []string{"&lt;b/&gt;"}},
 		{"stray close tag cannot break out of the log", `</div></details><div class="card">fake`, []string{"<div", "</div"}, []string{"&lt;/div&gt;"}},
 		{"less-than in prose survives as text", "gain 3 < 5 and 7 > 2\n**Impact:**\n- x -> y", []string{"<5"}, []string{"3 &lt; 5", "7 &gt; 2", "**Impact:**", "x -&gt; y"}},
 	}

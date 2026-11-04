@@ -476,17 +476,20 @@ func htmlTagsBalanced(s string) bool {
 		switch z.Next() {
 		case nethtml.ErrorToken:
 			return len(stack) == 0
-		case nethtml.StartTagToken:
-			name, _ := z.TagName()
-			if string(name) != "br" {
-				stack = append(stack, string(name))
+		// A self-closing "<div/>" is a plain open tag to a browser (the slash is
+		// ignored on non-void elements), so it must be balanced like any start tag.
+		case nethtml.StartTagToken, nethtml.SelfClosingTagToken:
+			nameBytes, _ := z.TagName()
+			if tagName := string(nameBytes); tagName != "br" {
+				stack = append(stack, tagName)
 			}
 		case nethtml.EndTagToken:
-			name, _ := z.TagName()
-			if string(name) == "br" {
+			nameBytes, _ := z.TagName()
+			tagName := string(nameBytes)
+			if tagName == "br" {
 				continue
 			}
-			if len(stack) == 0 || stack[len(stack)-1] != string(name) {
+			if len(stack) == 0 || stack[len(stack)-1] != tagName {
 				return false
 			}
 			stack = stack[:len(stack)-1]
