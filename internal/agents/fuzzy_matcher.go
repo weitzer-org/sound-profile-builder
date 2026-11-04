@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"unicode"
@@ -712,11 +713,34 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 				}
 			}
 		}
+		// corosData is a map, so bucket order is random per process. Sort once
+		// (total order, so the first-wins dedup below is deterministic too).
+		for _, amps := range ampMenuBuckets {
+			sort.Slice(amps, func(i, j int) bool {
+				a, b := amps[i], amps[j]
+				if a.Name != b.Name {
+					return a.Name < b.Name
+				}
+				if a.IsCapture != b.IsCapture {
+					return !a.IsCapture
+				}
+				return a.RequiredPlugin < b.RequiredPlugin
+			})
+		}
 	})
+
+	// Archetypes in sorted order: the output must be byte-identical on every
+	// call so the Librarian's static prompt prefix can hit Gemini's implicit cache.
+	archetypes := make([]string, 0, len(ampMenuBuckets))
+	for archetype := range ampMenuBuckets {
+		archetypes = append(archetypes, archetype)
+	}
+	sort.Strings(archetypes)
 
 	var sb strings.Builder
 	sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
-	for archetype, amps := range ampMenuBuckets {
+	for _, archetype := range archetypes {
+		amps := ampMenuBuckets[archetype]
 		seen := make(map[string]bool)
 		var names []string
 		for _, a := range amps {

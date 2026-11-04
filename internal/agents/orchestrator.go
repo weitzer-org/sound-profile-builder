@@ -39,6 +39,25 @@ func GetQCBlockSchemaJSON() string {
 	return string(embeddedQCBlockSchema)
 }
 
+// buildLibrarianStaticCatalog renders the Librarian's run-invariant catalog
+// sections (Dictionary, Amplifier Archetype Menu, User Capture Library) in
+// their fixed order. Section labels are referenced by name from the Librarian
+// prompts (4_coros_librarian*.md), so keep them as-is.
+func buildLibrarianStaticCatalog(dictJSON, ampMenu, userCapturesJSON string) string {
+	return fmt.Sprintf("Dictionary: %s\nAmplifier Archetype Menu:\n%s\nUser Capture Library: %s\n", dictJSON, ampMenu, userCapturesJSON)
+}
+
+// buildLibrarianContext assembles the Librarian's user turn.
+//
+// ORDER MATTERS: the static catalog (~67K chars, identical across runs that
+// share the same filter inputs) MUST come first, followed by the per-run
+// sections (Tone History, Scraper, Constraints). Gemini's implicit prompt
+// caching keys on an identical prompt PREFIX, so any per-run text placed
+// before the catalog makes every run a cache miss. Do not reorder.
+func buildLibrarianContext(staticCatalog, toneResult, scrapeResult string, constraints map[string]interface{}) string {
+	return fmt.Sprintf("%sTone History: %s\nScraper: %s\nConstraints: %v", staticCatalog, toneResult, scrapeResult, constraints)
+}
+
 // filterEmbeddedCorosMap returns the coros_map.json Dictionary injected into Agent 4's
 // (CorOS Librarian) context, filtered per this run's constraints. allowFactoryCaptures
 // drops every is_capture:true entry, as before. filterPlugins additionally drops any
@@ -152,27 +171,29 @@ func GetQCSonicProfilerSchemaJSON() string {
 // pipeline run so before/after quality-vs-cost comparisons don't have to be reconstructed
 // from log lines.
 type AgentUsage struct {
-	InputTokens    int32
-	OutputTokens   int32
-	ThinkingTokens int32 // Gemini 3.x's invisible reasoning-token spend; 0 for models/calls that don't think
-	Model          string
-	Calls          int
-	LatencyMs      int64
+	InputTokens       int32
+	CachedInputTokens int32 // subset of InputTokens served from Gemini's prompt cache; 0 for OpenLLM
+	OutputTokens      int32
+	ThinkingTokens    int32 // Gemini 3.x's invisible reasoning-token spend; 0 for models/calls that don't think
+	Model             string
+	Calls             int
+	LatencyMs         int64
 }
 
 // TokenUsage rigidly aggregates exact API volume metadata
 type TokenUsage struct {
-	InputTokens    int32
-	OutputTokens   int32
-	ThinkingTokens int32 // see AgentUsage.ThinkingTokens; billed as output by Gemini, tracked separately here for thinking-budget evals
-	ModelsUsed     map[string]int
-	PerAgent       map[string]*AgentUsage
-	TotalLatencyMs int64
-	mu             sync.Mutex
+	InputTokens       int32
+	CachedInputTokens int32 // subset of InputTokens served from Gemini's prompt cache
+	OutputTokens      int32
+	ThinkingTokens    int32 // see AgentUsage.ThinkingTokens; billed as output by Gemini, tracked separately here for thinking-budget evals
+	ModelsUsed        map[string]int
+	PerAgent          map[string]*AgentUsage
+	TotalLatencyMs    int64
+	mu                sync.Mutex
 }
 
 // recordAgentUsage accumulates one agent call's token/latency data under agentRole.
-func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outputTokens, thinkingTokens int32, latencyMs int64) {
+func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, cachedInputTokens, outputTokens, thinkingTokens int32, latencyMs int64) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if u.PerAgent == nil {
@@ -184,6 +205,7 @@ func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outp
 		u.PerAgent[agentRole] = a
 	}
 	a.InputTokens += inputTokens
+	a.CachedInputTokens += cachedInputTokens
 	a.OutputTokens += outputTokens
 	a.ThinkingTokens += thinkingTokens
 	a.Model = model
@@ -572,7 +594,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		librarianResult = "CorOS Librarian skipped by configuration."
 	} else {
 		sysPrompt4, _ := o.loadPromptForAgent("4_coros_librarian", version4)
-		userContext4 := fmt.Sprintf("Tone History: %s\nScraper: %s\nDictionary: %s\nAmplifier Archetype Menu:\n%s\nUser Capture Library: %s\nConstraints: %v", toneResult, scrapeResult, dictJSON, ampMenu, userCapturesJSON, constraints)
+		userContext4 := buildLibrarianContext(buildLibrarianStaticCatalog(dictJSON, ampMenu, userCapturesJSON), toneResult, scrapeResult, constraints)
 		librarianResult, err4 = o.RunAgentSplit(ctx, "CorOS Librarian", sysPrompt4, userContext4)
 		if err4 != nil {
 			return "", o.Usage, fmt.Errorf("Phase 2 Librarian failure: %v", err4)
@@ -1075,20 +1097,22 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 		ci.usage = AgentUsage{Model: finalModelName, Calls: 1, LatencyMs: latencyMs}
 		if resp.UsageMetadata != nil {
 			ci.usage.InputTokens = resp.UsageMetadata.PromptTokenCount
+			ci.usage.CachedInputTokens = resp.UsageMetadata.CachedContentTokenCount
 			ci.usage.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
 			ci.usage.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
 		}
 	}
 
 	if resp.UsageMetadata != nil {
-		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Out=%d Thinking=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, finalModelName, latencyMs)
+		log.Printf("AGENT_TOKEN_LOG: Agent=%s In=%d Cached=%d Out=%d Thinking=%d Model=%s LatencyMs=%d", agentRole, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CachedContentTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, finalModelName, latencyMs)
 		o.Usage.mu.Lock()
 		o.Usage.InputTokens += resp.UsageMetadata.PromptTokenCount
+		o.Usage.CachedInputTokens += resp.UsageMetadata.CachedContentTokenCount
 		o.Usage.OutputTokens += resp.UsageMetadata.CandidatesTokenCount
 		o.Usage.ThinkingTokens += resp.UsageMetadata.ThoughtsTokenCount
 		o.Usage.ModelsUsed[finalModelName]++
 		o.Usage.mu.Unlock()
-		o.Usage.recordAgentUsage(agentRole, finalModelName, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, latencyMs)
+		o.Usage.recordAgentUsage(agentRole, finalModelName, resp.UsageMetadata.PromptTokenCount, resp.UsageMetadata.CachedContentTokenCount, resp.UsageMetadata.CandidatesTokenCount, resp.UsageMetadata.ThoughtsTokenCount, latencyMs)
 	}
 
 	return resp.Text(), nil

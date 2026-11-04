@@ -28,9 +28,13 @@ type UsageRecord struct {
 	RefID     string `json:"refId,omitempty"`
 	Model     string `json:"model"`
 
-	InputTokens    int32 `json:"inputTokens"`
-	OutputTokens   int32 `json:"outputTokens"`
-	ThinkingTokens int32 `json:"thinkingTokens,omitempty"`
+	// InputTokens is the FULL prompt size, cached tokens included (Gemini's
+	// PromptTokenCount semantics). CachedInputTokens is the subset of it served
+	// from Gemini's prompt cache; it is billed at the cheaper cached rate.
+	InputTokens       int32 `json:"inputTokens"`
+	CachedInputTokens int32 `json:"cachedInputTokens,omitempty"`
+	OutputTokens      int32 `json:"outputTokens"`
+	ThinkingTokens    int32 `json:"thinkingTokens,omitempty"`
 
 	LatencyMS int64   `json:"latencyMs"`
 	CostUSD   float64 `json:"costUsd"`
@@ -48,26 +52,48 @@ type UsageRecord struct {
 // fallback-chain models (see getFallbackChain) that job_tracker doesn't use;
 // VERIFY these two specifically before relying on them for a real cost
 // report — 3-flash-preview's figure is a placeholder pending an official one.
-var geminiPriceTable = map[string]struct{ input, output float64 }{
-	"gemini-3.1-pro-preview": {input: 2.00, output: 12.00},
-	"gemini-3.5-flash":       {input: 1.50, output: 9.00},
-	"gemini-3.6-flash":       {input: 1.50, output: 7.50},
-	"gemini-3-flash-preview": {input: 1.50, output: 9.00}, // placeholder, matches 3.5-flash pending an official figure
-	"gemini-2.5-pro":         {input: 1.25, output: 10.00},
+//
+// cachedInput is the rate for prompt tokens served from Gemini's cache. Where
+// the real cached rate isn't verified it is set EQUAL to the input rate (no
+// discount): an unknown rate must never understate cost.
+var geminiPriceTable = map[string]struct{ input, cachedInput, output float64 }{
+	// cachedInput for 3.1-pro-preview: real cached rate not verified yet.
+	"gemini-3.1-pro-preview": {input: 2.00, cachedInput: 2.00, output: 12.00},
+	// cachedInput for 3.5-flash: real cached rate not verified yet. 3.5 Flash is
+	// reportedly routed to 3.6 Flash, so verify whether 0.075 applies here.
+	"gemini-3.5-flash": {input: 1.50, cachedInput: 1.50, output: 9.00},
+	// cachedInput 0.075 rises to 0.15 on 2027-01-01 per
+	// ai.google.dev/gemini-api/docs/pricing. VERIFY before relying on it.
+	"gemini-3.6-flash": {input: 1.50, cachedInput: 0.075, output: 7.50},
+	// placeholder, matches 3.5-flash pending an official figure; cached rate not verified yet.
+	"gemini-3-flash-preview": {input: 1.50, cachedInput: 1.50, output: 9.00},
+	// cachedInput for 2.5-pro: real cached rate not verified yet.
+	"gemini-2.5-pro": {input: 1.25, cachedInput: 1.25, output: 10.00},
 }
 
 // computeCostUSD returns 0 for an unknown/openllm model rather than
 // throwing — a signal to add the model to the table, not "this call was
-// free." Thinking tokens are billed at the output rate, matching Google's
-// documented behavior (same convention job_tracker's CostUSD uses).
-func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int32) float64 {
+// free." inputTokens is the full prompt size INCLUDING cachedTokens (Gemini's
+// PromptTokenCount semantics); cachedTokens is clamped to [0, inputTokens] and
+// billed at the cached rate, the remainder at the full input rate. Thinking
+// tokens are billed at the output rate, matching Google's documented behavior
+// (same convention job_tracker's CostUSD uses).
+func computeCostUSD(model string, inputTokens, cachedTokens, outputTokens, thinkingTokens int32) float64 {
 	price, ok := geminiPriceTable[model]
 	if !ok {
 		return 0
 	}
 	const perM = 1_000_000.0
+	if cachedTokens < 0 {
+		cachedTokens = 0
+	}
+	if cachedTokens > inputTokens {
+		cachedTokens = inputTokens
+	}
 	billedOutput := float64(outputTokens) + float64(thinkingTokens)
-	return float64(inputTokens)*price.input/perM + billedOutput*price.output/perM
+	return float64(inputTokens-cachedTokens)*price.input/perM +
+		float64(cachedTokens)*price.cachedInput/perM +
+		billedOutput*price.output/perM
 }
 
 // classifyError gives a coarse, stable label for a failed call so usage
@@ -136,8 +162,9 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
+		rec.CachedInputTokens = resp.UsageMetadata.CachedContentTokenCount
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
-		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.OutputTokens, rec.ThinkingTokens)
+		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.CachedInputTokens, rec.OutputTokens, rec.ThinkingTokens)
 	}
 	recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, rec)
 }

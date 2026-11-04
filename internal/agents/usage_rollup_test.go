@@ -143,3 +143,17 @@ func TestReadUsageRollup_NotFound(t *testing.T) {
 		t.Fatal("expected an error for a missing rollup")
 	}
 }
+
+func TestAggregateUsage_RollsUpCachedInputTokens(t *testing.T) {
+	records := []UsageRecord{
+		{Provider: "gemini", CallType: "CorOS Librarian", Model: "gemini-3.6-flash", InputTokens: 1000, CachedInputTokens: 600, Success: true},
+		{Provider: "gemini", CallType: "CorOS Librarian", Model: "gemini-3.6-flash", InputTokens: 1000, Success: true},
+	}
+	r := AggregateUsage("2026-11-04", records)
+	if r.TotalInputTokens != 2000 || r.TotalCachedInputTokens != 600 {
+		t.Errorf("totals in/cached = %d/%d, want 2000/600", r.TotalInputTokens, r.TotalCachedInputTokens)
+	}
+	if b := r.ByCallType["CorOS Librarian"]; b == nil || b.CachedInputTokens != 600 {
+		t.Errorf("byCallType cached = %+v, want 600", b)
+	}
+}

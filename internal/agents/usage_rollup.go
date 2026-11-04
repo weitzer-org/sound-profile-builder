@@ -14,12 +14,13 @@ import (
 // three bespoke structs, since the aggregation is identical. Mirrors
 // internal/usage.Bucket in the sibling job_tracker project.
 type UsageBucketStats struct {
-	Calls        int     `json:"calls"`
-	SuccessCount int     `json:"successCount"`
-	FailureCount int     `json:"failureCount"`
-	InputTokens  int32   `json:"inputTokens"`
-	OutputTokens int32   `json:"outputTokens"`
-	CostUSD      float64 `json:"costUsd"`
+	Calls             int     `json:"calls"`
+	SuccessCount      int     `json:"successCount"`
+	FailureCount      int     `json:"failureCount"`
+	InputTokens       int32   `json:"inputTokens"`
+	CachedInputTokens int32   `json:"cachedInputTokens,omitempty"`
+	OutputTokens      int32   `json:"outputTokens"`
+	CostUSD           float64 `json:"costUsd"`
 }
 
 // UsageRollup is a day's aggregated usage — the persisted counterpart of
@@ -31,9 +32,10 @@ type UsageRollup struct {
 	SuccessCount int    `json:"successCount"`
 	FailureCount int    `json:"failureCount"`
 
-	TotalInputTokens    int32 `json:"totalInputTokens"`
-	TotalOutputTokens   int32 `json:"totalOutputTokens"`
-	TotalThinkingTokens int32 `json:"totalThinkingTokens"`
+	TotalInputTokens       int32 `json:"totalInputTokens"`
+	TotalCachedInputTokens int32 `json:"totalCachedInputTokens,omitempty"`
+	TotalOutputTokens      int32 `json:"totalOutputTokens"`
+	TotalThinkingTokens    int32 `json:"totalThinkingTokens"`
 
 	TotalCostUSD float64 `json:"totalCostUsd"`
 	AvgLatencyMS float64 `json:"avgLatencyMs"`
@@ -89,6 +91,7 @@ func addToUsageBucket(m map[string]*UsageBucketStats, key string, rec UsageRecor
 		b.FailureCount++
 	}
 	b.InputTokens += rec.InputTokens
+	b.CachedInputTokens += rec.CachedInputTokens
 	b.OutputTokens += rec.OutputTokens
 	b.CostUSD += rec.CostUSD
 }
@@ -117,6 +120,7 @@ func AggregateUsage(date string, records []UsageRecord) UsageRollup {
 			}
 		}
 		r.TotalInputTokens += rec.InputTokens
+		r.TotalCachedInputTokens += rec.CachedInputTokens
 		r.TotalOutputTokens += rec.OutputTokens
 		r.TotalThinkingTokens += rec.ThinkingTokens
 		r.TotalCostUSD += rec.CostUSD

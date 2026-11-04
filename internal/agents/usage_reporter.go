@@ -13,8 +13,10 @@ import (
 // (POST /api/usage/ingest, adk/backend/src/app.ts). GSR's ingest contract is
 // the source of truth for field names here, not this package's own
 // UsageRecord — field names already match one-for-one except that this
-// project has no cached-token concept at all, so cachedTokens is simply
-// never populated (GSR already treats it as optional).
+// project's CachedInputTokens maps to cachedTokens (field name taken from this
+// comment's earlier claim that GSR treats it as optional; UNVERIFIED against
+// GSR's ingest schema, and unverified whether GSR expects inputTokens to
+// include or exclude the cached subset -- we send the full PromptTokenCount).
 type reportedUsageRecord struct {
 	Timestamp      string  `json:"timestamp"`
 	Provider       string  `json:"provider"`
@@ -22,6 +24,7 @@ type reportedUsageRecord struct {
 	RefID          string  `json:"refId,omitempty"`
 	Model          string  `json:"model"`
 	InputTokens    int32   `json:"inputTokens"`
+	CachedTokens   int32   `json:"cachedTokens,omitempty"`
 	OutputTokens   int32   `json:"outputTokens"`
 	ThinkingTokens int32   `json:"thinkingTokens,omitempty"`
 	LatencyMS      int64   `json:"latencyMs"`
@@ -130,6 +133,7 @@ func (r *UsageReporter) send(ctx context.Context, rec UsageRecord) {
 			RefID:          rec.RefID,
 			Model:          rec.Model,
 			InputTokens:    rec.InputTokens,
+			CachedTokens:   rec.CachedInputTokens,
 			OutputTokens:   rec.OutputTokens,
 			ThinkingTokens: rec.ThinkingTokens,
 			LatencyMS:      rec.LatencyMS,
