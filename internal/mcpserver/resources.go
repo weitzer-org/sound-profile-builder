@@ -189,11 +189,18 @@ func readPreset(svc *presetsvc.Service) mcp.ResourceHandler {
 		if !ok || validPresetID(v[0]) != nil {
 			return nil, mcp.ResourceNotFoundError(uri)
 		}
-		// presetMarkdown does not distinguish a missing preset from a storage error
-		// or a legacy preset without structured data, so all of them read as not found.
-		md, ok := presetMarkdown(ctx, svc, v[0])
-		if !ok {
-			return nil, mcp.ResourceNotFoundError(uri)
+		md, err := presetMarkdown(ctx, svc, v[0])
+		if err != nil {
+			// A missing preset, or one with no block data to render
+			// (errNoStructuredPreset), is genuinely not-found at this URI. Any
+			// other failure (a storage read error on an existing preset) goes
+			// through resourceErr instead, so it is logged and reported as a
+			// real error rather than silently swallowed as not-found.
+			var le *presetsvc.LookupError
+			if errors.As(err, &le) || errors.Is(err, errNoStructuredPreset) {
+				return nil, mcp.ResourceNotFoundError(uri)
+			}
+			return nil, resourceErr(uri, err)
 		}
 		return textResource(uri, mimeMarkdown, dataNotice+"\n\n"+md), nil
 	}

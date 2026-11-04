@@ -2,7 +2,9 @@ services:
   app:
     build: .
     ports:
-      - "8080:8080"
+      # Loopback-only: this container now carries MCP_TOKEN as well as the UI
+      # login password, and local dev has no reason to expose either to the LAN.
+      - "127.0.0.1:8080:8080"
     env_file:
       - .env
     environment:

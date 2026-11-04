@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
@@ -28,6 +29,22 @@ const (
 )
 
 // ---- reading helpers (shared by the tools and the resources) ----
+
+// boundedPrompt caps a run-level prompt (user_prompt/effective_prompt) for a
+// structured result at the same length the text form already uses, and
+// returns the untruncated character count so a client can tell whether it was
+// cut. Unlike an agent's system/input prompt, these have no offset/max_chars
+// paging of their own: get_run_log and get_run_prompts' index mode exist to
+// summarise a run, and generate_preset/refine_preset already validate the
+// submitted prompt/message at 4000 runes -- only a UI-originated run (whose
+// web form has no such limit) can reach this cap in practice.
+func boundedPrompt(s string) (string, int) {
+	total := utf8.RuneCountInString(s)
+	if total <= maxEchoedPromptRunes {
+		return s, 0 // not truncated: omit the redundant count (its field is omitempty)
+	}
+	return truncateRunes(s, maxEchoedPromptRunes), total
+}
 
 // keyVersion renders "key" or "key, vN" depending on whether a version is known.
 func keyVersion(t *runs.AgentTrace) string {
@@ -164,22 +181,24 @@ type logInput struct {
 }
 
 type logOutput struct {
-	RunID           string                      `json:"run_id"`
-	Kind            string                      `json:"kind"`
-	Source          string                      `json:"source"`
-	Status          string                      `json:"status"`
-	Phase           string                      `json:"phase"`
-	Mock            bool                        `json:"mock"`
-	PresetID        string                      `json:"preset_id,omitempty"`
-	ParentPresetID  string                      `json:"parent_preset_id,omitempty"`
-	Error           string                      `json:"error,omitempty"`
-	UserPrompt      string                      `json:"user_prompt"`
-	EffectivePrompt string                      `json:"effective_prompt"`
-	Constraints     map[string]any              `json:"constraints"`
-	PromptVersions  map[string]string           `json:"prompt_versions"`
-	Events          []runs.RunEvent             `json:"events"`
-	Agents          map[string]*runs.AgentTrace `json:"agents"`
-	Totals          runs.Usage                  `json:"totals"`
+	RunID                string                      `json:"run_id"`
+	Kind                 string                      `json:"kind"`
+	Source               string                      `json:"source"`
+	Status               string                      `json:"status"`
+	Phase                string                      `json:"phase"`
+	Mock                 bool                        `json:"mock"`
+	PresetID             string                      `json:"preset_id,omitempty"`
+	ParentPresetID       string                      `json:"parent_preset_id,omitempty"`
+	Error                string                      `json:"error,omitempty"`
+	UserPrompt           string                      `json:"user_prompt"`
+	UserPromptChars      int                         `json:"user_prompt_chars,omitempty"` // set only if UserPrompt was truncated above
+	EffectivePrompt      string                      `json:"effective_prompt"`
+	EffectivePromptChars int                         `json:"effective_prompt_chars,omitempty"` // set only if EffectivePrompt was truncated above
+	Constraints          map[string]any              `json:"constraints"`
+	PromptVersions       map[string]string           `json:"prompt_versions"`
+	Events               []runs.RunEvent             `json:"events"`
+	Agents               map[string]*runs.AgentTrace `json:"agents"`
+	Totals               runs.Usage                  `json:"totals"`
 }
 
 // runLogOutput builds the structured log for rec, keeping only events after sinceSeq.
@@ -187,10 +206,11 @@ func runLogOutput(rec *runs.RunRecord, sinceSeq int) logOutput {
 	out := logOutput{
 		RunID: rec.ID, Kind: rec.Kind, Source: rec.Source, Status: rec.Status, Phase: rec.Phase, Mock: rec.Mock,
 		PresetID: rec.PresetID, ParentPresetID: rec.ParentPresetID, Error: rec.Error,
-		UserPrompt: rec.UserPrompt, EffectivePrompt: rec.EffectivePrompt,
 		Constraints: rec.Constraints, PromptVersions: rec.PromptVersions,
 		Events: []runs.RunEvent{}, Agents: rec.Agents, Totals: rec.Totals,
 	}
+	out.UserPrompt, out.UserPromptChars = boundedPrompt(rec.UserPrompt)
+	out.EffectivePrompt, out.EffectivePromptChars = boundedPrompt(rec.EffectivePrompt)
 	if out.Constraints == nil {
 		out.Constraints = map[string]any{}
 	}
@@ -323,21 +343,25 @@ type promptIndexEntry struct {
 // the paging fields with it. The slice itself is only in the text content, so a
 // large page is not sent twice.
 type promptsOutput struct {
-	RunID           string             `json:"run_id"`
-	UserPrompt      string             `json:"user_prompt,omitempty"`
-	EffectivePrompt string             `json:"effective_prompt,omitempty"`
-	Agents          []promptIndexEntry `json:"agents,omitempty"`
-	Agent           string             `json:"agent,omitempty"`
-	PromptKey       string             `json:"prompt_key,omitempty"`
-	Part            string             `json:"part,omitempty"`
-	Offset          int                `json:"offset"`
-	ReturnedChars   int                `json:"returned_chars"`
-	TotalChars      int                `json:"total_chars"`
-	NextOffset      *int               `json:"next_offset,omitempty"`
+	RunID                string             `json:"run_id"`
+	UserPrompt           string             `json:"user_prompt,omitempty"`
+	UserPromptChars      int                `json:"user_prompt_chars,omitempty"`
+	EffectivePrompt      string             `json:"effective_prompt,omitempty"`
+	EffectivePromptChars int                `json:"effective_prompt_chars,omitempty"`
+	Agents               []promptIndexEntry `json:"agents,omitempty"`
+	Agent                string             `json:"agent,omitempty"`
+	PromptKey            string             `json:"prompt_key,omitempty"`
+	Part                 string             `json:"part,omitempty"`
+	Offset               int                `json:"offset"`
+	ReturnedChars        int                `json:"returned_chars"`
+	TotalChars           int                `json:"total_chars"`
+	NextOffset           *int               `json:"next_offset,omitempty"`
 }
 
 func promptIndex(rec *runs.RunRecord) (promptsOutput, string) {
-	out := promptsOutput{RunID: rec.ID, UserPrompt: rec.UserPrompt, EffectivePrompt: rec.EffectivePrompt, Agents: []promptIndexEntry{}}
+	out := promptsOutput{RunID: rec.ID, Agents: []promptIndexEntry{}}
+	out.UserPrompt, out.UserPromptChars = boundedPrompt(rec.UserPrompt)
+	out.EffectivePrompt, out.EffectivePromptChars = boundedPrompt(rec.EffectivePrompt)
 	var b strings.Builder
 	b.WriteString(runDataNotice + "\n\n")
 	fmt.Fprintf(&b, "Prompts for run `%s`.\nUser prompt: %s\n", rec.ID, cell(truncateRunes(rec.UserPrompt, maxEchoedPromptRunes)))

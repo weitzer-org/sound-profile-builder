@@ -322,6 +322,9 @@ func TestMCPJourney_J1toJ5(t *testing.T) {
 	if rf.Status != runs.StatusComplete || !strings.HasPrefix(rf.RunID, "chat-") {
 		t.Fatalf("refine status=%q run_id=%q, want complete chat-*", rf.Status, rf.RunID)
 	}
+	if rf.DSPMatrixUpdated == nil {
+		t.Errorf("refine_preset dsp_matrix_updated is missing, want a value")
+	}
 	p2Res, _ := jnyCall(t, cs, "11 get_preset after refine", getToolName, map[string]any{"preset_id": gen.PresetID})
 	p2 := itStructured[getOutput](t, p2Res)
 	if want := []string{gen.RunID, rf.RunID}; !slices.Equal(p2.RunIDs, want) {
@@ -489,7 +492,11 @@ func TestMCPJourney_PagingAndErrors(t *testing.T) {
 
 	t.Run("max_chars above the cap is capped", func(t *testing.T) {
 		big := jnyGenerate(t, cs, "3 setup big", "big log")
-		body := strings.Repeat("0123456789", 13000) // 130000 characters
+		// A 26-char cycle, not a divisor of maxPageChars (120000 mod 26 == 10),
+		// so the tail page's content actually differs from the head's -- a
+		// 10-char repeating pattern would make a wrong tail (e.g. read from
+		// offset 0) pass a content check against this fixture by accident.
+		body := strings.Repeat("abcdefghijklmnopqrstuvwxyz", 5000) // 130000 characters
 		if err := h.svc.Runs().WriteLog(t.Context(), big.RunID, "4_coros_librarian.system.md", []byte(body)); err != nil {
 			t.Fatal(err)
 		}
@@ -514,6 +521,9 @@ func TestMCPJourney_PagingAndErrors(t *testing.T) {
 		po = itStructured[promptsOutput](t, res)
 		if po.ReturnedChars != 10000 || po.NextOffset != nil {
 			t.Errorf("tail: returned=%d next=%s, want 10000 and none", po.ReturnedChars, jnyNext(po.NextOffset))
+		}
+		if got, want := jnyData(t, text), body[maxPageChars:]; got != want {
+			t.Errorf("tail data = %q, want %q (the fixture's actual offset-%d..end slice)", got, want, maxPageChars)
 		}
 	})
 

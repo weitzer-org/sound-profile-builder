@@ -44,23 +44,27 @@ type eventView struct {
 	Msg   string `json:"msg"`
 }
 
-// statusOutput is get_run_status's structured result.
+// statusOutput is get_run_status's structured result. ConversationalResponse
+// and DSPMatrixUpdated are set only for a completed refine run (any tool that
+// reports status can surface them, not only refine_preset itself -- a model
+// that calls refine_preset with wait_seconds=0 and then polls get_run_status
+// still sees the Architect's reply).
 type statusOutput struct {
-	RunID      string      `json:"run_id"`
-	Status     string      `json:"status"` // running | complete | error | abandoned
-	Phase      string      `json:"phase"`
-	ElapsedS   int         `json:"elapsed_s"`
-	PresetID   string      `json:"preset_id,omitempty"`
-	Error      string      `json:"error,omitempty"`
-	LastEvents []eventView `json:"last_events"`
+	RunID                  string      `json:"run_id"`
+	Status                 string      `json:"status"` // running | complete | error | abandoned
+	Phase                  string      `json:"phase"`
+	ElapsedS               int         `json:"elapsed_s"`
+	PresetID               string      `json:"preset_id,omitempty"`
+	Error                  string      `json:"error,omitempty"`
+	LastEvents             []eventView `json:"last_events"`
+	ConversationalResponse string      `json:"conversational_response,omitempty"` // refine only
+	DSPMatrixUpdated       *bool       `json:"dsp_matrix_updated,omitempty"`      // refine only
 }
 
 // runOutput is generate_preset's and refine_preset's structured result.
 type runOutput struct {
 	statusOutput
-	PresetMarkdown         string `json:"preset_markdown,omitempty"`
-	ConversationalResponse string `json:"conversational_response,omitempty"` // refine only
-	DSPMatrixUpdated       *bool  `json:"dsp_matrix_updated,omitempty"`      // refine only
+	PresetMarkdown string `json:"preset_markdown,omitempty"`
 }
 
 func baseStatus(rec *runs.RunRecord) statusOutput {
@@ -188,17 +192,42 @@ func waitDuration(secs *int, def int) time.Duration {
 
 // ---- shared text ----
 
+// errNoStructuredPreset marks a preset that has no block data to render (a
+// legacy preset, HTML-only). presetMarkdown's callers that only need
+// success/failure (finishRun, get_run_status) treat it the same as any other
+// render failure; readPreset (resources.go) treats it as not-found, same as a
+// missing preset, since there is nothing at that URI to serve either way.
+var errNoStructuredPreset = userErr("this preset predates structured presets and has no block data to render")
+
 // presetMarkdown renders a finished run's preset from its structured payload.
-func presetMarkdown(ctx context.Context, svc *presetsvc.Service, presetID string) (string, bool) {
+// A *presetsvc.LookupError means the preset does not exist (or storage is
+// unavailable, which GetPreset does not distinguish -- see LookupError's doc).
+func presetMarkdown(ctx context.Context, svc *presetsvc.Service, presetID string) (string, error) {
 	p, err := svc.GetPreset(ctx, presetID)
 	if err != nil {
-		return "", false
+		return "", err
 	}
 	sp, ok := presetsvc.DecodeStructured(p.Payload)
 	if !ok {
-		return "", false
+		return "", errNoStructuredPreset
 	}
-	return RenderPresetMarkdown(p, sp), true
+	return RenderPresetMarkdown(p, sp), nil
+}
+
+// addReplyFields sets ConversationalResponse/DSPMatrixUpdated on out for a
+// completed refine run, from the in-memory RunResult this process holds for
+// it. It is a no-op for a generate run, or for a refine run this process did
+// not start or has evicted (see presetsvc.Service.Result) -- the fields are
+// then simply absent, as documented in PR #107.
+func addReplyFields(svc *presetsvc.Service, rec *runs.RunRecord, out *statusOutput) {
+	if rec.Kind != runs.KindRefine || rec.Status != runs.StatusComplete {
+		return
+	}
+	if res, ok := svc.Result(rec.ID); ok {
+		out.ConversationalResponse = truncateRunes(res.Reply, maxReplyRunes)
+		up := res.DSPMatrixUpdated
+		out.DSPMatrixUpdated = &up
+	}
 }
 
 func eventLines(evs []eventView) string {
@@ -263,17 +292,11 @@ func validText(field, s string, maxRunes int) (string, error) {
 // finishRun renders the result of generate_preset / refine_preset after the wait.
 func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord) (*mcp.CallToolResult, runOutput) {
 	out := runOutput{statusOutput: baseStatus(rec)}
+	addReplyFields(svc, rec, &out.statusOutput)
 	text := statusText(out.statusOutput, stillRunningHint(rec.ID))
 	if rec.Status == runs.StatusComplete && rec.PresetID != "" {
-		if res, ok := svc.Result(rec.ID); ok && rec.Kind == runs.KindRefine {
-			out.ConversationalResponse = truncateRunes(res.Reply, maxReplyRunes)
-			up := res.DSPMatrixUpdated
-			out.DSPMatrixUpdated = &up
-		}
-		if md, ok := presetMarkdown(ctx, svc, rec.PresetID); ok {
-			out.PresetMarkdown = md
+		replyLines := func() string {
 			var b strings.Builder
-			b.WriteString(text + "\n\n")
 			if rec.Kind == runs.KindRefine {
 				if out.ConversationalResponse != "" {
 					fmt.Fprintf(&b, "Architect's reply (generated data): %s\n", cell(out.ConversationalResponse))
@@ -281,6 +304,14 @@ func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord)
 				if out.DSPMatrixUpdated != nil && !*out.DSPMatrixUpdated {
 					b.WriteString("The preset's blocks were not changed by this message.\n")
 				}
+			}
+			return b.String()
+		}
+		if md, err := presetMarkdown(ctx, svc, rec.PresetID); err == nil {
+			out.PresetMarkdown = md
+			var b strings.Builder
+			b.WriteString(text + "\n\n" + replyLines())
+			if rec.Kind == runs.KindRefine {
 				b.WriteString("\n")
 			}
 			b.WriteString(dataNotice + "\n\n" + md)
@@ -289,7 +320,9 @@ func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord)
 			}
 			text = b.String()
 		} else {
-			text += fmt.Sprintf("\n\nPreset `%s` was saved but could not be rendered; call get_preset with format=json.", rec.PresetID)
+			// The reply (if any) still reached the client, even though the
+			// preset itself could not be rendered here.
+			text += "\n\n" + replyLines() + fmt.Sprintf("Preset `%s` was saved but could not be rendered; call get_preset with format=json.", rec.PresetID)
 		}
 	}
 	return textResult(text), out
@@ -383,9 +416,16 @@ func getRunStatus(svc *presetsvc.Service) mcp.ToolHandlerFor[statusInput, status
 			return nil, statusOutput{}, waitError(statusToolName, in.RunID, err)
 		}
 		out := baseStatus(rec)
+		addReplyFields(svc, rec, &out)
 		text := statusText(out, stillRunningHint(rec.ID))
 		if rec.Status == runs.StatusComplete && rec.PresetID != "" {
-			if md, ok := presetMarkdown(ctx, svc, rec.PresetID); ok {
+			if rec.Kind == runs.KindRefine && out.ConversationalResponse != "" {
+				text += "\n\nArchitect's reply (generated data): " + cell(out.ConversationalResponse)
+				if out.DSPMatrixUpdated != nil && !*out.DSPMatrixUpdated {
+					text += "\nThe preset's blocks were not changed by this message."
+				}
+			}
+			if md, err := presetMarkdown(ctx, svc, rec.PresetID); err == nil {
 				text += "\n\n" + dataNotice + "\n\n" + md
 				if rec.Kind == runs.KindGenerate {
 					text += fmt.Sprintf("\n\nThis is an unsaved draft (preset_id `%s`). Show it to the user; call save_preset only once they approve a name.", rec.PresetID)
