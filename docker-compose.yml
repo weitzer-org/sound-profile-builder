@@ -11,6 +11,10 @@ services:
       # Cloudflare R2 endpoint) to point local dev at real object storage.
       S3_ENDPOINT: "${S3_ENDPOINT:-http://minio:9000}"
       S3_BUCKET: "${S3_BUCKET:-sound-builder-local}"
+      # Placeholder token for local MCP testing (not a secret). Override in .env.
+      MCP_TOKEN: "${MCP_TOKEN:-dev-token-change-me-0123456789abcdef}"
+      MCP_MAX_CONCURRENT_RUNS: "${MCP_MAX_CONCURRENT_RUNS:-2}"
+      RUN_ABANDON_AFTER: "${RUN_ABANDON_AFTER:-10m}"
       PORT: "8080"
       # Controlled by run-mock.sh / run-live.sh; defaults to mock (no key needed).
       MOCK_MODE: "${MOCK_MODE:-true}"
