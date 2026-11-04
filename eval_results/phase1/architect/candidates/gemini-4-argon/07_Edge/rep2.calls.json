@@ -1,0 +1,10 @@
+[
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-4-argon",
+    "success": false,
+    "error": "doRequest: error sending request: Post \"https://generativelanguage.googleapis.com/v1beta/models/gemini-4-argon:generateContent\": read tcp 127.0.0.1:48430-\u003e127.0.0.1:39089: read: connection reset by peer",
+    "latency_ms": 27151,
+    "grounded": false
+  }
+]
