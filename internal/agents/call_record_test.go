@@ -71,8 +71,21 @@ func TestGetFallbackChain_Invariants(t *testing.T) {
 	}
 	for _, c := range candidates {
 		for _, target := range getFallbackChain(c) {
-			if target == "gemini-2.5-pro" || target == c {
+			if target == "gemini-2.5-pro" {
 				t.Errorf("candidate %q chain must not contain %q: %v", c, target, getFallbackChain(c))
+				continue
+			}
+			// Every target must be a production-chain model (also rules out self-reference,
+			// since candidates and production are disjoint).
+			isProd := false
+			for _, p := range production {
+				if target == p {
+					isProd = true
+					break
+				}
+			}
+			if !isProd {
+				t.Errorf("candidate %q chain contains non-production target %q", c, target)
 			}
 		}
 	}
