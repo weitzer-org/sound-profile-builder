@@ -141,8 +141,10 @@ func main() {
 				calls := orch.Usage.CallsSnapshot()
 				rec.IntegrityOK, rec.IntegrityIssues, rec.MaxTokensByAgent = evalcheck.AssessCalls(calls, sc.AgentModels, sc.Pins)
 				rec.CallsFile = filepath.Join(dir, name+".calls.json")
-				if b, err := json.MarshalIndent(calls, "", "  "); err == nil {
-					_ = os.WriteFile(rec.CallsFile, b, 0o644)
+				if b, err := json.MarshalIndent(calls, "", "  "); err != nil {
+					log.Printf("calls marshal: %v", err)
+				} else if err := os.WriteFile(rec.CallsFile, b, 0o644); err != nil {
+					log.Printf("write calls file %s: %v", rec.CallsFile, err)
 				}
 				if line, err := json.Marshal(rec); err == nil {
 					fmt.Fprintln(runsFile, string(line))

@@ -122,6 +122,8 @@ func main() {
 
 		// Per-query coin flip for which side is shown as "A" (position bias control). The
 		// outcome is recorded in each row so position bias can be audited afterwards.
+		// isTier0A (historical name) == "labelB is shown as Preset A", i.e. the order is SWAPPED relative
+		// to (labelA, labelB). Recorded as-is in row.SwappedAB below.
 		isTier0A := rand.Float32() > 0.5
 		var aData, bData []byte
 		var aLabel, bLabel string

@@ -363,12 +363,19 @@ func main() {
 	if path == "" {
 		path = filepath.Join("eval_results", "capability_probe", time.Now().UTC().Format("20060102T150405Z")+".json")
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err == nil {
-		if b, err := json.MarshalIndent(results, "", "  "); err == nil {
-			_ = os.WriteFile(path, b, 0o644)
-			fmt.Println("Full results (raw errors included):", path)
-		}
+	// The calls are already spent: never lose the results silently. The matrix is printed above;
+	// on any persistence failure say so loudly and exit non-zero.
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		log.Fatalf("results NOT saved (create %s): %v -- the matrix above is the only copy", filepath.Dir(path), err)
 	}
+	b, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		log.Fatalf("results NOT saved (marshal): %v -- the matrix above is the only copy", err)
+	}
+	if err := os.WriteFile(path, b, 0o644); err != nil {
+		log.Fatalf("results NOT saved (write %s): %v -- the matrix above is the only copy", path, err)
+	}
+	fmt.Println("Full results (raw errors included):", path)
 }
 
 func printMatrix(results []Result, calls int) {
