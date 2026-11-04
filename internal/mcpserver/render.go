@@ -82,19 +82,27 @@ func RenderPresetMarkdown(p *storage.Preset, sp storage.StructuredPreset) string
 
 func renderGuitar(name string, effects []storage.EffectBlock, anyEstimate *bool) []string {
 	var table strings.Builder
-	table.WriteString("| # | Block | Model | Settings (A / B) |\n|---|---|---|---|")
+	table.WriteString("| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |\n|---|---|---|---|---|")
 
 	var why []string
 	for i, b := range effects {
-		settings := make([]string, 0, len(b.Parameters))
+		settingsA := make([]string, 0, len(b.Parameters))
+		settingsB := make([]string, 0, len(b.Parameters))
+		differs := false
 		for _, prm := range b.Parameters {
-			text, est := formatParam(prm)
+			a, bb, diff, est := formatParam(prm)
 			if est {
 				*anyEstimate = true
 			}
-			settings = append(settings, text)
+			differs = differs || diff
+			settingsA = append(settingsA, a)
+			settingsB = append(settingsB, bb)
 		}
-		fmt.Fprintf(&table, "\n| %d | %s | %s | %s |", i+1, cell(b.Type), cell(b.Model), strings.Join(settings, "; "))
+		colA, colB := strings.Join(settingsA, "; "), strings.Join(settingsB, "; ")
+		if !differs && colB != "" {
+			colB = sameAsA
+		}
+		fmt.Fprintf(&table, "\n| %d | %s | %s | %s | %s |", i+1, cell(b.Type), cell(b.Model), colA, colB)
 
 		if r := cell(b.Rationale); r != "" {
 			why = append(why, "- "+cell(b.Model)+": "+r)
@@ -108,22 +116,30 @@ func renderGuitar(name string, effects []storage.EffectBlock, anyEstimate *bool)
 	return out
 }
 
-// formatParam renders "Name value[unit]", or "Name A→B[unit]" when ValueB is set
-// and differs from Value, with a trailing "*" for estimated values.
-func formatParam(prm storage.BlockParameter) (string, bool) {
+// sameAsA fills Scene B for a block whose parameters are identical in both
+// scenes, so a long unchanged list is not printed twice.
+const sameAsA = "same as A"
+
+// formatParam renders one parameter for the Scene A and Scene B columns as
+// "Name value[unit]" (B falls back to A when ValueB is empty), with a trailing
+// "*" on both for an estimated value. differs reports whether B != A.
+func formatParam(prm storage.BlockParameter) (a, b string, differs, est bool) {
 	name := cell(prm.Name)
 	unit := cell(prm.Unit)
 	value := cell(prm.Value)
 	valueB := cell(prm.ValueB)
-
-	text := strings.TrimSpace(name + " " + value + unit)
-	if valueB != "" && valueB != value {
-		text = strings.TrimSpace(name + " " + value + unit + "→" + valueB + unit)
+	if valueB == "" {
+		valueB = value
 	}
 
-	est := prm.Basis == "estimate"
+	a = strings.TrimSpace(name + " " + value + unit)
+	b = strings.TrimSpace(name + " " + valueB + unit)
+	differs = valueB != value
+
+	est = prm.Basis == "estimate"
 	if est {
-		text += "*"
+		a += "*"
+		b += "*"
 	}
-	return text, est
+	return a, b, differs, est
 }

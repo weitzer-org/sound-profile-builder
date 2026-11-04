@@ -302,7 +302,7 @@ func TestIntegration_GetPresetMarkdown(t *testing.T) {
 	for _, want := range []string{
 		"## Session Lead",
 		"### Fender Telecaster Single Coil",
-		"| # | Block | Model | Settings (A / B) |",
+		"| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |",
 		dataNotice,
 		"Run IDs: gen-1, refine-1",
 	} {

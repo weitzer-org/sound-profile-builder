@@ -73,8 +73,9 @@ func (c *memClient) DeleteFile(_ context.Context, bucket, object string) error {
 func (c *memClient) Close() {}
 
 type svcHarness struct {
-	svc   *presetsvc.Service
-	store *storage.PresetStore
+	svc    *presetsvc.Service
+	store  *storage.PresetStore
+	client *memClient
 }
 
 // newTestService builds a presetsvc.Service over an in-memory store. Its
@@ -94,7 +95,7 @@ func newTestService(t *testing.T) *svcHarness {
 		},
 		Config: func() *config.AppConfig { return nil },
 	})
-	return &svcHarness{svc: svc, store: store}
+	return &svcHarness{svc: svc, store: store, client: client}
 }
 
 // seedPreset stores a preset whose Payload is the architect mock's structured_payload.

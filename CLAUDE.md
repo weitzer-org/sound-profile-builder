@@ -102,6 +102,17 @@ See `.env.example`.
 - Run records and logs go through `storage.Client`: `runs/<run_id>.json` and `logs/<run_id>/`.
 - `mock=true` or `MOCK_MODE=true` replays `testdata/e2e_mocks/run_events.json`, so every tool can be tested without Gemini.
 - Integration tests use the Go SDK client over `httptest` (`internal/mcpserver/*_test.go`).
+- **UI parity is enforced.** `generate_preset` must accept every field of the UI's tone prompt form
+  (`#gen-prompt-form` in `web/templates/index.html`); `internal/mcpserver/parity_test.go` fails when the form
+  gains one that `generateInput` lacks, or when an omitted MCP parameter stops matching the checkbox's default.
+  Add the MCP parameter, don't allowlist it.
+- **MCP-only `generate_preset` options** (no UI checkbox): `guitars` (1-3 validated names; omitted = the
+  Gibson ES-339 + Telecaster pair), `single_amp_mode`, `allow_cloud_captures` (request wins; nil = `config.json`).
+  Unlike the `allow_*` flags, config is the default, not a ceiling. `guitars` is untrusted text that lands in
+  LLM prompts: keep it behind `validGuitars`.
+- `qc://style/preset-display` (`internal/mcpserver/style/preset-display.md`, <=40 lines) is the chat presentation
+  guide; the server `instructions` summarise it. If you change `RenderPresetMarkdown`'s columns, update the guide
+  and `testdata/preset.golden.md` (`go test ./internal/mcpserver -run Golden -update`).
 - Connector setup: the header form (`authorization: Bearer <token>`) comes first. The `/mcp/<token>` path form is the fallback. See README "MCP server" and `docs/mcp/` for details.
 
 **Usage analytics.** Every real agent call funnels through `Orchestrator.

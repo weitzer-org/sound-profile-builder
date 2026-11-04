@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -267,15 +268,78 @@ func stillRunningHint(runID string) string {
 
 // ---- generate_preset ----
 
+// generateInput mirrors the UI's tone prompt form (#gen-prompt-form in
+// web/templates/index.html) field for field, plus a few MCP-only options. The
+// parity test (parity_test.go) fails when the form gains a field this struct
+// lacks. Descriptions use the UI's labels so the model and the user talk about
+// the same switches.
 type generateInput struct {
 	Prompt               string `json:"prompt" jsonschema:"what tone to build: song, artist, guitar, amp/pedals, any constraints"`
-	AllowFactoryCaptures *bool  `json:"allow_factory_captures,omitempty" jsonschema:"allow factory Neural Captures (default: server setting)"`
-	AllowUserCaptures    *bool  `json:"allow_user_captures,omitempty" jsonschema:"allow the user's downloaded Cortex Cloud captures (default: server setting)"`
-	AllowPaidPlugins     *bool  `json:"allow_paid_plugins,omitempty" jsonschema:"allow gear from paid Neural DSP plugins the user owns (default: server setting)"`
-	FavorCaptures        *bool  `json:"favor_captures,omitempty" jsonschema:"prefer Neural Captures over modelled amps"`
-	FavorCloudCaptures   *bool  `json:"favor_cloud_captures,omitempty" jsonschema:"prefer the user's cloud captures"`
-	WaitSeconds          *int   `json:"wait_seconds,omitempty" jsonschema:"how long to wait for the run to finish, 0-200 (default 200)"`
-	Mock                 bool   `json:"mock,omitempty" jsonschema:"use canned test data instead of the AI pipeline (no cost); only for testing"`
+	AllowFactoryCaptures *bool  `json:"allow_factory_captures,omitempty" jsonschema:"UI: Allow Factory Captures. Let the build use the Quad Cortex's factory Neural Captures. Default: on."`
+	AllowUserCaptures    *bool  `json:"allow_user_captures,omitempty" jsonschema:"UI: Use My Capture Library. Let the build pick from the user's own downloaded Cortex Cloud captures; off hides that library from the pipeline entirely. Default: on."`
+	AllowPaidPlugins     *bool  `json:"allow_paid_plugins,omitempty" jsonschema:"UI: Allow Paid Plugins. Let the build use gear from the paid Neural DSP plugins the user owns. Default: on."`
+	FavorCaptures        *bool  `json:"favor_captures,omitempty" jsonschema:"UI: Favor Captures Over Models. Prefer official factory Neural Captures over the built-in modelled amps and pedals when both fit. Default: off."`
+	FavorCloudCaptures   *bool  `json:"favor_cloud_captures,omitempty" jsonschema:"UI: Favor My Capture Library. Prefer entries from the user's own capture library over modelled gear and factory captures when they fit; a preference only, and it does nothing if the library is off. Default: off."`
+
+	// MCP-only: the UI has no control for any of these three.
+	Guitars            []string `json:"guitars,omitempty" jsonschema:"MCP-only. Names of the guitars to build a separate rig for, 1-3 entries, each at most 60 characters. Pass ONLY guitars the user actually named, using their wording (e.g. Gibson ES-339 Humbuckers). If the user named none, OMIT this field and the server builds its default pair; never add or invent a guitar the user did not ask for."`
+	SingleAmpMode      *bool    `json:"single_amp_mode,omitempty" jsonschema:"MCP-only. Force every rig to route through exactly one amp block. Set it only if the user asked for one amp (true) or allowed several (false); omit it to use the server setting."`
+	AllowCloudCaptures *bool    `json:"allow_cloud_captures,omitempty" jsonschema:"MCP-only. Run the Cloud Navigator step, which matches gear the Quad Cortex lacks against the user's capture library. Your value overrides the server setting, which is usually off. Needs allow_user_captures on to have any effect. Omit unless the user asked for it."`
+
+	WaitSeconds *int `json:"wait_seconds,omitempty" jsonschema:"how long to wait for the run to finish, 0-200 (default 200)"`
+	Mock        bool `json:"mock,omitempty" jsonschema:"use canned test data instead of the AI pipeline (no cost); only for testing"`
+}
+
+const (
+	minGuitars       = 1
+	maxGuitars       = 3
+	maxGuitarRunes   = 60
+	guitarsFieldHelp = "Omit guitars to use the default pair."
+)
+
+// guitarRuneOK is the guitar-name character allowlist: letters, digits, an
+// ASCII space, and - . + ( ) , /
+func guitarRuneOK(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == ' ' || strings.ContainsRune("-.+(),/", r)
+}
+
+// validGuitars checks the guitars option. The names are interpolated into LLM
+// prompts and become JSON keys and HTML ids downstream, so they are untrusted:
+// each is trimmed, must be non-empty, at most maxGuitarRunes, built only from
+// guitarRuneOK characters, and unique ignoring case. The allowlist is
+// deliberately strict: the name also becomes a tab id and is spliced unescaped
+// into an onclick="switchTab(this, 'tab-<name>')" attribute by the web UI
+// (internal/api/handlers_preset.go), so a quote or angle bracket would be script
+// injection there, and a newline would smuggle a second instruction into the
+// LLM prompt. The returned error text goes straight to the model, so it says
+// how to fix the call.
+func validGuitars(in []string) ([]string, error) {
+	if in == nil {
+		return nil, nil
+	}
+	if len(in) < minGuitars || len(in) > maxGuitars {
+		return nil, fmt.Errorf("guitars must have %d to %d entries, got %d. %s", minGuitars, maxGuitars, len(in), guitarsFieldHelp)
+	}
+	out := make([]string, 0, len(in))
+	seen := make(map[string]bool, len(in))
+	for i, raw := range in {
+		g, err := validText(fmt.Sprintf("guitars[%d]", i), raw, maxGuitarRunes)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range g {
+			if !guitarRuneOK(r) {
+				return nil, fmt.Errorf("guitars[%d] may only contain letters, digits, spaces and - . + ( ) , / (no quotes, apostrophes, symbols or line breaks); write \"Gibson Les Paul 59\" rather than \"'59\".", i)
+			}
+		}
+		key := strings.ToLower(g)
+		if seen[key] {
+			return nil, fmt.Errorf("guitars[%d] repeats %q. List each guitar once.", i, g)
+		}
+		seen[key] = true
+		out = append(out, g)
+	}
+	return out, nil
 }
 
 func validText(field, s string, maxRunes int) (string, error) {
@@ -334,10 +398,16 @@ func generatePreset(svc *presetsvc.Service) mcp.ToolHandlerFor[generateInput, ru
 		if err != nil {
 			return nil, runOutput{}, err
 		}
+		guitars, err := validGuitars(in.Guitars)
+		if err != nil {
+			return nil, runOutput{}, err
+		}
 		runID, err := svc.StartGenerate(ctx, prompt, presetsvc.GenerateOptions{
 			AllowFactoryCaptures: in.AllowFactoryCaptures, AllowUserCaptures: in.AllowUserCaptures,
 			AllowPaidPlugins: in.AllowPaidPlugins, FavorCaptures: in.FavorCaptures,
-			FavorCloudCaptures: in.FavorCloudCaptures, Mock: in.Mock, Source: runs.SourceMCP,
+			FavorCloudCaptures: in.FavorCloudCaptures, Guitars: guitars,
+			SingleAmpMode: in.SingleAmpMode, AllowCloudCaptures: in.AllowCloudCaptures,
+			Mock: in.Mock, Source: runs.SourceMCP,
 		})
 		if err != nil {
 			return nil, runOutput{}, toolError(generateToolName, err)

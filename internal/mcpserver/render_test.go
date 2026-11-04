@@ -70,7 +70,7 @@ var (
 	allowedHeading  = regexp.MustCompile(`^#{2,3} `)
 	unescapedPipe   = regexp.MustCompile(`(^|[^\\])\|`)
 	tableRowPrefix  = "|"
-	expectedColumns = 5 // leading pipe + 3 inner separators + trailing pipe for 4 columns
+	expectedColumns = 6 // leading pipe + 4 inner separators + trailing pipe for 5 columns
 )
 
 // assertStructure checks that LLM text did not create extra Markdown structure:
@@ -175,8 +175,8 @@ func TestRenderEstimateAndValueB(t *testing.T) {
 		out := RenderPresetMarkdown(p, block(
 			storage.BlockParameter{Name: "Gain", Value: "5", ValueB: "7", Unit: "dB", Basis: "confirmed_range"},
 		))
-		if !strings.Contains(out, "Gain 5dB→7dB") {
-			t.Errorf("missing A→B: %s", out)
+		if !strings.Contains(out, "| Gain 5dB | Gain 7dB |") {
+			t.Errorf("missing separate A and B columns: %s", out)
 		}
 		if strings.Contains(out, "*") || strings.Contains(out, "estimated value") {
 			t.Errorf("unexpected estimate marker:\n%s", out)
@@ -189,7 +189,7 @@ func TestRenderEstimateAndValueB(t *testing.T) {
 			storage.BlockParameter{Name: "Drive", Value: "3", ValueB: "3", Basis: "estimate"},
 			storage.BlockParameter{Name: "Bass", Value: "4", ValueB: ""},
 		))
-		for _, want := range []string{"Gain 5dB→7dB*; Drive 3*; Bass 4", "\\* = estimated value"} {
+		for _, want := range []string{"| Gain 5dB*; Drive 3*; Bass 4 | Gain 7dB*; Drive 3*; Bass 4 |", "\\* = estimated value"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("missing %q:\n%s", want, out)
 			}
@@ -199,10 +199,10 @@ func TestRenderEstimateAndValueB(t *testing.T) {
 		}
 	})
 
-	t.Run("ValueB equal to Value is not shown as A→B", func(t *testing.T) {
+	t.Run("identical scenes show same as A, never an arrow", func(t *testing.T) {
 		out := RenderPresetMarkdown(p, block(storage.BlockParameter{Name: "Drive", Value: "3", ValueB: "3"}))
-		if strings.Contains(out, "→") {
-			t.Errorf("unexpected arrow:\n%s", out)
+		if strings.Contains(out, "→") || !strings.Contains(out, "| Drive 3 | same as A |") {
+			t.Errorf("want same-as-A column:\n%s", out)
 		}
 	})
 }
