@@ -1,0 +1,32 @@
+[
+  {
+    "model": "gemini-pro-latest",
+    "check": "resolve",
+    "pass": false,
+    "verdict": "FAIL: served model \"gemini-3.1-pro-preview\" != expected \"gemini-pro-latest\" (NOT scored)",
+    "served_model": "gemini-3.1-pro-preview",
+    "expected_served": "gemini-pro-latest",
+    "served_ok": false,
+    "finish_reason": "STOP",
+    "input_tokens": 8,
+    "output_tokens": 0,
+    "thinking_tokens": 103,
+    "latency_sec": 3.394438114,
+    "text_snippet": "ok"
+  },
+  {
+    "model": "gemini-3.5-flash",
+    "check": "resolve",
+    "pass": false,
+    "verdict": "FAIL: served model \"gemini-3.6-flash\" != expected \"gemini-3.5-flash\" (NOT scored)",
+    "served_model": "gemini-3.6-flash",
+    "expected_served": "gemini-3.5-flash",
+    "served_ok": false,
+    "finish_reason": "STOP",
+    "input_tokens": 8,
+    "output_tokens": 1,
+    "thinking_tokens": 67,
+    "latency_sec": 1.285536638,
+    "text_snippet": "ok"
+  }
+]

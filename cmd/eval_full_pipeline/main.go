@@ -1,327 +1,193 @@
 package main
 
+// eval_full_pipeline runs the real 13-agent pipeline (RunPipeline) under the routing scenarios
+// of docs/eval/gemini-model-upgrade-test-plan.md §5 (S0-S5, A1-A3), so every agent gets the
+// genuine upstream context it gets in production -- unlike cmd/eval_subagent, which can only
+// isolate agents whose input doesn't depend on another agent.
+//
+// Safeguards (plan §2 principles):
+//   - -dry-run defaults to true and prints the exact run count; pass -dry-run=false to spend money.
+//   - Live runs REQUIRE EVAL_NO_FALLBACK=true (unless -allow-fallback), so a failing candidate
+//     fails visibly instead of being scored on gemini-2.5-pro.
+//   - Every attempt is recorded with the API-reported served model and finish reason; a run in
+//     which any attempt failed, fell back, or was served by a different model than the
+//     scenario asked for is marked integrity_ok=false and must not be scored.
+//   - One JSON line per run goes to <out>/runs.jsonl as soon as the run finishes.
+
 import (
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/evalcheck"
 	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
 )
 
-// eval_full_pipeline benchmarks gemini-3.6-flash as a candidate replacement for one
-// production model tier at a time, running the real 12(+1)-agent pipeline (RunPipeline)
-// so every agent gets the actual upstream context it gets in production -- unlike
-// cmd/eval_subagent, which can only isolate the handful of agents whose input doesn't
-// depend on another agent's output.
-//
-// Each scenario is a complete per-agent routing map, not a single model swapped in
-// uniformly everywhere: production splits agents into a "Pro tier" (1, 12) on
-// gemini-3.1-pro-preview and a "Flash tier" (2-11, 13) on gemini-3.5-flash (see
-// internal/agents/orchestrator.go's production routing defaults), so a candidate run
-// only ever changes one tier at a time, exactly like it would if adopted.
-type PipelineRunResult struct {
-	Query         string
-	ScenarioName  string
-	ScenarioLabel string
-	LatencySec    float64
-	InputTokens   int32
-	OutputTokens  int32
-	ModelsUsed    map[string]int
-	HTMLPath      string
-	Error         string
-}
-
-type RoutingScenario struct {
-	Label       string
-	FolderName  string
-	AgentModels map[string]string
-}
-
 func main() {
-	log.Println("🪐 Starting Full Pipeline gemini-3.6-flash Candidate Routing Benchmark...")
+	scenariosFlag := flag.String("scenarios", "all", "comma-separated scenario IDs: S0,S1,S2,S3,S4,S5,A1,A2,A3 (or all)")
+	queriesFlag := flag.String("queries", "all", "comma-separated golden-set query names (or all 13)")
+	reps := flag.Int("reps", 2, "repetitions per (scenario, query)")
+	dryRun := flag.Bool("dry-run", true, "print the run plan and exit without calling Gemini; pass -dry-run=false to spend real money")
+	includeSkipped := flag.Bool("include-skipped", false, "also run scenarios marked skipped (e.g. S3 once pro-latest resolves to the baseline Pro model)")
+	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results will NOT be scoreable)")
+	argonNoSearch := flag.Bool("argon-no-search", false, "keep agents 1,2,3 off Argon in A1/A2/A3 (use if the Phase 0.5 probe shows Argon cannot use GoogleSearch)")
+	outDir := flag.String("out", "eval_results/full_pipeline_gemini_upgrade", "output directory")
+	flag.Parse()
 
-	ctx := context.Background()
+	if *reps < 1 {
+		log.Fatal("-reps must be >= 1")
+	}
+	allScenarios := BuildScenarios(*argonNoSearch)
+	selected, err := SelectScenarios(allScenarios, *scenariosFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	goldenQueries := evalfixtures.GoldenQueries()
+	queryNames, err := SelectQueries(evalfixtures.GoldenQueryOrder(), goldenQueries, *queriesFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	plan := MakePlan(selected, len(queryNames), *reps, *includeSkipped)
+
+	fmt.Printf("Plan: %d scenarios x %d queries x %d reps\n", plan.Scenarios, plan.Queries, plan.Reps)
+	for _, s := range selected {
+		note := ""
+		if s.Skip != "" && !*includeSkipped {
+			note = "   SKIPPED: " + s.Skip
+		}
+		fmt.Printf("  %-3s %-36s %3d runs%s\n", s.ID, s.Label, plan.Queries*plan.Reps, note)
+	}
+	fmt.Printf("TOTAL: %d pipeline runs", plan.Total)
+	if plan.Executable != plan.Total {
+		fmt.Printf(" planned, %d executable (skipped scenarios excluded; -include-skipped to force)", plan.Executable)
+	}
+	fmt.Printf("\n~%d agent calls before retries (13 per run)\n", plan.AgentCalls)
+	if *dryRun {
+		fmt.Println("DRY RUN -- no Gemini calls made. Pass -dry-run=false to execute.")
+		return
+	}
+
+	if !strings.EqualFold(os.Getenv(agents.EvalNoFallbackEnv), "true") && !*allowFallback {
+		log.Fatalf("%s=true is required for live runs (otherwise a failed candidate is silently scored on a fallback model). Set it, or pass -allow-fallback to override.", agents.EvalNoFallbackEnv)
+	}
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		log.Fatal("GEMINI_API_KEY must be set to run live evals")
+	}
 	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-
-	// 1. Fetch Credentials. Reads GEMINI_API_KEY directly (matching how the app itself
-	// authenticates locally, see cmd/server/main.go's localSecretFetcher, and how cmd/eval
-	// does it) rather than requiring a GCP project + Secret Manager access.
-	geminiKey := os.Getenv("GEMINI_API_KEY")
-	if geminiKey == "" {
-		log.Fatalf("GEMINI_API_KEY must be set to run live evals")
-	}
-
-	// 2. Instantiate the Orchestrator (Gemini only -- Open-LLM isn't part of this comparison)
-	orch, err := agents.NewOrchestrator(ctx, geminiKey, nil)
+	ctx := context.Background()
+	orch, err := agents.NewOrchestrator(ctx, key, nil)
 	if err != nil {
 		log.Fatalf("Failed to initialize Orchestrator: %v", err)
 	}
 	defer orch.Close()
 
-	// Production tier split (internal/agents/orchestrator.go RunAgentSplit's routing
-	// defaults). 13_critic is Flash-tier: Preset Critic runs inside RunPipeline right
-	// after the Architect and otherwise falls through to the same gemini-3.5-flash default
-	// as agents 2-11.
-	proTierKeys := []string{"1_tone_historian", "12_architect"}
-	flashTierKeys := []string{
-		"2_sonic_profiler", "3_community_scraper", "4_coros_librarian",
-		"5_cloud_navigator", "6_acoustician", "7_transducer_tech",
-		"8_foh_optimizer", "9_mix_engineer", "10_control_mapper",
-		"11_dsp_dispatcher", "13_critic",
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		log.Fatal(err)
 	}
-
-	const (
-		prodProModel   = "gemini-3.1-pro-preview"
-		prodFlashModel = "gemini-3.5-flash"
-		candidateModel = "gemini-3.6-flash"
-	)
-
-	buildRoutingMap := func(proModel, flashModel string) map[string]string {
-		m := make(map[string]string)
-		for _, k := range proTierKeys {
-			m[k] = proModel
-		}
-		for _, k := range flashTierKeys {
-			m[k] = flashModel
-		}
-		return m
+	runsFile, err := os.OpenFile(filepath.Join(*outDir, "runs.jsonl"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer runsFile.Close()
 
-	scenarios := []RoutingScenario{
-		{
-			Label:       "Baseline (Prod Routing)",
-			FolderName:  "baseline",
-			AgentModels: buildRoutingMap(prodProModel, prodFlashModel),
-		},
-		{
-			Label:       fmt.Sprintf("Flash-Tier Candidate (%s)", candidateModel),
-			FolderName:  "flash-tier-candidate",
-			AgentModels: buildRoutingMap(prodProModel, candidateModel),
-		},
-		{
-			Label:       fmt.Sprintf("Pro-Tier Candidate (%s)", candidateModel),
-			FolderName:  "pro-tier-candidate",
-			AgentModels: buildRoutingMap(candidateModel, prodFlashModel),
-		},
-	}
-
-	// The 13 Standard Archetype Evaluation Queries (shared with every other cmd/eval_* tool)
-	evalQueries := evalfixtures.GoldenQueries()
 	constraints := evalfixtures.DefaultConstraints()
+	var records []evalcheck.RunRecord
 
-	results := []PipelineRunResult{}
-
-	queryNamesOrdered := evalfixtures.GoldenQueryOrder()
-
-	baseOutDir := "eval_results/full_pipeline"
-
-	// Sequential execution to avoid API rate limits across the ~39-pipeline run matrix
-	// (3 scenarios x 13 scenarios-worth of queries x 12 agent calls each).
-	for _, scenario := range scenarios {
-		log.Printf("\n🚀 STARTING ROUTING SCENARIO: %s", scenario.Label)
-
-		modelDir := filepath.Join(baseOutDir, scenario.FolderName)
-		if err := os.MkdirAll(modelDir, 0755); err != nil {
-			log.Fatalf("Failed to create folder: %v", err)
+	// Sequential on purpose (API rate limits; same as the July tool).
+	for _, sc := range selected {
+		if sc.Skip != "" && !*includeSkipped {
+			log.Printf("skipping %s: %s", sc.ID, sc.Skip)
+			continue
 		}
-
-		orch.AgentModels = scenario.AgentModels
-
-		for _, name := range queryNamesOrdered {
-			query := evalQueries[name]
-			log.Printf("\nScenario: %s | Routing: %s", name, scenario.Label)
-
-			// Clear statistics
-			orch.Usage = &agents.TokenUsage{
-				ModelsUsed: make(map[string]int),
+		orch.AgentModels = sc.AgentModels
+		for rep := 1; rep <= *reps; rep++ {
+			dir := filepath.Join(*outDir, sc.ID, fmt.Sprintf("rep%d", rep))
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				log.Fatal(err)
 			}
-
-			start := time.Now()
-			htmlResult, tokenUsage, err := orch.RunPipeline(ctx, query, constraints, cfg.AgentPrompts, nil)
-			duration := time.Since(start).Seconds()
-
-			runResult := PipelineRunResult{
-				Query:         query,
-				ScenarioName:  name,
-				ScenarioLabel: scenario.Label,
-				LatencySec:    duration,
-			}
-
-			if err != nil {
-				log.Printf(" ❌ Failed pipeline run: %v", err)
-				runResult.Error = err.Error()
-			} else {
-				log.Printf("  Success in %.2fs | Input Tokens: %d, Output Tokens: %d", duration, tokenUsage.InputTokens, tokenUsage.OutputTokens)
-				runResult.InputTokens = tokenUsage.InputTokens
-				runResult.OutputTokens = tokenUsage.OutputTokens
-
-				runResult.ModelsUsed = make(map[string]int)
-				for k, v := range tokenUsage.ModelsUsed {
-					runResult.ModelsUsed[k] = v
-				}
-
-				htmlFileName := fmt.Sprintf("%s.html", name)
-				htmlFilePath := filepath.Join(modelDir, htmlFileName)
-				err = os.WriteFile(htmlFilePath, []byte(htmlResult), 0644)
-				if err != nil {
-					log.Printf("  Failed to save HTML output: %v", err)
+			for _, name := range queryNames {
+				log.Printf("%s rep%d %s ...", sc.ID, rep, name)
+				orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
+				start := time.Now()
+				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, cfg.AgentPrompts, nil)
+				rec := evalcheck.RunRecord{Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
+				if runErr != nil {
+					rec.Error = runErr.Error()
 				} else {
-					runResult.HTMLPath = htmlFilePath
-				}
-			}
-
-			results = append(results, runResult)
-		}
-	}
-
-	reportPath := filepath.Join(baseOutDir, "full_pipeline_gemini36_benchmark_report.md")
-	log.Printf("\nGenerating full-pipeline summary report at: %s...", reportPath)
-	generateReport(reportPath, queryNamesOrdered, evalQueries, results, scenarios)
-	log.Println("🏁 FULL BENCHMARK SUITE COMPLETE! Walkthrough report written successfully.")
-	log.Println("Next: run cmd/judge_compare against baseline vs each candidate folder under " + baseOutDir + " (judge model stays gemini-3.1-pro-preview for both comparisons, including the Pro-Tier one where it's also a candidate).")
-}
-
-func generateReport(path string, queryNames []string, queries map[string]string, results []PipelineRunResult, scenarios []RoutingScenario) {
-	var sb strings.Builder
-	sb.WriteString("# 🪐 Full Pipeline - gemini-3.6-flash Candidate Routing Benchmark Report\n\n")
-	sb.WriteString("An end-to-end performance and qualitative benchmark comparing production routing (Pro tier: gemini-3.1-pro-preview on agents 1/12, Flash tier: gemini-3.5-flash on agents 2-11/13) against two gemini-3.6-flash candidate routings, one tier swapped at a time.\n\n")
-
-	sb.WriteString("## 📊 Telemetry Summary Matrix\n\n")
-
-	sb.WriteString("| Scenario | Metric")
-	for _, s := range scenarios {
-		sb.WriteString(" | " + s.Label)
-	}
-	sb.WriteString(" |\n| :--- | :---")
-	for range scenarios {
-		sb.WriteString(" | :---")
-	}
-	sb.WriteString(" |\n")
-
-	runs := make(map[string]map[string]PipelineRunResult)
-	for _, r := range results {
-		if _, ok := runs[r.Query]; !ok {
-			runs[r.Query] = make(map[string]PipelineRunResult)
-		}
-		runs[r.Query][r.ScenarioLabel] = r
-	}
-
-	type stats struct {
-		TotalRuns     int
-		TotalLatency  float64
-		TotalInput    int64
-		TotalOutput   int64
-		FallbackCount int
-	}
-	scenarioStats := make(map[string]*stats)
-	expectedModelsByScenario := make(map[string]map[string]bool)
-	for _, s := range scenarios {
-		scenarioStats[s.Label] = &stats{}
-		expected := make(map[string]bool)
-		for _, m := range s.AgentModels {
-			expected[m] = true
-		}
-		expectedModelsByScenario[s.Label] = expected
-	}
-
-	for _, name := range queryNames {
-		query := queries[name]
-		cleanName := strings.ReplaceAll(name, "_", " ")
-
-		sb.WriteString(fmt.Sprintf("| **%s** | Pipeline Latency", cleanName))
-		for _, s := range scenarios {
-			r := runs[query][s.Label]
-			if r.Error != "" {
-				sb.WriteString(" | *Failed* ")
-			} else {
-				sb.WriteString(fmt.Sprintf(" | %.2fs", r.LatencySec))
-				scenarioStats[s.Label].TotalRuns++
-				scenarioStats[s.Label].TotalLatency += r.LatencySec
-				scenarioStats[s.Label].TotalInput += int64(r.InputTokens)
-				scenarioStats[s.Label].TotalOutput += int64(r.OutputTokens)
-			}
-		}
-		sb.WriteString(" |\n")
-
-		sb.WriteString("| | Accrued Tokens (In/Out)")
-		for _, s := range scenarios {
-			r := runs[query][s.Label]
-			if r.Error != "" {
-				sb.WriteString(" | - ")
-			} else {
-				sb.WriteString(fmt.Sprintf(" | %d / %d", r.InputTokens, r.OutputTokens))
-			}
-		}
-		sb.WriteString(" |\n")
-
-		sb.WriteString("| | Fallback Events / Notes")
-		for _, s := range scenarios {
-			r := runs[query][s.Label]
-			if r.Error != "" {
-				sb.WriteString(fmt.Sprintf(" | Error: %s", strings.ReplaceAll(r.Error, "|", "-")))
-			} else {
-				fallbackText := "None"
-				expected := expectedModelsByScenario[s.Label]
-				unexpectedCount := 0
-				for m, count := range r.ModelsUsed {
-					if !expected[m] {
-						unexpectedCount += count
+					rec.OutputFile = filepath.Join(dir, name+".html") // JSON envelope; extension kept for cmd/judge_compare
+					if err := os.WriteFile(rec.OutputFile, []byte(out), 0o644); err != nil {
+						log.Printf("write output: %v", err)
 					}
 				}
-				if unexpectedCount > 0 {
-					fallbackText = fmt.Sprintf("⚠️ Yes (%d agent calls fell back to a non-target model)", unexpectedCount)
-					scenarioStats[s.Label].FallbackCount++
+				calls := orch.Usage.CallsSnapshot()
+				rec.IntegrityOK, rec.IntegrityIssues, rec.MaxTokensByAgent = evalcheck.AssessCalls(calls, sc.AgentModels, sc.Pins)
+				rec.CallsFile = filepath.Join(dir, name+".calls.json")
+				if b, err := json.MarshalIndent(calls, "", "  "); err == nil {
+					_ = os.WriteFile(rec.CallsFile, b, 0o644)
 				}
-				sb.WriteString(" | " + fallbackText)
+				if line, err := json.Marshal(rec); err == nil {
+					fmt.Fprintln(runsFile, string(line))
+				}
+				records = append(records, rec)
+				log.Printf("   success=%v integrity_ok=%v %.0fs %s", rec.Success, rec.IntegrityOK, rec.LatencySec, strings.Join(rec.IntegrityIssues, "; "))
 			}
 		}
-		sb.WriteString(" |\n")
-
-		sb.WriteString("| | Local HTML Matrix Page")
-		for _, s := range scenarios {
-			r := runs[query][s.Label]
-			if r.HTMLPath != "" {
-				absoluteURI := "file://" + r.HTMLPath
-				sb.WriteString(fmt.Sprintf(" | [View %s Output](%s)", s.Label, absoluteURI))
-			} else {
-				sb.WriteString(" | N/A ")
-			}
-		}
-		sb.WriteString(" |\n")
 	}
+	writeSummary(filepath.Join(*outDir, "summary.md"), records)
+	log.Printf("Done. Per-run records: %s ; deterministic scoring: go run ./cmd/eval_checks -root %s -runs %s", filepath.Join(*outDir, "runs.jsonl"), *outDir, filepath.Join(*outDir, "runs.jsonl"))
+}
 
-	sb.WriteString("\n---\n\n")
-	sb.WriteString("## 📉 Performance & Resource Averages Summary\n\n")
-	sb.WriteString("| Scenario | Avg Pipeline Latency | Avg Input Tokens | Avg Output Tokens | Queries With Fallback Events |\n")
-	sb.WriteString("| :--- | :--- | :--- | :--- | :--- |\n")
-
-	for _, s := range scenarios {
-		st := scenarioStats[s.Label]
-		if st.TotalRuns > 0 {
-			avgLat := st.TotalLatency / float64(st.TotalRuns)
-			avgIn := float64(st.TotalInput) / float64(st.TotalRuns)
-			avgOut := float64(st.TotalOutput) / float64(st.TotalRuns)
-			sb.WriteString(fmt.Sprintf("| **%s** | %.2fs | %.0f | %.0f | %d |\n", s.Label, avgLat, avgIn, avgOut, st.FallbackCount))
-		} else {
-			sb.WriteString(fmt.Sprintf("| **%s** | *No successful runs* | - | - | - |\n", s.Label))
+func writeSummary(path string, recs []evalcheck.RunRecord) {
+	type agg struct {
+		n, ok, integ int
+		lat          float64
+		trunc        map[string]int
+	}
+	by := map[string]*agg{}
+	for _, r := range recs {
+		a := by[r.Scenario]
+		if a == nil {
+			a = &agg{trunc: map[string]int{}}
+			by[r.Scenario] = a
+		}
+		a.n++
+		a.lat += r.LatencySec
+		if r.Success {
+			a.ok++
+		}
+		if r.IntegrityOK {
+			a.integ++
+		}
+		for k, v := range r.MaxTokensByAgent {
+			a.trunc[k] += v
 		}
 	}
-
-	sb.WriteString("\n\n> [!NOTE]\n")
-	sb.WriteString("> **Understanding Fallback Events:** a scenario's routing map only targets its own tier's candidate/production models; if any agent call in `ModelsUsed` shows a model outside that set, `getFallbackChain` (orchestrator.go) kicked in after the primary target failed or was rate-limited for that step.\n")
-	sb.WriteString("\n> **Judging quality:** run `cmd/judge_compare` with `DIR_A`/`DIR_B` pointed at `baseline` vs each candidate folder here, `LABEL_A`/`LABEL_B` set accordingly. The judge model stays `gemini-3.1-pro-preview` for both comparisons -- including the Pro-Tier one, where it is itself one of the two candidates -- to keep the grading rubric identical across both runs; that conflict of interest is a known, accepted tradeoff, not an oversight.\n")
-
-	err := os.WriteFile(path, []byte(sb.String()), 0644)
-	if err != nil {
-		log.Printf("Failed to write report file: %v", err)
+	var ids []string
+	for id := range by {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	var sb strings.Builder
+	sb.WriteString("# Full-pipeline eval summary\n\nScore only runs with integrity_ok=true. Quality: `go run ./cmd/eval_checks`.\n\n")
+	sb.WriteString("| Scenario | Runs | Success | Served-model integrity OK | Avg latency (s) | MAX_TOKENS by agent |\n| :-- | --: | --: | --: | --: | :-- |\n")
+	for _, id := range ids {
+		a := by[id]
+		sb.WriteString(fmt.Sprintf("| %s | %d | %d | %d | %.0f | %v |\n", id, a.n, a.ok, a.integ, a.lat/float64(a.n), a.trunc))
+	}
+	if err := os.WriteFile(path, []byte(sb.String()), 0o644); err != nil {
+		log.Printf("summary: %v", err)
 	}
 }

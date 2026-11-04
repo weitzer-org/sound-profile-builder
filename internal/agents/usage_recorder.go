@@ -39,6 +39,16 @@ type UsageRecord struct {
 	// Model (which fallback-chain member was attempted), zero tokens/cost.
 	Success   bool   `json:"success"`
 	ErrorKind string `json:"errorKind,omitempty"`
+
+	// ServedModel is the API-reported GenerateContentResponse.ModelVersion and FinishReason the
+	// candidate's finish reason; both empty when no response came back (or for openllm).
+	ServedModel  string `json:"servedModel,omitempty"`
+	FinishReason string `json:"finishReason,omitempty"`
+
+	// CostUnknown is true when the model has no entry in geminiPriceTable, so CostUSD=0 means
+	// "not priced", not "free". Aggregations must not add these calls into a dollar total
+	// without saying so.
+	CostUnknown bool `json:"costUnknown,omitempty"`
 }
 
 // geminiPriceTable is USD per 1,000,000 tokens. Mirrors the pricing table
@@ -56,9 +66,17 @@ var geminiPriceTable = map[string]struct{ input, output float64 }{
 	"gemini-2.5-pro":         {input: 1.25, output: 10.00},
 }
 
+// Models deliberately NOT in the table (no official price published as of
+// 2026-11-04, so inventing one would be worse than admitting it): gemini-4-argon,
+// gemini-3.8-flash, gemini-pro-latest, gemini-3.5-flash-lite. Their calls record
+// CostUnknown=true instead of a made-up figure. Third-party sites quote $0.75/$3.75 per M
+// for 3.8 Flash (introductory); that is unverified, so it is NOT used here. Add a row only
+// from Google's pricing page. job_tracker's internal/scoring/pricing.go needs no change until
+// a row is added here (nothing was added in this pass).
+//
 // computeCostUSD returns 0 for an unknown/openllm model rather than
 // throwing — a signal to add the model to the table, not "this call was
-// free." Thinking tokens are billed at the output rate, matching Google's
+// free." (see isPriceKnown / UsageRecord.CostUnknown for telling the two apart). Thinking tokens are billed at the output rate, matching Google's
 // documented behavior (same convention job_tracker's CostUSD uses).
 func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int32) float64 {
 	price, ok := geminiPriceTable[model]
@@ -68,6 +86,12 @@ func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int3
 	const perM = 1_000_000.0
 	billedOutput := float64(outputTokens) + float64(thinkingTokens)
 	return float64(inputTokens)*price.input/perM + billedOutput*price.output/perM
+}
+
+// isPriceKnown reports whether model has a geminiPriceTable entry.
+func isPriceKnown(model string) bool {
+	_, ok := geminiPriceTable[model]
+	return ok
 }
 
 // classifyError gives a coarse, stable label for a failed call so usage
@@ -139,6 +163,10 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
 		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.OutputTokens, rec.ThinkingTokens)
 	}
+	rec.ServedModel = responseServedModel(resp)
+	rec.FinishReason = responseFinishReason(resp)
+	rec.CostUnknown = !isPriceKnown(model)
+	o.Usage.appendCall(NewCallRecord(agentRole, model, latencyMs, resp, err))
 	recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, rec)
 }
 

@@ -168,7 +168,10 @@ type TokenUsage struct {
 	ModelsUsed     map[string]int
 	PerAgent       map[string]*AgentUsage
 	TotalLatencyMs int64
-	mu             sync.Mutex
+	// Calls is every Gemini attempt (incl. failed/truncated/fallback ones) with the
+	// API-reported served model and finish reason. See CallRecord.
+	Calls []CallRecord
+	mu    sync.Mutex
 }
 
 // recordAgentUsage accumulates one agent call's token/latency data under agentRole.
@@ -775,7 +778,13 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 }
 
 // getFallbackChain generates a progressive chronological backup pathway list for standard model components
+//
+// With EVAL_NO_FALLBACK=true (eval tooling only, see EvalNoFallbackEnv) it returns nil for
+// every model, so a failing candidate fails visibly instead of being scored on a fallback.
 func getFallbackChain(primaryModel string) []string {
+	if evalNoFallback() {
+		return nil
+	}
 	switch primaryModel {
 	case "gemini-3.1-pro-preview":
 		return []string{"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"}
@@ -1023,7 +1032,9 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 		// request against the same model with grounding dropped recovers a real (if
 		// ungrounded) response instead of burning the rest of the fallback chain on a
 		// deterministic error every one of those calls would repeat.
-		if len(genConfig.Tools) > 0 && strings.Contains(strings.ToLower(err.Error()), "tool use with a response mime type") {
+		// Skipped under EVAL_NO_FALLBACK: dropping grounding silently turns a failed
+		// "schema + tools" capability into an apparent success on a weaker request.
+		if !evalNoFallback() && len(genConfig.Tools) > 0 && strings.Contains(strings.ToLower(err.Error()), "tool use with a response mime type") {
 			// Record the original grounded failure before resp/err/attemptLatencyMs
 			// below get overwritten by the degraded retry -- otherwise this attempt
 			// (a real, billed API call) never reaches usage accounting at all.
