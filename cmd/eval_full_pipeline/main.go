@@ -160,7 +160,7 @@ func main() {
 				log.Printf(" ❌ Failed pipeline run: %v", err)
 				runResult.Error = err.Error()
 			} else {
-				log.Printf("  Success in %.2fs | Input Tokens: %d, Output Tokens: %d", duration, tokenUsage.InputTokens, tokenUsage.OutputTokens)
+				log.Printf("  Success in %.2fs | Input Tokens: %d (cached %d), Output Tokens: %d", duration, tokenUsage.InputTokens, tokenUsage.CachedInputTokens, tokenUsage.OutputTokens)
 				runResult.InputTokens = tokenUsage.InputTokens
 				runResult.OutputTokens = tokenUsage.OutputTokens
 
