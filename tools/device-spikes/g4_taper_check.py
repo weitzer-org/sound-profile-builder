@@ -59,7 +59,11 @@ def main() -> int:
     ap.add_argument("--slot", required=True, help="the slot G3 saved the test preset into")
     ap.add_argument("--folder-key", default=sc.SETLIST)
     ap.add_argument("--no-prompt", action="store_true", help="write and read back only; skip the screen readings")
+    ap.add_argument("--hold", type=int, default=0, metavar="SECONDS",
+                    help="photo mode: after each write, ring the bell and wait SECONDS (no typing) so you can photograph the unit; implies --no-prompt")
     args = ap.parse_args()
+    if args.hold:
+        args.no_prompt = True
 
     mcp = sc.load_qc_mcp(args.qc_mcp, allow_unpinned=args.allow_unpinned)
     sc.banner("G4: taper and symbolic-bound constants  (live edits only, never saves)")
@@ -73,6 +77,8 @@ def main() -> int:
 
         rows = []
         quit_all = False
+        total = sum(len(c[7]) for c in CASES)
+        step = 0
         for label, col, idx, vmin, vmax, skew, unit, wires, tol in CASES:
             if quit_all:
                 break
@@ -91,6 +97,12 @@ def main() -> int:
                        "predicted_taper": round(pred, 4), "predicted_linear": round(linear, 4), "screen": None}
                 sc.say(f"    wire {wire:<5}  read-back {sc.fmt_num(got)}   "
                        f"taper predicts {pred:.2f} {unit}   (linear would be {linear:.2f})")
+                step += 1
+                if args.hold:
+                    row["step"] = step
+                    row["held_at"] = time.strftime("%H:%M:%S")
+                    sc.say(f"      \a>>> PHOTO {step}/{total}: {label}, wire {wire}. Holding {args.hold}s.")
+                    time.sleep(args.hold)
                 if not args.no_prompt:
                     raw = input(f"      what does the unit show? (number, 's' skip, 'q' stop) > ")
                     if raw.strip().lower() == "q":

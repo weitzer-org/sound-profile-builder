@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 54 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 55 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -139,7 +139,7 @@ Select the G3 test preset on the unit, then:
 & $PY "$S\g4_taper_check.py" --slot 24H --firmware 4.1.0
 ```
 
-It writes known wire values to three parameters on the live buffer and asks what the unit's screen shows for each (9 readings). Tap the block on the unit first so its parameter is visible. Afterwards, select another preset **without saving**.
+It writes known wire values to three parameters on the live buffer and asks what the unit's screen shows for each (9 readings). **Photo mode:** add `--hold 20` and it asks nothing; it sets each value, rings the terminal bell, prints `PHOTO n/9`, and waits 20 seconds so you can photograph the unit, then moves on. Tap the block on the unit first so its parameter is visible. Afterwards, select another preset **without saving**.
 
 ### G6: scenes (after G3)
 
@@ -149,7 +149,7 @@ Select the G3 test preset on the unit, then:
 & $PY "$S\g6_scenes.py" --slot 24H --firmware 4.1.0
 ```
 
-It makes Myth Drive GAIN and the Spring bypass scene-varying, switches Scene A, B, A, records how the device reports them, and asks 9 yes/no questions about the screen. Afterwards, select another preset **without saving**.
+It makes Myth Drive GAIN and the Spring bypass scene-varying, switches Scene A, B, A, records how the device reports them, and asks 9 yes/no questions about the screen. **Photo mode:** `--hold 20` asks nothing and waits 20 seconds at each of the 3 scene stops (`PHOTO n/3`). Afterwards, select another preset **without saving**.
 
 ## If something goes wrong
 

@@ -527,6 +527,15 @@ class G4G6Tests(FakeDeviceCase):
         self.assertNotIn("UNEXPECTED ERROR", out)
         self.assertEqual(data["wire_roundtrip_failures"], 9)
 
+    def test_g4_and_g6_hold_mode_needs_no_input(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        code, out, data = self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", "--hold", "5"], qc, stdin=[])
+        self.assertEqual(out.count(">>> PHOTO"), 9, out)
+        self.assertTrue(all("step" in r for r in data["rows"]))
+        qc2 = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        code, out, data = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--hold", "5"], qc2, stdin=[])
+        self.assertEqual(out.count(">>> PHOTO"), 3, out)
+
     def test_g4_detects_linear_unit(self):
         qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
         readings = []

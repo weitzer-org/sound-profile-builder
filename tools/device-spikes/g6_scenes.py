@@ -78,7 +78,11 @@ def main() -> int:
     ap.add_argument("--slot", required=True, help="the slot G3 saved the test preset into")
     ap.add_argument("--folder-key", default=sc.SETLIST)
     ap.add_argument("--no-prompt", action="store_true", help="skip the questions about the unit's screen")
+    ap.add_argument("--hold", type=int, default=0, metavar="SECONDS",
+                    help="photo mode: at each scene, ring the bell and wait SECONDS (no typing) so you can photograph the unit; implies --no-prompt")
     args = ap.parse_args()
+    if args.hold:
+        args.no_prompt = True
 
     mcp = sc.load_qc_mcp(args.qc_mcp, allow_unpinned=args.allow_unpinned)
     import qc_mcp.preset as qc_preset  # after load_qc_mcp has put src/ on sys.path
@@ -109,6 +113,10 @@ def main() -> int:
             sc.say(f"  device confirms scene: {s['device_confirms']}")
             sc.say(f"  Myth Drive GAIN as read back: {s['gain']}  -> fits expectation: {s['gain_fits_expectation']}")
             sc.say(f"  bypass section as read back: {s['bypass_raw']}")
+            if args.hold:
+                s["held_at"] = time.strftime("%H:%M:%S")
+                sc.say(f"  \a>>> PHOTO {len(stops) + 1}/3: Scene {name} (Myth Drive GAIN and the Spring bypass). Holding {args.hold}s.")
+                time.sleep(args.hold)
             if not args.no_prompt:
                 exp_gain = "LOW (about 2 on the 0-10 dial)" if scene == 0 else "HIGH (about 8)"
                 exp_byp = "ON (active)" if scene == 0 else "BYPASSED"
