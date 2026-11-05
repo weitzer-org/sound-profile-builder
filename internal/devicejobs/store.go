@@ -131,12 +131,22 @@ func (s *Store) Enqueue(ctx context.Context, j *Job) error {
 	return s.client.WriteFile(ctx, s.bucket, PendingKey(j.JobID), env)
 }
 
-// PendingJobs returns every verifiable pending job. Objects that fail
-// verification are skipped (the agent deletes them).
+// maxPendingScan bounds how many pending objects one call reads, so a flood
+// of junk objects (written with the agent's bucket token) can't make every
+// tool call download them all. QC-2 itself never queues more than
+// MaxPendingJobs.
+const maxPendingScan = 4 * MaxPendingJobs
+
+// PendingJobs returns the verifiable pending jobs among the first
+// maxPendingScan objects. Objects that fail verification are skipped (the
+// agent deletes them).
 func (s *Store) PendingJobs(ctx context.Context) ([]*Job, error) {
 	names, err := s.client.ListFiles(ctx, s.bucket, PendingPrefix)
 	if err != nil {
 		return nil, err
+	}
+	if len(names) > maxPendingScan {
+		names = names[:maxPendingScan]
 	}
 	var out []*Job
 	for _, n := range names {
@@ -291,6 +301,11 @@ func (s *Store) openResult(data []byte, id string) (*Result, bool) {
 		return nil, false
 	}
 	if r.V != PayloadVersion || r.Type != TypeResult || r.JobID != id || r.Bucket != s.bucket {
+		return nil, false
+	}
+	switch r.Kind { // shown to the model: only the contract's values
+	case KindPushPreset, KindListSlots, KindReadPreset:
+	default:
 		return nil, false
 	}
 	switch r.Status {

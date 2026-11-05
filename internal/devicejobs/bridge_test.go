@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -502,5 +503,29 @@ func TestSlotAllowed(t *testing.T) {
 		if got := devicejobs.SlotAllowed(c.slot, c.ranges); got != c.want {
 			t.Errorf("SlotAllowed(%s, %v) = %v", c.slot, c.ranges, got)
 		}
+	}
+}
+
+func TestResultKindAndPendingFlood(t *testing.T) {
+	ctx := context.Background()
+	r := newRig(t)
+	r.online(t)
+	// A correctly signed result whose kind is not a contract value is unverified.
+	id := "11111111-2222-4333-8444-555555555555"
+	kr, _ := devicejobs.NewKeyring(keyA, "")
+	p, _ := json.Marshal(devicejobs.Result{V: 1, Type: devicejobs.TypeResult, JobID: id, Bucket: jobsBucket,
+		Kind: "x\n# injected <img>", Status: devicejobs.StatusSucceeded})
+	env, _ := kr.Seal(devicejobs.TagResult, p)
+	_ = r.client.WriteFile(ctx, jobsBucket, devicejobs.DoneKey(id), env)
+	if v, _ := r.bridge.Job(ctx, id); v.State != devicejobs.StateUnverified || v.Result != nil {
+		t.Fatalf("bad kind: %+v", v)
+	}
+	// A flood of junk pending objects is scanned only up to a bound, and does
+	// not block real work.
+	for i := 0; i < 500; i++ {
+		_ = r.client.WriteFile(ctx, jobsBucket, devicejobs.PendingKey(fmt.Sprintf("00000000-0000-4000-8000-%012d", i)), []byte("junk"))
+	}
+	if _, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots); err != nil {
+		t.Fatalf("queue with junk pending objects: %v", err)
 	}
 }
