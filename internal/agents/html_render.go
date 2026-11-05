@@ -105,11 +105,11 @@ func renderPresetHTML(blocks []storage.EffectBlock) string {
 				valA += " " + p.Unit
 				valB += " " + p.Unit
 			}
-			classB := "param"
+			classA, classB := paramClass(p.Name, valA), paramClass(p.Name, valB)
 			if valB != valA {
-				classB = "param diff" // Scene B differs from Scene A
+				classB += " diff" // Scene B differs from Scene A
 			}
-			sceneA = append(sceneA, "<span class='param'>"+html.EscapeString(p.Name+": "+valA)+"</span>")
+			sceneA = append(sceneA, "<span class='"+classA+"'>"+html.EscapeString(p.Name+": "+valA)+"</span>")
 			sceneB = append(sceneB, "<span class='"+classB+"'>"+html.EscapeString(p.Name+": "+valB)+"</span>")
 		}
 
@@ -157,4 +157,17 @@ func renderAllGuitarsHTML(guitars map[string][]storage.EffectBlock) map[string]s
 		out[name] = renderPresetHTML(guitars[name])
 	}
 	return out
+}
+
+// longParamText is the length of "NAME: value" above which a parameter line may wrap.
+const longParamText = 32
+
+// paramClass is the class of one "NAME: value" line in the read-only table: "param" keeps a
+// short line on one line (so "OUTPUT VOLUME: 0 dB" never splits into "0" / "dB"), and
+// "param long" lets a long text value wrap instead of forcing the scene columns wide.
+func paramClass(name, value string) string {
+	if len(name)+len(": ")+len(value) > longParamText {
+		return "param long"
+	}
+	return "param"
 }

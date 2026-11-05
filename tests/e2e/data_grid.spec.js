@@ -74,13 +74,13 @@ test.describe('data grid, desktop', () => {
     const delay = rowFor(page, 'Analog Delay');
     await expect(delay.locator('.param.diff')).toHaveText(['MIX: 30 %', 'DELAY TIME: 380 ms', 'FEEDBACK: 30 %']);
     await expect(delay).not.toContainText('WIDTH: 60');
-    await ws(page).screenshot({ path: path.join(shots, '01-v5-view-telecaster.png') });
+    await ws(page).screenshot({ path: path.join(shots, '01-v6-view-telecaster.png') });
 
     // 2. The second guitar's tab.
     await ws(page).locator('button:has-text("Gibson ES-339 Humbuckers")').first().click();
     await page.waitForTimeout(400);
     await expect(rowFor(page, 'Green 808')).toContainText('OVERDRIVE: 2');
-    await ws(page).screenshot({ path: path.join(shots, '02-v5-view-gibson.png') });
+    await ws(page).screenshot({ path: path.join(shots, '02-v6-view-gibson.png') });
 
     // 3. Edit: every device control, the device's ranges and positions, untouched ones tagged.
     await showEdit(page);
@@ -90,7 +90,7 @@ test.describe('data grid, desktop', () => {
     const trails = ws(page).locator(`.effect-block:has-text("Analog Delay") select[hx-vals*='"param_name":"TRAILS"']`).first();
     await expect(trails).toHaveValue('On');
     await expect(ws(page).locator('.param-default-tag').first()).toBeVisible();
-    await ws(page).screenshot({ path: path.join(shots, '03-v5-edit.png') });
+    await ws(page).screenshot({ path: path.join(shots, '03-v6-edit.png') });
 
     // 4. Change a control that was at its default (the delay's WIDTH, 60 %) and see it
     //    become a row in View and leave the "At device default" line.

@@ -71,9 +71,13 @@ pids+=($!)
 for _ in $(seq 60); do curl -s -o /dev/null "http://127.0.0.1:$PORT/login" && break; sleep 0.25; done
 
 if [ "${E2E_SEED:-}" = "1" ]; then
-  echo "== seed testdata/e2e_presets"
-  (cd "$ROOT" && STORAGE_BACKEND=s3 S3_ENDPOINT="http://127.0.0.1:$S3_PORT" S3_BUCKET="$BUCKET" \
-    S3_ACCESS_KEY_ID=test S3_SECRET_ACCESS_KEY=test S3_REGION=us-east-1 go run ./cmd/e2e_seed)
+  # E2E_SEED_EXTRA: more fixture directories (same format as testdata/e2e_presets), e.g. real
+  # eval outputs converted for eval_presets.spec.js.
+  for dir in testdata/e2e_presets ${E2E_SEED_EXTRA:-}; do
+    echo "== seed $dir"
+    (cd "$ROOT" && STORAGE_BACKEND=s3 S3_ENDPOINT="http://127.0.0.1:$S3_PORT" S3_BUCKET="$BUCKET" \
+      S3_ACCESS_KEY_ID=test S3_SECRET_ACCESS_KEY=test S3_REGION=us-east-1 go run ./cmd/e2e_seed "$dir")
+  done
 fi
 
 echo "== playwright (specs copied to $WORK/specs)"

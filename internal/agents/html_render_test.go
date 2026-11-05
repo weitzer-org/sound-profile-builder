@@ -125,3 +125,17 @@ func TestRenderPresetHTML_DefaultsLineAndSceneDiff(t *testing.T) {
 		t.Error("a control at its default should not be listed as a row")
 	}
 }
+
+// A long text value may wrap (class "long"); a short "NAME: value" stays on one line.
+func TestRenderPresetHTML_LongValuesWrap(t *testing.T) {
+	out := renderPresetHTML([]storage.EffectBlock{{Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+		{Name: "Mic 1", Type: "dropdown", Value: "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"},
+		{Name: "OUTPUT VOLUME", Type: "slider", Value: "-1.5", Unit: "dB"},
+	}}})
+	if !strings.Contains(out, "<span class='param long'>Mic 1: Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)</span>") {
+		t.Errorf("long value should carry the long class:\n%s", out)
+	}
+	if !strings.Contains(out, "<span class='param'>OUTPUT VOLUME: -1.5 dB</span>") {
+		t.Errorf("short value should stay a plain param:\n%s", out)
+	}
+}
