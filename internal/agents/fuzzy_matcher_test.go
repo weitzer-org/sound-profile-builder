@@ -83,7 +83,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	_ = GetValidNativeBlocks()
 
 	validBlocks := map[string]bool{
-		"US Twin Vibrato": true,
+		"US TWN Vibrato": true,
 		"UK C30 TopBoost": true,
 		"Parametric-3":    true,
 	}
@@ -92,8 +92,8 @@ func TestSnapToClosestBlock(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"US Twin Vibrato", "US Twin Vibrato"},
-		{"us twin vibrato", "US Twin Vibrato"}, // case insensitive match
+		{"US TWN Vibrato", "US TWN Vibrato"},
+		{"us twn vibrato", "US TWN Vibrato"}, // case insensitive match
 		{"US Twin V", "US Twin V"},             // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
 		{"UK C30 TopBoost", "UK C30 TopBoost"},
 		{"Bypassed", "Bypassed"},
@@ -111,7 +111,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 
 func TestApplyFuzzyCorrection(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US Twin Vibrato": true,
+		"US TWN Vibrato": true,
 		"UK C30 TopBoost": false,
 	}
 
@@ -120,8 +120,8 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 		expected string
 	}{
 		{
-			input:    `<td>Amplifier: US Twin Vibrato</td>`,
-			expected: `<td>Amplifier: US Twin Vibrato (Factory Capture)</td>`, // valid + capture, not in the user's library
+			input:    `<td>Amplifier: US TWN Vibrato</td>`,
+			expected: `<td>Amplifier: US TWN Vibrato (Factory Capture)</td>`, // valid + capture, not in the user's library
 		},
 		{
 			input:    `<td>Cabinet: UK C30 TopBoost</td>`,
@@ -150,8 +150,8 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 			// The model sometimes writes "(Capture)" into the name itself, redundant with
 			// the suffix this file adds programmatically. A real, valid name pre-annotated
 			// this way must still match its bare dictionary entry, not get flagged.
-			input:    `<td>Amplifier: US Twin Vibrato (Capture)</td>`,
-			expected: `<td>Amplifier: US Twin Vibrato (Factory Capture)</td>`,
+			input:    `<td>Amplifier: US TWN Vibrato (Capture)</td>`,
+			expected: `<td>Amplifier: US TWN Vibrato (Factory Capture)</td>`,
 		},
 		{
 			input:    `<td>Utility: Input & Noise Gate</td>`,
@@ -272,7 +272,7 @@ func TestBuildEffectiveValidBlocks(t *testing.T) {
 
 func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US Twin Vibrato":            true,
+		"US TWN Vibrato":            true,
 		"FNDR TWDLX IN Edge BAL CAB": true, // real user_captures.json entry
 		"Boss Blues Driver Waza":     true, // real user_captures.json entry, block_type "drive"
 	}
@@ -280,7 +280,7 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	sp := &storage.StructuredPreset{
 		Guitars: map[string][]storage.EffectBlock{
 			"Guitar 1": {
-				{ID: "1", Type: "Amplifier", Model: "US Twin Vibrato"},
+				{ID: "1", Type: "Amplifier", Model: "US TWN Vibrato"},
 				{ID: "2", Type: "Amplifier", Model: "57 Tweed Champ Bright"},
 				{ID: "3", Type: "Utility", Model: "Bypassed"},
 				{ID: "4", Type: "Reverb", Model: "Spring Reverb"},
@@ -294,7 +294,7 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	FlagUnverifiedStructuredBlocks(sp, validBlocks)
 
 	blocks := sp.Guitars["Guitar 1"]
-	if blocks[0].Model != "US Twin Vibrato (Factory Capture)" {
+	if blocks[0].Model != "US TWN Vibrato (Factory Capture)" {
 		t.Errorf("expected valid factory capture to be labeled, got %q", blocks[0].Model)
 	}
 	if blocks[1].Model != FlagUnverifiedBlock("57 Tweed Champ Bright") {

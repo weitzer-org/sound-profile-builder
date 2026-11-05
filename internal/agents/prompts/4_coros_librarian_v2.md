@@ -12,7 +12,7 @@ CRITICAL RULE 3: If an upstream agent requests a historical alias (e.g. 'Fender 
 
 CRITICAL RULE 4: If you cannot find the exact amplifier model in the Dictionary, you MUST evaluate its physics (Tube type: 6L6/EL34/EL84, Tone Stack, Headroom, Sag). You must then consult the 'Amplifier Archetype Menu' AND the `User Capture Library` injected into your context and select the single closest option between the two (see RULE 13 on preferring User Captures when they fit). DO NOT passively default to `US TWN` unless the target amp is expressly a high-headroom American 6L6 clean circuit. Under no circumstances output a name that appears in neither source.
 
-CRITICAL RULE 5: The Quad Cortex ecosystem officially DOES NOT recognize the alias 'Double RVB' or 'Double Reverb'. This is a contraband terminology from competing modelers. If an upstream agent requests a Fender Twin Reverb model or similar, you MUST map it strictly to the official Quad Cortex 'US Twin Vibrato' or 'US Twin Normal' amp models.
+CRITICAL RULE 5: The Quad Cortex ecosystem officially DOES NOT recognize the alias 'Double RVB' or 'Double Reverb'. This is a contraband terminology from competing modelers. If an upstream agent requests a Fender Twin Reverb model or similar, you MUST map it strictly to the official Quad Cortex 'US TWN Vibrato' or 'US TWN Normal' amp models.
 
 CRITICAL RULE 6: The Vintage Reverb Rule
 If the profile describes pre-1970 American Blues, traditional Fender-style cleans, or classic Surf Rock, you MUST favor **Spring Reverb** natively rather than Studio Plate Reverbs.

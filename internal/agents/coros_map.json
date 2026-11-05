@@ -104,7 +104,7 @@
     "tonal_archetype": "Other / Unique"
   },
   "Fender 65 Twin Reverb": {
-    "coros_equivalent": "US Twin Vibrato",
+    "coros_equivalent": "US TWN Vibrato",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "American Clean & Tweed"
@@ -222,7 +222,7 @@
     "tonal_archetype": "High-Gain Modern"
   },
   "Soldano SLO-100": {
-    "coros_equivalent": "Solo 100 Lead",
+    "coros_equivalent": "Soldano SLO-100®",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "High-Gain Modern",
@@ -522,12 +522,12 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B w/ Vintage 30": {
-    "coros_equivalent": "412 Brit 60B V30 '95",
+    "coros_equivalent": "412 Brit 60B V30 95",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 1960TV w/ G12M25": {
-    "coros_equivalent": "412 Brit TV GB75Hz '69",
+    "coros_equivalent": "412 Brit TV GB75Hz 69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -537,17 +537,17 @@
     "confidence_score": 1.0
   },
   "Mesa Boogie Standard OS V30": {
-    "coros_equivalent": "412 CA Stand OS A V30 '01",
+    "coros_equivalent": "412 CA Stand OS A V30 01",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Boogie Traditional V30": {
-    "coros_equivalent": "412 CA Trad A V30 '92",
+    "coros_equivalent": "412 CA Trad A V30 92",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Rectifier 2x12 V30": {
-    "coros_equivalent": "212 CA Recto V30 '98",
+    "coros_equivalent": "212 CA Recto V30 98",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -572,7 +572,7 @@
     "confidence_score": 1.0
   },
   "Vox AC30 w/ Alnico Silver Bell": {
-    "coros_equivalent": "212 UK C30 '65",
+    "coros_equivalent": "212 UK C30 65",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -587,7 +587,7 @@
     "confidence_score": 1.0
   },
   "Roland JC-120": {
-    "coros_equivalent": "212 Rols Jazz '87",
+    "coros_equivalent": "212 Rols Jazz 87",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -597,17 +597,17 @@
     "confidence_score": 1.0
   },
   "Two Rock Open Back w/ EVM12L": {
-    "coros_equivalent": "212 Too Rock EV",
+    "coros_equivalent": "212 Too Rock EV Vintage 79",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Diezel Front Loaded w/ V30": {
-    "coros_equivalent": "412 D-Cell Front V30 '04",
+    "coros_equivalent": "412 D-Cell Front V30 04",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Zilla Fatboy 2x12 w/ V30": {
-    "coros_equivalent": "212 Zila Fatboy V30 '02",
+    "coros_equivalent": "212 Zila Fatboy V30 02",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -676,7 +676,7 @@
     "confidence_score": 1.0
   },
   "Xotic RC Booster": {
-    "coros_equivalent": "Facial Fuzz",
+    "coros_equivalent": "Exotic Z Boost",
     "type": "fx",
     "confidence_score": 1.0
   },
@@ -883,7 +883,7 @@
     "confidence_score": 1.0
   },
   "MXR UniVibe": {
-    "coros_equivalent": "Exotic",
+    "coros_equivalent": "MX Vibe",
     "type": "mod",
     "confidence_score": 1.0
   },
@@ -1151,7 +1151,7 @@
     "confidence_score": 1.0
   },
   "Vox AC15 with Celestion Alnico Blue drivers": {
-    "coros_equivalent": "112 US DLX Black C12K 00s",
+    "coros_equivalent": "112 UK C15 Blue",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1166,7 +1166,7 @@
     "confidence_score": 1.0
   },
   "Zilla Mini Modern with Celestion G12H150 Redback drivers": {
-    "coros_equivalent": "112 Zila MiniMod RB '17",
+    "coros_equivalent": "112 Zila MiniMod RB 17",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1176,17 +1176,17 @@
     "confidence_score": 1.0
   },
   "Darkglass DG212N with custom Eminence neodymium drivers": {
-    "coros_equivalent": "210 Darkglass® Neo",
+    "coros_equivalent": "212 Douglas Neodymium",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Fender Tremolux with Oxford Alnico drivers": {
-    "coros_equivalent": "210 US TRMLX Oxf '63",
+    "coros_equivalent": "210 US TRMLX Oxf 63",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Darkglass D210C with custom Eminence ceramic drivers": {
-    "coros_equivalent": "210C Darkglass®",
+    "coros_equivalent": "210 Douglas Ceramic",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1196,7 +1196,7 @@
     "confidence_score": 1.0
   },
   "Mesa Rectifier with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "212 CA Recto V30 '98",
+    "coros_equivalent": "212 CA Recto V30 98",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1206,7 +1206,7 @@
     "confidence_score": 1.0
   },
   "Two Rock Open Back with ElectroVoice EVM12L Speakers": {
-    "coros_equivalent": "212 Too Rock EV",
+    "coros_equivalent": "212 Too Rock EV Vintage 79",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1221,12 +1221,12 @@
     "confidence_score": 1.0
   },
   "VOX AC30 Top Boost with Celestion Alnico “Silver Bell” drivers": {
-    "coros_equivalent": "212 UK C30 '65",
+    "coros_equivalent": "212 UK C30 65",
     "type": "cab",
     "confidence_score": 1.0
   },
   "VOX AC30 with Celestion Pre-Rola Greenback Pulsonic drivers": {
-    "coros_equivalent": "212 UK C30 GB '69",
+    "coros_equivalent": "212 UK C30 GB 69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1256,12 +1256,12 @@
     "confidence_score": 1.0
   },
   "Zilla Cab with Celestion Creamback G12H-75 drivers": {
-    "coros_equivalent": "212 Zila CB '16",
+    "coros_equivalent": "212 Zila CB 16",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Zilla Fatboy 2x12 2002 with Celestion UK Vintage 30": {
-    "coros_equivalent": "212 Zila Fatboy V30 '02",
+    "coros_equivalent": "212 Zila Fatboy V30 02",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1276,7 +1276,7 @@
     "confidence_score": 1.0
   },
   "Zilla Open with Celestion Alnico Gold drivers": {
-    "coros_equivalent": "212 Zila Open Gold '19",
+    "coros_equivalent": "212 Zila Open Gold 19",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1286,7 +1286,7 @@
     "confidence_score": 1.0
   },
   "Fender Bassman with Jensen P10Q drivers": {
-    "coros_equivalent": "410 US Basslad P10Q '16",
+    "coros_equivalent": "410 US Basslad P10Q 16",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1306,7 +1306,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1935A with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit 35A GB55Hz '75",
+    "coros_equivalent": "412 Brit 35A GB55Hz 75",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1321,7 +1321,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1960A with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit 60A GB75Hz '89",
+    "coros_equivalent": "412 Brit 60A GB75Hz 89",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1331,7 +1331,7 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B with Celestion Pulsonic Greenback drivers": {
-    "coros_equivalent": "412 Brit 60B GB '71",
+    "coros_equivalent": "412 Brit 60B GB 71",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1341,17 +1341,17 @@
     "confidence_score": 1.0
   },
   "Marshall 1960B with Celestion Marshall Vintage 30 drivers": {
-    "coros_equivalent": "412 Brit 60B V30 '95",
+    "coros_equivalent": "412 Brit 60B V30 95",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 2551B with Celestion drivers": {
-    "coros_equivalent": "412 Brit Silver B 70w '87",
+    "coros_equivalent": "412 Brit Silver B 70w 87",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Marshall 1960TV with Celestion G12M25 drivers": {
-    "coros_equivalent": "412 Brit TV GB75Hz '69",
+    "coros_equivalent": "412 Brit TV GB75Hz 69",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1366,12 +1366,12 @@
     "confidence_score": 1.0
   },
   "Mesa Standard OS Angled with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 CA Stand OS A V30 '01",
+    "coros_equivalent": "412 CA Stand OS A V30 01",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Oversize Angle 2003 with Celestion UK Vintage 30": {
-    "coros_equivalent": "412 CA Stand OS A V30 '03",
+    "coros_equivalent": "412 CA Stand OS A V30 03",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1381,12 +1381,12 @@
     "confidence_score": 1.0
   },
   "Mesa Traditional Angled with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 CA Trad A V30 '92",
+    "coros_equivalent": "412 CA Trad A V30 92",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Mesa Traditional Straight with Celestion G12H30 drivers": {
-    "coros_equivalent": "412 CA Trad S H30 '15",
+    "coros_equivalent": "412 CA Trad S H30 15",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1401,7 +1401,7 @@
     "confidence_score": 1.0
   },
   "Diezel Front Loaded with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 D-Cell Front V30 '04",
+    "coros_equivalent": "412 D-Cell Front V30 04",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1416,7 +1416,7 @@
     "confidence_score": 1.0
   },
   "Orange PPC412 with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 Range PPC V30 '03",
+    "coros_equivalent": "412 Range PPC V30 03",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1431,7 +1431,7 @@
     "confidence_score": 1.0
   },
   "Zilla Custom with Celestion Vintage 30 drivers": {
-    "coros_equivalent": "412 Zila Cust V30 '12 V2",
+    "coros_equivalent": "412 Zila Cust V30 12 V2",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1451,22 +1451,22 @@
     "confidence_score": 1.0
   },
   "Matchless Amplifiers DC30 Sig A": {
-    "coros_equivalent": "Match D30 Sig A",
+    "coros_equivalent": "212 Match D30 Sig A",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Matchless Amplifiers DC30 Sig B": {
-    "coros_equivalent": "Match D30 Sig B",
+    "coros_equivalent": "212 Match D30 Sig B",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Matchless Amplifiers Chieftain Sig 02": {
-    "coros_equivalent": "Match Jefe Sig 02",
+    "coros_equivalent": "212 Match Jefe Sig 02",
     "type": "cab",
     "confidence_score": 1.0
   },
   "Matchless Amplifiers Chieftain V30 02": {
-    "coros_equivalent": "Match Jefe V30 02",
+    "coros_equivalent": "212 Match Jefe V30 02",
     "type": "cab",
     "confidence_score": 1.0
   },
@@ -1588,7 +1588,7 @@
     "confidence_score": 1.0
   },
   "A free and enhanced version of the Overlord Synth from Archetype: Rabea X": {
-    "coros_equivalent": "Mono Synth",
+    "coros_equivalent": "Overlord Synth",
     "type": "fx",
     "confidence_score": 1.0
   },
@@ -2386,19 +2386,19 @@
     "tonal_archetype": "British Crunch"
   },
   "Cory Wong Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 1 (M) & (ST)",
+    "coros_equivalent": "Cory Wong Cab 1 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 2 (M) & (ST)",
+    "coros_equivalent": "Cory Wong Cab 2 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 3 (M) & (ST)",
+    "coros_equivalent": "Cory Wong Cab 3 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
@@ -2457,25 +2457,25 @@
     "required_plugin": "Cory Wong"
   },
   "Cory Wong The Tuber": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Cory Wong The Tuber",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong The Wash": {
-    "coros_equivalent": "Studio Plate 70 (ST)",
+    "coros_equivalent": "Cory Wong The Wash",
     "type": "reverb",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong The Wash Shimmer": {
-    "coros_equivalent": "Blossom (ST)",
+    "coros_equivalent": "Cory Wong The Wash Shimmer",
     "type": "reverb",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong Wah": {
-    "coros_equivalent": "Crying Wah",
+    "coros_equivalent": "Cory Wong Wah",
     "type": "wah",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
@@ -2489,63 +2489,63 @@
     "required_plugin": "Nameless"
   },
   "Gojira Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Gojira Cab 1 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Gojira Cab 2 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Gojira Cab 3 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira CHR": {
-    "coros_equivalent": "Chief CS3",
+    "coros_equivalent": "Gojira CHR",
     "type": "modulation",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira CLN": {
-    "coros_equivalent": "Chief CS3",
+    "coros_equivalent": "Gojira CLN",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
     "required_plugin": "Gojira"
   },
   "Gojira DLY (ST)": {
-    "coros_equivalent": "Dual (ST)",
+    "coros_equivalent": "Gojira DLY",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira DRT": {
-    "coros_equivalent": "Chief DS1",
+    "coros_equivalent": "Gojira DRT",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira HOT": {
-    "coros_equivalent": "Chief MT",
+    "coros_equivalent": "Gojira HOT",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
     "required_plugin": "Gojira"
   },
   "Gojira OCT": {
-    "coros_equivalent": "Chief OC2",
+    "coros_equivalent": "Gojira OCT",
     "type": "pitch",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira OD": {
-    "coros_equivalent": "Chief OD1",
+    "coros_equivalent": "Gojira OD",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
@@ -2559,38 +2559,38 @@
     "required_plugin": "Gojira"
   },
   "Gojira REV": {
-    "coros_equivalent": "Studio Plate 70 (ST)",
+    "coros_equivalent": "Gojira REV",
     "type": "reverb",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira REV Shimmer": {
-    "coros_equivalent": "Rage Booster",
+    "coros_equivalent": "Gojira REV Shimmer",
     "type": "reverb",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira RST": {
-    "coros_equivalent": "Chief CS3",
+    "coros_equivalent": "Gojira RST",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
     "required_plugin": "Gojira"
   },
   "Gojira WOW": {
-    "coros_equivalent": "Bubba Wah",
+    "coros_equivalent": "Gojira WOW",
     "type": "pitch",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Nameless Cab (M) & (S)": {
-    "coros_equivalent": "Single (M) Lite",
+    "coros_equivalent": "Nameless Cab",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nameless"
   },
   "Nameless Delay": {
-    "coros_equivalent": "Circular Delay",
+    "coros_equivalent": "Nameless Delay",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Nameless"
@@ -2623,69 +2623,69 @@
     "required_plugin": "Nameless"
   },
   "Nolly Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Nolly Cab 1 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Nolly Cab 2 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Nolly Cab 3 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 4 (M) & (ST)": {
-    "coros_equivalent": "Solid State Comp (ST)",
+    "coros_equivalent": "Nolly Cab 4 (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Clean": {
-    "coros_equivalent": "Brit 900 Clean",
+    "coros_equivalent": "Nolly Clean",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "British Crunch",
     "required_plugin": "Nolly"
   },
   "Nolly Compressor": {
-    "coros_equivalent": "Opto Comp (S/C)",
+    "coros_equivalent": "Nolly Compressor",
     "type": "compressor",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Crunch": {
-    "coros_equivalent": "US Prince",
+    "coros_equivalent": "Nolly Crunch",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
     "required_plugin": "Nolly"
   },
   "Nolly Delay-1 (M)": {
-    "coros_equivalent": "Dual (M)",
+    "coros_equivalent": "Nolly Delay-1 (M)",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Delay-2": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Nolly Delay-2",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Graphic-9": {
-    "coros_equivalent": "Plugin Graphic-9",
+    "coros_equivalent": "Nolly Graphic-9",
     "type": "eq",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Lead": {
-    "coros_equivalent": "PV-505 Lead",
+    "coros_equivalent": "Nolly Lead",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "High-Gain Modern",
@@ -2715,7 +2715,7 @@
     "required_plugin": "Nolly"
   },
   "Nolly Rhythm": {
-    "coros_equivalent": "PV-505 Rhythm",
+    "coros_equivalent": "Nolly Rhythm",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
@@ -2730,25 +2730,25 @@
     "required_plugin": "Parallax"
   },
   "Parallax Cab (M) & (ST)": {
-    "coros_equivalent": "Dual (M) Lite",
+    "coros_equivalent": "Parallax Cab (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Parallax"
   },
   "Plini Cab (M) & (ST)": {
-    "coros_equivalent": "Single (M) Lite",
+    "coros_equivalent": "Plini Cab (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
   },
   "Plini Chorus": {
-    "coros_equivalent": "Dream Chorus",
+    "coros_equivalent": "Plini Chorus",
     "type": "modulation",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
   },
   "Plini Clean": {
-    "coros_equivalent": "Plugin Blend",
+    "coros_equivalent": "Plini Clean",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
@@ -2763,39 +2763,39 @@
     "required_plugin": "Plini"
   },
   "Plini Crunch": {
-    "coros_equivalent": "US Prince",
+    "coros_equivalent": "Plini Crunch",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "Other / Unique",
     "required_plugin": "Plini"
   },
   "Plini Delay (ST)": {
-    "coros_equivalent": "Single (ST)",
+    "coros_equivalent": "Plini Delay",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
   },
   "Plini Drive": {
-    "coros_equivalent": "Myth Drive",
+    "coros_equivalent": "Plini Drive",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
   },
   "Plini Lead": {
-    "coros_equivalent": "PV-505 Lead",
+    "coros_equivalent": "Plini Lead",
     "type": "amp",
     "confidence_score": 1.0,
     "tonal_archetype": "High-Gain Modern",
     "required_plugin": "Plini"
   },
   "Plini Octaver": {
-    "coros_equivalent": "Poly Octaver",
+    "coros_equivalent": "Plini Octaver",
     "type": "pitch",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
   },
   "Plini Pre Delay (M)": {
-    "coros_equivalent": "Single (M)",
+    "coros_equivalent": "Plini Pre Delay (M)",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
@@ -2808,25 +2808,25 @@
     "required_plugin": "Plini"
   },
   "SLO-100 Cab (M) & (ST)": {
-    "coros_equivalent": "Solo 100 Crunch Bright",
+    "coros_equivalent": "SLO-100® Cab (ST)",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
   },
   "SLO-100 Chorus": {
-    "coros_equivalent": "Dream Chorus",
+    "coros_equivalent": "SLO-100® Chorus",
     "type": "modulation",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
   },
   "SLO-100 Compressor": {
-    "coros_equivalent": "",
+    "coros_equivalent": "SLO-100® Compressor",
     "type": "compressor",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
   },
   "SLO-100 Delay": {
-    "coros_equivalent": "",
+    "coros_equivalent": "SLO-100® Delay",
     "type": "delay",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
@@ -2840,13 +2840,13 @@
     "required_plugin": "SLO-100"
   },
   "SLO-100 Overdrive-2": {
-    "coros_equivalent": "",
+    "coros_equivalent": "SLO-100® Overdrive-2",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
   },
   "SLO-100 Reverb": {
-    "coros_equivalent": "",
+    "coros_equivalent": "SLO-100® Reverb",
     "type": "reverb",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"

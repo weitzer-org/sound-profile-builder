@@ -40,9 +40,9 @@ func TestRunMechanicalQualityChecks_MissingStructuredPayload(t *testing.T) {
 }
 
 func TestRunMechanicalQualityChecks_Clean(t *testing.T) {
-	validBlocks := map[string]bool{"US Twin Vibrato": true, "Any Cab": false}
+	validBlocks := map[string]bool{"US TWN Vibrato": true, "Any Cab": false}
 	raw := `{"structured_payload": {"guitars": {"Guitar 1": [
-		{"id": "1", "type": "Amplifier", "model": "US Twin Vibrato", "parameters": [
+		{"id": "1", "type": "Amplifier", "model": "US TWN Vibrato", "parameters": [
 			{"name": "Gain", "type": "slider", "value": "5.0"},
 			{"name": "Bass", "type": "slider", "value": "4.2"}
 		]},
