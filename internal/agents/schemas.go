@@ -124,8 +124,15 @@ func strSchema(desc string) *genai.Schema {
 // docs/eval/gemini-model-upgrade-test-plan.md). Normal rationales are well under 300 characters.
 const acousticianRationaleMaxLen = 400
 
-// boundedStrSchema is a string with a maxLength the model is asked to respect. Whether the API
-// enforces it during decoding (rather than only accepting it) was checked in the 2026-11-05 probe.
+// acousticianPickupRequired are the fields every per-pickup Acoustician object must carry. Without
+// them, models routinely dropped amp_vol_offset (most calls in the 2026-11-05 probe).
+var acousticianPickupRequired = []string{"input_gain_db", "amp_vol_offset", "eq_params", "rationale"}
+
+// boundedStrSchema is a string with a maxLength hint. VERIFIED 2026-11-05 (cmd/probe_agent,
+// eval_results/probe_agent/acoustician_v3_maxlen): the Gemini API ACCEPTS maxLength but does NOT
+// enforce it while decoding -- rationales of 701-1,771 chars came back against a 400 limit and one
+// call still looped to MAX_TOKENS. It is kept only as a hint; the real mitigations for the loop are
+// the v4 prompt's length rule and routing the Acoustician to gemini-4-argon (0 loops in 58 calls).
 func boundedStrSchema(desc string, maxLen int64) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeString, Description: desc, MaxLength: &maxLen}
 }
@@ -222,7 +229,7 @@ func agentResponseSchema(key string) *genai.Schema {
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
 				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for humbuckers. One or two short sentences.", acousticianRationaleMaxLen),
-			}, nil),
+			}, acousticianPickupRequired),
 			"single_coil": objSchema(map[string]*genai.Schema{
 				"input_gain_db":  numSchema(""),
 				"amp_vol_offset": numSchema("Change to the amp Volume dial in 0-10 dial steps (e.g. -1.0 = one step lower). Not decibels."),
@@ -230,8 +237,8 @@ func agentResponseSchema(key string) *genai.Schema {
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
 				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for single coils. One or two short sentences.", acousticianRationaleMaxLen),
-			}, nil),
-		}, nil) // v1 and v2 share no common field name, so nothing can be marked required here; the active prompt's instructions drive which shape is actually used.
+			}, acousticianPickupRequired),
+		}, []string{"humbucker", "single_coil"}) // Required since 2026-11-05: the prompt alone ("MUST output BOTH") did not stop models omitting single_coil (3.8 Flash 4/6, Argon 2/6 in the probe), and every downstream preset has one guitar of each kind. The flat v1 fields stay optional; the v1 prompt is not used in production (config.json routes v4).
 
 	case "7_transducer_tech":
 		return objSchema(map[string]*genai.Schema{

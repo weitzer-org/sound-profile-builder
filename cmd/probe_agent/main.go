@@ -29,6 +29,10 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
 )
 
+// PipelinePrefix is what RunPipeline prepends for evalfixtures.DefaultConstraints (favor_captures
+// and single_amp_mode true), copied from its log output, so a probe sees what the Phase 2 eval sent.
+const PipelinePrefix = "[GLOBAL USER CONFIG FLAG: FAVOR CAPTURES. The generated preset should actively prioritize using official Factory Neural Captures (tagged with is_capture: true) over built-in algorithmic component models when possible.]\n\n[GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]\n\n"
+
 // SourcesSuffix asks for the URLs actually used; the sources variant also makes the field required.
 const SourcesSuffix = "\n\nUse Google Search to research this request, and list in `sources` the URLs of the pages you actually used. Do not list a URL you did not retrieve."
 
@@ -107,6 +111,7 @@ func main() {
 	queries := flag.String("queries", "07_Edge,09_BB_King,05_Clapton", "golden query names")
 	reps := flag.Int("reps", 1, "repetitions")
 	promptVersion := flag.String("prompt-version", "", "override config.json's prompt version for every probed agent (e.g. v4)")
+	pipelinePrefix := flag.Bool("pipeline-prefix", false, "prepend the [GLOBAL USER CONFIG FLAG ...] lines RunPipeline adds for evalfixtures.DefaultConstraints (favor captures, single amp), as the eval pipeline sends them")
 	frozenDir := flag.String("frozen-dir", "eval_results/phase1/architect/frozen", "eval_architect frozen files (Acoustician input)")
 	dry := flag.Bool("dry-run", true, "print the grid and exit")
 	out := flag.String("out", "", "output dir (default eval_results/probe_agent/<UTC>)")
@@ -198,7 +203,11 @@ func main() {
 							pv = *promptVersion
 						}
 						sys, err := orch.PromptForAgent(a, pv)
-						user, uerr := UserPrompt(a, golden[q], sonic)
+						qtext := golden[q]
+						if *pipelinePrefix {
+							qtext = PipelinePrefix + qtext
+						}
+						user, uerr := UserPrompt(a, qtext, sonic)
 						gc := orch.GenerationConfigFor(roles[a], a)
 						if err == nil && uerr == nil {
 							user, uerr = ApplyVariant(v, gc, user)
