@@ -86,11 +86,12 @@ func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexed
 	out = append([]indexedParam(nil), out...)
 	baseLen := len(out)
 	for _, xp := range m.Params {
-		if xp.Replaces == "" {
+		replaces := strings.TrimSpace(xp.Replaces)
+		if replaces == "" {
 			out = append(out, indexedParam{len(out), xp})
 			continue
 		}
-		n, err := strconv.Atoi(strings.TrimSpace(xp.Replaces))
+		n, err := strconv.Atoi(replaces)
 		if err != nil || n < 0 || n >= baseLen {
 			return nil, fmt.Errorf("model %q param %q: bad replaces %q", m.Name, xp.Name, xp.Replaces)
 		}

@@ -36,7 +36,7 @@ const fixtureXML = `<?xml version="1.0" ?><Models>
   </Model>
   <Model clones=" 8015 " id="8016" name="Cloned Reverb" tm="">
     <Parameter defaultValue="70" max="100" min="0" name="DECAY" replaces="0" type="float" units="%"/>
-    <Parameter defaultValue="500" max="20000" min="20" name="LOW CUT" type="float" units="Hz"/>
+    <Parameter defaultValue="500" max="20000" min="20" name="LOW CUT" replaces=" " type="float" units="Hz"/>
   </Model>
   <Model id="8020" name="Renamed Param Reverb" tm="">
     <Parameter defaultValue="5" max="10" min="0" name="DEPTH" replaces="INTENSITY" type="float" units=""/>
@@ -157,7 +157,8 @@ func TestClonedModelInheritsBaseParams(t *testing.T) {
 		got = append(got, fmt.Sprintf("%d:%s=%v", p.Index, p.Name, *p.Default))
 	}
 	// DECAY overridden in slot 0, TAIL inherited in slot 1, LOW CUT appended after the base.
-	// The fixture's clones attribute carries stray spaces, which must not break the lookup.
+	// The fixture's clones attribute carries stray spaces, and LOW CUT has a whitespace-only
+	// replaces (= no replaces); neither may break parsing.
 	if want := "0:DECAY=70|1:TAIL=1|2:LOW CUT=500"; strings.Join(got, "|") != want {
 		t.Errorf("params = %q, want %q", strings.Join(got, "|"), want)
 	}
