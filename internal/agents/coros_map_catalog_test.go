@@ -108,3 +108,30 @@ func TestPluginTableAgreesWithCorosMap(t *testing.T) {
 		t.Error(b)
 	}
 }
+
+// TestCaptureNamesAreNotCatalogModels: a Neural Capture is not a block model, so no
+// coros_map.json capture entry or user capture may use a name the device catalog lists as
+// a model. If one did, the valid-block set would have to call the same name both a
+// capture and a native block, and the capture flag would win silently.
+func TestCaptureNamesAreNotCatalogModels(t *testing.T) {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		equiv, _ := rec["coros_equivalent"].(string)
+		if isCap, _ := rec["is_capture"].(bool); isCap && cat.IsKnownName(equiv) {
+			bad = append(bad, "coros_map.json "+gear+" -> "+equiv)
+		}
+	}
+	for _, c := range GetUserCaptures() {
+		if cat.IsKnownName(c.Name) {
+			bad = append(bad, "user_captures.json "+c.Name)
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Errorf("%s: marked as a capture, but the device catalog lists it as a block model", b)
+	}
+}
