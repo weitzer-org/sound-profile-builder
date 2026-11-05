@@ -34,7 +34,7 @@ async function openPreset(page, name, mobile) {
     const more = page.locator('#library-list-container button:has-text("Load More")');
     if (await more.count()) {
       await more.first().click();
-      await page.waitForTimeout(800);
+      await item().waitFor({ timeout: 5000 }).catch(() => {});
     }
   }
   test.skip(!(await item().count()), `fixture "${name}" not in the library: run with E2E_SEED=1`);
@@ -96,11 +96,7 @@ test.describe('data grid, desktop', () => {
     //    become a row in View and leave the "At device default" line.
     const width = ws(page).locator(`input[type="range"][hx-vals*='"block_id":"t-6"'][hx-vals*='"param_name":"WIDTH"']`).first();
     const saved = page.waitForResponse((r) => r.url().includes('/api/preset/update_parameter') && r.status() === 204);
-    await width.evaluate((el) => {
-      el.value = '75';
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    await width.fill('75');
     await saved;
     // The live value above the slider follows it, with the control's unit.
     await expect(width.locator('xpath=preceding-sibling::div[1]/span[last()]')).toHaveText('75 %');

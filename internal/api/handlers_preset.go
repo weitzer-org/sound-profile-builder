@@ -580,7 +580,7 @@ func withoutControl(kept []string, model, paramName string) []string {
 	if ok {
 		target = ctl.Index(paramName)
 	}
-	out := kept[:0:0]
+	out := make([]string, 0, len(kept)) // a new slice: the caller's may alias stored data
 	for _, k := range kept {
 		same := strings.EqualFold(strings.TrimSpace(k), strings.TrimSpace(paramName))
 		if !same && target >= 0 {

@@ -1,7 +1,7 @@
 package agents
 
 import (
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -60,11 +60,11 @@ func TestSplitDefaults(t *testing.T) {
 	for _, p := range shown {
 		names = append(names, p.Name)
 	}
-	if got := strings.Join(names, ","); got != "MIX,DELAY TIME,TRAILS,Bypass" {
-		t.Errorf("shown = %s", got)
+	if want := []string{"MIX", "DELAY TIME", "TRAILS", "Bypass"}; !slices.Equal(names, want) {
+		t.Errorf("shown = %q, want %q", names, want)
 	}
-	if got := strings.Join(atDefault, ","); got != "FEEDBACK,PING PONG,WIDTH" {
-		t.Errorf("atDefault = %s (want device order, no TRAILS, no unknown names)", got)
+	if want := []string{"FEEDBACK", "PING PONG", "WIDTH"}; !slices.Equal(atDefault, want) {
+		t.Errorf("atDefault = %q, want %q (device order, no TRAILS, no unknown names)", atDefault, want)
 	}
 	capture := storage.EffectBlock{Model: "US DLX 58 (Factory Capture)", Parameters: []storage.BlockParameter{{Name: "Gain", Value: "+1 dB"}}}
 	if shown, atDefault := SplitDefaults(capture); len(shown) != 1 || atDefault != nil {
