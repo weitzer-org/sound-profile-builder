@@ -103,26 +103,31 @@ func sanitizeJSONValue(raw json.RawMessage) any {
 	if err := dec.Decode(&v); err != nil {
 		return nil
 	}
-	var walk func(any) any
-	walk = func(v any) any {
+	// Depth follows the contract's MaxDepth: anything nested deeper is
+	// replaced, not walked (Go's decoder already stops at 10000 levels).
+	var walk func(any, int) any
+	walk = func(v any, depth int) any {
+		if depth > devicejobs.MaxDepth {
+			return "(nested too deeply)"
+		}
 		switch x := v.(type) {
 		case string:
 			return dtext(x)
 		case []any:
 			for i := range x {
-				x[i] = walk(x[i])
+				x[i] = walk(x[i], depth+1)
 			}
 			return x
 		case map[string]any:
 			out := make(map[string]any, len(x))
 			for k, e := range x {
-				out[sanitizeDeviceText(k, 64)] = walk(e)
+				out[sanitizeDeviceText(k, 64)] = walk(e, depth+1)
 			}
 			return out
 		}
 		return v
 	}
-	return walk(v)
+	return walk(v, 1)
 }
 
 // deviceError passes the bridge's user-facing errors through and hides the rest.

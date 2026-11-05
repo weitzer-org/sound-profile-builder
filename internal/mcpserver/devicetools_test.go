@@ -3,6 +3,7 @@ package mcpserver
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -490,5 +491,13 @@ func TestSanitizeDeviceTextBoundsWork(t *testing.T) {
 	allocs := testing.AllocsPerRun(5, func() { _ = sanitizeDeviceText(long, 200) })
 	if allocs > 50 {
 		t.Fatalf("%v allocations for a 3 MiB input", allocs)
+	}
+}
+
+func TestSanitizeJSONValueDepth(t *testing.T) {
+	deep := strings.Repeat("[", 200) + `"x"` + strings.Repeat("]", 200)
+	out, err := json.Marshal(sanitizeJSONValue(json.RawMessage(deep)))
+	if err != nil || !strings.Contains(string(out), "nested too deeply") || strings.Count(string(out), "[") > devicejobs.MaxDepth {
+		t.Fatalf("got %s (%v)", out, err)
 	}
 }

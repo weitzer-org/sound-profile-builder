@@ -41,6 +41,7 @@ func TestS3Integration(t *testing.T) {
 	if err := s3c.WriteFile(ctx, bucket, devicejobs.HeartbeatKey, data); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = s3c.DeleteFile(context.Background(), bucket, devicejobs.HeartbeatKey) })
 
 	plan, err := b.PlanPush(ctx, sp(), req)
 	if err != nil || plan.Token == "" || !plan.Bridge.Online {
@@ -51,7 +52,7 @@ func TestS3Integration(t *testing.T) {
 		t.Fatalf("confirm: %v existing=%v", err, existing)
 	}
 	t.Cleanup(func() {
-		for _, k := range []string{devicejobs.PendingKey(id), devicejobs.DoneKey(id), devicejobs.HeartbeatKey} {
+		for _, k := range []string{devicejobs.PendingKey(id), devicejobs.DoneKey(id)} {
 			_ = s3c.DeleteFile(context.Background(), bucket, k)
 		}
 	})
