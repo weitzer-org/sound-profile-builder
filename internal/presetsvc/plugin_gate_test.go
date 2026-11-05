@@ -51,6 +51,14 @@ func TestPluginGateFlagsUnownedDevices(t *testing.T) {
 		t.Run(tc.name+"/refine", func(t *testing.T) {
 			h := newHarnessWithConfig(t, cfg)
 			h.orch.refine = withAmpModel(t, h.orch.refine, device)
+			// The rendered table names a paid effect too: the saved HTML must be
+			// flagged the same way as the structured payload.
+			const htmlDevice = "Tim Henson Delay Modern"
+			oldCell := []byte("Delay: Digital")
+			if !bytes.Contains(h.orch.refine, oldCell) {
+				t.Fatal(`refine fixture has no "Delay: Digital" table cell to rewrite`)
+			}
+			h.orch.refine = bytes.Replace(h.orch.refine, oldCell, []byte("Delay: "+htmlDevice), 1)
 			ctx := context.Background()
 			p := &storage.Preset{Name: "Warm Lead"}
 			if err := h.store.Save(ctx, p); err != nil {
@@ -67,6 +75,22 @@ func TestPluginGateFlagsUnownedDevices(t *testing.T) {
 			}
 			if m := deviceModel(t, got.Payload, device); m != want {
 				t.Errorf("saved amp model = %q, want %q", m, want)
+			}
+			var saved struct {
+				LegacyHTML map[string]string `json:"legacy_html"`
+			}
+			if err := json.Unmarshal([]byte(got.Payload), &saved); err != nil {
+				t.Fatalf("preset payload is not JSON: %v", err)
+			}
+			var all string
+			for _, html := range saved.LegacyHTML {
+				all += html + "\n"
+			}
+			if !strings.Contains(all, htmlDevice) {
+				t.Fatalf("saved HTML lost the %q cell", htmlDevice)
+			}
+			if flagged := strings.Contains(all, agents.FlagUnverifiedBlock(htmlDevice)); flagged != tc.wantFlag {
+				t.Errorf("saved HTML flags %q = %v, want %v", htmlDevice, flagged, tc.wantFlag)
 			}
 		})
 	}
