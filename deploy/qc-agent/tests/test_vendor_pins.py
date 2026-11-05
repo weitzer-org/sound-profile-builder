@@ -44,8 +44,14 @@ class VendorPins(unittest.TestCase):
             self.assertTrue(any("__pycache__" in b for b in bad))
 
     def test_loading_writes_no_bytecode(self):
-        from qc_agent.qcmcp_backend import load_vendored
-        load_vendored()
+        import sys
+        from unittest import mock
+        from qc_agent import qcmcp_backend
+        with mock.patch.object(qcmcp_backend, "_loaded", None), mock.patch.dict(sys.modules):
+            for name in [n for n in sys.modules if n == "qc_mcp" or n.startswith("qc_mcp.")]:
+                del sys.modules[name]
+            mods = qcmcp_backend.load_vendored()  # a real first load, whatever ran before
+            self.assertIn("transport", mods)
         self.assertFalse((VENDOR_DIR / "qc_mcp" / "__pycache__").exists())
 
     def test_provenance_lists_every_pin(self):

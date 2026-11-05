@@ -378,8 +378,10 @@ def preset_to_plain(bp):
 
 
 class QcMcpBackend(DeviceBackend):
-    def __init__(self, vendor_dir: Path = VENDOR_DIR):
-        self._mods = load_vendored(vendor_dir)
+    def __init__(self, vendor_dir: Path = VENDOR_DIR, mods: dict | None = None):
+        # `mods` lets a caller pass modules load_vendored() already returned; nothing else is accepted
+        # as the transport, so the pin check can't be skipped by accident.
+        self._mods = mods if mods is not None and mods is _loaded else load_vendored(vendor_dir)
         self._qc = None
         self._raw = None
         self._guard = None

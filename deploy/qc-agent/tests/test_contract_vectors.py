@@ -104,14 +104,15 @@ class AgentActions(unittest.TestCase):
         store = MemoryStore(c["agent_bucket"])
         key = c["object_key"]
         store.objects[key] = c["envelope"].encode()
-        with tempfile.TemporaryDirectory() as d:
-            now = contract.parse_time(c["now"])
-            agent = Agent(cfg, store, FakeDevice(), catalog(), Path(d), now_fn=FixedClock(now))
-            for jid in c["ledger"]:
-                agent.ledger.take(jid, "list_slots", c["now"])
-                agent.ledger.finish(jid, c["now"], b'{"stub":1}')
-            got = agent._check(key, store.objects[key])
-            return got, store, agent
+        d = tempfile.TemporaryDirectory()
+        self.addCleanup(d.cleanup)  # the agent outlives this helper, so its home must too
+        now = contract.parse_time(c["now"])
+        agent = Agent(cfg, store, FakeDevice(), catalog(), Path(d.name), now_fn=FixedClock(now))
+        for jid in c["ledger"]:
+            agent.ledger.take(jid, "list_slots", c["now"])
+            agent.ledger.finish(jid, c["now"], b'{"stub":1}')
+        got = agent._check(key, store.objects[key])
+        return got, store, agent
 
     def test_every_vector_action(self):
         for c in V["pending_jobs"]:

@@ -42,14 +42,15 @@ def utcnow():
 
 
 class Agent:
-    def __init__(self, config, store: JobStore, device, catalog, home, now_fn=utcnow, sleep=None):
+    def __init__(self, config, store: JobStore, device, catalog, home, now_fn=utcnow, sleep=None,
+                 ledger: JobLedger | None = None, owned: OwnedSlots | None = None):
         self.config, self.store, self.device, self.catalog = config, store, device, catalog
         self.home = home
         self.now = now_fn
         self.stop = threading.Event()
         self._sleep = sleep or (lambda s: self.stop.wait(s))
-        self.ledger = JobLedger(home / "executed_jobs.jsonl")
-        self.owned = OwnedSlots(home / "owned_slots.jsonl")
+        self.ledger = ledger if ledger is not None else JobLedger(home / "executed_jobs.jsonl")
+        self.owned = owned if owned is not None else OwnedSlots(home / "owned_slots.jsonl")
         self.ctx = jobs.JobContext(config, catalog, device, self.owned, now_fn, sleep=self._job_sleep)
         self.started_at = self.now()
         self.last_activity = self.started_at

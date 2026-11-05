@@ -330,7 +330,11 @@ class _Push:
             return out
         self.fw = _fw(self.dev.firmware)
         try:
-            return self.check_unit() or self.build() or self.verify() or self.save()
+            for step in (self.check_unit, self.build, self.verify):
+                outcome = step()
+                if outcome is not None:  # a step stops the push by returning its Outcome
+                    return outcome
+            return self.save()
         except (_Gone, UnitAbsent):
             if self.saved:
                 return self.done(f"Save to {self.slot} issued after a clean read-back, then the Quad Cortex went "

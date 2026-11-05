@@ -7,6 +7,7 @@ writes and exactly one File CREATE; and the guard stops every forbidden message
 another slot) before it reaches the device. Proves nothing about the real unit.
 """
 import shutil
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -283,13 +284,20 @@ class VendoredLoad(unittest.TestCase):
             shutil.copytree(VENDOR_DIR, copy_dir)
             p = copy_dir / "qc_mcp" / "transport.py"
             p.write_bytes(p.read_bytes() + b"\n# local change\n")
-            with mock.patch.object(qcmcp_backend, "_loaded", None):
+            # The pin check refuses before sys.modules is touched; sandbox it anyway.
+            with mock.patch.object(qcmcp_backend, "_loaded", None), mock.patch.dict(sys.modules):
                 with self.assertRaises(DeviceError) as cm:
                     qcmcp_backend.load_vendored(copy_dir)
                 self.assertIn("differs from the reviewed f634ecd copy", str(cm.exception))
 
+    def test_injected_modules_must_be_the_verified_ones(self):
+        mods = qcmcp_backend.load_vendored()
+        self.assertIs(QcMcpBackend(mods=mods)._mods, mods)
+        with mock.patch.object(qcmcp_backend, "load_vendored", return_value=mods) as lv:
+            QcMcpBackend(mods={"transport": object()})  # not what load_vendored returned: ignored
+            lv.assert_called_once()
+
     def test_imports_are_the_vendored_copy(self):
-        import sys
         mods = qcmcp_backend.load_vendored()
         for m in mods.values():
             self.assertTrue(Path(m.__file__).resolve().is_relative_to(VENDOR_DIR.resolve()))

@@ -478,6 +478,13 @@ class Recovery(Base):
         self.assertNotIn(key, self.store.objects)
         self.assertIn(jid, self.make_agent().ledger.uploaded)
 
+    def test_uploaded_result_bodies_are_not_kept_in_memory(self):
+        jid, _ = self.queue("list_slots")
+        self.poll()
+        self.assertIsNone(self.agent.ledger.finished[jid]["result"])
+        self.assertIsNone(self.make_agent().ledger.finished[jid]["result"])
+        self.assertIn('"result":', (self.home / "executed_jobs.jsonl").read_text(), "the file keeps it")
+
     def test_restart_does_not_recheck_confirmed_uploads(self):
         jid, _ = self.queue("list_slots")
         self.poll()

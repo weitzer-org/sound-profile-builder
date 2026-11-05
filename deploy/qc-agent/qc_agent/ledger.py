@@ -40,18 +40,26 @@ def _read_lines(path: Path) -> list[dict]:
     line; anything else unparseable is corruption and stops the agent."""
     if not path.exists():
         return []
-    lines = [ln for ln in path.read_bytes().split(b"\n") if ln.strip()]
     out = []
-    for n, line in enumerate(lines):
-        obj = _parse(line)
-        if obj is None:
-            nxt = _parse(lines[n + 1]) if n + 1 < len(lines) else TORN
-            if nxt == TORN:
+    bad_at = None  # entry number of an unparseable line, pending a look at the next one
+    n = 0
+    with open(path, "rb") as f:  # streamed: only the parsed entries are kept
+        for line in f:
+            if not line.strip():
                 continue
-            raise LedgerError(f"{path}: entry {n + 1} is corrupt; fix or move it aside by hand "
-                              "(the agent never rewrites this file)")
-        if obj != TORN:
-            out.append(obj)
+            n += 1
+            obj = _parse(line)
+            if bad_at is not None:
+                if obj != TORN:
+                    break
+                bad_at = None
+            if obj is None:
+                bad_at = n
+            elif obj != TORN:
+                out.append(obj)
+    if bad_at is not None and bad_at != n:
+        raise LedgerError(f"{path}: entry {bad_at} is corrupt; fix or move it aside by hand "
+                          "(the agent never rewrites this file)")
     return out
 
 
@@ -96,6 +104,9 @@ class JobLedger:
                 self.uploaded.add(jid)
             else:
                 raise LedgerError(f"{path}: unknown event {e.get('event')!r}")
+        for jid in self.uploaded:  # an uploaded result is never needed again; keep the line, drop the body
+            if jid in self.finished:
+                self.finished[jid] = {**self.finished[jid], "result": None}
 
     def contains(self, job_id: str) -> bool:
         return job_id in self.taken or job_id in self.finished
@@ -116,6 +127,8 @@ class JobLedger:
             return
         _append(self.path, {"event": "uploaded", "job_id": job_id, "at": at})
         self.uploaded.add(job_id)
+        if job_id in self.finished:
+            self.finished[job_id] = {**self.finished[job_id], "result": None}
 
     def not_uploaded(self) -> list[str]:
         return [j for j in self.order if j in self.finished and j not in self.uploaded]
