@@ -719,3 +719,37 @@ func TestExcludeUnownedPluginBlocks(t *testing.T) {
 		t.Errorf("got %q / %q", blocks[0].Model, blocks[1].Model)
 	}
 }
+
+// An unowned plugin device is flagged in any block category, not only amp/cab/drive:
+// "Tim Henson Delay Modern" in a delay block passes once the plugin is owned.
+func TestFlagUnverifiedStructuredBlocks_UnownedPluginEffect(t *testing.T) {
+	for _, tc := range []struct {
+		owned       []string
+		wantFlagged bool
+	}{
+		{nil, true},
+		{[]string{"Tim Henson"}, false},
+	} {
+		valid := BuildEffectiveValidBlocksFor(ValidBlockFilter{
+			AllowFactoryCaptures: true, AllowUserCaptures: true,
+			Plugins: NewPluginGate(true, tc.owned),
+		})
+		sp := &storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {
+				{ID: "1", Type: "Delay", Model: "Tim Henson Delay Modern"},
+				{ID: "2", Type: "Delay", Model: "Not A Real Delay XYZ"}, // non-gear unknown: still unflagged
+			},
+		}}
+		n := FlagUnverifiedStructuredBlocks(sp, valid)
+		blocks := sp.Guitars["Guitar 1"]
+		if got := strings.HasSuffix(blocks[0].Model, unverifiedSuffix); got != tc.wantFlagged {
+			t.Errorf("owned %v: plugin delay flagged=%v (model now %q), want %v", tc.owned, got, blocks[0].Model, tc.wantFlagged)
+		}
+		if strings.HasSuffix(blocks[1].Model, unverifiedSuffix) {
+			t.Errorf("owned %v: unknown non-gear name %q was flagged; only plugin devices widen the check", tc.owned, blocks[1].Model)
+		}
+		if want := map[bool]int{true: 1, false: 0}[tc.wantFlagged]; n != want {
+			t.Errorf("owned %v: flagged %d blocks, want %d", tc.owned, n, want)
+		}
+	}
+}

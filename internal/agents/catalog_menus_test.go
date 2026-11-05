@@ -115,6 +115,21 @@ func TestGetCategorizedAmplifiers_Catalog(t *testing.T) {
 	if again := GetCategorizedAmplifiers(true, true, map[string]bool{"Cory Wong": true, "John Mayer": true}); again != menu {
 		t.Error("the amp menu differs between two identical calls")
 	}
+	// The repeat-call check above can't catch a lost sort (the buckets are cached once
+	// per process), so check the order directly.
+	prev := ""
+	for _, line := range strings.Split(menu, "\n") {
+		if strings.HasSuffix(line, ":") && !strings.HasPrefix(line, "- ") {
+			prev = ""
+			continue
+		}
+		if name, ok := strings.CutPrefix(line, "- "); ok {
+			if name < prev {
+				t.Errorf("amp menu not sorted within a bucket: %q listed after %q", name, prev)
+			}
+			prev = name
+		}
+	}
 }
 
 // buildCatalogAdditions against a small fixture catalog: coverage by exact or family
@@ -127,6 +142,8 @@ func TestBuildCatalogAdditions_Fixture(t *testing.T) {
 		{Name: "412 Test Cab (M)", Category: "Cabsim Guitar (M)"},
 		{Name: "412 Test Cab (ST)", Category: "Cabsim Guitar (ST)", BasedOn: "Based on A Cab"},
 		{Name: "412 Covered (M)", Category: "Cabsim Guitar (M)"},
+		{Name: "412 Sibling (M)", Category: "Cabsim Guitar (M)"},
+		{Name: "412 Sibling (ST)", Category: "Cabsim Guitar (ST)"}, // covered via its (M) sibling's family
 		{Name: "Bass Thing", Category: "Bass Amplifier"},
 		{Name: "Plini Clean", Category: "Guitar Amplifier", PluginID: "3"},
 		{Name: "Future Amp", Category: "Guitar Amplifier", PluginID: "999"},
@@ -135,6 +152,7 @@ func TestBuildCatalogAdditions_Fixture(t *testing.T) {
 	records := map[string]map[string]any{
 		"Marshall JCM800": {"coros_equivalent": "Brit 2203"},
 		"Covered Cab":     {"coros_equivalent": "412 Covered", "is_capture": true},
+		"Sibling Cab":     {"coros_equivalent": "412 Sibling (M)"},
 	}
 	got := buildCatalogAdditions(cat, records)
 	want := []catalogAddition{

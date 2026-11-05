@@ -492,6 +492,13 @@ func resolveBlockName(rawName, category string, validBlocks map[string]bool) str
 		return snapped
 	}
 
+	// A plugin device the caller's validBlocks left out needs a plugin the user doesn't
+	// own (see BuildEffectiveValidBlocksFor). Flag it in every category: a paid device
+	// in a delay or reverb block is just as unusable as one in an amp block.
+	if _, plugin := pluginOnlyBlocks[snapped]; plugin {
+		return FlagUnverifiedBlock(snapped)
+	}
+
 	// Nothing in the Dictionary or the user's Capture Library — as allowed by the
 	// caller's validBlocks — matched closely enough. Only gear-type categories are
 	// checked; native block categories (reverb, gate, EQ, ...) have no dictionary
