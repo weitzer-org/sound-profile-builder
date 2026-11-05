@@ -459,8 +459,9 @@ func TestGetDeviceJob_Validation(t *testing.T) {
 // Nothing the device path logs may contain the key, a signature or an envelope.
 func TestDeviceTools_NoSecretsInLogs(t *testing.T) {
 	var buf bytes.Buffer
+	prev := log.Writer()
 	log.SetOutput(&buf)
-	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	t.Cleanup(func() { log.SetOutput(prev) })
 	r := newDeviceRig(t, nil)
 	seedPreset(t, r.h, "p-dev", "Dev Preset")
 	r.online(t)
