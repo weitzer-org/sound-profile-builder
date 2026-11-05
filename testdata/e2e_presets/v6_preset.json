@@ -1,6 +1,6 @@
 {
-  "builder_statement": "Synthetic fixture: written the way the v5 prompt asks, a few deliberate changes per block and the rest kept at the device default.",
-  "name": "Data grid: v5-style preset",
+  "builder_statement": "Synthetic fixture: written the way the v6 prompt asks, a few deliberate changes per block and the rest kept at the device default.",
+  "name": "Data grid: v6-style preset",
   "payload": {
     "structured": {
       "guitars": {

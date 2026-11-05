@@ -9,7 +9,7 @@ import { withFullMobileCapture } from './helpers.js';
 // SCREENSHOT_DIR (default test-results/data-grid). Mock mode: no Gemini calls.
 
 const shots = process.env.SCREENSHOT_DIR || path.join('test-results', 'data-grid');
-const V5 = 'Data grid: v5-style preset';
+const V6 = 'Data grid: v6-style preset';
 const V4 = 'Data grid: v4-style preset with device-check notes';
 const NARRATED = 'Data grid: older preset with a narrated table';
 
@@ -62,9 +62,9 @@ const rowFor = (page, model) => ws(page).locator('.tab-pane:visible tr', { hasTe
 test.describe('data grid, desktop', () => {
   test.use({ viewport: { width: 1280, height: 960 }, deviceScaleFactor: 2 });
 
-  test('v5-style preset: View, second guitar, Edit, and an edit flowing into View', async ({ page }) => {
+  test('v6-style preset: View, second guitar, Edit, and an edit flowing into View', async ({ page }) => {
     await login(page, false);
-    await openPreset(page, V5, false);
+    await openPreset(page, V6, false);
 
     // 1. View: only changed controls, one "At device default" line, Scene B differences marked.
     await showView(page);
@@ -156,9 +156,9 @@ test.describe('data grid, phone', () => {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
   });
 
-  test('v5-style preset: View Scene A, Scene B, and Edit', async ({ page }) => {
+  test('v6-style preset: View Scene A, Scene B, and Edit', async ({ page }) => {
     await login(page, true);
-    await openPreset(page, V5, true);
+    await openPreset(page, V6, true);
 
     // 9. View, Scene A: one chip per changed control; the defaults line under the block name.
     await showView(page);
