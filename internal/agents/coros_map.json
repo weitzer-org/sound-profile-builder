@@ -2386,19 +2386,19 @@
     "tonal_archetype": "British Crunch"
   },
   "Cory Wong Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 1 (ST)",
+    "coros_equivalent": "Cory Wong Cab 1",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 2 (ST)",
+    "coros_equivalent": "Cory Wong Cab 2",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
   },
   "Cory Wong Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Cory Wong Cab 3 (ST)",
+    "coros_equivalent": "Cory Wong Cab 3",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Cory Wong"
@@ -2489,19 +2489,19 @@
     "required_plugin": "Nameless"
   },
   "Gojira Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Gojira Cab 1 (ST)",
+    "coros_equivalent": "Gojira Cab 1",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Gojira Cab 2 (ST)",
+    "coros_equivalent": "Gojira Cab 2",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
   },
   "Gojira Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Gojira Cab 3 (ST)",
+    "coros_equivalent": "Gojira Cab 3",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Gojira"
@@ -2623,25 +2623,25 @@
     "required_plugin": "Nameless"
   },
   "Nolly Cab 1 (M) & (ST)": {
-    "coros_equivalent": "Nolly Cab 1 (ST)",
+    "coros_equivalent": "Nolly Cab 1",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 2 (M) & (ST)": {
-    "coros_equivalent": "Nolly Cab 2 (ST)",
+    "coros_equivalent": "Nolly Cab 2",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 3 (M) & (ST)": {
-    "coros_equivalent": "Nolly Cab 3 (ST)",
+    "coros_equivalent": "Nolly Cab 3",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
   },
   "Nolly Cab 4 (M) & (ST)": {
-    "coros_equivalent": "Nolly Cab 4 (ST)",
+    "coros_equivalent": "Nolly Cab 4",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Nolly"
@@ -2730,13 +2730,13 @@
     "required_plugin": "Parallax"
   },
   "Parallax Cab (M) & (ST)": {
-    "coros_equivalent": "Parallax Cab (ST)",
+    "coros_equivalent": "Parallax Cab",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Parallax"
   },
   "Plini Cab (M) & (ST)": {
-    "coros_equivalent": "Plini Cab (ST)",
+    "coros_equivalent": "Plini Cab",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "Plini"
@@ -2808,7 +2808,7 @@
     "required_plugin": "Plini"
   },
   "SLO-100 Cab (M) & (ST)": {
-    "coros_equivalent": "SLO-100® Cab (ST)",
+    "coros_equivalent": "SLO-100® Cab",
     "type": "cab",
     "confidence_score": 1.0,
     "required_plugin": "SLO-100"
