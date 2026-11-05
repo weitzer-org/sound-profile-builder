@@ -1,5 +1,5 @@
 {
-  "status": "APPROVED by owner 2026-11-04. Changes need owner sign-off.",
+  "status": "APPROVED by owner 2026-11-04. Amended 2026-11-05 with owner approval: BD-2/TS808/TS9 added to the drive patterns and Watt Custom* treated as amps (both fix scorer false negatives found in the Librarian-only A/B; they apply equally to both orders). Further changes need owner sign-off.",
   "doc": {
     "purpose": "Deterministic, judge-free quality checklist for the 13 golden queries. Scored by code against (a) the CorOS Librarian's chosen block names and (b) the final preset's block models. No LLM involved.",
     "how_rules_work": "Each rule matches case-insensitive regex patterns against the chosen block NAMES. 'require' passes if at least one chosen name matches; 'forbid' fails if any does. 'scope' restricts which names are considered: 'amp' = names classified as amps (coros_map type 'amp', or a user capture whose block_type is 'amp' or 'full_rig'); 'any' = every chosen name. A pattern of the form '@archetype:<name>' expands to every amp in coros_map.json with that tonal_archetype; '@type:<t>' expands to every catalog entry of that type.",
@@ -24,8 +24,8 @@
     "DUMBLE_TWO_ROCK": "Dumbbell|ODS|Dumble|Two Rock|Too Rock|TRCK",
     "BIG_MUFF": "Fuzz Pi|Big Muff|Ram'?s? Head",
     "TS808": "Green 808|Iba Green|TS808|Tube Screamer",
-    "DRIVE_PEDAL": "@type:drive|@type:overdrive|BD2|Blues Driver|Brit Blues|BluesBreaker|Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Rage Booster|Range Master|Screamer",
-    "SMOOTH_DRIVE": "Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Drive|Overdrive|Screamer|BD2|Blues Driver|Boost",
+    "DRIVE_PEDAL": "@type:drive|@type:overdrive|BD2|Blues Driver|Brit Blues|BluesBreaker|Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Rage Booster|Range Master|Screamer|BD-?2|TS-?808|TS-?9",
+    "SMOOTH_DRIVE": "Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Drive|Overdrive|Screamer|BD2|Blues Driver|Boost|BD-?2|TS-?808|TS-?9",
     "FUZZ": "Fuzz Pi|Facial Fuzz|Fuzz Face|Soviet Fuzz|Big Muff|Muff|Fuzz",
     "TREBLE_BOOST_OR_FUZZ": "Rage Booster|Range Master|Facial Fuzz|Fuzz Face|Fuzz Pi|Soviet Fuzz|Muff|Treble Boost|Fuzz",
     "WAH": "Wah",
@@ -503,5 +503,8 @@
       "treat_as": "reverb",
       "why": "coros_map.json maps this one name to an Orange Rockerverb amp capture AND to generic/plugin spring reverbs. No golden query wants an Orange amp, so the scorer treats it as a reverb (never as an amp) and counts every use in G2."
     }
+  },
+  "amp_name_prefixes": {
+    "Watt Custom": "Hiwatt Custom PA100 captures are typed 'fx' in coros_map.json but are amps. Without this the scorer reported zero amps for a run that chose one."
   }
 }

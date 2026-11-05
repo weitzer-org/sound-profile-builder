@@ -139,6 +139,11 @@ func (s *Scorer) IsAmp(n string) bool {
 	if s.isAmbiguous(n) {
 		return false
 	}
+	for prefix := range s.cl.AmpNamePrefixes {
+		if strings.HasPrefix(n, prefix) {
+			return true
+		}
+	}
 	for _, e := range s.catalog[n] {
 		if e.Type == "amp" {
 			return true

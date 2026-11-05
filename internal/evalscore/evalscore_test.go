@@ -147,3 +147,19 @@ func TestLibrarianNamesAndPresetModels(t *testing.T) {
 		t.Errorf("PresetModels dedupe: %v", m)
 	}
 }
+
+// Regression: false negatives found in the 2026-11-05 Librarian-only A/B.
+func TestScorerFalseNegativeRegressions(t *testing.T) {
+	s := mustScorer(t)
+	if !s.IsAmp("Watt Custom Clean") {
+		t.Error("Hiwatt Custom captures (typed fx in coros_map) must count as amps")
+	}
+	g, _ := s.Score("06_Gilmour", []string{"Watt Custom Clean", "412 Watt S4123", "Fuzz Pi", "Studio Plate 70 (ST)"}, []string{"Watt Custom Clean"})
+	if !g.AllHardPass || !g.OneAmp {
+		t.Errorf("a Hiwatt Custom capture should satisfy 06-amp-hiwatt and G3: %+v", g)
+	}
+	m, _ := s.Score("11_Mayer_Lead", []string{"Two Rock SSS EQ1 (No Cab)", "Keeley Mod BD-2 3", "OG TS808"}, nil)
+	if !m.AllHardPass {
+		t.Errorf("BD-2 / TS808 drives must satisfy 11-drive: %+v", m)
+	}
+}
