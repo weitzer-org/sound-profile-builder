@@ -33,8 +33,11 @@ func prepareResume(dir string) (map[string]bool, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	if err := json.Unmarshal(b, &m); err != nil || m.BatchID == "" {
-		return nil, "", fmt.Errorf("manifest.json has no batch_id: %v", err)
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, "", fmt.Errorf("parse manifest.json: %v", err)
+	}
+	if m.BatchID == "" {
+		return nil, "", fmt.Errorf("manifest.json has no batch_id")
 	}
 	runsPath := filepath.Join(dir, "runs.jsonl")
 	recs, err := evalcheck.ReadRunRecords(runsPath)
