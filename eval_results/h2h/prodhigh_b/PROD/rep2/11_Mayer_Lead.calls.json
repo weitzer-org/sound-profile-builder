@@ -1,0 +1,65 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1988,
+    "output_tokens": 88,
+    "thinking_tokens": 1318,
+    "latency_ms": 15725,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 850,
+    "output_tokens": 301,
+    "thinking_tokens": 507,
+    "latency_ms": 49353,
+    "grounded": true,
+    "search_queries": 3
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 742,
+    "output_tokens": 965,
+    "thinking_tokens": 2100,
+    "latency_ms": 99076,
+    "grounded": true,
+    "search_queries": 6
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 38476,
+    "output_tokens": 418,
+    "thinking_tokens": 5297,
+    "latency_ms": 69823,
+    "grounded": false
+  },
+  {
+    "agent": "Cloud Navigator",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[Cloud Navigator] response truncated at the MaxOutputTokens limit (model gemini-4-argon) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 4671,
+    "output_tokens": 3,
+    "thinking_tokens": 3997,
+    "latency_ms": 46579,
+    "grounded": false
+  }
+]
