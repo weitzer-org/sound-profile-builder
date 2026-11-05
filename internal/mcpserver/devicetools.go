@@ -65,12 +65,14 @@ func sanitizeDeviceText(s string, n int) string {
 // emphasis or HTML, which cell()'s block-level escaping alone doesn't stop
 // (a stranger's preset named "x![p](https://evil.example/t.png)" would
 // otherwise become an image). sanitizeDeviceText has already removed
-// backticks and line breaks, so the span can't be closed early.
+// backticks and line breaks, so the span can't be closed early. Nothing is
+// escaped inside: a backslash would show literally, and device text is
+// never placed in a table, so a "|" can't split a cell.
 func dcell(s string) string {
 	if s == "" {
 		return "(none)"
 	}
-	return "`" + strings.ReplaceAll(s, "|", `\|`) + "`"
+	return "`" + s + "`"
 }
 
 func dtext(s string) string { return sanitizeDeviceText(s, maxDeviceTextRune) }

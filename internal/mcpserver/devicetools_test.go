@@ -74,8 +74,9 @@ func (r *deviceRig) online(t *testing.T) {
 	}
 }
 
-// runAgent processes jobs in the background until the test ends.
-func (r *deviceRig) runAgent(t *testing.T) {
+// runAgent processes jobs in the background until the test ends, or until
+// the returned stop is called (stop waits for the loop to exit).
+func (r *deviceRig) runAgent(t *testing.T) (stop func()) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
@@ -87,7 +88,10 @@ func (r *deviceRig) runAgent(t *testing.T) {
 			time.Sleep(5 * time.Millisecond)
 		}
 	}()
-	t.Cleanup(func() { cancel(); wg.Wait() })
+	var once sync.Once
+	stop = func() { once.Do(func() { cancel(); wg.Wait() }) }
+	t.Cleanup(stop)
+	return stop
 }
 
 func errText(t *testing.T, res *mcp.CallToolResult) string {
@@ -233,7 +237,7 @@ func TestSendPreset_ConfirmFlow(t *testing.T) {
 	r := newDeviceRig(t, nil)
 	seedPreset(t, r.h, "p-dev", "Dev Preset")
 	r.online(t)
-	r.runAgent(t)
+	stopAgent := r.runAgent(t)
 
 	dry := itStructured[devicePushOutput](t, itCall(t, r.cs, devicePushToolName, pushArgs(nil)))
 	res := itCall(t, r.cs, devicePushToolName, pushArgs(map[string]any{"dry_run": false, "confirm_token": dry.ConfirmToken, "wait_seconds": 5}))
@@ -242,8 +246,8 @@ func TestSendPreset_ConfirmFlow(t *testing.T) {
 	if out.Mode != "queued" || out.Job == nil || out.Job.State != devicejobs.StatusSucceeded || out.Job.Push == nil || out.Job.Push.Slot != "20A" {
 		t.Fatalf("confirm output %+v\n%s", out, text)
 	}
-	if len(r.agent.Executed) != 1 || r.agent.Executed[0].Kind != devicejobs.KindPushPreset {
-		t.Fatalf("agent executed %v", r.agent.Executed)
+	if ex := r.agent.ExecutedJobs(); len(ex) != 1 || ex[0].Kind != devicejobs.KindPushPreset {
+		t.Fatalf("agent executed %v", ex)
 	}
 	// A repeat confirm names the same job and queues nothing.
 	again := itStructured[devicePushOutput](t, itCall(t, r.cs, devicePushToolName,
@@ -251,9 +255,14 @@ func TestSendPreset_ConfirmFlow(t *testing.T) {
 	if again.Mode != "existing" || again.Job.JobID != out.Job.JobID {
 		t.Fatalf("repeat confirm %+v", again)
 	}
-	time.Sleep(30 * time.Millisecond)
-	if len(r.agent.Executed) != 1 {
-		t.Fatalf("job executed %d times", len(r.agent.Executed))
+	// Deterministic "never twice": stop the background agent, then give it
+	// one more full pass over the bucket.
+	stopAgent()
+	if _, err := r.agent.RunOnce(); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(r.agent.ExecutedJobs()); n != 1 {
+		t.Fatalf("job executed %d times", n)
 	}
 	// get_device_job reports the same result.
 	jo := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": out.Job.JobID}))

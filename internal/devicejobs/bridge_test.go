@@ -566,3 +566,41 @@ func TestPendingIgnoresExpiredCopiesAndOversize(t *testing.T) {
 		t.Fatal("the store did not use the bounded read")
 	}
 }
+
+// A failed read of an existing result or pending job is a storage error, not
+// a terminal state: Job returns it, and Wait keeps polling and recovers.
+func TestTransientReadErrorsAreNotTerminal(t *testing.T) {
+	ctx := context.Background()
+	r := newRig(t)
+	r.online(t)
+	id, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.client.SetFailRead(true)
+	if v, err := r.bridge.Store.JobState(ctx, id, nil, t0); err == nil {
+		t.Fatalf("pending job with a failing read: state %s, want an error", v.State)
+	}
+	r.client.SetFailRead(false)
+	if _, err := r.agent.RunOnce(); err != nil {
+		t.Fatal(err)
+	}
+	r.client.SetFailRead(true)
+	if v, err := r.bridge.Store.JobState(ctx, id, nil, t0); err == nil {
+		t.Fatalf("result with a failing read: state %s, want an error", v.State)
+	}
+	// Wait rides out the hiccup.
+	go func() {
+		time.Sleep(30 * time.Millisecond)
+		r.client.SetFailRead(false)
+	}()
+	v, err := r.bridge.Wait(ctx, id, 2*time.Second)
+	if err != nil || v.State != devicejobs.StatusSucceeded {
+		t.Fatalf("Wait across a transient failure: %+v %v", v, err)
+	}
+	// Oversized is permanent: unverified, not an error.
+	_ = r.client.WriteFile(ctx, jobsBucket, devicejobs.DoneKey(id), make([]byte, devicejobs.MaxResultBytes+1))
+	if v, err := r.bridge.Store.JobState(ctx, id, nil, t0); err != nil || v.State != devicejobs.StateUnverified {
+		t.Fatalf("oversized result: %+v %v", v, err)
+	}
+}

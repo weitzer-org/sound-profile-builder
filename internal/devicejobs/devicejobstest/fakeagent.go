@@ -24,7 +24,16 @@ type MemClient struct {
 	mu       sync.Mutex
 	objs     map[string]map[string][]byte
 	failList bool
+	failRead bool
 	limited  int
+}
+
+// SetFailRead makes every later ReadFile/ReadFileLimited call fail, as a
+// transient storage error would (the object still lists as present).
+func (c *MemClient) SetFailRead(fail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.failRead = fail
 }
 
 // SetFailList makes every later ListFiles call fail (storage-error tests).
@@ -40,6 +49,9 @@ func NewMemClient() *MemClient { return &MemClient{objs: map[string]map[string][
 func (c *MemClient) ReadFile(_ context.Context, bucket, object string) ([]byte, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.failRead {
+		return nil, fmt.Errorf("read failed (transient)")
+	}
 	d, ok := c.objs[bucket][object]
 	if !ok {
 		return nil, fmt.Errorf("object not found: %s/%s", bucket, object)
@@ -266,12 +278,14 @@ func (a *FakeAgent) RunOnce() (int, error) {
 		a.mu.Unlock()
 		switch o {
 		case devicejobs.OutcomeOK:
-			if err := a.writeSigned(devicejobs.DoneKey(j.JobID), devicejobs.TagResult, a.result(j, now)); err != nil {
-				return n, err
-			}
+			// Record before publishing the result, so anyone who sees the
+			// result also sees the execution.
 			a.mu.Lock()
 			a.Executed = append(a.Executed, j)
 			a.mu.Unlock()
+			if err := a.writeSigned(devicejobs.DoneKey(j.JobID), devicejobs.TagResult, a.result(j, now)); err != nil {
+				return n, err
+			}
 			n++
 		case devicejobs.OutcomeExpired:
 			r := a.base(j, now, devicejobs.StatusExpired)
@@ -318,6 +332,14 @@ func (a *FakeAgent) result(j *devicejobs.Job, now time.Time) devicejobs.Result {
 			Payload: json.RawMessage(fmt.Sprintf(`{"rows":[{"row":0,"blocks":[{"col":0,"model_id":5011,"label":%q}]}]}`, a.text("Jewel")))}
 	}
 	return r
+}
+
+// ExecutedJobs is a copy of the executed jobs (safe while the agent runs in
+// another goroutine).
+func (a *FakeAgent) ExecutedJobs() []*devicejobs.Job {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return append([]*devicejobs.Job(nil), a.Executed...)
 }
 
 // Ledger reports whether the agent has taken job id.

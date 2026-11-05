@@ -10,6 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
+// Both production backends implement LimitedReader; this fails to compile if
+// either stops doing so.
+var (
+	_ LimitedReader = (*S3Client)(nil)
+	_ LimitedReader = (*GCSClient)(nil)
+)
+
 // ErrTooLarge is returned by ReadFileLimited when the object exceeds the limit.
 var ErrTooLarge = errors.New("object exceeds the size limit")
 

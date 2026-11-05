@@ -77,7 +77,7 @@ func (s *Store) readLimited(ctx context.Context, object string, max int) (data [
 	if lr, ok := s.client.(storage.LimitedReader); ok {
 		data, rerr = lr.ReadFileLimited(ctx, s.bucket, object, int64(max))
 		if errors.Is(rerr, storage.ErrTooLarge) {
-			return nil, true, fmt.Errorf("%s is over the %d-byte limit", object, max)
+			return nil, true, fmt.Errorf("%s: %w", object, errTooLarge)
 		}
 	} else {
 		data, rerr = s.client.ReadFile(ctx, s.bucket, object)
@@ -93,10 +93,14 @@ func (s *Store) readLimited(ctx context.Context, object string, max int) (data [
 		return nil, true, fmt.Errorf("reading %s: %w", object, rerr)
 	}
 	if len(data) > max {
-		return nil, true, fmt.Errorf("%s is %d bytes, over the %d limit", object, len(data), max)
+		return nil, true, fmt.Errorf("%s: %w", object, errTooLarge)
 	}
 	return data, true, nil
 }
+
+// errTooLarge marks an object over its size cap: a permanent property of the
+// object, unlike a failed read, which may succeed on the next poll.
+var errTooLarge = errors.New("object is over its size limit")
 
 // NewJob builds a job with the contract's lifetime.
 func (s *Store) NewJob(id, kind string, args any, now time.Time) (*Job, error) {
@@ -257,15 +261,18 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 		return nil, errors.New("invalid job id")
 	}
 	v := &JobView{JobID: id}
+
+	// A result. Oversized is permanent: unverified. Any other read error may
+	// be transient, so it is returned (Wait keeps polling) instead of being
+	// turned into a terminal state.
 	data, found, err := s.readLimited(ctx, DoneKey(id), MaxResultBytes)
-	if err != nil && !found {
+	switch {
+	case errors.Is(err, errTooLarge):
+		v.State = StateUnverified
+		return v, nil
+	case err != nil:
 		return nil, err
-	}
-	if found {
-		if err != nil {
-			v.State = StateUnverified
-			return v, nil
-		}
+	case found:
 		r, ok := s.openResult(data, id)
 		if !ok {
 			v.State = StateUnverified
@@ -274,23 +281,20 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 		v.State, v.Result = r.Status, r
 		return v, nil
 	}
+
+	// Still pending? Same error rule; an object that isn't a job QC-2 wrote
+	// (oversized, unsigned, mismatched) counts as no job: the agent deletes it
+	// unanswered.
 	data, found, err = s.readLimited(ctx, PendingKey(id), MaxJobBytes)
-	if err != nil && !found {
-		return nil, err
-	}
-	if !found {
+	switch {
+	case errors.Is(err, errTooLarge), err == nil && !found:
 		v.State = StateNotFound
 		return v, nil
+	case err != nil:
+		return nil, err
 	}
-	if err == nil {
-		if payload, oerr := s.keys.Open(TagJob, data); oerr == nil {
-			if j, perr := ParseJob(payload); perr == nil && j.JobID == id {
-				v.Job = j
-			}
-		}
-	}
+	v.Job = s.ownJob(data, id)
 	if v.Job == nil {
-		// Not a job QC-2 wrote; the agent will delete it unanswered.
 		v.State = StateNotFound
 		return v, nil
 	}
@@ -304,6 +308,19 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 		v.State = StateQueued
 	}
 	return v, nil
+}
+
+// ownJob returns the job in data if it is one QC-2 signed for this id.
+func (s *Store) ownJob(data []byte, id string) *Job {
+	payload, err := s.keys.Open(TagJob, data)
+	if err != nil {
+		return nil
+	}
+	j, err := ParseJob(payload)
+	if err != nil || j.JobID != id {
+		return nil
+	}
+	return j
 }
 
 func (s *Store) openResult(data []byte, id string) (*Result, bool) {

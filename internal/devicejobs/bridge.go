@@ -262,21 +262,35 @@ func (b *Bridge) Job(ctx context.Context, id string) (*JobView, error) {
 }
 
 // Wait polls a job until it reaches a final state, max elapses, or ctx ends,
-// and returns the last state seen.
+// and returns the last state seen. A failed poll (a storage hiccup) is retried
+// until the deadline; it is returned only if no poll succeeded by then.
 func (b *Bridge) Wait(ctx context.Context, id string, max time.Duration) (*JobView, error) {
 	deadline := time.Now().Add(max)
 	gap := b.PollGap
 	if gap <= 0 {
 		gap = DefaultPollGap
 	}
+	var last *JobView
 	for {
 		v, err := b.Job(ctx, id)
-		if err != nil || Terminal(v.State) || !time.Now().Add(gap).Before(deadline) {
-			return v, err
+		if err == nil {
+			last = v
+		}
+		done := !time.Now().Add(gap).Before(deadline)
+		switch {
+		case err == nil && Terminal(v.State):
+			return v, nil
+		case done && last != nil:
+			return last, nil
+		case done:
+			return nil, err
 		}
 		select {
 		case <-ctx.Done():
-			return v, nil
+			if last == nil {
+				return nil, ctx.Err()
+			}
+			return last, nil
 		case <-time.After(gap):
 		}
 	}
