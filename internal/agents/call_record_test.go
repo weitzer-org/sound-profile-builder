@@ -85,12 +85,11 @@ func TestRecordAttemptUsage_AppendsCallRecordAndFlagsUnpricedModel(t *testing.T)
 }
 
 func TestIsPriceKnown_CandidatesAreUnpricedNotFree(t *testing.T) {
-	for _, m := range []string{"gemini-4-argon", "gemini-3.8-flash", "gemini-pro-latest", "gemini-3.5-flash-lite"} {
-		if isPriceKnown(m) {
-			t.Errorf("%s must stay unpriced until an official price is added", m)
-		}
+	// gemini-pro-latest is an alias (served as gemini-3.1-pro-preview); it stays unpriced.
+	if isPriceKnown("gemini-pro-latest") {
+		t.Error("gemini-pro-latest must stay unpriced (alias)")
 	}
-	for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash"} {
+	for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-4-argon", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"} {
 		if !isPriceKnown(m) {
 			t.Errorf("%s should be priced", m)
 		}
