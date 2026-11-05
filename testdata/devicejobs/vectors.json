@@ -1,0 +1,753 @@
+{
+ "contract": "qc2-device-job-contract/1",
+ "note": "Shared by internal/devicejobs (Go) and the home agent (Python). Changing any vector is a contract change.",
+ "keys": {
+  "current_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "current_kid": "72eb33c6",
+  "next_hex": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+  "next_kid": "c3eba903"
+ },
+ "keyrings": {
+  "current": {
+   "current": "current_hex"
+  },
+  "current+next": {
+   "current": "current_hex",
+   "next": "next_hex"
+  },
+  "next-as-current": {
+   "current": "next_hex",
+   "next": "current_hex"
+  }
+ },
+ "signatures": [
+  {
+   "name": "V1 job payload, current key",
+   "tag": "qc2-device-job/v1",
+   "key": "current",
+   "payload": "{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}}",
+   "sig": "b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca"
+  },
+  {
+   "name": "V1 payload under the result tag (must differ)",
+   "tag": "qc2-device-result/v1",
+   "key": "current",
+   "payload": "{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}}",
+   "sig": "4dbfe7ca1b70108a41802bfe505870711934301ef0d5eb224b1186767d7c22d0"
+  },
+  {
+   "name": "V2 non-ASCII and <",
+   "tag": "qc2-device-job/v1",
+   "key": "current",
+   "payload": "{\"name\":\"Café <Lead>\"}",
+   "sig": "95ff66cc7ce96ef0c25c09a8d3dd6cdb9a5a2215bd9932795ed3f327b689f2f6"
+  },
+  {
+   "name": "V1 payload, next key",
+   "tag": "qc2-device-job/v1",
+   "key": "next",
+   "payload": "{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}}",
+   "sig": "e865b3853bb7a3984f40e395832b1ed66c7b89a7833ba463051db96cdd9ad3d6"
+  }
+ ],
+ "envelopes": [
+  {
+   "name": "python-style envelope (ensure_ascii escapes)",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"name\\\":\\\"Caf\\u00e9 <Lead>\\\"}\",\"sig\":\"95ff66cc7ce96ef0c25c09a8d3dd6cdb9a5a2215bd9932795ed3f327b689f2f6\"}",
+   "expect": "ok",
+   "payload": "{\"name\":\"Café <Lead>\"}"
+  },
+  {
+   "name": "go-style envelope (\\u003c escape, raw UTF-8)",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"name\\\":\\\"Café \\u003cLead>\\\"}\",\"sig\":\"95ff66cc7ce96ef0c25c09a8d3dd6cdb9a5a2215bd9932795ed3f327b689f2f6\"}",
+   "expect": "ok",
+   "payload": "{\"name\":\"Café <Lead>\"}"
+  },
+  {
+   "name": "whitespace and key order do not matter",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{ \"sig\" : \"95ff66cc7ce96ef0c25c09a8d3dd6cdb9a5a2215bd9932795ed3f327b689f2f6\", \"payload\" : \"{\\\"name\\\":\\\"Caf\\u00e9 <Lead>\\\"}\", \"kid\" : \"72eb33c6\", \"v\" : 1 }",
+   "expect": "ok",
+   "payload": "{\"name\":\"Café <Lead>\"}"
+  },
+  {
+   "name": "wrong tag",
+   "tag": "qc2-device-result/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_signature"
+  },
+  {
+   "name": "tampered payload",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"read_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_signature"
+  },
+  {
+   "name": "signed with the next key, keyring has only current",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"c3eba903\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e865b3853bb7a3984f40e395832b1ed66c7b89a7833ba463051db96cdd9ad3d6\"}",
+   "expect": "unknown_kid"
+  },
+  {
+   "name": "signed with the next key during rotation",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current+next",
+   "envelope": "{\"v\":1,\"kid\":\"c3eba903\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e865b3853bb7a3984f40e395832b1ed66c7b89a7833ba463051db96cdd9ad3d6\"}",
+   "expect": "ok",
+   "payload": "{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}}"
+  },
+  {
+   "name": "signed with the old key after rotation (old is next)",
+   "tag": "qc2-device-job/v1",
+   "keyring": "next-as-current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "ok",
+   "payload": "{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}}"
+  },
+  {
+   "name": "uppercase sig",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"B805630D7503D11807C69CABC9061480FBB91AA5EE1C86157A59E822FD2A9FCA\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "uppercase kid",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72EB33C6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "extra envelope key",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\",\"extra\":1}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "v is 2",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":2,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "v is 1.0",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1.0,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "v is the string 1",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":\"1\",\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "payload is an object, not a string",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":{\"v\":1,\"type\":\"qc2-device-job\",\"job_id\":\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\",\"bucket\":\"qc2-device-jobs-test\",\"kind\":\"list_slots\",\"created_at\":\"2026-11-05T12:00:00Z\",\"expires_at\":\"2026-11-05T12:15:00Z\",\"args\":{}},\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "duplicate envelope key",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "lone surrogate in payload",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"name\\\":\\\"\\ud800\\\"}\",\"sig\":\"0000000000000000000000000000000000000000000000000000000000000000\"}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "trailing data",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"} {}",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "not JSON",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "hello",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "nested 3000 deep (must not crash the parser)",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+   "expect": "bad_envelope"
+  },
+  {
+   "name": "v is 1e400",
+   "tag": "qc2-device-job/v1",
+   "keyring": "current",
+   "envelope": "{\"v\":1e400,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_envelope"
+  }
+ ],
+ "pending_jobs": [
+  {
+   "name": "valid list_slots job",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "valid push_preset job",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"01e5735c566f2f1ea358eafadf3eeea6014de37d63b2eada1396a030d3295d94\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "valid read_preset job",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"read_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":null}}\",\"sig\":\"d5556dc9340113fd62f87ada56675c5e3a679d006118f1f179f471f68ee94a6f\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "object key not under jobs/pending/",
+   "keyring": "current",
+   "object_key": "jobs/done/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_object_key"
+  },
+  {
+   "name": "object key with uppercase uuid",
+   "keyring": "current",
+   "object_key": "jobs/pending/6F1C2E1A-3B7D-4C55-9A0E-2F4B8D9C1E01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_object_key"
+  },
+  {
+   "name": "object key with traversal",
+   "keyring": "current",
+   "object_key": "jobs/pending/../6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_object_key"
+  },
+  {
+   "name": "bad signature",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"0000000000000000000000000000000000000000000000000000000000000000\"}",
+   "expect": "bad_signature"
+  },
+  {
+   "name": "unknown kid",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"c3eba903\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e865b3853bb7a3984f40e395832b1ed66c7b89a7833ba463051db96cdd9ad3d6\"}",
+   "expect": "unknown_kid"
+  },
+  {
+   "name": "NaN in payload",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":NaN,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"bdb264c461e32366b054a1474560540f2bd70b522f0cb02be09822f55f1465e3\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "duplicate key in payload",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"0e4dc226e7a88557b8b257ca485bde46b9daf60310dbeb46c7795def0cc5b685\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "unknown payload field",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{},\\\"priority\\\":1}\",\"sig\":\"124e348b93b71d5fd20838b5c0d4fe95a7c7e5594408b953326c19d9e2a2437b\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "missing payload field",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\"}\",\"sig\":\"a0505606ae5782fedead40a830f413afee1665d98c058fd731dfc9da35e2fd27\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "payload v is 2",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":2,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"d7ee2dda3380934575f7b92715b4fac22c37e9ccd6845640a61be569cf52243b\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "unknown kind",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"delete_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"0fbe202ccf56a2c3dcc899938e0b2105ad569909e73b2e7def598355051c551f\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "list_slots with args",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"1A\\\"}}\",\"sig\":\"b1e52c60f84abba2a2238a16437b11ce26a0a45710fac8b6d46176c7692416ce\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "read_preset without slot key",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"read_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"c7aba67aea17aad9a6243b9fdc4c6b836dae0c3b249ae23bf3fb852a0dfa8fe7\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push_preset with lowercase slot",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20a\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"02497034771131a217fff408faecff09cceb39eed2b45abcf500adca9c3d5309\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push_preset with slot out of range",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"33A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"f412d8f3ec92b8ce735d905efe727baf2987b98e3725b696c5b2452d2290d971\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push_preset with control character in name",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas\\\\u0007Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"427bd2ffe2220853a8ba35f387334b12d27cb01ce2730b540873213758e2e5cc\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "timestamp with fractional seconds",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00.000Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"9f40ee6ec3bc6b930c6c29e11581af3ceffd30d9068a334a60fa3a923cf78457\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "timestamp with offset",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00+00:00\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"096e7a2c703004c6c851e132dfc1b974a9efeac3219b02b33867eca803733655\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "job_id does not match the object key",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"11111111-2222-4333-8444-555555555555\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"12a53be43460a20f945436d41aaf2acc36781702bcd6d6a6b82483bd115fc177\"}",
+   "expect": "misrouted"
+  },
+  {
+   "name": "bucket mismatch",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "someone-elses-bucket",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "misrouted"
+  },
+  {
+   "name": "replay: id already in the ledger",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [
+    "6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01"
+   ],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "replay"
+  },
+  {
+   "name": "replay wins over expiry",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T13:00:00Z",
+   "ledger": [
+    "6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01"
+   ],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "replay"
+  },
+  {
+   "name": "expired at exactly expires_at",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:15:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "expired"
+  },
+  {
+   "name": "one second before expiry",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:14:59Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "created_at 6 minutes in the future",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T11:54:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "created_at 5 minutes in the future is allowed",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T11:55:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "created_at not before expires_at",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"05f736ff0ae16426abad4b6b9925f5dee51d3de8ebf747f6b74e03c1e546686f\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "lifetime over 24h",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-06T12:00:01Z\\\",\\\"args\\\":{}}\",\"sig\":\"14013d69469967f6f62d166d81adc037a1814bb33742267914b4104e0d5684d5\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "rotation: job signed with the next key",
+   "keyring": "current+next",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"c3eba903\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e865b3853bb7a3984f40e395832b1ed66c7b89a7833ba463051db96cdd9ad3d6\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "object key with a trailing newline",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json\n",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b805630d7503d11807c69cabc9061480fbb91aa5ee1c86157a59e822fd2a9fca\"}",
+   "expect": "bad_object_key"
+  },
+  {
+   "name": "push slot with a trailing newline",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\\n\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"345ca37362b227c05d62a61b15484bdebe2293ecde2a714ac481182f59649d92\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "timestamp with a trailing newline",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\\n\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"09085275cdb08b36285881c6b986dbcd50e29fc51b8d91d2c315c62eea4711a2\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "timestamp with full-width digits",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"\\uff12\\uff10\\uff12\\uff16-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"a977863f096dfdfcd5ef979ef209a64b017d33657933b99bf89eea09e1786abb\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "timestamp in year 0000",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"0000-01-01T00:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"293e22e15ffb533b60fe5f0b3006e9f1e6d18a34cf47c07f7a34e717d3a2428a\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "case-variant duplicate key",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"Kind\\\":\\\"push_preset\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e692c075b582db8a0f2acff647d079b388e0ef910dc0d36698fa5af6e1454613\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "case-variant key alone",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"KIND\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"2afa385216c7d10c6071cb6f850c1ea81eaa2eb759537f25d8a29971e43e7759\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "v is true",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":true,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"57ad530f5277e4247b3ca0dfc6aa290e21027fa2b5bd5b2a79706b90c944a76f\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "v is 1.0",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1.0,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"list_slots\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"b6caa26a0475d4bd9ebd53e64437cdf1300da2a3e1d9780e7b7ad26f9a27fc57\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push source is null",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":null,\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"2c7a9b5e977e75eaea2ed562be7586a0be4c2e15d51fe7112e916233116a3ad2\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push source is empty",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"f52e31392c234927b0aa25031df224a2a3047264d69dc1310361eed814a8b949\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push source.preset_id is null",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":null,\\\"guitar\\\":\\\"T\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"57b8d002b1998771719d3b8797bc019d67e1f39b2163d6b138171674470631ec\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push source has an extra key",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p\\\",\\\"guitar\\\":\\\"T\\\",\\\"x\\\":1},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"3e7c3dabb0e05799fbfac193e4ad7572aa3b7a7f52fcac629380d36b529e93fa\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push export payload is an array",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":[]}}}\",\"sig\":\"3dc476216d287a87c5bdd14ac62d642a45dc25107dce6c004ebf693f843ae904\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "push export has an unknown format shape",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"EXPORT\\\",\\\"payload\\\":{}}}}\",\"sig\":\"cc859da755a99b35ee22d5f139d0a0c7a8a0a6728102911b94ceec2428fd216d\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "unpaired surrogate inside the payload",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Tele\\\\ud800\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":0,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"b69e2cfbf8c9b510b17e0c2d16aa2838cc3243398a9630fcc2b2173e906e0219\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "1e400 inside the export payload",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":1e400,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"f6753f6d55839e4e640d2e3d4ff0e0e28a46fbac21abaf5d9e40148ae7b18fe6\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "400-digit integer inside the export payload",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"rows\\\":[{\\\"row\\\":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999,\\\"blocks\\\":[]}]}}}}\",\"sig\":\"97fcc00ad62e0575bd5758dd294d04dfe7a5fec45f01cb44e062622cab4dfa4a\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "payload nested exactly 32 deep",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"deep\\\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]}}}}\",\"sig\":\"329dbe7cebb49f59e030e30ab0d4f8ceedf50284ba5cc79c34e8c96682c74d34\"}",
+   "expect": "ok"
+  },
+  {
+   "name": "payload nested 33 deep",
+   "keyring": "current",
+   "object_key": "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"push_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"p-123\\\",\\\"guitar\\\":\\\"Telecaster\\\"},\\\"export\\\":{\\\"format\\\":\\\"qc2-device-export/1\\\",\\\"payload\\\":{\\\"deep\\\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}}}}\",\"sig\":\"5e53b1f2dd2f8047d983601f9fb71a07f355fdb7959791af631f3e0ac743360e\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "read_preset with a padded slot",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"read_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\" 20A\\\\n\\\"}}\",\"sig\":\"603f45a5b2f5db4debf637a078b296329d2623f1aa66491f64ed075c76f82a5e\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "read_preset with a slot (shape-valid, agent refuses later)",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":\\\"read_preset\\\",\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"20A\\\"}}\",\"sig\":\"ebbab724582e6fe6be9ccebc5413469c8881c15375b50c971dc29582ecf6def8\"}",
+   "expect": "ok"
+  }
+ ]
+}
