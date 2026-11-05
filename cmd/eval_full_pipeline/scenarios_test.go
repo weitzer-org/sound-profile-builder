@@ -125,3 +125,17 @@ func TestSelectQueries_DedupesNames(t *testing.T) {
 		t.Fatalf("got %v, %v", q, err)
 	}
 }
+
+func TestProductionScenarioMirrorsDefaults(t *testing.T) {
+	sel, err := SelectScenarios(BuildScenarios(false), "PROD")
+	if err != nil || len(sel) != 1 {
+		t.Fatalf("PROD not selectable: %v %v", sel, err)
+	}
+	p := sel[0]
+	if len(p.AgentModels) != 13 {
+		t.Fatalf("PROD routes %d agents, want 13", len(p.AgentModels))
+	}
+	if p.AgentModels["2_sonic_profiler"] != "gemini-3.8-flash" || p.AgentModels["12_architect"] != "gemini-4-argon" {
+		t.Fatalf("PROD routing %v", p.AgentModels)
+	}
+}

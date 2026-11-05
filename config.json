@@ -20,7 +20,7 @@
   "agent_prompts": {
     "2_sonic_profiler": "v4",
     "4_coros_librarian": "v2",
-    "6_acoustician": "v3",
+    "6_acoustician": "v4",
     "12_architect": "v5",
     "10_control_mapper": "v2"
   }

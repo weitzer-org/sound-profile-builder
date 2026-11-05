@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/weitzer-org/sound-builder/internal/agents"
 )
 
 // Model ids used by the Gemini-upgrade scenarios (docs/eval/gemini-model-upgrade-test-plan.md §5).
@@ -111,13 +113,23 @@ func BuildScenarios(argonNoSearch bool) []Scenario {
 	return scenarios
 }
 
+// ProductionScenario routes every agent exactly as production does by default
+// (agents.DefaultModelFor), so a run validates what would deploy. Not part of the plan's S/A grid.
+func ProductionScenario() Scenario {
+	m := map[string]string{}
+	for _, k := range append(append(append([]string{}, proTierKeys...), flashTierKeys...), criticKey) {
+		m[k] = agents.DefaultModelFor(k)
+	}
+	return Scenario{ID: "PROD", Label: "Production defaults (agents.DefaultModelFor)", AgentModels: m, Pins: map[string]string{modelFlashBaseline: flashBaselineServed}}
+}
+
 // SelectScenarios filters by comma-separated IDs (empty = all, in plan order). Unknown IDs are an error.
 func SelectScenarios(all []Scenario, ids string) ([]Scenario, error) {
 	ids = strings.TrimSpace(ids)
 	if ids == "" || strings.EqualFold(ids, "all") {
 		return all, nil
 	}
-	byID := map[string]Scenario{}
+	byID := map[string]Scenario{"PROD": ProductionScenario()}
 	for _, s := range all {
 		byID[strings.ToUpper(s.ID)] = s
 	}
