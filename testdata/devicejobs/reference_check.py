@@ -292,13 +292,16 @@ def run_vectors(path):
     for e in v["envelopes"]:
         total += 1
         try:
-            open_envelope(ring(e["keyring"]), e["tag"], e["envelope"].encode("utf-8"))
+            payload = open_envelope(ring(e["keyring"]), e["tag"], e["envelope"].encode("utf-8"))
             got = "ok"
         except Reject as r:
-            got = r.outcome
+            payload, got = None, r.outcome
         if got != e["expect"]:
             bad += 1
             print("envelope:", e["name"], "got", got, "want", e["expect"])
+        elif got == "ok" and payload != e["payload"]:  # the exact signed string
+            bad += 1
+            print("envelope:", e["name"], "returned a different payload")
     for c in v["pending_jobs"]:
         total += 1
         ledger = set(c["ledger"])
