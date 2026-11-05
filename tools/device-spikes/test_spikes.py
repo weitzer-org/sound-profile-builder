@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import os
 import sys
 import tempfile
@@ -186,7 +187,6 @@ class FakeDeviceCase(unittest.TestCase):
                     st.enter_context(p)
                 code = sc.run_spike(mod.main, argv)
             files = sorted(Path(td).glob("*.json"))
-            import json
             data = json.loads(files[-1].read_text(encoding="utf-8")) if files else None
         return code, out.getvalue(), data
 
