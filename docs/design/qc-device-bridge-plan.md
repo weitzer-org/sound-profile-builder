@@ -28,7 +28,7 @@
   - UI parity rules for `generate_preset` untouched;
   - security review for auth, storage or LLM-content changes.
 - **The home side runs natively on the owner's Windows PC.** It is a Python program in a pinned virtual environment, started at logon by Task Scheduler.
-  - It uses **qc-mcp's transport code** from the owner's own standalone copy of qc-mcp, pinned to the reviewed commit `f634ecd`. That code already drove the owner's unit (CorOS 4.1.0) in direct mode.
+  - It uses **qc-mcp's transport code**, vendored into this repo at the reviewed commit `f634ecd` (`deploy/qc-agent/vendor/qc_mcp/`). That code already drove the owner's unit (CorOS 4.1.0) in direct mode.
   - **pyquadcortex is not used** (owner's decision).
   - **Containers are not used.** Every Windows container option puts the device behind USB passthrough into a Linux VM, and qc-mcp has no Linux backend. See section 5.1.
 
@@ -41,7 +41,7 @@ Phone: Claude app ── QC-2 Modeler connector (existing /mcp, MCP_TOKEN) ─�
                                                      R2 bucket "<app>-device-jobs" (NEW, separate)
                                                                      ▲ polls (outbound HTTPS only)
 Home: Windows PC ─ qc-agent (Python venv, Task Scheduler at logon) ──┘
-                     │ Windows HID (hid.dll), via qc-mcp's transport (owner's pinned copy)
+                     │ Windows HID (hid.dll), via qc-mcp's transport (vendored at f634ecd)
                      ▼
                  Quad Cortex (USB)
 ```
@@ -171,7 +171,11 @@ The output is one guitar's chain as exact device operations:
 
 **Library: qc-mcp's transport, used as a library.**
 - The agent imports `qc_mcp.transport.QuadCortex` and calls its methods directly. It does **not** run qc-mcp's MCP server or its 60 tools.
-- The code comes from the owner's own standalone copy of qc-mcp, pinned to `f634ecd` with hash-pinned dependencies (`requirements.lock.txt`). It loads through `PYTHONPATH=<copy>\src`, as in the trial.
+- **Vendored, not cloned.** The needed modules (`transport.py`, `protocol.py`, `backend.py`, `winhid.py`, `directory.py`, plus `descriptors/*.pb`; about 2,400 lines, MIT) are copied from upstream `f634ecd` into `deploy/qc-agent/vendor/qc_mcp/`, with upstream's `LICENSE` and a `PROVENANCE.md`.
+  - A test checks each vendored file's SHA-256 against the `f634ecd` originals, so any local change is deliberate and visible.
+  - Upstream updates arrive only through a re-vendoring PR.
+  - The runtime dependency is `protobuf`, hash-pinned. The agent doesn't need the `mcp` SDK.
+  - A separate GitHub copy of qc-mcp is **not** needed.
 - It's MIT-licensed, and already proven on the owner's unit in direct mode on Windows.
 - Methods used:
   - opening: `open(handshake=True)` (direct, exclusive);
@@ -203,7 +207,7 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 
 **Running it on Windows**
 
-- **Install:** clone the owner's qc-mcp copy and `qc-agent` (from this repo, `deploy/qc-agent/`). Then `py -3.12 -m venv`, and `pip install --require-hashes` for both lockfiles.
+- **Install:** clone this repo, then `py -3.12 -m venv`, then `pip install --require-hashes -r deploy/qc-agent/requirements.lock.txt`.
 - **Configuration** goes in `%LOCALAPPDATA%\qc-agent\agent.env`:
   - R2 endpoint, bucket and token;
   - `DEVICE_JOB_KEY`;
@@ -259,7 +263,7 @@ Every container runtime for Windows hits the same two problems:
 | Gate | Question | How | Needs device |
 |---|---|---|---|
 | **G0** | Did the hand-run "bb king test 2" save actually land in slot 2A? | Check on the unit, or run `directory_summary(refresh=true)` then `search_directory`. | yes |
-| **G1** | **Which parameter-index scheme does the device use for the 196 cloned models (cabs, some reverbs)?** Our catalog expands `clones=` templates. qc-mcp ignores them. Their indexes disagree for all 196 (checked against ModelRepo.xml). | Read back a preset containing a cab and a cloned reverb. Compare the raw per-block `params` array length and positions with both schemes. The "bb king test 2" preset has a cab and Spring (M). Use a library-mode script on the owner's qc-mcp copy. | yes |
+| **G1** | **Which parameter-index scheme does the device use for the 196 cloned models (cabs, some reverbs)?** Our catalog expands `clones=` templates. qc-mcp ignores them. Their indexes disagree for all 196 (checked against ModelRepo.xml). | Read back a preset containing a cab and a cloned reverb. Compare the raw per-block `params` array length and positions with both schemes. The "bb king test 2" preset has a cab and Spring (M). Use a library-mode script on the `qc-trial` qc-mcp clone. | yes |
 | **G2** | Does a **library-mode** qc-mcp script (no MCP server) connect, read and disconnect cleanly from a non-elevated Task Scheduler task? Does it fail cleanly when Cortex Control holds the unit? | A spike script run at logon by `schtasks`. A second run with Cortex Control open. | yes |
 | **G3** | Do qc-mcp's transport writes behave on 4.1.0 when driven with **wire** values? That means `set_routing`, `add_block`, `set_param` with an explicit 0..1, `set_param_scenes`, and `write_preset_file` into an empty slot. | One test preset into an empty slot. Read it back and compare. | yes |
 | **G4** | Taper and symbolic-bound constants on **4.1.0**. Our proposed constants come from pyquadcortex's 4.0.1 measurements. They are used here as **data, not code**, so they need confirming on this unit. | Set three known display values through the export path, and read the unit's screen. | yes |
@@ -274,11 +278,11 @@ Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-co
 
 | PR | Scope | Device? | Risk | Tests | Depends on |
 |---|---|---|---|---|---|
-| **P0-a** | Phase 0 spike scripts under `tools/device-spikes/`, built on the owner's qc-mcp copy in library mode: G1 read-back dump, G2 Task Scheduler run, G3/G4/G6 checks. Results written up in this doc. | **yes** (owner runs) | low; read-mostly, one write to an empty slot | Manual. Outputs pasted into the PR. | — |
+| **P0-a** | Phase 0 spike scripts under `tools/device-spikes/`, built on qc-mcp's transport in library mode (the trial's `qc-trial\qc-mcp` clone at `f634ecd` is fine for spikes): G1 read-back dump, G2 Task Scheduler run, G3/G4/G6 checks. Results written up in this doc. | **yes** (owner runs) | low; read-mostly, one write to an empty slot | Manual. Outputs pasted into the PR. | — |
 | **P1** | Catalog: import `skew`; `firmware_constants.go` with the symbolic-bound values. These are data points taken from pyquadcortex's published measurements, with MIT attribution and no pyquadcortex code, and are confirmed on the owner's unit by G4. `Param.ToWire` / `ToDisplay` that refuse rather than clamp; **clone fix if G1 requires it**; re-import `qc_catalog.json` (`-diff` reviewed). | no | low–medium; the catalog feeds the pipeline | Golden vectors: G4's on-device readings, plus qc-mcp's measured points (Gain LEVEL 0 dB at 0.5, mixer −40..+12). Every symbolic bound resolved or listed as unmeasured. `go test ./...` plus the e2e suite. | G1, G4 |
 | **P2** | Device export: `internal/deviceexport` (section 4), plus `get_preset(format=device)` on MCP and a "Download device JSON" link. | no | medium; mapping rules | Golden exports for 3 eval presets. Round-trip display → wire → display. Every id and index exists. Refusal cases. | P1, PR #120 |
 | **P3** | Job queue and tools: `internal/devicejobs` (job schema, HMAC sign/verify, jobs-bucket config `DEVICE_JOBS_BUCKET`, `DEVICE_JOB_KEY[_NEXT]`); MCP tools `device_status`, `send_preset_to_device` (dry run, then confirm token), `get_device_job`, `list_device_slots`, `read_device_preset`; server instructions and style guide updated. | no (fake agent in tests) | **high**: auth, storage, new attack surface | `httptest` MCP integration tests as in `internal/mcpserver/*_test.go`, with an in-memory store. Signature, expiry and replay tests. A golden dry-run. | P2, G5 |
-| **P4** | Home agent: `deploy/qc-agent/` (Python; qc-mcp transport behind a `DeviceBackend` interface), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-task` / `uninstall-task` (Task Scheduler), Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
+| **P4** | Home agent: `deploy/qc-agent/` (Python; vendored qc-mcp transport behind a `DeviceBackend` interface, plus the vendoring checksum test), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-task` / `uninstall-task` (Task Scheduler), Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
 | **P5** | Read-back import: device preset → `StructuredPreset` draft (inverse mapping, wire → display), so the phone can say "refine what's on my unit". | acceptance yes | medium | Round trip: push a preset, read it back, compare the two `StructuredPreset`s. | P4 |
 | **P6** | Hardware acceptance and runbook: the owner's end-to-end run from the phone, with failure drills (agent offline, slot occupied, wrong firmware, unplugged mid-job). | **yes** | — | A checklist in `docs/design/`. | P4, P5 |
 | v2 | `sync_device_library` (and feeding owned captures to the Librarian), `audition_on_device`, owned-slot re-push, scene labels and stomps, captures and IRs | mixed | medium | — | P6 |
@@ -323,6 +327,6 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 
 Suggested first message:
 
-> Read `docs/design/qc-device-bridge-plan.md` and `docs/research/qc-usb-tools-audit.md` on branch `claude/qc-usb-tools-audit`. Start with Phase 0: write the spike scripts for gates G1 (clone parameter indexing), G2 (library-mode qc-mcp under Task Scheduler) and G3 (qc-mcp transport writes with wire values on CorOS 4.1.0) under `tools/device-spikes/`. Use my qc-mcp copy in library mode; don't use pyquadcortex. Keep it read-only except the single empty-slot save in G3. Give me exact Windows/PowerShell steps to run them. Don't start P1–P4 until I've pasted the results.
+> Read `docs/design/qc-device-bridge-plan.md` and `docs/research/qc-usb-tools-audit.md` on branch `claude/qc-usb-tools-audit`. Start with Phase 0: write the spike scripts for gates G1 (clone parameter indexing), G2 (library-mode qc-mcp under Task Scheduler) and G3 (qc-mcp transport writes with wire values on CorOS 4.1.0) under `tools/device-spikes/`. Use qc-mcp's transport in library mode from my existing qc-trial clone at f634ecd; don't use pyquadcortex. Keep it read-only except the single empty-slot save in G3. Give me exact Windows/PowerShell steps to run them. Don't start P1–P4 until I've pasted the results.
 
 Use **Sonnet 5.5** for that session (spike scripts). Switch to **Opus 5.5** with `/model` when interpreting the results and for P3/P4.
