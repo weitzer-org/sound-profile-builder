@@ -40,6 +40,7 @@ func main() {
 	includeSkipped := flag.Bool("include-skipped", false, "also run scenarios marked skipped (e.g. S3 once pro-latest resolves to the baseline Pro model)")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results will NOT be scoreable)")
 	argonNoSearch := flag.Bool("argon-no-search", false, "keep agents 1,2,3 off Argon in A1/A2/A3 (use if the Phase 0.5 probe shows Argon cannot use GoogleSearch)")
+	allowCloud := flag.Bool("allow-cloud-captures", false, "set allow_cloud_captures=true in the run constraints so agent 5 (Cloud Navigator) is actually called; evalfixtures.DefaultConstraints has it false, which bypasses the agent without a model call")
 	archPrompt := flag.String("architect-prompt", "", "override config.json's 12_architect prompt version for EVERY scenario (e.g. v5), baseline included, so the prompt is not a variable between scenarios")
 	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
@@ -120,14 +121,17 @@ func main() {
 		}
 		agentPrompts["12_architect"] = *archPrompt
 	}
-	runCfg := map[string]any{"agent_prompts": agentPrompts, "scenarios": *scenariosFlag, "queries": *queriesFlag, "reps": *reps,
+	constraints := evalfixtures.DefaultConstraints()
+	if *allowCloud {
+		constraints["allow_cloud_captures"] = true
+	}
+	runCfg := map[string]any{"agent_prompts": agentPrompts, "constraints": constraints, "scenarios": *scenariosFlag, "queries": *queriesFlag, "reps": *reps,
 		"argon_no_search": *argonNoSearch, "eval_no_fallback": agents.EvalNoFallbackEnabled(), "started_at": time.Now().UTC().Format(time.RFC3339)}
 	if b, err := json.MarshalIndent(runCfg, "", "  "); err == nil {
 		if err := os.WriteFile(filepath.Join(*outDir, "run_config.json"), b, 0o644); err != nil {
 			log.Printf("write run_config.json: %v", err)
 		}
 	}
-	constraints := evalfixtures.DefaultConstraints()
 	var records []evalcheck.RunRecord
 
 	// Sequential on purpose (API rate limits; same as the July tool).

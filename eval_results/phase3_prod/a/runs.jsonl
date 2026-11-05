@@ -1,2 +1,0 @@
-{"scenario":"PROD","query":"01_SRV_Clean","rep":1,"success":true,"output_file":"eval_results/phase3_prod/a/PROD/rep1/01_SRV_Clean.html","latency_sec":88.268223594,"integrity_ok":true,"calls_file":"eval_results/phase3_prod/a/PROD/rep1/01_SRV_Clean.calls.json"}
-{"scenario":"PROD","query":"02_Chicago_Blues","rep":1,"success":true,"output_file":"eval_results/phase3_prod/a/PROD/rep1/02_Chicago_Blues.html","latency_sec":108.902604556,"integrity_ok":true,"calls_file":"eval_results/phase3_prod/a/PROD/rep1/02_Chicago_Blues.calls.json"}
