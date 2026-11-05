@@ -603,6 +603,25 @@ class G4G6Tests(FakeDeviceCase):
                 self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", *extra], qc)
         self.assertEqual([c for c in qc.calls if isinstance(c, tuple)], [])
 
+    def test_unsaved_test_layout_is_accepted_only_with_the_flag(self):
+        bp = self.saved_preset()
+        bp.name = ""                                   # g3 --apply, never saved
+        args = ["--slot", "24H", "--firmware", "4.1.0", "--case", "amp", "--wire", "0.25"]
+        code, out, _ = self.run_script("g4_taper_check", args, self.fake(bp=bp, open_slot=sc.parse_slot("24H")))
+        self.assertEqual(code, sc.EXIT_REFUSED, out)
+        self.assertIn("--unsaved", out)
+        qc = self.fake(bp=bp, open_slot=sc.parse_slot("24H"))
+        code, out, data = self.run_script("g4_taper_check", args + ["--unsaved"], qc)
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual([c for c in qc.calls if isinstance(c, tuple)], [("set_param", 0, tp.AMP_COL, tp.AMP_OUTPUT_IDX, 0.25)])
+
+    def test_unsaved_flag_does_not_bypass_the_block_check(self):
+        bp = self.blank_preset("")                     # blank name AND no blocks: not the test layout
+        code, out, _ = self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", "--case", "amp", "--wire", "0.25", "--unsaved"],
+                                       self.fake(bp=bp, open_slot=sc.parse_slot("24H")))
+        self.assertEqual(code, sc.EXIT_REFUSED, out)
+        self.assertIn("does not hold model", out)
+
     def test_g4_detects_linear_unit(self):
         qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
         readings = []

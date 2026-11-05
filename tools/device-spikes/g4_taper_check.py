@@ -61,6 +61,7 @@ def main() -> int:
     sc.add_common_args(ap, writes=True)
     ap.add_argument("--slot", required=True, help="the slot G3 saved the test preset into")
     ap.add_argument("--folder-key", default=sc.SETLIST)
+    ap.add_argument("--unsaved", action="store_true", help="accept the test layout on the live buffer from `g3 --apply` (blank name, never saved)")
     ap.add_argument("--no-prompt", action="store_true", help="write and read back only; skip the screen readings")
     ap.add_argument("--case", choices=CASE_KEYS, help="single-step mode: write ONE value to this parameter (amp OUTPUT, cab LEVEL or HPF FREQ), then exit; needs --wire")
     ap.add_argument("--wire", type=float, help="the wire value (0..1) for --case")

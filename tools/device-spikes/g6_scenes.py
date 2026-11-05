@@ -92,6 +92,7 @@ def main() -> int:
     sc.add_common_args(ap, writes=True)
     ap.add_argument("--slot", required=True, help="the slot G3 saved the test preset into")
     ap.add_argument("--folder-key", default=sc.SETLIST)
+    ap.add_argument("--unsaved", action="store_true", help="accept the test layout on the live buffer from `g3 --apply` (blank name, never saved)")
     ap.add_argument("--no-prompt", action="store_true", help="skip the questions about the unit's screen")
     ap.add_argument("--hold", type=int, default=0, metavar="SECONDS",
                     help="photo mode: at each scene, ring the bell and wait SECONDS (no typing) so you can photograph the unit; implies --no-prompt")

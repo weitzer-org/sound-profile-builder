@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 65 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 67 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -140,6 +140,8 @@ Select the G3 test preset on the unit, then:
 ```
 
 It writes known wire values to three parameters on the live buffer and asks what the unit's screen shows for each (9 readings). **Photo mode:** add `--hold 20` and it asks nothing; it sets each value, rings the terminal bell, prints `PHOTO n/9`, and waits 20 seconds so you can photograph the unit, then moves on. Tap the block on the unit first so its parameter is visible. **Fewest photos (4), one command each:** `--case amp --wire 0.25`, `--case cab --wire 0.01`, `--case cab --wire 1.0`, `--case hpf --wire 0.25`. Each writes ONE value, prints what the taper predicts (and what linear would give), and exits; the edit stays on the unit's live buffer until you select another preset. Tap the block to see its value. Afterwards, select another preset **without saving**.
+
+**If the G3 preset isn't saved on the unit** (e.g. it was deleted): select an empty My Presets slot, run `g3_build_and_save.py --slot 3A --firmware 4.1.0 --apply` (builds on the live buffer, no save), leave the unit on that preset, and add `--unsaved` to the G4 and G6 commands. The block-by-block check still has to pass, so nothing else can be edited this way.
 
 ### G6: scenes (after G3)
 

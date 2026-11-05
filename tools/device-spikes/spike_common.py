@@ -299,9 +299,14 @@ def require_open_test_preset(qc: Guarded, args, tp):
     if cur.get("folder_key") != args.folder_key or cur.get("position") != pos or cur.get("is_factory"):
         raise SpikeRefused(f"the unit has {cur} open, not {slot_label(pos)}. Select the G3 test preset on the unit first.")
     bp = qc.get_current_preset()
-    if bp is None or bp.name != tp.TEST_PRESET_NAME:
-        raise SpikeRefused(f"open preset is {None if bp is None else bp.name!r}, expected {tp.TEST_PRESET_NAME!r}. "
-                           "This spike only edits the G3 test preset.")
+    # --unsaved: the test layout built on the live buffer by `g3 --apply`, never saved (so its name is blank).
+    # The block-by-block check below still has to pass, so nothing else can be edited this way.
+    allowed = {tp.TEST_PRESET_NAME} | ({""} if getattr(args, "unsaved", False) else set())
+    if bp is None or bp.name not in allowed:
+        raise SpikeRefused(f"open preset is {None if bp is None else bp.name!r}, expected {tp.TEST_PRESET_NAME!r}"
+                           + (" (or the unsaved test layout from g3 --apply)" if getattr(args, "unsaved", False) else
+                              "; if the preset is not saved, build it with g3 --apply and pass --unsaved")
+                           + ". This spike only edits the G3 test preset.")
     ch = bp.chains[tp.ROW] if len(bp.chains) > tp.ROW else None
     for b in tp.BLOCKS:
         if ch is None or b.col >= len(ch.models) or ch.models[b.col].hash != b.model_id:
