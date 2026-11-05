@@ -247,7 +247,7 @@ func TestPayloadBlockModels(t *testing.T) {
 }
 
 // v6 is the prompt that explains the catalog sections; v4 stays as it was.
-func TestArchitectV5PromptDescribesCatalogSections(t *testing.T) {
+func TestArchitectV6PromptDescribesCatalogSections(t *testing.T) {
 	v6, err := LoadPrompt("12_architect", "v6")
 	if err != nil {
 		t.Fatalf("load v6: %v", err)
