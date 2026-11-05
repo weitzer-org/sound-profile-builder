@@ -47,8 +47,11 @@ var snapPool []snapCandidate
 var exactOnlyBlocks = make(map[string]string)
 
 // pluginOnlyBlocks maps every plugin-device block name to the plugins that unlock it
-// (by catalog.PluginNames spelling): the required_plugin of each coros_map.json entry
-// producing it, or a catalog model's plugin. Owning any one of them is enough. An empty
+// (by catalog.PluginNames spelling); owning any one of them is enough. A name only
+// coros_map.json gates gets the required_plugin of each entry producing it. A name that
+// is a catalog plugin model gets that model's plugin instead, replacing whatever
+// coros_map.json said: the device catalog, not the hand-written map, says which licence
+// a device needs (TestPluginTableAgreesWithCorosMap keeps the two in agreement). An empty
 // plugin name stands for a catalog plugin_id the plugin table doesn't know, and is never
 // owned. See excludeUnownedPlugins.
 var pluginOnlyBlocks = make(map[string][]string)
@@ -422,7 +425,8 @@ func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 // map (see PluginGateFromConstraints): with no "allow_paid_plugins" key nothing is removed
 // (older callers, tests); false removes every plugin device; true keeps the devices of
 // plugins listed in "available_plugins". A name that an ungated coros_map.json entry also
-// produces is not a plugin device and is never removed.
+// produces is not a plugin device and is never removed, unless the device catalog lists
+// it as a plugin model (see pluginOnlyBlocks).
 func ExcludeUnownedPluginBlocks(validBlocks map[string]bool, constraints map[string]interface{}) map[string]bool {
 	return excludeUnownedPlugins(validBlocks, PluginGateFromConstraints(constraints))
 }
