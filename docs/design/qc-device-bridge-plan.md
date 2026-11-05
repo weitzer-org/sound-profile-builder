@@ -286,7 +286,7 @@ The spikes are in [`tools/device-spikes/`](../../tools/device-spikes/README.md) 
 
 | Gate | Spike | Status | Result |
 |---|---|---|---|
-| G0 | `g0_verify_slot.py` | script ready; **not yet run on the unit** | — |
+| G0 | `g0_verify_slot.py` | **PASS** (owner's unit, 2026-11-05) | Slot 2A (position 8) in My Presets holds "bb king test 2", so the hand-run save did land (read from a fresh `list_directory`, exactly one preset with that name). Unit reports firmware `4.1.0`, `device_type` QC. My Presets has 247 of 256 slots empty (first: 2B, 2C, 2D...). The unit had a different preset open at the time (`/media/p4/Presets/Fender Amps`, position 27), so G1 needs 2A selected by hand first. |
 | G1 | `g1_dump_params.py` | script ready; **not yet run on the unit** | — |
 | G2 (a)(b)(c) | `g2_session.py --check a/b/c` | script ready; **not yet run on the unit** | — |
 | G3 | `g3_build_and_save.py` | script ready; **not yet run on the unit** | — |
