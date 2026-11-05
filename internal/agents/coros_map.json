@@ -2439,8 +2439,6 @@
     "coros_equivalent": "Cory Wong The Big Rig Overdrive",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique",
     "required_plugin": "Cory Wong"
   },
   "Cory Wong The Clean Machine": {
@@ -2481,11 +2479,9 @@
     "required_plugin": "Cory Wong"
   },
   "Fortin Nameless": {
-    "coros_equivalent": "Brit PA-EL34",
+    "coros_equivalent": "Fortin® Nameless",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "British Crunch",
     "required_plugin": "Nameless"
   },
   "Gojira Cab 1 (M) & (ST)": {
@@ -2551,11 +2547,9 @@
     "required_plugin": "Gojira"
   },
   "Gojira PHSR": {
-    "coros_equivalent": "Bogna Fish",
+    "coros_equivalent": "Gojira PHSR",
     "type": "modulation",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "High-Gain Modern",
     "required_plugin": "Gojira"
   },
   "Gojira REV": {
@@ -2596,30 +2590,27 @@
     "required_plugin": "Nameless"
   },
   "Nameless Grind": {
-    "coros_equivalent": "CA Tremo Red",
+    "coros_equivalent": "Fortin Grind®",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Nameless"
   },
   "Nameless Hexdrive": {
-    "coros_equivalent": "Obsessive Drive",
+    "coros_equivalent": "Fortin Hexdrive®",
     "type": "overdrive",
     "confidence_score": 1.0,
     "required_plugin": "Nameless"
   },
   "Nameless Reverb": {
-    "coros_equivalent": "Range Rverb",
+    "coros_equivalent": "Nameless Reverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true,
     "required_plugin": "Nameless"
   },
   "Nameless Zuul": {
-    "coros_equivalent": "",
+    "coros_equivalent": "Fortin Zuul®",
     "type": "utility",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique",
     "required_plugin": "Nameless"
   },
   "Nolly Cab 1 (M) & (ST)": {
@@ -2692,26 +2683,21 @@
     "required_plugin": "Nolly"
   },
   "Nolly Overdrive-1": {
-    "coros_equivalent": "Love Drive 11",
+    "coros_equivalent": "Nolly Overdrive-1",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique",
     "required_plugin": "Nolly"
   },
   "Nolly Overdrive-2": {
-    "coros_equivalent": "Love Drive 11",
+    "coros_equivalent": "Nolly Overdrive-2",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "High-Gain Modern",
     "required_plugin": "Nolly"
   },
   "Nolly Reverb": {
-    "coros_equivalent": "Range Rverb",
+    "coros_equivalent": "Nolly Reverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true,
     "required_plugin": "Nolly"
   },
   "Nolly Rhythm": {
@@ -2722,11 +2708,9 @@
     "required_plugin": "Nolly"
   },
   "Parallax": {
-    "coros_equivalent": "CA 3Axe",
+    "coros_equivalent": "Parallax",
     "type": "amp",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique",
     "required_plugin": "Parallax"
   },
   "Parallax Cab (M) & (ST)": {
@@ -2755,11 +2739,9 @@
     "required_plugin": "Plini"
   },
   "Plini Comp": {
-    "coros_equivalent": "OC-76 Comp",
+    "coros_equivalent": "Plini Comp",
     "type": "compressor",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "Other / Unique",
     "required_plugin": "Plini"
   },
   "Plini Crunch": {
@@ -2801,10 +2783,9 @@
     "required_plugin": "Plini"
   },
   "Plini Reverb": {
-    "coros_equivalent": "Range Rverb",
+    "coros_equivalent": "Plini Reverb",
     "type": "reverb",
     "confidence_score": 1.0,
-    "is_capture": true,
     "required_plugin": "Plini"
   },
   "SLO-100 Cab (M) & (ST)": {
@@ -2832,11 +2813,9 @@
     "required_plugin": "SLO-100"
   },
   "SLO-100 Overdrive-1": {
-    "coros_equivalent": "Love Drive 11",
+    "coros_equivalent": "SLO-100® Overdrive-1",
     "type": "overdrive",
     "confidence_score": 1.0,
-    "is_capture": true,
-    "tonal_archetype": "High-Gain Modern",
     "required_plugin": "SLO-100"
   },
   "SLO-100 Overdrive-2": {

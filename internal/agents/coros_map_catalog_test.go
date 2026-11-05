@@ -41,3 +41,39 @@ func TestCorosMapNamesExistInCatalog(t *testing.T) {
 		t.Errorf("coros_map.json entry %q: not a block name in the device catalog (CorOS %s)", b, cat.Source.CorOSVersion)
 	}
 }
+
+// TestCorosMapPluginEntriesUsePluginModels: an entry gated behind a paid plugin
+// (required_plugin) must map to that plugin's own device in the catalog, never a native
+// stand-in. It checks is_capture entries too: plugin devices are not Neural Captures, and
+// a wrong is_capture flag previously hid a dozen such entries from the name check above.
+func TestCorosMapPluginEntriesUsePluginModels(t *testing.T) {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		plugin, _ := rec["required_plugin"].(string)
+		equiv, _ := rec["coros_equivalent"].(string)
+		if plugin == "" || equiv == "" {
+			continue
+		}
+		models := cat.Family(catalog.FamilyName(equiv))
+		if m, ok := cat.Lookup(equiv); ok {
+			models = []*catalog.Model{m}
+		}
+		isPlugin := len(models) > 0
+		for _, m := range models {
+			if m.PluginID == "" {
+				isPlugin = false
+			}
+		}
+		if !isPlugin {
+			bad = append(bad, gear+" ("+plugin+") -> "+equiv)
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Errorf("coros_map.json entry %q: required_plugin set, but the block is not a plugin model in the device catalog", b)
+	}
+}

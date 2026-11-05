@@ -83,7 +83,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	_ = GetValidNativeBlocks()
 
 	validBlocks := map[string]bool{
-		"US TWN Vibrato": true,
+		"US TWN Vibrato":  true,
 		"UK C30 TopBoost": true,
 		"Parametric-3":    true,
 	}
@@ -94,7 +94,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	}{
 		{"US TWN Vibrato", "US TWN Vibrato"},
 		{"us twn vibrato", "US TWN Vibrato"}, // case insensitive match
-		{"US Twin V", "US Twin V"},             // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
+		{"US Twin V", "US Twin V"},           // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
 		{"UK C30 TopBoost", "UK C30 TopBoost"},
 		{"Bypassed", "Bypassed"},
 		{"-3.5dB", "-3.5dB"},
@@ -111,7 +111,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 
 func TestApplyFuzzyCorrection(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US TWN Vibrato": true,
+		"US TWN Vibrato":  true,
 		"UK C30 TopBoost": false,
 	}
 
@@ -272,7 +272,7 @@ func TestBuildEffectiveValidBlocks(t *testing.T) {
 
 func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US TWN Vibrato":            true,
+		"US TWN Vibrato":             true,
 		"FNDR TWDLX IN Edge BAL CAB": true, // real user_captures.json entry
 		"Boss Blues Driver Waza":     true, // real user_captures.json entry, block_type "drive"
 	}
