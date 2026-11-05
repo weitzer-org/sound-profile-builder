@@ -368,7 +368,12 @@ func renderDeviceBlock(b *deviceBlock) string {
 // skipped. Duplicates are dropped, order is kept, and at most maxCatalogContextModels
 // models are listed. Returns "" when nothing resolves.
 func CatalogParamContext(names []string, validBlocks map[string]bool, gate PluginGate) string {
-	var lines []string
+	return renderDeviceBlocks(catalogParamBlocks(names, validBlocks, gate))
+}
+
+// catalogParamBlocks resolves CatalogParamContext's block list.
+func catalogParamBlocks(names []string, validBlocks map[string]bool, gate PluginGate) []*deviceBlock {
+	var blocks []*deviceBlock
 	seen := map[string]bool{}
 	for _, raw := range names {
 		name := stripCaptureAnnotation(raw)
@@ -383,12 +388,77 @@ func CatalogParamContext(names []string, validBlocks map[string]bool, gate Plugi
 			continue
 		}
 		seen[b.Name] = true
-		lines = append(lines, renderDeviceBlock(b))
-		if len(lines) == maxCatalogContextModels {
+		blocks = append(blocks, b)
+		if len(blocks) == maxCatalogContextModels {
 			break
 		}
 	}
+	return blocks
+}
+
+func renderDeviceBlocks(blocks []*deviceBlock) string {
+	lines := make([]string, len(blocks))
+	for i, b := range blocks {
+		lines[i] = renderDeviceBlock(b)
+	}
 	return strings.Join(lines, "\n")
+}
+
+// alwaysEffectParamCategories are the effect categories whose every model's controls are
+// given to the Architect, chosen or not, so an effect it adds or swaps in (Rule 3) has its
+// real controls listed too. In the 2026-11-05 v5-vs-v6 eval, 79% of v6's leftover device
+// notes were effects it added whose controls it hadn't been shown (a Spring reverb, a
+// Slapback Delay); reverb and delay are on most presets, compressors, EQs and wahs on many.
+var alwaysEffectParamCategories = []string{"Delay", "Reverb", "Compressor", "Equalizer", "Wah"}
+
+// CatalogEffectParamContext renders the controls of every model, one line per family, in
+// the alwaysEffectParamCategories and in the effect category of each chosen block (so a
+// chorus suggestion brings every modulation model), for the plugins the gate allows.
+// Models CatalogParamContext already lists for the same names are left out. Returns "" when
+// nothing is left.
+func CatalogEffectParamContext(names []string, validBlocks map[string]bool, gate PluginGate) string {
+	listed := map[string]bool{}
+	cats := map[string]bool{}
+	for _, c := range alwaysEffectParamCategories {
+		cats[c] = true
+	}
+	for _, b := range catalogParamBlocks(names, validBlocks, gate) {
+		listed[b.Name] = true
+		cats[b.Category] = true
+	}
+	cat, err := catalog.Embedded()
+	if err != nil {
+		return ""
+	}
+	var blocks []*deviceBlock
+	for _, c := range effectListCategories {
+		if !cats[c] {
+			continue
+		}
+		families := map[string]bool{}
+		for i := range cat.Models {
+			if m := &cat.Models[i]; m.Category == c {
+				families[catalog.FamilyName(m.Name)] = true
+			}
+		}
+		names := make([]string, 0, len(families))
+		for f := range families {
+			names = append(names, f)
+		}
+		sort.Strings(names)
+		for _, f := range names {
+			b, ok := deviceBlockFor(f)
+			if !ok || listed[b.Name] {
+				continue
+			}
+			if b.Gated && (b.Plugin == "" || !gate.Allows(b.Plugin)) {
+				continue
+			}
+			listed[b.Name] = true
+			blocks = append(blocks, b)
+		}
+	}
+	return renderDeviceBlocks(blocks)
 }
 
 // effectListCategories are the catalog categories offered by name in the effects list

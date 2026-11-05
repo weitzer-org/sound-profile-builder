@@ -59,16 +59,19 @@ func promptUsesCatalogParams(systemPrompt string) bool {
 	return strings.Contains(systemPrompt, catalogPromptMarker)
 }
 
-// catalogArchitectSections renders the two device-catalog sections appended to the
-// Architect's context for catalog-aware prompts (v6): the chosen blocks' real parameters, and the real
-// effect names for Rule 3 swaps.
+// catalogArchitectSections renders the device-catalog sections appended to the Architect's
+// context for catalog-aware prompts (v6): the chosen blocks' real parameters, the parameters
+// of the effects it may add or swap in, and the real effect names for Rule 3 swaps.
 func catalogArchitectSections(blockNames []string, validBlocks map[string]bool, paramGate, effectsGate PluginGate) string {
 	params := CatalogParamContext(blockNames, validBlocks, paramGate)
 	if params == "" {
 		params = "(none of the chosen blocks are in the device catalog)"
 	}
-	return "\n\nDevice Block Parameters (from the Quad Cortex's own catalog -- exact parameter names, ranges, defaults and switch positions for the blocks chosen so far; see \"Device Block Parameters\" in your instructions):\n" +
-		params + "\n\nDevice Effect Blocks (every real effect block name on the device, by category; a swapped-in effect must be one of these):\n" +
+	s := "\n\nDevice Block Parameters (from the Quad Cortex's own catalog -- exact parameter names, ranges, defaults and switch positions for the blocks chosen so far; see \"Device Block Parameters\" in your instructions):\n" + params
+	if effects := CatalogEffectParamContext(blockNames, validBlocks, effectsGate); effects != "" {
+		s += "\n\nDevice Effect Parameters (same format: every model in the common effect categories and in the categories of the effects chosen so far, for an effect you add or swap in):\n" + effects
+	}
+	return s + "\n\nDevice Effect Blocks (every real effect block name on the device, by category; a swapped-in effect must be one of these):\n" +
 		CatalogEffectNames(effectsGate)
 }
 

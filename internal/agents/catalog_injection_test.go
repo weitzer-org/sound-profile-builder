@@ -99,7 +99,7 @@ func architectRequestForPipeline(t *testing.T, agentConfig map[string]string) st
 // architectRequestForPipeline captured (system prompt, contents and generation config).
 var lastArchitectRequestBody string
 
-func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
+func TestRunPipelineInjectsCatalogParamsForV6Only(t *testing.T) {
 	v6 := architectRequestForPipeline(t, map[string]string{"4_coros_librarian": "v2", "12_architect": "v6"})
 	for _, want := range []string{
 		"Device Block Parameters",
@@ -107,6 +107,8 @@ func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
 		"Spring [Reverb]: MIX 0..100%",
 		"Device Effect Blocks",
 		"John Mayer Spring Reverb", // owned plugin effect
+		"Device Effect Parameters",
+		"Slapback Delay [Delay]:", // an effect the Architect may add, with its controls
 	} {
 		if !strings.Contains(v6, want) {
 			t.Errorf("v6 Architect context is missing %q", want)
@@ -122,7 +124,7 @@ func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
 	}
 
 	for _, cfg := range []map[string]string{{"4_coros_librarian": "v2", "12_architect": "v4"}, nil} {
-		if got := architectRequestForPipeline(t, cfg); strings.Contains(got, "Device Block Parameters") || strings.Contains(got, "Device Effect Blocks") {
+		if got := architectRequestForPipeline(t, cfg); strings.Contains(got, "Device Block Parameters") || strings.Contains(got, "Device Effect Blocks") || strings.Contains(got, "Device Effect Parameters") {
 			t.Errorf("Architect %v context must be unchanged (no catalog sections)", cfg)
 		}
 		if strings.Contains(lastArchitectRequestBody, "kept_defaults") {
@@ -250,7 +252,7 @@ func TestArchitectV5PromptDescribesCatalogSections(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load v6: %v", err)
 	}
-	for _, want := range []string{"# Device Block Parameters", "Device Effect Blocks", "MIC 1 LEVEL", "20*log10"} {
+	for _, want := range []string{"# Device Block Parameters", "Device Effect Blocks", "Device Effect Parameters", "MIC 1 LEVEL", "20*log10"} {
 		if !strings.Contains(v6, want) {
 			t.Errorf("v6 prompt is missing %q", want)
 		}

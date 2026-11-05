@@ -46,6 +46,7 @@ func main() {
 	allowCloud := flag.Bool("allow-cloud-captures", false, "set allow_cloud_captures=true in the run constraints so agent 5 (Cloud Navigator) is actually called; evalfixtures.DefaultConstraints has it false, which bypasses the agent without a model call")
 	archPrompt := flag.String("architect-prompt", "", "override config.json's 12_architect prompt version for EVERY scenario (e.g. v5), baseline included, so the prompt is not a variable between scenarios")
 	smoke := flag.Bool("smoke", false, "plan §5 cost-gate smoke pass: "+SmokeQuery+" x 1 rep x every selected scenario (8 executable runs for the full set). Cannot be combined with -queries/-reps. Then run: go run ./cmd/eval_cost -root <out>")
+	saveAgentIO := flag.Bool("save-agent-io", true, "also write <query>.agents.json per run: every agent's output, plus the Librarian's, Cloud Navigator's and Architect's full prompts (~100-200 KB per run)")
 	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, or .../smoke-<UTC timestamp> with -smoke; a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
 
@@ -182,7 +183,13 @@ func main() {
 				log.Printf("%s rep%d %s ...", sc.ID, rep, name)
 				orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
 				start := time.Now()
-				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, agentPrompts, nil)
+				runCtx := ctx
+				var agentIO *agentIORecorder
+				if *saveAgentIO {
+					agentIO = newAgentIORecorder()
+					runCtx = agents.WithRunObserver(ctx, agentIO)
+				}
+				out, _, runErr := orch.RunPipeline(runCtx, goldenQueries[name], constraints, agentPrompts, nil)
 				rec := evalcheck.RunRecord{BatchID: manifest.BatchID, Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
 				if runErr != nil {
 					rec.Error = runErr.Error()
@@ -190,6 +197,13 @@ func main() {
 					rec.OutputFile = filepath.Join(dir, name+".html") // JSON envelope; extension kept for cmd/judge_compare
 					if err := os.WriteFile(rec.OutputFile, []byte(out), 0o644); err != nil {
 						log.Printf("write output: %v", err)
+					}
+				}
+				if agentIO != nil {
+					if b, err := json.MarshalIndent(agentIO.Calls(), "", "  "); err != nil {
+						log.Printf("agent io marshal: %v", err)
+					} else if err := os.WriteFile(filepath.Join(dir, name+".agents.json"), b, 0o644); err != nil {
+						log.Printf("write agent io: %v", err)
 					}
 				}
 				calls := orch.Usage.CallsSnapshot()
