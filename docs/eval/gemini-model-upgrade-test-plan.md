@@ -1,6 +1,6 @@
 # Gemini Model Upgrade — Test Plan
 
-Status: **Phase 0-1 complete; Phase 2 gates done (quality scoring §6.2 pending); Phase 1B complete (control failed R1, so candidates were compared against the control's own rate; see Phase 1 results)** · Written 2026-11-04 · Owner: bweitzer
+Status: **Phase 0-1 complete; Phase 2 gates done (quality scoring §6.2 pending); production routing + fixes shipped in PR #114 (§9a); Phase 1B complete (control failed R1, so candidates were compared against the control's own rate; see Phase 1 results)** · Written 2026-11-04 · Owner: bweitzer
 
 ## 1. Goal
 
@@ -405,6 +405,53 @@ deciding anything.
   needs new plumbing and a `thinking_level` probe. Treat that as a separate change.
 - **3C. Refinement path.** Re-run `cmd/eval_refine` with the winning Architect
   model, since Refinement Architect shares the `12_architect` routing key.
+
+## 9a. Production changes shipped with this eval (2026-11-05)
+
+Decided by the owner: ship as one change in PR #114; route every agent to `gemini-4-argon` or `gemini-3.8-flash` (older Flash ids are being deprecated). This overrides §7's "Argon only after pricing and a non-provisional id": pricing is now published (below); the id is still the launch id.
+
+**Routing (`agents.DefaultModelFor`).** Latency is median / 95th percentile per call, seconds (Phase 2 calls, run in parallel).
+
+| Agent | Model | Why | Argon vs 3.8 Flash latency |
+|---|---|---|---|
+| 1 Tone Historian | Argon | both clean in 1A/Phase 2; Argon is the only one that searched here (3.8 Flash: 0 of 35 calls) | 14.6/76 vs 10.4/17 (3.8 faster) |
+| 2 Sonic Profiler | **3.8 Flash** | both 26/26 after the integer-schema fix (below); 3.8 is faster | 17.2/36 vs 9.6/18 (probe) |
+| 3 Community Scraper | Argon | both clean; Argon searches more; faster | 10.1/25 vs 18.6/26 |
+| 4 CorOS Librarian | Argon | 3.8 Flash tier (S1) produced the Hiwatt-as-capture defect and invented cab names | 8.9/33 vs 26.4/37 |
+| 5 Cloud Navigator | Argon | exercised in the validation run (26/26 ok) | 3.9/10 (Argon only) |
+| 6 Acoustician | Argon | 0 runaway loops in 58+ Argon calls; Flash models loop in the rationale string | 8.2/13.5 vs 11.0/34 |
+| 7-11 | Argon | A1/A3 clean; Argon faster at the median on each | see §5a data |
+| 12 Architect (+ Refinement) | Argon, prompt v5 | A1 26/26 clean; 3.8 Flash's thinking ran away to MAX_TOKENS | 48.4/78 vs 41.5/60 (3.8 faster) |
+| 13 Critic | Argon | passes gates; its accuracy is NOT measured (it flags far less than the 3.6 Flash Critic) | 3.9/23 |
+
+Fallback chains (`getFallbackChain`) use only current models: Argon -> 3.8 Flash -> 3.1 Pro; 3.8 Flash -> Argon -> 3.1 Pro; anything else -> 3.8 Flash -> Argon. Offline tools on agents 14/15 (`cmd/enrich_captures`, `cmd/verify_user_captures`) also move to Argon via the default.
+
+**Prompt and schema fixes.**
+- `12_architect_v5` for generation and refinement (dial-format rules; §4a follow-up).
+- `6_acoustician_v4`: amp changes as 0-10 dial steps (only `input_gain_db` in dB), both pickup objects, short rationale. Schema now **requires** `humbucker` + `single_coil` and their four fields (the prompt alone did not stop omissions: 3.8 Flash 4/6, Argon 2/6). Probe after the fix: 12/12 complete, no loops.
+- `10_control_mapper_v2`: dial units, real parameter names only (no amp `Level`).
+- **Runaway truncations, root-caused from captured raw text** (`cmd/probe_agent`): (a) Acoustician: a degenerate loop inside the `rationale` string (43,675 chars ending in "...valid standard parseable JSON object baseline output format" repeated); `maxLength` is accepted by the API but **not enforced** (701-1,771-char rationales against 400), so the fixes are the prompt rule and Argon (no loops). (b) Sonic Profiler: `"suggested_low_cut_hz": 85.0000...` zeros until the cap, on number-typed fields. Whole-number fields (Sonic Profiler Hz/gate, FOH Hz) are now `INTEGER`, and the v2 fields are required: Argon 17/26 loops -> 0/26, 3.8 Flash 3/26 -> 0/26 (13 queries x 2 reps, pipeline prompt prefixes).
+
+**Grounding (why agents 1-3 rarely search).** Measured, 54 + 18 probe calls: removing the JSON schema did not increase search (2/18 vs 6/18 production config), nor did an explicit "search first" instruction (3/18). Search is the model's per-call choice: it searches when it judges its own knowledge insufficient (Community Scraper on QC-specific questions far more than Tone Historian on famous gear). The SDK (genai v1.63) exposes no way to force GoogleSearch (`ToolConfig` forcing covers function declarations only; not checked against the raw API). A required `sources` field made models **fabricate** grounding-redirect URLs on calls that did not search, so it was rejected. Argon searches far more readily than 3.8 Flash, which is one reason agents 1 and 3 are on Argon. Decision left open: whether to add our own search step (call a search API and inject results) if grounding matters for quality; not measured.
+
+**Prices (official, fetched 2026-11-05 from Google Cloud's generative AI pricing page and the Argon launch post; the ai.google.dev page is blocked here).** Per 1M tokens, standard tier, global endpoint, output includes reasoning: Argon $2/$10 through 2026-11-30, **$4/$20 from 2026-12-01**; 3.8 Flash $0.75/$3.75 through 2026-12-31, $1.50/$7.50 from 2027-01-01; 3.6 Flash same as 3.8 (our table had its post-intro rate). Google Search grounding: 5,000 queries/month free, then $14 per 1,000. Encoded as the dated `geminiPriceSchedule`; usage records now carry `groundingQueries`.
+
+**Validation of the exact production configuration** (`-scenarios PROD -allow-cloud-captures`, 13 queries x 2 reps, `EVAL_NO_FALLBACK=true`, constraints = `DefaultConstraints` + `allow_cloud_captures: true` so agent 5 is called; raw: `eval_results/phase3_prod/`):
+
+| Metric | Result | Today's production (S0, Phase 2) |
+|---|---|---|
+| Runs completed, all calls served by the requested model | **26/26** | 18/26 |
+| MAX_TOKENS (any agent) | **0** | Acoustician 5 |
+| Ground-truth defects (capture/dB/claims, snapped/unverified names) | **0** | 0 |
+| `dial_offset_on_modeled` (amp/drive dials in dB or signed) | **0** | not tracked then |
+| Pipeline latency median / p95 / max | 128 / 205 / 216 s | 101 / 148 s |
+| Cost per preset at intro / standard prices | $0.22 / **$0.44** | $0.27 |
+| Presets using a Cortex Cloud user capture | 18/26 | n/a |
+| Calls that searched | Tone Historian 4/26, Scraper 1/26, Sonic Profiler 0/26 | |
+
+Costs come from recorded tokens at the official rates. Today's figure includes partial (failed) runs, so it slightly understates a completed preset.
+
+**Trade-offs to know:** presets take ~25 s longer at the median and ~55 s longer at p95. Argon has occasional long server-side stalls on tiny responses (e.g. 85 s for a 20-token Critic reply). Its cause is not verified; plausibly preview capacity. Cost per preset rises ~60% when Argon's price doubles on 2026-12-01. The Argon Critic's accuracy, judge-scored quality (§6.2) and the refine path under v5 have not been evaluated.
 
 ## 9. Rollout
 

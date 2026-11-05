@@ -414,6 +414,15 @@ either production tier pending the fixes below.
 > reported `ModelVersion: gemini-3.6-flash` in 7 of 7 calls. No July call recorded a served model, so whether the
 > July "3.5 vs 3.6" comparison was partly 3.6 against itself is unknown, not confirmed.
 
+> **Update 2026-11-05 (PR #114, see `docs/eval/gemini-model-upgrade-test-plan.md` §9a):** production now routes every
+> agent to `gemini-4-argon` except the Sonic Profiler (`gemini-3.8-flash`); older Flash ids are no longer used anywhere,
+> including fallback chains. The two "blocking" defects below were root-caused and fixed: the capture/dB formatting was a
+> prompt defect shared by every model (fixed by `12_architect_v5`, `6_acoustician_v4`, `10_control_mapper_v2`), and the
+> Acoustician/Sonic Profiler truncations were degenerate loops (a never-closed rationale string; `85.000...` zeros on
+> number-typed fields), fixed by required/integer schema fields, the prompt, and routing. Validation: 26/26 production-config
+> runs clean, 0 truncations, 0 defects; ~128 s median per preset; $0.22 per preset until Argon's price doubles on
+> 2026-12-01 ($0.44 after). Open: Argon Critic accuracy, judge-scored quality, refine path under v5, grounding is model-discretionary.
+
 **Action items before reconsidering adoption:**
 
 - [ ] Root-cause the Iba-Green/Neural-Capture mislabeling on `07_Edge` --
