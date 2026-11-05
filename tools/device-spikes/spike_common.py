@@ -291,6 +291,24 @@ def param_values_all(p) -> list:
     return out
 
 
+def require_open_test_preset(qc: Guarded, args, tp):
+    """Refuse unless the unit has the G3 test preset open in --slot. Returns the BinaryPreset."""
+    require_full_qc(qc)
+    pos = parse_slot(args.slot)
+    cur = qc.get_setlist_position() or {}
+    if cur.get("folder_key") != args.folder_key or cur.get("position") != pos or cur.get("is_factory"):
+        raise SpikeRefused(f"the unit has {cur} open, not {slot_label(pos)}. Select the G3 test preset on the unit first.")
+    bp = qc.get_current_preset()
+    if bp is None or bp.name != tp.TEST_PRESET_NAME:
+        raise SpikeRefused(f"open preset is {None if bp is None else bp.name!r}, expected {tp.TEST_PRESET_NAME!r}. "
+                           "This spike only edits the G3 test preset.")
+    ch = bp.chains[tp.ROW] if len(bp.chains) > tp.ROW else None
+    for b in tp.BLOCKS:
+        if ch is None or b.col >= len(ch.models) or ch.models[b.col].hash != b.model_id:
+            raise SpikeRefused(f"col {b.col} does not hold model {b.model_id}; the test preset is not as G3 built it.")
+    return bp
+
+
 # --------------------------------------------------------------------------- catalogs
 
 def load_xml_models(xml_path: Path) -> dict[int, dict]:
