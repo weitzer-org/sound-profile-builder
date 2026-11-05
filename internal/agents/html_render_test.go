@@ -13,7 +13,7 @@ func TestRenderPresetHTML_NoDoubleEscapedBreaks(t *testing.T) {
 			ID: "b1", Type: "Amplifier", Model: "Brit 2203", Rationale: "Classic British crunch.",
 			Parameters: []storage.BlockParameter{
 				{Name: "Gain", Type: "slider", Value: "5.0", ValueB: "7.5"},
-				{Name: "Bass", Type: "slider", Value: "5.0"},
+				{Name: "Bass", Type: "slider", Value: "6.0"}, // not the device default (5), so it stays a row
 			},
 		},
 	}
@@ -26,7 +26,7 @@ func TestRenderPresetHTML_NoDoubleEscapedBreaks(t *testing.T) {
 	if strings.Contains(out, "&lt;br") {
 		t.Errorf("found double-escaped <br/> tag in rendered HTML: %s", out)
 	}
-	if !strings.Contains(out, "Gain: 5.0<br/>Bass: 5.0") {
+	if !strings.Contains(out, "Gain: 5.0</span><br/><span class='param'>Bass: 6.0") {
 		t.Errorf("expected a real <br/> separator between parameters, got: %s", out)
 	}
 }
@@ -96,5 +96,32 @@ func TestInjectRenderedHTML_ErrorsOnMalformedStructuredPayload(t *testing.T) {
 	out, err := injectRenderedHTML(raw)
 	if err == nil {
 		t.Fatalf("expected an error for malformed structured_payload, got none (output: %s)", out)
+	}
+}
+
+// Controls left at the device default -- kept_defaults, or listed with the default value
+// in both scenes -- are named once in a muted line instead of listed as rows; a Scene B
+// value that differs from Scene A is marked.
+func TestRenderPresetHTML_DefaultsLineAndSceneDiff(t *testing.T) {
+	blocks := []storage.EffectBlock{{
+		ID: "b1", Type: "Delay", Model: "Analog Delay",
+		Parameters: []storage.BlockParameter{
+			{Name: "MIX", Value: "30 %", ValueB: "40 %"},
+			{Name: "FEEDBACK", Value: "25 %"}, // the default, in both scenes
+		},
+		KeptDefaults: []string{"TRAILS", "WIDTH"},
+	}}
+	out := renderPresetHTML(blocks)
+	for _, want := range []string{
+		"<div class='defaults-note'>At device default: FEEDBACK, TRAILS, WIDTH</div>",
+		"<span class='param'>MIX: 30 %</span>",
+		"<span class='param diff'>MIX: 40 %</span>",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in %s", want, out)
+		}
+	}
+	if strings.Contains(out, "FEEDBACK: 25") {
+		t.Error("a control at its default should not be listed as a row")
 	}
 }

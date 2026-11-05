@@ -241,3 +241,19 @@ func TestRenderDeterministic(t *testing.T) {
 		}
 	}
 }
+
+// Controls left at the device default are listed once under the table, not as settings.
+func TestRenderPresetMarkdownDefaultsList(t *testing.T) {
+	sp := storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{"Strat": {{
+		ID: "b1", Type: "Delay", Model: "Analog Delay",
+		Parameters:   []storage.BlockParameter{{Name: "MIX", Value: "30 %"}, {Name: "FEEDBACK", Value: "25 %"}},
+		KeptDefaults: []string{"TRAILS"},
+	}}}}
+	out := RenderPresetMarkdown(&storage.Preset{Name: "P"}, sp)
+	if !strings.Contains(out, "**At device default:**\n\n- Analog Delay: FEEDBACK, TRAILS") {
+		t.Errorf("missing defaults list:\n%s", out)
+	}
+	if strings.Contains(out, "FEEDBACK 25") || !strings.Contains(out, "MIX 30 %") {
+		t.Errorf("table should list MIX only:\n%s", out)
+	}
+}

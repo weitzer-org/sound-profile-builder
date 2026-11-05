@@ -14,7 +14,7 @@ results already arrive in it; keep it.
    guitar: `# | Block | Model | Scene A (Rhythm) | Scene B (Lead)`. Never describe a
    second guitar as a prose diff of the first, even when they are close.
 4. A and B stay in separate columns, not "A→B" in one cell. A block whose B settings
-   equal A shows "same as A" in the B column.
+   equal A shows "same as A" in the B column. Keep the "At device default" list as is.
 5. Keep the `*` after an estimated value and the `\* = estimated value` legend.
 6. Always show the Why rationales (one line per block) and every pipeline warning:
    a ⚠️ in a model name ("Unverified") and ⚠️ notes inside a rationale (capture
@@ -30,6 +30,7 @@ results already arrive in it; keep it.
 <builder statement>
 ### <Guitar 1>
 (table: `# | Block | Model | Scene A (Rhythm) | Scene B (Lead)`, one row per block)
+**At device default:** controls each block leaves at the device default, if any
 **Why:** one line per block, with any ⚠️ note
 ### <Guitar 2>
 (same columns, same layout)
