@@ -30,7 +30,7 @@ import urllib.parse
 import urllib.request
 
 DEFAULT_BUCKET = "sound-profile-builder-device-jobs"
-DEFAULT_SLOTS = "20A-25H"
+DEFAULT_SLOTS = "1A-32H"  # owner decision: creation allowed in every bank (empty slots only)
 DEFAULT_FIRMWARE = "4.1.0"
 DEFAULT_IDLE_MINUTES = "30"
 
@@ -144,7 +144,7 @@ def main():
     while not KEY_RE.fullmatch(job_key):
         job_key = getpass.getpass("  must be exactly 64 hex characters, try again (hidden): ").strip()
 
-    slots = ask("Slots the bridge may write (e.g. 20A-25H or 20A-25H,30A)", DEFAULT_SLOTS,
+    slots = ask("Slots the bridge may create presets in (1A-32H = all; or e.g. 20A-25H,30A)", DEFAULT_SLOTS,
                 check=lambda v: bool(SLOTS_RE.fullmatch(v.upper())), error="use ranges like 20A-25H").upper()
     firmware = ask("Expected Quad Cortex firmware", DEFAULT_FIRMWARE)
     idle = ask("Idle minutes before the bridge exits", DEFAULT_IDLE_MINUTES,
