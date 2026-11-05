@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -131,5 +132,27 @@ func TestUpdateParameterRecordsDefaultControl(t *testing.T) {
 	}
 	if len(b.KeptDefaults) != 1 || b.KeptDefaults[0] != "TRAILS" {
 		t.Errorf("kept_defaults = %v, want only TRAILS", b.KeptDefaults)
+	}
+}
+
+// Parameter names and block ids are LLM-written and end up in each slider's oninput
+// script (via the live-value element's id). HTML escaping isn't enough there: the browser
+// decodes &#39; back to ' before running the script. The id must be plain [a-z0-9-].
+func TestSliderScriptIDIsInjectionSafe(t *testing.T) {
+	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1');alert(2);//", tabID: "strat"}
+	for _, block := range []storage.EffectBlock{
+		{ID: tgt.blockID, Model: "Made Up Pedal", Parameters: []storage.BlockParameter{{Name: "x');alert(1);//", Type: "slider", Value: "5"}}},
+		{ID: tgt.blockID, Model: "Green 808", Parameters: []storage.BlockParameter{{Name: "OVERDRIVE", Type: "slider", Value: "5"}}},
+	} {
+		out := blockControlsHTML(tgt, block)
+		scripts := regexp.MustCompile(`oninput="([^"]*)"`).FindAllStringSubmatch(out, -1)
+		if len(scripts) == 0 {
+			t.Fatalf("no slider rendered for %s", block.Model)
+		}
+		for _, m := range scripts {
+			if !regexp.MustCompile(`^document\.getElementById\('[a-z0-9-]+'\)\.innerText = this\.value( \+ '[^']*')?$`).MatchString(m[1]) {
+				t.Errorf("unsafe slider script for %s: %s", block.Model, m[1])
+			}
+		}
 	}
 }

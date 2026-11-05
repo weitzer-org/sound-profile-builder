@@ -34,8 +34,29 @@ func (t editTarget) hxVals(paramName, unit string) string {
 	return html.EscapeString(string(b))
 }
 
+// valueID is the id of the element showing a slider's live value. It's built only from
+// [a-z0-9-], because it is also interpolated into the slider's oninput script: HTML
+// escaping doesn't protect a JS string inside an attribute (the browser decodes &#39; back
+// to ' before the script runs), and parameter names and block ids are LLM-written. The
+// block id keeps two blocks' same-named controls (a delay's and a reverb's MIX) apart.
 func (t editTarget) valueID(paramName string) string {
-	return "val-" + t.tabID + "-" + strings.ReplaceAll(strings.ToLower(paramName), " ", "-")
+	return "val-" + idSlug(t.tabID) + "-" + idSlug(t.blockID) + "-" + idSlug(paramName)
+}
+
+// idSlug keeps lower-case ASCII letters and digits and turns everything else into '-'.
+func idSlug(s string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(s) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('-')
+		}
+	}
+	if b.Len() == 0 {
+		return "x"
+	}
+	return b.String()
 }
 
 // blockControlsHTML renders the controls for one block.
