@@ -207,3 +207,26 @@ func TestPayloadBlockModels(t *testing.T) {
 		t.Errorf("legacy HTML payload should yield no names, got %v", got)
 	}
 }
+
+// v5 is the prompt that explains the catalog sections; v4 stays as it was.
+func TestArchitectV5PromptDescribesCatalogSections(t *testing.T) {
+	v5, err := LoadPrompt("12_architect", "v5")
+	if err != nil {
+		t.Fatalf("load v5: %v", err)
+	}
+	for _, want := range []string{"# Device Block Parameters", "Device Effect Blocks", "MIC 1 LEVEL", "20*log10"} {
+		if !strings.Contains(v5, want) {
+			t.Errorf("v5 prompt is missing %q", want)
+		}
+	}
+	if strings.Contains(v5, "750Hz Slider: -5.0 dB") || strings.Contains(v5, "Use this rarely and honestly") {
+		t.Error("v5 still carries v4's EQ-summary or rare-confirmed_range instruction")
+	}
+	v4, err := LoadPrompt("12_architect", "v4")
+	if err != nil {
+		t.Fatalf("load v4: %v", err)
+	}
+	if strings.Contains(v4, "Device Block Parameters") {
+		t.Error("v4 must stay unchanged")
+	}
+}
