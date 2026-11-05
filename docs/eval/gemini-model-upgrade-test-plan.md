@@ -453,6 +453,35 @@ Costs come from recorded tokens at the official rates. Today's figure includes p
 
 **Trade-offs to know:** presets take ~25 s longer at the median and ~55 s longer at p95. Argon has occasional long server-side stalls on tiny responses (e.g. 85 s for a 20-token Critic reply). Its cause is not verified; plausibly preview capacity. Cost per preset rises ~60% when Argon's price doubles on 2026-12-01. The Argon Critic's accuracy, judge-scored quality (§6.2) and the refine path under v5 have not been evaluated.
 
+## 9b. Argon vs 3.8 Flash head-to-head (2026-11-05)
+
+Question: given Argon's higher cost, does it really beat 3.8 Flash? Four arms in ONE batch, same prompts/schemas as §9a, 13 queries x 2 reps, Cloud Navigator on, `EVAL_NO_FALLBACK=true`, 8 processes in parallel (so absolute latency is inflated vs §9a's 128 s; compare arms with each other). Raw: `eval_results/h2h/`. Quality scoring: `docs/eval/scripts/run_quality.sh` (each arm's own Critic notes stripped first, `cmd/eval_strip_critic`; fixed re-Critic `gemini-4-argon`; four judges with randomized A/B).
+
+| Arm | Completed | Latency median / p95 | Cost/preset intro / standard | Thinking tokens/preset | Gated defects |
+|---|--:|--:|--:|--:|---|
+| PROD (Argon; 3.8 Flash Sonic Profiler) | **26/26** | 191 / 290 s | $0.22 / $0.43 | ~950 | 1 run: Myth Drive (modeled Klon) written as a capture |
+| PROD + ThinkingLevel HIGH | **10/26** (9 Community Scraper 504 timeouts, 6 MAX_TOKENS) | 442 / 551 s | $0.28 / $0.56 | ~17,700 | 0 |
+| ALL38, ThinkingLevel LOW | **26/26** | **56 / 76 s** | **$0.07 / $0.14** | ~260 | 3 runs with invented cab names (e.g. "UK C30 64 Blue") |
+| ALL38, default thinking | 24/26 (2 Architect thinking runaways) | 142 / 190 s | $0.13 / $0.26 | ~16,000 | 0 |
+
+**Pairwise judges (each challenger vs PROD, both arms' presets complete):**
+
+| Comparison | 3.1 Pro | 3.6 Flash | Argon | 3.8 Flash | Both neutral judges agree | All four agree |
+|---|---|---|---|---|---|---|
+| ALL38-LOW vs PROD (26 pairs) | PROD 20-6 | PROD 23-3 | PROD 20-6 | PROD 17-9 | **PROD 20-3** | PROD 15-1 |
+| ALL38 vs PROD (24 pairs) | PROD 14-10 | PROD 19-5 | PROD 17-7 | PROD 17-7 | **PROD 12-3** (9 split) | PROD 8-1 |
+| PROD-HIGH vs PROD (10 pairs) | 5-5 | HIGH 5-4 (1 equal) | 5-5 | 5-5 | 4-4 | 3-2 |
+
+3.8 Flash as judge prefers Argon's presets over its own, so self-preference does not explain the result. Every verdict was served by the requested judge model. Spot-checks: "Preset B is missing its Reverb block" (05_Clapton rep2, ALL38-LOW) and "agent text mentions a delay block that is not in the payload" (02_Chicago_Blues rep1, ALL38-LOW) are both true in the files.
+
+**Re-Critic (gemini-4-argon on stripped presets):** PROD 0.12 issues/preset (3 medium), ALL38-LOW 0.65 (15 medium, 2 high). Caveats: the re-Critic is Argon scoring Argon's own writing, and it missed PROD's Myth Drive defect that the deterministic checker caught.
+
+**Why 3.8 Flash loses (measured).** Its presets are thinner: 5.7-5.9 blocks/guitar vs 6.7, a reverb on 71-73% of guitars vs 100%, and 113-118 rationale characters per block vs 187. Phase 2's mixed scenarios localise this to the **Architect**: 3.8 Flash upstream with a Pro Architect (S1) gives 6.6 blocks and 100% reverb, but a 3.8 Flash Architect (S2) gives 5.4 blocks and 60% reverb. Argon as Architect is what produces the richer rationale (A2 178, A1 186 vs Pro ~135, 3.8 ~120 chars). The 3.8 Flash Architect also has the unfixable 15,360-token thinking runaway (§4a/§9a; a thinking budget did not stop it).
+
+**Thinking on Argon:** HIGH thinking bought no judged quality (tie) and made the pipeline 2.3x slower, ~30% more expensive and unreliable (16/26 failed). Keep Argon at its default (no thinking).
+
+**Implication (untested):** 3.8 Flash at LOW thinking is 3.4x faster and 3x cheaper and was fully reliable; its weakness is the Architect role. A hybrid (Argon Architect + Critic, 3.8 Flash LOW on agents 1-11) might keep Argon's judged quality at a fraction of the latency and cost. It needs its own head-to-head before any routing change.
+
 ## 9. Rollout
 
 1. Set the winners in `config.json` `agent_models` (overrides the code defaults), and
