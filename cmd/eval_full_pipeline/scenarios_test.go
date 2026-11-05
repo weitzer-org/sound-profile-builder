@@ -42,10 +42,16 @@ func TestScenarios_ChangeExactlyWhatThePlanSays(t *testing.T) {
 		}
 		return out
 	}
-	expect := map[string]int{"S0": 0, "S1": 10, "S2": 2, "S3": 2, "S4": 3, "S5": 1, "A1": 13, "A2": 2, "A3": 10}
+	expect := map[string]int{"S0": 0, "S1": 10, "S2": 2, "S3": 2, "S4": 3, "S5": 1, "A1": 12, "A2": 2, "A3": 9}
 	for id, n := range expect {
 		if got := len(diff(id)); got != n {
 			t.Errorf("%s differs from S0 on %d agents, want %d: %v", id, got, n, diff(id))
+		}
+	}
+	// Phase 1A: Argon was dropped from agent 2, so A1/A3 keep it on the Flash baseline.
+	for _, id := range []string{"A1", "A3"} {
+		if got := byID[id].AgentModels["2_sonic_profiler"]; got != modelFlashBaseline {
+			t.Errorf("%s routes agent 2 to %s, want %s", id, got, modelFlashBaseline)
 		}
 	}
 	// One variable at a time: S1 must leave the Critic and Pro tier on baseline.

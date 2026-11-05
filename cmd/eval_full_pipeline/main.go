@@ -40,6 +40,7 @@ func main() {
 	includeSkipped := flag.Bool("include-skipped", false, "also run scenarios marked skipped (e.g. S3 once pro-latest resolves to the baseline Pro model)")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results will NOT be scoreable)")
 	argonNoSearch := flag.Bool("argon-no-search", false, "keep agents 1,2,3 off Argon in A1/A2/A3 (use if the Phase 0.5 probe shows Argon cannot use GoogleSearch)")
+	archPrompt := flag.String("architect-prompt", "", "override config.json's 12_architect prompt version for EVERY scenario (e.g. v5), baseline included, so the prompt is not a variable between scenarios")
 	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
 
@@ -109,6 +110,23 @@ func main() {
 	}
 	defer runsFile.Close()
 
+	agentPrompts := map[string]string{}
+	for k, v := range cfg.AgentPrompts {
+		agentPrompts[k] = v
+	}
+	if *archPrompt != "" {
+		if _, err := agents.LoadPrompt("12_architect", *archPrompt); err != nil {
+			log.Fatalf("-architect-prompt %q: %v", *archPrompt, err)
+		}
+		agentPrompts["12_architect"] = *archPrompt
+	}
+	runCfg := map[string]any{"agent_prompts": agentPrompts, "scenarios": *scenariosFlag, "queries": *queriesFlag, "reps": *reps,
+		"argon_no_search": *argonNoSearch, "eval_no_fallback": agents.EvalNoFallbackEnabled(), "started_at": time.Now().UTC().Format(time.RFC3339)}
+	if b, err := json.MarshalIndent(runCfg, "", "  "); err == nil {
+		if err := os.WriteFile(filepath.Join(*outDir, "run_config.json"), b, 0o644); err != nil {
+			log.Printf("write run_config.json: %v", err)
+		}
+	}
 	constraints := evalfixtures.DefaultConstraints()
 	var records []evalcheck.RunRecord
 
@@ -128,7 +146,7 @@ func main() {
 				log.Printf("%s rep%d %s ...", sc.ID, rep, name)
 				orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
 				start := time.Now()
-				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, cfg.AgentPrompts, nil)
+				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, agentPrompts, nil)
 				rec := evalcheck.RunRecord{Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
 				if runErr != nil {
 					rec.Error = runErr.Error()

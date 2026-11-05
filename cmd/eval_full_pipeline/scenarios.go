@@ -79,6 +79,7 @@ func BuildScenarios(argonNoSearch bool) []Scenario {
 		}
 		return m
 	}
+	argonOffAgent2 := map[string]string{"2_sonic_profiler": modelFlashBaseline}
 	lite := map[string]string{}
 	for _, k := range mechanicalKeys {
 		lite[k] = modelLite
@@ -93,9 +94,11 @@ func BuildScenarios(argonNoSearch bool) []Scenario {
 			Skip:        fmt.Sprintf("Phase 0.3: %s is served as %s, identical to S0's Pro tier", modelProLatest, proLatestResolved)},
 		{ID: "S4", Label: "Lite on mechanical agents 8,10,11", AgentModels: build(base, lite)},
 		{ID: "S5", Label: "Critic -> Argon", AgentModels: build(routing{modelProBaseline, modelFlashBaseline, modelArgon}, nil)},
-		{ID: "A1", Label: "Argon everywhere", AgentModels: keepGroundedOnBaseline(build(routing{modelArgon, modelArgon, modelArgon}, nil))},
+		// A1/A3 keep agent 2 (Sonic Profiler) on the Flash baseline: Phase 1A dropped Argon there
+		// (schema-valid 16/26, truncated 10/26 vs 26/26 and 0 for baseline).
+		{ID: "A1", Label: "Argon everywhere (agent 2 on baseline)", AgentModels: keepGroundedOnBaseline(build(routing{modelArgon, modelArgon, modelArgon}, argonOffAgent2))},
 		{ID: "A2", Label: "Argon Pro tier only", AgentModels: keepGroundedOnBaseline(build(routing{modelArgon, modelFlashBaseline, modelFlashBaseline}, nil))},
-		{ID: "A3", Label: "Argon Flash tier only", AgentModels: keepGroundedOnBaseline(build(routing{modelProBaseline, modelArgon, modelFlashBaseline}, nil))},
+		{ID: "A3", Label: "Argon Flash tier only (agent 2 on baseline)", AgentModels: keepGroundedOnBaseline(build(routing{modelProBaseline, modelArgon, modelFlashBaseline}, argonOffAgent2))},
 	}
 	// Every scenario that sends gemini-3.5-flash expects it to be served as 3.6 Flash.
 	for i := range scenarios {
