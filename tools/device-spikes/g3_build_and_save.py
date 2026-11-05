@@ -141,7 +141,7 @@ def read_back(qc, result) -> bool:
             if not hit:
                 ok = False
         sc.say(f"  col {b.col} model {b.model_id}: N={len(m.params)} params; "
-               + ", ".join(f"[{p['index']}] wrote {p['wrote']} read {p['read'] if p['read'] is None else round(p['read'], 6)}"
+               + ", ".join(f"[{p['index']}] wrote {p['wrote']} read {sc.fmt_num(p['read'])}"
                            f"{'' if p['ok'] else ' <-- DIFF'}" for p in entry["params"]))
         report["blocks"].append(entry)
     extra = [(r, c, m.hash) for r, c, m in sc.iter_blocks(bp) if (r, c) not in {(tp.ROW, b.col) for b in tp.BLOCKS}]

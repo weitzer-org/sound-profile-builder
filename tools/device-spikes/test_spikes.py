@@ -80,6 +80,14 @@ class TaperTests(unittest.TestCase):
                 sc.predict_display(0, 1, 1, bad)
 
 
+class FmtTests(unittest.TestCase):
+    def test_never_raises(self):
+        self.assertEqual(sc.fmt_num(0.123456789), "0.123457")
+        self.assertEqual(sc.fmt_num(None), "None")
+        self.assertEqual(sc.fmt_num("oops"), "'oops'")
+        self.assertEqual(sc.fmt_num(3), "3")
+
+
 class GuardTests(unittest.TestCase):
     class Stub:
         firmware = "4.1.0"
@@ -510,6 +518,14 @@ class G4G6Tests(FakeDeviceCase):
         self.assertEqual(code, sc.EXIT_OK, out)
         self.assertEqual(data["verdict"], "TAPER_CONFIRMED")
         self.assertFalse([c for c in qc.calls if isinstance(c, tuple) and c[0] != "set_param"])
+
+    def test_g4_survives_non_float_readback(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        orig = sc.param_value
+        with mock.patch.object(sc, "param_value", lambda p: "garbage"):
+            code, out, data = self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", "--no-prompt"], qc)
+        self.assertNotIn("UNEXPECTED ERROR", out)
+        self.assertEqual(data["wire_roundtrip_failures"], 9)
 
     def test_g4_detects_linear_unit(self):
         qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))

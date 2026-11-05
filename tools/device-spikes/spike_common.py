@@ -270,6 +270,11 @@ def param_value(p):
     return getattr(pv, which) if which else None
 
 
+def fmt_num(v, digits: int = 6) -> str:
+    """Print a device value without ever raising: floats rounded, anything else shown raw."""
+    return str(round(v, digits)) if isinstance(v, float) else repr(v)
+
+
 def param_values_all(p) -> list:
     out = []
     for pv in p.param_values:

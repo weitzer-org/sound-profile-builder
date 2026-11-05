@@ -91,7 +91,7 @@ def main() -> int:
                 row = {"label": label, "col": col, "index": idx, "unit": unit, "wire_written": wire, "wire_read": got,
                        "wire_ok": isinstance(got, float) and abs(got - wire) <= 1e-4,
                        "predicted_taper": round(pred, 4), "predicted_linear": round(linear, 4), "screen": None}
-                sc.say(f"    wire {wire:<5}  read-back {got if got is None else round(got, 6)}   "
+                sc.say(f"    wire {wire:<5}  read-back {sc.fmt_num(got)}   "
                        f"taper predicts {pred:.2f} {unit}   (linear would be {linear:.2f})")
                 if not args.no_prompt:
                     raw = input(f"      what does the unit show? (number, 's' skip, 'q' stop) > ")
