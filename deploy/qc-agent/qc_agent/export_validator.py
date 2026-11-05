@@ -149,6 +149,65 @@ def _check_value(cp, display, wire, where):
     return w
 
 
+def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
+    where = f"block {bi}"
+    _exact(b, ("col", "model_id", "model", "params", "bypass"), where)
+    if _int(b["col"], where + ".col") != bi:
+        raise ExportRefused(f"{where}: columns must run 0..{nblocks - 1} in order")
+    mid = _int(b["model_id"], where + ".model_id")
+    if mid in DENY_MODEL_IDS:
+        raise ExportRefused(f"{where}: model {mid} is denied (NC_Recorder)")
+    cm = catalog.models.get(mid)
+    if cm is None:
+        raise ExportRefused(f"{where}: model {mid} is not in this PC's device catalog")
+    if b["model"] != cm["name"]:
+        raise ExportRefused(f"{where}: model {mid} is {cm['name']!r} in the catalog, not {b['model']!r}")
+    where = f"block {bi} ({cm['name']})"
+    if cm.get("plugin_id") is not None:
+        raise ExportRefused(f"{where}: plugin models are not pushed in v1")
+    if cm["category"] not in ALLOWED_CATEGORIES:
+        raise ExportRefused(f"{where}: category {cm['category']!r} is not pushed in v1")
+
+    if not isinstance(b["params"], list) or len(b["params"]) > MAX_PARAMS_PER_BLOCK:
+        raise ExportRefused(f"{where}.params must be a list of at most {MAX_PARAMS_PER_BLOCK}")
+    params, seen = [], set()
+    for pi, prm in enumerate(b["params"]):
+        p = _check_param(f"{where} param {pi}", prm, cm)
+        if p.index in seen:
+            raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
+        seen.add(p.index)
+        params.append(p)
+
+    _exact(b["bypass"], ("A", "B"), where + ".bypass")
+    ba, bb = b["bypass"]["A"], b["bypass"]["B"]
+    if not isinstance(ba, bool) or not isinstance(bb, bool):
+        raise ExportRefused(f"{where}.bypass flags must be true/false")
+    return PlannedBlock(bi, mid, cm["name"], params, [ba, bb] + [ba] * (SCENES - 2),
+                        max(cm["params_by_index"], default=0))
+
+
+def _check_param(pw, prm, cm) -> PlannedParam:
+    _exact(prm, ("index", "name", "display", "wire"), pw, optional=("scene_b",))
+    idx = _int(prm["index"], pw + ".index")
+    cp = cm["params_by_index"].get(idx)
+    if cp is None:
+        raise ExportRefused(f"{pw}: index {idx} is not a listed parameter of this model")
+    if prm["name"] != cp["name"]:
+        raise ExportRefused(f"{pw}: index {idx} is {cp['name']!r} in the catalog, not {prm['name']!r}")
+    pw = f"{pw.rsplit(' param ', 1)[0]} {cp['name']} [{idx}]"
+    if cp["type"] not in WRITABLE_TYPES:
+        raise ExportRefused(f"{pw}: type {cp['type']!r} is not writable by the agent")
+    a = _check_value(cp, prm["display"], prm["wire"], pw)
+    scene_wires = None
+    if "scene_b" in prm:
+        _exact(prm["scene_b"], ("display", "wire"), pw + ".scene_b")
+        bw = _check_value(cp, prm["scene_b"]["display"], prm["scene_b"]["wire"], pw + " scene B")
+        if bw != a:
+            # G6: unwritten scenes keep their old value, so write all eight; C-H copy A (plan 4).
+            scene_wires = [a, bw] + [a] * (SCENES - 2)
+    return PlannedParam(idx, cp["name"], a, scene_wires)
+
+
 def validate(export: dict, catalog, expected_firmware: str) -> Plan:
     """`export` is the job's args.export object ({"format", "payload"}). Returns the
     plan to execute, or raises ExportRefused naming the first problem."""
@@ -204,59 +263,5 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
     if not isinstance(blocks, list) or not 1 <= len(blocks) <= MAX_BLOCKS:
         raise ExportRefused(f"rows[0].blocks must hold 1-{MAX_BLOCKS} blocks")
 
-    planned = []
-    for bi, b in enumerate(blocks):
-        where = f"block {bi}"
-        _exact(b, ("col", "model_id", "model", "params", "bypass"), where)
-        if _int(b["col"], where + ".col") != bi:
-            raise ExportRefused(f"{where}: columns must run 0..{len(blocks) - 1} in order")
-        mid = _int(b["model_id"], where + ".model_id")
-        if mid in DENY_MODEL_IDS:
-            raise ExportRefused(f"{where}: model {mid} is denied (NC_Recorder)")
-        cm = catalog.models.get(mid)
-        if cm is None:
-            raise ExportRefused(f"{where}: model {mid} is not in this PC's device catalog")
-        if b["model"] != cm["name"]:
-            raise ExportRefused(f"{where}: model {mid} is {cm['name']!r} in the catalog, not {b['model']!r}")
-        where = f"block {bi} ({cm['name']})"
-        if cm.get("plugin_id") is not None:
-            raise ExportRefused(f"{where}: plugin models are not pushed in v1")
-        if cm["category"] not in ALLOWED_CATEGORIES:
-            raise ExportRefused(f"{where}: category {cm['category']!r} is not pushed in v1")
-
-        if not isinstance(b["params"], list) or len(b["params"]) > MAX_PARAMS_PER_BLOCK:
-            raise ExportRefused(f"{where}.params must be a list of at most {MAX_PARAMS_PER_BLOCK}")
-        params, seen = [], set()
-        for pi, prm in enumerate(b["params"]):
-            pw = f"{where} param {pi}"
-            _exact(prm, ("index", "name", "display", "wire"), pw, optional=("scene_b",))
-            idx = _int(prm["index"], pw + ".index")
-            cp = cm["params_by_index"].get(idx)
-            if cp is None:
-                raise ExportRefused(f"{pw}: index {idx} is not a listed parameter of this model")
-            if idx in seen:
-                raise ExportRefused(f"{pw}: index {idx} appears twice")
-            seen.add(idx)
-            if prm["name"] != cp["name"]:
-                raise ExportRefused(f"{pw}: index {idx} is {cp['name']!r} in the catalog, not {prm['name']!r}")
-            pw = f"{where} {cp['name']} [{idx}]"
-            if cp["type"] not in WRITABLE_TYPES:
-                raise ExportRefused(f"{pw}: type {cp['type']!r} is not writable by the agent")
-            a = _check_value(cp, prm["display"], prm["wire"], pw)
-            scene_wires = None
-            if "scene_b" in prm:
-                _exact(prm["scene_b"], ("display", "wire"), pw + ".scene_b")
-                bw = _check_value(cp, prm["scene_b"]["display"], prm["scene_b"]["wire"], pw + " scene B")
-                if bw != a:
-                    # G6: unwritten scenes keep their old value, so write all eight; C-H copy A (plan 4).
-                    scene_wires = [a, bw] + [a] * (SCENES - 2)
-            params.append(PlannedParam(idx, cp["name"], a, scene_wires))
-
-        _exact(b["bypass"], ("A", "B"), where + ".bypass")
-        ba, bb = b["bypass"]["A"], b["bypass"]["B"]
-        if not isinstance(ba, bool) or not isinstance(bb, bool):
-            raise ExportRefused(f"{where}.bypass flags must be true/false")
-        planned.append(PlannedBlock(bi, mid, cm["name"], params, [ba, bb] + [ba] * (SCENES - 2),
-                                    max(cm["params_by_index"], default=0)))
-
+    planned = [_check_block(bi, b, len(blocks), catalog) for bi, b in enumerate(blocks)]
     return Plan(ROW, IN_PORT, OUT_PORT, planned, labels)

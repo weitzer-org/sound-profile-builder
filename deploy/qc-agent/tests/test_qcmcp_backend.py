@@ -6,15 +6,15 @@ writes and exactly one File CREATE; and the guard stops every forbidden message
 (RecallPreset SAVE, recall, deletes, global writes, off-plan grid writes, a save to
 another slot) before it reaches the device. Proves nothing about the real unit.
 """
-import copy
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from helpers import Clock, catalog, config, export, job
 from qc_agent import jobs, qcmcp_backend
-from qc_agent.device import UnitAbsent
+from qc_agent.device import DeviceError, UnitAbsent
 from qc_agent.export_validator import validate
 from qc_agent.ledger import OwnedSlots
 from qc_agent.qcmcp_backend import GuardError, Guarded, QcMcpBackend, WireRefused
@@ -30,15 +30,13 @@ P = fake_hid.P
 class Base(unittest.TestCase):
     def setUp(self):
         self.hid = fake_hid.FakeHID()
-        self._orig = T.open_hid
-        T.open_hid = lambda **kw: self.hid
+        patcher = mock.patch.object(T, "open_hid", side_effect=lambda **kw: self.hid)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.dev = QcMcpBackend()
+        self.addCleanup(self.dev.disconnect)
         self.tmp = tempfile.TemporaryDirectory()
-
-    def tearDown(self):
-        T.open_hid = self._orig
-        self.dev.disconnect()
-        self.tmp.cleanup()
+        self.addCleanup(self.tmp.cleanup)
 
     def names(self):
         return [(n, getattr(o, "action", None)) for n, o in self.hid.received]
@@ -86,7 +84,6 @@ class Session(Base):
                 return self.hid._reply("File", f)
             return orig(name, m)
         self.hid._handle = short
-        from qc_agent.device import DeviceError
         with self.assertRaises(DeviceError):
             self.dev.list_my_presets()
 
@@ -104,11 +101,9 @@ class Session(Base):
         self.assertFalse(self.dev.alive())
 
     def test_no_device_maps_to_unit_absent(self):
-        def boom(**kw):
-            raise RuntimeError("no HID device 0x152a:0x880a found")
-        T.open_hid = boom
-        with self.assertRaises(UnitAbsent):
-            self.dev.connect()
+        with mock.patch.object(T, "open_hid", side_effect=RuntimeError("no HID device 0x152a:0x880a found")):
+            with self.assertRaises(UnitAbsent):
+                self.dev.connect()
 
 
 class PushOverTheWire(Base):
@@ -250,7 +245,7 @@ class Guard(Base):
 
     def test_backend_save_must_match_the_push(self):
         self.dev.begin_push(152, "Texas Blues", self.plan)
-        with self.assertRaises(Exception):
+        with self.assertRaises(DeviceError):
             self.dev.save_to_slot(153, "Texas Blues")
 
     def test_end_push_disarms(self):
@@ -288,14 +283,10 @@ class VendoredLoad(unittest.TestCase):
             shutil.copytree(VENDOR_DIR, copy_dir)
             p = copy_dir / "qc_mcp" / "transport.py"
             p.write_bytes(p.read_bytes() + b"\n# local change\n")
-            saved = qcmcp_backend._loaded
-            qcmcp_backend._loaded = None
-            try:
-                with self.assertRaises(Exception) as cm:
+            with mock.patch.object(qcmcp_backend, "_loaded", None):
+                with self.assertRaises(DeviceError) as cm:
                     qcmcp_backend.load_vendored(copy_dir)
                 self.assertIn("differs from the reviewed f634ecd copy", str(cm.exception))
-            finally:
-                qcmcp_backend._loaded = saved
 
     def test_imports_are_the_vendored_copy(self):
         import sys

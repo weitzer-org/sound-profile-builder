@@ -9,7 +9,7 @@ from pathlib import Path
 
 from helpers import AGENT_DIR, REPO
 from qc_agent import shortcut
-from qc_agent.lock import AlreadyRunning, InstanceLock
+from qc_agent.lock import InstanceLock
 
 EXE = r"C:\Users\bweit\AppData\Local\qc-agent\venv\Scripts\python.exe"
 WD = r"C:\Users\bweit\qc-trial\qc2\deploy\qc-agent"

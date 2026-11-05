@@ -270,7 +270,6 @@ class WireGuard:
         raise WireRefused(f"{name} action={action} is not allowed")
 
     def _check_grid(self, msg, fields):
-        push = self._push
         if not fields <= {"action", "request_id", "preset"}:
             raise WireRefused(f"Grid: unexpected fields {sorted(fields)}")
         preset = msg.preset
@@ -278,52 +277,67 @@ class WireGuard:
         if not pf <= {"chains", "bypass"}:
             raise WireRefused(f"Grid: preset fields {sorted(pf)} not allowed")
         for ch in preset.chains:
-            cf = _names(ch)
-            if not cf <= {"row", "in_portid", "out_portid", "models"}:
-                raise WireRefused(f"Grid: chain fields {sorted(cf)} not allowed")
-            if ch.row != push["row"]:
-                raise WireRefused(f"Grid: row {ch.row} is not the plan's row")
-            if "in_portid" in cf and ch.in_portid != push["in"] or "out_portid" in cf and ch.out_portid != push["out"]:
-                raise WireRefused("Grid: routing other than the plan's")
-            for m in ch.models:
-                mf = _names(m)
-                if not mf <= {"hash", "column", "params"}:
-                    raise WireRefused(f"Grid: model fields {sorted(mf)} not allowed")
-                col = m.column
-                if col not in push["cols"]:
-                    raise WireRefused(f"Grid: column {col} is not in the plan")
-                if not mf & {"hash", "params"}:
-                    raise WireRefused(f"Grid: an empty entry for column {col} (the shape of a delete)")
-                if "hash" in mf:
-                    if m.hash != push["cols"][col] or "params" in mf:
-                        raise WireRefused(f"Grid: placing model {m.hash} in column {col} is not the plan")
-                    continue
-                for p in m.params:
-                    qf = _names(p)
-                    if qf == {"scene_mode"} or qf == {"index", "scene_mode"}:
-                        # "Assign to Scenes": only for the plan's scene-varying params, or a
-                        # scene-varying block's bypass (index one past its read, set by the transport).
-                        if (col, p.index) in push["scene_params"]:
-                            continue
-                        if col in push["bypass_cols"] and p.index > push["max_index"][col]:
-                            continue  # the bypass control sits past every listed parameter (one past the read)
-                        raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
-                    if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
-                        raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
-                    if len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "float_value":
-                        raise WireRefused("Grid: parameter writes must be one float")
-                    v = p.param_values[0].float_value
-                    if not 0.0 <= v <= 1.0:
-                        raise WireRefused(f"Grid: wire value {v} outside 0..1")
+            self._check_chain(ch)
         for b in preset.bypass:
-            if _names(b) - {"row", "colBypass"} or b.row != push["row"]:
-                raise WireRefused("Grid: bypass outside the plan's row")
-            for cb in b.colBypass:
-                if _names(cb) - {"column", "sceneBypass"} or cb.column not in push["bypass_cols"]:
-                    raise WireRefused(f"Grid: bypass of column {cb.column} is not the plan")
-                for sb in cb.sceneBypass:
-                    if _names(sb) - {"bypass"}:
-                        raise WireRefused("Grid: unexpected bypass fields")
+            self._check_bypass(b)
+
+    def _check_chain(self, ch):
+        push = self._push
+        cf = _names(ch)
+        if not cf <= {"row", "in_portid", "out_portid", "models"}:
+            raise WireRefused(f"Grid: chain fields {sorted(cf)} not allowed")
+        if ch.row != push["row"]:
+            raise WireRefused(f"Grid: row {ch.row} is not the plan's row")
+        if "in_portid" in cf and ch.in_portid != push["in"] or "out_portid" in cf and ch.out_portid != push["out"]:
+            raise WireRefused("Grid: routing other than the plan's")
+        for m in ch.models:
+            self._check_model(m)
+
+    def _check_model(self, m):
+        push = self._push
+        mf = _names(m)
+        if not mf <= {"hash", "column", "params"}:
+            raise WireRefused(f"Grid: model fields {sorted(mf)} not allowed")
+        if not mf & {"hash", "params"}:
+            raise WireRefused(f"Grid: an empty entry for column {m.column} (the shape of a delete)")
+        col = m.column
+        if col not in push["cols"]:
+            raise WireRefused(f"Grid: column {col} is not in the plan")
+        if "hash" in mf:
+            if m.hash != push["cols"][col] or "params" in mf:
+                raise WireRefused(f"Grid: placing model {m.hash} in column {col} is not the plan")
+            return
+        for p in m.params:
+            self._check_param(col, p)
+
+    def _check_param(self, col, p):
+        push = self._push
+        qf = _names(p)
+        if qf == {"scene_mode"} or qf == {"index", "scene_mode"}:
+            # "Assign to Scenes": only for the plan's scene-varying params, or a scene-varying block's bypass.
+            if (col, p.index) in push["scene_params"]:
+                return
+            if col in push["bypass_cols"] and p.index > push["max_index"][col]:
+                return  # the bypass control sits past every listed parameter (one past the read)
+            raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
+        if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
+            raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
+        if len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "float_value":
+            raise WireRefused("Grid: parameter writes must be one float")
+        v = p.param_values[0].float_value
+        if not 0.0 <= v <= 1.0:
+            raise WireRefused(f"Grid: wire value {v} outside 0..1")
+
+    def _check_bypass(self, b):
+        push = self._push
+        if _names(b) - {"row", "colBypass"} or b.row != push["row"]:
+            raise WireRefused("Grid: bypass outside the plan's row")
+        for cb in b.colBypass:
+            if _names(cb) - {"column", "sceneBypass"} or cb.column not in push["bypass_cols"]:
+                raise WireRefused(f"Grid: bypass of column {cb.column} is not the plan")
+            for sb in cb.sceneBypass:
+                if _names(sb) - {"bypass"}:
+                    raise WireRefused("Grid: unexpected bypass fields")
 
     def _check_save(self, msg, fields):
         folder_key, position, name = self._save

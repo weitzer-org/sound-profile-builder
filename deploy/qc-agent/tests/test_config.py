@@ -1,7 +1,8 @@
 """agent.env parsing: exactly the setup script's names, strict, and no secret in any message or repr."""
-import importlib.util
+import os
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from helpers import AGENT_DIR, KEY_HEX, NEXT_HEX, env
@@ -81,12 +82,8 @@ class Strict(unittest.TestCase):
             cfg.parse_env_text("not a line\n")
 
     def test_environment_does_not_override_the_file(self):
-        import os
-        os.environ["DEVICE_JOB_KEY"] = NEXT_HEX
-        try:
+        with mock.patch.dict(os.environ, {"DEVICE_JOB_KEY": NEXT_HEX}):
             self.assertEqual(cfg.from_mapping(env()).current_kid, "72eb33c6")
-        finally:
-            del os.environ["DEVICE_JOB_KEY"]
 
     def test_rotation(self):
         c = cfg.from_mapping(env(DEVICE_JOB_KEY_NEXT=NEXT_HEX))

@@ -303,60 +303,104 @@ def _diff(plan, preset):
     return mismatches, diff, problems
 
 
-def push_preset(ctx, job) -> Outcome:
-    a = job["args"]
-    slot, name = a["slot"], a["name"]
-    pos = slots.position(slot)
-    result_push = {"slot": slot, "name": name, "mismatches": 0, "cpu_load": None, "diff": []}
-    saved = False
+class _Push:
+    """One push, as the steps the module docstring lists. Each step returns an Outcome to stop
+    with, or None to go on; run() owns the order and the error handling."""
 
-    if a["export"]["format"] not in SUPPORTED_FORMATS:
-        return refused("unsupported_arg", f"This bridge can't push export format "
-                       f"{text.clean(a['export']['format'], 48)}; update the bridge.")
-    if not ctx.config.allowed_slots.contains(slot):
-        return refused("slot_not_allowed", f"Slot {slot} is outside the bridge's allowed slots "
-                       f"({', '.join(ctx.config.allowed_slots.labels())}).")
-    try:
-        check_preset_name(name)
-        plan = validate(a["export"], ctx.catalog, ctx.config.expected_firmware)
-    except ExportRefused as e:
-        return refused("validation", "The export failed the bridge's own checks: " + text.clean(str(e), 400))
+    def __init__(self, ctx, job):
+        self.ctx, self.job, self.dev = ctx, job, ctx.device
+        a = job["args"]
+        self.args, self.slot, self.name = a, a["slot"], a["name"]
+        self.pos = slots.position(self.slot)
+        self.result = {"slot": self.slot, "name": self.name, "mismatches": 0, "cpu_load": None, "diff": []}
+        self.plan = None
+        self.fw = None
+        self.saved = False
 
-    bad = _connect_checked(ctx)
-    if bad:
-        return bad
-    dev = ctx.device
-    fw = _fw(dev.firmware)
-    try:
-        listing = dev.list_my_presets()
-        _check_alive(ctx)
+    def run(self) -> Outcome:
+        out = self.check_job()                              # rule 1 (no device contact)
+        if out:
+            return out
+        out = _connect_checked(self.ctx)                    # rule 2
+        if out:
+            return out
+        self.fw = _fw(self.dev.firmware)
+        try:
+            return self.check_unit() or self.build() or self.verify() or self.save()
+        except (_Gone, UnitAbsent):
+            if self.saved:
+                return self.done(f"Save to {self.slot} issued after a clean read-back, then the Quad Cortex went "
+                                 f"away before the save could be confirmed. Check {self.slot} on the unit.",
+                                 unit_gone=True)
+            return failed("unit_absent", "The Quad Cortex went away during the push. If anything was written it "
+                          "was not saved.", firmware=self.fw, push=self.result, unit_gone=True)
+        except DeviceError as e:
+            log.warning("push failed: %s", text.clean(str(e), 200))
+            if self.saved:
+                return self.done(f"Save to {self.slot} issued after a clean read-back, but confirming it failed. "
+                                 f"Check {self.slot} on the unit.")
+            return failed("device_error", "A device operation failed. Nothing was saved; re-select the slot on the "
+                          "unit to discard any partial grid.", firmware=self.fw, push=self.result)
+
+    def done(self, msg, **kw):
+        return Outcome("succeeded", "", msg, firmware=self.fw, push=self.result, **kw)
+
+    def check_job(self):
+        a, cfg = self.args, self.ctx.config
+        if a["export"]["format"] not in SUPPORTED_FORMATS:
+            return refused("unsupported_arg", f"This bridge can't push export format "
+                           f"{text.clean(a['export']['format'], 48)}; update the bridge.")
+        if not cfg.allowed_slots.contains(self.slot):
+            return refused("slot_not_allowed", f"Slot {self.slot} is outside the bridge's allowed slots "
+                           f"({', '.join(cfg.allowed_slots.labels())}).")
+        try:
+            check_preset_name(self.name)
+            self.plan = validate(a["export"], self.ctx.catalog, cfg.expected_firmware)
+        except ExportRefused as e:
+            return refused("validation", "The export failed the bridge's own checks: " + text.clean(str(e), 400))
+        return None
+
+    def check_slot(self, listing, cur):
+        """Rules 3 and 4 against a listing and the open position (run before writing and again before saving)."""
+        slot, pos = self.slot, self.pos
         if _occupied(listing, pos):
             return refused("slot_not_empty", f"Slot {slot} is not empty on the unit "
                            f"(it holds {text.clean(listing.get(pos), NAME_LIMIT)!r}). The bridge never "
-                           "overwrites a preset; pick an empty slot.", firmware=fw)
-        dup = _same_name(listing, pos, name)
+                           "overwrites a preset; pick an empty slot.", firmware=self.fw)
+        dup = _same_name(listing, pos, self.name)
         if dup is not None:
-            return refused("validation", f"Slot {slots.label(dup)} already has a preset named {name!r}. Pick a "
+            return refused("validation", f"Slot {slots.label(dup)} already has a preset named {self.name!r}. Pick a "
                            "different name: if the unit stores presets by name, a save could replace it.",
-                           firmware=fw)
-        cur = dev.setlist_position() or {}
+                           firmware=self.fw)
         if cur.get("folder_key") != SETLIST_KEY or cur.get("position") != pos or cur.get("is_factory"):
             return refused("unsupported_arg", f"Select slot {slot} (empty) on the Quad Cortex first, then send "
                            "again. The bridge only builds into the empty slot that is open on the unit, so it "
-                           "never changes what you have loaded.", firmware=fw)
-        live = dev.read_current_preset()
-        _check_alive(ctx)
-        if live is None:
-            return failed("device_error", "The unit did not return the open slot's grid in time.", firmware=fw)
-        if any(c.get("blocks") for c in live.get("chains", [])):
-            return refused("slot_not_empty", f"Slot {slot} is open but its grid isn't blank (unsaved edits?). "
-                           f"Re-select {slot} on the unit to discard them, then retry.", firmware=fw)
-        if _expired(ctx, job):
-            return Outcome("expired", "expired", "The request expired before the bridge got to it; "
-                           "nothing was written.", firmware=fw)
+                           "never changes what you have loaded.", firmware=self.fw)
+        return None
 
-        # ---- writes: the live edit buffer of the empty, open slot ----
-        dev.begin_push(pos, name, plan)
+    def check_unit(self):
+        """Rules 3-5: fresh listing, the slot open with a blank grid, not expired."""
+        listing = self.dev.list_my_presets()
+        _check_alive(self.ctx)
+        out = self.check_slot(listing, self.dev.setlist_position() or {})
+        if out:
+            return out
+        live = self.dev.read_current_preset()
+        _check_alive(self.ctx)
+        if live is None:
+            return failed("device_error", "The unit did not return the open slot's grid in time.", firmware=self.fw)
+        if any(c.get("blocks") for c in live.get("chains", [])):
+            return refused("slot_not_empty", f"Slot {self.slot} is open but its grid isn't blank (unsaved edits?). "
+                           f"Re-select {self.slot} on the unit to discard them, then retry.", firmware=self.fw)
+        if _expired(self.ctx, self.job):
+            return Outcome("expired", "expired", "The request expired before the bridge got to it; "
+                           "nothing was written.", firmware=self.fw)
+        return None
+
+    def build(self):
+        """The writes, into the live edit buffer of the empty, open slot."""
+        dev, plan, ctx = self.dev, self.plan, self.ctx
+        dev.begin_push(self.pos, self.name, plan)
         dev.set_routing(plan.row, plan.in_port, plan.out_port)
         ctx.sleep(PACE_S)
         for b in plan.blocks:
@@ -364,7 +408,7 @@ def push_preset(ctx, job) -> Outcome:
             if not dev.add_block(plan.row, b.col, b.model_id):
                 return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
                               "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
-                              firmware=fw, push=result_push)
+                              firmware=self.fw, push=self.result)
             ctx.sleep(PACE_S)
             for p in b.params:
                 if p.scene_wires:
@@ -375,60 +419,52 @@ def push_preset(ctx, job) -> Outcome:
             if any(b.bypass_scenes):  # a new block starts active; write flags only when some scene bypasses it
                 dev.set_block_bypass(plan.row, b.col, b.bypass_scenes)
             _check_alive(ctx)
+        return None
 
-        ctx.sleep(0.5)
-        back = dev.read_current_preset()
-        _check_alive(ctx)
+    def verify(self):
+        """Read back and diff; any mismatch stops before the save."""
+        self.ctx.sleep(0.5)
+        back = self.dev.read_current_preset()
+        _check_alive(self.ctx)
         if back is None:
             return failed("device_error", "The read-back timed out. Nothing was saved; re-select the slot on "
-                          "the unit to discard the edits.", firmware=fw, push=result_push)
-        mismatches, diff, problems = _diff(plan, back)
-        result_push.update(mismatches=mismatches, diff=diff)
+                          "the unit to discard the edits.", firmware=self.fw, push=self.result)
+        mismatches, diff, problems = _diff(self.plan, back)
+        self.result.update(mismatches=mismatches, diff=diff)
         if mismatches:
             for pr in problems[:10]:
                 log.warning("read-back: %s", pr)
             return failed("readback_mismatch", f"The unit's read-back differs from the plan in {mismatches} "
                           "place(s). Nothing was saved; re-select the slot on the unit to discard the edits.",
-                          firmware=fw, push=result_push)
+                          firmware=self.fw, push=self.result)
+        return None
 
-        # ---- save: re-check with a second fresh listing, then File CREATE ----
+    def save(self):
+        """Rule 6: a second fresh listing, then File CREATE, then wait for the listing to show it."""
+        dev, ctx, slot, pos, name = self.dev, self.ctx, self.slot, self.pos, self.name
         listing = dev.list_my_presets()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        if _occupied(listing, pos) or _same_name(listing, pos, name) is not None or cur.get("position") != pos or cur.get("folder_key") != SETLIST_KEY:
+        if self.check_slot(listing, cur):
             return refused("slot_not_empty", f"Slot {slot} changed while the preset was being built. "
-                           "Nothing was saved.", firmware=fw, push=result_push)
+                           "Nothing was saved.", firmware=self.fw, push=self.result)
         dev.save_to_slot(pos, name)
-        saved = True
-        result_push["listed"] = False
-        ctx.owned.record(slot, pos, name, job["job_id"], contract.format_time(ctx.now()))
-        listed = False
+        self.saved = True
+        self.result["listed"] = False
+        ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
             if dev.list_my_presets().get(pos) == name:
-                listed = True
+                self.result["listed"] = True
                 break
-        result_push["listed"] = listed
-        labels = (" Scene labels are not written in v1." if plan.scene_labels else "")
-        if listed:
-            return Outcome("succeeded", "", f"Saved {name!r} to {slot}; read-back matched.{labels}",
-                           firmware=fw, push=result_push)
-        return Outcome("succeeded", "", f"Save to {slot} issued and the read-back matched, but the unit's "
-                       f"listing didn't show {name!r} within {int(SAVE_LIST_POLLS * SAVE_LIST_INTERVAL_S)} s "
-                       f"(the unit can lag for minutes). Check {slot} on the unit.{labels}",
-                       firmware=fw, push=result_push)
-    except (_Gone, UnitAbsent):
-        if saved:
-            return Outcome("succeeded", "", f"Save to {slot} issued after a clean read-back, then the Quad "
-                           f"Cortex went away before the save could be confirmed. Check {slot} on the unit.",
-                           firmware=fw, push=result_push, unit_gone=True)
-        return failed("unit_absent", "The Quad Cortex went away during the push. If anything was written it "
-                      "was not saved.", firmware=fw, push=result_push, unit_gone=True)
-    except DeviceError as e:
-        log.warning("push failed: %s", text.clean(str(e), 200))
-        if saved:
-            return Outcome("succeeded", "", f"Save to {slot} issued after a clean read-back, but confirming it "
-                           f"failed. Check {slot} on the unit.", firmware=fw, push=result_push)
-        return failed("device_error", "A device operation failed. Nothing was saved; re-select the slot on the "
-                      "unit to discard any partial grid.", firmware=fw, push=result_push)
+        labels = " Scene labels are not written in v1." if self.plan.scene_labels else ""
+        if self.result["listed"]:
+            return self.done(f"Saved {name!r} to {slot}; read-back matched.{labels}")
+        return self.done(f"Save to {slot} issued and the read-back matched, but the unit's listing didn't show "
+                         f"{name!r} within {int(SAVE_LIST_POLLS * SAVE_LIST_INTERVAL_S)} s (the unit can lag for "
+                         f"minutes). Check {slot} on the unit.{labels}")
+
+
+def push_preset(ctx, job) -> Outcome:
+    return _Push(ctx, job).run()

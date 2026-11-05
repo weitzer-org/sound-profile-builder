@@ -14,7 +14,7 @@ import logging
 import threading
 import traceback
 
-from . import AGENT_VERSION, contract, jobs, slots
+from . import AGENT_VERSION, contract, jobs
 from .device import SETLIST_NAME
 from .ledger import JobLedger, OwnedSlots
 from .s3 import S3Error

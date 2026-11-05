@@ -12,7 +12,6 @@ import hmac
 import json
 import math
 import re
-import sys
 from datetime import datetime, timezone
 
 MAX_JOB_BYTES = 512 * 1024

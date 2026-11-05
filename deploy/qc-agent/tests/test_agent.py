@@ -4,7 +4,6 @@ Covers every refusal path of contract section 8 step 11 and the plan's device ru
 crash recovery from local state only, the heartbeat, and the exit rules. Proves the
 agent's logic and guards; says nothing about the real unit (that's Phase 0 / P6).
 """
-import copy
 import datetime as dt
 import json
 import tempfile
