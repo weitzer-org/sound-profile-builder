@@ -210,13 +210,13 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 **Running it on Windows**
 
 - **Install:** clone this repo, then `py -3.12 -m venv`, then `pip install --require-hashes -r deploy/qc-agent/requirements.lock.txt`.
-- **Configuration** goes in `%LOCALAPPDATA%\qc-agent\agent.env`:
-  - R2 endpoint, bucket and token;
-  - `DEVICE_JOB_KEY`;
-  - the allowed slot range;
-  - the expected firmware.
+- **Configuration** goes in `%LOCALAPPDATA%\qc-agent\agent.env`, written by `deploy/qc-agent/write_agent_env.py`. That script prompts for each value with secrets hidden, tests the bridge token against R2 with a read-only listing, and restricts the file to the user with `icacls`. Its variables, which the agent must read under exactly these names:
+  - `QC_AGENT_R2_ENDPOINT`, `QC_AGENT_R2_BUCKET`;
+  - `QC_AGENT_R2_ACCESS_KEY_ID`, `QC_AGENT_R2_SECRET_ACCESS_KEY` (the bridge token: Object Read & Write on the jobs bucket only);
+  - `DEVICE_JOB_KEY` (the same value as the Fly secret) and, only during a rotation, `DEVICE_JOB_KEY_NEXT`;
+  - `QC_AGENT_ALLOWED_SLOTS` (e.g. `20A-25H`), `QC_AGENT_EXPECTED_FIRMWARE` (`4.1.0` today), `QC_AGENT_IDLE_MINUTES` (`30`).
 
-  The file is ACL-restricted to the user. No secret goes on the command line.
+  No secret goes on the command line.
 - **On demand, never always-on** (owner's requirement).
   - **Start: a desktop shortcut** (owner's decision). `python -m qc_agent install-shortcut` creates "Start QC bridge" on the desktop, running `<venv>\Scripts\python.exe -m qc_agent run`. It's a `.lnk` written by Python: no PowerShell script, no execution-policy change, no admin rights.
     - The window it opens shows "Bridge running: waiting for jobs", then each job and its result.
