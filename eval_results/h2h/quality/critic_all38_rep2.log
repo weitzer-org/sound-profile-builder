@@ -1,0 +1,37 @@
+2026/11/05 14:53:08 critic model: gemini-4-argon
+=== 01_SRV_Clean.json ===
+  (no issues found)
+=== 03_British_Invasion.json ===
+  [high] Fender Telecaster Single Coil / block-2: The rationale states the block is "available in reserve for raw garage-fuzz leads" and the builder_statement describes Scene A as "clean-to-crunch rhythm", yet this fuzz capture block has no Bypass parameter (or is not bypassed) and remains active in the signal path across all scenes.
+  [medium] Fender Telecaster Single Coil / block-5: The rationale describes a "tape slapback echo adding analog dimension" and the builder_statement claims "vintage slapback echo", which contradicts the selected "Circular Delay" model (a digital multi-tap/circular delay rather than a tape or analog delay model).
+  [high] Gibson ES-339 Humbuckers / block-2: The builder_statement describes Scene A as "clean-to-crunch rhythm", yet the "Otso Bender Mk1" fuzz capture block has no Bypass parameter (leaving it permanently active in the signal path alongside the amp).
+=== 04_Southern_Rock.json ===
+  [medium] Fender Telecaster Single Coil / block-5: The rationale claims the block 'Recreates Echoplex tape slapback', which contradicts the selected 'Circular Delay' model (a digital circular/ping-pong delay rather than a tape echo emulation).
+  [medium] Gibson ES-339 Humbuckers / block-5: The rationale claims 'Tape-style warmth... to deliver vintage echo', which contradicts the selected 'Circular Delay' model (a digital circular delay rather than a tape delay model).
+=== 05_Clapton.json ===
+  [medium] Gibson ES-339 Humbuckers / block-5: The rationale claims the cabinet is "pairing dual off-axis mics", which contradicts Mic 2's parameter value of "Cone Mid / 2.50 in Distance / 0 deg On-Axis".
+=== 06_Gilmour.json ===
+  [medium] Fender Telecaster Single Coil / block-5: The rationale claims the block "Recreates the rhythmic tape/drum repeats of the vintage Binson Echorec unit", which contradicts the selected "Circular Delay" model (a digital multi-tap/circular delay based on the Lexicon PCM70 rather than a tape/magnetic drum echo emulation).
+  [medium] Gibson ES-339 Humbuckers / block-5: The rationale claims the block "Recreates the rhythmic tape/drum repeats of the vintage Binson Echorec unit", which contradicts the selected "Circular Delay" model (a digital multi-tap/circular delay based on the Lexicon PCM70 rather than a tape/magnetic drum echo emulation).
+=== 07_Edge.json ===
+  (no issues found)
+=== 08_EVH.json ===
+  [medium] Fender Telecaster Single Coil / block-7: The builder_statement describes this post-cabinet block as a "tape delay", which contradicts the selected digital rack-style model "Circular Delay".
+  [medium] Gibson ES-339 Humbuckers / block-7: The rationale and builder_statement claim this block is a "Studio tape echo simulation" and "tape delay", contradicting the digital rack-style model "Circular Delay".
+=== 09_BB_King.json ===
+  [medium] Fender Telecaster Single Coil / block-4: The builder_statement claims the post-cabinet graphic EQ 'rolls off harsh black-panel top end', but block-4 (Graphic-9) only contains '1kHz' and 'Level' parameters with no high-frequency roll-off or attenuation.
+  [medium] Gibson ES-339 Humbuckers / block-4: The builder_statement claims the post-cabinet graphic EQ 'rolls off harsh black-panel top end', but block-4 (Graphic-9) only contains '1kHz' and 'Level' parameters with no high-frequency roll-off or attenuation.
+=== 10_Slash.json ===
+  (no issues found)
+=== 11_Mayer_Lead.json ===
+  [medium] Gibson ES-339 Humbuckers / block-6: The rationale describes the block as an "Aqua-Puss style analog slapback delay", whereas the selected model "Circular Delay" is a digital delay (Lexicon PCM70 Circular Delays emulation) rather than an analog delay.
+=== 12_Bonamassa.json ===
+  [medium] Fender Telecaster Single Coil / block-4: The rationale states the delay provides "rhythmic space" alongside lead reinforcement, and Mix is scaled between Scene A ("20%") and Scene B ("26%"), but Bypass is set to "On" (inactive) in Scene A so no delay is active during rhythm.
+  [medium] Gibson ES-339 Humbuckers / block-3: The rationale claims the cabinet is paired with "dual off-axis dynamic and ribbon mics", which contradicts Mic 2 being explicitly set to "Ribbon 121: Mid-Cone, 2.5 inches distance, on-axis".
+=== 13_Hard_Rock_Blues.json ===
+  (no issues found)
+
+=== SUMMARY ===
+Critic: gemini-4-argon
+Total issues found: 15
+Total tokens: in=69238 out=1396

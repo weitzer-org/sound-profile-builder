@@ -1,0 +1,35 @@
+[
+  {
+    "Name": "02_Chicago_Blues",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Preset A grounds its choices accurately in Chicago blues studio history (5E3 Tweed Deluxe, TS808/Green 808 drive, RCA 77-DX mic emulations via dual mic blending) and relies on standard Quad Cortex factory models and captures (US DLX 58, Green 808, Spring Reverb). Preset B introduces non-standard block names such as 'John Mayer Spring Reverb' and custom capture file names.",
+    "Struct": "Both presets follow the required schema structure with Scene B overrides and parameter basis tags. Preset A maintains a cleaner, more reliable signal chain without redundant block clutter.",
+    "Rationale": "Preset A provides a significantly more authentic and practical signal chain for classic Chicago blues tone. It heeds the tone agent guidance by keeping a single overdrive (Green 808) in front of the 1958 Tweed Deluxe capture, avoiding mid-frequency congestion and excessive gain stacking. The parameter choices between the Telecaster and ES-339 configurations are logical and well-justified. Preset B over-complicates the signal chain with a pre-EQ block, two separate drives (a TS808 capture and a Vemural Ray block), and uses a non-standard block name ('John Mayer Spring Reverb').",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "07_Edge",
+    "Winner": "prod",
+    "Conf": 4.8,
+    "Ground": "Preset A demonstrates exceptional gear knowledge and Quad Cortex workflow awareness. It correctly identifies that the '66 AC30 JMP Clean is a full-rig capture and sets the cab block to Bypassed by default to avoid double-cab filtering. It accurately incorporates key components of The Edge's rig (Boss CS-2 compression, Boss FA-1 / Korg SDD-3000 preamp boost via EQ, TS-9 drive for lead scene, dotted-eighth dual delay, circular delay cascade, and plate reverb). Preset B is less accurate, using an optical compressor (Jewel) to emulate both Dyna Comp and an SDD-3000 preamp push, while lacking an overdrive block.",
+    "Struct": "Preset A is clean, valid, and properly utilizes relative dB controls for Quad Cortex Neural Capture blocks. Preset B has minor block naming errors where model names end with an unnatural trailing underscore (`Dual (ST)_` and `Studio Plate 70 (ST)_`).",
+    "Rationale": "Preset A is significantly better constructed for both historical authenticity and Quad Cortex usability. It faithfully models The Edge's rig architecture—including the CS-2, FA-1 preamp boost, TS-9 lead boost, and dual modulated delay—while showing sophisticated Quad Cortex awareness by disabling the cab block for the full-rig capture. Scene changes and pickup adaptations are well-thought-out. Preset B suffers from block naming defects (`Dual (ST)_`) and a simplified signal chain that lacks dedicated drive/boost stages.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": false
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "prodhigh",
+    "Conf": 4.5,
+    "Ground": "Preset A accurately models the historical Slash rig strategy (specifically referencing the S.I.R. #34 hot-rodded Marshall JCM800 setup) by using a pre-amp Graphic-9 EQ to push the front end of the Brit 2203 rather than compounding multiple overdrive pedals. Preset B mentions S.I.R. #34 and AFD in notes, but stacks an active Chief SD1 overdrive, a boosted Graphic-9 EQ, and high amp gain simultaneously in Scene B, leading to excessive gain staging.",
+    "Struct": "Both presets are structurally complete and fully valid JSON, utilizing proper schema types, basis tags, and Scene B overrides.",
+    "Rationale": "Preset A is superior in tone architecture and gain staging logic. For a classic Slash JCM800/S.I.R. #34 tone, using a pre-amp EQ to shape low-end clarity and push midrange frequencies into the Marshall head yields a much more realistic and playable result. Preset B stacks an always-on SD1, an engaged Graphic-9 with +2.5 to +3.5 dB output level boost, AND significant amp gain boosts in Scene B, which would result in excessive feedback, compression, and loss of dynamics on a Quad Cortex JCM800 model.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  }
+]

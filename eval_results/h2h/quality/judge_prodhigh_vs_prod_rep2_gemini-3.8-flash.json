@@ -1,0 +1,35 @@
+[
+  {
+    "Name": "02_Chicago_Blues",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Preset A is meticulously grounded in standard Quad Cortex factory inventory and CorOS terminology, using verified native/factory items: 'Green 808', 'US DLX 58' (a real factory Tweed Deluxe capture), '112 US DLX Tweed WGS-Q 10s' (factory Tweed cab), and 'Spring Reverb'. Preset B invents or pulls non-standard model names, most notably 'John Mayer Spring Reverb' (which does not exist in the factory Quad Cortex reverb library) and obscure capture strings ('Fender 57 Deluxe - T8 I4 M12', 'FNDR TWDLX IN Edge BAL CAB').",
+    "Struct": "Both presets conform well to schema requirements and parameter structures. Preset B correctly handles bypass inversion ('On' for bypassed in Scene A, 'Off' for engaged in Scene B), but its signal chain is needlessly crowded for a Tweed Deluxe patch.",
+    "Rationale": "Preset A is significantly better realized. Tonal and historical logic for a 1950s Chicago Blues tone favors an edge-of-breakup Tweed 5E3 pushed by a single boost/overdrive (TS808) and room/spring reverb. Preset A explicitly recognizes that stacking multiple drive stages into a low-headroom 5E3 leads to flub and congestion, opting for an elegant 4-block architecture with seamless Scene A/B gain staging. In contrast, Preset B chains a Parametric EQ, a TS808 capture, and a Vemural Ray overdrive into a Tweed capture—far too much pre-amp gain stacking for authentic Chicago blues—and includes fabricated native block names like 'John Mayer Spring Reverb'. Preset A is far more authentic, usable, and plug-and-play on real Quad Cortex hardware.",
+    "Judge": "gemini-3.8-flash",
+    "JudgeServed": "gemini-3.8-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "07_Edge",
+    "Winner": "prod",
+    "Conf": 0.95,
+    "Ground": "Preset A displays exemplary grounding in The Edge's actual historical signal chain: it includes the Boss CS-2 (Chief CS3), the essential front-end FET preamp boost recreating the Boss FA-1 and Korg SDD-3000 line stage (Parametric-3), the TS9 drive for lead scenes, the jumpered AC30, and dual post-amp modulated delay lines. In contrast, Preset B uses an optical compressor (Jewel) and tries to claim it covers both Dyna Comp and the SDD-3000 preamp boost simultaneously.",
+    "Struct": "Preset B has noticeable model naming defects with trailing underscores ('Dual (ST)_' and 'Studio Plate 70 (ST)_'), and combines stereo feedback into a generic single 'Feedback' slider instead of dual parameters. Preset A has spotless block naming, correct parameter naming for Neural Captures and stereo delays, and thoughtfully leaves the cabinet block bypassed to avoid double-cabbing the full-rig capture.",
+    "Rationale": "Preset A is clearly superior. The Edge's signature tone relies heavily on the clean preamp coloration of the Boss FA-1 and Korg SDD-3000 driving a chimey Vox AC30 edge-of-breakup front end, which Preset A models intentionally with dedicated compression, EQ preamp boost, and layered delays. Furthermore, Preset B suffers from syntax/naming hallucinations (appending trailing underscores to 'Dual (ST)_' and 'Studio Plate 70 (ST)_'). Preset A is completely coherent, mix-ready, and historically authentic.",
+    "Judge": "gemini-3.8-flash",
+    "JudgeServed": "gemini-3.8-flash",
+    "SwappedAB": false
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "prodhigh",
+    "Conf": 0.88,
+    "Ground": "Both presets correctly identify core elements of Slash's rig: the S.I.R. #34 modded JCM800 2203, Celestion Vintage 30s, Boss GE-7 mid-boost, Boss DD-3 delay, and Cry Baby wah. However, Preset A demonstrates superior tonal and historical understanding by deliberately avoiding a diode-clipping overdrive (like the Boss SD-1 included in Preset B). Slash's signature gain structure famously derived from cascading tube stages in modded Marshall heads rather than an asymmetrical clipping overdrive pedal. Preset A's use of the Graphic-9 directly into the Brit 2203 to push the front-end tubes accurately reflects this ethos.",
+    "Struct": "Both presets provide well-formed parameters across both requested pickup profiles with clear Scene A to Scene B parameter mappings. Preset A lists both 'Volume' and 'Master Volume' on the Brit 2203 (likely translating pre-amp gain/master vs. output volume), whereas Preset B uses 'Gain' and 'Master Volume'. Both presets follow proper parameter formatting and routing logic.",
+    "Rationale": "Preset A is preferred because its signal chain strategy is much more authentic to Slash's tone. Slash has never been known for using an SD-1 or TS-style overdrive pedal; his sound is purely hot-rodded Marshall tube saturation pushed by high-output pickups and an EQ/line boost. Preset A explicitly acknowledges this in its builder statement and achieves the saturated, singing lead compression by pushing the front end of the Brit 2203 with the Graphic-9 EQ. Preset B stacks an active SD-1 and a boosted Graphic-9 into an already high-gain Brit 2203, which alters the clipping character away from the open, punchy Marshall crunch typical of Appetite for Destruction / UYI tones.",
+    "Judge": "gemini-3.8-flash",
+    "JudgeServed": "gemini-3.8-flash",
+    "SwappedAB": true
+  }
+]

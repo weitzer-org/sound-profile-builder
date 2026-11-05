@@ -1,0 +1,13 @@
+2026/11/05 14:59:29 judge model: gemini-3.1-pro-preview
+2026/11/05 14:59:51 ⚖️ 01_SRV_Clean -> all38low (conf 4.00)
+2026/11/05 15:00:21 ⚖️ 02_Chicago_Blues -> all38low (conf 5.00)
+2026/11/05 15:00:43 ⚖️ 03_British_Invasion -> all38low (conf 0.95)
+2026/11/05 15:01:07 ⚖️ 04_Southern_Rock -> prod (conf 0.95)
+2026/11/05 15:01:24 ⚖️ 05_Clapton -> prod (conf 5.00)
+2026/11/05 15:01:46 ⚖️ 06_Gilmour -> all38low (conf 0.95)
+2026/11/05 15:02:14 ⚖️ 07_Edge -> prod (conf 5.00)
+2026/11/05 15:02:37 ⚖️ 08_EVH -> prod (conf 0.95)
+2026/11/05 15:02:57 ⚖️ 09_BB_King -> prod (conf 5.00)
+2026/11/05 15:03:20 ⚖️ 10_Slash -> prod (conf 0.95)
+2026/11/05 15:03:43 ⚖️ 11_Mayer_Lead -> prod (conf 5.00)
+2026/11/05 15:04:16 ⚖️ 12_Bonamassa -> prod (conf 0.95)
