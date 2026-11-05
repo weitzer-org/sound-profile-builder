@@ -47,8 +47,10 @@ def scene_state(qc, mcp, want_scene: int) -> dict:
     if bp is None:
         out["error"] = "preset read timed out"
         return out
-    m = bp.chains[tp.ROW].models[tp.DRIVE_COL]
-    p = m.params[tp.DRIVE_GAIN_IDX]
+    p = sc.get_param(bp, tp.ROW, tp.DRIVE_COL, tp.DRIVE_GAIN_IDX)
+    if p is None:
+        out["error"] = "preset structure is incomplete (no Myth Drive GAIN param in the read-back)"
+        return out
     out["gain"] = {"scene_mode": p.scene_mode, "values": sc.param_values_all(p)}
     spec = mcp.preset.describe(bp)
     out["bypass_raw"] = spec.get("bypass")

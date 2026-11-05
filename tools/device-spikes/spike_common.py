@@ -270,6 +270,14 @@ def param_value(p):
     return getattr(pv, which) if which else None
 
 
+def get_param(bp, row: int, col: int, idx: int):
+    """The Param message at chains[row].models[col].params[idx], or None if any level is missing."""
+    if bp is None or len(bp.chains) <= row or len(bp.chains[row].models) <= col:
+        return None
+    m = bp.chains[row].models[col]
+    return m.params[idx] if idx < len(m.params) else None
+
+
 def fmt_num(v, digits: int = 6) -> str:
     """Print a device value without ever raising: floats rounded, anything else shown raw."""
     return str(round(v, digits)) if isinstance(v, float) else repr(v)

@@ -544,6 +544,29 @@ class G4G6Tests(FakeDeviceCase):
         kinds = {c[0] for c in qc.calls if isinstance(c, tuple)}
         self.assertEqual(kinds, {"set_param_scenes", "set_block_bypass", "set_scene"})
 
+    def test_g4_and_g6_survive_truncated_readback(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        full = qc.bp
+        calls = {"n": 0}
+
+        def truncated(timeout_ms=6000):
+            calls["n"] += 1
+            if calls["n"] <= 1:          # only the precondition check sees the full preset
+                return full
+            bp = self.qp.BinaryPreset()
+            bp.name = tp.TEST_PRESET_NAME   # no chains at all
+            return bp
+        qc.get_current_preset = truncated
+        code, out, data = self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", "--no-prompt"], qc)
+        self.assertNotIn("UNEXPECTED ERROR", out)
+        self.assertEqual(data["wire_roundtrip_failures"], 9)
+        calls["n"] = 0
+        qc2 = self.fake(bp=full, open_slot=sc.parse_slot("24H"))
+        qc2.get_current_preset = truncated
+        code, out, data = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--no-prompt"], qc2)
+        self.assertNotIn("UNEXPECTED ERROR", out)
+        self.assertTrue(all("error" in s for s in data["stops"]))
+
     def test_g6_refuses_wrong_preset(self):
         code, out, _ = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--no-prompt"],
                                        self.fake(bp=self.blank_preset("x"), open_slot=sc.parse_slot("24H")))

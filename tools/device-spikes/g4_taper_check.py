@@ -82,10 +82,8 @@ def main() -> int:
                 qc.set_param(tp.ROW, col, idx, wire)
                 time.sleep(0.6)
                 bp2 = qc.get_current_preset()
-                got = None
-                if bp2 is not None:
-                    m = bp2.chains[tp.ROW].models[col]
-                    got = sc.param_value(m.params[idx]) if idx < len(m.params) else None
+                prm = sc.get_param(bp2, tp.ROW, col, idx)
+                got = sc.param_value(prm) if prm is not None else None
                 pred = sc.predict_display(vmin, vmax, skew, wire)
                 linear = vmin + (vmax - vmin) * wire
                 row = {"label": label, "col": col, "index": idx, "unit": unit, "wire_written": wire, "wire_read": got,
