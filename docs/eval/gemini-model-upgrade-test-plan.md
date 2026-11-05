@@ -209,6 +209,34 @@ The tool stopped before any candidate was run, as required. I inspected the evid
 
 Fisher exact, two-sided, each candidate vs the control: p < 0.001 for both (computed in this session). The earlier "not distinguishable" reading was a small-sample artifact: with 20 runs the candidates are clearly worse than the production Pro model on R1. Every defect is the same pattern: relative-dB Volume on `UK C30 TopBoost`; no capture-claim defects anywhere. R2 (`09_BB_King`, `05_Clapton`) was not extended: 0 defects for all three models in 5 reps per query (3.8 Flash: 9 scoreable because of one truncation).
 
+### 1B follow-up: why the Architect writes dB on a modeled amp, and a prompt fix (2026-11-05)
+
+**Broader measure.** `internal/evalcheck`'s `capture_db_on_modeled` only counts values with a `dB` unit. `docs/eval/scripts/amp_volume_audit.py` also counts bare signed offsets such as `Volume: -2.0`, which are just as unusable on a 0-10 dial. Re-scored that way, production v4 on `07_Edge` is wrong in **7/20** Pro runs (3 dB + 4 bare signed; 13 of its "clean" runs simply omit the amp `Volume` parameter), **18/19** Argon, **17/20** 3.8 Flash.
+
+**Root cause, from the per-run logs (frozen input + raw Architect output + call records):**
+1. The upstream agents hand the Architect dB values for a modeled amp. The Acoustician's prompt opens "calculate precise dB offsets", and its output says "-2.0dB volume offset" for the ES-339. The Control Mapper is told to "strictly adhere to the dB ... constants" from the Acoustician and writes `UK C30 TopBoost: ... Level = -2.0 dB` (Scene A) / `Level = 0.0 dB` (Scene B). Those are exactly the humbucker values in the defective runs.
+2. The Acoustician returned only the `humbucker` profile, though the run has two guitars, so every Telecaster dB value (`+1.5 dB`, `+1.0 dB`) was extrapolated by the Architect.
+3. The orchestrator's Architect user prompt says "based strictly on the following aggregated data payload", and Rule 9's only `Volume` example is the capture form `Volume: 0.0 dB`, the most common wrong value. Nothing tells the Architect how to turn an offset into a dial, and there is no final format check (there is one for Bypass, rule 13).
+4. Why the newer models look worse: Pro mostly drops the amp `Volume` parameter (13/20), which hides the conflict. Argon and 3.8 Flash faithfully include every AC30 control and carry the upstream offset into it.
+5. The Critic (baseline) caught 0 of 38 defective runs, and instead flagged Iba Green (a real capture) as "not a capture" again.
+6. Argon used **0 thinking tokens** on all 19 default Architect calls (Pro ~4,200, 3.8 Flash ~2,500). `ThinkingConfig.ThinkingLevel=HIGH` (new `Orchestrator.ThinkingLevel`, eval-only) makes it think (~3,900-5,500 tokens).
+7. `evalfixtures.DefaultConstraints` sets `favor_captures: true`, which prefixes every prompt with "prioritize Neural Captures"; a plausible nudge toward capture formatting, not tested separately.
+
+**Experiment** (same frozen `07_Edge` upstream, 5 reps per arm, Critic on baseline; raw: `eval_results/phase1/architect_promptfix/`). `12_architect_v5.md` = v4 plus: rule 10 "translate upstream dB offsets into 0-10 dials on algorithmic blocks", rule 14 "final dial-format check", and a modeled-amp counter-example in Rule 9 (which keeps its number, because the orchestrator's user prompt cites "Rule 9").
+
+| Arm | Wrong-format runs (audit) | `capture_db_on_modeled` runs | Iba Green (capture) still in dB | MAX_TOKENS | median thinking / latency |
+|---|--:|--:|---|--:|---|
+| Argon, v4, thinking default (earlier) | 18/19 | 18/19 | yes | 0 | 0 / ~49 s |
+| A: Argon, v4, thinking HIGH | **4/5** | 4/5 | yes | 0 | 3,852 / 94 s |
+| B: Argon, **v5**, default | **0/5** | 0/5 | yes | 0 | 0 / 59 s |
+| C: Argon, **v5**, HIGH | **0/5** | 0/5 | yes | 0 | 5,534 / 104 s |
+| D: 3.8 Flash, **v5** | **0/5** | 0/5 | yes | 0 | 3,222 / 53 s |
+| E: Pro, **v5** | **0/5** | 0/5 | yes | 0 | 4,967 / 54 s |
+
+- **The prompt fixes it; thinking alone does not** (arm A). Under v5, all three models write plain dials, and in every v5 run the humbucker's AC30 Volume is lower than the Telecaster's (e.g. 5.5 vs 6.5), i.e. the -2 dB intent was applied in the right direction. No new snapped/unverified names, capture claims, parse failures or truncations.
+- **Consequence for 1B:** the R1 failures of Argon and 3.8 Flash on v4 were a prompt defect shared by every model (production included), not a model regression. Under v5 both pass R1 (0/5). **They should not be dropped from agent 12 on R1 if v5 is adopted.**
+- **Not yet tested:** v5 on the R2 queries (`09_BB_King`, `05_Clapton`) and the other 10 golden queries; v5 against a different upstream sample (one freeze per query); the upstream prompts themselves (Acoustician / Control Mapper emitting dB for modeled amps; Acoustician skipping the second guitar). v5 is a downstream guard, not a fix of the upstream contradiction. Production still routes `12_architect` to v4 (`config.json`); nothing was deployed.
+
 ### 1C: Phase 1 exit report
 
 **Dropped candidates (and why)**
@@ -240,7 +268,7 @@ Fisher exact, two-sided, each candidate vs the control: p < 0.001 for both (comp
 4. The 1A tool and the Architect freeze both resolve prompts through production code (`PromptForAgent`), so no `_flash` prompt variant exists today; if one is added, the freeze flags `prompt_matches_frozen`.
 
 **Owner decisions (2026-11-04)**
-1. More Architect samples were requested; done (above). Result: Argon and 3.8 Flash are clearly worse than the control on R1, so both stay dropped from agent 12.
+1. More Architect samples were requested; done (above). Result on the production v4 prompt: Argon and 3.8 Flash are clearly worse than the control on R1. **Superseded by the follow-up:** the cause is a v4 prompt defect, and under `12_architect_v5` all three models pass R1 (0/5 each), so the agent-12 drop is withdrawn pending the v5 decision.
 2. Split the Pro tier: agreed. Agent 1 candidates (Argon, 3.8 Flash) stay alive on the 1A evidence; agent 12 candidates are dropped.
 3. The `UK C30 TopBoost` volume-in-dB defect (also present in production's own model at ~15%) will NOT be fixed as part of this work.
 
