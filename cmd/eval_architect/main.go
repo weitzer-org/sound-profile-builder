@@ -80,6 +80,7 @@ func main() {
 	maxCalls := flag.Int("max-calls", 0, "hard cap on live API calls for this invocation (0 = the planned maximum); refuses to start above it")
 	noStop := flag.Bool("no-stop-on-control-failure", false, "keep spending on candidates even if the control fails (results are then NOT conclusions)")
 	archPrompt := flag.String("architect-prompt", "", "Architect prompt version to test instead of the frozen production one (e.g. v5); the frozen upstream user prompt is unchanged")
+	thinkingBudget := flag.Int("thinking-budget", -1, "ThinkingBudget for every call this tool makes (-1 = unset, per-agent defaults apply); used to check the budget is enforced")
 	thinkingLevel := flag.String("thinking-level", "", "ThinkingLevel for the Architect call only (MINIMAL|LOW|MEDIUM|HIGH); empty = provider default, as in production")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (NOT scoreable)")
 	flag.Parse()
@@ -164,6 +165,10 @@ func main() {
 		log.Fatalf("init orchestrator: %v", err)
 	}
 	defer orch.Close()
+	if *thinkingBudget >= 0 {
+		b := int32(*thinkingBudget)
+		orch.ThinkingBudget = &b
+	}
 
 	// ---- freeze ----
 	if *stage != "run" {
