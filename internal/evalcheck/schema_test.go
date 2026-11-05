@@ -37,8 +37,8 @@ func TestValidateAgainstSchema_EnumAndNumber(t *testing.T) {
 	}
 	bad := `{"eq_profile":"boomy","saturation_style":"x","reverb_type":"y","noise_gate_target_db":"-60 dB"}`
 	got := strings.Join(ValidateAgainstSchema(bad, s), "|")
-	if !strings.Contains(got, "not in enum") || !strings.Contains(got, "expected number") {
-		t.Fatalf("expected enum and number violations, got %q", got)
+	if !strings.Contains(got, "not in enum") || !strings.Contains(got, "expected integer") {
+		t.Fatalf("expected enum and integer violations, got %q", got)
 	}
 }
 

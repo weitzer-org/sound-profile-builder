@@ -137,6 +137,15 @@ func boundedStrSchema(desc string, maxLen int64) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeString, Description: desc, MaxLength: &maxLen}
 }
 
+// intSchema is for whole-number fields (Hz, gate threshold). VERIFIED 2026-11-05
+// (cmd/probe_agent, eval_results/probe_agent/sonic_*): with these typed as TypeNumber, Sonic
+// Profiler responses that hit MAX_TOKENS were all one pattern -- "suggested_low_cut_hz":
+// 85.000000... with zeros until the cap (gemini-4-argon 17/26, gemini-3.8-flash 2-3/26). An
+// integer type leaves no decimal places to expand.
+func intSchema(desc string) *genai.Schema {
+	return &genai.Schema{Type: genai.TypeInteger, Description: desc}
+}
+
 func numSchema(desc string) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeNumber, Description: desc}
 }
@@ -172,13 +181,13 @@ func agentResponseSchema(key string) *genai.Schema {
 
 	case "2_sonic_profiler":
 		return objSchema(map[string]*genai.Schema{
-			"peak_freq_hz":          numSchema("v1 field: the single dominant peak frequency in Hz."),
+			"peak_freq_hz":          intSchema("v1 field: the single dominant peak frequency in Hz."),
 			"eq_profile":            {Type: genai.TypeString, Enum: []string{"scooped", "mid_pushed", "flat", "bright", "dark"}, Description: "v2 field: overall EQ shape."},
-			"suggested_low_cut_hz":  numSchema("v2 field: high-pass point, typically 80-120Hz, never above 200Hz."),
-			"suggested_high_cut_hz": numSchema("v2 field: low-pass point, never below 5000Hz."),
+			"suggested_low_cut_hz":  intSchema("v2 field: high-pass point, typically 80-120Hz, never above 200Hz."),
+			"suggested_high_cut_hz": intSchema("v2 field: low-pass point, never below 5000Hz."),
 			"saturation_style":      strSchema("Style of overdrive/saturation, e.g. asymmetric clipping, tape saturation, hard clipping."),
 			"reverb_type":           strSchema("Characteristic reverb space for this tone."),
-			"noise_gate_target_db":  numSchema("Global input gate threshold in dB (-65 for single coils, -55 to -60 for humbuckers/high gain)."),
+			"noise_gate_target_db":  intSchema("Global input gate threshold in dB (-65 for single coils, -55 to -60 for humbuckers/high gain)."),
 		}, []string{"saturation_style", "reverb_type", "noise_gate_target_db"})
 
 	case "3_community_scraper":
@@ -250,7 +259,7 @@ func agentResponseSchema(key string) *genai.Schema {
 	case "8_foh_optimizer":
 		return objSchema(map[string]*genai.Schema{
 			"global_eq_cuts": objSchema(map[string]*genai.Schema{
-				"hz_start": numSchema(""), "hz_end": numSchema(""),
+				"hz_start": intSchema(""), "hz_end": intSchema(""),
 			}, []string{"hz_start", "hz_end"}),
 			"lane_output_db": numSchema("Lane output level compensation in dB."),
 		}, []string{"global_eq_cuts", "lane_output_db"})
