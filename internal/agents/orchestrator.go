@@ -208,6 +208,10 @@ type Orchestrator struct {
 	gcs            storage.Client
 	AgentModels    map[string]string // Added for per-agent model configuration
 	ThinkingBudget *int32            // nil = provider/model default; explicit 0 disables thinking (Gemini 3.x). Applies to every Gemini call this orchestrator makes -- eval tooling for per-model thinking-budget sweeps, not a per-agent override.
+	// ThinkingLevel, when non-empty, sets ThinkingConfig.ThinkingLevel (MINIMAL/LOW/MEDIUM/HIGH).
+	// Empty = provider default, which is what production uses. Eval tooling only for now:
+	// gemini-4-argon reported 0 thinking tokens at every ThinkingBudget in Phase 0.
+	ThinkingLevel  genai.ThinkingLevel
 	useOpenLLM     bool
 	openLLMClient  *OpenLLMClient
 	openLLMTimeout time.Duration
@@ -1116,8 +1120,8 @@ func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.Gener
 		Tools:           agentSearchTool(key),
 		MaxOutputTokens: agentMaxOutputTokens(key),
 	}
-	if o.ThinkingBudget != nil {
-		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingBudget: o.ThinkingBudget}
+	if o.ThinkingBudget != nil || o.ThinkingLevel != "" {
+		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingBudget: o.ThinkingBudget, ThinkingLevel: o.ThinkingLevel}
 	}
 	if key == "12_architect" {
 		cfg.ResponseMIMEType = "application/json"

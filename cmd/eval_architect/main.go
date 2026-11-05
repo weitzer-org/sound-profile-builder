@@ -27,6 +27,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/genai"
+
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/evalcheck"
@@ -77,6 +79,8 @@ func main() {
 	outDir := flag.String("out", "", "run output directory (default eval_results/phase1/architect/<UTC timestamp>); one with runs.jsonl is refused")
 	maxCalls := flag.Int("max-calls", 0, "hard cap on live API calls for this invocation (0 = the planned maximum); refuses to start above it")
 	noStop := flag.Bool("no-stop-on-control-failure", false, "keep spending on candidates even if the control fails (results are then NOT conclusions)")
+	archPrompt := flag.String("architect-prompt", "", "Architect prompt version to test instead of the frozen production one (e.g. v5); the frozen upstream user prompt is unchanged")
+	thinkingLevel := flag.String("thinking-level", "", "ThinkingLevel for the Architect call only (MINIMAL|LOW|MEDIUM|HIGH); empty = provider default, as in production")
 	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (NOT scoreable)")
 	flag.Parse()
 
@@ -215,7 +219,7 @@ func main() {
 				break
 			}
 		}
-		res := runOne(ctx, orch, cfg, valid, frozen[j.Query], j, *outDir)
+		res := runOne(ctx, orch, cfg, valid, frozen[j.Query], j, *outDir, *archPrompt, genai.ThinkingLevel(strings.ToUpper(*thinkingLevel)))
 		results = append(results, res)
 		if b, err := json.Marshal(res); err == nil {
 			fmt.Fprintln(rf, string(b))
@@ -298,8 +302,8 @@ func missingUpstream(got []UpstreamOutput) []string {
 	return miss
 }
 
-func runOne(ctx context.Context, orch *agents.Orchestrator, cfg *config.AppConfig, valid map[string]bool, fz *Frozen, j Job, outDir string) RunResult {
-	res := RunResult{Model: j.Model, Query: j.Query, Rep: j.Rep}
+func runOne(ctx context.Context, orch *agents.Orchestrator, cfg *config.AppConfig, valid map[string]bool, fz *Frozen, j Job, outDir, archPrompt string, level genai.ThinkingLevel) RunResult {
+	res := RunResult{Model: j.Model, Query: j.Query, Rep: j.Rep, ArchPromptVersion: cfg.AgentPrompts[architectKey], ThinkingLevel: string(level)}
 	routing := map[string]string{architectKey: j.Model, criticKey: modelFlashBaseline}
 	orch.AgentModels = routing
 	orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
@@ -311,7 +315,18 @@ func runOne(ctx context.Context, orch *agents.Orchestrator, cfg *config.AppConfi
 		// the frozen one so the only variable is the model, and flag it.
 		sys = fz.ArchSystem
 	}
+	if archPrompt != "" {
+		// Deliberate prompt experiment, loaded through the same production selector.
+		p, perr := orch.PromptForAgent(architectKey, archPrompt)
+		if perr != nil || p == fz.ArchSystem {
+			res.ArchError = fmt.Sprintf("architect prompt %q unusable or identical to the frozen one: %v", archPrompt, perr)
+			return res
+		}
+		sys, res.ArchPromptVersion, res.PromptMatches = p, archPrompt, false
+	}
+	orch.ThinkingLevel = level // Architect call only; the Critic below stays on production settings
 	out, aerr := orch.RunAgentSplit(ctx, architectRole, sys, fz.ArchUser)
+	orch.ThinkingLevel = ""
 	archCalls := orch.Usage.CallsSnapshot()
 	if len(archCalls) > 0 {
 		c := archCalls[len(archCalls)-1]

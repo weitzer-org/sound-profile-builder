@@ -95,31 +95,33 @@ func BuildJobs(models, queries []string, reps int) []Job {
 
 // RunResult is one executed repro run.
 type RunResult struct {
-	Model           string            `json:"model"`
-	Query           string            `json:"query"`
-	Rep             int               `json:"rep"`
-	PromptMatches   bool              `json:"prompt_matches_frozen"` // production prompt selection for this model == the frozen system prompt
-	ArchServed      string            `json:"architect_served_model"`
-	ArchFinish      string            `json:"architect_finish_reason"`
-	ArchSuccess     bool              `json:"architect_success"`
-	ArchError       string            `json:"architect_error,omitempty"`
-	ArchLatencyMs   int64             `json:"architect_latency_ms"`
-	ArchInTokens    int32             `json:"architect_input_tokens"`
-	ArchOutTokens   int32             `json:"architect_output_tokens"`
-	ArchThinkTokens int32             `json:"architect_thinking_tokens"`
-	ArchIntegrityOK bool              `json:"architect_integrity_ok"` // answered by the requested model, one attempt, success
-	CriticServed    string            `json:"critic_served_model,omitempty"`
-	CriticFinish    string            `json:"critic_finish_reason,omitempty"`
-	CriticSuccess   bool              `json:"critic_success"`
-	CriticError     string            `json:"critic_error,omitempty"`
-	CriticIntegrity bool              `json:"critic_integrity_ok"`
-	MaxTokens       map[string]int    `json:"max_tokens_by_agent,omitempty"`
-	IntegrityIssues []string          `json:"integrity_issues,omitempty"`
-	Scoreable       bool              `json:"scoreable"` // architect integrity ok AND output parsed; critic status does not affect the R check
-	Report          *evalcheck.Report `json:"report,omitempty"`
-	CaptureDefect   bool              `json:"capture_defect"` // capture_claim_on_modeled>0 || capture_db_on_modeled>0
-	OutputFile      string            `json:"output_file,omitempty"`
-	CallsFile       string            `json:"calls_file,omitempty"`
+	Model             string            `json:"model"`
+	Query             string            `json:"query"`
+	Rep               int               `json:"rep"`
+	PromptMatches     bool              `json:"prompt_matches_frozen"` // production prompt selection for this model == the frozen system prompt
+	ArchPromptVersion string            `json:"architect_prompt_version,omitempty"`
+	ThinkingLevel     string            `json:"architect_thinking_level,omitempty"`
+	ArchServed        string            `json:"architect_served_model"`
+	ArchFinish        string            `json:"architect_finish_reason"`
+	ArchSuccess       bool              `json:"architect_success"`
+	ArchError         string            `json:"architect_error,omitempty"`
+	ArchLatencyMs     int64             `json:"architect_latency_ms"`
+	ArchInTokens      int32             `json:"architect_input_tokens"`
+	ArchOutTokens     int32             `json:"architect_output_tokens"`
+	ArchThinkTokens   int32             `json:"architect_thinking_tokens"`
+	ArchIntegrityOK   bool              `json:"architect_integrity_ok"` // answered by the requested model, one attempt, success
+	CriticServed      string            `json:"critic_served_model,omitempty"`
+	CriticFinish      string            `json:"critic_finish_reason,omitempty"`
+	CriticSuccess     bool              `json:"critic_success"`
+	CriticError       string            `json:"critic_error,omitempty"`
+	CriticIntegrity   bool              `json:"critic_integrity_ok"`
+	MaxTokens         map[string]int    `json:"max_tokens_by_agent,omitempty"`
+	IntegrityIssues   []string          `json:"integrity_issues,omitempty"`
+	Scoreable         bool              `json:"scoreable"` // architect integrity ok AND output parsed; critic status does not affect the R check
+	Report            *evalcheck.Report `json:"report,omitempty"`
+	CaptureDefect     bool              `json:"capture_defect"` // capture_claim_on_modeled>0 || capture_db_on_modeled>0
+	OutputFile        string            `json:"output_file,omitempty"`
+	CallsFile         string            `json:"calls_file,omitempty"`
 }
 
 // Defect applies the redefined R1/R2 condition to a report.

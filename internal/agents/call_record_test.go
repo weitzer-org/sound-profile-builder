@@ -155,3 +155,15 @@ func TestNewCallRecord_Grounded(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildGenerationConfig_ThinkingLevel(t *testing.T) {
+	o := &Orchestrator{}
+	if cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect"); cfg.ThinkingConfig != nil {
+		t.Fatalf("production default must not set ThinkingConfig, got %+v", cfg.ThinkingConfig)
+	}
+	o.ThinkingLevel = genai.ThinkingLevelHigh
+	cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect")
+	if cfg.ThinkingConfig == nil || cfg.ThinkingConfig.ThinkingLevel != genai.ThinkingLevelHigh || cfg.ThinkingConfig.ThinkingBudget != nil {
+		t.Fatalf("ThinkingLevel not applied: %+v", cfg.ThinkingConfig)
+	}
+}
