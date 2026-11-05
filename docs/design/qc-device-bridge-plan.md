@@ -334,10 +334,52 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 6. ~~Start mode~~ **Decided:** desktop shortcut only. No automatic start.
 5. **Read-back import:** should reading a slot automatically create a QC-2 draft (proposed: only when asked)?
 
-## 11. Starting the new chat
+## 11. Kickoff prompts for the implementation chats
 
-Suggested first message:
+Each prompt below starts one chat. Chats 1 and 2 can run in parallel now. Chat 3 starts once Chat 2's contract PR is merged. Chat 4 needs Chat 1's G1 and G4 results, and Chat 5 needs Chat 4. Everything referenced is on `main`.
 
-> Read `docs/design/qc-device-bridge-plan.md` and `docs/research/qc-usb-tools-audit.md` on branch `claude/qc-usb-tools-audit`. Start with Phase 0: write the spike scripts for gates G1 (clone parameter indexing), G2 (shortcut-started library-mode qc-mcp, clean failure when Cortex Control is open, exit on unit power-off) and G3 (qc-mcp transport writes with wire values on CorOS 4.1.0) under `tools/device-spikes/`. Use qc-mcp's transport in library mode from my existing qc-trial clone at f634ecd; don't use pyquadcortex. Keep it read-only except the single empty-slot save in G3. Give me exact Windows/PowerShell steps to run them. Don't start P1–P4 until I've pasted the results.
+**Chat 1: Phase 0 hardware checks** (Sonnet 5.5)
 
-Use **Sonnet 5.5** for that session (spike scripts). Switch to **Opus 5.5** with `/model` when interpreting the results and for P3/P4.
+> Read `docs/design/qc-device-bridge-plan.md` (especially sections 5 and 7) and `docs/research/qc-usb-tools-audit.md`. Branch from main as `claude/device-phase0`. Write the Phase 0 spike scripts under `tools/device-spikes/` for gates G0, G1, G2, G3, G4 and G6. Use qc-mcp's transport in library mode from my existing clone at `C:\Users\bweit\qc-trial\qc-mcp` (commit f634ecd) and the venv at `C:\Users\bweit\qc-trial\venv`. Don't use pyquadcortex, containers or qc-mcp's MCP server. Everything is read-only except one save into an empty slot I name for G3 and G4. Start with G0 and G1: G1 decides whether our catalog's parameter indexes are right for the 196 cloned models, so dump the raw per-block parameter arrays of my "bb king test 2" preset in slot 2A, which has a cab and a Spring reverb. Give me exact PowerShell steps, one gate at a time. I'll paste outputs back. Record each result in section 7 of the plan, and open a draft PR with the scripts and findings.
+
+If this chat runs in the cloud (claude.ai or the phone), not in Claude Code on the Windows PC, add: "You're in a cloud session: push the scripts to the branch and give me commands to pull and run them on my Windows PC."
+
+**Chat 2: job contract, queue and auth on the QC-2 side, P3** (Opus 5.5)
+
+> Read `docs/design/qc-device-bridge-plan.md` (sections 2, 3, 6 and 8) and CLAUDE.md. Branch from main as `claude/device-jobs`. Use the `planner` agent first for P3. Your first deliverable is a small, separate PR: `docs/design/device-job-contract.md`, defining the job and result JSON schemas, the HMAC signing scheme with `DEVICE_JOB_KEY` / `DEVICE_JOB_KEY_NEXT`, expiry and replay rules, the heartbeat file, the jobs-bucket layout, and shared test vectors the Python agent will reuse. A home-agent chat starts only after that contract lands. Then implement P3: `internal/devicejobs` through `storage.Client` with a separate `DEVICE_JOBS_BUCKET`, and the MCP tools `device_status`, `get_device_job`, `list_device_slots`, `read_device_preset` and `send_preset_to_device`. `send_preset_to_device` defaults to dry-run with a confirm token, and refuses when no heartbeat is newer than 2 minutes. The device export (P2) doesn't exist yet, so take it as an opaque, versioned payload behind an interface and test with fixtures. Settle gate G5 (R2 polling cost, bucket-scoped tokens) and label anything unverified. Follow CLAUDE.md's security rules: run `/security-review` and the `security-reviewer` agent, and add the `deep-review` label on the PR. Use `test-runner` for tests and `scout` for lookups.
+
+**Chat 3: the home agent, P4** (Opus 5.5; start after Chat 2's contract PR is merged)
+
+> Read `docs/design/qc-device-bridge-plan.md` (sections 5, 5.1, 6 and 8) and `docs/design/device-job-contract.md`. Branch from main as `claude/qc-agent`. Build P4 under `deploy/qc-agent/` in Python:
+> - Vendor qc-mcp's `transport.py`, `protocol.py`, `backend.py`, `winhid.py`, `directory.py` and `descriptors/*.pb` from lexasoft123/qc-mcp at f634ecd into `vendor/qc_mcp/`, with the upstream LICENSE, a `PROVENANCE.md`, and a test that checks each file's SHA-256 against f634ecd.
+> - Put a `DeviceBackend` interface in front of it, with a fake backend for tests.
+> - Write the job loop: poll the jobs bucket, verify the HMAC with the contract's test vectors, check expiry, re-validate every operation against the agent's own catalog copy, check firmware and that the slot is empty from a fresh listing, keep the owned-slot ledger, write the heartbeat, and exit after 30 idle minutes or when the unit disconnects.
+> - Add `install-shortcut` / `uninstall-shortcut` (desktop shortcut only, no Task Scheduler, no services, no PowerShell scripts) and a hash-pinned lockfile.
+>
+> Never call qc-mcp's `save_preset`, global I/O, EQ, master-volume or mode operations, or raw `send`. Reuse the rules and fake-device harness pattern from `tools/qc-mcp-trial`. No pyquadcortex, no containers. Hardware acceptance waits for Phase 0 gates G2 and G3. Run `/security-review` and the `security-reviewer` agent before the PR.
+
+**Chat 4: catalog values, P1** (Sonnet 5.5; needs Chat 1's G1 and G4 results)
+
+> Read `docs/design/qc-device-bridge-plan.md` (sections 4, 7 and 8, including the Phase 0 results now recorded in section 7) and the audit's §2.2. Branch from main as `claude/catalog-values`. Implement P1:
+> - import the `skew` attribute, mapping LIN_SKEW to 1.0 and LOG_SKEW to 0.3; any other symbolic value is an import error;
+> - apply the clone-indexing fix if G1 requires it;
+> - add `firmware_constants.go` with the symbolic bounds as G4 confirmed them, citing pyquadcortex's published measurements as data with MIT attribution and no code;
+> - add `Param.ToWire` / `ToDisplay`, which refuse out-of-range values, NaN and unmeasured bounds rather than clamp;
+> - re-import `qc_catalog.json` and review the `-diff`.
+>
+> Golden tests come from G4's on-device readings. If the clone fix changes parameter indexes, check that `internal/agents/catalog_params.go` and the preset views still pass. Show `go test ./...` and the e2e results.
+
+**Chat 5: device export, P2** (the Opus `planner` agent first, then Sonnet 5.5; needs Chat 4)
+
+> Read `docs/design/qc-device-bridge-plan.md` (section 4) and the merged P1 and P3 code. Branch from main as `claude/device-export`. Run the `planner` agent on the mapping rules first:
+> - model name to id, including mono and stereo families;
+> - parameter name to index for dual-mic cabs, reusing `catalog_params.go`'s per-mic labelling;
+> - value-string parsing;
+> - Scene A/B handling;
+> - grid placement (row 0, at most 8 blocks).
+>
+> Then implement `internal/deviceexport`, add `get_preset(format=device)`, and wire it into P3's `send_preset_to_device` in place of the fixture. Use golden exports for three eval presets, test round trips, and require zero unresolved items for a push.
+
+**After that:**
+- **P5, read-back import** (Sonnet 5.5): "Implement P5 from `docs/design/qc-device-bridge-plan.md`."
+- **P6, hardware acceptance from the phone** (Sonnet 5.5, with the unit): "Walk me through P6 from `docs/design/qc-device-bridge-plan.md`."

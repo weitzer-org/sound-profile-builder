@@ -139,6 +139,21 @@ set it will cause the next run to needlessly re-research that entry.
     bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
     as the catalog gives them, which matches how presets already write them (not verified on a device).
 
+## Quad Cortex device bridge (in progress)
+Pushing presets to, and reading them from, the owner's physical Quad Cortex over USB, driven from the phone through
+this app's MCP connector. Read these before any device work:
+- `docs/research/qc-usb-tools-audit.md` — security and device-safety audit of the unofficial QC USB tools
+  (qc-mcp, pyquadcortex, web editor, ampersand, cortex), with verdicts per pinned commit.
+- `docs/design/qc-device-bridge-plan.md` — the design and phased plan (Phase 0 hardware gates, P1–P6), the MCP
+  tool inventory, which model does what, and the kickoff prompt for each implementation chat (section 11).
+- `tools/qc-mcp-trial/` — the allowlist proxy and Windows walkthrough used to trial qc-mcp on the owner's unit.
+
+Owner decisions that bind this work: no pyquadcortex and no containers. The home agent runs natively on the owner's
+Windows PC, using qc-mcp's transport vendored at `f634ecd`. It starts from a desktop shortcut only, and is never
+always-on. No LLM in the push path. The device never gets global-settings writes, deletes, or overwrites of slots
+this system didn't create. Our catalog's parameter indexes for the 196 cloned models (`clones=`) are unverified
+until Phase 0 gate G1.
+
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).

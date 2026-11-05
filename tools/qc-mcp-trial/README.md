@@ -57,7 +57,7 @@ $T = "$HOME\qc-trial"
 mkdir "$T"; cd "$T"
 git clone https://github.com/lexasoft123/qc-mcp.git
 git -C qc-mcp checkout f634ecd3dcf426090b90bc4cc176e4b500494b9e
-git clone -b claude/qc-usb-tools-audit https://github.com/weitzer-org/sound-profile-builder.git qc2
+git clone https://github.com/weitzer-org/sound-profile-builder.git qc2
 ```
 `$T` is just shorthand for the folder. If you open a new PowerShell window later, set it again with the first line.
 
