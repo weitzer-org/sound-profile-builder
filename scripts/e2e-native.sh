@@ -12,7 +12,10 @@
 #
 # Environment: E2E_WORK (scratch dir, default a fresh temp dir), PORT (8080), S3_PORT
 # (9000), PW_CHROMIUM_PATH (a preinstalled Chromium; found automatically under
-# /opt/pw-browsers if unset), MOTO_VENV (reuse an existing venv with moto installed).
+# /opt/pw-browsers if unset), MOTO_VENV (reuse an existing venv with moto installed),
+# E2E_SEED=1 (load the synthetic presets in testdata/e2e_presets first, for
+# data_grid.spec.js; off by default because extra presets change what the library-list
+# specs see), SCREENSHOT_DIR (where data_grid.spec.js writes its screenshots).
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -32,6 +35,15 @@ pids=()
 cleanup() { for p in "${pids[@]}"; do kill "$p" 2>/dev/null || true; done; }
 trap cleanup EXIT
 
+# A server or moto left over from an earlier run would answer instead of this run's,
+# with its own build and data. Refuse rather than test the wrong thing.
+for port in "$PORT" "$S3_PORT"; do
+  if curl -s -o /dev/null "http://127.0.0.1:$port"; then
+    echo "port $port is already in use; stop whatever is listening there first" >&2
+    exit 1
+  fi
+done
+
 echo "== build server"
 (cd "$ROOT" && go build -o "$WORK/server" ./cmd/server)
 
@@ -50,12 +62,19 @@ boto3.client("s3", endpoint_url=f"http://127.0.0.1:{sys.argv[1]}", aws_access_ke
 PY
 
 echo "== server (mock mode) on :$PORT"
-(cd "$ROOT" && env -u GEMINI_API_KEY STORAGE_BACKEND=s3 S3_ENDPOINT="http://127.0.0.1:$S3_PORT" \
+# exec, so the recorded pid is the server itself and cleanup stops it.
+(cd "$ROOT" && exec env -u GEMINI_API_KEY STORAGE_BACKEND=s3 S3_ENDPOINT="http://127.0.0.1:$S3_PORT" \
   S3_BUCKET="$BUCKET" S3_ACCESS_KEY_ID=test S3_SECRET_ACCESS_KEY=test S3_REGION=us-east-1 \
   GCS_BUCKET_NAME="$BUCKET" MOCK_MODE=true MOCK_PASSWORD=bluesmusic PORT="$PORT" \
   "$WORK/server" >"$WORK/server.log" 2>&1) &
 pids+=($!)
 for _ in $(seq 60); do curl -s -o /dev/null "http://127.0.0.1:$PORT/login" && break; sleep 0.25; done
+
+if [ "${E2E_SEED:-}" = "1" ]; then
+  echo "== seed testdata/e2e_presets"
+  (cd "$ROOT" && STORAGE_BACKEND=s3 S3_ENDPOINT="http://127.0.0.1:$S3_PORT" S3_BUCKET="$BUCKET" \
+    S3_ACCESS_KEY_ID=test S3_SECRET_ACCESS_KEY=test S3_REGION=us-east-1 go run ./cmd/e2e_seed)
+fi
 
 echo "== playwright (specs copied to $WORK/specs)"
 rm -rf "${WORK:?}/specs"

@@ -1,0 +1,672 @@
+{
+  "builder_statement": "Synthetic fixture: written the way the v5 prompt asks, a few deliberate changes per block and the rest kept at the device default.",
+  "name": "Data grid: v5-style preset",
+  "payload": {
+    "structured": {
+      "guitars": {
+        "Fender Telecaster Single Coil": [
+          {
+            "id": "t-1",
+            "type": "Compressor",
+            "model": "Opto Comp",
+            "parameters": [
+              {
+                "name": "THRESHOLD",
+                "type": "slider",
+                "value": "-30 dB",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "RATIO",
+                "type": "slider",
+                "value": "3",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "ATTACK",
+              "RELEASE",
+              "MAKEUP",
+              "MIX"
+            ],
+            "rationale": "Gentle levelling ahead of the drive."
+          },
+          {
+            "id": "t-2",
+            "type": "Overdrive",
+            "model": "Green 808",
+            "parameters": [
+              {
+                "name": "Bypass",
+                "type": "toggle",
+                "value": "On",
+                "value_b": "Off",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "OVERDRIVE",
+                "type": "slider",
+                "value": "3",
+                "value_b": "5.5",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "TONE",
+                "type": "slider",
+                "value": "6",
+                "basis": "estimate"
+              },
+              {
+                "name": "LEVEL",
+                "type": "slider",
+                "value": "7",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "Mid push into the amp; more gain for the lead."
+          },
+          {
+            "id": "t-3",
+            "type": "Amplifier",
+            "model": "US DLX 65 Reissue",
+            "parameters": [
+              {
+                "name": "VOLUME",
+                "type": "slider",
+                "value": "5.5",
+                "value_b": "6.5",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "TREBLE",
+                "type": "slider",
+                "value": "6",
+                "basis": "estimate"
+              },
+              {
+                "name": "BASS",
+                "type": "slider",
+                "value": "4",
+                "basis": "estimate"
+              },
+              {
+                "name": "MODE",
+                "type": "dropdown",
+                "value": "Normal",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "INPUT",
+              "OUTPUT"
+            ],
+            "rationale": "Edge-of-breakup blackface platform."
+          },
+          {
+            "id": "t-4",
+            "type": "Cabinet",
+            "model": "412 Brit 60B V30 95 (M)",
+            "parameters": [
+              {
+                "name": "Mic 1",
+                "type": "dropdown",
+                "value": "Dyn 57",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "Mic 2",
+                "type": "dropdown",
+                "value": "Ribbon 121",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "MIC 1 POSITION",
+                "type": "slider",
+                "value": "2",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "MIC 1 DISTANCE",
+                "type": "slider",
+                "value": "1",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 POSITION",
+                "type": "slider",
+                "value": "5",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 DISTANCE",
+                "type": "slider",
+                "value": "3",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 LEVEL",
+                "type": "slider",
+                "value": "-3.5 dB",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "HPF",
+                "type": "slider",
+                "value": "80 Hz",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "LPF",
+                "type": "slider",
+                "value": "7500 Hz",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "MIC 1 LEVEL",
+              "MIC 1 PAN",
+              "MIC 1 GRID MODE",
+              "MIC 2 PAN",
+              "MIC 2 GRID MODE",
+              "OUTPUT VOLUME"
+            ],
+            "rationale": "Dynamic close on the cone edge, ribbon back a little."
+          },
+          {
+            "id": "t-5",
+            "type": "Modulation",
+            "model": "Tremolo",
+            "parameters": [
+              {
+                "name": "Bypass",
+                "type": "toggle",
+                "value": "Off",
+                "value_b": "On",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "RATE",
+                "type": "slider",
+                "value": "4.5 Hz",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "DEPTH",
+                "type": "slider",
+                "value": "35 %",
+                "basis": "estimate"
+              }
+            ],
+            "kept_defaults": [
+              "WAVEFORM",
+              "DUTY CYCLE",
+              "WIDTH",
+              "SMOOTHING",
+              "LFO ACTIVE",
+              "FADE IN",
+              "FADE OUT",
+              "BOOST",
+              "SYNC",
+              "SYNC NOTE"
+            ],
+            "rationale": "Subtle amp-style throb, rhythm only."
+          },
+          {
+            "id": "t-6",
+            "type": "Delay",
+            "model": "Analog Delay",
+            "parameters": [
+              {
+                "name": "MIX",
+                "type": "slider",
+                "value": "20 %",
+                "value_b": "30 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "DELAY TIME",
+                "type": "slider",
+                "value": "220 ms",
+                "value_b": "380 ms",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "FEEDBACK",
+                "type": "slider",
+                "value": "15 %",
+                "value_b": "30 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "SYNC",
+                "type": "dropdown",
+                "value": "Off",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "HIGH PASS",
+              "LOW PASS",
+              "SYNC NOTE",
+              "MOD RATE",
+              "MOD DEPTH",
+              "DRIVE",
+              "TRAILS"
+            ],
+            "rationale": "Slap for rhythm, a longer repeat under the lead."
+          },
+          {
+            "id": "t-7",
+            "type": "Reverb",
+            "model": "Nordic Concert Hall",
+            "parameters": [
+              {
+                "name": "MIX",
+                "type": "slider",
+                "value": "18 %",
+                "value_b": "28 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "DECAY",
+                "type": "slider",
+                "value": "1.8 s",
+                "value_b": "2.6 s",
+                "basis": "estimate"
+              },
+              {
+                "name": "PRE DELAY",
+                "type": "slider",
+                "value": "25 ms",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "HIGH PASS",
+                "type": "slider",
+                "value": "150 Hz",
+                "basis": "engineering_convention"
+              }
+            ],
+            "kept_defaults": [
+              "SIZE",
+              "H-SHELF GAIN",
+              "LOW PASS",
+              "BASS FREQ",
+              "BASS MULT",
+              "H-SHELF FREQ",
+              "REV ATTACK",
+              "EARLY DIFF",
+              "LATE DIFF",
+              "MOD RATE",
+              "MOD DEPTH",
+              "TRAILS"
+            ],
+            "rationale": "A short hall that opens up for the lead."
+          },
+          {
+            "id": "t-8",
+            "type": "EQ",
+            "model": "Graphic-9",
+            "parameters": [
+              {
+                "name": "500Hz",
+                "type": "slider",
+                "value": "-2 dB",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "2kHz",
+                "type": "slider",
+                "value": "1.5 dB",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "HPF",
+              "65Hz",
+              "125Hz",
+              "250Hz",
+              "1kHz",
+              "4kHz",
+              "8kHz",
+              "16kHz",
+              "OUTPUT"
+            ],
+            "rationale": "Trim the boxy lower mids; a touch of presence."
+          }
+        ],
+        "Gibson ES-339 Humbuckers": [
+          {
+            "id": "g-1",
+            "type": "Compressor",
+            "model": "Opto Comp",
+            "parameters": [
+              {
+                "name": "THRESHOLD",
+                "type": "slider",
+                "value": "-30 dB",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "RATIO",
+                "type": "slider",
+                "value": "3",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "ATTACK",
+              "RELEASE",
+              "MAKEUP",
+              "MIX"
+            ],
+            "rationale": "Gentle levelling ahead of the drive."
+          },
+          {
+            "id": "g-2",
+            "type": "Overdrive",
+            "model": "Green 808",
+            "parameters": [
+              {
+                "name": "Bypass",
+                "type": "toggle",
+                "value": "On",
+                "value_b": "Off",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "OVERDRIVE",
+                "type": "slider",
+                "value": "2",
+                "value_b": "5.5",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "TONE",
+                "type": "slider",
+                "value": "6",
+                "basis": "estimate"
+              },
+              {
+                "name": "LEVEL",
+                "type": "slider",
+                "value": "7",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "Mid push into the amp; more gain for the lead."
+          },
+          {
+            "id": "g-3",
+            "type": "Amplifier",
+            "model": "US DLX 65 Reissue",
+            "parameters": [
+              {
+                "name": "VOLUME",
+                "type": "slider",
+                "value": "5.5",
+                "value_b": "6.5",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "TREBLE",
+                "type": "slider",
+                "value": "6",
+                "basis": "estimate"
+              },
+              {
+                "name": "BASS",
+                "type": "slider",
+                "value": "4",
+                "basis": "estimate"
+              },
+              {
+                "name": "MODE",
+                "type": "dropdown",
+                "value": "Normal",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "INPUT",
+              "OUTPUT"
+            ],
+            "rationale": "Edge-of-breakup blackface platform."
+          },
+          {
+            "id": "g-4",
+            "type": "Cabinet",
+            "model": "412 Brit 60B V30 95 (M)",
+            "parameters": [
+              {
+                "name": "Mic 1",
+                "type": "dropdown",
+                "value": "Dyn 57",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "Mic 2",
+                "type": "dropdown",
+                "value": "Ribbon 121",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "MIC 1 POSITION",
+                "type": "slider",
+                "value": "2",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "MIC 1 DISTANCE",
+                "type": "slider",
+                "value": "1",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 POSITION",
+                "type": "slider",
+                "value": "5",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 DISTANCE",
+                "type": "slider",
+                "value": "3",
+                "basis": "estimate"
+              },
+              {
+                "name": "MIC 2 LEVEL",
+                "type": "slider",
+                "value": "-3.5 dB",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "HPF",
+                "type": "slider",
+                "value": "80 Hz",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "LPF",
+                "type": "slider",
+                "value": "7500 Hz",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "MIC 1 LEVEL",
+              "MIC 1 PAN",
+              "MIC 1 GRID MODE",
+              "MIC 2 PAN",
+              "MIC 2 GRID MODE",
+              "OUTPUT VOLUME"
+            ],
+            "rationale": "Dynamic close on the cone edge, ribbon back a little."
+          },
+          {
+            "id": "g-5",
+            "type": "Modulation",
+            "model": "Tremolo",
+            "parameters": [
+              {
+                "name": "Bypass",
+                "type": "toggle",
+                "value": "Off",
+                "value_b": "On",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "RATE",
+                "type": "slider",
+                "value": "4.5 Hz",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "DEPTH",
+                "type": "slider",
+                "value": "35 %",
+                "basis": "estimate"
+              }
+            ],
+            "kept_defaults": [
+              "WAVEFORM",
+              "DUTY CYCLE",
+              "WIDTH",
+              "SMOOTHING",
+              "LFO ACTIVE",
+              "FADE IN",
+              "FADE OUT",
+              "BOOST",
+              "SYNC",
+              "SYNC NOTE"
+            ],
+            "rationale": "Subtle amp-style throb, rhythm only."
+          },
+          {
+            "id": "g-6",
+            "type": "Delay",
+            "model": "Analog Delay",
+            "parameters": [
+              {
+                "name": "MIX",
+                "type": "slider",
+                "value": "20 %",
+                "value_b": "30 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "DELAY TIME",
+                "type": "slider",
+                "value": "220 ms",
+                "value_b": "380 ms",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "FEEDBACK",
+                "type": "slider",
+                "value": "15 %",
+                "value_b": "30 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "SYNC",
+                "type": "dropdown",
+                "value": "Off",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "HIGH PASS",
+              "LOW PASS",
+              "SYNC NOTE",
+              "MOD RATE",
+              "MOD DEPTH",
+              "DRIVE",
+              "TRAILS"
+            ],
+            "rationale": "Slap for rhythm, a longer repeat under the lead."
+          },
+          {
+            "id": "g-7",
+            "type": "Reverb",
+            "model": "Nordic Concert Hall",
+            "parameters": [
+              {
+                "name": "MIX",
+                "type": "slider",
+                "value": "18 %",
+                "value_b": "28 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "DECAY",
+                "type": "slider",
+                "value": "1.8 s",
+                "value_b": "2.6 s",
+                "basis": "estimate"
+              },
+              {
+                "name": "PRE DELAY",
+                "type": "slider",
+                "value": "25 ms",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "HIGH PASS",
+                "type": "slider",
+                "value": "150 Hz",
+                "basis": "engineering_convention"
+              }
+            ],
+            "kept_defaults": [
+              "SIZE",
+              "H-SHELF GAIN",
+              "LOW PASS",
+              "BASS FREQ",
+              "BASS MULT",
+              "H-SHELF FREQ",
+              "REV ATTACK",
+              "EARLY DIFF",
+              "LATE DIFF",
+              "MOD RATE",
+              "MOD DEPTH",
+              "TRAILS"
+            ],
+            "rationale": "A short hall that opens up for the lead."
+          },
+          {
+            "id": "g-8",
+            "type": "EQ",
+            "model": "Graphic-9",
+            "parameters": [
+              {
+                "name": "500Hz",
+                "type": "slider",
+                "value": "-2 dB",
+                "basis": "confirmed_range"
+              },
+              {
+                "name": "2kHz",
+                "type": "slider",
+                "value": "1.5 dB",
+                "basis": "confirmed_range"
+              }
+            ],
+            "kept_defaults": [
+              "HPF",
+              "65Hz",
+              "125Hz",
+              "250Hz",
+              "1kHz",
+              "4kHz",
+              "8kHz",
+              "16kHz",
+              "OUTPUT"
+            ],
+            "rationale": "Trim the boxy lower mids; a touch of presence."
+          }
+        ]
+      }
+    }
+  }
+}
