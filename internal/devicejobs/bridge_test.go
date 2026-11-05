@@ -602,3 +602,29 @@ func TestTransientReadErrorsAreNotTerminal(t *testing.T) {
 		t.Fatalf("oversized result: %+v %v", v, err)
 	}
 }
+
+// Wait lasts the full max even when max is shorter than the poll gap, and
+// catches a result that lands in the last partial gap.
+func TestWaitUsesTheWholeWindow(t *testing.T) {
+	ctx := context.Background()
+	r := newRig(t)
+	r.online(t)
+	r.bridge.PollGap = time.Second
+	id, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots)
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	v, err := r.bridge.Wait(ctx, id, 80*time.Millisecond)
+	if el := time.Since(start); err != nil || v.State != devicejobs.StateQueued || el < 80*time.Millisecond || el > 900*time.Millisecond {
+		t.Fatalf("short wait: state %v err %v after %v, want queued after ~80ms", v, err, el)
+	}
+	// The agent answers 50ms in; with a 1s gap only the final poll at the
+	// 150ms deadline can see it.
+	timer := time.AfterFunc(50*time.Millisecond, func() { _, _ = r.agent.RunOnce() })
+	defer timer.Stop()
+	v, err = r.bridge.Wait(ctx, id, 150*time.Millisecond)
+	if err != nil || v.State != devicejobs.StatusSucceeded {
+		t.Fatalf("result in the last partial gap: %+v %v", v, err)
+	}
+}

@@ -276,14 +276,22 @@ func (b *Bridge) Wait(ctx context.Context, id string, max time.Duration) (*JobVi
 		if err == nil {
 			last = v
 		}
-		done := !time.Now().Add(gap).Before(deadline)
-		switch {
-		case err == nil && Terminal(v.State):
+		if err == nil && Terminal(v.State) {
 			return v, nil
-		case done && last != nil:
-			return last, nil
-		case done:
+		}
+		// Decide after the poll, against the real deadline, and sleep only
+		// what is left: the wait lasts the full max (with a final poll at the
+		// deadline), even when max is shorter than the poll gap.
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			if last != nil {
+				return last, nil
+			}
 			return nil, err
+		}
+		sleep := gap
+		if remaining < sleep {
+			sleep = remaining
 		}
 		select {
 		case <-ctx.Done():
@@ -291,7 +299,7 @@ func (b *Bridge) Wait(ctx context.Context, id string, max time.Duration) (*JobVi
 				return nil, ctx.Err()
 			}
 			return last, nil
-		case <-time.After(gap):
+		case <-time.After(sleep):
 		}
 	}
 }
