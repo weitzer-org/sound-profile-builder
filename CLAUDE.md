@@ -122,6 +122,10 @@ set it will cause the next run to needlessly re-research that entry.
     units, and `confirmed_range` on an unknown range. `Bypass` is always allowed; on cabs `Mic 1`/`Mic 2`
     (the mic model) are allowed and `Blend` is counted separately (the device sets each mic's LEVEL).
     Names compare ignoring case, spaces and inter-letter hyphens, plus a few aliases (Time, Low/High Cut).
+    It also counts (and notes) `UnrecognizedBlocks`: a non-capture block named neither a device block
+    nor a library entry and not already flagged unverified, i.e. an invented effect name such as
+    "Plate Reverb" (the unverified check only covers gear categories). The input block's gate, the
+    output block and the global EQ are real but aren't grid blocks, so they're exempt.
   - **Don't guess display scales.** The check skips pans (L/R labels), unitless 0..1 floats and symbolic
     bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
     as the catalog gives them, which matches how presets already write them (not verified on a device).

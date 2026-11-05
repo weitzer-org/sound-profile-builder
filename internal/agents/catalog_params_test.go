@@ -235,8 +235,10 @@ func TestFlagCatalogParamMismatches(t *testing.T) {
 			CatalogParamCounts{UncheckedBlocks: 1}, ""},
 		{"unverified is skipped", storage.EffectBlock{Type: "Amplifier", Model: FlagUnverifiedBlock("Made Up Amp"), Parameters: []storage.BlockParameter{param("Drive", "99")}},
 			CatalogParamCounts{UncheckedBlocks: 1}, ""},
-		{"not in the valid set is skipped", storage.EffectBlock{Type: "Reverb", Model: "Hall", Parameters: []storage.BlockParameter{param("Nonsense", "1")}},
+		{"the input block's own gate isn't a grid block but is real", storage.EffectBlock{Type: "Noise Gate", Model: "Input Gate", Parameters: []storage.BlockParameter{param("Threshold", "-60 dB")}},
 			CatalogParamCounts{UncheckedBlocks: 1}, ""},
+		{"an invented effect name is counted, not silently skipped", storage.EffectBlock{Type: "Reverb", Model: "Plate Reverb", Parameters: []storage.BlockParameter{param("Nonsense", "1")}},
+			CatalogParamCounts{UnrecognizedBlocks: 1, UncheckedBlocks: 1}, `"Plate Reverb" isn't a block on the device or in your libraries`},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

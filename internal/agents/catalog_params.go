@@ -549,6 +549,10 @@ type CatalogParamCounts struct {
 	// device has no control for (Blend). Separate from UnknownNames so a v4-vs-v5
 	// comparison can tell a convention change from a real wrong knob.
 	CabConvention int
+	// UnrecognizedBlocks counts non-capture blocks whose name is neither a device block nor
+	// in the user's libraries and wasn't already flagged unverified -- in practice invented
+	// effect names, which the gear-only unverified check doesn't cover.
+	UnrecognizedBlocks int
 	// CheckedBlocks resolved in the catalog and were checked; UncheckedBlocks didn't
 	// (captures, unverified or invented names). Information, not defects.
 	CheckedBlocks   int
@@ -557,10 +561,15 @@ type CatalogParamCounts struct {
 
 // Defects is the total of the defect counts (not Checked/UncheckedBlocks).
 func (c CatalogParamCounts) Defects() int {
-	return c.UnknownNames + c.OutOfRange + c.BadSwitchValues + c.UnitMismatches + c.BasisOverclaims + c.CabConvention
+	return c.UnknownNames + c.OutOfRange + c.BadSwitchValues + c.UnitMismatches + c.BasisOverclaims + c.CabConvention + c.UnrecognizedBlocks
 }
 
 const deviceCheckPrefix = "⚠️ Device check: "
+
+// deviceElementNames are real parts of the device that aren't grid blocks, so the block
+// catalog doesn't list them: the input block (with its built-in noise gate), the output
+// block and the global EQ. Compared lower-cased.
+var deviceElementNames = map[string]bool{"input gate": true, "input": true, "output": true, "global eq": true}
 
 // paramNameAliases are spellings the Architect uses for a control the device names
 // differently. An alias only applies when its target exists on that model.
@@ -613,7 +622,8 @@ func unitDimension(u string) (dim string, factor float64, ok bool) {
 //
 // Skipped blocks: those already flagged unverified, captures (validBlocks marks them; they
 // have no catalog parameters), names not in validBlocks (when validBlocks is non-nil), and
-// names the catalog doesn't know.
+// names the catalog doesn't know. A skipped name that isn't in validBlocks and wasn't
+// flagged unverified is counted (and noted) as UnrecognizedBlocks.
 //
 // Always accepted names: "Bypass" on any block (a block on/off state, not a catalog
 // parameter), and "Mic 1"/"Mic 2" on blocks with mic slots (the mic model choice, which
@@ -639,7 +649,16 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 			}
 			name := stripCaptureAnnotation(b.Model)
 			if validBlocks != nil {
-				if isCap, known := validBlocks[name]; !known || isCap {
+				isCap, known := validBlocks[name]
+				if !known && !strings.HasSuffix(b.Model, unverifiedSuffix) && !isSkippableValue(name) &&
+					!deviceElementNames[strings.ToLower(name)] {
+					// resolveBlockName only flags unknown names in gear categories, so an
+					// invented effect name ("Plate Reverb") would otherwise pass unseen while
+					// a real one ("Plate") gets its parameters checked.
+					counts.UnrecognizedBlocks++
+					appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"%q isn't a block on the device or in your libraries; its settings can't be checked.", name))
+				}
+				if !known || isCap {
 					counts.UncheckedBlocks++
 					continue
 				}
