@@ -1,0 +1,9 @@
+2026/11/05 14:44:08 critic model: gemini-4-argon
+=== 01_SRV_Clean.json ===
+  [medium] Fender Telecaster Single Coil / block-6: The rationale claims that bypassing the delay in Scene A is 'keeping Scene A rhythm bone-dry and punchy', which contradicts block-7 (Spring Reverb) being active ('Bypass': 'Off') in Scene A with a '20%' Mix and '2.2 s' Decay.
+=== 02_Chicago_Blues.json ===
+  (no issues found)
+=== 03_British_Invasion.json ===
+  (no issues found)
+=== 04_Southern_Rock.json ===
+  (no issues found)
