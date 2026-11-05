@@ -738,8 +738,15 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 				continue
 			}
 			var mic1, mic2, mic1Choice, mic2Choice, blend, mic1Level, mic2Level bool
+			// A control named in kept_defaults was deliberately left at the device
+			// default (e.g. the louder mic's LEVEL at 0 dB): it's accounted for too.
+			names := make([]string, 0, len(blocks[i].Parameters)+len(blocks[i].KeptDefaults))
 			for _, p := range blocks[i].Parameters {
-				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
+				names = append(names, p.Name)
+			}
+			names = append(names, blocks[i].KeptDefaults...)
+			for _, name := range names {
+				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", ""))
 				mic1 = mic1 || strings.Contains(norm, "mic1")
 				mic2 = mic2 || strings.Contains(norm, "mic2")
 				// A per-mic device control ("MIC 1 LEVEL") isn't the microphone choice itself.

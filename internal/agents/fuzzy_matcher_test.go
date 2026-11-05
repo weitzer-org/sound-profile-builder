@@ -422,6 +422,11 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 					{Name: "MIC 1 LEVEL", Value: "0 dB"},
 					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
 				}}, // per-mic controls but no Mic 1/Mic 2 microphone choice -- incomplete
+				{ID: "8", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 2 LEVEL", Value: "-3.5 dB"},
+				}, KeptDefaults: []string{"MIC 1 LEVEL"}}, // the louder mic left at its 0 dB default -- complete
 			},
 		},
 	}
@@ -446,6 +451,9 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	}
 	if !strings.Contains(blocks[5].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
+	}
+	if strings.Contains(blocks[7].Rationale, cabinetIncompleteNote) {
+		t.Errorf("a mic level named in kept_defaults should count as present, got %q", blocks[7].Rationale)
 	}
 	if !strings.Contains(blocks[6].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected a cab with MIC n LEVEL/POSITION but no Mic 1/Mic 2 choice to be flagged, got %q", blocks[6].Rationale)
