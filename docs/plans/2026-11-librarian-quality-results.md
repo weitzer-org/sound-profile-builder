@@ -109,3 +109,23 @@ a Silver Jubilee capture typed `fx`, so it also fails the single-amp check).
 
 ## Spend (estimates)
 Pipelines $18.04, judge $14.20, Librarian-only $17.11, shakedown $0.49: about $50.
+
+## Follow-up: what the Librarian picks, and user-capture use (2026-11-05, no new API spend)
+
+Pick-distribution test (`scripts/eval/librarian_pick_distribution.py`, rule fixed before computing):
+how differently do the two orders pick block names, versus how differently repeats of the SAME
+order pick (equal-size halves)? Argon (2nd run): within 0.131, between 0.229, difference +0.098,
+95% CI [+0.043, +0.158] -> ORDER EFFECT. 3.5-flash (1st run): +0.005 [-0.025, +0.036] -> none.
+
+The changed picks are almost all user captures being replaced by factory/native equivalents:
+
+| data (Argon) | runs with >=1 user capture: old | new | per-unit diff, 95% CI | units old-more / new-more |
+|---|---|---|---|---|
+| Librarian-only | 57% | 23% | -0.33 [-0.48, -0.19] | 13 / 0 |
+| Librarian output in full pipelines | 49% | 13% | -0.36 [-0.51, -0.21] | 14 / 0 |
+
+On 3.5-flash both orders rarely used user captures (11% vs 12%). The Librarian prompt's rule 13
+says to prefer user captures when they fit, so by its own policy the new order regresses. The
+checklist (amp class only) and the judge (doesn't know what the user owns) could not see this.
+Hypothesis (untested): in the old order the User Capture Library sat last before Constraints;
+in the new order the per-run Tone/Scraper text follows it.
