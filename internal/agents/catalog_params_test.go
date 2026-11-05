@@ -416,3 +416,11 @@ func TestCatalogEffectParamContext(t *testing.T) {
 		t.Errorf("effect parameter section is %d bytes with every plugin, over the 24000-byte ceiling", len(all))
 	}
 }
+
+// tokenIndex is the first of tokenIndices, or -1 (a test helper).
+func tokenIndex(haystack, needle string) int {
+	if hits := tokenIndices(haystack, needle); len(hits) > 0 {
+		return hits[0]
+	}
+	return -1
+}
