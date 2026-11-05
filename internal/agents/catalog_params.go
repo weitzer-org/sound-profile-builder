@@ -433,12 +433,12 @@ func CatalogEffectParamContext(names []string, validBlocks map[string]bool, gate
 				families[catalog.FamilyName(m.Name)] = true
 			}
 		}
-		names := make([]string, 0, len(families))
+		familyNames := make([]string, 0, len(families))
 		for f := range families {
-			names = append(names, f)
+			familyNames = append(familyNames, f)
 		}
-		sort.Strings(names)
-		for _, f := range names {
+		sort.Strings(familyNames)
+		for _, f := range familyNames {
 			b, ok := deviceBlockFor(f)
 			if !ok || listed[b.Name] {
 				continue
