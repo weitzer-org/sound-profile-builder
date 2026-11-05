@@ -1,0 +1,64 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-1",
+        "issue": "The rationale claims Scene B has a \"darker Tone for single-coil lead thickness,\" but the Tone parameter actually increases (brightens) from \"4.5\" in Scene A to \"5.0\" in Scene B.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The rationale and builder_statement claim this block emulates \"Maestro EP-3 Echoplex tape repeats\", which contradicts the assigned digital delay model \"Circular Delay\" (Lexicon PCM70 Circular Delay).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The rationale and builder_statement claim this block recreates \"Maestro EP-3 Echoplex tape repeats\", which contradicts the assigned digital delay model \"Circular Delay\" (Lexicon PCM70 Circular Delay).",
+        "severity": "medium"
+      }
+    ]
+  }
+]

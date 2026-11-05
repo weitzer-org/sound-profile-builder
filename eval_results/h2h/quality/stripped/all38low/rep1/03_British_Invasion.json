@@ -1,0 +1,410 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational sonic blueprint: a 1960s Vox AC30 Top Boost pushed by a Dallas Rangemaster Treble Booster and Sola Sound Tone Bender MKI into Celestion Alnico Blue speakers, defining the core British chime and bite.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed EL84 cathode-biased saturation targets, identified high-cut needs at 6.8 kHz to rein in brittle top end, isolated the 2.4 kHz presence peak, and set a -65 dB noise floor threshold.",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Warned of hot-input intermodulation fizz on factory Vox captures, explicitly advising input padding/gain trimming and emphasizing open-back Alnico Blue cab pairing over standard V30s.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Resolved physical gear to native Quad Cortex blocks: '66 AC30 JMP OD' capture, '212 UK C30 '65' cab, 'Rage Booster', 'Otso Bender Mk1', 'Parametric-8', and 'Range Rverb', ordering drive pedals pre-amp.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified capture compatibility and grid viability, confirming native block assignments without unmapped gear drops.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Implemented pickup compensation by padding input gain by -3.0 dB and shaving bass (4.5) on the ES-339 humbuckers while boosting input +2.5 dB, softening treble (4.5), and pushing mids (6.0) on the Telecaster single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Specified dual-mic placement on the 212 UK C30 '65 cab using Cap-Edge (1.0 inch, on-axis) and Cone-Edge (2.5 inches, 45° off-axis) blended at 65% to capture classic Alnico cone chime without harshness.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Enforced global high/low cuts (80 Hz low-cut, 6500 Hz high-cut) and dialed Lane Output to -2.5 dB to provide headroom and prevent digital brittleness at the PA.",
+    "\u003cstrong\u003eAgent 9 (Mix Architect):\u003c/strong\u003e Set ambient spacing using the Range Rverb spring/plate profile with a 1.8s decay, matching a subtle 18% rhythm wetness up to 25% for leads.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Configured Scene A (Rhythm) with drives bypassed and neutral amp gains, and Scene B (Lead) engaging the Rage Booster (+6.5 Boost) alongside a +2.0 dB capture gain jump and increased reverb mix.",
+    "\u003cstrong\u003eAgent 11 (DSP Optimizer):\u003c/strong\u003e Mapped the dual-lane routing layout (pre-effects, capture, and cab on Lane 1; surgical Parametric-8 EQ and Range Rverb on Lane 2) to maintain optimal DSP allocation and bypass switching."
+  ],
+  "builder_statement": "Built around a 1966 Vox AC30 Top Boost neural capture and vintage 2x12 Alnico Blue cabinet, this preset delivers authentic British invasion chime and dynamic edge-of-breakup saturation. Pre-amp treble booster and Tone Bender options provide searing harmonic bite, while post-cab parametric EQ and dual-mic tailoring tame high-frequency brittle digital harshness.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Boost",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Range",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Emulates the Dallas Rangemaster to push upper-mid chime into the AC30 front end for Scene B lead cut.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Otso Bender Mk1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Attack",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Sola Sound Tone Bender style fuzz capture providing vintage British harmonic fuzz when engaged.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-3",
+          "model": "66 AC30 JMP OD",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Factory neural capture of a jumpered 1966 AC30 combo dialed with warmer treble and pushed mids to smooth bright Telecaster single coils.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge, 1.0 inch distance, 0-deg on-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone-Edge, 2.5 inches distance, 45-deg off-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Authentic open-back 2x12 cabinet loaded with Celestion Alnico Blues, filtered to remove sub-rumble and harsh top-end fizz.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Low-Pass Freq",
+              "type": "slider",
+              "value": "6500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Notch Freq",
+              "type": "slider",
+              "value": "3800 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Notch Gain",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Post-cab surgical EQ block eliminating digital brittle harmonics at 3.8 kHz and matching FOH output trim recommendations.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Spring and vintage plate hybrid reverb to seat the direct guitar tone into a lush live acoustic space.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Boost",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Range",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Emulates the Dallas Rangemaster treble booster to focus ES-339 midrange and push front-end saturation in Scene B.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Otso Bender Mk1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Attack",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Vintage Tone Bender fuzz capture retained in the chain for high-saturation fuzz lead variations.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-3",
+          "model": "66 AC30 JMP OD",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Neural capture of a jumpered 1966 AC30, calibrated with input padding, trimmed bass, and upper headroom to keep humbuckers articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge, 1.0 inch distance, 0-deg on-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone-Edge, 2.5 inches distance, 45-deg off-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Open-back British 2x12 Alnico cab block capturing authentic speaker compression and treble dispersion.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Low-Pass Freq",
+              "type": "slider",
+              "value": "6500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Notch Freq",
+              "type": "slider",
+              "value": "3800 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Notch Gain",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Surgical parametric filtering taming aggressive transients above 6.5 kHz while applying lane output balance.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Provides a warm ambient foundation with dynamic mix expansion during solo passages.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

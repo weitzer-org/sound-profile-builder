@@ -1,0 +1,436 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational Cream-era rig, specifying a cranked 1967 Marshall JTM45/100 Super Lead, Vox V846 Wah, and a 4x12 Greenback cab captured via a vintage Neumann U67 condenser.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the dark acoustic profile, mandating smooth power-tube compression, a -58 dB noise floor target, and critical frequency boundaries with high cut at 5500 Hz and low cut at 90 Hz.",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Highlighted community techniques for avoiding low-end mud when rolling guitar tone pots down, warning to cut between 120-200 Hz post-cab and recommending a low-gain boost rather than heavy preamp distortion.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped mandatory Quad Cortex factory blocks Brit Plexi 100 Patch and 412 Brit TV GB75Hz '69, while integrating Crying Clyde Wah, Brit Blues overdrive, and Parametric-3 EQ.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified availability of all factory native models without requiring external cloud captures, ensuring complete compatibility on the hardware grid.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Compensated for pickup divergence by trimming input gain (-3.5 dB) and scooping bass on the Gibson ES-339 humbuckers while adding input gain (+3.0 dB) and mid bloom to the Fender Telecaster single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured dual-mic placement on the 4x12 cab using Cap Edge at 1.5 inches and Cone Edge at 3.0 inches blended at 65% to emulate the warm proximity and smooth top end of a Neumann U67.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Established system safety and stage integration by shaping band limits at 80 Hz and 6500 Hz, with a calibrated lane output pad of -2.5 dB to prevent console clipping.",
+    "\u003cstrong\u003eAgent 9 (Mix Architect):\u003c/strong\u003e Set the vintage room reverb parameters to 1.8 seconds decay and 22% wet mix to recreate the natural live acoustic space of IBC and Atlantic Studios without clouding the dry core.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Assigned Scene A for classic rhythm crunch with Brit Blues bypassed and dialed Scene B for searing lead sustain with Brit Blues engaged (Drive: 3.5, Level: 7.0) and pushed amp gain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Constructed the two-lane signal grid routing Crying Clyde Wah, Brit Blues, and Brit Plexi 100 on Lane 1, handing off to the 412 Brit TV cab and Parametric-3 EQ on Lane 2 to optimize DSP overhead."
+  ],
+  "builder_statement": "This preset captures the legendary late-60s 'Woman Tone' using a cranked Marshall JTM45/100 Super Lead platform paired with a vintage Celestion Greenback 4x12 cab. A smooth Brit Blues overdrive pushes the front end for singing lead sustain, while a dedicated parametric filter cleans up the critical low-mid boominess inherent to rolled-off guitar tone pots.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "45"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "4.8"
+            }
+          ],
+          "rationale": "Emulates the Vox V846 wah pedal positioned first in the chain to provide classic vintage vocal sweep before saturation.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.2"
+            }
+          ],
+          "rationale": "Acts as a transparent mid-focused clean boost in Scene B to push the amp into thick sustain without adding fizzy diode distortion.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.8",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.4"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.2"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.8",
+              "value_b": "5.2"
+            }
+          ],
+          "rationale": "Provides cranked JTM45/100 Super Lead tube saturation, tuned with higher gain and mids to give thinner Telecaster pickups body and singing warmth.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge 1.5 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge 3.0 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5500 Hz"
+            }
+          ],
+          "rationale": "Recreates the classic Celestion G12M Greenback basketweave response with condenser miking, rolling off high shrillness.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Band Freq",
+              "type": "slider",
+              "value": "160 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Band Gain",
+              "type": "slider",
+              "value": "-3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Band Freq",
+              "type": "slider",
+              "value": "750 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Band Gain",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Band Freq",
+              "type": "slider",
+              "value": "3200 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Band Gain",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Surgically cleans up the woolly low-end buildup around 160 Hz when rolling back tone knobs while pushing vocal mids for lead sustain.",
+          "type": "Equalizer"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "45"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "4.8"
+            }
+          ],
+          "rationale": "Faithful recreation of the vintage Vox Clyde McCoy/V846 wah circuit placed pre-gain for expressive vocal sweeps.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Provides a clean mid boost to tighten the amp front end and add singing sustain for lead sections without muddying humbuckers.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.2",
+              "value_b": "6.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            }
+          ],
+          "rationale": "Emulates the cranked JTM45/100 Super Lead with dialed-back bass to keep the hotter semi-hollow humbuckers tight and articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge 1.5 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge 3.0 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5500 Hz"
+            }
+          ],
+          "rationale": "Pairs vintage Greenback warmth with dual-mic U67 condenser positioning to recreate studio tracking acoustics.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Band Freq",
+              "type": "slider",
+              "value": "150 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Band Gain",
+              "type": "slider",
+              "value": "-4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Band Freq",
+              "type": "slider",
+              "value": "700 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Band Gain",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Band Freq",
+              "type": "slider",
+              "value": "3500 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Band Gain",
+              "type": "slider",
+              "value": "-1.0 dB"
+            }
+          ],
+          "rationale": "Controls lower midrange resonant mud from the ES-339 body while emphasizing the vocal core required for woman tone solos.",
+          "type": "Equalizer"
+        }
+      ]
+    }
+  }
+}
