@@ -18,6 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from typing import Protocol
 
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 _S3_NS = "{http://s3.amazonaws.com/doc/2006-03-01/}"
@@ -77,6 +78,23 @@ def sign_v4(method: str, host: str, path: str, query: dict[str, str], headers: d
     out["authorization"] = (f"AWS4-HMAC-SHA256 Credential={access_key}/{scope}, "
                             f"SignedHeaders={';'.join(names)}, Signature={sig}")
     return out
+
+
+class JobStore(Protocol):
+    """What the agent needs from the jobs bucket. S3Store (R2) and MemoryStore (tests) implement it;
+    every method raises S3Error on failure."""
+
+    bucket: str
+
+    def list_prefix(self, prefix: str, limit: int) -> tuple[list[tuple[str, int]], bool]: ...
+
+    def get_bounded(self, key: str, cap: int) -> bytes | None: ...
+
+    def exists(self, key: str) -> bool: ...
+
+    def put(self, key: str, body: bytes) -> None: ...
+
+    def delete(self, key: str) -> None: ...
 
 
 class S3Store:

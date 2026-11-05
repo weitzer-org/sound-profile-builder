@@ -11,8 +11,8 @@ from helpers import AGENT_DIR, REPO
 from qc_agent import shortcut
 from qc_agent.lock import InstanceLock
 
-EXE = r"C:\Users\bweit\AppData\Local\qc-agent\venv\Scripts\python.exe"
-WD = r"C:\Users\bweit\qc-trial\qc2\deploy\qc-agent"
+EXE = r"C:\Users\example\AppData\Local\qc-agent\venv\Scripts\python.exe"
+WD = r"C:\Users\example\src\qc2\deploy\qc-agent"
 
 
 class Lnk(unittest.TestCase):

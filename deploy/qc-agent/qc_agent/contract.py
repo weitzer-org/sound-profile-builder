@@ -281,6 +281,15 @@ HEARTBEAT_KEY = "agent/heartbeat.json"
 OWNED_SLOTS_KEY = "jobs/owned_slots.json"
 
 
+def pending_key(job_id):
+    """Contract section 3 layout; job_id must already be a validated lowercase UUID."""
+    return PENDING_PREFIX + job_id + ".json"
+
+
+def done_key(job_id):
+    return DONE_PREFIX + job_id + ".json"
+
+
 def format_time(dt):
     """Contract section 6: UTC, whole seconds, literal Z."""
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

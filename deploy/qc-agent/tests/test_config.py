@@ -1,5 +1,6 @@
 """agent.env parsing: exactly the setup script's names, strict, and no secret in any message or repr."""
 import os
+import re
 import tempfile
 import unittest
 from unittest import mock
@@ -48,9 +49,8 @@ class Names(unittest.TestCase):
 
 class Strict(unittest.TestCase):
     def bad(self, needle, **over):
-        with self.assertRaises(cfg.ConfigError) as cm:
+        with self.assertRaisesRegex(cfg.ConfigError, re.escape(needle)) as cm:
             cfg.from_mapping(env(**over))
-        self.assertIn(needle, str(cm.exception))
         return str(cm.exception)
 
     def test_missing(self):

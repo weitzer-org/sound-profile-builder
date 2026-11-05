@@ -243,6 +243,27 @@ def _expired(ctx, job) -> bool:
     return not ctx.now() < contract.parse_time(job["expires_at"])
 
 
+def _diff_param(row, col, p, vals, diff) -> int:
+    """Compare one written parameter's read-back values; append diff entries; return the mismatch count."""
+    mismatches = 0
+    expected = p.scene_wires or [p.wire]
+    for s in (range(8) if p.scene_wires else [0]):
+        v = vals[s] if s < len(vals) else None
+        if not p.scene_wires and vals:
+            # Not scene-assigned: the unit replicates one value into all 8 slots (G1).
+            ok = all(isinstance(x, float) and abs(x - p.wire) <= TOL for x in vals)
+        else:
+            ok = isinstance(v, float) and abs(v - expected[s]) <= TOL
+        mismatches += not ok
+        if len(diff) < MAX_DIFF:
+            e = {"row": row, "col": col, "param_index": p.index, "expected": expected[s],
+                 "readback": v if isinstance(v, float) and math.isfinite(v) else None, "ok": ok}
+            if p.scene_wires:
+                e["scene"] = "ABCDEFGH"[s]
+            diff.append(e)
+    return mismatches
+
+
 def _diff(plan, preset):
     """Compare the live grid with the plan. Returns (mismatches, diff entries, problems)."""
     diff, problems, mismatches = [], [], 0
@@ -271,24 +292,7 @@ def _diff(plan, preset):
             continue
         params = {p["index"]: p for p in got.get("params", [])}
         for p in b.params:
-            vals = (params.get(p.index) or {}).get("values") or []
-            expected = p.scene_wires or [p.wire]
-            scenes = range(8) if p.scene_wires else [0]
-            for s in scenes:
-                v = vals[s] if s < len(vals) else None
-                if not p.scene_wires and vals:
-                    # Not scene-assigned: the unit replicates one value into all 8 slots (G1).
-                    ok = all(isinstance(x, float) and abs(x - p.wire) <= TOL for x in vals)
-                else:
-                    ok = isinstance(v, float) and abs(v - expected[s]) <= TOL
-                if not ok:
-                    mismatches += 1
-                if len(diff) < MAX_DIFF:
-                    e = {"row": plan.row, "col": b.col, "param_index": p.index, "expected": expected[s],
-                         "readback": v if isinstance(v, float) and math.isfinite(v) else None, "ok": ok}
-                    if p.scene_wires:
-                        e["scene"] = "ABCDEFGH"[s]
-                    diff.append(e)
+            mismatches += _diff_param(plan.row, b.col, p, (params.get(p.index) or {}).get("values") or [], diff)
         want = b.bypass_scenes
         have = None
         if bypass and len(bypass) > plan.row and len(bypass[plan.row]) > b.col:
@@ -445,9 +449,11 @@ class _Push:
         listing = dev.list_my_presets()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        if self.check_slot(listing, cur):
-            return refused("slot_not_empty", f"Slot {slot} changed while the preset was being built. "
-                           "Nothing was saved.", firmware=self.fw, push=self.result)
+        out = self.check_slot(listing, cur)
+        if out:
+            out.message = f"The unit changed while the preset was being built; nothing was saved. {out.message}"
+            out.push = self.result
+            return out
         dev.save_to_slot(pos, name)
         self.saved = True
         self.result["listed"] = False

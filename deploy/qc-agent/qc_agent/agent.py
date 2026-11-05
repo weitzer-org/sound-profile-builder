@@ -17,7 +17,7 @@ import traceback
 from . import AGENT_VERSION, contract, jobs
 from .device import SETLIST_NAME
 from .ledger import JobLedger, OwnedSlots
-from .s3 import S3Error
+from .s3 import JobStore, S3Error
 
 log = logging.getLogger("qc_agent")
 
@@ -26,8 +26,10 @@ POLL_FAST_S = 5            # for FAST_WINDOW_S after start or after a job (contr
 POLL_SLOW_S = 15
 FAST_WINDOW_S = 5 * 60
 MAX_SCAN = 50              # well-formed pending objects read per poll; a spam flood can't stall the loop for long
-MAX_LIST = 1000            # keys listed per poll (one ListObjectsV2 page): malformed keys, which are skipped
-                           # but not deleted (contract step 1), can't crowd real jobs out of the scan
+MAX_LIST = 10_000          # keys listed per poll (up to 10 ListObjectsV2 pages; normally one page with a few
+                           # keys). Malformed keys are skipped, not deleted (contract step 1), so this bounds how
+                           # many a bucket-token holder must plant to crowd real jobs out; that holder can delete
+                           # real jobs outright anyway (contract section 15).
 
 DELETE_OUTCOMES = frozenset({"too_large", "bad_envelope", "unknown_kid", "bad_signature",
                              "bad_payload", "misrouted", "replay"})
@@ -40,7 +42,7 @@ def utcnow():
 
 
 class Agent:
-    def __init__(self, config, store, device, catalog, home, now_fn=utcnow, sleep=None):
+    def __init__(self, config, store: JobStore, device, catalog, home, now_fn=utcnow, sleep=None):
         self.config, self.store, self.device, self.catalog = config, store, device, catalog
         self.home = home
         self.now = now_fn
@@ -145,14 +147,14 @@ class Agent:
     def _publish(self, job_id, data):
         """Upload a result already recorded in the ledger, then drop the pending job."""
         try:
-            self.store.put(contract.DONE_PREFIX + job_id + ".json", data)
+            self.store.put(contract.done_key(job_id), data)
         except S3Error as e:
             log.warning("result for %s not uploaded yet (%s); will retry", job_id[:8], e)
             self._unuploaded[job_id] = data
             return
         self._unuploaded.pop(job_id, None)
         self.ledger.mark_uploaded(job_id, contract.format_time(self.now()))
-        self._delete(contract.PENDING_PREFIX + job_id + ".json")
+        self._delete(contract.pending_key(job_id))
 
     def _delete(self, key):
         try:
@@ -203,7 +205,7 @@ class Agent:
         # a bucket-token holder deleting it later is the "delete objects" power contract 15 already concedes.
         for job_id in self.ledger.not_uploaded():
             e = self.ledger.finished[job_id]
-            key = contract.DONE_PREFIX + job_id + ".json"
+            key = contract.done_key(job_id)
             try:
                 if self.store.exists(key):
                     continue
@@ -220,7 +222,7 @@ class Agent:
     def _seen(self, job_id):
         if self.ledger.contains(job_id):
             return True
-        return self.store.exists(contract.DONE_PREFIX + job_id + ".json")  # S3Error propagates: skip this round
+        return self.store.exists(contract.done_key(job_id))  # S3Error propagates: skip this round
 
     def scan(self):
         """Steps 1-9 for up to MAX_SCAN pending objects. Returns verified jobs, oldest first."""

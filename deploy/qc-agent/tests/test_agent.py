@@ -302,6 +302,18 @@ class Push(Base):
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
 
+    def test_name_taken_during_build_keeps_the_reason(self):
+        def fill(name):
+            if name == "read_current_preset" and any(c[0] == "set_routing" for c in self.dev.calls):
+                self.dev.slots[7] = "Texas Blues"
+        self.dev.on_call = fill
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
+        self.assertIn("nothing was saved", r["message"])
+        self.assertIn("1H already has a preset named", r["message"])
+        self.assertIsNotNone(r["push"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
     def test_slot_filled_during_build_does_not_save(self):
         def fill(name):
             if name == "read_current_preset" and any(c[0] == "set_routing" for c in self.dev.calls):
@@ -363,7 +375,7 @@ class Queue(Base):
         self.assertIn("jobs/pending/../x.json", self.store.objects)
 
     def test_malformed_keys_cannot_starve_real_jobs(self):
-        for i in range(agent_mod.MAX_SCAN + 10):
+        for i in range(1500):  # more than one ListObjectsV2 page
             self.store.objects[f"jobs/pending/-{i:03d}.json"] = b"{}"  # sort before every UUID key
         jid, key = self.queue("list_slots")
         self.poll()

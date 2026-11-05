@@ -4,6 +4,7 @@ The fixture follows plan section 4's `qc2-device-export/1` sketch and uses the
 models and wire values of the Phase 0 G3/G4/G6 test preset. Every refusal path has
 its own case."""
 import copy
+import re
 import unittest
 
 from helpers import catalog, export
@@ -42,9 +43,8 @@ class Valid(unittest.TestCase):
 
 class Refusals(unittest.TestCase):
     def refused(self, e, needle, firmware="4.1.0"):
-        with self.assertRaises(ExportRefused) as cm:
+        with self.assertRaisesRegex(ExportRefused, re.escape(needle)):
             validate(e, catalog(), firmware)
-        self.assertIn(needle, str(cm.exception))
 
     def test_unknown_format(self):
         e = export()
