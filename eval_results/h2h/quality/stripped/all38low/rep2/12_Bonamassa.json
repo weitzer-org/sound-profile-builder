@@ -1,0 +1,499 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational Dumble Overdrive Special (ODS) core tone paired with TS808 mid-push drive, digital delay, and Celestion JB-85/G12-65 voiced open-back speakers.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed asymmetric tube clipping characteristics, mid-focused EQ centering at 1.2 kHz, a tight -58 dB gate threshold, and cab bandpass filtering limits (90 Hz - 6.2 kHz).",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Warned of potential volume spikes in ODS factory captures and emphasized using transparent boost staging (Xotic BB style) while placing pristine digital/plate ambient blocks post-cab.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Resolved mandatory blocks to the native Neural Capture 'ODS Joe Lead' and '212 Too Rock G65' cabinet, mapping pedal effects to 'Exotic', '1981 TS808 1', 'Circular Delay', and 'Studio Plate 70 (ST)'.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed dropped status for the Way Huge Pork Loin and verified that all active models exist natively within the Quad Cortex factory environment.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Tailored distinct instrument response curves, assigning an input trim of -3.5 dB and reduced treble for the hot Gibson ES-339 humbuckers, and an input boost of +2.5 dB with warmer mid shaping for the Fender Telecaster.",
+    "\u003cstrong\u003eAgent 7 (Transducer):\u003c/strong\u003e Positioned dual virtual microphones on the 212 Too Rock G65 cab using a Shure SM57 Cap-Edge On-Axis and Beyerdynamic M160 Cone Off-Axis blend at 65%.",
+    "\u003cstrong\u003eAgent 8 (FOH):\u003c/strong\u003e Applied overall bandpass safety cuts (80 Hz low cut and 6500 Hz high cut) and calibrated Lane output down to -2.5 dB to prevent downstream digital inter-sample peaks.",
+    "\u003cstrong\u003eAgent 9 (Mix):\u003c/strong\u003e Established precise post-amp temporal spacing with a 375 ms digital delay repeat and a 2.2-second studio plate reverb tail at 28% max lead wet mix.",
+    "\u003cstrong\u003eAgent 10 (Map):\u003c/strong\u003e Assigned scene-switching logic across Scenes A and B, configuring rhythm mode around the Exotic boost and plate reverb, and kicking on the TS808 drive and Circular Delay for soaring lead lines.",
+    "\u003cstrong\u003eAgent 11 (DSP):\u003c/strong\u003e Partitioned the signal path logically across two processing lanes: Pre-amp drive chain and amp/cab on Lane 1, handing off to post-cab ambient time-based processors on Lane 2."
+  ],
+  "builder_statement": "Built an authentic, high-dynamic Joe Bonamassa blues-rock rig centering on the factory capture 'ODS Joe Lead' running into a boutique Two-Rock 2x12 cab. Scene A delivers a responsive, singing edge-of-breakup rhythm driven by the Exotic preamp, while Scene B stacks the vintage TS808 capture and kicks in the 375ms circular delay and lush studio plate reverb for liquid sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Used as a lead-boost capture in Scene B to tighten the low end and punch forward the Telecaster's single-coil mid presence.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Exotic",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            }
+          ],
+          "rationale": "Provides a fat, transparent front-end drive with softened treble and boosted low-mids to fatten up the Telecaster single coils.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "ODS Joe Lead",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Neural Capture of Bonamassa's authentic Dumble ODS amp, voiced with added gain and rounded treble to compensate for thin bridge pickup spikes.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge 0.5in On-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone 2.0in 45-deg Off-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "High-headroom boutique open-back 2x12 cab loaded with Celestion G12-65 style speakers, blending dynamic bite with warm ribbon cone response.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "28%"
+            }
+          ],
+          "rationale": "Classic 375ms post-cab solo delay adding deep, non-intrusive trails for soaring lead work.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Smooth, studio-grade plate reverb situated post-delay to simulate ambient studio depth without washing out note definition.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Used exclusively in Scene B to push the lead channel into liquid sustain while carving muddy humbucker bass.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Exotic",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "5.6"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Active in both scenes to tighten the lower midrange of the ES-339 humbuckers and provide crisp attack definition.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "ODS Joe Lead",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "High-gain Dumble ODS neural capture tailored with trimmed bass and level to preserve clarity with higher-output semi-hollow humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge 0.5in On-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone 2.0in 45-deg Off-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "Matched Two-Rock 2x12 cab pairing an SM57 for articulate high-mid bite and an M160 ribbon for warm, woody chest resonance.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "28%"
+            }
+          ],
+          "rationale": "Post-cab digital delay dialed to 375ms to replicate Joe Bonamassa's vintage rack delay spacing on solos.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Adds rich mechanical plate reverberation to give the dry Dumble circuit a studio-mastered presence.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

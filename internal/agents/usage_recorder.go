@@ -45,41 +45,94 @@ type UsageRecord struct {
 	ServedModel  string `json:"servedModel,omitempty"`
 	FinishReason string `json:"finishReason,omitempty"`
 
-	// CostUnknown is true when the model has no entry in geminiPriceTable, so CostUSD=0 means
+	// GroundingQueries is the number of Google Search queries the model issued for this call
+	// (GroundingMetadata.WebSearchQueries), billed separately from tokens: see geminiPriceSchedule.
+	GroundingQueries int `json:"groundingQueries,omitempty"`
+
+	// CostUnknown is true when the model has no entry in geminiPriceSchedule, so CostUSD=0 means
 	// "not priced", not "free". Aggregations must not add these calls into a dollar total
 	// without saying so.
 	CostUnknown bool `json:"costUnknown,omitempty"`
 }
 
-// geminiPriceTable is USD per 1,000,000 tokens. Mirrors the pricing table
-// used by the sibling job_tracker project (internal/scoring/pricing.go) for
-// the models both projects share — keep them in sync when prices change.
-// gemini-2.5-pro/gemini-3-flash-preview are this project's own
-// fallback-chain models (see getFallbackChain) that job_tracker doesn't use;
-// VERIFY these two specifically before relying on them for a real cost
-// report — 3-flash-preview's figure is a placeholder pending an official one.
-var geminiPriceTable = map[string]struct{ input, output float64 }{
-	"gemini-3.1-pro-preview": {input: 2.00, output: 12.00},
-	"gemini-3.5-flash":       {input: 1.50, output: 9.00},
-	"gemini-3.6-flash":       {input: 1.50, output: 7.50},
-	"gemini-3-flash-preview": {input: 1.50, output: 9.00}, // placeholder, matches 3.5-flash pending an official figure
-	"gemini-2.5-pro":         {input: 1.25, output: 10.00},
+// geminiPrice is USD per 1,000,000 tokens. Thinking tokens bill at the output rate (Google lists
+// output as "response and reasoning").
+type geminiPrice struct{ input, output float64 }
+
+// pricePeriod is a price in effect until (exclusive) Until; a zero Until means open-ended.
+type pricePeriod struct {
+	Until time.Time
+	geminiPrice
 }
 
-// Models deliberately NOT in the table (no official price published as of
-// 2026-11-04, so inventing one would be worse than admitting it): gemini-4-argon,
-// gemini-3.8-flash, gemini-pro-latest, gemini-3.5-flash-lite. Their calls record
-// CostUnknown=true instead of a made-up figure. Third-party sites quote $0.75/$3.75 per M
-// for 3.8 Flash (introductory); that is unverified, so it is NOT used here. Add a row only
-// from Google's pricing page. job_tracker's internal/scoring/pricing.go needs no change until
-// a row is added here (nothing was added in this pass).
+// day returns 00:00 UTC on the given date. Google states promo windows as calendar dates ("through
+// November 30, 2026") without a time zone, so a boundary may be off by up to a day.
+func day(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0, 0, 0, time.UTC) }
+
+// geminiPriceSchedule is USD per 1M tokens, standard tier, global endpoint, <=200K-token prompts.
 //
-// computeCostUSD returns 0 for an unknown/openllm model rather than
-// throwing — a signal to add the model to the table, not "this call was
-// free." (see isPriceKnown / UsageRecord.CostUnknown for telling the two apart). Thinking tokens are billed at the output rate, matching Google's
-// documented behavior (same convention job_tracker's CostUSD uses).
+// SOURCE (fetched 2026-11-05): Google Cloud's official generative AI pricing page,
+// https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing, plus the Google
+// Cloud blog launch post for Argon (2026-10-13: "introductory rate of $2 per million input tokens
+// and $10 per million output tokens through November 30, 2026 ... standard pricing of $4 ... and
+// $20"). The Gemini Developer API pricing page (ai.google.dev) is blocked from the eval sessions and
+// was NOT read directly; a Google-domain search summary of it reported the same Argon figures.
+// Non-global (regional) endpoints are ~10% higher; prompts >200K tokens cost more on 3.1 Pro
+// ($4/$18). Neither applies to this app today.
+//
+// Mirrors job_tracker's internal/scoring/pricing.go for the models both projects share -- keep
+// them in sync when prices change (that repo is separate and was not updated in this change).
+var geminiPriceSchedule = map[string][]pricePeriod{
+	"gemini-4-argon": {
+		{Until: day(2026, time.December, 1), geminiPrice: geminiPrice{2.00, 10.00}}, // introductory
+		{geminiPrice: geminiPrice{4.00, 20.00}},
+	},
+	"gemini-3.8-flash": {
+		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 3.75}}, // introductory
+		{geminiPrice: geminiPrice{1.50, 7.50}},
+	},
+	"gemini-3.6-flash": {
+		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 3.75}}, // introductory
+		{geminiPrice: geminiPrice{1.50, 7.50}},
+	},
+	"gemini-3.5-flash":       {{geminiPrice: geminiPrice{1.50, 9.00}}},
+	"gemini-3.5-flash-lite":  {{geminiPrice: geminiPrice{0.30, 2.50}}},
+	"gemini-3.1-pro-preview": {{geminiPrice: geminiPrice{2.00, 12.00}}},
+	// Not on the 2026-11-05 page; kept for historical usage records only (no longer in any
+	// fallback chain). VERIFY before relying on them; 3-flash-preview's figure was a placeholder.
+	"gemini-3-flash-preview": {{geminiPrice: geminiPrice{1.50, 9.00}}},
+	"gemini-2.5-pro":         {{geminiPrice: geminiPrice{1.25, 10.00}}},
+}
+
+// Deliberately unpriced: gemini-pro-latest (an alias; served as gemini-3.1-pro-preview, Phase 0.3)
+// and anything unrecognized. Their calls record CostUnknown=true rather than a guessed figure.
+//
+// Grounding with Google Search is billed per search query, not per token: 5,000 queries/month
+// free across all Gemini 3 and 4 models, then $14 per 1,000 (same source). It depends on the
+// monthly total, so it is NOT folded into CostUSD; UsageRecord.GroundingQueries records the count.
+
+// nowFunc is time.Now, swappable in tests.
+var nowFunc = time.Now
+
+// priceAt returns the price in effect for model at t.
+func priceAt(model string, t time.Time) (geminiPrice, bool) {
+	for _, p := range geminiPriceSchedule[model] {
+		if p.Until.IsZero() || t.Before(p.Until) {
+			return p.geminiPrice, true
+		}
+	}
+	return geminiPrice{}, false
+}
+
+// computeCostUSD prices one call at the rate in effect now. It returns 0 for an unknown/openllm
+// model rather than throwing -- a signal to add the model to the schedule, not "this call was
+// free" (see isPriceKnown / UsageRecord.CostUnknown). Thinking tokens bill at the output rate.
 func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int32) float64 {
-	price, ok := geminiPriceTable[model]
+	return computeCostUSDAt(model, nowFunc(), inputTokens, outputTokens, thinkingTokens)
+}
+
+func computeCostUSDAt(model string, at time.Time, inputTokens, outputTokens, thinkingTokens int32) float64 {
+	price, ok := priceAt(model, at)
 	if !ok {
 		return 0
 	}
@@ -88,9 +141,9 @@ func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int3
 	return float64(inputTokens)*price.input/perM + billedOutput*price.output/perM
 }
 
-// isPriceKnown reports whether model has a geminiPriceTable entry.
+// isPriceKnown reports whether model has a price schedule.
 func isPriceKnown(model string) bool {
-	_, ok := geminiPriceTable[model]
+	_, ok := geminiPriceSchedule[model]
 	return ok
 }
 
@@ -165,6 +218,7 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 	}
 	rec.ServedModel = responseServedModel(resp)
 	rec.FinishReason = responseFinishReason(resp)
+	_, rec.GroundingQueries = responseGrounding(resp)
 	rec.CostUnknown = !isPriceKnown(model)
 	o.Usage.appendCall(NewCallRecord(agentRole, model, latencyMs, resp, err))
 	recordUsage(ctx, o.gcs, o.UsageBucket, o.Reporter, rec)

@@ -1,6 +1,7 @@
 package agents
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -11,12 +12,25 @@ import (
 // EvalNoFallbackEnv is the eval-only switch that disables getFallbackChain (and the
 // "retry without grounding" degrade path in runAgentSplit). Production never sets it.
 //
-// Why it exists: the gemini-3.x production chains end in gemini-2.5-pro (and, before the
-// unknown-model default became "no fallback", so did every unrecognized model), so an eval
-// of a candidate that fails (or truncates) can silently be scored on a completely different
-// model. With this set to "true" a failed
+// Why it exists: getFallbackChain routes a failing model to a different one, so an eval of a
+// candidate that fails (or truncates) could silently be scored on a completely different model.
+// With this set to "true" a failed
 // candidate call fails visibly instead. See docs/eval/gemini-model-upgrade-test-plan.md §3 0.1.
 const EvalNoFallbackEnv = "EVAL_NO_FALLBACK"
+
+// AblationEnvSet returns the ABLATE_AGENT_* variables set to "true" (runAgentSplit then returns a
+// stub for that agent without calling any model and without recording a call). Live eval tools
+// refuse to run with any set, so a leftover shell variable cannot leak a stub into results.
+func AblationEnvSet() []string {
+	var set []string
+	for i := 1; i <= 13; i++ {
+		k := fmt.Sprintf("ABLATE_AGENT_%d", i)
+		if os.Getenv(k) == "true" {
+			set = append(set, k)
+		}
+	}
+	return set
+}
 
 // EvalNoFallbackEnabled is the exported form of evalNoFallback, so eval tools gate on exactly
 // the same parsing (trimmed, case-insensitive "true") the orchestrator uses.
@@ -45,6 +59,13 @@ type CallRecord struct {
 	OutputTokens   int32  `json:"output_tokens,omitempty"`
 	ThinkingTokens int32  `json:"thinking_tokens,omitempty"`
 	LatencyMs      int64  `json:"latency_ms"`
+	// Grounded is true when the response carries Google Search grounding evidence: at least one
+	// web search query or grounding chunk in Candidate.GroundingMetadata. A request can ask for
+	// the GoogleSearch tool and still get Grounded=false (the model chose not to search, or
+	// skips search when a response schema is set -- see the Phase 0 capability matrix), so this
+	// is the only honest signal that an agent was actually grounded.
+	Grounded      bool `json:"grounded"`
+	SearchQueries int  `json:"search_queries,omitempty"` // len(GroundingMetadata.WebSearchQueries)
 }
 
 // responseServedModel / responseFinishReason pull the two fields out of a response, nil-safe.
@@ -62,6 +83,19 @@ func responseFinishReason(resp *genai.GenerateContentResponse) string {
 	return string(resp.Candidates[0].FinishReason)
 }
 
+// responseGrounding reports whether the first candidate carries grounding evidence, and how many
+// search queries the model issued. nil-safe.
+func responseGrounding(resp *genai.GenerateContentResponse) (grounded bool, queries int) {
+	if resp == nil || len(resp.Candidates) == 0 || resp.Candidates[0] == nil {
+		return false, 0
+	}
+	gm := resp.Candidates[0].GroundingMetadata
+	if gm == nil {
+		return false, 0
+	}
+	return len(gm.WebSearchQueries) > 0 || len(gm.GroundingChunks) > 0, len(gm.WebSearchQueries)
+}
+
 // NewCallRecord builds a CallRecord from one attempt's outcome.
 func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.GenerateContentResponse, err error) CallRecord {
 	rec := CallRecord{
@@ -76,6 +110,7 @@ func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.Gene
 		// as the advisory Preset Critic swallow this, so it must not read as a clean call.
 		rec.Success, rec.Error = false, "response has no candidates"
 	}
+	rec.Grounded, rec.SearchQueries = responseGrounding(resp)
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount

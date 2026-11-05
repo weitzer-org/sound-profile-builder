@@ -19,8 +19,11 @@ import (
 const (
 	pro   = "gemini-3.1-pro-preview"
 	flash = "gemini-3.5-flash"
-	f38   = "gemini-3.8-flash"
-	lite  = "gemini-3.5-flash-lite"
+	// Stand-ins for "a model with no official price": the real 3.8 Flash / 3.5 Flash-Lite ids
+	// gained official prices in PR #114, so the unpriced path uses ids the schedule never has.
+	// argon stays the real id because the provisional-model rule is keyed on it.
+	f38   = "gemini-test-unpriced-a"
+	lite  = "gemini-test-unpriced-b"
 	argon = "gemini-4-argon"
 )
 
@@ -548,7 +551,7 @@ func TestRenderCostNeverZeroForUnpriced(t *testing.T) {
 	if strings.Contains(out, "$0.0000") {
 		t.Errorf("an unpriced scenario rendered as $0:\n%s", out)
 	}
-	for _, want := range []string{"UNPRICED(gemini-3.8-flash", "UNPRICED(gemini-4-argon", "SKIPPED", "p50/p95", "HARD GATES", "DECISION RULES"} {
+	for _, want := range []string{"UNPRICED(" + f38, "UNPRICED(" + lite, "SKIPPED", "p50/p95", "HARD GATES", "DECISION RULES"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("render missing %q", want)
 		}

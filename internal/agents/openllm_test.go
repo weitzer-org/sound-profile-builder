@@ -357,7 +357,7 @@ func TestOrchestrator_OpenLLM_ContextLimit_Fallback(t *testing.T) {
 	orch.Usage.mu.Lock()
 	inputTokens := orch.Usage.InputTokens
 	outputTokens := orch.Usage.OutputTokens
-	modelsUsedCount := orch.Usage.ModelsUsed["gemini-3.1-pro-preview"]
+	modelsUsedCount := orch.Usage.ModelsUsed[DefaultModelFor("1_tone_historian")]
 	orch.Usage.mu.Unlock()
 
 	if inputTokens != 50 {
@@ -367,7 +367,7 @@ func TestOrchestrator_OpenLLM_ContextLimit_Fallback(t *testing.T) {
 		t.Errorf("Expected output tokens: 25, got: %d", outputTokens)
 	}
 	if modelsUsedCount != 1 {
-		t.Errorf("Expected model gemini-3.1-pro-preview usage count: 1, got: %d", modelsUsedCount)
+		t.Errorf("Expected model %s usage count: 1, got: %d", DefaultModelFor("1_tone_historian"), modelsUsedCount)
 	}
 }
 

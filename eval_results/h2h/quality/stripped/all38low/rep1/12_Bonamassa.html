@@ -1,0 +1,316 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational Dumble Overdrive Special lead tone, TS808 front-end boost, and post-amp digital delay architecture.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed the mid-pushed curve centered at 800 Hz, noise gate threshold of -58 dB, and high/low cuts at 95 Hz and 6.2 kHz.",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Warned of Dumble capture gain staging flub and advised running the Green 808 with low drive and high output to focus midrange compression.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Selected the mandatory 'ODS Joe Lead' factory capture, '212 Zila Open CL80 19' cab, and suggested native blocks 'Green 808' and 'Circular Delay'.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified capture compatibility and handled dropped gear items by routing to authentic native equivalents.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Specified instrument input compensation with -3.0 dB trim for the Gibson ES-339 humbuckers and +3.0 dB push for the Telecaster single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Dialed dual mic geometry using Cap-Edge at 0.75 in and Cone-Mid at 1.5 in blended at 65% on the Celestion Classic Lead 80 cabinet.",
+    "\u003cstrong\u003eAgent 8 (FOH):\u003c/strong\u003e Enforced global corrective filtering from 80 Hz to 6.5 kHz and targeted lane output headroom at -3.5 dB.",
+    "\u003cstrong\u003eAgent 9 (Mix Architect):\u003c/strong\u003e Set post-cab delay timing to 375 ms with a 22-25% mix to give blooming lead ambience without cluttering note attack.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Assigned Scene A as rhythm bypass and Scene B as singing lead with active Green 808 and Circular Delay engaged.",
+    "\u003cstrong\u003eAgent 11 (DSP Optimizer):\u003c/strong\u003e Placed the signal flow linearly along Lane 1 (Green 808 -\u003e ODS Joe Lead -\u003e 212 Cab -\u003e Circular Delay) within optimal DSP budget."
+  ],
+  "builder_statement": "Built around the authentic 'ODS Joe Lead' factory Neural Capture to achieve the signature singing, harmonic-rich Dumble Overdrive Special voice. A Green 808 block tightens the front end for focused midrange sustain on leads, while an open-back Celestion Classic Lead 80 cabinet and post-amp digital delay provide smooth ambient bloom.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Used as a clean midrange boost to tighten bass before the amp capture without introducing diode congestion.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "ODS Joe Lead",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "2.2 dB",
+              "value_b": "2.6 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "1.5 dB"
+            }
+          ],
+          "rationale": "High-gain boutique Dumble capture voiced with compensated low-end and attenuated treble to keep single coils smooth and vocal.",
+          "type": "Neural Capture"
+        },
+        {
+          "id": "block-3",
+          "model": "212 Zila Open CL80 19",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge 0.75in"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone-Mid 1.5in"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "Matches the Celestion Classic Lead 80 configuration, providing focused punch and tamed high-end fizz.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Recreates studio rack digital delay bloom post-cab for soaring lead sustain without preamp clutter.",
+          "type": "Delay"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Acts as a pre-amp frequency shaper to cut sub-bass flub before the high-gain Dumble capture stages.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "ODS Joe Lead",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "1.8 dB",
+              "value_b": "2.2 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.2 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "1.0 dB"
+            }
+          ],
+          "rationale": "Dialed with a lean low-end and neutral treble to prevent semi-hollow humbuckers from overwhelming the capture front-end.",
+          "type": "Neural Capture"
+        },
+        {
+          "id": "block-3",
+          "model": "212 Zila Open CL80 19",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap-Edge 0.75in"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone-Mid 1.5in"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "Faithfully reproduces the Celestion Classic Lead 80 voicing with precise cap-edge and cone placement.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Delivers crystal clear repeats post-cab to emulate classic DD-2 studio solo enhancements.",
+          "type": "Delay"
+        }
+      ]
+    }
+  }
+}

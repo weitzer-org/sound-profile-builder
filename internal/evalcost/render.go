@@ -28,7 +28,7 @@ func Render(w io.Writer, ex *Extrapolation, batchID string, smoke bool, assume m
 	if !smoke {
 		fmt.Fprintln(w, "NOTE: this batch is not a smoke batch; per-run costs average over whatever it contains.")
 	}
-	fmt.Fprintf(w, "Prices: repo geminiPriceTable (internal/agents/usage_recorder.go) -- NOT independently verified here. Pricing basis: %s model id.\n", ex.Basis)
+	fmt.Fprintf(w, "Prices: repo geminiPriceSchedule (internal/agents/usage_recorder.go) -- NOT independently verified here. Pricing basis: %s model id.\n", ex.Basis)
 	fmt.Fprintln(w, "Cost = recorded input + output + thinking tokens x table price (thinking billed at the output rate).")
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "%-4s %-9s %-34s %-28s %-9s %s\n", "ID", "runs used", "measured $/run", "projected for full matrix", "full runs", "unpriced models (calls, in/out+think tokens per run)")
@@ -86,7 +86,7 @@ func Render(w io.Writer, ex *Extrapolation, batchID string, smoke bool, assume m
 	}
 	fmt.Fprintf(w, "\n  Smoke pass actually spent (priced calls only): %s\n", Money(ex.SpentSmokeKnown))
 	fmt.Fprintln(w, "\nEXCLUDED from every figure above:")
-	fmt.Fprintln(w, "  - calls to models with no entry in geminiPriceTable (listed per scenario; never counted as $0)")
+	fmt.Fprintln(w, "  - calls to models with no entry in geminiPriceSchedule (listed per scenario; never counted as $0)")
 	fmt.Fprintln(w, "  - Google Search grounding fees for agents 1-3 (billing of grounded calls is an UNVERIFIED assumption)")
 	fmt.Fprintln(w, "  - cached-token discounts, and any price change since the table was last edited")
 	fmt.Fprintln(w, "  - the re-critic (one extra Critic call per output, Phase 2.2) and the judge calls (Phase 2.3): priced separately")

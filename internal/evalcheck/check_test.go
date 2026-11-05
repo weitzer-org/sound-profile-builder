@@ -276,3 +276,27 @@ func TestAssessCalls_ZeroCallsIsNotClean(t *testing.T) {
 		t.Fatal("a run with no recorded model calls (mock mode) must not be integrity_ok")
 	}
 }
+
+func TestDialOffsetOnModeled(t *testing.T) {
+	valid := agents.BuildEffectiveValidBlocks(true, true)
+	env := `{"structured_payload":{"guitars":{"G":[
+	 {"id":"a","type":"Amplifier","model":"UK C30 TopBoost","rationale":"x","parameters":[
+	   {"name":"Volume","type":"slider","value":"-2.0","value_b":"6.0"},
+	   {"name":"Level","type":"slider","value":"-2.0 dB"},
+	   {"name":"Gain","type":"slider","value":"4.5"}]},
+	 {"id":"b","type":"Drive","model":"Brit Blues","rationale":"x","parameters":[{"name":"Level","type":"slider","value":"+3.5 dB"}]},
+	 {"id":"d","type":"Cabinet","model":"212 UK C30 '65","rationale":"x","parameters":[{"name":"Level","type":"slider","value":"-2.5 dB"}]},
+	 {"id":"c","type":"Drive","model":"Iba Green","rationale":"x","parameters":[{"name":"Volume","type":"slider","value":"+1.0 dB"}]}]}}}`
+	r := Check(env, valid)
+	if r.ParseError != "" {
+		t.Fatal(r.ParseError)
+	}
+	// UK C30 Volume "-2.0" + Level "-2.0 dB" + Brit Blues Level "+3.5 dB" = 3; the plain 6.0/4.5,
+	// the cabinet's dB Level and Iba Green (a real capture) are not counted.
+	if r.DialOffsetOnModeled != 3 {
+		t.Fatalf("DialOffsetOnModeled = %d, want 3 (%v)", r.DialOffsetOnModeled, r.Examples)
+	}
+	if r.CaptureDBOnModeled != 0 {
+		t.Fatalf("narrow counter changed: %d", r.CaptureDBOnModeled)
+	}
+}

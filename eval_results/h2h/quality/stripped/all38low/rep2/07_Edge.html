@@ -1,0 +1,252 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the target sound as a classic 1964 Vox AC30 Top Boost platform pushed by boutique preamps and cascading rhythmic analog/digital delay units.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed an edge-of-breakup EL84 saturation character, bright EQ tilt with a 3.2 kHz peak, 100 Hz low-cut, and 7.5 kHz high-cut to tame top-end harshness.",
+    "\u003cstrong\u003eAgent 3 (Web Scraper):\u003c/strong\u003e Warned that rhythmic delays pre-amp cause excessive smearing against edge-of-breakup AC30 circuits and flagged harshness in the 3 kHz to 5 kHz region under single coils.",
+    "\u003cstrong\u003eAgent 4 (Gear Librarian):\u003c/strong\u003e Selected the confirmed Neural Capture '66 AC30 JMP Clean' to anchor single-amp mode, assigned 'Circular Delay' post-amp, and mapped an authentic Celestion Blue 2x12 cab stage.",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Confirmed that external preamp pedals were unavailable and routed tone shaping into the capture block's native drive curve and cab filtration.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Tailored specific offsets per guitar: attenuating gain and brightening mids for the Gibson ES-339 humbuckers while pushing input gain and smoothing treble on the Telecaster single coil.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured a dynamic Shure SM57 on cap-edge blended at 65% with an off-axis Royer R-121 ribbon at 2.5 inches to balance chime with body warmth.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Implemented Global EQ high-pass at 80 Hz and low-pass at 6.5 kHz with a -2.5 dB lane output trim to keep the preset sit-ready in a live mix.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Dialed Circular Delay to 375 ms dotted-eighth repeats with 35% mix for Scene A, bumping feedback and mix for Scene B lead space.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Set up Scene A (rhythm chime) and Scene B (lead push) control assignments across capture gain stages and delay density.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured a clean serial topology placing the '66 AC30 JMP Clean' capture first into the matched Celestion Blue Cab, followed by post-amp Circular Delay to preserve repeat articulation."
+  ],
+  "builder_statement": "This preset captures the chime and edge-of-breakup harmonic bloom of a classic Vox AC30 Top Boost. Using the '66 AC30 JMP Clean' Neural Capture paired with a dual-mic 2x12 Celestion Blue cabinet, the post-amp Circular Delay delivers pristine dotted-eighth rhythmic repeats without premature clipping or congestion.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "66 AC30 JMP Clean",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.4 dB",
+              "value_b": "+1.2 dB"
+            }
+          ],
+          "rationale": "Neural Capture of a vintage jumpered AC30. Adjusted with a slight gain push and reduced treble to counteract the piercing high frequencies of Telecaster single coils.",
+          "type": "Capture"
+        },
+        {
+          "id": "block-2",
+          "model": "UK C30 64 TB Cab",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57, Cap-Edge, 1.0 in Distance, On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121, Cone-Edge, 2.5 in Distance, Off-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Emulates an authentic 2x12 Vox cabinet loaded with Celestion Alnico Blues. The SM57 provides bite while the R-121 softens single-coil icepick transients.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-3",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "38%",
+              "value_b": "45%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            }
+          ],
+          "rationale": "Positioned post-amp to guarantee pristine, percussive dotted-eighth repeats without smearing through cathode-biased tube breakup.",
+          "type": "Delay"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "66 AC30 JMP Clean",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.5 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.8 dB",
+              "value_b": "+0.0 dB"
+            }
+          ],
+          "rationale": "Neural Capture of a vintage jumpered AC30. Trimmed input gain and bass prevent the thicker semi-hollow humbuckers from muddying the front end.",
+          "type": "Capture"
+        },
+        {
+          "id": "block-2",
+          "model": "UK C30 64 TB Cab",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57, Cap-Edge, 1.0 in Distance, On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121, Cone-Edge, 2.5 in Distance, Off-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "Celestion Alnico Blue 2x12 cab emulation. Retains slightly higher high-cut to preserve top-end acoustic openness with humbuckers.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-3",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "38%",
+              "value_b": "45%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            }
+          ],
+          "rationale": "Post-amp dotted-eighth delay to keep ambient repeats distinct and articulate behind the richer humbucker harmonic spectrum.",
+          "type": "Delay"
+        }
+      ]
+    }
+  }
+}

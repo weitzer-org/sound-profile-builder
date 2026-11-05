@@ -1,0 +1,14 @@
+{
+  "agent_prompts": {
+    "12_architect": "v5",
+    "2_sonic_profiler": "v4",
+    "4_coros_librarian": "v2",
+    "6_acoustician": "v3"
+  },
+  "argon_no_search": false,
+  "eval_no_fallback": true,
+  "queries": "all",
+  "reps": 2,
+  "scenarios": "S4",
+  "started_at": "2026-11-05T02:19:01Z"
+}

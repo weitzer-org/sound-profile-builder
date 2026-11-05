@@ -1,0 +1,52 @@
+[
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 851,
+    "output_tokens": 117,
+    "thinking_tokens": 934,
+    "latency_ms": 34994,
+    "grounded": false
+  },
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 4563,
+    "output_tokens": 112,
+    "thinking_tokens": 2897,
+    "latency_ms": 39727,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 743,
+    "output_tokens": 1402,
+    "thinking_tokens": 1822,
+    "latency_ms": 156000,
+    "grounded": true,
+    "search_queries": 12
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[CorOS Librarian] response truncated at the MaxOutputTokens limit (model gemini-4-argon) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 38526,
+    "output_tokens": 177,
+    "thinking_tokens": 11823,
+    "latency_ms": 123105,
+    "grounded": false
+  }
+]

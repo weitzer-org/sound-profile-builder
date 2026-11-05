@@ -1,6 +1,6 @@
 # Gemini Model Upgrade — Test Plan
 
-Status: **Phase 0 complete; Phase 2 readiness tooling built and unit-tested, no live Phase 2 run yet (see "Phase 2 readiness" in §5)** · Written 2026-11-04 · Owner: bweitzer
+Status: **Phase 0-1 complete; Phase 2 readiness tooling (from main) and the Phase 2 live run both landed; quality scoring and the Argon vs 3.8 Flash head-to-head done (§9b); production routing + fixes shipped in PR #114 (§9a)** · Written 2026-11-04 · Owner: bweitzer
 
 ## 1. Goal
 
@@ -135,7 +135,7 @@ on upstream output. 13 queries × 2 reps.
 
 | Agent | Baseline | Candidates |
 |---|---|---|
-| 1 Tone Historian | `gemini-3.1-pro-preview` | `gemini-4-argon`, `gemini-3.8-flash`, `gemini-pro-latest`* |
+| 1 Tone Historian | `gemini-3.1-pro-preview` | `gemini-4-argon`, `gemini-3.8-flash` (pro-latest dropped: served as 3.1-pro-preview) |
 | 2 Sonic Profiler | `gemini-3.5-flash` | `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.5-flash-lite` |
 | 3 Community Scraper | `gemini-3.5-flash` | `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.5-flash-lite` |
 
@@ -146,7 +146,7 @@ stay on baseline; only the Architect model changes. 5 reps each.
 
 | Repro | Query | Pass condition |
 |---|---|---|
-| R1 Iba Green described as a Neural Capture | `07_Edge` | 0/5 runs flagged (3.6 Flash: reproduced 4×) |
+| R1 (redefined, see Phase 1 results) capture claimed or dB-formatted on a block the map says is not a capture | `07_Edge` | 0/5 runs with `capture_claim_on_modeled > 0` or `capture_db_on_modeled > 0` |
 | R2 Rule 9 dB formatting on a non-capture block (the checker's `capture_db_on_modeled`; replaces "units inside numeric fields", see Phase 0 correction 1) | `09_BB_King`, `05_Clapton` | 0/5 runs with `capture_db_on_modeled > 0` |
 
 Run for `gemini-4-argon`, `gemini-3.8-flash`, `gemini-pro-latest`*, and the baseline
@@ -155,6 +155,124 @@ as a control. The baseline must pass both, or the check itself is broken.
 **Phase 1 exit:** any candidate that fails R1 or R2, or a Phase 0.5 must-have
 capability, is dropped from the Pro tier. Any candidate whose 1A schema-validity
 or truncation rate is worse than baseline is dropped from that agent.
+
+## 4a. Phase 1 results (run 2026-11-04)
+
+Raw data: `eval_results/phase1/subagent/` (`calls.jsonl`, one record per call incl. served model, finish reason, grounded, schema issues, output; `summary.md/json`), `eval_results/phase1/architect/` (`frozen/*.json` = the frozen upstream, `full/` = the run, stopped at the control gate), plus `*_smoke` dirs. Tools: `cmd/eval_subagent`, `cmd/eval_architect` (PR #114). Live calls spent, approximately: 1A smoke 11 + full 286; 1B 20 wasted on a freeze check bug (see below) + 10 freeze for the smoke + 6 smoke run + 20 freeze + 30 control (Architect + Critic) = about 385. Every `EVAL_NO_FALLBACK=true`; all 286 1A calls were served by the requested model in one attempt (3.5-flash served as 3.6-flash, pinned).
+
+### 1A: independent-agent screen (13 queries x 2 reps = n 26 per cell)
+
+| Agent | Model | schema valid | truncated | grounded | p50 / p95 latency (s) | Exit rule |
+|---|---|--:|--:|--:|--:|---|
+| 1 Tone Historian | `gemini-3.1-pro-preview` (baseline) | 26/26 | 0 | 0/26 | 12.6 / 18.2 | n/a |
+| 1 | `gemini-4-argon` | 26/26 | 0 | 3/26 | 10.9 / 26.8 | keep |
+| 1 | `gemini-3.8-flash` | 26/26 | 0 | 0/26 | 10.7 / 29.1 | keep |
+| 2 Sonic Profiler | `gemini-3.5-flash` (served 3.6, baseline) | 26/26 | 0 | 0/26 | 6.9 / 10.5 | n/a |
+| 2 | `gemini-4-argon` | 16/26 | **10** | 3/26 | 11.2 / 41.8 | **DROP** |
+| 2 | `gemini-3.8-flash` | 26/26 | 0 | 0/26 | 9.4 / 24.8 | keep |
+| 2 | `gemini-3.5-flash-lite` | 24/26 | **2** | 0/26 | 1.8 / 8.4 | **DROP** |
+| 3 Community Scraper | `gemini-3.5-flash` (served 3.6, baseline) | 26/26 | 0 | 6/26 | 10.6 / 13.9 | n/a |
+| 3 | `gemini-4-argon` | 26/26 | 0 | 4/26 | 9.7 / 23.7 | keep |
+| 3 | `gemini-3.8-flash` | 26/26 | 0 | 4/26 | 17.8 / 45.0 | keep |
+| 3 | `gemini-3.5-flash-lite` | 26/26 | 0 | 5/26 | 2.3 / 2.9 | keep |
+
+- The Argon and Lite Sonic Profiler truncations are runaway generations, not thinking-token starvation: truncated outputs are ~3,970-4,050 output tokens against the 4,000 cap (baseline mean output 78 tokens), with 0 thinking tokens on 7 of 10 Argon cases.
+- **Grounding (measured, not assumed):** the production baselines were grounded on 0/26 (agent 1), 0/26 (agent 2) and 6/26 (agent 3) calls, so agents 1 and 2 are effectively **not grounded in production today** despite `agentSearchTool`, and agent 3 only 23% of the time. Argon grounded 3/26, 3/26, 4/26, at or above baseline. So grounding does not stop Argon from staying on agents 1 and 3. Caveat: this tool sends the raw query without the pipeline's `[GLOBAL USER CONFIG FLAG ...]` prefixes, one sample per cell, and `grounded` means search queries or chunks present in the response metadata.
+- Strict exit rule, no tolerance: at n=26 one call is ~4 points. No other candidate had a single schema failure, truncation or served-model issue.
+
+### 1B: Architect repros (control gate tripped; candidates then run on the owner's approval)
+
+Frozen upstream: agents 1-11 once per query on baseline (`frozen/`). Control = `gemini-3.1-pro-preview`, 5 reps per query, Critic on baseline, all 15 runs scoreable and served as requested.
+
+| Rule | Queries | Control result |
+|---|---|---|
+| R1 | `07_Edge` | **FAIL: 2/5 runs** (`capture_db_on_modeled` = 4 in reps 3 and 5: `UK C30 TopBoost` Volume written in relative dB, e.g. `"-2.0 dB"`, on both guitars) |
+| R2 | `09_BB_King`, `05_Clapton` | PASS: 0/10 |
+
+The tool stopped before any candidate was run, as required. I inspected the evidence: the flagged values are on `UK C30 TopBoost`, a modeled amp (`is_capture: false`), so the check is correct, and the frozen prompt is the production one (the Librarian mandated the amp, and the Rule 9 capture list contained only `Iba Green`). **The control model itself has the defect at 2/5, so R1 as a zero-defect pass bar is unsatisfiable for the baseline, and the July attribution of this pattern to 3.6 Flash was never isolated from the baseline's own rate** (The retained July baseline 07_Edge output had 0 such values, but that is a single run, which says little about a rate near 2/5; unverified either way beyond that.) Smoke pass (n=1, not a conclusion): control 0/1, Argon 0/1, 3.8 Flash 1/1 defect on 07_Edge; all served as requested, no MAX_TOKENS.
+
+**Candidate runs (run after the stop, with `-no-stop-on-control-failure`; same frozen upstream, 5 reps per query; raw: `eval_results/phase1/architect/candidates/`)**
+
+| Model | R1 `07_Edge` defect runs / scoreable | R2 `09_BB_King` + `05_Clapton` | Architect MAX_TOKENS | Failed runs | Fuzzy-snapped / unverified names | served as requested |
+|---|--:|--:|--:|--|--:|--|
+| `gemini-3.1-pro-preview` (control) | **2 / 5** | 0 / 10 | 0 | none | 0 / 0 | 15/15 |
+| `gemini-4-argon` | **4 / 4** | 0 / 10 | 0 | 1 transient connection reset (`07_Edge` rep2; infrastructure, not a model fault; unscoreable) | 0 / 0 | 14/14 answered |
+| `gemini-3.8-flash` | **5 / 5** | 0 / 9 | **1** (`09_BB_King` rep5: 15,359 of 16,000 tokens went to thinking, 627 to output) | that truncation | 0 / 0 | 15/15 |
+
+**Follow-up sample, run on the owner's instruction to bias toward upgrading unless a candidate is clearly worse (15 more `07_Edge` reps per model, same frozen upstream; raw: `eval_results/phase1/architect/extra_edge_*`). Pooled with the first 5, 20 runs per model:**
+
+| Model | `07_Edge` defect runs / scoreable | rate | Architect MAX_TOKENS on `07_Edge` | unscoreable |
+|---|--:|--:|--:|---|
+| `gemini-3.1-pro-preview` (control) | 3 / 20 | 15% | 0 | 0 |
+| `gemini-4-argon` | 18 / 19 | 95% | 0 | 1 connection reset (`07_Edge`; infrastructure) |
+| `gemini-3.8-flash` | 17 / 20 | 85% | 0 | 0 |
+
+Fisher exact, two-sided, each candidate vs the control: p < 0.001 for both (computed in this session). The earlier "not distinguishable" reading was a small-sample artifact: with 20 runs the candidates are clearly worse than the production Pro model on R1. Every defect is the same pattern: relative-dB Volume on `UK C30 TopBoost`; no capture-claim defects anywhere. R2 (`09_BB_King`, `05_Clapton`) was not extended: 0 defects for all three models in 5 reps per query (3.8 Flash: 9 scoreable because of one truncation).
+
+### 1B follow-up: why the Architect writes dB on a modeled amp, and a prompt fix (2026-11-05)
+
+**Broader measure.** `internal/evalcheck`'s `capture_db_on_modeled` only counts values with a `dB` unit. `docs/eval/scripts/amp_volume_audit.py` also counts bare signed offsets such as `Volume: -2.0`, which are just as unusable on a 0-10 dial. Re-scored that way, production v4 on `07_Edge` is wrong in **7/20** Pro runs (3 dB + 4 bare signed; 13 of its "clean" runs simply omit the amp `Volume` parameter), **18/19** Argon, **17/20** 3.8 Flash.
+
+**Root cause, from the per-run logs (frozen input + raw Architect output + call records):**
+1. The upstream agents hand the Architect dB values for a modeled amp. The Acoustician's prompt opens "calculate precise dB offsets", and its output says "-2.0dB volume offset" for the ES-339. The Control Mapper is told to "strictly adhere to the dB ... constants" from the Acoustician and writes `UK C30 TopBoost: ... Level = -2.0 dB` (Scene A) / `Level = 0.0 dB` (Scene B). Those are exactly the humbucker values in the defective runs.
+2. The Acoustician returned only the `humbucker` profile, though the run has two guitars, so every Telecaster dB value (`+1.5 dB`, `+1.0 dB`) was extrapolated by the Architect.
+3. The orchestrator's Architect user prompt says "based strictly on the following aggregated data payload", and Rule 9's only `Volume` example is the capture form `Volume: 0.0 dB`, the most common wrong value. Nothing tells the Architect how to turn an offset into a dial, and there is no final format check (there is one for Bypass, rule 13).
+4. Why the newer models look worse: Pro mostly drops the amp `Volume` parameter (13/20), which hides the conflict. Argon and 3.8 Flash faithfully include every AC30 control and carry the upstream offset into it.
+5. The Critic (baseline) caught 0 of 38 defective runs, and instead flagged Iba Green (a real capture) as "not a capture" again.
+6. Argon used **0 thinking tokens** on all 19 default Architect calls (Pro ~4,200, 3.8 Flash ~2,500). `ThinkingConfig.ThinkingLevel=HIGH` (new `Orchestrator.ThinkingLevel`, eval-only) makes it think (~3,900-5,500 tokens).
+7. `evalfixtures.DefaultConstraints` sets `favor_captures: true`, which prefixes every prompt with "prioritize Neural Captures"; a plausible nudge toward capture formatting, not tested separately.
+
+**Experiment** (same frozen `07_Edge` upstream, 5 reps per arm, Critic on baseline; raw: `eval_results/phase1/architect_promptfix/`). `12_architect_v5.md` = v4 plus: rule 10 "translate upstream dB offsets into 0-10 dials on algorithmic blocks", rule 14 "final dial-format check", and a modeled-amp counter-example in Rule 9 (which keeps its number, because the orchestrator's user prompt cites "Rule 9").
+
+| Arm | Wrong-format runs (audit) | `capture_db_on_modeled` runs | Iba Green (capture) still in dB | MAX_TOKENS | median thinking / latency |
+|---|--:|--:|---|--:|---|
+| Argon, v4, thinking default (earlier) | 18/19 | 18/19 | yes | 0 | 0 / ~49 s |
+| A: Argon, v4, thinking HIGH | **4/5** | 4/5 | yes | 0 | 3,852 / 94 s |
+| B: Argon, **v5**, default | **0/5** | 0/5 | yes | 0 | 0 / 59 s |
+| C: Argon, **v5**, HIGH | **0/5** | 0/5 | yes | 0 | 5,534 / 104 s |
+| D: 3.8 Flash, **v5** | **0/5** | 0/5 | yes | 0 | 3,222 / 53 s |
+| E: Pro, **v5** | **0/5** | 0/5 | yes | 0 | 4,967 / 54 s |
+
+- **The prompt fixes it; thinking alone does not** (arm A). Under v5, all three models write plain dials, and in every v5 run the humbucker's AC30 Volume is lower than the Telecaster's (e.g. 5.5 vs 6.5), i.e. the -2 dB intent was applied in the right direction. No new snapped/unverified names, capture claims, parse failures or truncations.
+- **Consequence for 1B:** the R1 failures of Argon and 3.8 Flash on v4 were a prompt defect shared by every model (production included), not a model regression. Under v5 both pass R1 (0/5). **They should not be dropped from agent 12 on R1 if v5 is adopted.**
+- **v5 regression check on the other repro queries (`09_BB_King`, `05_Clapton`, 5 reps each per model, 30 runs; raw: `eval_results/phase1/architect_promptfix/R2_v5_*`):** all 30 scoreable, 0 MAX_TOKENS, 0 on every gated counter, and 0 dial-format problems on the broader audit. That includes Argon on `05_Clapton`, which under v4 wrote `Brit Blues Level = +3.5 dB` (a modeled drive) in **4/5** runs, a defect the narrow checker missed (see below). Block counts per run are unchanged within noise (Pro 13.4 -> 13.2, Argon 13.2 -> 13.0, 3.8 Flash 11.6 -> 10.6; n = 9-10, watch in Phase 2). Critic flags: 3.8 Flash 2 (a real "Range Rverb is not a spring reverb" prose catch), others 0.
+- **Checker blind spot found and partly addressed.** `capture_db_on_modeled` only looks at Rule 9's five parameter names and only at values with a `dB` unit. The broader audit (`docs/eval/scripts/dial_format_audit.py`, any amp/drive dial on a non-capture block, dB or bare signed) shows production Pro on v4 `07_Edge` is wrong in **19/20** runs, not 3/20: it mostly writes the offset into an invented `Level` control (`Level = -2.0 dB`; the AC30 has no `Level` in the QC amp vocabulary) or a bare `Volume = -2.0`. `internal/evalcheck` now reports this as `dial_offset_on_modeled` (reference only, not gated, because some algorithmic controls may be genuinely dB-native and that is not verified per block). Earlier R1/R2 numbers in this section use the narrow counter and therefore understate the v4 problem for every model.
+- **Not yet tested:** v5 on the other 10 golden queries; v5 against a different upstream sample (one freeze per query); the upstream prompts themselves (Acoustician / Control Mapper emitting dB for modeled amps; Acoustician skipping the second guitar). v5 is a downstream guard, not a fix of the upstream contradiction. Production still routes `12_architect` to v4 (`config.json`); nothing was deployed.
+
+### 1C: Phase 1 exit report
+
+**Dropped candidates (and why)**
+- Sonic Profiler (2) on `gemini-4-argon`: schema valid 16/26 vs 26/26 baseline, 10/26 truncated (exit rule).
+- Sonic Profiler (2) on `gemini-3.5-flash-lite`: schema valid 24/26, 2/26 truncated (exit rule).
+- `gemini-pro-latest` and S3: served as `gemini-3.1-pro-preview` (Phase 0.3).
+- `gemini-4-argon` and `gemini-3.8-flash` on the Architect (agent 12): both fail R1 as the plan defines it (any defective `07_Edge` run), 4/4 and 5/5. **The control also trips R1 (3/20 = 15%), so a zero-defect bar would drop the baseline too; the decision rests on the comparison instead: both candidates are clearly worse than the control (95% and 85% vs 15%, p < 0.001), after the owner asked for a larger sample because the bias is to upgrade unless a candidate is clearly worse. It is clear.** The defect is Architect-specific, so I did NOT drop either from agent 1 (1A evidence only): the plan says "dropped from the Pro tier" (agents 1 and 12); splitting it is a judgment call for the owner.
+- `gemini-3.8-flash` additionally truncated once on the Architect (1/15, thinking consumed the 16,000-token cap), which is worse than the control's 0/15 on the Phase 2 truncation gate.
+- No candidate failed a Phase 0.5 must-have capability.
+
+**Scenarios surviving into Phase 2**
+- S0 baseline: always.
+- S1 (Flash tier -> 3.8 Flash): survives (3.8 passed 1A on agents 2 and 3; its Architect result is irrelevant here because the Pro tier stays on baseline).
+- S2 (Pro tier -> 3.8 Flash): **dropped** (3.8 fails R1 on agent 12 and truncated once). A variant with 3.8 on agent 1 only is possible but is not a plan scenario.
+- S3: dropped (alias resolves to the baseline Pro model).
+- S4 (Lite on 8, 10, 11): survives; Lite was only screened on agents 2 and 3 (and dropped on 2), so Phase 2 is its first test on 8/10/11.
+- S5 (Critic -> Argon): survives (the Architect is on baseline there; the Critic was not screened in Phase 1).
+- A1 (Argon everywhere): **dropped** (Argon on agent 12 fails R1; on agent 2 fails the 1A exit rule).
+- A2 (Argon Pro tier only): **dropped** (same agent-12 failure).
+- A3 (Argon Flash tier only): survives, **with a change**: Argon must stay off agent 2 (keep `gemini-3.5-flash`). `BuildScenarios`' `-argon-no-search` is all-or-nothing for agents 1-3 and cannot express this; Phase 2 needs a per-agent override first.
+- Net: Phase 2 would run S0, S1, S4, S5, A3 (5 scenarios x 13 queries x 2 reps = 130 pipeline runs, not 234). Not started, as instructed.
+
+**Can Argon stay on agents 1/2/3?** Agents 1 and 3: yes on the evidence above (valid, no truncation, grounds at or above baseline). Agent 2: no (truncation/schema failures).
+
+**What the plan got wrong**
+1. "The baseline must pass R1" is false: the production Pro model fails the redefined R1 at 2/5 under identical upstream. Candidates must be compared against the control's measured rate, not against zero.
+2. The 12-agent freeze assumption: with the default constraints (`allow_cloud_captures: false`) Cloud Navigator is bypassed with no API call, so a freeze is 10 calls per query, not 11 (30 total, not 33). My first freeze check required 11 outputs and wasted 20 calls before I fixed it.
+3. Production agents 1 and 2 are effectively ungrounded (0/26), contradicting the premise in the prompts and in `agentSearchTool`'s comments; a decision for the owner, outside this PR.
+4. The 1A tool and the Architect freeze both resolve prompts through production code (`PromptForAgent`), so no `_flash` prompt variant exists today; if one is added, the freeze flags `prompt_matches_frozen`.
+
+**Owner decisions (2026-11-04)**
+1. More Architect samples were requested; done (above). Result on the production v4 prompt: Argon and 3.8 Flash are clearly worse than the control on R1. **Superseded by the follow-up:** the cause is a v4 prompt defect, and under `12_architect_v5` all three models pass R1 (0/5 each), so the agent-12 drop is withdrawn pending the v5 decision.
+2. Split the Pro tier: agreed. Agent 1 candidates (Argon, 3.8 Flash) stay alive on the 1A evidence; agent 12 candidates are dropped.
+3. The `UK C30 TopBoost` volume-in-dB defect (also present in production's own model at ~15%) will NOT be fixed as part of this work.
 
 ## 5. Phase 2 — Full-pipeline routing scenarios
 
@@ -182,7 +300,7 @@ A1/A2/A3, and the report must say so prominently.
 
 **Cost gate.** Run a smoke pass first: 1 query (`07_Edge`) × 1 rep × every scenario,
 9 runs planned, **8 executable** (S3 is skipped), `eval_full_pipeline -smoke`. Then
-`eval_cost` prices the measured per-run cost from recorded tokens × `geminiPriceTable` and
+`eval_cost` prices the measured per-run cost from recorded tokens × `geminiPriceSchedule` (dated official prices since PR #114) and
 multiplies by the full matrix: **208 runs = 8 executable scenarios × 13 queries × 2 reps (26
 per scenario)**, not 234. Models with no official price are UNKNOWN, never $0, so until Google
 publishes prices the projected total is a *lower bound* and the tool prints exactly what it
@@ -342,7 +460,7 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
 17. **§7 "Argon anywhere in production".** The tool cannot know whether Google has published
     pricing or a non-provisional id; it treats the ids in `-provisional-models` (default
     `gemini-4-argon`) as provisional and caps any would-be ADOPT to UNDETERMINED ("preview signal
-    only"). Argon is also absent from `geminiPriceTable`, so its cost is UNKNOWN.
+    only"). Argon is also absent from `geminiPriceTable`, so its cost is UNKNOWN. *(Superseded 2026-11-05: official Argon and 3.8 Flash prices are now in `geminiPriceSchedule`, §9a.)*
 18. **§7 A1/A2/A3 "wins". Decided (this definition).** Interpreted as: all gates pass, defects ≤ S0, and agreed
     judge wins strictly exceed losses. Attribution then follows the plan's text.
 19. **p50/p95 pipeline latency** are nearest-rank over *scoreable* runs. With 26 runs p95 is the
@@ -358,6 +476,43 @@ Where the plan could not be implemented literally, this is what the tools do. Ea
 22. **Pre-existing, unrelated:** `TestOrchestrator_OpenLLM_Integration` fails when `GEMINI_API_KEY`
     is set in the environment (`NewOrchestrator` creates the Gemini client whenever the env var is set, even
     for an empty key argument, so the test's "client must be nil" assertion breaks); it passes with `env -u GEMINI_API_KEY go test ./...`. Not changed here.
+
+## 5a. Phase 2 results (run 2026-11-05)
+
+**Setup.** 8 scenarios (S0, S1, S2, S4, S5, A1, A2, A3; S3 skipped) x 13 golden queries x 2 reps = 208 pipeline runs, `EVAL_NO_FALLBACK=true`, **every scenario on `12_architect_v5`** (`-architect-prompt v5`, so the prompt is not a variable between scenarios; S0 is therefore "production models + v5", not literal production). A1/A3 keep agent 2 on `gemini-3.5-flash` (Phase 1A). Scenarios ran as 8 parallel processes (sequential within each). Raw: `eval_results/phase2/full/<ID>/` (`runs.jsonl`, per-run `.html` envelope + `.calls.json`, `run_config.json`); combined `all_runs.jsonl`. Scored with `go run ./cmd/eval_checks -root eval_results/phase2/full -runs eval_results/phase2/full/all_runs.jsonl`. Smoke pass: `eval_results/phase2/smoke/`.
+
+**Integrity.** 0 calls served by a different model than requested, 0 fallbacks. All 55 integrity failures are failed calls: Acoustician truncations, 10 local-proxy connection resets (`read tcp 127.0.0.1...`; infrastructure, spread across scenarios), and 2 Architect truncations.
+
+| Scenario | Scoreable runs | p50 / p95 latency | MAX_TOKENS by agent | Gated defects (capDB / capClaim / snapped / unverified) | Cost/run (priced calls) | Cost/run if Argon = 3.1 Pro and 3.8/Lite = 3.5 Flash prices (**hypothetical**) |
+|---|--:|--:|---|---|--:|--:|
+| S0 baseline (+v5) | 18/26 | 101 / 148 s | Acoustician 5 | 0 / 0 / 0 / 0 | $0.27 | $0.27 |
+| S1 Flash tier -> 3.8 Flash | 18/26 | 138 / 173 s | Acoustician 3, **Sonic Profiler 4** | **14 / 2 / 0 / 2** (one run: Hiwatt `Watt D103 Normal` written as a capture) | $0.11 + 3.8 tokens | $0.27 |
+| S2 Pro tier -> 3.8 Flash | 15/26 | 91 / 135 s | Acoustician 9, **Architect 2** | 0 / 0 / 0 / 0 | $0.18 + 3.8 tokens | $0.24 |
+| S4 Lite on 8, 10, 11 | 19/26 | 100 / 133 s | Acoustician 6 | 0 / 0 / 0 / 0 | $0.25 + Lite tokens | $0.26 |
+| S5 Critic -> Argon | 18/26 | 94 / 155 s | Acoustician 7 | 0 / 0 / 0 / 0 | $0.25 + Argon tokens | $0.25 |
+| A1 Argon everywhere (agent 2 baseline) | **26/26** | 121 / 190 s | **none** | 0 / 0 / 0 / 0 | $0.01 + Argon tokens | $0.23 |
+| A2 Argon Pro tier | 16/26 | 116 / 169 s | Acoustician 9 | 0 / 0 / **2** / 0 (Architect named a non-existent cab "Fender 5E3 Deluxe - T8 I4 M12") | $0.18 + Argon tokens | $0.23 |
+| A3 Argon Flash tier (agent 2 baseline) | **25/26** (1 Critic connection reset) | 115 / 171 s | **none** | 0 / 1* / 0 / 0 | $0.18 + Argon tokens | $0.29 |
+
+\* A3's one capture claim is a checker false positive: the Myth Drive's rationale mentions "the neural capture's input" (the amp downstream), not itself.
+
+**Acoustician truncation by the model it ran on** (all scenarios): `gemini-3.5-flash` (served 3.6) **36 of 127 calls (28%)**, `gemini-3.8-flash` 3/22, `gemini-4-argon` **0/52**. This is the dominant cause of failed pipelines, it is about double July's rate on the same model, and it is what production runs today. The scenarios that differ from S0 only outside the Acoustician (S2, S4, S5, A2) lose runs to the same baseline Acoustician; their success-rate differences from S0 are not attributable to the scenario (e.g. S0 18/26 vs S2 15/26, Fisher exact two-sided p = 0.57, computed in this session).
+
+**v5 holds up across all 13 queries.** Under v5, the dial-format problem on amp/drive blocks appears in **1 of 155** scoreable outputs (S1, `06_Gilmour` rep1). `dial_offset_on_modeled` initially also flagged cabinet `Level` values in dB (e.g. `212 UK C30 '65 Level -2.5`); cabinets are now excluded from it because a cab Level is plausibly a genuine dB control (unverified against the QC manual).
+
+**§6.1 gates.** Read two ways: the literal rule, and attributable to the agents the scenario actually changed.
+
+| Scenario | Literal §6.1 | Attributable to the change | Notes |
+|---|---|---|---|
+| S1 | FAIL | **FAIL** | Rule 9 defect + capture claim on a modeled Hiwatt, 4 Sonic Profiler truncations on 3.8 Flash (S0: 0), 2 invented cab names |
+| S2 | FAIL | **FAIL** | 2 Architect truncations on 3.8 Flash (S0: 0; Phase 1B also saw 1); success 15 vs 18 is mostly the unchanged Acoustician |
+| S4 | FAIL (Acoustician 6 > 5) | pass | the only failing gate is the unchanged baseline Acoustician |
+| S5 | FAIL (Acoustician 7 > 5) | pass | same; the Critic itself is scored in §6.2, not here |
+| A1 | **pass** | **pass** | 26/26, no truncations, no defects |
+| A2 | FAIL | borderline | 2 snapped (invented) cab names from Argon as Architect; lower success is the unchanged Acoustician |
+| A3 | **pass** | **pass** | 25/26 (one Critic connection reset), no truncations, no real defects |
+
+**Not done yet (§6.2 quality):** the uniform re-Critic over all outputs and the two-judge pairwise comparison against S0. Gates say which scenarios are safe; they do not say which presets are better. Also, Argon cannot be adopted in production under §7 until Google publishes pricing and a non-provisional model id.
 
 ## 6. Scoring
 
@@ -420,6 +575,82 @@ deciding anything.
   needs new plumbing and a `thinking_level` probe. Treat that as a separate change.
 - **3C. Refinement path.** Re-run `cmd/eval_refine` with the winning Architect
   model, since Refinement Architect shares the `12_architect` routing key.
+
+## 9a. Production changes shipped with this eval (2026-11-05)
+
+Decided by the owner: ship as one change in PR #114; route every agent to `gemini-4-argon` or `gemini-3.8-flash` (older Flash ids are being deprecated). This overrides §7's "Argon only after pricing and a non-provisional id": pricing is now published (below); the id is still the launch id.
+
+**Routing (`agents.DefaultModelFor`).** Latency is median / 95th percentile per call, seconds (Phase 2 calls, run in parallel).
+
+| Agent | Model | Why | Argon vs 3.8 Flash latency |
+|---|---|---|---|
+| 1 Tone Historian | Argon | both clean in 1A/Phase 2; Argon is the only one that searched here (3.8 Flash: 0 of 35 calls) | 14.6/76 vs 10.4/17 (3.8 faster) |
+| 2 Sonic Profiler | **3.8 Flash** | both 26/26 after the integer-schema fix (below); 3.8 is faster | 17.2/36 vs 9.6/18 (probe) |
+| 3 Community Scraper | Argon | both clean; Argon searches more; faster | 10.1/25 vs 18.6/26 |
+| 4 CorOS Librarian | Argon | 3.8 Flash tier (S1) produced the Hiwatt-as-capture defect and invented cab names | 8.9/33 vs 26.4/37 |
+| 5 Cloud Navigator | Argon | exercised in the validation run (26/26 ok) | 3.9/10 (Argon only) |
+| 6 Acoustician | Argon | 0 runaway loops in 58+ Argon calls; Flash models loop in the rationale string | 8.2/13.5 vs 11.0/34 |
+| 7-11 | Argon | A1/A3 clean; Argon faster at the median on each | see §5a data |
+| 12 Architect (+ Refinement) | Argon, prompt v5 | A1 26/26 clean; 3.8 Flash's thinking ran away to MAX_TOKENS | 48.4/78 vs 41.5/60 (3.8 faster) |
+| 13 Critic | Argon | passes gates; its accuracy is NOT measured (it flags far less than the 3.6 Flash Critic) | 3.9/23 |
+
+Fallback chains (`getFallbackChain`) use only current models: Argon -> 3.8 Flash -> 3.1 Pro; 3.8 Flash -> Argon -> 3.1 Pro; anything else -> 3.8 Flash -> Argon. Offline tools on agents 14/15 (`cmd/enrich_captures`, `cmd/verify_user_captures`) also move to Argon via the default.
+
+**Prompt and schema fixes.**
+- `12_architect_v5` for generation and refinement (dial-format rules; §4a follow-up).
+- `6_acoustician_v4`: amp changes as 0-10 dial steps (only `input_gain_db` in dB), both pickup objects, short rationale. Schema now **requires** `humbucker` + `single_coil` and their four fields (the prompt alone did not stop omissions: 3.8 Flash 4/6, Argon 2/6). Probe after the fix: 12/12 complete, no loops.
+- `10_control_mapper_v2`: dial units, real parameter names only (no amp `Level`).
+- **Runaway truncations, root-caused from captured raw text** (`cmd/probe_agent`): (a) Acoustician: a degenerate loop inside the `rationale` string (43,675 chars ending in "...valid standard parseable JSON object baseline output format" repeated); `maxLength` is accepted by the API but **not enforced** (701-1,771-char rationales against 400), so the fixes are the prompt rule and Argon (no loops). (b) Sonic Profiler: `"suggested_low_cut_hz": 85.0000...` zeros until the cap, on number-typed fields. Whole-number fields (Sonic Profiler Hz/gate, FOH Hz) are now `INTEGER`, and the v2 fields are required: Argon 17/26 loops -> 0/26, 3.8 Flash 3/26 -> 0/26 (13 queries x 2 reps, pipeline prompt prefixes).
+
+**Grounding (why agents 1-3 rarely search).** Measured, 54 + 18 probe calls: removing the JSON schema did not increase search (2/18 vs 6/18 production config), nor did an explicit "search first" instruction (3/18). Search is the model's per-call choice: it searches when it judges its own knowledge insufficient (Community Scraper on QC-specific questions far more than Tone Historian on famous gear). The SDK (genai v1.63) exposes no way to force GoogleSearch (`ToolConfig` forcing covers function declarations only; not checked against the raw API). A required `sources` field made models **fabricate** grounding-redirect URLs on calls that did not search, so it was rejected. Argon searches far more readily than 3.8 Flash, which is one reason agents 1 and 3 are on Argon. Decision left open: whether to add our own search step (call a search API and inject results) if grounding matters for quality; not measured.
+
+**Prices (official, fetched 2026-11-05 from Google Cloud's generative AI pricing page and the Argon launch post; the ai.google.dev page is blocked here).** Per 1M tokens, standard tier, global endpoint, output includes reasoning: Argon $2/$10 through 2026-11-30, **$4/$20 from 2026-12-01**; 3.8 Flash $0.75/$3.75 through 2026-12-31, $1.50/$7.50 from 2027-01-01; 3.6 Flash same as 3.8 (our table had its post-intro rate). Google Search grounding: 5,000 queries/month free, then $14 per 1,000. Encoded as the dated `geminiPriceSchedule`; usage records now carry `groundingQueries`.
+
+**Validation of the exact production configuration** (`-scenarios PROD -allow-cloud-captures`, 13 queries x 2 reps, `EVAL_NO_FALLBACK=true`, constraints = `DefaultConstraints` + `allow_cloud_captures: true` so agent 5 is called; raw: `eval_results/phase3_prod/`):
+
+| Metric | Result | Today's production (S0, Phase 2) |
+|---|---|---|
+| Runs completed, all calls served by the requested model | **26/26** | 18/26 |
+| MAX_TOKENS (any agent) | **0** | Acoustician 5 |
+| Ground-truth defects (capture/dB/claims, snapped/unverified names) | **0** | 0 |
+| `dial_offset_on_modeled` (amp/drive dials in dB or signed) | **0** | not tracked then |
+| Pipeline latency median / p95 / max | 128 / 205 / 216 s | 101 / 148 s |
+| Cost per preset at intro / standard prices | $0.22 / **$0.44** | $0.27 |
+| Presets using a Cortex Cloud user capture | 18/26 | n/a |
+| Calls that searched | Tone Historian 4/26, Scraper 1/26, Sonic Profiler 0/26 | |
+
+Costs come from recorded tokens at the official rates. Today's figure includes partial (failed) runs, so it slightly understates a completed preset.
+
+**Trade-offs to know:** presets take ~25 s longer at the median and ~55 s longer at p95. Argon has occasional long server-side stalls on tiny responses (e.g. 85 s for a 20-token Critic reply). Its cause is not verified; plausibly preview capacity. Cost per preset rises ~60% when Argon's price doubles on 2026-12-01. The Argon Critic's accuracy, judge-scored quality (§6.2) and the refine path under v5 have not been evaluated.
+
+## 9b. Argon vs 3.8 Flash head-to-head (2026-11-05)
+
+Question: given Argon's higher cost, does it really beat 3.8 Flash? Four arms in ONE batch, same prompts/schemas as §9a, 13 queries x 2 reps, Cloud Navigator on, `EVAL_NO_FALLBACK=true`, 8 processes in parallel (so absolute latency is inflated vs §9a's 128 s; compare arms with each other). Raw: `eval_results/h2h/`. Quality scoring: `docs/eval/scripts/run_quality.sh` (each arm's own Critic notes stripped first, `cmd/eval_strip_critic`; fixed re-Critic `gemini-4-argon`; four judges with randomized A/B).
+
+| Arm | Completed | Latency median / p95 | Cost/preset intro / standard | Thinking tokens/preset | Gated defects |
+|---|--:|--:|--:|--:|---|
+| PROD (Argon; 3.8 Flash Sonic Profiler) | **26/26** | 191 / 290 s | $0.22 / $0.43 | ~950 | 1 run: Myth Drive (modeled Klon) written as a capture |
+| PROD + ThinkingLevel HIGH | **10/26** (9 Community Scraper 504 timeouts, 6 MAX_TOKENS) | 442 / 551 s | $0.28 / $0.56 | ~17,700 | 0 |
+| ALL38, ThinkingLevel LOW | **26/26** | **56 / 76 s** | **$0.07 / $0.14** | ~260 | 3 runs with invented cab names (e.g. "UK C30 64 Blue") |
+| ALL38, default thinking | 24/26 (2 Architect thinking runaways) | 142 / 190 s | $0.13 / $0.26 | ~16,000 | 0 |
+
+**Pairwise judges (each challenger vs PROD, both arms' presets complete):**
+
+| Comparison | 3.1 Pro | 3.6 Flash | Argon | 3.8 Flash | Both neutral judges agree | All four agree |
+|---|---|---|---|---|---|---|
+| ALL38-LOW vs PROD (26 pairs) | PROD 20-6 | PROD 23-3 | PROD 20-6 | PROD 17-9 | **PROD 20-3** | PROD 15-1 |
+| ALL38 vs PROD (24 pairs) | PROD 14-10 | PROD 19-5 | PROD 17-7 | PROD 17-7 | **PROD 12-3** (9 split) | PROD 8-1 |
+| PROD-HIGH vs PROD (10 pairs) | 5-5 | HIGH 5-4 (1 equal) | 5-5 | 5-5 | 4-4 | 3-2 |
+
+3.8 Flash as judge prefers Argon's presets over its own, so self-preference does not explain the result. Every verdict was served by the requested judge model. Spot-checks: "Preset B is missing its Reverb block" (05_Clapton rep2, ALL38-LOW) and "agent text mentions a delay block that is not in the payload" (02_Chicago_Blues rep1, ALL38-LOW) are both true in the files.
+
+**Re-Critic (gemini-4-argon on stripped presets):** PROD 0.12 issues/preset (3 medium), ALL38-LOW 0.65 (15 medium, 2 high). Caveats: the re-Critic is Argon scoring Argon's own writing, and it missed PROD's Myth Drive defect that the deterministic checker caught.
+
+**Why 3.8 Flash loses (measured).** Its presets are thinner: 5.7-5.9 blocks/guitar vs 6.7, a reverb on 71-73% of guitars vs 100%, and 113-118 rationale characters per block vs 187. Phase 2's mixed scenarios localise this to the **Architect**: 3.8 Flash upstream with a Pro Architect (S1) gives 6.6 blocks and 100% reverb, but a 3.8 Flash Architect (S2) gives 5.4 blocks and 60% reverb. Argon as Architect is what produces the richer rationale (A2 178, A1 186 vs Pro ~135, 3.8 ~120 chars). The 3.8 Flash Architect also has the unfixable 15,360-token thinking runaway (§4a/§9a; a thinking budget did not stop it).
+
+**Thinking on Argon:** HIGH thinking bought no judged quality (tie) and made the pipeline 2.3x slower, ~30% more expensive and unreliable (16/26 failed). Keep Argon at its default (no thinking).
+
+**Implication (untested):** 3.8 Flash at LOW thinking is 3.4x faster and 3x cheaper and was fully reliable; its weakness is the Architect role. A hybrid (Argon Architect + Critic, 3.8 Flash LOW on agents 1-11) might keep Argon's judged quality at a fraction of the latency and cost. It needs its own head-to-head before any routing change.
 
 ## 9. Rollout
 

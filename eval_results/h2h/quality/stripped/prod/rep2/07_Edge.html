@@ -1,0 +1,690 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the classic chime-driven architecture centered around a 1964 Vox AC30 Top Boost paired with 2x12 Celestion Alnico Blue speakers, preceded by a Boss CS-2, Boss FA-1 FET preamp, Ibanez TS-9, Korg SDD-3000, and Electro-Harmonix Deluxe Memory Man.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the bright cathode-biased EL84 edge-of-breakup target with a -65 dB input gate threshold, 90 Hz low-cut, 7200 Hz high-cut, and Studio Plate reverb character.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted crucial single-amp routing warnings: placing delays after the edge-of-breakup AC30 capture so dotted-eighth repeats do not mush out, and carefully managing front-end boost levels into the capture.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the hardware to Quad Cortex blocks, locking in mandatory '66 AC30 JMP Clean' and '212 UK C30 '65' alongside 'Chief CS3', 'Parametric-3', 'Iba Green', 'Dual (ST)', 'Circular Delay', and 'Studio Plate 70 (ST)'.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified block naming against available system captures and confirmed '66 AC30 JMP Clean' and 'Iba Green' as Neural Capture blocks requiring standardized relative dB parameter formatting.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation, reducing input gain by 3.0 dB and trimming bass for the warm semi-hollow Gibson ES-339 Humbuckers while boosting input gain by 2.5 dB and adding low-end warmth for the Fender Telecaster Single Coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the '212 UK C30 '65' cabinet IR block with an off-axis Dynamic 57 (8.5 kHz high-cut) and an ambient Ribbon 121 (90 Hz low-cut) at a 35% blend ratio, while keeping the block bypassed by default for the full-rig AC30 capture.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set Mix-ready frequency boundaries with global low/high cuts at 95 Hz and 7500 Hz and a -1.5 dB lane output trim to prevent digital clipping on bright chime transients.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Formulated the rhythmic 357 ms dotted-eighth delay baseline, 45% wet mix target, and a 2.8-second plate reverb decay envelope.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Assigned Scene A (Rhythm Chime) and Scene B (Lead Boost) state changes, engaging 'Iba Green' and 'Circular Delay' in Scene B while expanding delay feedback, mix, and amp capture gain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the signal chain across Lane 1 (compression, EQ preamp, drive capture, amp capture, cab) and Lane 3 (stereo dual delay, modulated delay, stereo plate reverb) for optimal CPU balance."
+  ],
+  "builder_statement": "This preset recreates the iconic 1980s rhythmic chime and edge-of-breakup sustain centered around a jumpered 1966 Vox AC30 Neural Capture ('66 AC30 JMP Clean'). A 'Chief CS3' compressor and a 'Parametric-3' block (emulating the Boss FA-1 FET and SDD-3000 preamp boost) sit in front of the amp to drive transient snap and harmonic chime, while an 'Iba Green' TS-style capture kicks in on Scene B for mid-focused lead sustain. Because we are running a single edge-of-breakup amp capture, the 'Dual (ST)' dotted-eighth/quarter delay, 'Circular Delay', and 'Studio Plate 70 (ST)' reverb are placed post-amp so the rhythmic repeats stay crisp and articulate.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Chief CS3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Sustain",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Attack",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Emulates the Boss CS-2 Compression Sustainer at the start of the chain, with slightly higher Sustain and Level for the lower-output Telecaster single coils to bring out rhythmic pick snap.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Low Gain",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Gain",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.5 dB"
+            }
+          ],
+          "rationale": "Placed pre-amp to replicate the clean FET preamp push of the Boss FA-1 and Korg SDD-3000 preamp, incorporating a +2.5 dB output boost and gentle low-end warmth tailored for the Telecaster.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Neural Capture of an Ibanez TS-9 Tube Screamer engaged in Scene B for mid-pushed lead sustain, formatted with standardized capture relative dB controls and slightly tamed Treble for single-coil balance.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "66 AC30 JMP Clean",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of a jumpered 1966 Vox AC30 combo at the edge of breakup; Bass and Gain are nudged up while Treble is trimmed by 0.5 dB so the Telecaster single coils hit the EL84 sweet spot without harshness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: 3.5 (Off-Axis), Y: 1.0 (Close), High-Cut: 8.5kHz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Body, X: 5.5 (Mid-Cone), Y: 2.5 (Ambient), Low-Cut: 90Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "40%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7200 Hz"
+            }
+          ],
+          "rationale": "2x12 Celestion Alnico Blue cabinet block pre-configured with a slightly higher 40% Ribbon 121 blend and 7200 Hz high-cut for the brighter Telecaster, kept bypassed by default to prevent double-cab filtering on the full-rig '66 AC30 JMP Clean' capture.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Dual (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time 1",
+              "type": "dropdown",
+              "value": "1/8D"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time 2",
+              "type": "dropdown",
+              "value": "1/4"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback 1",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback 2",
+              "type": "slider",
+              "value": "25%",
+              "value_b": "32%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Depth",
+              "type": "slider",
+              "value": "30%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Rate",
+              "type": "slider",
+              "value": "1.2 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            }
+          ],
+          "rationale": "Placed post-amp to preserve rhythmic definition in single-amp mode, recreating the Korg SDD-3000 and Memory Man dotted-eighth and quarter-note modulated delay lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "357 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "25%",
+              "value_b": "30%"
+            }
+          ],
+          "rationale": "Secondary ambient delay engaged in Scene B to widen the stereo field and cascade repeats during soaring lead passages.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "3.0 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "28%"
+            }
+          ],
+          "rationale": "Provides studio plate ambiance at the end of the chain, expanding in Decay and Mix on Scene B for lush arena-style sustain.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Chief CS3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Sustain",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Attack",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            }
+          ],
+          "rationale": "Emulates the Boss CS-2 Compression Sustainer with slightly faster Attack and lower Sustain/Level to accommodate the higher output of the ES-339 semi-hollow humbuckers without over-squashing transients.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Low Gain",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Models the Boss FA-1 FET and SDD-3000 preamp coloration while trimming Low Gain and Output Level to incorporate the Acoustician's humbucker input cut and prevent early EL84 saturation.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Neural Capture of an Ibanez TS-9 Tube Screamer engaged in Scene B for lead sustain, using relative dB capture controls with reduced Bass and boosted Treble to tighten the ES-339 humbuckers.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "66 AC30 JMP Clean",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of a jumpered 1966 Vox AC30 combo; Gain, Bass, and Volume are pulled back while Treble is boosted by +1.5 dB to keep the warm semi-hollow humbuckers articulate and chimey.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: 3.5 (Off-Axis), Y: 1.0 (Close), High-Cut: 8.5kHz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Body, X: 5.5 (Mid-Cone), Y: 2.5 (Ambient), Low-Cut: 90Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "2x12 Celestion Alnico Blue cabinet block configured with the Transducer Tech's 35% SM57/R121 blend and 95 Hz to 7500 Hz cuts for humbucker clarity, kept bypassed by default for the full-rig AC30 capture.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Dual (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time 1",
+              "type": "dropdown",
+              "value": "1/8D"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time 2",
+              "type": "dropdown",
+              "value": "1/4"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback 1",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback 2",
+              "type": "slider",
+              "value": "25%",
+              "value_b": "32%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Depth",
+              "type": "slider",
+              "value": "30%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Rate",
+              "type": "slider",
+              "value": "1.2 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "42%"
+            }
+          ],
+          "rationale": "Placed post-amp to preserve rhythmic definition in single-amp mode, recreating the Korg SDD-3000 and Memory Man dotted-eighth and quarter-note modulated delay lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "357 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "25%",
+              "value_b": "30%"
+            }
+          ],
+          "rationale": "Secondary ambient delay engaged in Scene B to widen the stereo field and cascade repeats during soaring lead passages.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "3.0 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "28%"
+            }
+          ],
+          "rationale": "Provides studio plate ambiance at the end of the chain, expanding in Decay and Mix on Scene B for lush arena-style sustain.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

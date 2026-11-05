@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/evalcheck"
 	"github.com/weitzer-org/sound-builder/internal/evaltestutil"
 )
@@ -13,8 +14,12 @@ import (
 const (
 	pro   = "gemini-3.1-pro-preview"
 	flash = "gemini-3.5-flash"
-	f38   = "gemini-3.8-flash"
-	lite  = "gemini-3.5-flash-lite"
+	// Stand-ins for "a model with no official price". Real candidate ids (gemini-3.8-flash,
+	// gemini-3.5-flash-lite, gemini-4-argon) gained official prices in PR #114, so the unpriced
+	// path is exercised with ids the price schedule can never contain.
+	f38   = "gemini-test-unpriced-a"
+	lite  = "gemini-test-unpriced-b"
+	argon = "gemini-test-unpriced-c"
 )
 
 var pins = map[string]string{flash: "gemini-3.6-flash"}
@@ -31,7 +36,7 @@ func smokeFixture(t *testing.T) *evalcheck.Batch {
 		"S1": evaltestutil.Routing(pro, f38, flash),
 		"S2": evaltestutil.Routing(f38, flash, flash),
 		"S4": evaltestutil.Routing(pro, flash, flash),
-		"S5": evaltestutil.Routing(pro, flash, "gemini-4-argon"),
+		"S5": evaltestutil.Routing(pro, flash, argon),
 	}
 	for _, k := range []string{"8_foh_optimizer", "10_control_mapper", "11_dsp_dispatcher"} {
 		route["S4"][k] = lite
@@ -126,8 +131,13 @@ func TestExtrapolate_PriceBasisServedUsesThe36Rate(t *testing.T) {
 			s0 = s
 		}
 	}
-	// 3.5-flash is SERVED as 3.6-flash (output $7.50/M in the table, vs $9.00 for 3.5-flash).
-	want := 2*(1000*2.0/1e6+150*12.0/1e6) + 11*(1000*1.5/1e6+150*7.5/1e6)
+	// 3.5-flash is SERVED as 3.6-flash, so the served basis prices it at 3.6's rate (dated: an
+	// introductory rate through 2026-12-31), taken from the schedule rather than hard-coded.
+	in36, out36, ok := agents.PriceFor("gemini-3.6-flash")
+	if !ok {
+		t.Fatal("gemini-3.6-flash must be priced")
+	}
+	want := 2*(1000*2.0/1e6+150*12.0/1e6) + 11*(1000*in36/1e6+150*out36/1e6)
 	if !near(s0.PerRun.KnownUSD, want) {
 		t.Errorf("served-basis S0 = %.6f, want %.6f", s0.PerRun.KnownUSD, want)
 	}
@@ -139,7 +149,7 @@ func TestRender_NeverPrintsZeroForUnpricedAndListsExclusions(t *testing.T) {
 	var buf bytes.Buffer
 	Render(&buf, ex, "B1", true, nil)
 	out := buf.String()
-	for _, want := range []string{"UNKNOWN", "LOWER BOUND", "gemini-3.8-flash", "gemini-3.5-flash-lite", "Google Search grounding", "S3", "re-derived from calls file", "skipped scenarios"} {
+	for _, want := range []string{"UNKNOWN", "LOWER BOUND", f38, lite, "Google Search grounding", "S3", "re-derived from calls file", "skipped scenarios"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("report missing %q:\n%s", want, out)
 		}

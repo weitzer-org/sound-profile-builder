@@ -8,23 +8,22 @@ import (
 	"google.golang.org/genai"
 )
 
-// fallbackChainCases is the full expected routing table (EVAL_NO_FALLBACK unset). The first
-// four rows are the existing production chains and must not change; the next four are the
-// explicit chains for models that can now be a primary; the last two are unknown models.
+// fallbackChainCases is the full expected routing table (EVAL_NO_FALLBACK unset). Since PR #114
+// production runs on gemini-4-argon / gemini-3.8-flash and every chain uses only current models;
+// unknown models get no fallback (kept from main's 5e9b2e0).
 var fallbackChainCases = map[string][]string{
-	// existing production chains -- unchanged
-	"gemini-3.1-pro-preview": {"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"},
-	"gemini-3.5-flash":       {"gemini-3-flash-preview", "gemini-2.5-pro"},
-	"gemini-3-flash-preview": {"gemini-2.5-pro"},
+	"gemini-4-argon":         {"gemini-3.8-flash", "gemini-3.1-pro-preview"},
+	"gemini-3.8-flash":       {"gemini-4-argon", "gemini-3.1-pro-preview"},
+	"gemini-3.1-pro-preview": {"gemini-4-argon", "gemini-3.8-flash"},
+	// legacy ids that may still arrive via config/TARGET_MODEL fall forward to current models
+	"gemini-3.5-flash":      {"gemini-3.8-flash", "gemini-4-argon"},
+	"gemini-3.6-flash":      {"gemini-3.8-flash", "gemini-4-argon"},
+	"gemini-3.5-flash-lite": {"gemini-3.8-flash", "gemini-4-argon"},
+	// unknown or retired: no fallback, never a guessed model
+	"gemini-3-flash-preview": nil,
 	"gemini-2.5-pro":         nil,
-	// candidate primaries
-	"gemini-4-argon":        {"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview"},
-	"gemini-3.8-flash":      {"gemini-3.5-flash", "gemini-3-flash-preview"},
-	"gemini-3.5-flash-lite": {"gemini-3.5-flash", "gemini-3-flash-preview"},
-	"gemini-3.6-flash":      {"gemini-3-flash-preview"},
-	// unknown: no fallback, never a guessed model
-	"totally-bogus-model": nil,
-	"":                    nil,
+	"totally-bogus-model":    nil,
+	"":                       nil,
 }
 
 func TestGetFallbackChain_Table(t *testing.T) {
@@ -49,8 +48,8 @@ func TestGetFallbackChain_EvalNoFallback(t *testing.T) {
 	}
 }
 
-// The unknown-model default must never name a model, and no candidate primary may be
-// slipped into a production chain as a fallback target (that decision belongs to the eval).
+// Unknown models never get a guessed fallback; no chain contains a deprecated/retired model or
+// its own primary; and every production default (DefaultModelFor) has a non-empty chain.
 func TestGetFallbackChain_Invariants(t *testing.T) {
 	t.Setenv(EvalNoFallbackEnv, "")
 	for _, m := range []string{"totally-bogus-model", "", "gemini-5-unreleased", "GEMINI-3.5-FLASH"} {
@@ -58,35 +57,17 @@ func TestGetFallbackChain_Invariants(t *testing.T) {
 			t.Errorf("unknown model %q must have no fallback, got %v", m, got)
 		}
 	}
-	candidates := []string{"gemini-4-argon", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"}
-	production := []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"}
-	for _, p := range production {
-		for _, target := range getFallbackChain(p) {
-			for _, c := range candidates {
-				if target == c {
-					t.Errorf("production chain for %q must not target candidate %q", p, c)
-				}
+	deprecated := map[string]bool{"gemini-2.5-pro": true, "gemini-3-flash-preview": true, "gemini-3.5-flash": true, "gemini-3.6-flash": true, "gemini-3.5-flash-lite": true}
+	for model := range fallbackChainCases {
+		for _, target := range getFallbackChain(model) {
+			if deprecated[target] || target == model {
+				t.Errorf("chain for %q contains %q", model, target)
 			}
 		}
 	}
-	for _, c := range candidates {
-		for _, target := range getFallbackChain(c) {
-			if target == "gemini-2.5-pro" {
-				t.Errorf("candidate %q chain must not contain %q: %v", c, target, getFallbackChain(c))
-				continue
-			}
-			// Every target must be a production-chain model (also rules out self-reference,
-			// since candidates and production are disjoint).
-			isProd := false
-			for _, p := range production {
-				if target == p {
-					isProd = true
-					break
-				}
-			}
-			if !isProd {
-				t.Errorf("candidate %q chain contains non-production target %q", c, target)
-			}
+	for _, key := range AgentRoleKeys {
+		if m := DefaultModelFor(key); len(getFallbackChain(m)) == 0 {
+			t.Errorf("production default %s for %s has no fallback chain", m, key)
 		}
 	}
 }
@@ -127,12 +108,11 @@ func TestRecordAttemptUsage_AppendsCallRecordAndFlagsUnpricedModel(t *testing.T)
 }
 
 func TestIsPriceKnown_CandidatesAreUnpricedNotFree(t *testing.T) {
-	for _, m := range []string{"gemini-4-argon", "gemini-3.8-flash", "gemini-pro-latest", "gemini-3.5-flash-lite"} {
-		if isPriceKnown(m) {
-			t.Errorf("%s must stay unpriced until an official price is added", m)
-		}
+	// gemini-pro-latest is an alias (served as gemini-3.1-pro-preview); it stays unpriced.
+	if isPriceKnown("gemini-pro-latest") {
+		t.Error("gemini-pro-latest must stay unpriced (alias)")
 	}
-	for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash"} {
+	for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-4-argon", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash"} {
 		if !isPriceKnown(m) {
 			t.Errorf("%s should be priced", m)
 		}
@@ -178,5 +158,41 @@ func TestNewCallRecord_NoCandidatesIsFailure(t *testing.T) {
 	rec := NewCallRecord("Preset Critic", "gemini-3.5-flash", 5, &genai.GenerateContentResponse{ModelVersion: "gemini-3.6-flash"}, nil)
 	if rec.Success || rec.Error == "" {
 		t.Fatalf("a response with no candidates must not read as success: %+v", rec)
+	}
+}
+
+func TestNewCallRecord_Grounded(t *testing.T) {
+	mk := func(gm *genai.GroundingMetadata) *genai.GenerateContentResponse {
+		return &genai.GenerateContentResponse{ModelVersion: "m", Candidates: []*genai.Candidate{{FinishReason: genai.FinishReasonStop, GroundingMetadata: gm}}}
+	}
+	cases := []struct {
+		name     string
+		resp     *genai.GenerateContentResponse
+		grounded bool
+		queries  int
+	}{
+		{"nil response", nil, false, 0},
+		{"no metadata (tool requested, model did not search)", mk(nil), false, 0},
+		{"empty metadata", mk(&genai.GroundingMetadata{}), false, 0},
+		{"search queries", mk(&genai.GroundingMetadata{WebSearchQueries: []string{"a", "b"}}), true, 2},
+		{"chunks only", mk(&genai.GroundingMetadata{GroundingChunks: []*genai.GroundingChunk{{}}}), true, 0},
+	}
+	for _, c := range cases {
+		rec := NewCallRecord("Tone Historian", "m", 1, c.resp, nil)
+		if rec.Grounded != c.grounded || rec.SearchQueries != c.queries {
+			t.Errorf("%s: grounded=%v queries=%d, want %v/%d", c.name, rec.Grounded, rec.SearchQueries, c.grounded, c.queries)
+		}
+	}
+}
+
+func TestBuildGenerationConfig_ThinkingLevel(t *testing.T) {
+	o := &Orchestrator{}
+	if cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect"); cfg.ThinkingConfig != nil {
+		t.Fatalf("production default must not set ThinkingConfig, got %+v", cfg.ThinkingConfig)
+	}
+	o.ThinkingLevel = genai.ThinkingLevelHigh
+	cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect")
+	if cfg.ThinkingConfig == nil || cfg.ThinkingConfig.ThinkingLevel != genai.ThinkingLevelHigh || cfg.ThinkingConfig.ThinkingBudget != nil {
+		t.Fatalf("ThinkingLevel not applied: %+v", cfg.ThinkingConfig)
 	}
 }

@@ -1,0 +1,638 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational 1968 Marshall 1959 Super Lead 100W Variac Plexi rig matched with Celestion Greenbacks, EP-3 preamp, MXR Phase 90/Flanger, and plate reverb to target Eddie Van Halen's early 'Brown Sound'.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed mid-pushed tonestack emphasis, EL34 variac voltage sag characteristics, a 95 Hz low cut to eliminate sub-cabinet flub, a 6.8 kHz high cut to tame top-end Plexi fizz, and a -58 dB noise gate threshold.",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Warned against mid-hump overdrive pedals (Tube Screamers) that thin low-end warmth, stressed power tube saturation over preamp gain, and recommended subtle off-axis Dynamic 57 positioning.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Selected mandatory native models 'Brit Plexi 100 Patch' and '412 Brit 60B GB \\'71', supplemented with 'EP3 pre (V-12 EQ-mid)' Neural Capture, 'MX Phase 95', 'MX Flanger', 'Graphic-9', 'Circular Delay', and 'Studio Plate 70 (ST)'.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified capture compatibility and aligned the block manifest with factory routing requirements.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Compensated for instrument pickup disparity by rolling bass down to 4.0 and trimming preamp volume by 0.5 on the hotter ES-339 humbuckers, while boosting Telecaster single-coil input gain, setting bass to 5.5, and pulling treble down to 4.5 to eliminate harsh single-coil bite.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured dual virtual mic placement with Dynamic 57 at Cap Edge (1.0\" distance, 15° off-axis) blended at 70% with a secondary cone-edge mic at 2.5\" distance to balance punch with diaphragm smoothness.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Implemented final high/low frequency roll-offs (80 Hz to 6.5 kHz) and set lane output trim to -2.5 dB to provide optimal console headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Master):\u003c/strong\u003e Synced post-cab Circular Delay to 310 ms with 24% wet mix and established a 2.1-second decay EMT 140 plate reverb emulation to mirror Sunset Sound acoustic space.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Configured Scene A as touch-responsive rhythm crunch and Scene B as a boosted lead scene with engaged Graphic-9 mid bump, MX Phase 95 modulation, and increased delay/reverb depth.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Constructed the 4-lane quad-path architecture: pre-effects (EP-3, Phase 95, Flanger) feeding Lane 1, Plexi and 4x12 Cab across Lane 2, post-amp Graphic-9 and Circular Delay on Lane 3, terminating into stereo Studio Plate reverb on Lane 4."
+  ],
+  "builder_statement": "Built around the legendary 1968 Super Lead 100W Variac Plexi driving Celestion G12M Greenbacks, this preset reproduces early Van Halen 'Brown Sound' dynamics. An EP-3 preamp capture and analog phaser sit pre-amp to push authentic front-end tube compression, while studio plate reverb and tape delay are isolated post-cabinet for studio-grade clarity.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "EP3 pre (V-12 EQ-mid)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Discrete Echoplex EP-3 preamp capture adds front-end harmonic warmth and provides input level compensation for lower-output Telecaster single coils.",
+          "type": "Preamp"
+        },
+        {
+          "id": "block-2",
+          "model": "MX Phase 95",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Rate",
+              "type": "slider",
+              "value": "2.8"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Depth",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Authentic script-style four-stage phaser placed before the amplifier to chew into the front-end tube compression during lead sections.",
+          "type": "Modulation"
+        },
+        {
+          "id": "block-3",
+          "model": "MX Flanger",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Rate",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Depth",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Analog BBD flanger tuned for signature EVH jet-plane sweeps, kept in bypass by default for rhythm work.",
+          "type": "Modulation"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "1968 Super Lead 100W with jumped channels. Bass is set higher and treble rolled off to prevent Telecaster bridge ice-pick harshness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 1.0 inch distance, 15 degrees off-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone edge, 2.5 inches distance, 0 degrees on-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Vintage 4x12 loaded with Celestion G12M-25 Greenbacks. Off-axis Shure SM57 placement paired with high cut attenuates piercing highs.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "800 Hz",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6 kHz",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Post-cab 6-band/9-band style EQ push emulating the MXR graphic equalizer used to punch solos through the mix.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "310 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "24%"
+            }
+          ],
+          "rationale": "Post-cab studio delay configured to standard early EVH slapback/echo timing without compounding distortion into the cranked amp section.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.1 s",
+              "value_b": "2.5 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Sunset Sound EMT 140 plate reverb emulation delivering warm studio ambience and three-dimensional decay.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "EP3 pre (V-12 EQ-mid)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Discrete Echoplex EP-3 preamp capture acting as tone conditioner; padded -3.0 dB to avoid overdriving the Plexi with hotter humbuckers.",
+          "type": "Preamp"
+        },
+        {
+          "id": "block-2",
+          "model": "MX Phase 95",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Rate",
+              "type": "slider",
+              "value": "2.8"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Depth",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Vintage-voiced phaser before the preamp section to provide the iconic chewing frequency sweep on humbucker lead lines.",
+          "type": "Modulation"
+        },
+        {
+          "id": "block-3",
+          "model": "MX Flanger",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Rate",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Depth",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Analog flanger positioned pre-gain for thick metallic jet sweeps.",
+          "type": "Modulation"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Variac-simulated Super Lead Plexi. Bass is backed off to 4.0 to stop high-output PAF humbuckers from generating low-end flub.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 1.0 inch distance, 15 degrees off-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone edge, 2.5 inches distance, 0 degrees on-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Authentic 1971 Greenback basketweave cab emulating the woody low-mid punch essential to early Van Halen records.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "800 Hz",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6 kHz",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Post-cab graphic equalizer kicking in for Scene B solos, accentuating critical midrange punch without altering preamp dirt.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "310 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "24%"
+            }
+          ],
+          "rationale": "Studio tape echo simulation seated post-cabinet to preserve pristine, uncompressed delay repeats for solo depth.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.1 s",
+              "value_b": "2.5 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Stereo plate reverb providing the characteristic early Van Halen album sheen and dimensional separation.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

@@ -87,8 +87,8 @@ func main() {
 	})
 
 	type agg struct {
-		n, parseErr, blocks, nonNum, unitB, capDB, modStyle, capClaim, critic, criticMapWrong, gear, snapped, unver int
-		critTypes                                                                                                   map[string]int
+		n, parseErr, blocks, nonNum, unitB, capDB, modStyle, capClaim, critic, criticMapWrong, gear, snapped, unver, dialOff int
+		critTypes                                                                                                            map[string]int
 	}
 	byScen := map[string]*agg{}
 	var order []string
@@ -109,6 +109,7 @@ func main() {
 		a.nonNum += r.NonNumericValues
 		a.unitB += r.UnitBearingValues
 		a.capDB += r.CaptureDBOnModeled
+		a.dialOff += r.DialOffsetOnModeled
 		a.modStyle += r.ModeledStyleOnCapture
 		a.capClaim += r.CaptureClaimOnModeled
 		a.critic += r.CriticFlags
@@ -127,11 +128,11 @@ func main() {
 	}
 	fmt.Println()
 	fmt.Println("DEFECT counters (ground-truth gated) and REFERENCE counters (ungated, not a pass/fail signal)")
-	fmt.Printf("%-24s %4s %5s | %8s %8s %9s %7s %8s | %9s %9s | %7s %6s\n",
-		"scenario", "runs", "block", "capDB/mod", "modStyle", "capClaim", "snapped", "unverif", "critic", "criticVsMap", "REF:nonNum", "REF:unit")
+	fmt.Printf("%-24s %4s %5s | %8s %8s %9s %7s %8s | %9s %9s | %7s %6s %11s\n",
+		"scenario", "runs", "block", "capDB/mod", "modStyle", "capClaim", "snapped", "unverif", "critic", "criticVsMap", "REF:nonNum", "REF:unit", "REF:dialOff")
 	for _, s := range order {
 		a := byScen[s]
-		fmt.Printf("%-24s %4d %5d | %8d %8d %9d %7d %8d | %9d %9d | %7d %6d\n", s, a.n, a.blocks, a.capDB, a.modStyle, a.capClaim, a.snapped, a.unver, a.critic, a.criticMapWrong, a.nonNum, a.unitB)
+		fmt.Printf("%-24s %4d %5d | %8d %8d %9d %7d %8d | %9d %9d | %7d %6d %11d\n", s, a.n, a.blocks, a.capDB, a.modStyle, a.capClaim, a.snapped, a.unver, a.critic, a.criticMapWrong, a.nonNum, a.unitB, a.dialOff)
 	}
 	fmt.Println("\nCritic flags by type:")
 	for _, s := range order {

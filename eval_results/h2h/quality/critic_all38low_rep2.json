@@ -1,0 +1,136 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-comp",
+        "issue": "The builder_statement claims the signal path utilizes \"front-end optical compression\", which contradicts the block model \"Solid State Comp\" (a solid-state VCA compressor rather than an optical compressor).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-comp",
+        "issue": "The builder_statement claims the signal path utilizes \"front-end optical compression\", which contradicts the block model \"Solid State Comp\" (a solid-state VCA compressor rather than an optical compressor).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-drive",
+        "issue": "The rationale claims the block is \"tuned with higher treble cut\" for humbuckers, which contradicts the Tone parameter being increased to \"5.5\" compared to the Telecaster's \"4.5\" (a higher treble boost, not a cut).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-2",
+        "issue": "The builder_statement claims \"post-amp modulation\", but block-2 (MX Phase 95) is placed in block-2 before block-4 (Brit Plexi 100 Patch) and its rationale states it is \"placed in front of the amplifier\".",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-3",
+        "issue": "The builder_statement claims \"post-amp modulation\", while block-3 (MX Flanger) is placed pre-amp before block-4 and its Bypass is set to \"On\" (inactive) across all scenes with no value_b.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The builder_statement and block rationale describe this block as \"tape delay\" and \"Tape-style studio echo\", which contradicts the assigned digital model \"Circular Delay\" (Lexicon PCM70 circular delay emulation).",
+        "severity": "high"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-2",
+        "issue": "The builder_statement claims \"post-amp modulation\", but block-2 (MX Phase 95) is placed before block-4 (Brit Plexi 100 Patch) and its rationale states it is \"dialed before the amplifier\".",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-3",
+        "issue": "The builder_statement claims \"post-amp modulation\", while block-3 (MX Flanger) is placed pre-amp before block-4 and its Bypass is permanently set to \"On\" (inactive) with no value_b.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The builder_statement and block rationale claim \"tape delay\" and \"warm tape delay\", which contradicts the assigned digital model \"Circular Delay\".",
+        "severity": "high"
+      }
+    ]
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

@@ -1,0 +1,540 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core vintage Chicago blues target around a Fender 5E3 Tweed Deluxe, an Ibanez TS808 Tube Screamer, a 1x12 Jensen P12R Alnico speaker, and a warm ribbon microphone.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the soft asymmetric tube saturation, -65 dB noise gate target, mid-pushed EQ profile, and a 100 Hz to 6000 Hz bandwidth window with live-room style ambience.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Warned against Tweed low-end flub and advised placing a Parametric EQ cut around 85-100 Hz before the amp, using transparent Vemuram Jan Ray style overdrive for rhythm, and keeping capture Gain below +3.0 dB.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the mandatory 'Fender 57 Deluxe - T8 I4 M12' and 'FNDR TWDLX IN Edge BAL CAB' blocks alongside 'Parametric-3', '1981 TS808 1', 'Vemural Ray', and 'John Mayer Spring Reverb'.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed all chosen Neural Captures and native blocks required no external substitutions.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup divergence, prescribing a -2.5 dB input trim and reduced bass for the warm Gibson ES-339 Humbuckers, and a +3.0 dB input boost with pushed mids and rolled-off treble for the Fender Telecaster Single Coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Specified a 60% blend between a Cap Edge Dynamic 57 (X: 3.5cm, Y: 1.5cm) for midrange focus and a Mid Cone Ribbon 121 (X: 6.0cm, Y: 4.0cm) for warm, woody vintage body on the cabinet block.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the final frequency boundaries between 95 Hz and 7500 Hz with a -1.5 dB lane output trim for clean live headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided ambient decay targets of 1.6 seconds and an 18% wet mix ceiling for lead lines.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A (Rhythm) around the active 'Vemural Ray' and Scene B (Lead) by engaging the '1981 TS808 1' capture and pushing the EQ, overdrive, and reverb mix.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the signal flow across Lane 1 (pre-amp EQ, dual drives, and 57 Deluxe capture) splitting into Lane 3 (Tweed cabinet and Spring Reverb to Multi-Out)."
+  ],
+  "builder_statement": "This preset recreates the woody, edge-of-breakup warmth of a vintage 1957 Fender 5E3 Tweed Deluxe recorded in a classic Chicago blues studio. It pairs a pre-amp Parametric-3 EQ to tighten the notorious Tweed low end with an always-on Vemural Ray for transparent rhythm compression in Scene A, while stacking a vintage 1981 TS808 capture in Scene B for singing lead sustain, finished with a 1x12 Jensen P12R cabinet and damped spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "-2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Peak Freq",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Peak Gain",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Placed first in the chain to apply the +3.0 dB single-coil input boost, thicken the Telecaster's midrange at 800 Hz, and prevent low-end flub before hitting the Tweed capture.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.0 dB"
+            }
+          ],
+          "rationale": "This Neural Capture of a vintage 1981 Ibanez TS808 is bypassed in Scene A and engaged in Scene B to push the Tweed Deluxe into vocal, mid-focused lead saturation while smoothing out single-coil bridge bite.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Vemural Ray",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Active in both scenes to impart warm, woody compression without modern mid-honk, dialed with fuller Bass (5.0) and rolled-off Treble (4.0) to tame Telecaster ice-pick highs.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "A Neural Capture of a 1957 Fender 5E3 Tweed Deluxe (Tone 8, Instrument 4, Mic 12); relative dB EQ boosts the mids (+2.5 dB) and trims treble (-1.5 dB) with a +0.5 dB volume offset to fatten the single coils.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge (X: 3.5cm, Y: 1.5cm) - Dynamic 57 for midrange focus and controlled low-end"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Mid Cone (X: 6.0cm, Y: 4.0cm) - Ribbon 121 for warm, woody vintage body"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Provides the authentic 1957 5E3 1x12 Jensen P12R speaker response with a 60% blend favoring the Ribbon 121 and a slightly lower 6500 Hz High Cut to smooth out single-coil top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "18%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "1.9 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3500 Hz"
+            }
+          ],
+          "rationale": "Placed at the end of Lane 3 with heavy high-frequency damping at 3500 Hz and a subtle 12% to 18% mix to emulate the warm acoustic room bleed of a 1950s studio.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "105 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-4.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Peak Freq",
+              "type": "slider",
+              "value": "850 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Peak Gain",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Placed at the start of the chain to apply the -2.5 dB humbucker input cut and a 105 Hz low cut with a -3.0 dB low-shelf reduction so the semi-hollow ES-339 neck pickup never farts out in the Tweed capture.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.0 dB"
+            }
+          ],
+          "rationale": "This Neural Capture of a 1981 Ibanez TS808 is bypassed in Scene A and engaged in Scene B to tighten the ES-339's low end (-1.0 dB Bass) and push the Tweed Deluxe into singing blues sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Vemural Ray",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Always-on transparent overdrive providing woody compression, configured with reduced Bass (3.5) and elevated Treble (5.5) to keep the semi-hollow humbuckers articulate.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "A Neural Capture of a 1957 Fender 5E3 Tweed Deluxe (Tone 8, Instrument 4, Mic 12); Bass is trimmed by -1.5 dB and Volume starts at -0.5 dB to preserve soft tube saturation with hotter humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge (X: 3.5cm, Y: 1.5cm) - Dynamic 57 for midrange focus and controlled low-end"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Mid Cone (X: 6.0cm, Y: 4.0cm) - Ribbon 121 for warm, woody vintage body"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "Delivers the 1x12 Jensen P12R speaker character with a 60% blend between Dynamic 57 and Ribbon 121 mics, using a 100 Hz Low Cut and 7500 Hz High Cut to keep the ES-339 open and tight.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "18%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "1.9 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3500 Hz"
+            }
+          ],
+          "rationale": "Adds vintage 1950s live room depth at the end of the chain with a 3500 Hz high-end rolloff and an expanding wet mix from 12% in Rhythm to 18% in Lead.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

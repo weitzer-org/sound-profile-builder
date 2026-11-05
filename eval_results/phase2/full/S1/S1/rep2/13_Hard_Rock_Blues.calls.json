@@ -1,0 +1,39 @@
+[
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-3.1-pro-preview",
+    "served_model": "gemini-3.1-pro-preview",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 335,
+    "output_tokens": 120,
+    "thinking_tokens": 734,
+    "latency_ms": 8167,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1489,
+    "output_tokens": 311,
+    "thinking_tokens": 1486,
+    "latency_ms": 20879,
+    "grounded": false
+  },
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[Sonic Profiler] response truncated at the MaxOutputTokens limit (model gemini-3.8-flash) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 1664,
+    "output_tokens": 3059,
+    "thinking_tokens": 932,
+    "latency_ms": 26472,
+    "grounded": false
+  }
+]

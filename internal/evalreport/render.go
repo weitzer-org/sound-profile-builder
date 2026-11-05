@@ -65,7 +65,7 @@ func (r *Report) Render(w io.Writer) {
 	} else {
 		fmt.Fprintf(w, "batch %s%s; baseline %s; every scenario is compared only with this batch's %s\n", r.BatchID, map[bool]string{true: " (SMOKE: 1 query x 1 rep, not a basis for decisions)", false: ""}[r.Smoke], r.BaselineID, r.BaselineID)
 	}
-	fmt.Fprintf(w, "cost basis: price by %s model id; prices are the repo's geminiPriceTable, not independently verified\n\n", r.Options.Basis)
+	fmt.Fprintf(w, "cost basis: price by %s model id; prices are the repo's geminiPriceSchedule, not independently verified\n\n", r.Options.Basis)
 
 	fmt.Fprintln(w, "PRECONDITIONS (a comparison is meaningless unless these hold)")
 	blocked := false

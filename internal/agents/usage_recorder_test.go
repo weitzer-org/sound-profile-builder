@@ -252,3 +252,39 @@ func TestRecordAttemptUsage_Failure(t *testing.T) {
 		t.Errorf("expected zero tokens/cost on failure, got %+v", rec)
 	}
 }
+
+// Prices from Google Cloud's pricing page (2026-11-05): introductory windows end on fixed dates.
+func TestPriceSchedule_IntroductoryWindows(t *testing.T) {
+	cases := []struct {
+		model   string
+		at      time.Time
+		in, out float64
+	}{
+		{"gemini-4-argon", day(2026, time.November, 5), 2.00, 10.00},
+		{"gemini-4-argon", day(2026, time.November, 30).Add(23 * time.Hour), 2.00, 10.00},
+		{"gemini-4-argon", day(2026, time.December, 1), 4.00, 20.00},
+		{"gemini-3.8-flash", day(2026, time.December, 31), 0.75, 3.75},
+		{"gemini-3.8-flash", day(2027, time.January, 1), 1.50, 7.50},
+		{"gemini-3.6-flash", day(2026, time.November, 5), 0.75, 3.75},
+		{"gemini-3.5-flash-lite", day(2026, time.November, 5), 0.30, 2.50},
+	}
+	for _, c := range cases {
+		p, ok := priceAt(c.model, c.at)
+		if !ok || p.input != c.in || p.output != c.out {
+			t.Errorf("priceAt(%s, %s) = %+v %v, want %v/%v", c.model, c.at.Format("2006-01-02T15"), p, ok, c.in, c.out)
+		}
+	}
+	// 1M in + 1M out + 1M thinking on Argon after Dec 1: 4 + 20 + 20.
+	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.December, 2), 1_000_000, 1_000_000, 1_000_000); got != 44 {
+		t.Errorf("Argon standard cost = %v, want 44", got)
+	}
+}
+
+func TestComputeCostUSD_UsesNow(t *testing.T) {
+	old := nowFunc
+	defer func() { nowFunc = old }()
+	nowFunc = func() time.Time { return day(2027, time.February, 1) }
+	if got := computeCostUSD("gemini-3.8-flash", 1_000_000, 0, 0); got != 1.50 {
+		t.Errorf("3.8 Flash input after the intro window = %v, want 1.50", got)
+	}
+}

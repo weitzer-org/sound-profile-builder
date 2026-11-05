@@ -1,0 +1,20 @@
+[
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

@@ -24,6 +24,13 @@ type criticResponse struct {
 
 const criticIssueNotePrefix = "⚠️ Critic: "
 
+// ApplyCriticFindings is the exported form of applyCriticFindings, for eval tooling that runs
+// the Architect and Critic outside RunPipeline (cmd/eval_architect) and must apply the Critic
+// exactly as production does.
+func ApplyCriticFindings(raw string, criticRaw string) string {
+	return applyCriticFindings(raw, criticRaw)
+}
+
 // applyCriticFindings parses the Preset Critic's raw JSON response and appends each flagged
 // issue to the matching block's Rationale in the Architect's own raw JSON, via the same
 // envelope-parse/re-marshal pattern injectRenderedHTML uses. Must run BEFORE

@@ -79,6 +79,13 @@ func agentMaxOutputTokens(key string) int32 {
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }
 
+// No per-agent thinking budget: one was tried for 12_architect (8192) to stop gemini-3.8-flash's
+// thinking consuming the 16,000-token cap, and VERIFIED NOT TO WORK (2026-11-05,
+// eval_results/phase1/architect_budget/flash38): 1 of 15 calls still spent 15,361 tokens thinking
+// and truncated (09_BB_King, the same 15,359-15,361 signature as the Phase 2 failures), although a
+// 512 budget did reduce thinking to 0. Production routes the Architect to gemini-4-argon, which
+// does not think at default settings, so this only matters on the 3.8 Flash fallback path.
+
 // agentSearchTool returns the Google Search grounding tool for agents whose prompts are
 // written as if they already have live search access. Tier 0 wired this for the two
 // research agents (Tone Historian, Community Scraper); Tier 1 extends it to Sonic
@@ -117,6 +124,35 @@ func strSchema(desc string) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeString, Description: desc}
 }
 
+// acousticianRationaleMaxLen bounds the Acoustician's free-text rationale. Its truncations
+// (MAX_TOKENS at the 8,000 cap, ~28% of gemini-3.5-flash calls in the Phase 2 eval) were a
+// degenerate loop inside this one string: a probe captured 43,675 characters of filler ending in
+// "...valid standard parseable JSON object baseline output format" repeated (see
+// docs/eval/gemini-model-upgrade-test-plan.md). Normal rationales are well under 300 characters.
+const acousticianRationaleMaxLen = 400
+
+// acousticianPickupRequired are the fields every per-pickup Acoustician object must carry. Without
+// them, models routinely dropped amp_vol_offset (most calls in the 2026-11-05 probe).
+var acousticianPickupRequired = []string{"input_gain_db", "amp_vol_offset", "eq_params", "rationale"}
+
+// boundedStrSchema is a string with a maxLength hint. VERIFIED 2026-11-05 (cmd/probe_agent,
+// eval_results/probe_agent/acoustician_v3_maxlen): the Gemini API ACCEPTS maxLength but does NOT
+// enforce it while decoding -- rationales of 701-1,771 chars came back against a 400 limit and one
+// call still looped to MAX_TOKENS. It is kept only as a hint; the real mitigations for the loop are
+// the v4 prompt's length rule and routing the Acoustician to gemini-4-argon (0 loops in 58 calls).
+func boundedStrSchema(desc string, maxLen int64) *genai.Schema {
+	return &genai.Schema{Type: genai.TypeString, Description: desc, MaxLength: &maxLen}
+}
+
+// intSchema is for whole-number fields (Hz, gate threshold). VERIFIED 2026-11-05
+// (cmd/probe_agent, eval_results/probe_agent/sonic_*): with these typed as TypeNumber, Sonic
+// Profiler responses that hit MAX_TOKENS were all one pattern -- "suggested_low_cut_hz":
+// 85.000000... with zeros until the cap (gemini-4-argon 17/26, gemini-3.8-flash 2-3/26). An
+// integer type leaves no decimal places to expand.
+func intSchema(desc string) *genai.Schema {
+	return &genai.Schema{Type: genai.TypeInteger, Description: desc}
+}
+
 func numSchema(desc string) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeNumber, Description: desc}
 }
@@ -152,14 +188,14 @@ func agentResponseSchema(key string) *genai.Schema {
 
 	case "2_sonic_profiler":
 		return objSchema(map[string]*genai.Schema{
-			"peak_freq_hz":          numSchema("v1 field: the single dominant peak frequency in Hz."),
+			"peak_freq_hz":          intSchema("v1 field: the single dominant peak frequency in Hz."),
 			"eq_profile":            {Type: genai.TypeString, Enum: []string{"scooped", "mid_pushed", "flat", "bright", "dark"}, Description: "v2 field: overall EQ shape."},
-			"suggested_low_cut_hz":  numSchema("v2 field: high-pass point, typically 80-120Hz, never above 200Hz."),
-			"suggested_high_cut_hz": numSchema("v2 field: low-pass point, never below 5000Hz."),
+			"suggested_low_cut_hz":  intSchema("v2 field: high-pass point, typically 80-120Hz, never above 200Hz."),
+			"suggested_high_cut_hz": intSchema("v2 field: low-pass point, never below 5000Hz."),
 			"saturation_style":      strSchema("Style of overdrive/saturation, e.g. asymmetric clipping, tape saturation, hard clipping."),
 			"reverb_type":           strSchema("Characteristic reverb space for this tone."),
-			"noise_gate_target_db":  numSchema("Global input gate threshold in dB (-65 for single coils, -55 to -60 for humbuckers/high gain)."),
-		}, []string{"saturation_style", "reverb_type", "noise_gate_target_db"})
+			"noise_gate_target_db":  intSchema("Global input gate threshold in dB (-65 for single coils, -55 to -60 for humbuckers/high gain)."),
+		}, []string{"saturation_style", "reverb_type", "noise_gate_target_db", "eq_profile", "suggested_low_cut_hz", "suggested_high_cut_hz"}) // v2+ fields required since 2026-11-05: gemini-4-argon omitted suggested_high_cut_hz in about half of its probe calls. Production routes v4 (a v2-family prompt); the v1 prompt is unused.
 
 	case "3_community_scraper":
 		return objSchema(map[string]*genai.Schema{
@@ -204,21 +240,21 @@ func agentResponseSchema(key string) *genai.Schema {
 			// v2 (per-pickup-type) fields:
 			"humbucker": objSchema(map[string]*genai.Schema{
 				"input_gain_db":  numSchema(""),
-				"amp_vol_offset": numSchema(""),
+				"amp_vol_offset": numSchema("Change to the amp Volume dial in 0-10 dial steps (e.g. -1.0 = one step lower). Not decibels."),
 				"eq_params": objSchema(map[string]*genai.Schema{
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
-				"rationale": strSchema("Why gain/EQ were adjusted this way for humbuckers."),
-			}, nil),
+				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for humbuckers. One or two short sentences.", acousticianRationaleMaxLen),
+			}, acousticianPickupRequired),
 			"single_coil": objSchema(map[string]*genai.Schema{
 				"input_gain_db":  numSchema(""),
-				"amp_vol_offset": numSchema(""),
+				"amp_vol_offset": numSchema("Change to the amp Volume dial in 0-10 dial steps (e.g. -1.0 = one step lower). Not decibels."),
 				"eq_params": objSchema(map[string]*genai.Schema{
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
-				"rationale": strSchema("Why gain/EQ were adjusted this way for single coils."),
-			}, nil),
-		}, nil) // v1 and v2 share no common field name, so nothing can be marked required here; the active prompt's instructions drive which shape is actually used.
+				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for single coils. One or two short sentences.", acousticianRationaleMaxLen),
+			}, acousticianPickupRequired),
+		}, []string{"humbucker", "single_coil"}) // Required since 2026-11-05: the prompt alone ("MUST output BOTH") did not stop models omitting single_coil (3.8 Flash 4/6, Argon 2/6 in the probe), and every downstream preset has one guitar of each kind. The flat v1 fields stay optional; the v1 prompt is not used in production (config.json routes v4).
 
 	case "7_transducer_tech":
 		return objSchema(map[string]*genai.Schema{
@@ -230,7 +266,7 @@ func agentResponseSchema(key string) *genai.Schema {
 	case "8_foh_optimizer":
 		return objSchema(map[string]*genai.Schema{
 			"global_eq_cuts": objSchema(map[string]*genai.Schema{
-				"hz_start": numSchema(""), "hz_end": numSchema(""),
+				"hz_start": intSchema(""), "hz_end": intSchema(""),
 			}, []string{"hz_start", "hz_end"}),
 			"lane_output_db": numSchema("Lane output level compensation in dB."),
 		}, []string{"global_eq_cuts", "lane_output_db"})
