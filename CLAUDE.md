@@ -111,6 +111,20 @@ set it will cause the next run to needlessly re-research that entry.
   - Plugin gating uses the catalog's `plugin_id` through `internal/catalog/plugins.go`'s table
     (short names as in `config.json`'s `available_plugins`). A new `plugin_id` after a CorOS update
     fails `TestPluginNamesCoverCatalog`; until it's added, that plugin's devices are never offered.
+  - **Architect parameters** (`internal/agents/catalog_params.go`). For an Architect prompt of v5 or
+    later, the Architect's context gets the chosen blocks' real parameters (names, ranges, defaults,
+    switch positions; from the Librarian's picks in generate, the preset's blocks in refine) and the
+    real effect names for Rule 3 swaps. v4 and older get none of it, so v4 stays a like-for-like
+    baseline. `qc_block_schema.json` is still injected for blocks the catalog doesn't cover.
+  - **Parameter check.** `FlagCatalogParamMismatches` runs on every generate/refine (last, after
+    `FlagUnverifiedStructuredBlocks`) and in `RunMechanicalQualityChecks`. It notes in Rationale, never
+    Value: unknown parameter names, values out of a known range, bad switch positions, contradicting
+    units, and `confirmed_range` on an unknown range. `Bypass` is always allowed; on cabs `Mic 1`/`Mic 2`
+    (the mic model) are allowed and `Blend` is counted separately (the device sets each mic's LEVEL).
+    Names compare ignoring case, spaces and inter-letter hyphens, plus a few aliases (Time, Low/High Cut).
+  - **Don't guess display scales.** The check skips pans (L/R labels), unitless 0..1 floats and symbolic
+    bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
+    as the catalog gives them, which matches how presets already write them (not verified on a device).
 
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
