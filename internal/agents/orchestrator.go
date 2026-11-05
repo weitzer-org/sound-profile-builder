@@ -1136,6 +1136,9 @@ func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.Gener
 	}
 	if o.ThinkingBudget != nil || o.ThinkingLevel != "" {
 		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingBudget: o.ThinkingBudget, ThinkingLevel: o.ThinkingLevel}
+	} else if b := agentThinkingBudget(key); b != nil {
+		// Per-agent ceiling, only when no orchestrator-wide thinking setting is in force.
+		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingBudget: b}
 	}
 	if key == "12_architect" {
 		cfg.ResponseMIMEType = "application/json"

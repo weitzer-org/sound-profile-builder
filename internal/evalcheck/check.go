@@ -195,6 +195,15 @@ func claimsCapture(prose string) bool {
 
 // splitCriticNotes separates a rationale into the Architect's own prose and the appended
 // "⚠️ Critic: ..." notes. Other "⚠️ Verify" warnings are dropped from both.
+// StripCriticNotes returns rationale without the Preset Critic's appended "⚠️ Critic:" notes (and
+// injected "⚠️ Verify" warnings), keeping the model's own prose. Used to prepare outputs for
+// quality judging: each scenario's own Critic would otherwise label its presets, and a quieter
+// Critic would make its presets look cleaner to the judge.
+func StripCriticNotes(rationale string) string {
+	prose, _ := splitCriticNotes(rationale)
+	return prose
+}
+
 func splitCriticNotes(rationale string) (prose string, criticNotes []string) {
 	parts := strings.Split(rationale, "⚠️")
 	var pb strings.Builder

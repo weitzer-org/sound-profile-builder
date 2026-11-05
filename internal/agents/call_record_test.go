@@ -164,8 +164,11 @@ func TestNewCallRecord_Grounded(t *testing.T) {
 
 func TestBuildGenerationConfig_ThinkingLevel(t *testing.T) {
 	o := &Orchestrator{}
-	if cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect"); cfg.ThinkingConfig != nil {
-		t.Fatalf("production default must not set ThinkingConfig, got %+v", cfg.ThinkingConfig)
+	if cfg := o.buildGenerationConfig("Tone Historian", "1_tone_historian"); cfg.ThinkingConfig != nil {
+		t.Fatalf("production default must not set ThinkingConfig on agents without a budget, got %+v", cfg.ThinkingConfig)
+	}
+	if cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect"); cfg.ThinkingConfig == nil || cfg.ThinkingConfig.ThinkingBudget == nil || *cfg.ThinkingConfig.ThinkingBudget != 8192 {
+		t.Fatalf("Architect must carry its 8192 thinking budget by default, got %+v", cfg.ThinkingConfig)
 	}
 	o.ThinkingLevel = genai.ThinkingLevelHigh
 	cfg := o.buildGenerationConfig("Architect & Evaluator", "12_architect")

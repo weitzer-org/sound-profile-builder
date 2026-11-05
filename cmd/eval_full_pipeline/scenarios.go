@@ -123,13 +123,22 @@ func ProductionScenario() Scenario {
 	return Scenario{ID: "PROD", Label: "Production defaults (agents.DefaultModelFor)", AgentModels: m, Pins: map[string]string{modelFlashBaseline: flashBaselineServed}}
 }
 
+// All38Scenario routes every agent to gemini-3.8-flash: the head-to-head counterpart of PROD.
+func All38Scenario() Scenario {
+	m := map[string]string{}
+	for _, k := range append(append(append([]string{}, proTierKeys...), flashTierKeys...), criticKey) {
+		m[k] = modelFlash38
+	}
+	return Scenario{ID: "ALL38", Label: "Every agent on gemini-3.8-flash", AgentModels: m, Pins: map[string]string{modelFlashBaseline: flashBaselineServed}}
+}
+
 // SelectScenarios filters by comma-separated IDs (empty = all, in plan order). Unknown IDs are an error.
 func SelectScenarios(all []Scenario, ids string) ([]Scenario, error) {
 	ids = strings.TrimSpace(ids)
 	if ids == "" || strings.EqualFold(ids, "all") {
 		return all, nil
 	}
-	byID := map[string]Scenario{"PROD": ProductionScenario()}
+	byID := map[string]Scenario{"PROD": ProductionScenario(), "ALL38": All38Scenario()}
 	for _, s := range all {
 		byID[strings.ToUpper(s.ID)] = s
 	}
