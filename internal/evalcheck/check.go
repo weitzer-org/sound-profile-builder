@@ -122,7 +122,9 @@ func Check(envelopeJSON string, validBlocks map[string]bool) Report {
 						}
 					}
 				}
-				if known && !isCap && agents.IsCaptureEligibleBlockType(b.Type) && dialParamNames[strings.ToLower(strings.TrimSpace(p.Name))] && p.Type == "slider" {
+				// Cabinets are excluded: a cab's Level is plausibly a genuine dB output control
+				// (unverified against the QC manual), and every cab hit in Phase 2 was that pattern.
+				if known && !isCap && agents.IsCaptureEligibleBlockType(b.Type) && !strings.Contains(strings.ToLower(b.Type), "cab") && dialParamNames[strings.ToLower(strings.TrimSpace(p.Name))] && p.Type == "slider" {
 					for _, v := range []string{p.Value, p.ValueB} {
 						if v = strings.TrimSpace(v); v != "" && (agents.IsRelativeDB(v) || signedNumber.MatchString(v)) {
 							r.DialOffsetOnModeled++
