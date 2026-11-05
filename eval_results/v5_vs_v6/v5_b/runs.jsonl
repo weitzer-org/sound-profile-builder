@@ -1,1 +1,2 @@
 {"scenario":"PROD","query":"08_EVH","rep":1,"success":true,"output_file":"eval_results/v5_vs_v6/v5_b/PROD/rep1/08_EVH.html","latency_sec":179.996794837,"integrity_ok":true,"calls_file":"eval_results/v5_vs_v6/v5_b/PROD/rep1/08_EVH.calls.json","batch_id":"20261105T154717Z"}
+{"scenario":"PROD","query":"09_BB_King","rep":1,"success":true,"output_file":"eval_results/v5_vs_v6/v5_b/PROD/rep1/09_BB_King.html","latency_sec":114.966873189,"integrity_ok":true,"calls_file":"eval_results/v5_vs_v6/v5_b/PROD/rep1/09_BB_King.calls.json","batch_id":"20261105T154717Z"}
