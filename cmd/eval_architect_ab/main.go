@@ -185,15 +185,27 @@ func runOnce(ctx context.Context, apiKey string, cfg *config.AppConfig, arm, que
 	return line
 }
 
+// reportColumns is the number of averaged columns in the report table, after Arm and OK/Runs.
+const reportColumns = 17
+
+// reportValues is one run's values for the report table's averaged columns, in order.
+func reportValues(l runLine) [reportColumns]int {
+	r := l.Report
+	return [reportColumns]int{r.TotalDefects(), r.UnverifiedBlocks, r.CaptureFormattingMismatches, r.IncompleteCabinetBlocks,
+		r.LeftoverValueRanges, r.CriticIssues, r.Catalog.UnknownNames, r.Catalog.OutOfRange, r.Catalog.BadSwitchValues,
+		r.Catalog.UnitMismatches, r.Catalog.BasisOverclaims, r.Catalog.UnrecognizedBlocks, r.Catalog.CabConvention,
+		r.Catalog.UnconsideredParams, r.Catalog.CheckedBlocks, int(l.InputTokens), int(l.OutputTokens + l.ThinkingTokens)}
+}
+
 // renderReport averages each arm over its successful, parsed runs.
 func renderReport(lines []runLine, arms []string) string {
 	var sb strings.Builder
 	sb.WriteString("# Architect A/B\n\nAverages per successful run (lower is better). Device* columns are the catalog parameter check; CabConv counts v4-style Blend on cabs.\n\n")
-	sb.WriteString("| Arm | OK/Runs | Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | DevUnknownName | DevRange | DevSwitch | DevUnit | DevBasis | CabConv | Unconsidered | Checked blocks | In tok | Out+think tok |\n")
-	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+	sb.WriteString("| Arm | OK/Runs | Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | DevUnknownName | DevRange | DevSwitch | DevUnit | DevBasis | DevUnrecognized | CabConv | Unconsidered | Checked blocks | In tok | Out+think tok |\n")
+	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, arm := range arms {
 		var ok, runs int
-		var sum [17]float64
+		var sum [reportColumns]float64
 		for _, l := range lines {
 			if l.Arm != arm {
 				continue
@@ -203,16 +215,12 @@ func renderReport(lines []runLine, arms []string) string {
 				continue
 			}
 			ok++
-			r := l.Report
-			for i, v := range []int{r.TotalDefects(), r.UnverifiedBlocks, r.CaptureFormattingMismatches, r.IncompleteCabinetBlocks,
-				r.LeftoverValueRanges, r.CriticIssues, r.Catalog.UnknownNames, r.Catalog.OutOfRange, r.Catalog.BadSwitchValues,
-				r.Catalog.UnitMismatches, r.Catalog.BasisOverclaims, r.Catalog.CabConvention, r.Catalog.UnconsideredParams, r.Catalog.CheckedBlocks,
-				int(l.InputTokens), int(l.OutputTokens + l.ThinkingTokens)} {
+			for i, v := range reportValues(l) {
 				sum[i] += float64(v)
 			}
 		}
 		fmt.Fprintf(&sb, "| %s | %d/%d |", arm, ok, runs)
-		for i := 0; i < 16; i++ {
+		for i := range sum {
 			if ok == 0 {
 				sb.WriteString(" - |")
 				continue
