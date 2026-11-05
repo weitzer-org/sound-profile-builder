@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 61 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 63 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -123,7 +123,7 @@ Pick an empty slot (G0 lists the first ten) and **leave it empty**. In the comma
    & $PY "$S\g3_build_and_save.py" --slot 24H --firmware 4.1.0 --apply
    ```
    Then select another preset on the unit to discard, and re-select the empty slot.
-4. Build and save. You must type the slot label to confirm:
+4. Build and save. You must type the slot label to confirm. It then re-lists the directory up to 6 times, 6 s apart, because on the first hardware run a listing 3 s after the save still showed the slot blank:
    ```powershell
    & $PY "$S\g3_build_and_save.py" --slot 24H --firmware 4.1.0 --apply --save
    ```

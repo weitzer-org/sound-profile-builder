@@ -34,6 +34,8 @@ import test_preset as tp
 
 TOL = 1e-4
 PACE = 0.15
+LIST_POLL_S = 6.0   # first hardware run: a single listing 3 s after the save still showed the slot blank
+LIST_POLLS = 6
 
 
 def preflight(qc, args, mcp, xml_models, result) -> tuple[int, dict]:
@@ -187,7 +189,6 @@ def main() -> int:
         apply_preset(qc, result)
         sc.say("\nRead-back and diff:")
         ok = read_back(qc, result)
-        result["write_errors_during_apply"] = result.get("write_errors_during_apply")
         if result["write_errors_during_apply"]:
             sc.say(f"  note: the transport counted {result['write_errors_during_apply']} non-benign write codes "
                    f"(last={result['last_write_error']}); audit 1.5 says this can be benign on Windows, but record it.")
@@ -218,10 +219,19 @@ def main() -> int:
             raise sc.SpikeRefused(f"open slot changed to {cur}. Not saving.")
         qc.write_preset_file(args.folder_key, pos, args.name)
         result["save_issued"] = True
-        sc.say("Save issued (File CREATE). Waiting, then re-listing to confirm...")
-        time.sleep(3.0)
-        folder2 = sc.find_folder(qc.list_directory(), args.folder_key)
-        landed = folder2 is not None and (sc.slot_entry(folder2, pos).get("name") or "") == args.name
+        sc.say(f"Save issued (File CREATE). Re-listing every {LIST_POLL_S:.0f}s (up to {LIST_POLLS} times) to confirm...")
+        landed, folder2, polls = False, None, []
+        t_save = time.monotonic()
+        for attempt in range(1, LIST_POLLS + 1):
+            time.sleep(LIST_POLL_S)
+            folder2 = sc.find_folder(qc.list_directory(), args.folder_key)
+            name_now = (sc.slot_entry(folder2, pos).get("name") or "") if folder2 else None
+            landed = name_now == args.name
+            polls.append({"attempt": attempt, "seconds_after_save": round(time.monotonic() - t_save, 1), "name": name_now})
+            sc.say(f"  listing {attempt}/{LIST_POLLS}: slot {sc.slot_label(pos)} = {name_now!r}")
+            if landed:
+                break
+        result["listing_polls"] = polls
         result["save_landed"] = landed
         result["slot_after"] = sc.slot_entry(folder2, pos) if folder2 else None
         result["verdict"] = "SAVED_AND_LISTED" if landed else "SAVE_NOT_SEEN_IN_LISTING"

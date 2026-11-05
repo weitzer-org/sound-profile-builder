@@ -478,6 +478,44 @@ class G3Tests(FakeDeviceCase):
         saves = [c for c in qc.calls if c[0] == "write_preset_file"]
         self.assertEqual(saves, [("write_preset_file", sc.SETLIST, self.SLOT, tp.TEST_PRESET_NAME)])
 
+    def test_save_confirmed_even_when_listing_lags(self):
+        # Real unit: the listing taken 3 s after the save still showed the slot blank.
+        qc = self.new()
+        real_write = qc.write_preset_file
+        state = {"lists_after_save": 0, "saved": False}
+
+        def write(folder_key, position, name, binary_preset=None):
+            real_write(folder_key, position, name)
+            state["saved"] = True
+            qc.hidden = qc.library.pop(position)       # the directory doesn't show it yet
+        qc.write_preset_file = write
+        real_list = qc.list_directory
+
+        def lagging(*a, **k):
+            if state["saved"]:
+                state["lists_after_save"] += 1
+                if state["lists_after_save"] == 3:     # appears on the third listing
+                    qc.library[sc.parse_slot("24H")] = qc.hidden
+            return real_list(*a, **k)
+        qc.list_directory = lagging
+        code, out, data = self.run_script("g3_build_and_save", self.ARGS + ["--apply", "--save"], qc, stdin=["24H"])
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(data["verdict"], "SAVED_AND_LISTED")
+        self.assertEqual([p["name"] for p in data["listing_polls"]], ["", "", tp.TEST_PRESET_NAME])
+
+    def test_save_not_seen_after_all_polls_is_inconclusive(self):
+        qc = self.new()
+        real_write = qc.write_preset_file
+
+        def write(folder_key, position, name, binary_preset=None):
+            real_write(folder_key, position, name)
+            qc.library.pop(position)                   # never shows up
+        qc.write_preset_file = write
+        code, out, data = self.run_script("g3_build_and_save", self.ARGS + ["--apply", "--save"], qc, stdin=["24H"])
+        self.assertEqual(code, sc.EXIT_CHECK_FAILED, out)
+        self.assertEqual(data["verdict"], "SAVE_NOT_SEEN_IN_LISTING")
+        self.assertEqual(len(data["listing_polls"]), 6)
+
     def test_save_aborts_if_slot_filled_meanwhile(self):
         qc = self.new()
         real = qc.list_directory
