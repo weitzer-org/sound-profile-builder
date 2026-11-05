@@ -1,0 +1,147 @@
+[
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 752,
+    "output_tokens": 343,
+    "latency_ms": 9526,
+    "grounded": false
+  },
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1682,
+    "output_tokens": 94,
+    "thinking_tokens": 1248,
+    "latency_ms": 13604,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 860,
+    "output_tokens": 285,
+    "latency_ms": 20083,
+    "grounded": false
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 31581,
+    "output_tokens": 397,
+    "latency_ms": 9500,
+    "grounded": false
+  },
+  {
+    "agent": "Cloud Navigator",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 4650,
+    "output_tokens": 20,
+    "latency_ms": 50523,
+    "grounded": false
+  },
+  {
+    "agent": "Transducer Tech",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 772,
+    "output_tokens": 116,
+    "latency_ms": 4210,
+    "grounded": false
+  },
+  {
+    "agent": "Acoustician",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 3236,
+    "output_tokens": 308,
+    "latency_ms": 6795,
+    "grounded": false
+  },
+  {
+    "agent": "FOH Optimizer",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 452,
+    "output_tokens": 49,
+    "latency_ms": 7589,
+    "grounded": false
+  },
+  {
+    "agent": "Mix Engineer",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 509,
+    "output_tokens": 48,
+    "latency_ms": 2846,
+    "grounded": false
+  },
+  {
+    "agent": "DSP Dispatcher",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 765,
+    "output_tokens": 156,
+    "latency_ms": 7582,
+    "grounded": false
+  },
+  {
+    "agent": "Control Mapper",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1515,
+    "output_tokens": 831,
+    "latency_ms": 8396,
+    "grounded": false
+  },
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 9334,
+    "output_tokens": 7238,
+    "thinking_tokens": 654,
+    "latency_ms": 74152,
+    "grounded": false
+  },
+  {
+    "agent": "Preset Critic",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 8185,
+    "output_tokens": 20,
+    "latency_ms": 4159,
+    "grounded": false
+  }
+]

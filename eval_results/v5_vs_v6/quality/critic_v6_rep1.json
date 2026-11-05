@@ -1,0 +1,93 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-5",
+        "issue": "The rationale claims \"an active 6800 Hz high shelf trim to prevent harshness,\" but \"8 BYPASS\" is set to \"1\" (On/bypassed) and \"8 GAIN\" is kept at its default (0.0 dB), meaning band 8 is inactive and applies no trim.",
+        "severity": "high"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale claims the block is set to \"enforce the FOH 95 Hz–7500 Hz mix boundaries,\" but \"8 BYPASS\" (for \"8 FREQ\" at \"7500 Hz\") is set to \"1\" (On/bypassed) with \"8 GAIN\" kept at default, rendering the 7500 Hz boundary band inactive.",
+        "severity": "high"
+      }
+    ]
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

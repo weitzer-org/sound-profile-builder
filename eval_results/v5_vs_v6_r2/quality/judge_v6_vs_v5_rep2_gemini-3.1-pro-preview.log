@@ -1,0 +1,96 @@
+2026/11/05 18:12:58 judge model: gemini-3.1-pro-preview
+2026/11/05 18:13:23 ⚖️ 01_SRV_Clean -> v6 (conf 0.95)
+2026/11/05 18:13:43 ⚖️ 02_Chicago_Blues -> v6 (conf 0.95)
+2026/11/05 18:14:09 ⚖️ 03_British_Invasion -> v6 (conf 5.00)
+2026/11/05 18:14:32 ⚖️ 04_Southern_Rock -> v6 (conf 1.00)
+2026/11/05 18:14:57 ⚖️ 05_Clapton -> v6 (conf 5.00)
+2026/11/05 18:15:23 ⚖️ 06_Gilmour -> v6 (conf 0.95)
+2026/11/05 18:15:48 ⚖️ 07_Edge -> v6 (conf 0.95)
+2026/11/05 18:16:07 ⚖️ 08_EVH -> v6 (conf 1.00)
+2026/11/05 18:16:22 ⚖️ 09_BB_King -> v6 (conf 0.95)
+2026/11/05 18:16:34 ⚖️ 10_Slash -> v6 (conf 1.00)
+2026/11/05 18:17:03 ⚖️ 11_Mayer_Lead -> v6 (conf 5.00)
+2026/11/05 18:17:18 ⚖️ 12_Bonamassa -> v6 (conf 0.98)
+2026/11/05 18:17:30 ⚖️ 13_Hard_Rock_Blues -> v6 (conf 0.95)
+
+=== JUDGE RESULTS ===
+v5 wins: 0 | v6 wins: 13 | equal: 0
+
+--- 01_SRV_Clean ---
+Winner: v6 (confidence 0.95)
+Grounding: Both presets show excellent grounding in the historical gear of SRV, correctly identifying the Dumble Steel String Singer, EVM12L speakers, and the specific TS808 gain-staging technique (low drive, cranked level) to push the front of the amp. Both properly adjust the EQ and input trims to accommodate the differences between a Telecaster and an ES-339. Preset B mentions specific filtering targets and mid-range focus for authenticity.
+Structural: Preset A contains a critical structural error in the Cabinet block: it hallucinates prose, coordinates, and justifications directly into the 'Mic 1' and 'Mic 2' dropdown values (e.g., 'Dynamic 57 - On-Axis, Cap Edge (X: 2.5, Y: 1.0) for percussive snap'). Preset B correctly separates the microphone selection, position, distance, and level into their own discrete parameters, which maps properly to the Quad Cortex architecture. Preset B does contain a minor hallucination with the model name 'John Mayer Spring Reverb', but its parameter structure is flawless and includes the allowed kept_defaults schema.
+Rationale: Preset B is the clear winner due to structural correctness. Preset A's decision to combine mic selection, X/Y placement coordinates, and prose rationale into a single dropdown string makes it impossible to parse or map to actual device controls. Preset B breaks out the cabinet parameters correctly (Position, Distance, Level, HPF, LPF) and matches the device's true parameter schema much more closely, while delivering an equally well-reasoned historical tone.
+
+--- 02_Chicago_Blues ---
+Winner: v6 (confidence 0.95)
+Grounding: Preset A demonstrates excellent grounding in both real-world vintage tone building and specific Quad Cortex community practices (using a pre-amp EQ to cut sub-bass flub before hitting a Tweed capture). It accurately identifies the specific Neural Capture and structures the preset sensibly around it. Preset B makes similar historical claims but hallucinates heavy details about Quad Cortex UI and block schemas.
+Structural: Preset A accurately uses Quad Cortex parameter names and formatting (e.g., '1 GAIN' and '1 FREQ' for Parametric-3, 'MIC 1 POSITION' and 'HPF' for cabinets). Preset B suffers from severe schema hallucinations, such as concatenating mic type, placement, and axis into single massive dropdown strings ('Ribbon 160 | Cap Edge (X: 3.5, Y: 2.0) | 15 deg Off-Axis'), and using generic EQ parameter names ('Low Shelf Freq') instead of the actual QC Parametric-3 names.
+Rationale: Preset A is a highly realistic, deployable preset. It correctly understands the Quad Cortex Bypass parameter logic (where 'On' means the block is bypassed/muted, and 'Off' means it is engaged). It also handles the inclusion of a Cab block brilliantly by bypassing it by default because the main amp node is a full-rig capture, keeping it available in the chain without double-cabbing the signal. Preset B fails on structural validity due to made-up parameter values and names.
+
+--- 03_British_Invasion ---
+Winner: v6 (confidence 5.00)
+Grounding: Both presets show excellent historical grounding, referencing the Vox AC30, Dallas Rangemaster, Alnico Blue speakers, and Abbey Road/Olympic studio techniques. Preset A correctly implements vintage studio parallel compression (Legendary 87) and plate reverb, while Preset B cleverly tries to emulate the Vox Cut control with a post-cab EQ.
+Structural: Preset A flawlessly mirrors Quad Cortex block schemas: it correctly formats Neural Capture parameters in dB (Gain, Bass, Mid, Treble, Volume) and properly separates Cab block parameters into Mic selection, Position, and Distance. Preset B suffers a fatal structural hallucination in the Cab block by concatenating the mic model, axis, and distance into a single fabricated dropdown string (e.g., 'Condenser U67 | X: Cap Edge (Off-Axis) | Y: 2.0 in'), which breaks the device schema.
+Rationale: Preset A is the clear winner due to its structural correctness. While both presets offer highly plausible, well-reasoned British Invasion tones and logical Scene A/B transitions, Preset B hallucinates a non-existent parameter format for the cabinet microphones. Preset A accurately maps every parameter to real-world Quad Cortex UI conventions (using separate sliders for mic position/distance and correct dB scales for captures), making it a truly loadable and functional preset.
+
+--- 04_Southern_Rock ---
+Winner: v6 (confidence 1.00)
+Grounding: Both presets show excellent grounding in the target genre. Preset A goes for a cranked Tweed Deluxe (often associated with smaller early Southern rock or ZZ Top studio tones), while Preset B goes for the quintessential Tweed Bassman (the bedrock of the Allman Brothers' sound), paired thoughtfully with parallel 1176-style compression for slide sustain and stacked Klon/TS drives for pushing the amp.
+Structural: Preset A has a critical malformed data issue: in the Cabinet block, it places entire paragraphs of prose into the dropdown `value` fields for Mic 1 and Mic 2 instead of just the mic name, which would break parameter mapping. Preset B correctly keeps prose in the rationale and formats its parameters flawlessly.
+Rationale: Preset B wins decisively due to structural correctness. Preset A hallucinates prose into the strict 'value' field of dropdown menus, breaking the data schema. Aside from this, Preset B offers a fantastic, highly authentic Southern Rock rig (Bassman + parallel studio compression for slide + stacked drives) and cleverly uses the Parametric EQ's output level to apply the per-guitar input trims, showcasing great internal logic.
+
+--- 05_Clapton ---
+Winner: v6 (confidence 5.00)
+Grounding: Preset B shows highly accurate knowledge of Quad Cortex specific parameter names, scales, and gear behavior (e.g., using 'GAIN 1' and 'GAIN 2' for a jumpered Plexi, and applying the 'Woman Tone' EQ curve using precise parametric band controls). Preset A relies on generic, hand-wavy parameters that do not exist on the modeled hardware.
+Structural: Preset A suffers from severe schema hallucinations: it concatenates multiple distinct variables into a single string for Cabinet microphones, invents non-standard slider names like '750Hz Peak' for an 8-band EQ, and adds a 'Master Volume' to a vintage Plexi amp model. Preset B perfectly separates and names parameters according to the real Quad Cortex OS (MIC 1 POSITION, 4 FREQ, etc.) and utilizes the 'kept_defaults' arrays properly.
+Rationale: Preset B is vastly superior due to its rigorous adherence to actual Quad Cortex parameter structures. It translates the historical tone-shaping intent (rolling off the guitar's tone capacitor to achieve Clapton's 'Woman Tone') into real, executable parameters on the Parametric-8 EQ block, manages the dual-gain nature of the jumpered Plexi correctly, and avoids the malformed schema shortcuts seen in Preset A.
+
+--- 06_Gilmour ---
+Winner: v6 (confidence 0.95)
+Grounding: Both presets demonstrate a strong understanding of Gilmour's rig architecture, utilizing the Hiwatt (Watt D103) and Fane-loaded 4x12. Preset A references the historically accurate 1970s Colorsound Power Boost but attempts to emulate it with an 'Exotic Z Boost' (which is vague/potentially hallucinated for QC). Preset B leans on the well-known community trick of stacking a Tube Driver after the Big Muff to restore midrange; while the Chandler Tube Driver is technically an 80s/90s Gilmour staple rather than 70s, it is incredibly accurate to how modeler users build Gilmour tones today.
+Structural: Preset B uses the correct parameter taxonomy for the Quad Cortex. For example, its Cabinet block uses individual 'MIC 1 POSITION', 'MIC 1 DISTANCE', and 'MIC 1 LEVEL' sliders, whereas Preset A hallucinates a generic 'Blend' parameter which does not exist in QC's cab block UI. Preset B also correctly uses 'HPF'/'LPF' instead of Preset A's 'Low Cut'/'High Cut'. Furthermore, Preset B includes the standard `kept_defaults` arrays and correctly names parameters like 'DELAY TIME' in all caps matching the QC device UI.
+Rationale: Preset B is the superior preset because it correctly adheres to the Quad Cortex device schema. Preset A's use of generic parameter names (like 'Blend' for cabs, or 'Time' instead of 'DELAY TIME') makes it less accurate as a direct device translation. Preset B precisely maps to real QC parameters, manages dual-mic setups accurately, implements a very popular and realistic community block-routing trick (Tube Drive behind the Big Muff), and ensures its Acoustic agent's math perfectly matches the block tables.
+
+--- 07_Edge ---
+Winner: v6 (confidence 0.95)
+Grounding: Both presets demonstrate excellent knowledge of the target tone, mentioning the Vox AC30, Korg SDD-3000, and dotted-eighth rhythmic modulation. Preset A correctly identifies that Edge places his delay *in front* of the amplifier for compressed, gritty repeats. However, Preset B employs a brilliant, highly specific community trick: because the Quad Cortex lacks a dedicated Korg SDD-3000 preamp model, it uses a Parametric EQ to recreate the exact frequency push (2.5 kHz and 125 Hz) of the vintage FET preamp. While Preset B opts for a cleaner post-cab delay routing, its rationale acknowledges this as an intentional mix-ready choice.
+Structural: Preset B is vastly superior in its structural execution. Preset A fabricates non-standard parameter strings (e.g., combining Mic Type, X/Y placement, and cone position into a single fake dropdown value like 'Dynamic 57 - Cap Edge (X: 0.35, Y: 0.10)') and uses malformed EQ parameter names ('Band 2 Freq (3.2kHz)' with a dB value). Preset B accurately breaks down the Quad Cortex UI parameters (MIC 1 DISTANCE, MIC 1 POSITION, MIC 1 LEVEL) and properly uses the kept_defaults array to handle unaltered controls.
+Rationale: Preset B wins decisively due to its strict adherence to actual device parameter schemas, whereas Preset A hallucinates combined UI strings for the Cabinet block and mismatched units for the EQ. Tonally, while Preset A's pre-amp delay routing is more historically accurate to The Edge's physical rig, Preset B's method of constructing the missing SDD-3000 preamp out of a parametric EQ block is an incredibly clever, authentic modeling trick that elevates its usefulness as a preset.
+
+--- 08_EVH ---
+Winner: v6 (confidence 1.00)
+Grounding: Preset B is exceptionally well-grounded in historical EVH facts, accurately citing the Boss GE-10 for the pre-amp mid push, the Maestro Echoplex EP-3, and specifically employing engineer Donn Landee's famous dual-SM57 miking technique (one on-axis, one angled off-axis). Preset A makes a decent attempt but hallucinates an MXR Six-Band EQ into the Graphic-9 block and uses a generic ribbon/dynamic mic combo.
+Structural: Preset A suffers from severe parameter hallucination and bundling, especially in the Cabinet block where it lumps the mic type, position, and HPF into a single long string rather than discrete controls. Preset B uses authentic Quad Cortex parameter names (e.g., 'SPEED' and 'MODE' for the Phase 95, discrete 'POSITION' and 'DISTANCE' sliders for the cab) and correctly employs the 'kept_defaults' arrays.
+Rationale: Preset B excels in both historical accuracy and structural integrity. The tonal rationale meticulously pieces together the 1978 Sunset Sound 'Brown Sound' signal chain, appropriately placing the modulation and EQ before the Plexi amplifier. More importantly, its parameter mapping strictly adheres to actual Quad Cortex block layouts, whereas Preset A invents parameters and crams multiple settings into single dropdown values.
+
+--- 09_BB_King ---
+Winner: v6 (confidence 0.95)
+Grounding: Preset B heavily relies on accurate historical and community-sourced gear knowledge, specifically calling out the solid-state Lab Series L5 (B.B. King's actual famously preferred amplifier) and simulating its transient limiting with a parallel compressor, as well as accurately emulating the Gibson Varitone circuit using a parametric EQ. Preset A hallucinates a 'John Mayer Spring Reverb' block, which does not exist in the Quad Cortex ecosystem.
+Structural: Preset B adheres perfectly to Quad Cortex parameter naming conventions (e.g., '3 FREQ', '3 Q', 'BOING' in the Spring block, 'MIC 1 DISTANCE') and properly utilizes the 'kept_defaults' arrays. Preset A uses generic, slightly off-brand parameter names ('Band 3 Freq') and fabricates block models like 'John Mayer Spring Reverb'.
+Rationale: Preset B is an expertly crafted patch that demonstrates deep knowledge of both the target artist's actual gear history (Lab Series L5, Varitone) and the specific architecture of the Quad Cortex (using the Legendary 87 for parallel solid-state style limiting, utilizing exact parameter names like 'BOING' for the Spring reverb). Preset A suffers from hallucinated block models and generic parameter names, making it less useful and less accurate to the hardware.
+
+--- 10_Slash ---
+Winner: v6 (confidence 1.00)
+Grounding: Both presets exhibit excellent grounding in historical gear facts, accurately identifying the S.I.R. #34 modified Marshall JCM 800 (and the necessity of an inverted-V graphic EQ in front, rather than a Tube Screamer, to emulate the mod's tone on a stock capture), Boss DD-3 delay, and Vintage 30 cabinets.
+Structural: Preset A hallucinates parameters for almost every block. The Graphic-9 EQ in QC has bands at 125, 250, 500, 1k, etc., but A uses '400Hz Slider' and '800Hz Slider'. Furthermore, its Cabinet block uses a single descriptive string for mic placement rather than actual QC parameters. Preset B uses the exact parameter names for Quad Cortex models (e.g., 'MIC 1 POSITION', 'HPF', '250Hz', 'DELAY TIME', 'SYNC') and correctly implements 'kept_defaults'.
+Rationale: While both presets boast fantastic historical rationale and community insights regarding how to recreate the fabled S.I.R. #34 tone, Preset B successfully maps this knowledge onto accurate Quad Cortex block schemas. Preset A relies on fabricated or heavily generalized parameter names that do not match the actual device UI, rendering it less useful as a loadable preset. Preset B's attention to exact model parameters and inclusion of kept_defaults makes it the clear winner.
+
+--- 11_Mayer_Lead ---
+Winner: v6 (confidence 5.00)
+Grounding: Both presets demonstrate excellent knowledge of John Mayer's gear (continuum-era Trio tone, Two-Rock platform, Aqua-Puss analog delay). Preset B edges out slightly by specifically employing the famous Marshall Bluesbreaker MkI and TS10 pedal-stacking combo, which is widely regarded as the cornerstone of Mayer's lead tone during that era. Preset A's use of the Keeley Mod BD-2 is also historically plausible but B's combination is the most iconic.
+Structural: Preset B is structurally far superior. Preset A hallucinates non-Quad Cortex parameter structures for the Cabinet block (lumping position, distance, and axis into a single mic dropdown string and using a non-existent 'Blend' slider). Preset B correctly utilizes Quad Cortex's discrete 'MIC POSITION', 'MIC DISTANCE', and 'MIC LEVEL' parameters. Preset B also correctly models the Parametric-8 and Circular Delay blocks using exact QC parameter names and formatting.
+Rationale: Preset B wins due to perfect schema compliance and highly accurate Quad Cortex parameter structures, whereas Preset A relies on legacy/hallucinated string formats for its Cabinet block. Preset B pairs this flawless structural execution with top-tier historical grounding regarding the Mayer Bluesbreaker/TS10 pedal stack.
+
+--- 12_Bonamassa ---
+Winner: v6 (confidence 0.98)
+Grounding: Both presets show excellent grounding in Joe Bonamassa's signature tone, referencing his use of Dumble Overdrive Special amps, Klon/TS808 drive stacking, EV12L speakers, and Boss DD-3 style delays. Preset A takes it a step further by including the signature JB95 Cry Baby wah.
+Structural: Preset A uses the correct Quad Cortex block schema, particularly in the Cabinet block where it properly breaks down Mic Position, Distance, and Level into separate parameters. Preset B hallucinates a non-QC parameter structure for its Cabinet block, stuffing X/Y coordinates into the Mic dropdown strings and using a single 'Blend' parameter instead of individual Mic Levels.
+Rationale: Preset A is the superior preset because it correctly adheres to the Quad Cortex device schema while delivering an incredibly detailed, historically accurate tonal blueprint. The pickup compensation between the Telecaster and the ES-339 in Preset A is highly logical, and the block routing/parameter choices perfectly match the builder statement. Preset B fails because it uses fabricated parameter types for the Cabinet block that would not map successfully to the target hardware.
+
+--- 13_Hard_Rock_Blues ---
+Winner: v6 (confidence 0.95)
+Grounding: Both presets cite specific historical gear combinations (Plexi, Echoplex preamp, Greenbacks) appropriate for classic hard rock. However, Preset B is much more grounded in the actual Quad Cortex architecture, referencing precise model names (Facial Fuzz, Green 808) and correctly mirroring the real-world controls of the modeled gear (e.g., GAIN 1 and GAIN 2 on the jumpered Plexi).
+Structural: Preset B perfectly adheres to the hardware schema, breaking down cabinet block controls into discrete parameters (MIC 1 POSITION, MIC 1 DISTANCE, MIC 1 LEVEL) and utilizing the 'kept_defaults' array properly. Preset A hallucinates a generic 'Gain' parameter for a jumpered amp that requires two distinct gain controls, and heavily malforms the Cab block by stuffing position, distance, axis, and filtering into a single, un-parseable dropdown string.
+Rationale: Preset B is chosen for its structural accuracy and faithful mapping of parameters to the Quad Cortex ecosystem. Preset A's formatting of the Cabinet and Amp block parameters is fundamentally broken and would not translate to the device's UI. Furthermore, Preset B's use of the 'kept_defaults' feature keeps the payload clean and readable while confirming that all necessary device controls were accounted for.
+

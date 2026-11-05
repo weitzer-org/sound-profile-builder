@@ -1,0 +1,36 @@
+2026/11/05 16:27:04 critic model: gemini-4-argon
+=== 01_SRV_Clean.json ===
+  (no issues found)
+=== 02_Chicago_Blues.json ===
+  (no issues found)
+=== 03_British_Invasion.json ===
+  (no issues found)
+=== 04_Southern_Rock.json ===
+  [medium] Gibson ES-339 Humbuckers / block-6: The rationale describes the effect as a "110 ms vintage tape-style echo", which contradicts the block's digital model "Circular Delay" (based on the TC Electronic 2290).
+=== 05_Clapton.json ===
+  (no issues found)
+=== 06_Gilmour.json ===
+  (no issues found)
+=== 07_Edge.json ===
+  (no issues found)
+=== 08_EVH.json ===
+  [medium] Fender Telecaster Single Coil / block-7: The rationale claims this block provides a "tape-style slapback echo", which contradicts the selected "Circular Delay" digital delay model.
+  [medium] Gibson ES-339 Humbuckers / block-7: The rationale claims this block provides a "tape-style slapback echo", which contradicts the selected "Circular Delay" digital delay model.
+=== 09_BB_King.json ===
+  (no issues found)
+=== 10_Slash.json ===
+  [medium] Gibson ES-339 Humbuckers / block-5: The rationale claims Circular Delay is "bypassed in Scene A for bone-dry rhythm riffs", but Scene A is not dry because block-6 (Studio Plate 70 (ST)) is always active (no Bypass parameter) with a "Mix" of "15%" and "Decay" of "1.5 s" in Scene A.
+=== 11_Mayer_Lead.json ===
+  (no issues found)
+=== 12_Bonamassa.json ===
+  [high] Fender Telecaster Single Coil / block-2: The builder_statement claims "Scene B engages the Green 808 and Iba Green front-end boosts", whereas block-2 (Iba Green) has Bypass set to "On" (inactive) with no value_b override and its own rationale states it is "kept bypassed across both scenes".
+  [high] Gibson ES-339 Humbuckers / block-2: The builder_statement claims "Scene B engages the Green 808 and Iba Green front-end boosts", whereas block-2 (Iba Green) has Bypass set to "On" (inactive) across both scenes and its rationale states it is "left bypassed to avoid stacking redundant drives".
+=== 13_Hard_Rock_Blues.json ===
+  [high] Fender Telecaster Single Coil / block-6: The rationale claims the block "Emulates the warm tape-echo repeats of an EP-3", which contradicts the selected "Circular Delay" model (a digital Lexicon PCM70-style delay rather than a tape echo).
+  [medium] Gibson ES-339 Humbuckers / block-5: The rationale states a "60% blend toward the off-axis Dynamic 57" (Mic 1), whereas for the Telecaster a 55% Blend is described as "shifting the blend slightly toward the warmer Ribbon 121" (Mic 2), creating an internal contradiction about which microphone higher Blend percentages favor.
+  [high] Gibson ES-339 Humbuckers / block-6: The rationale claims the block "Delivers warm EP-3 tape-style delay repeats" and is bypassed in Scene A for "dry rhythm punch", which contradicts both the digital "Circular Delay" model and the fact that "Studio Plate 70 (ST)" (block-7) is active (`Bypass: Off`, `Mix: 15%`) in Scene A.
+
+=== SUMMARY ===
+Critic: gemini-4-argon
+Total issues found: 9
+Total tokens: in=85871 out=978

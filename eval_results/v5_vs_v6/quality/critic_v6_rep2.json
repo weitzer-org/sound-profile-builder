@@ -1,0 +1,80 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

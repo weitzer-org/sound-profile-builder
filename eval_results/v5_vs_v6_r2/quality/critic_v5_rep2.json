@@ -1,0 +1,105 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-8",
+        "issue": "The rationale and builder_statement describe a '115ms tape slapback', which contradicts the digital rack delay model 'Circular Delay' (Lexicon PCM70 emulation).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-9",
+        "issue": "The rationale claims this block recreates 'chamber and spring-style ambiance', which contradicts the explicitly digital reverb model 'Vintage Digital'.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-8",
+        "issue": "The rationale and builder_statement describe a '115ms zero-feedback slapback tape echo', which contradicts the digital rack delay model 'Circular Delay' (Lexicon PCM70 emulation).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-9",
+        "issue": "The rationale claims this block provides '1960s studio room and spring-style decay', which contradicts the explicitly digital reverb model 'Vintage Digital'.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

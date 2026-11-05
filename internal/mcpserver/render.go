@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -89,12 +90,15 @@ func renderGuitar(name string, effects []storage.EffectBlock, anyEstimate *bool)
 	var table strings.Builder
 	table.WriteString("| # | Block | Model | Scene A (Rhythm) | Scene B (Lead) |\n|---|---|---|---|---|")
 
-	var why []string
+	var why, defaults []string
 	for i, b := range effects {
-		settingsA := make([]string, 0, len(b.Parameters))
-		settingsB := make([]string, 0, len(b.Parameters))
+		// Controls left at the device default are named once below the table instead of
+		// listed in the scene columns (agents.SplitDefaults, shared with the web view).
+		shown, atDefault := agents.SplitDefaults(b)
+		settingsA := make([]string, 0, len(shown))
+		settingsB := make([]string, 0, len(shown))
 		differs := false
-		for _, prm := range b.Parameters {
+		for _, prm := range shown {
 			a, bb, diff, est := formatParam(prm)
 			if est {
 				*anyEstimate = true
@@ -112,9 +116,19 @@ func renderGuitar(name string, effects []storage.EffectBlock, anyEstimate *bool)
 		if r := cell(b.Rationale); r != "" {
 			why = append(why, "- "+cell(b.Model)+": "+r)
 		}
+		if len(atDefault) > 0 {
+			names := make([]string, len(atDefault))
+			for k, n := range atDefault {
+				names[k] = cell(n)
+			}
+			defaults = append(defaults, "- "+cell(b.Model)+": "+strings.Join(names, ", "))
+		}
 	}
 
 	out := []string{"### " + cell(name), table.String()}
+	if len(defaults) > 0 {
+		out = append(out, "**At device default:**\n\n"+strings.Join(defaults, "\n"))
+	}
 	if len(why) > 0 {
 		out = append(out, "**Why:**\n\n"+strings.Join(why, "\n"))
 	}

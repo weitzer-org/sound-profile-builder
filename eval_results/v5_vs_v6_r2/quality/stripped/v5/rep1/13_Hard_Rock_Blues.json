@@ -1,0 +1,608 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the core vintage blues-rock and hard-rock architecture built around a Marshall 1959 Super Lead 100W Plexi into a 4x12 Greenback cabinet, preceded by a Vox V846 Wah, Fuzz Face, TS808 Tube Screamer, and Maestro Echoplex EP-3 preamp.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the mid-pushed EQ target, asymmetric tube saturation with power-amp sag, a vintage plate reverb profile, and vital bandwidth boundaries (90 Hz low cut and 6500 Hz high cut) to eliminate FRFR harshness.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted best practices for Neural Captures—specifically keeping capture EQ dials near 0.0 dB, using the TS808 strictly as a low-drive/high-level mid boost to prevent low-end mud, and placing a Parametric EQ post-cab for major tone shaping.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Translated the historical gear into exact Quad Cortex blocks, locking in the mandatory Brit Plexi 100 Patch and 412 Brit 60A GB75Hz 89 cab, alongside the 1981 TS808 1 and EP3 pre (V-12 EQ-mid) captures, Crying Clyde Wah,Circular Delay, Studio Plate 70 (ST), and Parametric-3.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Audited the dropped gear list (Brit TM45 Patch, Brit 2203, Obsessive Drive) and verified no fallback substitutions were required given the primary Plexi and TS808 selections.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation for the Gibson ES-339 Humbuckers (-3.0 dB input offset, lower amp volume, Bass at 3.5, Mid at 6.5, Treble at 5.5) versus the Fender Telecaster Single Coil (+3.0 dB input offset, higher amp volume, Bass at 5.0, Mid at 7.5, Treble at 4.0).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 412 Brit 60A GB75Hz 89 cabinet microphone array, pairing a Dynamic 57 at the cap edge with a Ribbon 160 at the cone center at a 45% blend ratio for balanced bite and warmth.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Enforced live-mix readiness by specifying high-pass and low-pass filtering boundaries (85-95 Hz up to 6200-7500 Hz) and managing post-cab output headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix/Space Designer):\u003c/strong\u003e Dialed in the temporal ambiance targets, establishing a 135 ms slapback for rhythm and a 375-380 ms delay trail at 25% mix with a 1.8 s to 2.6 s plate reverb decay for leads.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) around the always-on 1981 TS808 1 and EP3 pre (V-12 EQ-mid) captures pushing the Plexi, and Scene B (Lead) with increased capture gain/volume, engaged Crying Clyde Wah, post-cab Parametric-3 mid boost (+2.5 dB at 850 Hz), and expanded delay/reverb tails.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Mapped the signal chain across Lane 1 (Wah, Drive Captures, and Plexi Amp) and Lane 3 (Greenback Cab, Parametric-3 EQ, Circular Delay, and Studio Plate 70 Reverb) while preventing gain congestion by omitting redundant fuzz stacking in favor of the dual-capture boost stage."
+  ],
+  "builder_statement": "This preset delivers an authentic vintage British blues-rock and hard-rock rig centered around a jumpered 100W Plexi (`Brit Plexi 100 Patch`) and a 1989 Greenback 4x12 cabinet (`412 Brit 60A GB75Hz 89`). To capture the exact analog feel of classic studio setups without causing gain congestion, a vintage 1981 Tube Screamer capture (`1981 TS808 1`) acts as a tight mid-focused boost directly into an always-on Maestro Echoplex preamp capture (`EP3 pre (V-12 EQ-mid)`), driving the Plexi into asymmetric power-tube sag, while a post-cab `Parametric-3` EQ, `Circular Delay`, and `Studio Plate 70 (ST)` reverb elevate Scene B into a soaring lead tone.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Placed at the very beginning of the chain to replicate the vocal sweep of a vintage Vox V846 Wah, slightly lower Q for the brighter Telecaster pickup, bypassed in Scene A and active in Scene B for expressive lead work.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+3.0 dB",
+              "value_b": "+4.5 dB"
+            }
+          ],
+          "rationale": "Neural Capture of a vintage 1981 Ibanez TS808 Tube Screamer tuned with slightly higher Gain and Volume to fatten the lower-output Telecaster single coils and shave off top-end harshness before hitting the Plexi.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "EP3 pre (V-12 EQ-mid)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.0 dB"
+            }
+          ],
+          "rationale": "Neural Capture of the Maestro Echoplex EP-3 preamp circuit placed right before the amp input, pushed +1.0 dB hotter on Gain and Volume for the Telecaster to compensate for single-coil output and thicken the midrange.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Algorithmic model of a jumpered Marshall 1959 Super Lead 100W Plexi. Incorporates the Acoustician's single-coil +3.0 dB input and +0.5 volume offset by running Volume higher at 6.5 (8.0 for Lead), pushing Bass to 5.0 and Mid to 7.5, and rolling Treble back to 4.0 to tame Telecaster ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60A GB75Hz 89",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160 - Cone Center (X: 5.0, Y: 3.0)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "50%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz",
+              "value_b": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6300 Hz",
+              "value_b": "6000 Hz"
+            }
+          ],
+          "rationale": "Marshall 1960A 4x12 cabinet with Greenbacks, blending the Ribbon 160 slightly higher (50%) and setting a lower High Cut (6300 Hz Rhythm / 6000 Hz Lead) to warm up the single-coil top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Band Freq",
+              "type": "slider",
+              "value": "750 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Post-cab parametric EQ centered slightly lower at 750 Hz for the Telecaster to add lower-mid body in Rhythm (+0.5 dB) and a thick +3.0 dB vocal lead push in Scene B.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "135 ms",
+              "value_b": "380 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "32%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Post-cab delay bypassed in Scene A for dry rhythm punch and engaged in Scene B at 380 ms and 25% Mix for spacious solo trails.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.6 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "16%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Vintage studio plate reverb with a slightly darker Tone setting (4.5) to complement the Telecaster's bright transients, expanding from 1.8 s in Scene A to 2.6 s in Scene B.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Placed first in the chain to emulate the classic Vox V846 Wah sweep, using a slightly sharper Q (6.0) to help the warm semi-hollow humbuckers cut through during Scene B leads.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "1981 TS808 1",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            }
+          ],
+          "rationale": "Neural Capture of a 1981 Ibanez TS808 Tube Screamer used strictly as a low-gain, high-volume mid boost (-3.0 dB Gain, -0.5 dB Bass) to tighten the ES-339's semi-hollow low end before hitting the Plexi.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "EP3 pre (V-12 EQ-mid)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Neural Capture of the Maestro Echoplex EP-3 preamp circuit placed immediately before the amp input, adding vintage harmonic coloration at 0.0 dB Gain in Scene A and a +2.0 dB push in Scene B without overwhelming the humbuckers.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Algorithmic model of a jumpered Marshall 1959 Super Lead 100W Plexi. Translates the Acoustician's -3.0 dB input cut and -1.0 volume offset for the ES-339 humbuckers into a restrained Volume of 5.0 (6.5 in Scene B) and Bass rolled back to 3.5 to prevent semi-hollow low-end flub during power-amp sag.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60A GB75Hz 89",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160 - Cone Center (X: 5.0, Y: 3.0)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "45%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz",
+              "value_b": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "6200 Hz"
+            }
+          ],
+          "rationale": "Marshall 1960A 4x12 Greenback cabinet using the exact Transducer Tech 45% blend between a Cap Edge Dynamic 57 and Cone Center Ribbon 160, with an 85-95 Hz Low Cut to keep the ES-339's low end tight.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Band Freq",
+              "type": "slider",
+              "value": "850 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Post-cab parametric EQ kept flat in Scene A and engaged for a +2.5 dB upper-mid boost at 850 Hz and +2.5 dB output jump in Scene B so humbucker solos project effortlessly.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "135 ms",
+              "value_b": "380 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "32%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Post-cab delay bypassed during Scene A rhythm work and activated in Scene B at 380 ms with 25% Mix for smooth, vintage tape-style solo repeats.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.6 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Vintage 1970s studio plate reverb with a slightly brighter Tone (5.5) and 25 ms Pre-Delay to keep the ES-339's warm humbuckers articulate across both Rhythm (1.8 s) and Lead (2.6 s) scenes.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

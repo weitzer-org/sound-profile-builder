@@ -1,0 +1,542 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the late-60s British blues-rock rig built around a 1966 Marshall JTM45/100 (1959 Super Lead 100W Plexi), a 1960B 4x12 cab with G12M-25 Greenbacks, a Vox Clyde McCoy Wah, and a Sola Sound Tone Bender Professional MKII.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the cranked British valve power-amp compression with a dark, vocal EQ profile centered around an 800Hz peak, a 100Hz low cut, a 5800Hz high cut, and a -58dB input gate target.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the pre-amp Parametric EQ technique to emulate the rolled-off 'Woman Tone' capacitor while cutting sub-110Hz mud before the jumped Plexi circuit.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the vintage hardware to native Quad Cortex blocks: Brit Plexi 100 Patch, 412 Brit 60B GB 71, Crying Clyde Wah, Reus Bender Mk2 capture, Parametric-3, and Studio Plate 70 (ST).",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Confirmed the Reus Bender Mk2 capture selection from the capture library to deliver authentic three-transistor Tone Bender MkII fuzz saturation.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup compensation offsets, trimming the Gibson ES-339 input by -2.5dB with lowered Bass (3.5) and Volume, while boosting the Fender Telecaster input by +3.0dB with raised Volume, Bass (5.5), and lowered Treble (3.5).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 412 Brit 60B GB 71 cabinet with a 50/50 blend of a Dynamic 57 at X=4.5, Y=1.0 and a Ribbon 160 at X=5.5, Y=2.0 pushed toward the cap edge to smooth out high-end fizz.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Established FOH band-pass boundaries from 95Hz to 7500Hz and set a -1.5dB output trim to maintain clean digital headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Set the ambient studio room parameters around a 1.8s reverb decay and 22% baseline wet mix.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) for cranked Plexi crunch with the Wah and Fuzz bypassed, and Scene B (Lead) engaging the mid-cocked Crying Clyde Wah, Reus Bender Mk2 capture, and a steeper pre-amp Parametric-3 high cut for the 'Woman Tone' lead.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the signal chain across Lane 1 (Input, Wah, Fuzz, Pre-EQ, Amp) and Lane 3 (Cab, Reverb, Output) to balance CPU load."
+  ],
+  "builder_statement": "This preset recreates the quintessential late-60s British blues-rock 'Woman Tone' and cranked Super Lead crunch using the jumped Brit Plexi 100 Patch and a Greenback-loaded 412 Brit 60B GB 71 cabinet. Scene A delivers touch-sensitive, power-tube-compressed rhythm crunch, while Scene B engages a mid-cocked Crying Clyde Wah, the Reus Bender Mk2 fuzz capture, and a pre-amp Parametric-3 high-cut filter to achieve thick, vocal, cello-like lead sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "+3.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            }
+          ],
+          "rationale": "Boosts the lower-output Telecaster single coils by +3.0 dB to properly drive the jumped Plexi front end while gating single-coil hum at -58 dB.",
+          "type": "Input"
+        },
+        {
+          "id": "block-2",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Emulates the vintage Vox Clyde McCoy Wah placed first in the chain; bypassed in Scene A and engaged at a fixed mid-cocked 5.0 position in Scene B for vocal midrange focus.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-3",
+          "model": "Reus Bender Mk2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a Sola Sound Tone Bender Professional MKII circuit; bypassed in Scene A and engaged in Scene B with slightly warmed bass, smoothed treble, and a -1.5 dB output trim to prevent pre-amp digital clipping.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz",
+              "value_b": "125 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band Freq",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band Gain",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5800 Hz",
+              "value_b": "2800 Hz"
+            }
+          ],
+          "rationale": "Placed before the amp to clear sub-100Hz flub and shape the 800Hz vocal peak; Scene B pulls the High Cut down to 2800 Hz to simulate a rolled-off tone capacitor ('Woman Tone') without single-coil ice-pick.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "9.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.5",
+              "value_b": "9.0"
+            }
+          ],
+          "rationale": "Algorithmic model of the jumped 100W Super Lead Plexi; translated the Acoustician's +1.0 step volume offset for single coils into higher Volume (8.0/9.0), fuller Bass (5.5), pushed Mid (7.5), and tamed Treble (3.5).",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "412 Brit 60B GB 71",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: X=4.5 (Cap Edge), Y=1.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160: X=5.5 (Cap Edge/Cone Transition), Y=2.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Greenback 4x12 cabinet using cap-edge Dynamic 57 and Ribbon 160 mics; blended at 60% toward the Ribbon 160 with a 6500 Hz High Cut to thicken the Telecaster's top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "26%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Provides vintage 1960s studio room and plate ambiance after the cab, expanding from 18% mix in Scene A to 26% in Scene B while applying the FOH -1.5 dB lane output trim.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            }
+          ],
+          "rationale": "Trims the warm semi-hollow ES-339 humbucker signal by -2.5 dB at the input to prevent low-mid congestion in the jumped Plexi preamp.",
+          "type": "Input"
+        },
+        {
+          "id": "block-2",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Emulates the Vox Clyde McCoy Wah placed first in the signal path; bypassed in Scene A and engaged at a parked 5.0 mid-cocked position in Scene B for 'Disraeli Gears' vocal lead resonance.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-3",
+          "model": "Reus Bender Mk2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-2.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a Tone Bender Professional MKII; bypassed in Scene A and active in Scene B with a -1.5 dB bass cut to keep the ES-339 tight and a -2.0 dB volume trim to prevent input clipping on the Plexi.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "110 Hz",
+              "value_b": "140 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band Freq",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band Gain",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "3200 Hz"
+            }
+          ],
+          "rationale": "Pre-amp EQ that cuts sub-110Hz mud in Scene A and tightens to 140Hz with a 3200Hz High Cut and +3.5dB 800Hz mid push in Scene B to recreate the rolled-off humbucker tone capacitor ('Woman Tone').",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Algorithmic model of the jumped 1959 Super Lead 100W Plexi; incorporates the Acoustician's -0.5 step volume reduction (6.5/7.5) and restrained Bass (3.5) to prevent semi-hollow humbucker mud while pushing Mid to 7.0.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "412 Brit 60B GB 71",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: X=4.5 (Cap Edge), Y=1.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160: X=5.5 (Cap Edge/Cone Transition), Y=2.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "50%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            }
+          ],
+          "rationale": "1960B 4x12 Greenback cabinet with an even 50% blend of cap-edge Dynamic 57 and Ribbon 160 mics, rolling off below 100 Hz and above 7000 Hz for smooth, woody British crunch.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "26%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Delivers vintage studio room depth at the end of the chain, lifting wet mix from 18% on rhythm to 26% with a 2.2s decay on solos while setting the -1.5 dB FOH output trim.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "builder_statement": "Synthetic fixture: an older save whose narration exists only in its stored table (no block has a rationale).",
+  "name": "Data grid: older preset with a narrated table",
+  "payload": {
+    "legacy_html": {
+      "Fender Telecaster Single Coil": "\u003ctable class='grid-matrix'\u003e\u003cthead\u003e\u003ctr\u003e\u003cth\u003eEffect Type \u0026amp; Name\u003c/th\u003e\u003cth\u003eScene A (Rhythm)\u003c/th\u003e\u003cth\u003eScene B (Lead)\u003c/th\u003e\u003c/tr\u003e\u003c/thead\u003e\u003ctbody\u003e\u003ctr\u003e\u003ctd\u003eAmplifier: Brit 2203\u003cbr/\u003e\u003cdiv\u003e\u003cem\u003eRationale: JCM800-style crunch, narrated by an older Architect that wrote its own table.\u003c/em\u003e\u003c/div\u003e\u003c/td\u003e\u003ctd\u003eGain: 6\u003cbr/\u003eMaster: 4\u003c/td\u003e\u003ctd\u003eGain: 6\u003cbr/\u003eMaster: 4\u003c/td\u003e\u003c/tr\u003e\u003c/tbody\u003e\u003c/table\u003e"
+    },
+    "structured": {
+      "guitars": {
+        "Fender Telecaster Single Coil": [
+          {
+            "id": "b1",
+            "type": "Amplifier",
+            "model": "Brit 2203",
+            "parameters": [
+              {
+                "name": "GAIN",
+                "type": "slider",
+                "value": "6"
+              },
+              {
+                "name": "MASTER",
+                "type": "slider",
+                "value": "4"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
