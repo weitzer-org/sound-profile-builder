@@ -15,6 +15,15 @@ import (
 
 var validNativeBlocks = make(map[string]bool)
 var validBlocksRunes = make(map[string][]rune)
+
+// exactOnlyBlocks holds block names that every coros_map.json entry producing them gates
+// behind a paid plugin (required_plugin), keyed by lowercase name. They are valid on an
+// exact (case-insensitive) match but are kept out of validBlocksRunes, the fuzzy-snap
+// candidate pool: a plugin device's name is a distinctive brand name, so a near miss like
+// "Spring Reverb" is a generic block, not a misspelled "Plini Reverb". The pool is not
+// filtered by which plugins the user owns, so snapping into these names would also
+// introduce plugin devices the user can't run.
+var exactOnlyBlocks = make(map[string]string)
 var parseBlocksOnce sync.Once
 var validCategories = map[string]bool{
 	"amplifier:": true, "cab:": true, "cabinet:": true,
@@ -231,11 +240,21 @@ func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
+			ungated := make(map[string]bool)
 			for _, props := range corosData {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
 					validNativeBlocks[equiv] = isCap
 					validBlocksRunes[equiv] = []rune(strings.ToLower(equiv))
+					if plugin, _ := props["required_plugin"].(string); plugin == "" {
+						ungated[equiv] = true
+					}
+				}
+			}
+			for equiv := range validBlocksRunes {
+				if !ungated[equiv] {
+					delete(validBlocksRunes, equiv)
+					exactOnlyBlocks[strings.ToLower(equiv)] = equiv
 				}
 			}
 		}
@@ -768,6 +787,10 @@ func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 	bestMatch := inputStr
 
 	inputRunes := []rune(strings.ToLower(inputStr))
+
+	if v, ok := exactOnlyBlocks[strings.ToLower(inputStr)]; ok {
+		return v // plugin device: exact (case-insensitive) matches only, never a fuzzy target
+	}
 
 	for v, vRunes := range validBlocksRunes {
 		if strings.EqualFold(inputStr, v) {

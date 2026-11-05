@@ -469,3 +469,24 @@ func TestFlagLeftoverValueRanges(t *testing.T) {
 		t.Errorf("expected a non-slider parameter to never be checked even if range-shaped, got %q", block.Rationale)
 	}
 }
+
+// Plugin-gated device names are valid on an exact (case-insensitive) match but are never
+// fuzzy-snap targets: "Spring Reverb" must not become the paid "Plini Reverb".
+func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {
+	_ = GetValidNativeBlocks()
+	for _, tc := range []struct{ in, want string }{
+		{"plini reverb", "Plini Reverb"}, // exact, any case
+		{"Plini Reverb", "Plini Reverb"},
+		{"Spring Reverb", "Spring Reverb"}, // 3 edits from "Plini Reverb": not snapped
+		{"Plini Reverbb", "Plini Reverbb"}, // near miss of a plugin name: not snapped
+	} {
+		if got := SnapToClosestBlock(tc.in, nil); got != tc.want {
+			t.Errorf("SnapToClosestBlock(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+	// Ungated names stay normal fuzzy candidates. ("Exotic Z Boost" is the only valid
+	// name within 4 edits of the probe, so map iteration order can't pick another.)
+	if got := SnapToClosestBlock("Exotic Z Boos", nil); got != "Exotic Z Boost" {
+		t.Errorf("SnapToClosestBlock(%q) = %q, want ungated %q", "Exotic Z Boos", got, "Exotic Z Boost")
+	}
+}
