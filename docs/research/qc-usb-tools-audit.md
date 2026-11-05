@@ -335,6 +335,8 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 
 **qc-mcp safe-trial protocol**
 
+A ready-made version of the proxy in step 4, with a setup walkthrough, is in [`tools/qc-mcp-trial/`](../../tools/qc-mcp-trial/README.md).
+
 0. **Check firmware first.** Read the CorOS version off the unit's settings screen. qc-mcp ships schemas for 4.0 and 4.1 only (`protocol.py:53`). **If it's newer than 4.1.x, stop.** It would use the 4.1 schema and spoof compatibility.
 1. **Back up.**
    - Cortex Control: create a **local backup** and keep the file.
