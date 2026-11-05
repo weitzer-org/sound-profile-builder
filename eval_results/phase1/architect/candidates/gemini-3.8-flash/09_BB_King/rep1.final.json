@@ -1,0 +1,370 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Identified B.B. King's signature setup centered on a Fender Twin Reverb combo with JBL D120F speakers and an SM57 mic for articulate clean blues.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the clean tube preamp saturation profile, vintage spring reverb, mid-pushed EQ curve, and high/low cut boundaries (90 Hz / 7000 Hz).",
+    "<strong>Agent 3 (Scraper):</strong> Sourced community insights advising low amp gain (3.0-3.5), elevated mids, and post-cab EQ to prevent ice-pick harshness from the 2x12 Twin.",
+    "<strong>Agent 4 (Librarian):</strong> Selected native Quad Cortex blocks US Twin Vibrato, 212 US TWN C12Q 00s, Jewel compressor, Graphic-9, and Range Rverb.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the strict restriction against Cloud Sourcing, constraining all assets to native models and factory captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Tailored EQ and gain trims for humbuckers (-3.0 dB input, 4.5 bass) versus single coils (+3.0 dB input, 7.0 mids, 4.5 treble) to preserve headroom and prevent shrillness.",
+    "<strong>Agent 7 (Transducer Tech):</strong> Configured dual-mic placement using an off-center Dynamic 57 and an outer-cone Ribbon 121 with an initial 70% blend ratio on the 2x12 open-back cab.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Applied global bandpass filtering (80 Hz to 10 kHz) and set lane output to -2.5 dB to prevent digital clipping across gain stages.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Specified time-based settings with 250ms delay, 2.5s reverb decay, and a 30% wet mix for vintage stage ambiance.",
+    "<strong>Agent 10 (Map Specialist):</strong> Established Scene A (Rhythm) and Scene B (Lead) parameter targets, pushing gain, mids, and EQ levels for solo boost.",
+    "<strong>Agent 11 (DSP Architect):</strong> Routed the signal across Lane 1 (Jewel -> US Twin Vibrato -> 212 US TWN C12Q 00s) and Lane 2 (Graphic-9 -> Range Rverb) to optimize DSP allocation and preserve pristine clean headroom."
+  ],
+  "builder_statement": "This preset captures the iconic vocal, mid-focused clean blues tone of B.B. King using the pristine headroom of the US Twin Vibrato paired with a 2x12 US TWN cab. Front-end optical compression via the Jewel block enhances note sustain and touch sensitivity, while post-cab Graphic-9 EQ and ambient reverb deliver singing lead bite and classic club warmth.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Comp",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Optical compressor positioned first in the chain to level out picking dynamics and add clean sustain to thinner single-coil notes.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            }
+          ],
+          "rationale": "High-headroom Blackface Twin platform dialed with pushed mids and softened treble to fill out single-coil scooping and tame ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Classic 2x12 open-back cabinet paired with a slightly warmer ribbon blend and steeper high cut to balance bright Telecaster single coils.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Post-cab graphic equalizer reinforcing lower vocal midrange punch while granting a clean output level boost for lead soloing.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-5",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-3.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Factory capture block tuned with trimmed top end and pushed mids to recreate vintage room and spring tank ambiance without digital edge.",
+          "type": "Neural Capture"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Comp",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            }
+          ],
+          "rationale": "Optical compressor positioned first in the chain to provide smooth dynamic leveling and vocal vibrato sustain without clipping.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.0",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            }
+          ],
+          "rationale": "Iconic clean Fender tube amplifier providing the immense headroom, warm tube compression, and focused midrange essential for B.B. King tone.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            }
+          ],
+          "rationale": "Authentic 2x12 open-back enclosure with dual dynamic and ribbon mics placed off-center to eliminate high-end harshness.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Post-cab graphic equalizer sculpting upper-mid harmonic clarity and providing clean solo level boost for Scene B.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-5",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-4.0 dB",
+              "value_b": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Factory capture block adjusted with reduced gain to retain clean headroom while adding dimensional acoustic space.",
+          "type": "Neural Capture"
+        }
+      ]
+    }
+  }
+}

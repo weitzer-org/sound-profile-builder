@@ -141,7 +141,7 @@ func TestResources_ReadAll(t *testing.T) {
 func TestResources_PromptTemplateVersions(t *testing.T) {
 	h := newMockService(t)
 	cs := newMCPSession(t, h.svc)
-	// 12_architect has v2 to v5 on disk. v2 must be the sibling file, not v1.
+	// 12_architect has v2 to v6 on disk. v2 must be the sibling file, not v1.
 	v2 := readResourceText(t, cs, "qc://prompt-templates/12_architect/v2", mimeMarkdown)
 	want, err := agents.PromptFS.ReadFile("prompts/12_architect_v2.md")
 	if err != nil {

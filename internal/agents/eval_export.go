@@ -3,13 +3,21 @@ package agents
 import (
 	"encoding/json"
 	"strings"
+	"time"
 )
 
-// PriceFor exposes geminiPriceTable (USD per 1,000,000 tokens) to eval tooling without
-// duplicating it. ok is false when the model has no official entry -- callers must then report
-// the cost as UNKNOWN, never as $0 (see UsageRecord.CostUnknown). A leading "models/" is ignored.
+// PriceFor exposes the price in effect now from geminiPriceSchedule (USD per 1,000,000 tokens)
+// to eval tooling without duplicating it. ok is false when the model has no official entry --
+// callers must then report the cost as UNKNOWN, never as $0 (see UsageRecord.CostUnknown). A
+// leading "models/" is ignored. Prices are dated (introductory vs. standard); use PriceForAt to
+// price a past run at the rate in effect when it ran.
 func PriceFor(model string) (inputPerM, outputPerM float64, ok bool) {
-	p, ok := geminiPriceTable[strings.TrimPrefix(strings.TrimSpace(model), "models/")]
+	return PriceForAt(model, nowFunc())
+}
+
+// PriceForAt is PriceFor at time t.
+func PriceForAt(model string, t time.Time) (inputPerM, outputPerM float64, ok bool) {
+	p, ok := priceAt(strings.TrimPrefix(strings.TrimSpace(model), "models/"), t)
 	return p.input, p.output, ok
 }
 

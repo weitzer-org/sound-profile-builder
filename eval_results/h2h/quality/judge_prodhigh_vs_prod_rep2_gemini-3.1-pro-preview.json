@@ -1,0 +1,35 @@
+[
+  {
+    "Name": "02_Chicago_Blues",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Preset B is exceptionally well-grounded in the actual Quad Cortex ecosystem, specifically referencing accurate CorOS factory capture names ('US DLX 58'), their matching native cabinet models ('112 US DLX Tweed WGS-Q 10s'), and standard native blocks ('Green 808', 'Spring Reverb'). Preset A hallucinates several block names, notably 'John Mayer Spring Reverb' (reverbs cannot be Neural Captured, and no such native block exists) and 'FNDR TWDLX IN Edge BAL CAB', which sounds like a naming convention borrowed from Fractal or Helix rather than a Quad Cortex factory cabinet.",
+    "Struct": "Both presets are structurally sound, successfully parsing the requested JSON schema with well-formatted tables, valid basis tags, and appropriate usage of the 'value_b' overrides for Scene B. However, Preset B is much more authentic in its parameter mapping.",
+    "Rationale": "Preset B wins by relying on verified, real-world Quad Cortex block names and factory captures rather than the hallucinated devices seen in Preset A. Furthermore, Preset B's internal consistency is flawless: the Scene B overrides explicitly match the Control Mapper agent's instructions to scale the Green 808 Drive/Level, US DLX 58 Gain/Volume, and Spring Reverb Mix/Decay. The guitar-specific compensations are also completely logical, taming the low-end and gain for the ES-339 humbuckers while pushing the Telecaster single coils.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": false
+  },
+  {
+    "Name": "07_Edge",
+    "Winner": "prod",
+    "Conf": 5,
+    "Ground": "Preset B is exceptionally well-grounded in both the artist's historical gear (correctly identifying The Edge's use of the Boss FA-1, Korg SDD-3000 preamp, and TS-9) and Quad Cortex engineering. Notably, Preset B correctly formats its Neural Capture blocks ('Iba Green' and '66 AC30 JMP Clean') using relative dB values (e.g., -0.5 dB, +1.0 dB) rather than 0-10 dials, and smartly sets the Cabinet block's Bypass state to 'On' (bypassed) to prevent double-cab filtering since the amp capture is defined as a full-rig capture. Preset A mistakenly relies on the 'Jewel' (an optical compressor) to emulate the OTA-based MXR Dyna Comp.",
+    "Struct": "Preset A contains malformed block models with trailing underscores ('Dual (ST)_' and 'Studio Plate 70 (ST)_'). Preset B is structurally flawless, utilizing the correct schema and perfectly matching its bypass toggles and parameter states to the stated scene logic.",
+    "Rationale": "Preset B is a masterpiece of AI prompt execution for this hardware. It not only captures the highly specific historical pedals used by The Edge (like the Boss FA-1 emulated via the Parametric-3 block), but it demonstrates an advanced understanding of the Quad Cortex ecosystem by properly distinguishing the parameter schema for Neural Captures (relative dB) versus models (0-10 dials) and managing cabinet bypass states for full-rig captures. Preset A is decent but suffers from minor formatting artifacts and slightly less accurate gear pairings.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Preset A demonstrates superb grounding by specifically referencing the S.I.R. #34/#39 modded JCM800 paradigm. It correctly notes that achieving this tone on a stock JCM800 model involves pushing the front end with an EQ (like the Boss GE-7) rather than a diode-clipping overdrive, which is exactly how Slash's tone is traditionally chased in modeler communities. Preset B falls back on a more generic 80s metal approach by using an SD-1.",
+    "Struct": "Both presets are structurally sound. They correctly employ the 'Bypass: On/Off' logic (where 'On' means the block is bypassed and 'Off' means it is active). Value ranges, scene overrides (value_b), and basis tags are correctly implemented across both.",
+    "Rationale": "Preset A is preferred for its deeper historical and community grounding. By deliberately omitting the generic SD-1 overdrive and instead using a Graphic-9 EQ to simulate the extra cascaded gain stage of the famed S.I.R. rented Marshalls, it nails the specific 'Slash' methodology. Furthermore, Preset A's acoustic adaptations between the Telecaster and ES-339 are highly logical, accurately using input trim, EQ cuts, and amp EQ shifts to maintain the target tone across different pickup types.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  }
+]

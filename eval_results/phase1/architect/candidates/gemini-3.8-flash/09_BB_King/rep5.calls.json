@@ -1,0 +1,15 @@
+[
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[Architect \u0026 Evaluator] response truncated at the MaxOutputTokens limit (model gemini-3.8-flash) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 6949,
+    "output_tokens": 627,
+    "thinking_tokens": 15359,
+    "latency_ms": 110833,
+    "grounded": false
+  }
+]

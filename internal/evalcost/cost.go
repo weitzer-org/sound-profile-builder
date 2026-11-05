@@ -1,10 +1,10 @@
 // Package evalcost turns recorded tokens (CallRecord) into dollars using the repo's own
-// geminiPriceTable, and extrapolates a smoke pass to the full matrix (plan §5 cost gate).
+// geminiPriceSchedule, and extrapolates a smoke pass to the full matrix (plan §5 cost gate).
 //
 // Two rules are enforced everywhere here:
 //  1. A model with no official price is UNKNOWN, never $0. A partly-priced run is a LOWER BOUND
 //     and says how many calls and tokens it leaves out.
-//  2. Cost comes from recorded tokens x geminiPriceTable only. Nothing is estimated from list
+//  2. Cost comes from recorded tokens x geminiPriceSchedule only. Nothing is estimated from list
 //     prices, and no price is invented.
 //
 // What is NOT included in any figure (the report must say so): Google Search grounding fees (the

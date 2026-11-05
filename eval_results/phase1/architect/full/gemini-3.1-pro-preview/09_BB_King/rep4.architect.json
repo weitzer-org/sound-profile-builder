@@ -1,0 +1,446 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the foundational B.B. King clean tone platform, specifying the Fender Twin Reverb, JBL speakers, and an SM57 microphone to capture his signature vocal mid-range.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the clean tube preamp saturation target and vintage spring reverb aesthetic, while dictating the precise -58dB noise gate and 90Hz/7000Hz EQ brackets.",
+    "<strong>Agent 3 (Scraper):</strong> Brought in community warnings to avoid overdriving the Twin model, emphasizing the need for pristine clean headroom and utilizing an optical compressor to sustain vibrato.",
+    "<strong>Agent 4 (Librarian):</strong> Selected the exact native blocks for the build, mandating the US Twin Vibrato and 212 US TWN C12Q 00s cab, while suggesting the Jewel compressor and Graphic-9 EQ.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the strict exclusion of Cloud Captures, ensuring the preset relies entirely on factory-available algorithmic blocks and factory captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Engineered the acoustic divergence, reducing input gain and taming bass for the hot ES-339 humbuckers while boosting gain and mids to fill out the Telecaster single coils.",
+    "<strong>Agent 7 (Transducer):</strong> Placed the primary Dynamic 57 mic off-center to tame harsh transients and blended it 70/30 with a Ribbon 121 on the outer cone for added warmth.",
+    "<strong>Agent 8 (FOH):</strong> Applied global EQ cut constraints (80Hz to 10kHz) and specified a -2.5dB lane output reduction to prevent digital clipping from the stacked mid-boosts.",
+    "<strong>Agent 9 (Mix):</strong> Specified the 250ms delay time and 2.5s reverb decay to create a vintage, three-dimensional spatial environment without muddying the rhythm tracks.",
+    "<strong>Agent 10 (Map):</strong> Programmed the specific Scene A (Rhythm) and Scene B (Lead) parameter deltas, pushing the Graphic-9 EQ and Jewel compressor output for the lead scene.",
+    "<strong>Agent 11 (DSP):</strong> Structured the dual-lane routing, placing the Jewel compressor before the amp to smooth transients and the Graphic-9 post-cab for optimal mid-shaping."
+  ],
+  "builder_statement": "This preset captures the pristine, mid-focused clean tone of B.B. King, utilizing a high-headroom US Twin Vibrato model paired with an optical compressor to smooth transients. The post-cab Graphic EQ provides the signature vocal bite, while the routing ensures the amp remains clean even during lead pushes.",
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Noise Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            }
+          ],
+          "rationale": "Placed at the input to silence single-coil hum and ambient noise based on the Sonic Profiler's strict -58dB target.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Comp",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Output",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Optical compressor placed early in the chain to smooth picking transients and enhance single-note sustain without driving the amp into clipping.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.2",
+              "value_b": "4.2"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Middle",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            }
+          ],
+          "rationale": "The core B.B. King platform. Gain is kept low to maintain pristine clean headroom, with bass slightly reduced to accommodate the hot, semi-hollow humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            }
+          ],
+          "rationale": "Mandatory 2x12 cab paired with an off-center SM57 to tame harsh ice-pick highs, blended with a Ribbon 121 for added warmth.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "800Hz",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "1.6kHz",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Post-cab EQ to shape the mid prominence and add a subtle wide peak for singing neck-humbucker bite during lead phrases.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Digital Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "250 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Added to fulfill the Mix agent's request for a 250ms vintage spatial reflection, placed post-cab to keep the repeats pristine.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Identified as a pre-trained Neural Capture. Used here to add a unique high-gain modern coloration and ambient texture at the end of the chain, with volume reduced to satisfy FOH lane constraints.",
+          "type": "Capture"
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Noise Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            }
+          ],
+          "rationale": "Placed at the input to silence single-coil hum and ambient noise based on the Sonic Profiler's strict -58dB target.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Comp",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Output",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Optical compressor placed early in the chain to smooth picking transients and enhance single-note sustain without driving the amp into clipping.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Middle",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            }
+          ],
+          "rationale": "Gain is boosted to reach the sweet spot of tube preamp saturation with lower-output single coils. Mids are increased to fill the natural single-coil scoop, while treble is softened to prevent harshness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            }
+          ],
+          "rationale": "Mandatory 2x12 cab paired with an off-center SM57 to tame harsh ice-pick highs, blended with a Ribbon 121 for added warmth.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "800Hz",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "1.6kHz",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Post-cab EQ to shape the mid prominence and add a subtle wide peak for singing bite during lead phrases.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Digital Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "250 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Added to fulfill the Mix agent's request for a 250ms vintage spatial reflection, placed post-cab to keep the repeats pristine.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Range Rverb",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Identified as a pre-trained Neural Capture. Used here to add a unique high-gain modern coloration and ambient texture at the end of the chain, with volume reduced to satisfy FOH lane constraints.",
+          "type": "Capture"
+        }
+      ]
+    }
+  }
+}

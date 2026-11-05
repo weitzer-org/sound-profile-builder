@@ -42,10 +42,16 @@ func TestScenarios_ChangeExactlyWhatThePlanSays(t *testing.T) {
 		}
 		return out
 	}
-	expect := map[string]int{"S0": 0, "S1": 10, "S2": 2, "S3": 2, "S4": 3, "S5": 1, "A1": 13, "A2": 2, "A3": 10}
+	expect := map[string]int{"S0": 0, "S1": 10, "S2": 2, "S3": 2, "S4": 3, "S5": 1, "A1": 12, "A2": 2, "A3": 9}
 	for id, n := range expect {
 		if got := len(diff(id)); got != n {
 			t.Errorf("%s differs from S0 on %d agents, want %d: %v", id, got, n, diff(id))
+		}
+	}
+	// Phase 1A: Argon was dropped from agent 2, so A1/A3 keep it on the Flash baseline.
+	for _, id := range []string{"A1", "A3"} {
+		if got := byID[id].AgentModels["2_sonic_profiler"]; got != modelFlashBaseline {
+			t.Errorf("%s routes agent 2 to %s, want %s", id, got, modelFlashBaseline)
 		}
 	}
 	// One variable at a time: S1 must leave the Critic and Pro tier on baseline.
@@ -117,5 +123,19 @@ func TestSelectQueries_DedupesNames(t *testing.T) {
 	q, err := SelectQueries(evalfixtures.GoldenQueryOrder(), evalfixtures.GoldenQueries(), "07_Edge,07_Edge, 09_BB_King")
 	if err != nil || len(q) != 2 {
 		t.Fatalf("got %v, %v", q, err)
+	}
+}
+
+func TestProductionScenarioMirrorsDefaults(t *testing.T) {
+	sel, err := SelectScenarios(BuildScenarios(false), "PROD")
+	if err != nil || len(sel) != 1 {
+		t.Fatalf("PROD not selectable: %v %v", sel, err)
+	}
+	p := sel[0]
+	if len(p.AgentModels) != 13 {
+		t.Fatalf("PROD routes %d agents, want 13", len(p.AgentModels))
+	}
+	if p.AgentModels["2_sonic_profiler"] != "gemini-3.8-flash" || p.AgentModels["12_architect"] != "gemini-4-argon" {
+		t.Fatalf("PROD routing %v", p.AgentModels)
 	}
 }

@@ -1,0 +1,494 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the late-60s Cream-era 'Woman Tone' foundation built on a jumped 1966 Marshall Super 100 / 1959SLP Plexi into a 1960B 4x12 with 20W Greenbacks, fronted by a Vox Clyde McCoy Wah-Wah and Dallas Arbiter Fuzz Face.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the dark, smooth harmonic compression profile with a 90 Hz low cut, 5800 Hz high cut, an 850 Hz midrange vocal peak, and vintage studio room ambiance.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the critical QC routing insight that the 'Woman Tone' rolled-off capacitor interaction must be emulated pre-amp via a steep high-cut and resonant midrange peak rather than post-gain amp EQ, alongside a dark ribbon + dynamic 57 cab pairing.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the vintage rig to verified native Quad Cortex models: Brit Plexi 100 Patch, 412 Brit 60B GB '71, Parametric-3, Crying Clyde Wah, Facial Fuzz, and Studio Plate 70 (ST).",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no external cloud or factory captures were required, keeping the signal path on responsive algorithmic models with full tone-stack interaction.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup divergence, trimming ES-339 humbuckers (Bass 3.5, Mid 6.5, Treble 4.5) to prevent semi-hollow mud while boosting the Telecaster single coils (Bass 5.5, Mid 7.5, Treble 3.5, +1.0 Volume offset) to thicken bridge-pickup bite into violin-like sustain.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Specified a 65% blend favoring a dark Ribbon 121 at the cone edge (X: 3.5\", Y: 2.0\" off-axis) paired with a Dynamic 57 at the cap edge (X: 1.5\", Y: 1.0\") for vocal midrange definition.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set live stage bandwidth boundaries at 95 Hz to 7500 Hz with a -2.5 dB output pad to maintain FOH headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Targeted a 1.6s to 1.8s baseline studio plate decay around 18-20% mix to provide classic 1960s studio depth without washing out lead articulation.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) for woody, warm British crunch (Wah and Fuzz bypassed, moderate pre-amp roll-off at 3500 Hz) and Scene B (Lead 'Woman Tone') with a steep 1200 Hz pre-amp capacitor roll-off, +4.5 dB resonant peak at 650 Hz, engaged Facial Fuzz, and parked Crying Clyde Wah at 45%.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the chain across Lane 1 (pre-amp EQ, Wah, Fuzz, and Plexi) and Lane 3 (Greenback Cab and stereo Studio Plate 70) for balanced DSP load."
+  ],
+  "builder_statement": "This preset recreates the iconic late-1960s British blues-rock 'Woman Tone' and vocal lead sustain using the jumped Brit Plexi 100 Patch and 412 Brit 60B GB '71 Greenback cabinet. By placing the Parametric-3 EQ at the very front of the chain to replicate the resonant peak and steep high-frequency roll-off of a zeroed passive tone capacitor—stacked into a parked Crying Clyde Wah and Facial Fuzz—the rig shifts seamlessly between warm, woody British rhythm crunch in Scene A and thick, violin-like lead sustain in Scene B.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "750 Hz",
+              "value_b": "600 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+5.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "3000 Hz",
+              "value_b": "1050 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Applies the +3.0 dB single-coil input lift and uses a slightly lower High Cut and stronger resonant peak so the Telecaster single coils achieve humbucker-like 'Woman Tone' girth.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "42%"
+            }
+          ],
+          "rationale": "Bypassed in Scene A and engaged at a slightly deeper 42% heel-side position in Scene B to add lower-mid body to the single-coil pickup.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-3",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Bypassed for Scene A rhythm and engaged with extra Drive (8.0) in Scene B to compensate for lower single-coil output and sustain effortlessly.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "9.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Tuned for the Telecaster with Bass raised to 5.5, Mid pushed to 7.5, Treble rolled back to 3.5, and Volume stepped +1.0 higher than the humbucker variant to drive the power section into thick compression.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Edge (X: 3.5\", Y: 2.0\" off-axis) for dark, smooth violin-like top end"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge (X: 1.5\", Y: 1.0\") for vocal midrange definition"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "75%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5500 Hz"
+            }
+          ],
+          "rationale": "Increases the dark Ribbon 121 blend to 75% and lowers the High Cut to 5500 Hz to smooth out Telecaster bridge-pickup twang.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            }
+          ],
+          "rationale": "Delivers stereo 1960s studio plate ambiance at the end of the chain, opening up in Scene B for lush lead sustain.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "800 Hz",
+              "value_b": "650 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+4.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "3500 Hz",
+              "value_b": "1200 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Placed first in the chain to emulate the passive tone-pot capacitor roll-off and resonant midrange peak in Scene B, while applying the -2.5 dB semi-hollow humbucker input trim.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "45%"
+            }
+          ],
+          "rationale": "Bypassed for rhythm in Scene A and engaged at a parked 45% mid-cocked position in Scene B for classic 'White Room' and 'Tales of Brave Ulysses' vocal midrange focus.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-3",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Bypassed in Scene A so the Plexi handles rhythm crunch alone, then engaged in Scene B to push the pre-filtered signal into thick, singing violin sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Jumped 100W Marshall Plexi model with Bass trimmed to 3.5 to keep the semi-hollow ES-339 tight and Master Volume pushed high for authentic power-tube compression.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit 60B GB '71",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Edge (X: 3.5\", Y: 2.0\" off-axis) for dark, smooth violin-like top end"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge (X: 1.5\", Y: 1.0\") for vocal midrange definition"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5800 Hz"
+            }
+          ],
+          "rationale": "Greenback 4x12 cab blending a dark Ribbon 121 and Dynamic 57 with a smooth 5800 Hz high cut to eliminate upper-mid fizz and preserve creamy sustain.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            }
+          ],
+          "rationale": "Provides vintage 1960s studio room/plate depth at the end of the chain, expanding in Scene B to give leads extra dimension.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

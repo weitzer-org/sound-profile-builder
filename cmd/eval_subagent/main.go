@@ -1,266 +1,196 @@
 package main
 
+// eval_subagent is the Phase 1A screen of docs/eval/gemini-model-upgrade-test-plan.md: it runs the
+// three agents whose input is a direct function of the user query (1 Tone Historian, 2 Sonic
+// Profiler, 3 Community Scraper) on each agent's production model and on the candidate models,
+// over the golden queries, WITHOUT running the pipeline. Every other agent consumes upstream
+// output and is covered by cmd/eval_full_pipeline (agents 4-11, 13) or cmd/eval_architect (12).
+//
+// Per call it records the served model, finish reason, whether the response carried Google
+// Search grounding evidence, schema validity (against the exact typed schema production sends),
+// truncation, latency and tokens, then reports rates per (agent, model).
+//
+// Safeguards: -dry-run defaults to true and prints the exact call grid; live runs require
+// EVAL_NO_FALLBACK=true so a failing candidate fails visibly instead of being answered by a
+// fallback model (plan principle 3).
+
 import (
 	"context"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/evalcheck"
 	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
 )
 
-// eval_subagent benchmarks gemini-3.6-flash as a candidate replacement against each
-// agent's current production model, one agent at a time. Only agents whose input is a
-// direct function of the user query (no upstream agent output required) are covered here --
-// Tone Historian, Sonic Profiler, and Community Scraper. Every other agent (4-11, 13)
-// consumes prior agents' outputs as context and can't be meaningfully isolated this way;
-// those are covered instead by cmd/eval_full_pipeline's mixed-routing scenarios.
-const candidateModel = "gemini-3.6-flash"
-
-type EvalRunResult struct {
-	Query        string
-	ModelLabel   string
-	Content      string
-	LatencySec   float64
-	InputTokens  int32
-	OutputTokens int32
-	Error        string
-}
-
-type AgentSpec struct {
-	Role            string // RunAgentSplit agentRole
-	Key             string // agentConfig/AgentModels key
-	BaselineModel   string // current production model for this agent
-	BuildUserPrompt func(query string) string
-}
-
 func main() {
-	log.Println("🪐 Starting gemini-3.6-flash Candidate Subagent Benchmark Suite...")
+	agentsFlag := flag.String("agents", "1,2,3", "independent agents to screen: 1,2,3 (or prompt keys)")
+	modelsFlag := flag.String("models", "default", "candidate models for every selected agent, comma-separated; \"default\" = the plan's per-agent candidates. The agent's baseline is always included.")
+	queriesFlag := flag.String("queries", "all", "comma-separated golden query names (or all 13)")
+	reps := flag.Int("reps", 2, "repetitions per (agent, model, query)")
+	dryRun := flag.Bool("dry-run", true, "print the exact call grid and exit without calling Gemini; pass -dry-run=false to spend money")
+	parallel := flag.Int("parallel", 1, "concurrent calls (one orchestrator per worker); latency numbers are only comparable within one run")
+	maxCalls := flag.Int("max-calls", 0, "hard cap on live calls (0 = the grid size); refuses to start if the grid is larger")
+	allowFallback := flag.Bool("allow-fallback", false, "permit a live run without EVAL_NO_FALLBACK=true (results are NOT scoreable)")
+	outDir := flag.String("out", "", "output directory (default eval_results/phase1/subagent/<UTC timestamp>); one that already has calls.jsonl is refused")
+	flag.Parse()
+
+	if *reps < 1 || *parallel < 1 {
+		log.Fatal("-reps and -parallel must be >= 1")
+	}
+	specs, err := SelectAgents(Specs(), *agentsFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	golden := evalfixtures.GoldenQueries()
+	queries, err := SelectQueries(evalfixtures.GoldenQueryOrder(), golden, *queriesFlag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	jobs := BuildGrid(specs, *modelsFlag, queries, *reps)
+	perAgent, total := GridCounts(jobs)
+
+	fmt.Printf("Plan: %d agent(s) x %d queries x %d reps\n", len(specs), len(queries), *reps)
+	for _, sp := range specs {
+		ms := ModelsFor(sp, *modelsFlag)
+		fmt.Printf("  agent %d %-18s models=%v  %d x %d x %d = %d calls\n", sp.Num, sp.Role, ms, len(ms), len(queries), *reps, perAgent[sp.Key])
+	}
+	fmt.Printf("TOTAL: %d API calls (one attempt each; EVAL_NO_FALLBACK disables retries)\n", total)
+	if *dryRun {
+		fmt.Println("DRY RUN -- no Gemini calls made. Pass -dry-run=false to execute.")
+		return
+	}
+	if *maxCalls > 0 && total > *maxCalls {
+		log.Fatalf("grid is %d calls, above -max-calls %d; refusing to start", total, *maxCalls)
+	}
+	if !agents.EvalNoFallbackEnabled() && !*allowFallback {
+		log.Fatalf("%s=true is required for live runs. Set it, or pass -allow-fallback (results will NOT be scoreable).", agents.EvalNoFallbackEnv)
+	}
+	if set := agents.AblationEnvSet(); len(set) > 0 {
+		log.Fatalf("%v set: those agents would return a stub without calling a model; unset them for a live eval", set)
+	}
+	if os.Getenv("TARGET_MODEL") != "" {
+		log.Fatal("TARGET_MODEL is set; unset it so it cannot interfere with per-agent routing")
+	}
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		log.Fatal("GEMINI_API_KEY must be set to run live evals")
+	}
+	cfg, err := config.LoadConfig("config.json")
+	if err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+
+	if *outDir == "" {
+		*outDir = filepath.Join("eval_results", "phase1", "subagent", time.Now().UTC().Format("20060102T150405Z"))
+	}
+	callsPath := filepath.Join(*outDir, "calls.jsonl")
+	if _, err := os.Stat(callsPath); err == nil {
+		log.Fatalf("%s already exists; pick a fresh -out", callsPath)
+	}
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		log.Fatal(err)
+	}
+	f, err := os.OpenFile(callsPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
 
 	ctx := context.Background()
-
-	// 1. Fetch Credentials. Reads GEMINI_API_KEY directly (matching how the app itself
-	// authenticates locally, see cmd/server/main.go's localSecretFetcher, and how cmd/eval
-	// does it) rather than requiring a GCP project + Secret Manager access.
-	geminiKey := os.Getenv("GEMINI_API_KEY")
-	if geminiKey == "" {
-		log.Fatalf("GEMINI_API_KEY must be set to run live evals")
-	}
-
-	// 2. Instantiate the Orchestrator (Gemini only -- Open-LLM isn't part of this comparison)
-	orch, err := agents.NewOrchestrator(ctx, geminiKey, nil)
-	if err != nil {
-		log.Fatalf("Failed to initialize Orchestrator: %v", err)
-	}
-	defer orch.Close()
-
-	agentSpecs := []AgentSpec{
-		{
-			Role:          "Tone Historian",
-			Key:           "1_tone_historian",
-			BaselineModel: "gemini-3.1-pro-preview", // Pro tier
-			BuildUserPrompt: func(query string) string {
-				return "User Request: " + query
-			},
-		},
-		{
-			Role:          "Sonic Profiler",
-			Key:           "2_sonic_profiler",
-			BaselineModel: "gemini-3.5-flash", // Flash tier
-			BuildUserPrompt: func(query string) string {
-				return fmt.Sprintf("User Request: %s\nQC Block Parameter Vocabulary: %s", query, agents.GetQCSonicProfilerSchemaJSON())
-			},
-		},
-		{
-			Role:          "Community Scraper",
-			Key:           "3_community_scraper",
-			BaselineModel: "gemini-3.5-flash", // Flash tier
-			BuildUserPrompt: func(query string) string {
-				return "User Request: " + query
-			},
-		},
-	}
-
-	// The 13 Standard Archetype Evaluation Queries (shared with every other cmd/eval_* tool)
-	evalQueries := evalfixtures.GoldenQueries()
-	queryNamesOrdered := evalfixtures.GoldenQueryOrder()
-
-	reportDir := "eval_results/subagent"
-	if err := os.MkdirAll(reportDir, 0755); err != nil {
-		log.Fatalf("Failed to create report directory: %v", err)
-	}
-
-	for _, spec := range agentSpecs {
-		log.Printf("\n=============================================================")
-		log.Printf("▶ AGENT: %s (baseline: %s, candidate: %s)", spec.Role, spec.BaselineModel, candidateModel)
-		log.Printf("=============================================================")
-
-		sysPrompt, err := agents.LoadPrompt(spec.Key, "")
+	jobCh := make(chan Job)
+	var mu sync.Mutex
+	var results []CallResult
+	var wg sync.WaitGroup
+	done := 0
+	for w := 0; w < *parallel; w++ {
+		orch, err := agents.NewOrchestrator(ctx, key, nil)
 		if err != nil {
-			log.Fatalf("Failed to load system prompt for %s: %v", spec.Role, err)
+			log.Fatalf("init orchestrator: %v", err)
 		}
-
-		modelVariants := []struct {
-			Label string
-			Model string
-		}{
-			{Label: fmt.Sprintf("Baseline (%s)", spec.BaselineModel), Model: spec.BaselineModel},
-			{Label: fmt.Sprintf("Candidate (%s)", candidateModel), Model: candidateModel},
-		}
-
-		results := []EvalRunResult{}
-
-		for _, name := range queryNamesOrdered {
-			query := evalQueries[name]
-			log.Printf(" -> Scenario: %s", name)
-
-			for _, mVariant := range modelVariants {
-				log.Printf("    Executing on: %s...", mVariant.Label)
-
-				// Clear statistics by instantiating a fresh tracker
-				orch.Usage = &agents.TokenUsage{
-					ModelsUsed: make(map[string]int),
-				}
-
-				orch.AgentModels = map[string]string{
-					spec.Key: mVariant.Model,
-				}
-
-				start := time.Now()
-				res, err := orch.RunAgentSplit(ctx, spec.Role, sysPrompt, spec.BuildUserPrompt(query))
-				duration := time.Since(start).Seconds()
-
-				runResult := EvalRunResult{
-					Query:      query,
-					ModelLabel: mVariant.Label,
-					LatencySec: duration,
-				}
-
-				if err != nil {
-					log.Printf("    ❌ Failed: %v", err)
-					runResult.Error = err.Error()
+		wg.Add(1)
+		go func(orch *agents.Orchestrator) {
+			defer wg.Done()
+			defer orch.Close()
+			for j := range jobCh {
+				res := runJob(ctx, orch, j, golden[j.Query], cfg.AgentPrompts[j.Spec.Key])
+				mu.Lock()
+				results = append(results, res)
+				done++
+				if b, err := json.Marshal(res); err == nil {
+					fmt.Fprintln(f, string(b))
 				} else {
-					log.Printf("    ✅ Success in %.2fs | Tokens: In %d, Out %d", duration, orch.Usage.InputTokens, orch.Usage.OutputTokens)
-					runResult.Content = res
-					runResult.InputTokens = orch.Usage.InputTokens
-					runResult.OutputTokens = orch.Usage.OutputTokens
+					log.Printf("marshal result: %v", err)
 				}
-
-				results = append(results, runResult)
+				log.Printf("[%d/%d] agent %d %-22s %-26s rep%d success=%v schema=%v finish=%s grounded=%v served=%s %.1fs",
+					done, total, j.Spec.Num, j.Query, j.Model, j.Rep, res.Success, res.SchemaValid, res.FinishReason, res.Grounded, res.ServedModel, float64(res.LatencyMs)/1000)
+				mu.Unlock()
 			}
-		}
-
-		reportPath := filepath.Join(reportDir, spec.Key+"_gemini36_benchmark_report.md")
-		log.Printf("\nGenerating comparison report at: %s...", reportPath)
-		generateReport(reportPath, spec.Role, queryNamesOrdered, evalQueries, results)
+		}(orch)
 	}
+	for _, j := range jobs {
+		jobCh <- j
+	}
+	close(jobCh)
+	wg.Wait()
 
-	log.Println("🏁 BENCHMARK COMPLETE! Reports written to " + reportDir)
+	stats := Aggregate(results)
+	md := Markdown(stats)
+	if err := os.WriteFile(filepath.Join(*outDir, "summary.md"), []byte(md), 0o644); err != nil {
+		log.Printf("write summary.md: %v", err)
+	}
+	if b, err := json.MarshalIndent(stats, "", "  "); err == nil {
+		if err := os.WriteFile(filepath.Join(*outDir, "summary.json"), b, 0o644); err != nil {
+			log.Printf("write summary.json: %v", err)
+		}
+	}
+	fmt.Println(md)
+	log.Printf("Done. Raw per-call records: %s", callsPath)
 }
 
-func generateReport(path string, agentRole string, queryNames []string, queries map[string]string, results []EvalRunResult) {
-	// Find all unique model labels present in the results (maintaining the order they appear)
-	var modelLabels []string
-	seenModels := make(map[string]bool)
-	for _, r := range results {
-		if !seenModels[r.ModelLabel] {
-			seenModels[r.ModelLabel] = true
-			modelLabels = append(modelLabels, r.ModelLabel)
-		}
-	}
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("# 🪐 %s - gemini-3.6-flash Candidate Benchmark Report\n\n", agentRole))
-	sb.WriteString(fmt.Sprintf("Baseline-vs-candidate quality and performance comparison for the **%s** agent.\n\n", agentRole))
-
-	sb.WriteString("## 📊 Performance Summary Matrix\n\n")
-
-	sb.WriteString("| Scenario | Metric")
-	for _, label := range modelLabels {
-		sb.WriteString(" | " + label)
-	}
-	sb.WriteString(" |\n| :--- | :---")
-	for range modelLabels {
-		sb.WriteString(" | :---")
-	}
-	sb.WriteString(" |\n")
-
-	runs := make(map[string]map[string]EvalRunResult)
-	for _, r := range results {
-		if _, ok := runs[r.Query]; !ok {
-			runs[r.Query] = make(map[string]EvalRunResult)
-		}
-		runs[r.Query][r.ModelLabel] = r
-	}
-
-	for _, name := range queryNames {
-		query := queries[name]
-		cleanName := strings.ReplaceAll(name, "_", " ")
-
-		sb.WriteString(fmt.Sprintf("| **%s** | Latency", cleanName))
-		for _, label := range modelLabels {
-			r := runs[query][label]
-			sb.WriteString(fmt.Sprintf(" | %.2fs", r.LatencySec))
-		}
-		sb.WriteString(" |\n")
-
-		sb.WriteString("| | Tokens (In/Out)")
-		for _, label := range modelLabels {
-			r := runs[query][label]
-			sb.WriteString(fmt.Sprintf(" | %d / %d", r.InputTokens, r.OutputTokens))
-		}
-		sb.WriteString(" |\n")
-
-		sb.WriteString("| | Status")
-		for _, label := range modelLabels {
-			r := runs[query][label]
-			status := "OK"
-			if r.Error != "" {
-				status = "Error"
-			}
-			sb.WriteString(" | " + status)
-		}
-		sb.WriteString(" |\n")
-	}
-
-	sb.WriteString("\n---\n\n")
-	sb.WriteString("## 🔍 Detailed Scenario Outputs & Prose Comparison\n\n")
-	sb.WriteString("Use the carousel cards below to compare the qualitative depth, specific gear references, and technical details of each variant's output.\n\n")
-
-	for _, name := range queryNames {
-		query := queries[name]
-		cleanName := strings.ReplaceAll(name, "_", " ")
-		sb.WriteString(fmt.Sprintf("### 🎸 Scenario: %s\n", cleanName))
-		sb.WriteString(fmt.Sprintf("> **Target Query:** *%s*\n\n", query))
-
-		sb.WriteString("````carousel\n")
-
-		for i, label := range modelLabels {
-			r := runs[query][label]
-			slideMarker := ""
-			if i > 0 {
-				slideMarker = "<!-- slide -->\n"
-			}
-			sb.WriteString(slideMarker)
-			sb.WriteString(fmt.Sprintf("### %s\n", label))
-			sb.WriteString(fmt.Sprintf("* **Latency:** %.2fs | **Tokens:** %d In / %d Out\n\n", r.LatencySec, r.InputTokens, r.OutputTokens))
-			if r.Error != "" {
-				sb.WriteString(fmt.Sprintf("❌ **Error:** %s\n", r.Error))
-			} else {
-				sb.WriteString(r.Content)
-			}
-			sb.WriteString("\n")
-		}
-		sb.WriteString("````\n\n")
-		sb.WriteString("---\n\n")
-	}
-
-	err := os.WriteFile(path, []byte(sb.String()), 0644)
+// runJob executes one call exactly as RunPipeline would for that agent (production prompt
+// selection, generation config, tools and caps) and scores it.
+func runJob(ctx context.Context, orch *agents.Orchestrator, j Job, query, promptVersion string) CallResult {
+	res := CallResult{Agent: j.Spec.Role, AgentKey: j.Spec.Key, Model: j.Model, Baseline: j.Baseline, Query: j.Query, Rep: j.Rep, PromptVersion: promptVersion}
+	orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
+	orch.AgentModels = map[string]string{j.Spec.Key: j.Model}
+	sys, err := orch.PromptForAgent(j.Spec.Key, promptVersion)
 	if err != nil {
-		log.Printf("Failed to write report file: %v", err)
+		res.Error = "load prompt: " + err.Error()
+		return res
 	}
+	out, runErr := orch.RunAgentSplit(ctx, j.Spec.Role, sys, j.Spec.BuildUserPrompt(query))
+	calls := orch.Usage.CallsSnapshot()
+	res.CallCount = len(calls)
+	if len(calls) > 0 {
+		c := calls[len(calls)-1]
+		res.ServedModel, res.FinishReason, res.Success = c.ServedModel, c.FinishReason, c.Success
+		res.Grounded, res.SearchQueries = c.Grounded, c.SearchQueries
+		res.LatencyMs, res.InputTokens, res.OutputTokens, res.ThinkTokens = c.LatencyMs, c.InputTokens, c.OutputTokens, c.ThinkingTokens
+		res.Error = c.Error
+		res.Truncated = c.FinishReason == "MAX_TOKENS"
+		res.ServedOK = c.AttemptModel == j.Model && agents.ServedModelMatches(ExpectedServed(j.Model), c.ServedModel)
+	}
+	if runErr != nil {
+		res.Success = false
+		if res.Error == "" {
+			res.Error = runErr.Error()
+		}
+		return res
+	}
+	res.Output = out
+	res.SchemaIssues = evalcheck.ValidateAgainstSchema(out, agents.AgentResponseSchema(j.Spec.Key))
+	res.SchemaValid = len(res.SchemaIssues) == 0
+	if len(res.SchemaIssues) > 5 {
+		res.SchemaIssues = append(res.SchemaIssues[:5], fmt.Sprintf("... %d more", len(res.SchemaIssues)-5))
+	}
+	return res
 }

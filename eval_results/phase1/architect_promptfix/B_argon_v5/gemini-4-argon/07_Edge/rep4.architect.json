@@ -1,0 +1,528 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the core U2-inspired sonic blueprint anchored by a 1964 Vox AC30 Top Boost paired with Celestion Alnico Blue speakers, a Shure SM57, Korg SDD-3000 / Memory Man style modulated delays, and a Tube Screamer boost.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Targeted edge-of-breakup EL84 cathode-biased compression with a bright EQ profile, recommending a 90 Hz low cut and 7500 Hz high cut to control harsh chime.",
+    "<strong>Agent 3 (Community Scraper):</strong> Highlighted the necessity of dotted-eighth (1/8d) tempo locking with light pitch modulation, treble/mid boosting in front of the amp, and keeping rhythm delay feedback under 35% to preserve note attack.",
+    "<strong>Agent 4 (Librarian):</strong> Translated the historical rig into native Quad Cortex blocks, locking in mandatory `UK C30 TopBoost` and `212 UK C30 '65` models alongside `Iba Green`, `Rage Booster`, `Circular Delay`, and `Studio Plate 70 (ST)`, while dictating pre-amp drive placement.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the user constraint disabling Cloud Captures, ensuring the entire signal chain relies strictly on built-in native models and factory captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Calculated pickup compensation for the Gibson ES-339 Humbuckers, prescribing a -3.0 dB input trim, a -2.0 dB amp volume reduction (translated to a lower 0-10 Volume dial setting on the algorithmic amp), and tightened bass (4.2) compared to the Fender Telecaster Single Coil.",
+    "<strong>Agent 7 (Transducer Tech):</strong> Configured the `212 UK C30 '65` cabinet mic placement with Mic 1 at Cap Edge (0.5 inches) and Mic 2 at Cone Edge (1.5 inches, 45° angle) blended at 70%.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Set protective live-mix frequency boundaries from 80 Hz to 6500 Hz and established a -1.5 dB lane output ceiling to prevent digital clipping during delay swells.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Defined a 375 ms base delay time (synced to 1/8d), 30% wet delay mix, and a 1.8s to 2.2s studio plate decay for spatial depth.",
+    "<strong>Agent 10 (Control Mapper):</strong> Programmed Scene A (Rhythm) for edge-of-breakup chime with `Iba Green` active and `Rage Booster` bypassed, and Scene B (Lead) engaging `Rage Booster` alongside higher amp gain, delay feedback, and reverb mix.",
+    "<strong>Agent 11 (DSP Architect):</strong> Structured the signal flow across two lanes, placing the pre-amp drives (`Iba Green` -> `Rage Booster`), `Circular Delay` (obeying the Pre-Amp Delay Rule for rhythmic chime), `UK C30 TopBoost`, and `212 UK C30 '65` before finishing with `Studio Plate 70 (ST)`."
+  ],
+  "builder_statement": "This preset captures classic rhythmic, edge-of-breakup British chime by pairing the `UK C30 TopBoost` amplifier and `212 UK C30 '65` Alnico Blue cabinet with pre-amp gain staging and dotted-eighth modulated echoes. In Scene A (Rhythm), the `Iba Green` capture gently pushes the EL84 preamp while the `Circular Delay` sits in front of the amp so its 1/8d repeats compress naturally with your pick attack; Scene B (Lead) engages the `Rage Booster` and increases amp saturation and spatial mix for soaring, harmonic sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Factory Neural Capture of a classic green overdrive placed first in the chain to add subtle midrange focus and preamp push; engaged in both scenes (`Bypass: Off`) with extra Gain and Volume push in Scene B.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Placed before the amp to inject upper-mid harmonics for lead work; bypassed in Scene A (`Bypass: On`) and engaged in Scene B (`Bypass: Off`) to push the AC30 into singing sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tempo Sync",
+              "type": "dropdown",
+              "value": "1/8d"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "34%",
+              "value_b": "45%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "30%",
+              "value_b": "38%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Depth",
+              "type": "slider",
+              "value": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mod Rate",
+              "type": "slider",
+              "value": "1.2 Hz"
+            }
+          ],
+          "rationale": "Positioned before the amplifier in accordance with the Pre-Amp Delay Rule so dotted-eighth (1/8d) repeats and light pitch modulation compress naturally through the EL84 tube stage; Feedback is kept at 34% in Scene A to prevent washing out attack.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-4",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.8",
+              "value_b": "6.4"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.2"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.4"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.2",
+              "value_b": "7.7"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.8",
+              "value_b": "7.8"
+            }
+          ],
+          "rationale": "Algorithmic model of the 1964 Vox AC30 Top Boost tuned for Telecaster single coils with fuller Bass (5.2), slightly tamed Treble (5.4), and higher Gain/Volume dial positions (6.8 in Scene A, 7.8 in Scene B) to compensate for lower single-coil output.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 0.5 inches distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge, 1.5 inches distance, 45° angle"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6600 Hz"
+            }
+          ],
+          "rationale": "Alnico Blue 2x12 cabinet using the Transducer Tech's dual-mic blend at 70%, paired with a 6600 Hz High Cut to tame single-coil top-end bite as advised by the Librarian.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "2.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Stereo studio plate placed at the end of the chain to wrap the rhythmic delay repeats in an ambient halo, expanding in Decay and Mix for Scene B leads.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Factory Neural Capture of a classic green overdrive placed before the amp; integrates the Acoustician's -3.0 dB input gain reduction and a -1.5 dB Bass trim so the ES-339's hotter semi-hollow humbuckers preserve clean edge-of-breakup chime.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.8"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Pre-amp treble/harmonic booster kept bypassed in Scene A (`Bypass: On`) and engaged in Scene B (`Bypass: Off`) with a slightly brighter Tone setting (5.8) to help the humbuckers cut through dense mixes.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tempo Sync",
+              "type": "dropdown",
+              "value": "1/8d"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "34%",
+              "value_b": "46%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "28%",
+              "value_b": "38%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mod Depth",
+              "type": "slider",
+              "value": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mod Rate",
+              "type": "slider",
+              "value": "1.2 Hz"
+            }
+          ],
+          "rationale": "Placed before the `UK C30 TopBoost` per the Pre-Amp Delay Rule for authentic dotted-eighth (1/8d) compression; rhythm Feedback is capped at 34% with a slightly leaner 28% Mix to keep thicker humbucker transients articulate.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-4",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.2",
+              "value_b": "5.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.2"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Algorithmic 1964 Vox AC30 Top Boost calibrated for the ES-339 with Bass trimmed to 4.2, Treble opened to 6.0 for chime, and the Acoustician/Control Mapper's -2.0 dB Scene A level offset translated into a lower 5.5 Volume dial setting (stepping up to 7.0 in Scene B).",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 0.5 inches distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge, 1.5 inches distance, 45° angle"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "75%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7300 Hz"
+            }
+          ],
+          "rationale": "Alnico Blue 2x12 cabinet featuring the Transducer Tech's dual-mic placement, adjusted to a 75% blend toward the brighter Cap Edge mic, a 95 Hz Low Cut to tighten semi-hollow resonance, and an open 7300 Hz High Cut to preserve humbucker air.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "2.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Post-cab stereo studio plate with a slightly longer 25 ms Pre-Delay and brighter 6.5 Tone setting to keep the warm ES-339 humbuckers clear and spacious across both scenes.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

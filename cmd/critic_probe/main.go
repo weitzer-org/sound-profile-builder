@@ -45,6 +45,24 @@ func main() {
 		dir = "/tmp/qc2-eval-full/tier1"
 	}
 
+	// CRITIC_MODEL selects the re-scoring Critic (default gemini-4-argon since 2026-11-05; it was
+	// hard-coded to gemini-3.1-pro-preview before). OUT_FILE, when set, receives one JSON record per
+	// scored file, including the API-reported served model, so arms can be compared afterwards.
+	criticModel := os.Getenv("CRITIC_MODEL")
+	if criticModel == "" {
+		criticModel = "gemini-4-argon"
+	}
+	outFile := os.Getenv("OUT_FILE")
+	type scored struct {
+		File        string               `json:"file"`
+		CriticModel string               `json:"critic_model"`
+		Served      string               `json:"served_model"`
+		Issues      []agents.CriticIssue `json:"issues"`
+		Error       string               `json:"error,omitempty"`
+	}
+	var records []scored
+	log.Printf("critic model: %s", criticModel)
+
 	criticSystemPrompt, err := agents.LoadPrompt("13_critic", "")
 	if err != nil {
 		log.Fatalf("failed to load prompts/13_critic.md: %v", err)
@@ -82,9 +100,10 @@ func main() {
 		}
 
 		prompt := fmt.Sprintf(criticPromptTemplate, criticSystemPrompt, string(data))
-		resp, err := client.Models.GenerateContent(ctx, "gemini-3.1-pro-preview", []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
+		resp, err := client.Models.GenerateContent(ctx, criticModel, []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("critic failed for %s: %v", base, err)
+			records = append(records, scored{File: base, CriticModel: criticModel, Error: err.Error()})
 			continue
 		}
 		if resp.UsageMetadata != nil {
@@ -95,8 +114,10 @@ func main() {
 		var result criticResult
 		if err := json.Unmarshal([]byte(agents.StripJSONFences(resp.Text())), &result); err != nil {
 			log.Printf("failed to parse critic output for %s: %v\nraw: %s", base, err, resp.Text())
+			records = append(records, scored{File: base, CriticModel: criticModel, Served: resp.ModelVersion, Error: "unparseable: " + err.Error()})
 			continue
 		}
+		records = append(records, scored{File: base, CriticModel: criticModel, Served: resp.ModelVersion, Issues: result.Issues})
 
 		fmt.Printf("=== %s ===\n", base)
 		if len(result.Issues) == 0 {
@@ -108,5 +129,14 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\n=== SUMMARY ===\nTotal issues found: %d\nTotal tokens: in=%d out=%d\n", totalIssues, totalIn, totalOut)
+	fmt.Printf("\n=== SUMMARY ===\nCritic: %s\nTotal issues found: %d\nTotal tokens: in=%d out=%d\n", criticModel, totalIssues, totalIn, totalOut)
+	if outFile != "" {
+		b, err := json.MarshalIndent(records, "", "  ")
+		if err != nil {
+			log.Fatalf("marshal results: %v", err)
+		}
+		if err := os.WriteFile(outFile, b, 0o644); err != nil {
+			log.Fatalf("write %s: %v", outFile, err)
+		}
+	}
 }

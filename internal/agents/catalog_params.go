@@ -6,7 +6,7 @@ package agents
 // file turns that into two things:
 //
 //   - CatalogParamContext: a compact, per-model listing of the parameters of the blocks
-//     chosen in a run, injected into the Architect's context (v5+ prompts only, see
+//     chosen in a run, injected into the Architect's context (catalog-aware prompts, v6, only; see
 //     architectUsesCatalogParams), so it can use the device's real names and ranges.
 //   - FlagCatalogParamMismatches: a post-generation check that annotates a block's
 //     Rationale when a parameter name, value, switch position or unit contradicts the
@@ -300,7 +300,7 @@ const maxCatalogContextModels = 16
 
 func formatNum(x float64) string { return strconv.FormatFloat(x, 'g', -1, 64) }
 
-// renderDeviceParam is one parameter in the compact form documented in the v5 prompt:
+// renderDeviceParam is one parameter in the compact form documented in the v6 prompt:
 //
 //	GAIN 0..10 d5            numeric range, default 5
 //	OUTPUT -60..12dB min=OFF d0
@@ -577,7 +577,7 @@ type CatalogParamCounts struct {
 	UnitMismatches  int // a unit that contradicts the device control
 	BasisOverclaims int // basis "confirmed_range" where the device's range isn't known
 	// CabConvention counts cab parameters from the old Mic 1/Mic 2/Blend convention the
-	// device has no control for (Blend). Separate from UnknownNames so a v4-vs-v5
+	// device has no control for (Blend). Separate from UnknownNames so an old-vs-v6
 	// comparison can tell a convention change from a real wrong knob.
 	CabConvention int
 	// UnrecognizedBlocks counts non-capture blocks whose name is neither a device block nor

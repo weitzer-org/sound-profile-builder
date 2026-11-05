@@ -1,0 +1,444 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Established the foundational 1964 Vox AC30 Top Boost amp and Alnico Blue speaker combination, alongside classic TS9 and Memory Man pedals for the target era.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the edge-of-breakup EL84 saturation style and specified the ambient hall space requirements, including a -65dB noise gate target.",
+    "<strong>Agent 3 (Scraper):</strong> Identified the critical need for 1/8d tempo sync to prevent rhythmic drift and suggested a treble booster to push the upper-mid harmonics.",
+    "<strong>Agent 4 (Librarian):</strong> Selected the mandatory algorithmic UK C30 TopBoost and 212 UK C30 '65 cab blocks, and mapped the suggested pedals to native QC equivalents like the Iba Green and Rage Booster.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the strict exclusion of Cloud Captures, ensuring all selected blocks rely entirely on native factory models and captures.",
+    "<strong>Agent 6 (Acoustician):</strong> Tailored the input gain (-3.0dB) and EQ for the ES-339 humbuckers to prevent muddy low-end and premature clipping.",
+    "<strong>Agent 7 (Transducer):</strong> Configured the dual SM57 mic placement (Cap Edge and Cone Edge) with a 70% blend for balanced attack and body.",
+    "<strong>Agent 8 (FOH):</strong> Applied global high/low pass filters and a -1.5dB lane output pad to ensure mix-ready clarity and headroom.",
+    "<strong>Agent 9 (Mix):</strong> Dialed in the 375ms delay time and 1.8s reverb decay with a 30% wet mix to create the expansive ambient space.",
+    "<strong>Agent 10 (Map):</strong> Structured the Scene A (Rhythm) and Scene B (Lead) parameter variations, orchestrating gain pushes, pedal bypass states, and delay feedback increases.",
+    "<strong>Agent 11 (DSP):</strong> Routed the signal chain efficiently across two lanes, placing the drive blocks before the amp to compress naturally and running the time-based effects post-cab."
+  ],
+  "builder_statement": "Built to deliver a classic edge-of-breakup Vox chime, utilizing a pushed AC30 Top Boost model paired with Alnico Blue speakers. The signal chain leverages an Iba Green capture and a Rage Booster for staged saturation, feeding into tempo-synced dotted-eighth delays and a lush plate reverb for expansive, rhythmic ambient textures.",
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Selected as a pre-trained Neural Capture to provide the foundational TS9-style mid-push. Formatted strictly with relative dB controls per capture rules.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.0",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Acts as a secondary gain stage engaged exclusively in Scene B to push the AC30 into singing lead territory.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.2",
+              "value_b": "5.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "Level",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "The core algorithmic amp block providing the signature Vox chime. Input gain and level are padded down in Scene A to accommodate the higher output of the humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 0.5 inches distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge, 1.5 inches distance, 45° angle"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            }
+          ],
+          "rationale": "Mandatory Alnico Blue speaker cabinet emulation. High cut is set to 7500Hz to retain the natural top-end chime without becoming piercing with humbuckers.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tempo Sync",
+              "type": "dropdown",
+              "value": "1/8d"
+            },
+            {
+              "basis": "estimate",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "38%",
+              "value_b": "48%"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "30%",
+              "value_b": "40%"
+            }
+          ],
+          "rationale": "Provides the rhythmic dotted-eighth repeats essential for the targeted ambient style. Feedback and mix are boosted in Scene B for trailing lead lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2s",
+              "value_b": "2.8s"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Creates a lush, wide ambient space behind the amp and delay. Decay time is extended in Scene B to support sustained solo notes.",
+          "type": "Reverb"
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.0 dB"
+            }
+          ],
+          "rationale": "Adjusted capture settings for single coils. Gain and mid-push are slightly increased, while treble is tamed to compensate for the Telecaster's inherent brightness.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Acts as a secondary gain stage engaged exclusively in Scene B. Gain is slightly higher here to ensure the lower-output single coils still achieve full saturation.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "6.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Amp block tuned for the Telecaster. Gain is increased to hit the edge-of-breakup sweet spot, bass is raised for body, and treble is rolled back to prevent ice-pick frequencies.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 UK C30 '65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 0.5 inches distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Edge, 1.5 inches distance, 45° angle"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            }
+          ],
+          "rationale": "High cut is aggressively lowered to 6500Hz per Librarian tactical hints to tame the excessive top-end bite typical of single coils into a Vox circuit.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tempo Sync",
+              "type": "dropdown",
+              "value": "1/8d"
+            },
+            {
+              "basis": "estimate",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "38%",
+              "value_b": "48%"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "30%",
+              "value_b": "40%"
+            }
+          ],
+          "rationale": "Provides the rhythmic dotted-eighth repeats essential for the targeted ambient style. Feedback and mix are boosted in Scene B for trailing lead lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2s",
+              "value_b": "2.8s"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Creates a lush, wide ambient space behind the amp and delay. Decay time is extended in Scene B to support sustained solo notes.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

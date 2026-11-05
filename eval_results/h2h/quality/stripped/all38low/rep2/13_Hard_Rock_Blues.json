@@ -1,0 +1,472 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational vintage British rock rig consisting of a Marshall 1959 Super Lead Plexi paired with a Celestion Greenback-loaded 1960A 4x12 and vintage fuzz/boost pedal references.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed asymmetric power-amp breakup, an 800 Hz mid-push profile, bandpass filtering boundaries (90 Hz low cut and 6500 Hz high cut), and vintage studio plate reverb ambiance.",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Recommended using Greenback-style speaker IRs, off-axis dynamic mic positioning, and low-gain/high-level overdrive pushes while warning against high-gain V30 harshness.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Resolved target gear to Quad Cortex native devices: Brit Plexi 100 Patch, 412 Brit TV GB75Hz '69 cab, Green 808, Facial Fuzz, Rage Booster, Circular Delay, and Studio Plate 70 (ST).",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified and confirmed dropped gear reconciliation, eliminating the secondary Brit 2203 in compliance with the single-amp constraint.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Tailored distinct input gain and tonestack offsets: padding the hotter Gibson ES-339 humbuckers while boosting the bridge-cut Telecaster single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Defined dual-mic cabinet parameters matching classic Greenback miking with Cap Edge 1.5 in Off-Axis and Cone Sweetspot 3.0 in On-Axis at a 65% blend.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Implemented the bandpass filtering (80 Hz to 6500 Hz) and set the global lane output to -2.5 dB to prevent digital inter-stage clipping.",
+    "\u003cstrong\u003eAgent 9 (Mix Master):\u003c/strong\u003e Configured post-amp spatial depth parameters, specifying 500 ms delay repeats and a 1.8 s plate reverb decay at a 25% wet mix.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Assigned Scene A (Rhythm) and Scene B (Lead) states, automating Green 808 engage, amp volume/gain lifts, and delay activation for soloing.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Routed the signal layout logically across dual paths, allocating front-end dirt pedals to Lane 1 before the Plexi amp and placing post-cab time effects on Lane 2."
+  ],
+  "builder_statement": "Built around the legendary Brit Plexi 100 Patch driving a vintage 412 Brit TV GB75Hz '69 Greenback cabinet. The preset provides dynamic edge-of-breakup British crunch in Scene A, seamlessly escalating into a singing lead tone in Scene B via a front-end Green 808 boost and Circular Delay.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Fuzz",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Classic vintage germanium fuzz positioned at the very front of the signal chain for optimal impedance reaction.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Boost",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Rangemaster-style treble booster to saturate the Plexi front end when engaged.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.0"
+            }
+          ],
+          "rationale": "Engaged in Scene B to push the Plexi into tight, vocal lead saturation while rolling off excessive Tele top end.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.6",
+              "value_b": "7.4"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.6"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Core vintage British rock amplifier, dialed with boosted mids and lower treble to balance bright single-coil pickups.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge 1.5 in Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Sweetspot 3.0 in On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Classic 4x12 Greenback cab offering smooth low mids and tame top-end response.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "500 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Engaged during Scene B leads to provide spacious, non-intrusive repeats post-cabinet.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "25%"
+            }
+          ],
+          "rationale": "Provides a lush studio plate ambiance across both rhythm and lead playing.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Fuzz",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Classic vintage germanium fuzz positioned at the very front of the signal chain for optimal impedance reaction.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-2",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Boost",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Rangemaster-style treble booster to saturate the Plexi front end when engaged.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.0"
+            }
+          ],
+          "rationale": "Engaged in Scene B to tighten humbucker low end and push the Plexi into singing lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.2",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.8",
+              "value_b": "7.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Core vintage British rock amplifier, dialed with reduced bass to prevent mud with high-output semi-hollow humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "412 Brit TV GB75Hz '69",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge 1.5 in Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone Sweetspot 3.0 in On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Classic 4x12 Greenback cab delivering warm mid bloom and natural top-end rolloff.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "500 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Engaged during Scene B leads to provide spacious, non-intrusive repeats post-cabinet.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "25%"
+            }
+          ],
+          "rationale": "Provides a lush studio plate ambiance across both rhythm and lead playing.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

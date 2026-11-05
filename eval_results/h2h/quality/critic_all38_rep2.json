@@ -1,0 +1,172 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-2",
+        "issue": "The rationale states the block is \"available in reserve for raw garage-fuzz leads\" and the builder_statement describes Scene A as \"clean-to-crunch rhythm\", yet this fuzz capture block has no Bypass parameter (or is not bypassed) and remains active in the signal path across all scenes.",
+        "severity": "high"
+      },
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-5",
+        "issue": "The rationale describes a \"tape slapback echo adding analog dimension\" and the builder_statement claims \"vintage slapback echo\", which contradicts the selected \"Circular Delay\" model (a digital multi-tap/circular delay rather than a tape or analog delay model).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-2",
+        "issue": "The builder_statement describes Scene A as \"clean-to-crunch rhythm\", yet the \"Otso Bender Mk1\" fuzz capture block has no Bypass parameter (leaving it permanently active in the signal path alongside the amp).",
+        "severity": "high"
+      }
+    ]
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-5",
+        "issue": "The rationale claims the block 'Recreates Echoplex tape slapback', which contradicts the selected 'Circular Delay' model (a digital circular/ping-pong delay rather than a tape echo emulation).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale claims 'Tape-style warmth... to deliver vintage echo', which contradicts the selected 'Circular Delay' model (a digital circular delay rather than a tape delay model).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale claims the cabinet is \"pairing dual off-axis mics\", which contradicts Mic 2's parameter value of \"Cone Mid / 2.50 in Distance / 0 deg On-Axis\".",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-5",
+        "issue": "The rationale claims the block \"Recreates the rhythmic tape/drum repeats of the vintage Binson Echorec unit\", which contradicts the selected \"Circular Delay\" model (a digital multi-tap/circular delay based on the Lexicon PCM70 rather than a tape/magnetic drum echo emulation).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale claims the block \"Recreates the rhythmic tape/drum repeats of the vintage Binson Echorec unit\", which contradicts the selected \"Circular Delay\" model (a digital multi-tap/circular delay based on the Lexicon PCM70 rather than a tape/magnetic drum echo emulation).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The builder_statement describes this post-cabinet block as a \"tape delay\", which contradicts the selected digital rack-style model \"Circular Delay\".",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The rationale and builder_statement claim this block is a \"Studio tape echo simulation\" and \"tape delay\", contradicting the digital rack-style model \"Circular Delay\".",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-4",
+        "issue": "The builder_statement claims the post-cabinet graphic EQ 'rolls off harsh black-panel top end', but block-4 (Graphic-9) only contains '1kHz' and 'Level' parameters with no high-frequency roll-off or attenuation.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-4",
+        "issue": "The builder_statement claims the post-cabinet graphic EQ 'rolls off harsh black-panel top end', but block-4 (Graphic-9) only contains '1kHz' and 'Level' parameters with no high-frequency roll-off or attenuation.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-6",
+        "issue": "The rationale describes the block as an \"Aqua-Puss style analog slapback delay\", whereas the selected model \"Circular Delay\" is a digital delay (Lexicon PCM70 Circular Delays emulation) rather than an analog delay.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-4",
+        "issue": "The rationale states the delay provides \"rhythmic space\" alongside lead reinforcement, and Mix is scaled between Scene A (\"20%\") and Scene B (\"26%\"), but Bypass is set to \"On\" (inactive) in Scene A so no delay is active during rhythm.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-3",
+        "issue": "The rationale claims the cabinet is paired with \"dual off-axis dynamic and ribbon mics\", which contradicts Mic 2 being explicitly set to \"Ribbon 121: Mid-Cone, 2.5 inches distance, on-axis\".",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  }
+]

@@ -1,6 +1,6 @@
 // eval_cost is the plan §5 cost gate: it reads a SMOKE batch written by
 // `eval_full_pipeline -smoke`, prices every run from its recorded tokens x the repo's
-// geminiPriceTable, and extrapolates the measured per-run cost to the full matrix. It makes NO
+// geminiPriceSchedule, and extrapolates the measured per-run cost to the full matrix. It makes NO
 // Gemini calls.
 //
 //	go run ./cmd/eval_cost -root eval_results/full_pipeline_gemini_upgrade/smoke-<ts>

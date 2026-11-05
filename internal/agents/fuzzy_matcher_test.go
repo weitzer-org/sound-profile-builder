@@ -411,7 +411,7 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 					{Name: "Mic 2", Value: "Ribbon 121"},
 					{Name: "MIC 1 LEVEL", Value: "0 dB"},
 					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
-				}}, // v5 device convention: per-mic levels instead of Blend -- complete
+				}}, // v6 device convention: per-mic levels instead of Blend -- complete
 				{ID: "6", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
 					{Name: "Mic 1", Value: "Dyn 57"},
 					{Name: "Mic 2", Value: "Ribbon 121"},

@@ -1,0 +1,129 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1668,
+    "output_tokens": 63,
+    "thinking_tokens": 1068,
+    "latency_ms": 7135,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 392,
+    "output_tokens": 197,
+    "thinking_tokens": 682,
+    "latency_ms": 8001,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 846,
+    "output_tokens": 284,
+    "latency_ms": 36774,
+    "grounded": false
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 37842,
+    "output_tokens": 186,
+    "thinking_tokens": 2061,
+    "latency_ms": 13057,
+    "grounded": false
+  },
+  {
+    "agent": "FOH Optimizer",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 160,
+    "output_tokens": 34,
+    "thinking_tokens": 571,
+    "latency_ms": 4148,
+    "grounded": false
+  },
+  {
+    "agent": "Transducer Tech",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 274,
+    "output_tokens": 49,
+    "thinking_tokens": 709,
+    "latency_ms": 5371,
+    "grounded": false
+  },
+  {
+    "agent": "Acoustician",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1889,
+    "output_tokens": 363,
+    "thinking_tokens": 725,
+    "latency_ms": 8287,
+    "grounded": false
+  },
+  {
+    "agent": "Mix Engineer",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 179,
+    "output_tokens": 27,
+    "thinking_tokens": 411,
+    "latency_ms": 3667,
+    "grounded": false
+  },
+  {
+    "agent": "DSP Dispatcher",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 361,
+    "output_tokens": 56,
+    "thinking_tokens": 864,
+    "latency_ms": 5554,
+    "grounded": false
+  },
+  {
+    "agent": "Control Mapper",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 827,
+    "output_tokens": 243,
+    "thinking_tokens": 1089,
+    "latency_ms": 8416,
+    "grounded": false
+  },
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-4-argon",
+    "success": false,
+    "error": "doRequest: error sending request: Post \"https://generativelanguage.googleapis.com/v1beta/models/gemini-4-argon:generateContent\": read tcp 127.0.0.1:33744-\u003e127.0.0.1:33357: read: connection reset by peer",
+    "latency_ms": 3040,
+    "grounded": false
+  }
+]

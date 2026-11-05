@@ -1,4 +1,4 @@
-// eval_architect_ab compares two Architect prompt versions (default v4 vs v5) on the golden
+// eval_architect_ab compares two Architect prompt versions (default v5 vs v6) on the golden
 // query set. Each run is the real full pipeline (RunPipeline) with config.json's models and
 // prompt pins; only agent_prompts["12_architect"] differs between the arms. Each output is
 // scored with RunMechanicalQualityChecks, the same deterministic checks production runs.
@@ -14,10 +14,10 @@
 // fails its run instead of being silently scored on another model; failed runs are listed
 // and left out of the averages.
 //
-// The catalog counts are reported per kind. Read CabConvention on its own: v4's prompt
-// always writes a cab "Blend", which the device doesn't have, so it counts against v4 by
+// The catalog counts are reported per kind. Read CabConvention on its own: a pre-v6 prompt
+// always writes a cab "Blend", which the device doesn't have, so it counts against it by
 // construction. Unconsidered (controls neither set nor kept at default) is only measured
-// for output that uses kept_defaults, so it is 0 for v4 by construction, not by merit.
+// for output that uses kept_defaults, so it is 0 for pre-v6 output by construction, not by merit.
 //
 // Output (under -out/<timestamp>/): runs.jsonl (one line per run, written as it finishes),
 // <query>_<arm>_rep<n>.json (the raw Architect output) and report.md.
@@ -55,8 +55,8 @@ type runLine struct {
 
 func main() {
 	dryRun := flag.Bool("dry-run", true, "print the plan and exit without calling Gemini; pass -dry-run=false to spend real money")
-	armA := flag.String("a", "v4", "Architect prompt version for arm A")
-	armB := flag.String("b", "v5", "Architect prompt version for arm B")
+	armA := flag.String("a", "v5", "Architect prompt version for arm A")
+	armB := flag.String("b", "v6", "Architect prompt version for arm B")
 	reps := flag.Int("reps", 1, "repetitions per (query, arm)")
 	queriesFlag := flag.String("queries", "all", "comma-separated golden-set query names, or all")
 	configPath := flag.String("config", "config.json", "app config (models, prompt pins, plugins, capture toggles)")
@@ -200,7 +200,7 @@ func reportValues(l runLine) [reportColumns]int {
 // renderReport averages each arm over its successful, parsed runs.
 func renderReport(lines []runLine, arms []string) string {
 	var sb strings.Builder
-	sb.WriteString("# Architect A/B\n\nAverages per successful run (lower is better). Device* columns are the catalog parameter check; CabConv counts v4-style Blend on cabs.\n\n")
+	sb.WriteString("# Architect A/B\n\nAverages per successful run (lower is better). Device* columns are the catalog parameter check; CabConv counts pre-v6 Blend on cabs.\n\n")
 	sb.WriteString("| Arm | OK/Runs | Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | DevUnknownName | DevRange | DevSwitch | DevUnit | DevBasis | DevUnrecognized | CabConv | Unconsidered | Checked blocks | In tok | Out+think tok |\n")
 	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, arm := range arms {

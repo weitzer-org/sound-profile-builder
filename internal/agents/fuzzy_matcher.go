@@ -716,7 +716,7 @@ func isMicSlotControl(norm string) bool { return micSlotControlPattern.MatchStri
 // functions: there's no safe default mic position/level value to fabricate on the block's
 // behalf.
 //
-// Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v5's device convention,
+// Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v6's device convention,
 // where Blend (a control the device doesn't have) is replaced by each mic's own level:
 // Mic 1, Mic 2, MIC 1 LEVEL and MIC 2 LEVEL. Names are compared lowercased with spaces
 // removed, by substring. The v4 form is unchanged (any name mentioning mic 1, any naming

@@ -1,0 +1,131 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The builder_statement and block rationale describe this as a \"tape delay\" and \"Tape-style slapback/ambient delay... to recreate Echoplex studio room depth,\" but the actual model assigned is \"Circular Delay\" (a digital delay based on the Lexicon PCM70 Circular Delays preset, rather than a tape delay model).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The builder_statement and block rationale describe this as a \"tape delay\" and \"EP-3-style delay repeats,\" but the actual model assigned is \"Circular Delay\" (a digital delay based on the Lexicon PCM70 rather than a tape delay model).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-1",
+        "issue": "The builder_statement claims \"Front-end optical compression\", but block-1 uses the \"Solid State Comp\" model rather than an optical compressor.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-1",
+        "issue": "The builder_statement and block-1 rationale claim \"front-end optical compression\", which contradicts the block's \"Solid State Comp\" model.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-1",
+        "issue": "The rationale describes the block as placed for \"expressive cleanup via guitar volume,\" yet Bypass is set to \"On\" with no value_b, meaning the block is permanently bypassed in both scenes.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-6",
+        "issue": "The rationale describes this block as a \"warm tape delay\" and the builder_statement calls it a \"tape-voiced circular delay,\" which contradicts the selected digital multi-tap delay model \"Circular Delay\".",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-1",
+        "issue": "The rationale claims the block provides \"volume-knob dynamics,\" yet Bypass is set to \"On\" with no value_b, leaving it permanently bypassed in both scenes.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-6",
+        "issue": "The rationale describes this block as a \"warm tape delay\" and the builder_statement calls it a \"tape-voiced circular delay,\" which contradicts the selected digital multi-tap delay model \"Circular Delay\".",
+        "severity": "medium"
+      }
+    ]
+  }
+]

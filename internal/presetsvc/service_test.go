@@ -493,7 +493,7 @@ func TestRefineAppendsRunID(t *testing.T) {
 // RefineChat used to load Architect v4 whatever config.json said; the run must now hand it
 // the configured versions.
 func TestRefinePassesConfiguredPromptVersions(t *testing.T) {
-	h := newHarnessWithConfig(t, &config.AppConfig{AgentPrompts: map[string]string{"12_architect": "v5"}})
+	h := newHarnessWithConfig(t, &config.AppConfig{AgentPrompts: map[string]string{"12_architect": "v6"}})
 	ctx := context.Background()
 	p := &storage.Preset{Name: "Warm Lead"}
 	if err := h.store.Save(ctx, p); err != nil {
@@ -509,8 +509,8 @@ func TestRefinePassesConfiguredPromptVersions(t *testing.T) {
 	h.orch.mu.Lock()
 	got := h.orch.refineVersions["12_architect"]
 	h.orch.mu.Unlock()
-	if got != "v5" {
-		t.Errorf("RefineChat saw 12_architect = %q, want the configured v5", got)
+	if got != "v6" {
+		t.Errorf("RefineChat saw 12_architect = %q, want the configured v6", got)
 	}
 }
 

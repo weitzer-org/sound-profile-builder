@@ -100,7 +100,7 @@ func architectRequestForPipeline(t *testing.T, agentConfig map[string]string) st
 var lastArchitectRequestBody string
 
 func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
-	v5 := architectRequestForPipeline(t, map[string]string{"4_coros_librarian": "v2", "12_architect": "v5"})
+	v6 := architectRequestForPipeline(t, map[string]string{"4_coros_librarian": "v2", "12_architect": "v6"})
 	for _, want := range []string{
 		"Device Block Parameters",
 		"Green 808 [Guitar Overdrive]: OVERDRIVE 0..10",
@@ -108,17 +108,17 @@ func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
 		"Device Effect Blocks",
 		"John Mayer Spring Reverb", // owned plugin effect
 	} {
-		if !strings.Contains(v5, want) {
-			t.Errorf("v5 Architect context is missing %q", want)
+		if !strings.Contains(v6, want) {
+			t.Errorf("v6 Architect context is missing %q", want)
 		}
 	}
 	for _, unwanted := range []string{"Made Up Amp 9000 [", "Petrucci Wah"} {
-		if strings.Contains(v5, unwanted) {
-			t.Errorf("v5 Architect context should not contain %q", unwanted)
+		if strings.Contains(v6, unwanted) {
+			t.Errorf("v6 Architect context should not contain %q", unwanted)
 		}
 	}
 	if !strings.Contains(lastArchitectRequestBody, "kept_defaults") {
-		t.Error("v5 Architect request schema should carry kept_defaults")
+		t.Error("v6 Architect request schema should carry kept_defaults")
 	}
 
 	for _, cfg := range []map[string]string{{"4_coros_librarian": "v2", "12_architect": "v4"}, nil} {
@@ -166,14 +166,14 @@ func TestRefineChatUsesConfiguredArchitectVersionAndPayloadParams(t *testing.T) 
 		return requestPromptText(t, lastBody)
 	}
 
-	v5 := refine(WithPromptVersions(ctx, map[string]string{"12_architect": "v5"}))
+	v6 := refine(WithPromptVersions(ctx, map[string]string{"12_architect": "v6"}))
 	for _, want := range []string{"Green 808 [Guitar Overdrive]: OVERDRIVE", "412 Brit 60B V30 95 [Cabsim", "MIC 1 LEVEL", "Device Effect Blocks", "Spring"} {
-		if !strings.Contains(v5, want) {
-			t.Errorf("v5 refine context is missing %q", want)
+		if !strings.Contains(v6, want) {
+			t.Errorf("v6 refine context is missing %q", want)
 		}
 	}
 	// RefineChat doesn't know which plugins the user owns, so it offers no plugin effects.
-	if strings.Contains(v5, "John Mayer Spring Reverb") {
+	if strings.Contains(v6, "John Mayer Spring Reverb") {
 		t.Error("refine's effects list should offer no plugin effects")
 	}
 
@@ -193,16 +193,16 @@ func TestRefineArchitectVersion(t *testing.T) {
 		ctx  context.Context
 		want string
 	}{
-		{ctx, "v4"},
-		{WithPromptVersions(ctx, map[string]string{"12_architect": "v5"}), "v5"},
-		{WithPromptVersions(ctx, map[string]string{"12_architect": "off"}), "v4"},
-		{WithPromptVersions(ctx, map[string]string{"4_coros_librarian": "v2"}), "v4"},
+		{ctx, refineArchitectPromptVersion},
+		{WithPromptVersions(ctx, map[string]string{"12_architect": "v6"}), "v6"},
+		{WithPromptVersions(ctx, map[string]string{"12_architect": "off"}), refineArchitectPromptVersion},
+		{WithPromptVersions(ctx, map[string]string{"4_coros_librarian": "v2"}), refineArchitectPromptVersion},
 	} {
 		if got := refineArchitectVersion(tc.ctx); got != tc.want {
 			t.Errorf("refineArchitectVersion = %q, want %q", got, tc.want)
 		}
 	}
-	for v, want := range map[string]bool{"v5": true, "v4": false, "v3": false} {
+	for v, want := range map[string]bool{"v6": true, "v5": false, "v4": false, "v3": false} {
 		prompt, err := LoadPrompt("12_architect", v)
 		if err != nil {
 			t.Fatalf("load %s: %v", v, err)
@@ -244,19 +244,19 @@ func TestPayloadBlockModels(t *testing.T) {
 	}
 }
 
-// v5 is the prompt that explains the catalog sections; v4 stays as it was.
+// v6 is the prompt that explains the catalog sections; v4 stays as it was.
 func TestArchitectV5PromptDescribesCatalogSections(t *testing.T) {
-	v5, err := LoadPrompt("12_architect", "v5")
+	v6, err := LoadPrompt("12_architect", "v6")
 	if err != nil {
-		t.Fatalf("load v5: %v", err)
+		t.Fatalf("load v6: %v", err)
 	}
 	for _, want := range []string{"# Device Block Parameters", "Device Effect Blocks", "MIC 1 LEVEL", "20*log10"} {
-		if !strings.Contains(v5, want) {
-			t.Errorf("v5 prompt is missing %q", want)
+		if !strings.Contains(v6, want) {
+			t.Errorf("v6 prompt is missing %q", want)
 		}
 	}
-	if strings.Contains(v5, "750Hz Slider: -5.0 dB") || strings.Contains(v5, "Use this rarely and honestly") {
-		t.Error("v5 still carries v4's EQ-summary or rare-confirmed_range instruction")
+	if strings.Contains(v6, "750Hz Slider: -5.0 dB") || strings.Contains(v6, "Use this rarely and honestly") {
+		t.Error("v6 still carries v4's EQ-summary or rare-confirmed_range instruction")
 	}
 	v4, err := LoadPrompt("12_architect", "v4")
 	if err != nil {

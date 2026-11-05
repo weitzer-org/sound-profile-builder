@@ -30,6 +30,12 @@ type Report struct {
 	UnitBearingValues     int `json:"unit_bearing_values"`      // REFERENCE ONLY: subset: number followed by a unit (dB, Hz, ms, s, %)
 	CaptureDBOnModeled    int `json:"capture_db_on_modeled"`    // DEFECT: Rule 9 five params in relative dB on a block the map says is NOT a capture (gear types)
 	ModeledStyleOnCapture int `json:"modeled_style_on_capture"` // DEFECT: Rule 9 five params NOT in relative dB on a block the map says IS a capture (gear types)
+	// REFERENCE ONLY (broader than CaptureDBOnModeled): any amp/drive-family dial (dialParamNames) on
+	// a known non-capture block written as relative dB OR as a bare signed offset ("-2.0"). Added
+	// after Phase 1B: the narrow counter missed "Level = +3.5 dB" on Brit Blues and "Volume = -2.0" /
+	// invented "Level = -2.0 dB" on UK C30 TopBoost. Not gated, because some algorithmic controls may
+	// be genuinely dB-native (see captureOnlyParamNames' comment) and that is not verified per block.
+	DialOffsetOnModeled int `json:"dial_offset_on_modeled"`
 
 	// (ii) Capture-vs-modeled contradictions.
 	CaptureClaimOnModeled       int            `json:"capture_claim_on_modeled"`       // DEFECT (ground truth): rationale calls a known non-capture block a Neural/Factory Capture
@@ -61,6 +67,11 @@ var (
 	captureClaim = regexp.MustCompile(`(?i)\b(?:factory|neural|pre-?trained|snapshot)(?:[ -]+(?:neural|factory|pre-?trained))*[ -]+capture\b`)
 	negation     = regexp.MustCompile(`(?i)(?:\bnot\b|\bnor\b|n't\b|rather than|instead of|\bnon-?|unlike|\bno\b)[^.;]{0,40}$`)
 	notOnly      = regexp.MustCompile(`(?i)\bnot only\b`)
+	signedNumber = regexp.MustCompile(`^[+-]\d+(\.\d+)?$`)
+	// dialParamNames are the 0-10 dial controls of the QC amp and drive vocabularies
+	// (internal/agents/qc_block_schema.json "amplifier" and "drive").
+	dialParamNames = map[string]bool{"gain": true, "volume": true, "bass": true, "mid": true, "treble": true,
+		"presence": true, "master volume": true, "drive": true, "tone": true, "level": true}
 )
 
 // Check parses one output envelope and runs every check. validBlocks is typically
@@ -108,6 +119,15 @@ func Check(envelopeJSON string, validBlocks map[string]bool) Report {
 						r.NonNumericValues++
 						if numberUnit.MatchString(v) {
 							r.UnitBearingValues++
+						}
+					}
+				}
+				// Cabinets are excluded: a cab's Level is plausibly a genuine dB output control
+				// (unverified against the QC manual), and every cab hit in Phase 2 was that pattern.
+				if known && !isCap && agents.IsCaptureEligibleBlockType(b.Type) && !strings.Contains(strings.ToLower(b.Type), "cab") && dialParamNames[strings.ToLower(strings.TrimSpace(p.Name))] && p.Type == "slider" {
+					for _, v := range []string{p.Value, p.ValueB} {
+						if v = strings.TrimSpace(v); v != "" && (agents.IsRelativeDB(v) || signedNumber.MatchString(v)) {
+							r.DialOffsetOnModeled++
 						}
 					}
 				}
