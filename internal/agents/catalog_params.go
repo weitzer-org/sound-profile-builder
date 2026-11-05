@@ -404,37 +404,29 @@ func renderDeviceBlocks(blocks []*deviceBlock) string {
 	return strings.Join(lines, "\n")
 }
 
-// alwaysEffectParamCategories are the effect categories whose every model's controls are
-// given to the Architect, chosen or not, so an effect it adds or swaps in (Rule 3) has its
-// real controls listed too. In the 2026-11-05 v5-vs-v6 eval, 79% of v6's leftover device
-// notes were effects it added whose controls it hadn't been shown (a Spring reverb, a
-// Slapback Delay); reverb and delay are on most presets, compressors, EQs and wahs on many.
-var alwaysEffectParamCategories = []string{"Delay", "Reverb", "Compressor", "Equalizer", "Wah"}
+// effectParamCategories are the effect categories whose every model's controls are given to
+// the Architect, chosen or not, so a delay or reverb it adds or swaps in (Rule 3) has its real
+// controls listed too. In the 2026-11-05 v5-vs-v6 eval, 79% of v6's leftover device notes were
+// a reverb or delay it added without having been shown its controls (a Spring, a Slapback
+// Delay); the chosen blocks' own controls are listed already. Kept to these two categories
+// because each one costs tokens on every run (~8 KB for delays, ~4.5 KB for reverbs with the
+// shipped plugin config).
+var effectParamCategories = []string{"Delay", "Reverb"}
 
-// CatalogEffectParamContext renders the controls of every model, one line per family, in
-// the alwaysEffectParamCategories and in the effect category of each chosen block (so a
-// chorus suggestion brings every modulation model), for the plugins the gate allows.
-// Models CatalogParamContext already lists for the same names are left out. Returns "" when
-// nothing is left.
+// CatalogEffectParamContext renders the controls of every model, one line per family, in the
+// effectParamCategories, for the plugins the gate allows. Models CatalogParamContext already
+// lists for the same names are left out. Returns "" when nothing is left.
 func CatalogEffectParamContext(names []string, validBlocks map[string]bool, gate PluginGate) string {
 	listed := map[string]bool{}
-	cats := map[string]bool{}
-	for _, c := range alwaysEffectParamCategories {
-		cats[c] = true
-	}
 	for _, b := range catalogParamBlocks(names, validBlocks, gate) {
 		listed[b.Name] = true
-		cats[b.Category] = true
 	}
 	cat, err := catalog.Embedded()
 	if err != nil {
 		return ""
 	}
 	var blocks []*deviceBlock
-	for _, c := range effectListCategories {
-		if !cats[c] {
-			continue
-		}
+	for _, c := range effectParamCategories {
 		families := map[string]bool{}
 		for i := range cat.Models {
 			if m := &cat.Models[i]; m.Category == c {

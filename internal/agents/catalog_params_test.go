@@ -385,14 +385,14 @@ func TestKeptDefaultsCoverage(t *testing.T) {
 	}
 }
 
-// The effects the Architect adds or swaps in get their controls listed: every model in the
-// common effect categories, plus the category of each chosen effect, minus the models
-// already listed for the chosen blocks, with plugin models only when owned.
+// The delays and reverbs the Architect adds or swaps in get their controls listed: every model
+// in those categories, minus the models already listed for the chosen blocks, with plugin
+// models only when owned.
 func TestCatalogEffectParamContext(t *testing.T) {
 	valid := BuildEffectiveValidBlocks(true, true)
 	none := NewPluginGate(false, nil)
-	got := CatalogEffectParamContext([]string{"Analog Delay", "Green 808"}, valid, none)
-	for _, want := range []string{"Spring [Reverb]: MIX", "Slapback Delay [Delay]:", "[Compressor]:", "[Equalizer]:", "[Wah]:"} {
+	got := CatalogEffectParamContext([]string{"Analog Delay", "Green 808", "Chief DC2W"}, valid, none)
+	for _, want := range []string{"Spring [Reverb]: MIX", "Slapback Delay [Delay]:"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("effect parameters missing %q", want)
 		}
@@ -400,22 +400,19 @@ func TestCatalogEffectParamContext(t *testing.T) {
 	if strings.Contains(got, "\nAnalog Delay [") || strings.HasPrefix(got, "Analog Delay [") {
 		t.Error("a chosen block's controls are already listed and shouldn't repeat")
 	}
-	if strings.Contains(got, "[Modulation]:") {
-		t.Error("modulation isn't a common category and nothing chosen is a modulation block")
-	}
-	if strings.Contains(got, "John Mayer") {
-		t.Error("plugin models need an owned plugin")
-	}
-	// A chosen modulation block brings its whole category.
-	if withMod := CatalogEffectParamContext([]string{"Chief DC2W"}, valid, none); !strings.Contains(withMod, "[Modulation]:") {
-		t.Error("a chosen modulation block should bring the modulation category")
+	for _, unwanted := range []string{"[Modulation]:", "[Compressor]:", "[Equalizer]:", "[Wah]:", "John Mayer"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("effect parameters should not contain %q (only delays and reverbs; plugins need ownership)", unwanted)
+		}
 	}
 	owned := CatalogEffectParamContext(nil, valid, NewPluginGate(true, []string{"John Mayer"}))
 	if !strings.Contains(owned, "John Mayer Spring Reverb [Reverb]:") {
-		t.Error("an owned plugin's effects should be listed")
+		t.Error("an owned plugin's reverb should be listed")
 	}
-	t.Logf("common categories, no plugins: %d bytes (~%d tokens)", len(got), len(got)/4)
-	if len(got) > 20000 {
-		t.Errorf("effect parameter section is %d bytes, over the 20000-byte ceiling", len(got))
+	all := CatalogEffectParamContext(nil, valid, PluginGate{}) // inactive gate: every plugin allowed
+	t.Logf("delays+reverbs: no plugins %d bytes (~%d tokens), shipped config's plugins %d bytes, every plugin %d bytes",
+		len(got), len(got)/4, len(owned), len(all))
+	if len(all) > 24000 {
+		t.Errorf("effect parameter section is %d bytes with every plugin, over the 24000-byte ceiling", len(all))
 	}
 }
