@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz at the very beginning of the signal chain before any buffered pedals to preserve high-impedance guitar interaction and roll-off dynamics.",
+    "Position the Green 808 and Rage Booster before the amp block to tighten low-end response and drive the Plexi front-end into vintage crunch.",
+    "Use a dynamic Shure SM57 microphone mic pairing on the 412 Brit 60A GB75Hz '89 cabinet block for classic British rock mid-range punch."
+  ]
+}

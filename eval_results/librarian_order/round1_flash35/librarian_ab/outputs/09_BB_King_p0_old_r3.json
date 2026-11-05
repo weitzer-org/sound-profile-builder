@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Spring Reverb block post-cab to emulate traditional Blackface combo spring reverb ambiance.",
+    "Use a Graphic EQ block to elevate midrange frequencies around 800Hz-1kHz for a warm, vocal lead body without introducing overdrive pedal saturation.",
+    "Drive clean saturation natively by increasing the amplifier master volume rather than utilizing overdrive pedals to preserve maximum headroom.",
+    "Position a Shure SM57 microphone slightly off-axis on the cabinet to smooth out high-end transients from humbucker pickups."
+  ]
+}

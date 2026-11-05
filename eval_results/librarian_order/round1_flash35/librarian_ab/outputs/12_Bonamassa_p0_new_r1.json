@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "MXR Custom Shop Joe Bonamassa FET Driver",
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Myth Drive before the Dumbbell ODS amplifier block with low drive to focus mid-range frequencies and tighten pick attack.",
+    "Position a dynamic mic (SM57 style) on-axis and a ribbon mic (M160 style) off-axis on the 2x12 cab block to capture warm sustain while taming high-end harshness.",
+    "Use a high-pass filter around 80Hz after the cabinet block to eliminate low-end boominess typical of D-style amp circuits."
+  ]
+}

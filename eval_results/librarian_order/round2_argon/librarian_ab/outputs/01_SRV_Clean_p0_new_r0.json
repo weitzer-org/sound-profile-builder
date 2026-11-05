@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Vibroverb"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad P10Q 16"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the amp block, set as a clean volume and midrange boost with low drive and high output level to push the front end of the amplifier.",
+    "Since single_amp_mode is enabled, rely on a single high-headroom American 4x10 platform (US SPR Vibrato) for both punchy rhythm and pushed Texas blues lead tones.",
+    "Pair the amp with the 410 cabinet using a blend of a Dynamic 57 mic on-axis for bite and a large-diaphragm condenser or Ribbon 121 off-axis to capture warm low-end and smooth out harsh high transients.",
+    "Place the Spring reverb AFTER the cabinet block with a modest mix and short decay to provide authentic vintage American blues room ambiance."
+  ]
+}

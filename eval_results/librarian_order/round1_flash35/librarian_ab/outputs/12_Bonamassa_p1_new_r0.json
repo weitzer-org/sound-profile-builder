@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp input as a mid-focused boost with low drive to tighten the D-Style amp gain structure",
+    "Position the dynamic SM57 on-axis for bite and pair it with a Ribbon mic off-axis to smooth out high-end transients",
+    "Keep the Bass control trimmed on the Dumbbell ODS block to prevent low-end flub during high-gain solo runs"
+  ]
+}

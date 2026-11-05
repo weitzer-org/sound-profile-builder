@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "VCA Comp (S/C)",
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Parametric-8",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Run the Watt D103 Normal amp block slightly pushed to edge-of-breakup so its subtle power-amp compression smooths out the fuzz transients rather than running it completely sterile.",
+    "Place the VCA Comp (S/C) first in the chain before the fuzz to provide smooth, sustained Gilmour-style bloom.",
+    "Use the RR Big Muff 1976 Original user capture (or native Fuzz Pi) as the primary lead voice, and immediately follow it with the TW Tube Drive, Exotic Z Boost, or Parametric-8 block to restore the vocal midrange and emulate the Colorsound Power Boost post-fuzz shaping.",
+    "Pair the 412 Watt S4123 cabinet with a Dynamic 57 and Condenser 87 microphone combination, engaging high-cuts on the cab block to tame upper-frequency fizz from the stacked fuzz.",
+    "Place the MX Flanger, Circular Delay, and Studio Plate 70 (ST) after the amp and cab blocks, padding the amp output slightly to prevent digital clipping into the lush, long-decay plate reverb."
+  ]
+}

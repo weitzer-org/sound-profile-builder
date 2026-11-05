@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring",
+    "Legendary 87 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the amp block to tighten low-end response and push the upper-midrange chime into 60s British invasion breakup.",
+    "Place the Otso Bender Mk1 BEFORE the amp block for vintage MkI fuzz textures.",
+    "Configure the 212 UK C30 65 cab block with a large-diaphragm condenser or blended ribbon and dynamic microphones, applying a gentle high-cut filter to tame top-end fizz.",
+    "Place the Circular Delay and Spring reverb blocks AFTER the cab block to emulate vintage WEM Copicat tape slapback and baseline room ambiance.",
+    "Keep the input gate threshold low so it does not choke the natural chime and sustain tail of edge-of-breakup chords."
+  ]
+}

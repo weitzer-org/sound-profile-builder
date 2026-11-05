@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2555 Lead",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the Brit 2555 Lead capture block to act as a transparent mid-boost and solo level lift, cutting low frequencies to prevent neck-pickup mud while avoiding the nasal coloration of a Tube Screamer.",
+    "Keep the output boost from the pre-amp Graphic-9 moderate so it does not clip the fixed input stage of the Brit 2555 Lead capture.",
+    "Pair a Dynamic 57 microphone slightly off-axis with a Ribbon 121 microphone blended lower on the 412 Brit 60B V30 95 cabinet block, engaging high-pass and low-pass filters to tighten the low end and tame high-end fizz.",
+    "Route the Circular Delay and Studio Plate 70 (ST) in series AFTER the cabinet block, rolling off the high frequencies on the delay repeats so they sit underneath the sustaining lead notes."
+  ]
+}

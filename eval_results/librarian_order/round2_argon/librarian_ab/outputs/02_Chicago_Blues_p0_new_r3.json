@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain to mimic vintage tape saturation.",
+    "Place the Green 808 BEFORE the amp capture set to low gain to gently push the front end without causing harsh clipping.",
+    "Use a Ribbon mic on the 112 US DLX Tweed WGS-Q 10s cabinet block and apply a low-cut filter to tame the inherent low-end flub of a pushed Tweed circuit.",
+    "Place the Spring reverb after the cab with a short decay and rolled-off high end to emulate a vintage Chess Records echo chamber without introducing metallic clang."
+  ]
+}

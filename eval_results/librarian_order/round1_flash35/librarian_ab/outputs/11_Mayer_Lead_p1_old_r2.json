@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp capture block with low gain and high output level to push midrange frequencies for lead sections.",
+    "Apply a high-pass filter around 80-100 Hz to prevent high-headroom Two-Rock clean captures from developing low-end mud.",
+    "Mic the 212 cabinet using an SM57 aligned on-axis paired with a ribbon mic off-axis to smooth transient response."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Reus Bender Mk2",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block first in the signal chain to cut sub-bass flub and apply a smooth high-cut with a slight resonant peak to replicate the rolled-off 'Woman Tone' capacitor curve.",
+    "Place the Crying Clyde Wah and Reus Bender Mk2 BEFORE theBrit TM45 Patch amplifier block; the wah can be used dynamically or set to a static cocked position for vowel-like midrange honk.",
+    "Avoid stacking the fuzz block into an already-cranked amp setting if you want to preserve the dynamic woody bloom; rely primarily on the Brit TM45 Patch pushed natively.",
+    "Pair the 412 Brit 60B GB 71 cabinet with a dynamic 57-style mic and a condenser or ribbon mic pushed slightly off-axis to smooth out high-end transients.",
+    "Place the Spring reverb after the cabinet block to provide baseline vintage 1960s British blues room ambiance."
+  ]
+}

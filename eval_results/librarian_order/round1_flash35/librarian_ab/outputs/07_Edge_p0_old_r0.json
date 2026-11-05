@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Exotic",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Push the master volume on the amplifier block while keeping input gain low for clean edge-of-breakup headroom.",
+    "Place a low-pass filter after the cab block to smooth out bright top-end sizzle.",
+    "Place the boost overdrive before the amplifier to add top-end chime and push the front end cleanly.",
+    "Enable Tempo Sync on the delay block set to a dotted-eighth note division to lock with the global tempo."
+  ]
+}

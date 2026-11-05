@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1x15 JBL D130F in a 1964 Fender Vibroverb"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb"
+  ],
+  "suggested_blocks": [
+    "OG TS808",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The mandatory block '1964 Fender Super Reverb' from the User Capture Library is a full_rig capture (amp + cab baked in), so do not place a separate Cabinet block unless swapping to the native 'US SPR Vibrato' with '410 US Basslad PR10'.",
+    "Place the 'OG TS808' user capture (or native 'Green 808') BEFORE the amp capture as a clean volume and midrange push; reduce the capture input gain slightly and push its output level to slam the front end of the Super Reverb.",
+    "Place the native 'Spring' reverb AFTER the amp capture block with a modest mix and short decay for authentic vintage Texas blues room ambiance.",
+    "Watch the input and output clipping meters when boosting the front end of the full-rig capture, and compensate by lowering the amp capture's output volume to preserve clean glassiness."
+  ]
+}

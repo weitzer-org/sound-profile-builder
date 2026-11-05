@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "66 AC30 JMP OD",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the 66 AC30 JMP OD block to tighten the low end and push the midrange into classic 60s British chime and fuzz saturation.",
+    "Since 66 AC30 JMP OD is a full_rig capture, bypass the 212 UK C30 65 cab block by default or use it only if separating the speaker simulation, and apply a high cut on the cab or post-EQ to tame top-end fizz.",
+    "Use a Condenser 67 style microphone or blend a Ribbon 160 and Dynamic 57 on the cab block to capture the vintage 60s British midrange bark and top-end sparkle.",
+    "Place the Circular Delay (emulating the WEM Copicat tape echo) and Spring reverb AFTER the amp/cab section for spatial depth.",
+    "Keep the Input Gate threshold low so it does not choke the natural edge-of-breakup sustain tail, and lower input gain slightly when switching from the Telecaster single-coils to the hotter Gibson ES-339 humbuckers."
+  ]
+}

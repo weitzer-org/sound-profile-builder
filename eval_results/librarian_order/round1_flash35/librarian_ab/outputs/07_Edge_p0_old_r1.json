@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay",
+    "Exotic"
+  ],
+  "tactical_hints": [
+    "Keep amp input gain low and push master volume for clean edge-of-breakup chime on the UK C30 TopBoost.",
+    "Apply a low-pass filter cutting around 4kHz to 5kHz to tame top-end brightness on Vox-style circuits.",
+    "Enable Tempo Sync on the delay block set to dotted-eighth (1/8D) note divisions.",
+    "Position the Exotic boost pedal before the amp block to push the front end cleanly and add chime."
+  ]
+}

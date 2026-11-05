@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom first in the chain with a slower attack and parallel dry mix to preserve the initial slide transient while extending note decay.",
+    "Place the Green 808 before the US DLX 58 amplifier capture to tighten the sub-lows from the ES-339 humbuckers and push mid-range singing sustain without bloating the bass.",
+    "Pair the US DLX 58 with the 112 US DLX Tweed WGS-Q 10s cab using a Dynamic 57 mic to capture authentic Tweed midrange projection, and place the Spring reverb at the end of the chain for vintage American room ambiance."
+  ]
+}

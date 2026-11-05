@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Circular Delay",
+    "Chorus 229T",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ at the very start of the signal chain to replicate the Korg SDD-3000 preamp mid-high push.",
+    "Place the Legendary 87 (ST) compressor BEFORE the amplifier to add percussive sustain to the rhythmic delay repeats.",
+    "Run the primary dotted-eighth Circular Delay IN FRONT of the UK C30 TopBoost amplifier block so the delay repeats push the amp input and compress naturally together in classic 80s U2 style.",
+    "Engage modulation within the delay block to mimic the warble of the Electro-Harmonix Deluxe Memory Man.",
+    "Use a dynamic SM57-style microphone on the 212 UK C30 65 cabinet and roll down the cabinet high-cut filter to tame high-end chime and fizz.",
+    "Place the Spring reverb at the end of the chain to provide baseline direct-to-FOH spatial ambiance."
+  ]
+}

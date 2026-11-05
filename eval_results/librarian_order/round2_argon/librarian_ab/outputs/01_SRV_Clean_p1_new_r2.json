@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "1964 Fender Super Reverb",
+    "Fender Vibroverb 64 Custom SRV",
+    "D-Cell SSS Clean",
+    "US Super",
+    "410 US Super"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Two Rock SSS EQ1 (No Cab) amp capture with low drive and pushed level to slam the front end in classic Texas blues style.",
+    "Reduce the output volume of the Two Rock SSS EQ1 (No Cab) capture block slightly to prevent internal digital clipping when boosted by the Green 808.",
+    "Pair the Two Rock SSS EQ1 (No Cab) head capture with the 212 Too Rock EV Vintage 79 cabinet block to authentically replicate the massive, uncompressed Electro-Voice EVM12L speaker headroom.",
+    "Mic the 212 Too Rock EV Vintage 79 cabinet using a Dynamic 57 slightly off-axis blended with a Ribbon 121, applying a gentle high cut to keep the boosted single-coil treble smooth.",
+    "Place the Spring reverb block AFTER the cabinet with a low mix and short decay to add vintage room slap without washing out the percussive attack."
+  ]
+}

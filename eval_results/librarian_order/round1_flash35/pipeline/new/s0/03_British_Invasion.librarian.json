@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "MK3 Silicon Fuzz"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amp block to push punchy upper-mids into dynamic edge-of-breakup crunch.",
+    "Keep low frequencies tight by trimming bass on the amp block to avoid muddy low-end build-up on Vox-style circuits.",
+    "Use a high-frequency cut or a low-pass filter around 5-6 kHz downstream to smooth out top-end chime and prevent harshness."
+  ]
+}

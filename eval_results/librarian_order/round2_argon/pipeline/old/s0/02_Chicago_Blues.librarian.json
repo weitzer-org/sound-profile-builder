@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block BEFORE the US DLX 58 amp capture to cut low-end frequencies and prevent bass flub on the small tweed circuit when digging in.",
+    "Place the Green 808 or Myth Drive BEFORE the amp capture with low gain and pushed level to act primarily as a clean/mid boost that gooses the natural input dynamics of the Tweed Deluxe.",
+    "Pair the US DLX 58 capture with the FNDR TWDLX IN Edge BAL CAB user capture (which features the exact 1957 5E3 1x12 Jensen P12R speaker), or if using a native cab like 112 US DLX Tweed WGS-Q 10s, position a Ribbon mic slightly off-axis to emulate the warm vintage RCA 77-DX response.",
+    "Configure the Circular Delay after the cab for a barely audible, heavily high-cut filtered vintage tape slapback.",
+    "Place the Spring reverb at the end of the chain with a low mix and short decay to replicate vintage Chess Records studio reflections."
+  ]
+}

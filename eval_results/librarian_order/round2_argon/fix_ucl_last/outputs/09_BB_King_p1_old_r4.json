@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Do not use any overdrive pedals; push the US TWN Vibrato amp block volume natively to achieve natural, high-headroom edge-of-breakup compression and sustain.",
+    "Place the Parametric-8 EQ block BEFORE the amp to mimic the Gibson Varitone circuit by cutting low-mids and boosting upper-mids for a vocal, nasal bite.",
+    "In the 212 US TWN CK2 cab block, blend a Dynamic 57 and Ribbon 121 mic, and engage the high cut to tame piercing upper-register frequencies.",
+    "Place the Spring reverb block at the end of the chain with a low mix and short decay so staccato picking dynamics and vibrato remain clear."
+  ]
+}

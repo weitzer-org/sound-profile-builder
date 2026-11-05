@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place Chief CS3 at the very front of the signal chain to smooth out pick attack and add sustain before hitting the fuzz.",
+    "Run Fuzz Pi BEFORE the amp as the core lead saturation, and place TW Tube Drive or Parametric-3 immediately AFTER Fuzz Pi to restore the vocal midrange and emulate the Colorsound Power Boost / Tube Driver mid-push.",
+    "Dial in Watt D103 Normal right on the edge of breakup so it provides natural power-amp compression that tames the high-end fizz of the fuzz pedal.",
+    "Pair 412 Watt S4123 with a dynamic 57 and a condenser 87 mic blend, applying a gentle high-cut to smooth out harshness from the fuzz.",
+    "Place MX Flanger, Circular Delay, and Studio Plate 70 (ST) AFTER the amplifier and cabinet blocks for a lush, expansive stadium soundstage."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place drive pedals before the amp block to push the input stage dynamically",
+    "Adjust guitar volume knob to cleanup fuzz and treble boost saturation",
+    "Position the Range Rverb block after the cab block to provide baseline ambiance"
+  ]
+}

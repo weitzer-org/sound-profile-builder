@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay",
+    "Exotic",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Keep the input gain low on the UK C30 TopBoost block and push the master volume to maintain clean edge-of-breakup headroom with signature Vox chime.",
+    "Place the Exotic boost block before the amp to push the front end cleanly for solo lifts and added top-end sparkle.",
+    "Enable Tempo Sync on the Circular Delay block to lock rhythmic dotted-eighth repeats to the global tempo.",
+    "Apply a high-pass / low-pass filter around 4kHz-5kHz after the cabinet to smooth out harsh top-end sizzle."
+  ]
+}

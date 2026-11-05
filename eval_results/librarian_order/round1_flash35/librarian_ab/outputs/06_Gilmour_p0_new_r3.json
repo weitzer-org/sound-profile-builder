@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the high-headroom Watt D103 Normal amp block as a primary fuzz tone generator.",
+    "Use a Shure SM57 microphone positioning on the 412 Watt S4123 cabinet to tame aggressive upper-mid transients.",
+    "Apply high-pass (around 80Hz) and low-pass (around 6.5kHz) filtering on the cabinet block to trim sub-boom and harsh fuzz sizzle.",
+    "Engage a low-cut filter and modest pre-delay on the Studio Plate 70 (ST) reverb block to preserve note articulation during heavy fuzz playing."
+  ]
+}

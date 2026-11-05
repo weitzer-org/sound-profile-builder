@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad P10Q 16"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Since allow_cloud_captures is false, use the native US SPR Vibrato amplifier model and 410 US Basslad P10Q 16 cabinet block to authentically represent the 1964 Fender Super Reverb 4x10 platform.",
+    "Place the Green 808 BEFORE the amplifier as a clean volume and midrange push, keeping drive low and level high to slam the front end of the Fender amp for Texas blues edge-of-breakup.",
+    "Pair a Dynamic 57 mic on-axis with a condenser or ribbon mic slightly off-axis on the 4x10 cabinet to capture both the percussive attack and warm low-mid punch.",
+    "Place the Spring reverb AFTER the cabinet block with a modest mix and short decay for vintage American blues room ambiance."
+  ]
+}

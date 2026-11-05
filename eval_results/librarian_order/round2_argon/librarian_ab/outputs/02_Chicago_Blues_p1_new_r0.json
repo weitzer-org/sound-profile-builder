@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Brit Blues",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place a Parametric-3 EQ block BEFORE the US DLX 58 amp block to cut excess bass frequencies and prevent the loose, farty low-end common to small Tweed circuits, especially when using the Gibson ES-339 humbuckers.",
+    "Place the overdrive blocks (Green 808, Chief BD2, or Brit Blues) BEFORE the amp block to achieve natural Chess Records-style grit rather than pushing the Neural Capture block's input gain.",
+    "In the 112 US DLX Tweed WGS-Q 10s cab block, pair a dynamic microphone with a ribbon microphone, keeping the ribbon mic blended lower and slightly off-axis to capture vintage warmth without making the mix overly dark.",
+    "Place the Spring reverb block AFTER the cab block with a dark, rolled-off tone to provide authentic vintage 1950s American blues ambiance."
+  ]
+}

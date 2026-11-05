@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Facial Fuzz"
+  ],
+  "tactical_hints": [
+    "Place Iba Green before the US Tweed Basslad Normal Patch amp block to push mid frequencies and add sustain for slide leads.",
+    "Position Facial Fuzz at the very beginning of the signal path before any buffered blocks to ensure proper impedance loading.",
+    "Place a dynamic Shure SM57 mic model off-axis on the 410 US Basslad PR10 cabinet to tame high-frequency spikes when pushing tweed power-amp breakup.",
+    "Apply a high-pass filter around 80-100 Hz prior to drive blocks to prevent low-end flub when using humbuckers."
+  ]
+}

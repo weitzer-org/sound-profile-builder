@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "US HP Tweed Twin",
+    "US Tweed Bassman"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain with a slow attack and parallel dry mix to preserve the initial brass/glass slide transient while extending sustain.",
+    "Place the Green 808 overdrive before the Fender 57 Deluxe amp capture to tighten sub-lows from humbuckers, prevent boxy low-mid bloat, and push vocal midrange sustain.",
+    "Note that 'Fender 57 Deluxe - T8 I4 M12' is a full-rig capture; if pairing it with the 'FNDR TWDLX IN Edge BAL CAB' cabinet block, ensure cab simulation is managed appropriately, and use an SM57-style dynamic mic placement.",
+    "Place the Spring reverb block at the end of the chain to provide classic vintage American ambiance."
+  ]
+}

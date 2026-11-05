@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the amplifier block as a transparent mid-range push with low drive and high output level.",
+    "Position a Dynamic 57 microphone on the 4x10 cabinet slightly off-axis to capture punch while smoothing out harsh upper-mid transients.",
+    "Place a Spring Reverb block after the cabinet to achieve authentic 1960s American clean spring tank ambiance."
+  ]
+}

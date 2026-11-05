@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive pedal before the amp block as a front-end volume push to tighten mid-range response.",
+    "Use Graphic-9 to boost upper-mid frequencies for solo lifts and nasal lead character.",
+    "Position Circular Delay after the cabinet block to add lush solo trails without muddying amp saturation.",
+    "Apply high-cut and low-cut filtering on the cab block to smooth out top-end fizz and control low-end boominess."
+  ]
+}

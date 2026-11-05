@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 phaser before the amp block to accurately reproduce classic 1978 brown-sound phaser dynamics.",
+    "Position the MX Flanger before the amp block for authentic 'Unchained' style jet flanging.",
+    "Use the Graphic-9 EQ to boost mid frequencies (around 800 Hz and 1.6 kHz) simulating the Boss GE-10 front-end boost.",
+    "Mic the 4x12 Greenback cabinet IR slightly off-axis with a dynamic mic to tame high-end harshness when running high amp volume."
+  ]
+}

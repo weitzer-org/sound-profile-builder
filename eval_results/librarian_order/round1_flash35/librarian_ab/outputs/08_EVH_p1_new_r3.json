@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger BEFORE the amp block to achieve authentic front-end vintage modulation sag.",
+    "Use the Graphic-9 EQ block to boost 800 Hz and 1.6 kHz mids for iconic Plexi lead bark.",
+    "Place Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block to emulate post-amp ambient tape echo and studio plate reverb.",
+    "Position the dynamic microphone off-axis on the cabinet to smooth out high-frequency transients."
+  ]
+}

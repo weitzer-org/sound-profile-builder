@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive BEFORE the amp block with gain set low and level high to push the front-end and tighten low frequencies.",
+    "Place the Graphic-9 EQ after the amplifier to boost mid frequencies (800 Hz to 1 kHz) for Slash's signature vocal lead bite.",
+    "Apply a High-Pass Filter around 80 Hz and a Low-Pass Filter around 6.5 kHz on the cab block to control humbucker boominess and eliminate JCM800 top-end harshness."
+  ]
+}

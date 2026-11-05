@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Otso Bender Mk1 FIRST in the signal chain before any buffers or boosters so it interacts directly with the guitar's pickup impedance.",
+    "Place the Rage Booster BEFORE the UK C30 TopBoost amp to tighten the low end, push the upper-midrange chime, and drive the EL84 power section into classic 1960s British breakup.",
+    "Use a Condenser 87 or Ribbon 160 microphone on the 212 UK C30 65 cabinet to emulate the warm, vintage studio response of a Neumann U67, and apply a gentle high-cut filter to tame any harshness.",
+    "Place the Circular Delay and Spring reverb AFTER the cabinet block to recreate the vintage WEM Copicat tape echo slapback and natural 1960s studio room ambiance."
+  ]
+}

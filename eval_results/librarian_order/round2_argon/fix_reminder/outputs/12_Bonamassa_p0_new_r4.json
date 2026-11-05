@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "1981 TS808 1",
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' is a full-rig user capture of Joe Bonamassa's Dumble Overdrive Special; if cab simulation is kept active, use '212 Too Rock EV Vintage 79' (or '212 Zila Open CL80 19') to provide the requested EVM12L/CL80 speaker voicing.",
+    "Pair a Dynamic 57 with a Ribbon 160 mic on the cabinet block to replicate the classic SM57 and Beyerdynamic M160 microphone blend.",
+    "Place '1981 TS808 1' (or native 'Green 808' to cover the Way Huge Overrated Special mid-focused circuit) BEFORE the amp block with low drive and a pushed output level to tighten the low end of the ES-339 humbuckers.",
+    "Watch the input gain into the 'ODS Joe Lead' capture so the front-end boost tightens the bass without causing digital clipping.",
+    "Place 'Circular Delay' and 'Studio Plate 70 (ST)' AFTER the amp and cab blocks for spatial depth and ambient lead sustain."
+  ]
+}

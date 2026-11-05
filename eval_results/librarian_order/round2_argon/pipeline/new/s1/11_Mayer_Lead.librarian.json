@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Myth Drive",
+    "Brit Blues",
+    "Green 808",
+    "Chief BD2",
+    "Parametric-8",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use Dumbbell ODS as the single amplifier block paired with the 212 Too Rock G65 cabinet to capture the Two-Rock / Dumble foundation and smooth Celestion G12-65 high-end roll-off.",
+    "Mic the 212 Too Rock G65 cabinet with a dynamic 57 and a ribbon 121 off-axis to smooth transients and capture woody low-mid warmth.",
+    "Place Exotic Z Boost or Myth Drive at the start of the drive chain as a clean boost to replicate the Keeley Katana / Klon front-end push.",
+    "Stack Brit Blues into Green 808 or Chief BD2 before the amplifier with low drive and high output level to push the amp into singing, mid-focused lead sustain.",
+    "Place Parametric-8 pre-drive or post-amp with a gentle lower-mid cut to carve out the hollow clean voice before engaging midrange-heavy overdrives.",
+    "Place Circular Delay and Spring reverb after the amplifier and cabinet blocks for slapback analog echo and classic amp-style ambiance."
+  ]
+}

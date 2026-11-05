@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom at the very beginning of the chain for smooth, sustained pick attack.",
+    "Route the RR Big Muff 1976 Original capture BEFORE the amp, and immediately follow it with the TW Tube Drive (acting as the Colorsound Power Boost equivalent) or Parametric-3 to push the midrange and smooth out high-end fuzz fizz before hitting the Hiwatt input.",
+    "Set the Watt D103 Normal to the edge of breakup so it compresses naturally when hit by the stacked fuzz and boost.",
+    "On the 412 Watt S4123 cabinet block, blend a Dynamic 57 and a Condenser 87 (or Ribbon 121) and apply a high-cut filter to tame any piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block, ideally in a parallel split path or with an elevated pre-delay on the plate reverb so the initial pick transient punches through the massive ambient wash."
+  ]
+}

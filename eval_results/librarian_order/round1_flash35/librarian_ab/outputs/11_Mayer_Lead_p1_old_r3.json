@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Keeley Mod BD-2 3",
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp capture with low gain and high output volume to serve as a clean mid-range lead boost.",
+    "Apply a high-pass filter around 80-100 Hz on the amp/cab section to control low-end mud inherent to high-headroom Dumble/Two-Rock circuits.",
+    "Position a Shure SM57 slightly off-axis combined with a ribbon mic on the 212 cab block to smooth transient spikes."
+  ]
+}

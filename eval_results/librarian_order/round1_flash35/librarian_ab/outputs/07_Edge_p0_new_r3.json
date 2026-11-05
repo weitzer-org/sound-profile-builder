@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Back off the input gain on the UK C30 TopBoost amp block and trim high frequencies around 4kHz to 5kHz to prevent harsh top-end Vox sizzle.",
+    "Set the Circular Delay post-amp with Tempo Sync explicitly turned ON to lock in 1/8D dotted-eighth rhythmic delay repeats.",
+    "Position the Shure SM57 microphone off-axis on the 212 UK C30 '65 cab block to smooth out high-frequency transients."
+  ]
+}

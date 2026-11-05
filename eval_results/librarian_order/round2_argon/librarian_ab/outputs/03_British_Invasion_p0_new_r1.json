@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Otso Bender Mk1 and Rage Booster BEFORE the UK C30 TopBoost amp block to tighten the low end and push the upper-midrange into authentic 1960s British Invasion chime and harmonically rich saturation.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 cab block, using a condenser or ribbon microphone model off-axis to emulate the smooth, warm transient response of a vintage Neumann U67.",
+    "Use the Cab block's high-cut filter or a post-amp EQ block to gently roll off harsh high-end frequencies, mimicking the Vox AC30's famous interactive Cut control.",
+    "Place the Circular Delay and Spring reverb blocks AFTER the cab block to provide vintage WEM Copicat-style tape echo slapback and baseline 1960s room/spring ambiance for direct-to-FOH playing.",
+    "Keep the input gate threshold very low and adjust input gain staging carefully when switching between the Gibson ES-339 humbuckers and Fender Telecaster single-coils so edge-of-breakup sustain tails are not choked."
+  ]
+}

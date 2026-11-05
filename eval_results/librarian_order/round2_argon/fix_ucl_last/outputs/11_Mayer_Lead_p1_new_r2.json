@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Keeley Mod BD-2 3",
+    "Green 808",
+    "TS10 JM Settings",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)",
+    "Nordic Concert Hall (ST)"
+  ],
+  "tactical_hints": [
+    "Keep the Two Rock SSS EQ1 (No Cab) capture clean to prevent tubby low-end mud, generating all sustain and breakup from the stacked drive blocks in front of the amp.",
+    "Stack the transparent foundation drive (Brit Blues, Keeley Mod BD-2 3, or Exotic Z Boost) with a mid-hump Tube Screamer (Green 808 or TS10 JM Settings) BEFORE the amp to smooth out nasal midrange spikes and prevent digital clipping.",
+    "Pair the amp block with the 212 Too Rock G65 or 212 Too Rock EV Vintage 79 cabinet using a blend of Dynamic 57 and an off-axis Ribbon 121 mic to smooth out high-end transients.",
+    "Place the Circular Delay AFTER the amp and cab, followed by the Spring or Studio Plate 70 (ST) reverb to create lush spatial depth without washing out the dry guitar attack."
+  ]
+}

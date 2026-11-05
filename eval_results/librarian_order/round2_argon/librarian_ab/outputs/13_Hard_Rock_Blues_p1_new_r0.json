@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very beginning of the signal chain before any buffers or overdrives to preserve vintage impedance sensitivity and guitar volume-knob cleanup.",
+    "Place the Green 808 BEFORE the Brit Plexi 100 Patch amp block with low drive and elevated output level to tighten the low end and push the Plexi into singing sustain.",
+    "Pair the Brit Plexi 100 Patch with the 412 Brit 60A GB75Hz 89 cabinet block and use a Dynamic 57 microphone to capture classic mid-forward British punch.",
+    "Engage a Low Cut filter on the cabinet block to tame sub-bass flub, and apply a High Cut to smooth out top-end harshness.",
+    "Place the Circular Delay (emulating the Maestro Echoplex EP-3 tape echo) and Studio Plate 70 (ST) AFTER the cabinet block for vintage arena depth without washing out the dry attack."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Marshall Super Lead 100"
+  ],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz at the very start of the signal chain so it interacts cleanly with guitar volume adjustments.",
+    "Place the Crying Clyde Wah after the fuzz or before the amp to sweep the midrange frequencies for classic British blues-rock vocal lead phrasing.",
+    "Use the Parametric-8 block early in the chain with a steep high-cut roll-off and a mid-frequency bump to emulate the classic 'Woman Tone' rolled-off tone capacitor response.",
+    "Place the Rage Booster right before the Brit TM45 Patch amplifier block to tighten up the low end and push the preamp tubes into singing sustain without flubbing out.",
+    "Pair the 412 Brit 60B GB 71 cabinet with a dynamic and condenser/ribbon microphone blend, applying an aggressive high-cut filter to smooth out harsh top-end fizz.",
+    "Place the Spring reverb block at the end of the chain after the cabinet to provide essential baseline room ambiance for direct-to-FOH playing."
+  ]
+}

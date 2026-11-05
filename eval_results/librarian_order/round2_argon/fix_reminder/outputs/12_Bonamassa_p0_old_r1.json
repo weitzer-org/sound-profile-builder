@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Iba Green BEFORE the Dumbbell ODS amp block with low drive and elevated level to goose the front end and naturally tighten the low end for humbuckers.",
+    "Watch the Input Gain when running a drive block into the Dumbbell ODS capture; pushing the input too hard can create unnatural digital fizz instead of smooth compression.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 (EVM12L) or 212 Zila Open CL80 19 (Classic Lead 80) cab block to retain massive, un-clipped low-end and vocal midrange projection; avoid Vintage 30 or Greenback cabs which sound boxy here.",
+    "In the Cab block, use a Dynamic 57 (Shure SM57) and a Ribbon 160 (Beyerdynamic M160) mic combination to capture both midrange bite and smooth high-end transients.",
+    "Place the Circular Delay and a baseline Spring reverb AFTER the amp and cab blocks for spatial ambiance."
+  ]
+}

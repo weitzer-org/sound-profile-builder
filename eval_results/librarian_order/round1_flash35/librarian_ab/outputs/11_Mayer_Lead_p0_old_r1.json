@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp capture with low drive and high output level to act as a tight mid-focused boost.",
+    "Place the Chief BD2 / Keeley Blues Driver after the TS-808 boost for main gain staging and smooth solo sustain.",
+    "Apply high-pass filtering around 80Hz on post-amp EQ to prevent woolly low-end accumulation characteristic of D-style/Two-Rock clean circuits."
+  ]
+}

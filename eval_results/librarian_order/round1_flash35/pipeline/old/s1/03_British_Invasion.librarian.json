@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster (Dallas Rangemaster) before the UK C30 TopBoost amp block to drive classic British top-end chime and touch-sensitive crunch.",
+    "Set a low-pass filter on the 212 UK C30 '65 cabinet block between 6.5 kHz and 7.5 kHz to tame upper-frequency fizz and prevent harsh 'ice-pick' frequencies.",
+    "Avoid heavy pre-amp compression before the edge-of-breakup amp block to preserve natural touch dynamics and volume-knob cleanup."
+  ]
+}

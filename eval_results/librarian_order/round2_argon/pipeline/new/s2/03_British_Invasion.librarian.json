@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65",
+    "112 UK C15 Blue"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Myth Drive",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost to push the front end into classic British chime and edge-of-breakup saturation.",
+    "Alternatively, use the Myth Drive BEFORE the amp with minimal gain as a clean midrange push.",
+    "For the cabinet, use either the 212 UK C30 65 (Alnico Silver Bell) or 112 UK C15 Blue (Alnico Blue) to maintain authentic 1960s top-end sparkle, avoiding Greenback speakers.",
+    "Pair a condenser microphone (emulating the Neumann U67) with a ribbon mic (like a Royer R-121) or dynamic SM57 in the cab block, and apply a high-cut filter to tame excessive top-end fizz.",
+    "Place a Spring reverb block AFTER the cab block to provide baseline vintage room and amp-style ambiance for direct-to-FOH playing."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Korg SDD-3000",
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Jewel",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor pre-amp to even out picking dynamics and keep delay repeats consistent",
+    "Position Iba Green before the UK C30 TopBoost block as a mid/gain push into edge-of-breakup",
+    "Adjust delay mix around 80% to 82.5% to maintain unity volume between dry signal and delayed repeats",
+    "Apply a 5.5kHz Low-Pass Filter on the 212 UK C30 cabinet block to smooth out upper treble harshness"
+  ]
+}

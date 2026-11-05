@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Vintage Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Myth Drive before the amp block as a subtle midrange boost rather than high-gain drive to prevent bottom-end mud on the 5E3 circuit.",
+    "Position the Spring Reverb post-cabinet for authentic pre-1970 studio ambience.",
+    "Apply a high cut filter between 5.5 kHz and 6.5 kHz to smooth top-end harshness when using Stratocaster or Telecaster bridge pickups."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ at the very front of the signal chain as an upper-midrange and level push to replicate the Korg SDD-3000 preamp hit.",
+    "Place the Legendary 87 compressor before the delay and amplifier to add percussive sustain and evening to the pick attack.",
+    "Run the Circular Delay BEFORE the 66 AC30 JMP Clean capture rather than after it; set it to a dotted-eighth rhythmic pattern with noticeable modulation warble so the repeats push the amp input and compress naturally together like an Electro-Harmonix Deluxe Memory Man or Korg SDD-3000 into a 1960s Vox.",
+    "Note that 66 AC30 JMP Clean is a full-rig user capture; if pairing it with the 212 UK C30 65 cabinet block for Shure SM57 mic modeling, bypass cab simulation on the capture or use the cab block's high-cut filter to tame high-end chime and fizz.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide essential direct-to-FOH stadium ambiance."
+  ]
+}

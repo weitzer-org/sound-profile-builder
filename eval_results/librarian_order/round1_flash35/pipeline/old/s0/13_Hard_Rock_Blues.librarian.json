@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Rage Booster",
+    "Facial Fuzz",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place boost and overdrive pedals before the amplifier block to naturally push the tube front-end into vintage sustain.",
+    "Use a low-cut filter around 80-100Hz on the cab block to prevent bottom-end mud when pushing British amp circuits.",
+    "Position a dynamic SM57 microphone slightly off-axis on the cabinet block to control harsh top-end transients."
+  ]
+}

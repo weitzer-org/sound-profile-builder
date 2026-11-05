@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ immediately at the start of the signal chain before the compressor and amp to sculpt the hollow-body Varitone mid-notch and apply a high-pass filter to prevent boomy neck pickup low-end.",
+    "Place the Legendary 87 (ST) compressor gently ahead of the US TWN Vibrato amplifier to add vocal-like sustain and bloom without using an overdrive pedal.",
+    "Do not add any overdrive pedals; rely strictly on pushing the US TWN Vibrato amplifier volume natively to achieve natural high-headroom edge-of-breakup saturation.",
+    "On the 212 US TWN C12Q 00s cab block, pair a Shure SM57 or Dynamic 421 with a Ribbon 160 mic positioned slightly toward the cap edge to tame piercing upper-mid frequencies while keeping the fundamental thick.",
+    "Place the Spring reverb after the cab block with a conservative mix and reduced high-end tone to capture a classic studio tank splash without washing out the articulate pick attack."
+  ]
+}

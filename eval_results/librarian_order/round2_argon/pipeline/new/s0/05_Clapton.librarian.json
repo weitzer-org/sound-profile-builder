@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Reus Bender Mk2",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block first in the signal chain BEFORE the amp and drives to roll off high frequencies with a resonant peak (emulating the 'Woman Tone' rolled-off tone capacitor) while simultaneously cutting sub-bass frequencies to prevent low-end flub into the cranked Marshall.",
+    "Place the Crying Clyde Wah at the front of the chain; it can be used dynamically or set to a static 'cocked' position to emphasize vowel-like midrange honk.",
+    "Place the Reus Bender Mk2 before the amplifier for period-correct British germanium fuzz textures, though the cranked Brit Plexi 100 Patch will provide the primary woody saturation natively.",
+    "On the 412 Brit 60B GB 71 cabinet block, pair a Dynamic 57 with a condenser or ribbon mic pushed slightly off-axis to smooth out high-end transients and capture vintage room warmth.",
+    "Place the Spring reverb at the end of the chain after the cabinet to provide baseline vintage 1960s room and spring ambiance for direct-to-FOH playing."
+  ]
+}

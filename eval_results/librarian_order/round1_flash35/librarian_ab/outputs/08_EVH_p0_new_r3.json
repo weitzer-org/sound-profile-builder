@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place MX Phase 95 and MX Flanger BEFORE the amp block to replicate modulation compressing through the cranked front end of the amplifier",
+    "Use Graphic-9 EQ block for clean volume and mid-range boosts rather than an overdrive pedal",
+    "Position Circular Delay and Studio Plate 70 (ST) post-cab for authentic room/plate ambience"
+  ]
+}

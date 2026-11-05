@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the Two Rock SSS EQ1 (No Cab) user capture as the single high-headroom clean amplifier platform, paired directly with the 212 Too Rock G65 cab block.",
+    "In the 212 Too Rock G65 cab block, blend a Dynamic 57 and a Ribbon 121 microphone, and engage low and high cuts to keep the extended headroom tight and smooth.",
+    "Stack the Exotic Z Boost (representing the clean boost), Brit Blues (or Myth Drive), and TS10 JM Settings in front of the amplifier, keeping drive output levels controlled to prevent digital input clipping when stacked.",
+    "Place the Circular Delay (set for a quick slapback analog echo like the Aqua-Puss) and the Spring reverb after the cab block to recreate authentic vintage-voiced Trio room ambiance."
+  ]
+}

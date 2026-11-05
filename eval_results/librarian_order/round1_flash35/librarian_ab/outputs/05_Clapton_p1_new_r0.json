@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "To achieve the authentic 'Woman Tone', select the neck humbucker and roll the guitar's tone knob down to 0 or 1.",
+    "Push the Gain and Master Volume on the Brit TM45 Patch to simulate the natural compression of a cranked 100W Marshall stack.",
+    "In the Cab block, utilize a Condenser 67 mic model positioned off-center to capture the warm, vocal-like transients essential for this era.",
+    "Apply a High-Pass Filter (HPF) at 80Hz within the Cab block to prevent low-end mud when the guitar tone knob is fully rolled off.",
+    "Place the Brit Blues drive block before the amp with low gain and high volume to act as a mid-range frequency push for lead sections."
+  ]
+}

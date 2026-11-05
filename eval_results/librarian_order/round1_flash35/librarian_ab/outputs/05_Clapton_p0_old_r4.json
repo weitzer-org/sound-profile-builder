@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Love Bender Mk3",
+    "Crying Clyde Wah",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah at the very front of the signal chain to maintain the classic impedance relationship with the fuzz.",
+    "The Love Bender Mk3 should be positioned before the amplifier block to push the JTM circuit into vintage saturation.",
+    "Utilize a Condenser microphone model within the cabinet block to replicate the frequency response of the Neumann U67.",
+    "Apply a high-pass filter at approximately 80Hz-100Hz on the cabinet block to manage the heavy low-end bloom common in cranked Marshall JTM circuits.",
+    "Since the JTM45/100 is a high-headroom platform, use the amplifier's Master Volume to control the primary grit rather than relying solely on the fuzz pedal."
+  ]
+}

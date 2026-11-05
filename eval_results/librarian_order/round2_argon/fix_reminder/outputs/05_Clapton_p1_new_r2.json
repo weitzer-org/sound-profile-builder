@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Marshall JTM45 (Secondary)"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block at the very start of the signal chain with a steep high-cut and slight resonant peak to simulate a rolled-off passive tone capacitor for the vocal Woman Tone.",
+    "Place the Crying Clyde Wah and Facial Fuzz (or Rage Booster) before the Brit Plexi 100 Patch amplifier block to drive the front end into singing sustain.",
+    "Engage a low-cut filter in the 412 Brit 60B GB 71 cab block to tighten the loose low-end of the dimed Plexi circuit, and blend dynamic and ribbon mics slightly off-axis to smooth out high-end fizz.",
+    "Place the Spring reverb after the cab block to provide baseline FOH spatial ambiance."
+  ]
+}

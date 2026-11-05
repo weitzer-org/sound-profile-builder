@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt Custom VH",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "MX Phase 95",
+    "MX Flanger",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use the Watt Custom VH factory capture as the single amplifier block to deliver the modded, variac-starved Brown Sound saturation and sag natively.",
+    "Place the Graphic-9 EQ block BEFORE the amplifier capture with a mid-focused 'frowning' curve to push the input gain and replicate the vintage MXR 6-Band EQ boost.",
+    "Place both the MX Phase 95 and MX Flanger BEFORE the amplifier block so the modulation sweep compresses organically into the preamp distortion rather than sounding overly hi-fi.",
+    "You can optionally place the user capture 'EP3 pre (V-12 EQ-mid)' before the amp to capture the Maestro Echoplex preamp coloration, while using the native Circular Delay block post-amp for the actual tape echo repeats.",
+    "Pair the amp with the 412 Brit 60B GB 71 cabinet using a dynamic 57-style mic blended with a ribbon mic, applying a high-cut filter to tame top-end Greenback fizz.",
+    "Place the Studio Plate 70 (ST) reverb at the very end of the chain with a subtle mix to recreate the Sunset Sound studio room ambiance without washing out rhythmic palm mutes."
+  ]
+}

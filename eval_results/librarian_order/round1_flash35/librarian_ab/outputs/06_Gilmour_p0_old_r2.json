@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [
+    "WEM 4x12"
+  ],
+  "mandatory_blocks": [
+    "Watt D103 Normal"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the clean Hiwatt amplifier and set high headroom on the amp block to act as a stable pedal platform",
+    "Use low-pass filtering around 6.5kHz and high-pass filtering around 80Hz downstream to control brittle top-end fizz associated with Big Muff style fuzzes into high-headroom British clean amps",
+    "Engage the pre-delay on the Studio Plate 70 (ST) reverb block to preserve initial transient clarity"
+  ]
+}

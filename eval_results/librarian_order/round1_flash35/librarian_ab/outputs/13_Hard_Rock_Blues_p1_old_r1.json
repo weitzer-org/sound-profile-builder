@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the boost and fuzz pedals (Facial Fuzz, Rage Booster, Green 808) before the amplifier block to push the front-end tube saturation.",
+    "Position a dynamic SM57 microphone on-axis against the 412 Brit 60A cabinet block for classic bite and upper-mid clarity.",
+    "Manage gain staging via the amplifier output volume control to maintain dynamic picking cleanup and prevent clipping into the reverb block."
+  ]
+}

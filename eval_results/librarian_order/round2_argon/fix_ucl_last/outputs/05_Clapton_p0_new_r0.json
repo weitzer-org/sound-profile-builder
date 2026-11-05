@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Graphic-9 at the very beginning of the signal chain to simulate a rolled-off guitar tone capacitor with a steep high-cut and a vocal mid push.",
+    "Place Crying Clyde Wah and Facial Fuzz before the amplifier.",
+    "Use Rage Booster right before the Brit Plexi 100 Patch block to tighten the low end and prevent flubbiness when rolling off high frequencies.",
+    "Do not use a Tube Screamer (Green 808) for the Woman Tone, as its mid-hump clashes with the resonant peak of a rolled-off humbucker.",
+    "Blend a Dynamic 57 and Ribbon 160 mic on the 412 Brit 60B GB 71 cabinet with an aggressive high-cut filter to smooth out top-end fizz.",
+    "Place the Spring reverb after the cabinet for baseline vintage room ambiance."
+  ]
+}

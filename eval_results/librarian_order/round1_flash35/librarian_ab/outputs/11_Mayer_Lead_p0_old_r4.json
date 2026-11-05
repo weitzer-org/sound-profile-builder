@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Keeley Mod BD-2 3"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with drive set low to function as a mid-focused lead push.",
+    "Position the Keeley Mod BD-2 before the main amp capture for dynamic breakup, watching for low-mid buildup.",
+    "Use high-pass filtering around 80Hz post-amp to prevent extreme D-Style bass response from overwhelming the cab output."
+  ]
+}

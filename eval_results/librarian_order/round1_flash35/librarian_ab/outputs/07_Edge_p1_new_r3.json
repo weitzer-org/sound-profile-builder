@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Iba Green overdrive before the amplifier block to serve as a tight mid-frequency boost.",
+    "Position the Circular Delay and Chorus 229T blocks post-amp/cab for clear time-based modulation.",
+    "Apply a low-pass filter on the 2x12 cabinet block to tame aggressive top-end chime characteristic of driven AC30 circuits."
+  ]
+}

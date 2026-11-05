@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Parametric-3",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Chief CS3 at the very front of the chain for subtle sustain and dynamic smoothing.",
+    "Use the RR Big Muff 1976 Original user capture (or native Fuzz Pi) before the amp as the core Ram's Head fuzz engine.",
+    "Place TW Tube Drive or Parametric-3 immediately AFTER the fuzz block (but BEFORE the Watt D103 Normal amp) to push the vocal midrange and replicate the Colorsound Power Boost / Tube Driver mid-lift so the fuzz cuts through the mix.",
+    "Dial the Watt D103 Normal just at the edge of breakup to provide slight power-amp compression so the fuzz does not sound fizzy or detached.",
+    "Pair the 412 Watt S4123 cab with a Dynamic 57 and a Condenser 87 mic, engaging a high-cut roll-off to emulate the warm Fane Crescendo response.",
+    "Place MX Flanger, Circular Delay (emulating the Binson Echorec), and Studio Plate 70 (ST) after the amp and cab for expansive stadium spatial depth."
+  ]
+}

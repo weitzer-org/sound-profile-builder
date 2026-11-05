@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "D-Cell SSS Clean (Neural Capture)",
+    "US Super (Neural Capture)"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Two Rock SSS EQ1 (No Cab) capture block, dialed in the classic 'SRV boost' style with low drive and pushed level to slam the front end of the clean amp.",
+    "Reduce the output volume of the Two Rock SSS EQ1 (No Cab) capture block slightly to prevent internal digital clipping when hit with the high-level Green 808 boost.",
+    "Pair the Two Rock SSS EQ1 (No Cab) amp capture with the 212 Too Rock EV Vintage 79 cabinet block (loaded with Electro-Voice EVM12L speakers) to accurately replicate the massive, uncompressed Dumble/EVM12L low-end punch and glassy snap in a single-amp lane.",
+    "Mic the 212 Too Rock EV Vintage 79 cabinet with a Dynamic 57 slightly off-axis blended with a Ribbon 121, applying a high cut to keep the pushed treble smooth.",
+    "Place the Spring reverb block AFTER the cabinet with a low mix and short decay to replicate vintage American blues amp spring slap without washing out percussive attack."
+  ]
+}

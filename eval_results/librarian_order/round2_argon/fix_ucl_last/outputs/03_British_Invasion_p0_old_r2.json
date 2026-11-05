@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Brit TM45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring",
+    "Legendary 87 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost to tighten the low end and push the midrange into 60s British chime.",
+    "Place the Otso Bender Mk1 at the very front of the signal chain for vintage MkI Tone Bender fuzz textures.",
+    "Use the 212 UK C30 65 cab block paired with Ribbon 160 and Dyn 57 mics or a condenser mic to capture mid-forward bark and top-end sparkle, applying a high-cut filter to tame excessive digital fizz.",
+    "Place the Circular Delay and Spring reverb AFTER the amp and cab blocks to emulate the WEM Copicat tape echo and maintain vintage room ambiance.",
+    "Watch the input gain staging and Input Gate threshold when switching between the Gibson ES-339 humbuckers and Fender Telecaster single coils so the hotter humbuckers do not overly compress the chime or choke the sustain tail."
+  ]
+}

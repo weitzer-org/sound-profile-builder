@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with low drive and high output level to act as a mid-focused clean boost without boxiness.",
+    "Pad the input level entering the US SPR Vibrato block to preserve clean headroom and prevent premature digital breakup.",
+    "Place the reverb block at the end of the signal chain to emulate vintage Fender combo spring tank ambiance."
+  ]
+}

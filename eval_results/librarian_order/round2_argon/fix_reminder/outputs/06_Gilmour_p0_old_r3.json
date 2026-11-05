@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Parametric-3",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Set the Watt D103 Normal strictly at edge-of-breakup so there is a hint of power-amp compression; running it completely sterile will make the Big Muff sound fizzy and detached.",
+    "Use the RR Big Muff 1976 Original user capture (or native Fuzz Pi) before the amp, and immediately follow it with the TW Tube Drive, Exotic Z Boost, or Parametric-3 to restore the vocal midrange and simulate the Colorsound Power Boost mid-push.",
+    "Pair the amp with the 412 Watt S4123 cab (closest Fane-loaded 4x12 match to the WEM Starfinder) using a Shure SM57 and a condenser mic (like a Neumann U87) with high-cuts engaged to smooth out the fuzz fizz.",
+    "Place the MX Flanger after the drive/fuzz section and before the time-based effects for classic sweeping modulation.",
+    "Route the Circular Delay (simulating the Binson Echorec) and Studio Plate 70 (ST) at the end of the chain, padding the amp output slightly to prevent digital clipping before hitting the expansive stadium plate reverb."
+  ]
+}

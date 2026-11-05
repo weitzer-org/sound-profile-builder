@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the UK C30 TopBoost amp block to push the input into authentic 1960s British edge-of-breakup saturation.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 cab block, blending a Condenser 67 or Ribbon 160 with a Dynamic 57 and engaging the Cab High Cut to tame harsh Alnico top-end transients.",
+    "Place the Circular Delay and Spring Reverb AFTER the cabinet block, dialing in a short single-repeat slapback and subtle room ambiance for direct-to-FOH depth."
+  ]
+}

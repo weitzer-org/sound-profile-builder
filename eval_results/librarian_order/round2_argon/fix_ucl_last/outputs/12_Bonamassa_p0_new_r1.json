@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and 1981 TS808 1 BEFORE the ODS Joe Lead capture block, using low drive and high output level to push the midrange without causing digital fizz at the input stage.",
+    " Note that ODS Joe Lead is a full_rig capture, so the Architect may choose to bypass the 212 Too Rock EV Vintage 79 cab block if the capture already includes speaker filtering, or use the cab block with a Dynamic 57 and Ribbon 160 mic combination to capture the classic EVM12L midrange projection.",
+    "Place the Circular Delay and Spring reverb AFTER the amplifier and cabinet blocks to provide studio-style spatial dimension and baseline direct-to-FOH ambiance.",
+    "Ensure low-end frequencies are tightened before hitting the Dumble capture when using the Gibson ES-339 humbuckers to prevent muddiness."
+  ]
+}

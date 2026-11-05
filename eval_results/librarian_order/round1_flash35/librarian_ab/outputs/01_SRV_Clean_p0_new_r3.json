@@ -1,0 +1,14 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier block with low drive and high output level to tighten the low end and push the front end.",
+    "Mic the 212 Too Rock EV cabinet using a Shure SM57 to capture dynamic midrange bite and clean headroom clarity."
+  ]
+}

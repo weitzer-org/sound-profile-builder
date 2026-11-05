@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain to smooth out pick attack and add sustain.",
+    "Run the Fuzz Pi BEFORE the TW Tube Drive (or Parametric-3 EQ) to push the midrange and smooth out any high-end fizz before hitting the front of the Watt D103 Normal amp.",
+    "Set the Watt D103 Normal just on the edge of breakup so it compresses naturally when hit by the fuzz and boost.",
+    "On the 412 Watt S4123 cabinet block, blend a Dynamic 57 and a Condenser 87 (or Ribbon 121) and apply a high-cut filter to tame piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cabinet block, ideally on a parallel path or with sufficient pre-delay so the initial pick transient remains clear and unwashed."
+  ]
+}

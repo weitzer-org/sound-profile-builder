@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive block BEFORE the Brit 2203 amp block with drive low and level high to tighten up the low-end response.",
+    "Place the Circular Delay POST-cab to maintain clear digital delay repeats without getting distorted by the amp block.",
+    "Position a Shure SM57 microphone off-axis on the 412 Brit 60B V30 '95 cabinet block to smooth out top-end harshness."
+  ]
+}

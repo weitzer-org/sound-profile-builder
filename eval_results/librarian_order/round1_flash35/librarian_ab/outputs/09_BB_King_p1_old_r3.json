@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain with a fast attack to sustain clean lead lines without adding distortion.",
+    "Place the Parametric-8 EQ block post-amp with a subtle mid-range boost to emulate vocal lead clarity.",
+    "Lower amplifier gain and compensate with Master Output to keep the high-headroom Twin Reverb tone completely clean.",
+    "Apply a Low Pass Filter around 5.5 kHz to 6 kHz on the Cab block to shave off harsh top-end fizz through FRFR monitors."
+  ]
+}

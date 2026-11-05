@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the delay block after the amplifier and cabinet, ensuring tempo sync is enabled with dotted-eighth note division for rhythmic delays.",
+    "Position a dynamic microphone like a Shure SM57 slightly off-axis on the cab to control top-end brightness inherent to Vox circuits.",
+    "Keep amplifier input gain low while driving the master volume to maintain clean edge-of-breakup headroom."
+  ]
+}

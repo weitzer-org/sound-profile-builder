@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief DC2W (M)",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with low drive and elevated output level to tighten low-end response and gently push the front end.",
+    "Pair the amp with the 212 Too Rock EV cab and a Dynamic 57 mic positioned off-axis to emulate EVM12L speaker response.",
+    "Add a subtle spatial reverb and dimension modulation post-amp to recreate SRV-style 3D room ambiance."
+  ]
+}

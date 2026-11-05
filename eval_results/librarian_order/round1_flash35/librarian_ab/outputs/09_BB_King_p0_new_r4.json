@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place a Graphic EQ block after the amplifier stage to boost midrange frequencies for a warm, vocal lead tone while avoiding preamp clipping.",
+    "Position a Reverb block post-cabinet to capture baseline vintage American blackface spring/room ambiance.",
+    "Keep overdrive pedals out of the signal path and push saturation natively through the amplifier block volume to preserve pure clean headroom."
+  ]
+}

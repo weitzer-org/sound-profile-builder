@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief DC2W",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp input block with low drive and boosted level to tighten the bottom end and push the front end.",
+    "Place a Shure SM57 off-axis on the cabinet block to round out transient attack and tame upper-mid peak edge."
+  ]
+}

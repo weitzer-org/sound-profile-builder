@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Chief SD1",
+    "Parametric-8",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 at the very beginning of the signal chain to keep rhythmic arpeggios consistent and locked in.",
+    "Place the Chief SD1 and Parametric-8 BEFORE the amp capture; use the EQ to push upper-mids and overall level to emulate the classic Korg SDD-3000 preamp boost and Herdim pick attack.",
+    "Note that '66 AC30 JMP Clean' is a full_rig capture from the User Capture Library; if pairing with the 212 UK C30 65 cab block, bypass the cab for authentic full-rig response or use the cab block's high-cut filter to tame top-end fizz and emulate the Vox Cut control with a Dynamic 57 mic.",
+    "Place the Circular Delay AFTER the amp/cab section rather than in front of the amp to ensure clean, distinct dotted-eighth rhythmic separation without mushing the repeats, and engage modulation within the delay block to capture the signature 80s chorus-like warble of the SDD-3000 and Memory Man.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide baseline FOH spatial dimension."
+  ]
+}

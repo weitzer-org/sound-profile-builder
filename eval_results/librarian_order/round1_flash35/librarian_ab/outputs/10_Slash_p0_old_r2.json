@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive before the amplifier block with low gain and high level as a mid-focused volume push",
+    "Use Graphic-9 after the drive or amp to boost upper-mid frequencies for lead solo cuts",
+    "Engage a high-pass filter around 80 Hz and a low-pass filter around 6.5 kHz on the cabinet block to control top-end fizz and low-end boom",
+    "Place Circular Delay after the cabinet block for clean ambient lead trails"
+  ]
+}

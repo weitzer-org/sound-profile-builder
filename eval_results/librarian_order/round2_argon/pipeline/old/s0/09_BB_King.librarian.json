@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain to add optical sustain and solid-state transient snap.",
+    "Place the Parametric-8 EQ BEFORE the amplifier to emulate the Gibson Varitone frequency curve and push the front end of the amp natively without relying on overdrive pedals.",
+    "Push the US TWN Vibrato volume natively for authentic high-headroom edge-of-breakup saturation.",
+    "Pair a Dynamic 57 and a Ribbon 121 microphone in the 212 US TWN CK2 cabinet block, and apply a high-cut filter to tame any excessive bright transients and keep the top end round and vocal.",
+    "Place the Spring reverb after the cab block with a subtle mix to provide vintage three-dimensional studio space without washing out the dry pick attack."
+  ]
+}

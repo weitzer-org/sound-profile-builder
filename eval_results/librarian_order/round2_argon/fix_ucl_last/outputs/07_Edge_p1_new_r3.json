@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Legendary 87 (ST)",
+    "Chief SD1",
+    "Graphic-9",
+    "Parametric-8",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 or Legendary 87 (ST) at the very start of the signal chain to keep rhythmic arpeggios locked in and consistent.",
+    "Place the Chief SD1 BEFORE the amp block as a low-gain midrange push for sustained lead lines.",
+    "Place the Graphic-9 or Parametric-8 immediately BEFORE the amp block, boosting upper-mids and output level to simulate the Korg SDD-3000 preamp boost and Herdim pick scrape.",
+    "Use the 212 UK C30 65 cab block (or 112 UK C15 Blue if pure Alnico Blue speaker character is preferred) with a Dynamic 57 and Condenser 414 mic blend, and engage the cab high-cut filter to emulate the traditional Vox Cut control and prevent digital fizz.",
+    "Place the Circular Delay AFTER the amp and cab blocks rather than in front of the amp so heavy dotted-eighth rhythmic repeats remain clean, distinct, and do not mush together.",
+    "Dial in modulation depth and rate on the delay block to capture the signature 80s chorus-like warble of the SDD-3000 and Deluxe Memory Man.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide baseline FOH spatial ambiance."
+  ]
+}

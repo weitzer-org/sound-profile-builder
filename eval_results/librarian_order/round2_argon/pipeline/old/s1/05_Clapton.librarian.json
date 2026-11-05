@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Rage Booster",
+    "Reus Bender Mk2",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain before any drive or EQ blocks.",
+    "Use the Parametric-3 EQ early in the chain with a low-pass roll-off and a mid-frequency resonant peak to emulate the rolled-off 'Woman Tone' capacitor circuit, and apply a high-pass filter before the amp to prevent low-end muddiness.",
+    "Place the Reus Bender Mk2 and Rage Booster before the Brit TM45 Patch amp block, using them selectively as a treble booster can counteract the dark Woman Tone roll-off.",
+    "Pair a Dynamic 57 and a Ribbon 160 microphone on the 412 Brit 60B GB 71 cabinet with a rolled-back high cut to replicate the vintage Western Electric ribbon/dynamic mic warmth and smooth out harsh high-end transients.",
+    "Place the Spring reverb at the end of the chain after the cabinet with a short decay and low mix for subtle vintage studio ambiance."
+  ]
+}

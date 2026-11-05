@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 block at the very start of the signal chain with a steep high-cut and slight resonant bump to simulate a rolled-off passive guitar tone capacitor for the vocal Woman Tone, while also applying a low-cut to prevent the vintage Marshall model's bottom end from getting flubby.",
+    "Place the Crying Clyde Wah and Facial Fuzz (or Rage Booster) before the Brit Plexi 100 Patch amplifier block to push the front end gently for singing sustain.",
+    "In the 412 Brit 60B GB 71 cabinet block, use a combination of a dynamic mic and a ribbon mic pushed slightly off-axis to smooth out high-end fizz and emulate the warmth of a vintage Neumann U67 condenser.",
+    "Place a Spring reverb block after the cabinet to provide essential baseline room ambiance for direct-to-FOH playing."
+  ]
+}

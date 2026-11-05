@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Reus Bender Mk2"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah before the amplifier block for classic sweep or park it as a fixed midrange filter push.",
+    "Place the Reus Bender Mk2 before the amplifier block to drive the front end into heavy vintage fuzz distortion.",
+    "Apply a high-pass filter around 80Hz–100Hz on the cab block to prevent dark sub-bass bloom and mud when rolling guitar tone knobs down."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah"
+  ],
+  "tactical_hints": [
+    "Position the Crying Clyde Wah before the amplifier block to allow dynamic pitch sweep and filter saturation.",
+    "Achieve the iconic vintage tone by pushing the Brit TM45 Patch master volume into power tube overdrive rather than using aggressive front-end overdrive pedals.",
+    "Roll down the guitar physical tone pot to 0-2 on a neck humbucker for the authentic Cream warmth rather than filtering with software EQ blocks."
+  ]
+}

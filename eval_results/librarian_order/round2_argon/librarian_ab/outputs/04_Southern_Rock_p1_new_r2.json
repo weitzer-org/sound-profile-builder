@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Basslad Normal Patch",
+    "US HP Tweed TWN Normal Patch"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) at the very beginning of the signal chain with parallel mix to elongate slide note decay without squashing pick or finger attack.",
+    "Place the Green 808 BEFORE the US DLX 58 amp block with low gain and high level to tighten the woofy low-end when using the Gibson ES-339 humbuckers and to push the amp into singing slide sustain.",
+    "Pair the 112 US DLX Tweed WGS-Q 10s cab block with a Dynamic 57 and Ribbon 121 mic blend, applying a high-pass filter to tame Tweed low-end flub and a low-pass filter to smooth out top-end harshness.",
+    "Place the Circular Delay and Spring (or Studio Plate 70 (ST)) AFTER the cab block for subtle vintage slapback and studio ambiance.",
+    "Keep the input gate threshold very low or off so it does not prematurely choke the natural fading trail of a glass or brass slide."
+  ]
+}

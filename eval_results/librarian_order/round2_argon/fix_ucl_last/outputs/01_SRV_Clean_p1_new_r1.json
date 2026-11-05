@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "D-Cell SSS Clean (Neural Capture)",
+    "US Super (Neural Capture)"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the 'Two Rock SSS EQ1 (No Cab)' user capture as the single amplifier block to authentically deliver the Dumble Steel String Singer high-headroom circuit.",
+    "Pair the amp capture with the '212 Too Rock EV Vintage 79' cabinet block (which features the requested Electro-Voice EVM12L speakers) to avoid the boxiness of a 4x10 in a single-amp lane.",
+    "Mic the cabinet using a Dynamic 57 slightly off-axis and a Ribbon 121 to smooth out pushed treble transients.",
+    "Place the 'Green 808' overdrive block BEFORE the amplifier as a classic SRV clean boost (low drive, high level), and slightly reduce the amp capture's output volume to prevent internal digital clipping.",
+    "Place the 'Spring' reverb block AFTER the cabinet block with a low mix and short decay to replicate vintage room slap without washing out percussive attack."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ BEFORE the Brit 2203 87 amp capture configured as a clean midrange and volume push to replicate the Boss GE-7 trick and drive the hot-rodded JCM800 circuit into singing sustain without diode-clipping artifacts.",
+    "Apply a low-cut filter in the pre-EQ or Cab block to prevent low-mid muddiness when using neck humbuckers into the boosted Marshall capture.",
+    "Pair the Dynamic 57 and Dynamic 421 microphones on the 4x12 cabinet (or blend the Vintage 30 and Greenback cabinets) to capture the classic late-80s studio bite and midrange punch.",
+    "Place the Circular Delay and Studio Plate 70 (ST) strictly AFTER the amp capture and before or after the cab block to keep the pick attack clear and provide a clean studio-style lead ambiance."
+  ]
+}

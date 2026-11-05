@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp with low drive to provide a warm midrange push without stripping lower-mid sag.",
+    "Use a Ribbon microphone positioned off-axis on the cabinet block to smooth out high-end transients for an authentic 1950s Chicago blues character.",
+    "Set the optical compressor (Jewel) before the amp with a subtle ratio to maintain dynamic picking response."
+  ]
+}

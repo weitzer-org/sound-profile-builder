@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "TW Tube Drive",
+    "Parametric-3",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Dial the Watt D103 Normal strictly at edge-of-breakup so that power-amp compression smooths out the fuzz transients rather than running completely sterile.",
+    "Place the 4-Comp Custom at the very beginning of the signal chain before the fuzz for smooth sustain.",
+    "Place the RR Big Muff 1976 Original capture before the amplifier.",
+    "Place the TW Tube Drive and Parametric-3 immediately AFTER the RR Big Muff 1976 Original capture (and before the amp) to act as a Colorsound Power Boost style mid-recovery and clean boost stage so the tone cuts through the mix.",
+    "Pair the 412 Watt S4123 cabinet with a Dynamic 57 and Condenser 87 microphone combination, engaging high-cuts on the cab block to tame top-end fizz.",
+    "Place the MX Flanger, Circular Delay, and Studio Plate 70 (ST) in the post-amp/cab section for lush, wide stadium modulation and ambiance.",
+    "Pad the output level of the amplifier or cab block slightly before hitting the time-based effects to prevent digital clipping when stacking high-output fuzz and boost blocks."
+  ]
+}

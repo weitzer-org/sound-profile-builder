@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 overdrive BEFORE the amp block to provide gain boost and midrange sustain.",
+    "Position a ribbon microphone off-axis on the cabinet block to smooth out high-frequency transients.",
+    "Utilize a High-Pass Filter in the cab or utility EQ block to maintain low-end clarity when rolling back guitar tone knobs."
+  ]
+}

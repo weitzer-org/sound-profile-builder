@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the high-headroom amplifier block to achieve classic vintage fuzz sustain.",
+    "Insert a Graphic-9 EQ block between the fuzz pedal and amplifier input to boost mid-range frequencies and prevent the fuzz from being buried in a mix.",
+    "Position the Studio Plate 70 (ST) reverb block at the very end of the signal chain to provide spacious ambiance without mudding up the drive section."
+  ]
+}

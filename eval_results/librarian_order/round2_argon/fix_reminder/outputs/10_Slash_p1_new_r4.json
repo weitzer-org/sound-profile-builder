@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the Brit 2203 87 amplifier capture as a clean mid-range and volume push to replicate the hot-rodded S.I.R. #34 JCM800 lead sustain without using diode-clipping overdrive pedals.",
+    "Apply a low-cut filter in the pre-EQ or Cab block to prevent low-mid muddiness when using neck humbuckers into the boosted Marshall capture.",
+    "Configure the 412 Brit 60B V30 95 cabinet block with a Dynamic 57 and Dynamic 421 (or Ribbon 121) microphone combination to capture the classic late-80s stadium rock bite and midrange weight.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb AFTER the amplifier and cabinet blocks for clean, studio-grade spatial ambiance that preserves pick attack."
+  ]
+}

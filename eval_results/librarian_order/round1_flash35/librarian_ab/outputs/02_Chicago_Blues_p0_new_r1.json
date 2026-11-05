@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain before the drive block to simulate vintage tube power amp sag and preserve dynamic picking response.",
+    "Set the Green 808 overdrive before the amplifier as a transparent volume push rather than a high-gain distortion pedal to gently push the amp into natural edge-of-breakup.",
+    "Position the Spring Reverb block post-cabinet with a short decay time to emulate classic 1950s small combo tank and room ambience.",
+    "Apply high-cut cabinet filtering around 7 kHz to 8 kHz and low-cut around 60 Hz to match vintage 12-inch Alnico speaker frequency roll-off."
+  ]
+}

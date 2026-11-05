@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Position the Green 808 before the amp block as a mid-focused volume push to drive the Dumble input stage.",
+    "Pair a Ribbon mic off-axis with a Dynamic mic on the cab block to capture full body without harsh top-end transients.",
+    "Trim the low-end on the amplifier EQ stage to maintain tight response during fast lead articulation."
+  ]
+}

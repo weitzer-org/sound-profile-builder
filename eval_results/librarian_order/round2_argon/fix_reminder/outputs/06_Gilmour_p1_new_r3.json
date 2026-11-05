@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "RR Big Muff 1976 Original",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom at the very beginning of the signal chain to smooth out pick attack and add sustain before the fuzz stage.",
+    "Use the RR Big Muff 1976 Original user capture for the vintage Big Muff sustain, and place the TW Tube Drive or Exotic Z Boost (or Parametric-3 EQ) immediately AFTER the fuzz and BEFORE the Watt D103 Normal amp to restore the mid-range scoop and tame harsh high-end fizz.",
+    "Pair the Watt D103 Normal with the 412 Watt S4123 cabinet, blending a dynamic mic and a condenser or ribbon mic, and apply a high-cut roll-off on the cab block to prevent piercing digital harshness from the fuzz.",
+    "Place Circular Delay and Studio Plate 70 (ST) after the cab block, routing them in parallel or utilizing generous pre-delay on the plate reverb so the initial pick attack punches through the ambient wash."
+  ]
+}

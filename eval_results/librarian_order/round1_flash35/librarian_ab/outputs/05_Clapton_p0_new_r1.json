@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Reus Bender Mk2",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Reus Bender Mk2 fuzz BEFORE the amplifier block to maintain authentic input impedance saturation.",
+    "Place a High Pass Filter around 80Hz-100Hz on the 412 Brit 60B GB 90s cabinet block to prevent low-end mud when using humbuckers with rolled-off tone controls.",
+    "Position a condenser microphone mic capture off-axis on the cabinet block to replicate Neumann U67 studio tracking."
+  ]
+}

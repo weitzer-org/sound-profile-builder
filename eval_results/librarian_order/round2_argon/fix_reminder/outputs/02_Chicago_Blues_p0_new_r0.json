@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Fender 57 Deluxe - T8 I4 M12 is a full-rig capture of a '57 Tweed Deluxe; if using it standalone, bypass the cab block, or pair it with 112 US DLX Tweed WGS-Q 10s if cab mic shaping is desired.",
+    "Use a Ribbon mic on the cab block and apply a generous low cut to prevent the Tweed low end from getting flubby.",
+    "Place the Jewel compressor early in the signal chain to add subtle vintage compression and warmth.",
+    "Place the Green 808 before the amp block set to low gain as a gentle mid-focused push, relying primarily on the capture's input gain for natural breakup.",
+    "Place the Spring reverb after the amp and cab blocks with rolled-off highs and a short decay to emulate a vintage 1950s Chess Records echo chamber without metallic clang."
+  ]
+}

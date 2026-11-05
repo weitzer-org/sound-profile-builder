@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Marshall JCM800"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain, followed by the Facial Fuzz so the fuzz circuit interacts directly with the guitar's pickups.",
+    "Place the Green 808 BEFORE the Brit Plexi 100 Patch amp block with low gain and high level to act as a front-end mid-focused sustain boost.",
+    "Use a Dynamic 57 microphone on the 412 Brit 60A GB75Hz 89 cabinet block and engage low and high cuts to tighten the sub-bass and smooth out high-end fizz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block to provide vintage tape-style echo and arena plate depth without washing out the dry attack."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the 'Fender 57 Deluxe - T8 I4 M12' user full-rig capture as the core 5E3 Tweed Deluxe amplifier foundation, or pair with the 'FNDR TWDLX IN Edge BAL CAB' user cabinet capture if speaker separation is desired.",
+    "Place the compressor first in the chain with a slow attack and blended dry mix to preserve the natural slide transient while extending sustain.",
+    "Place the 'Green 808' overdrive BEFORE the amp block to tighten the low-end of the ES-339 humbuckers and prevent bloated bass in the 5E3 circuit.",
+    "Use a Dynamic 57 mic on the cab block (if using a native cab) to capture the mid-forward vocal projection.",
+    "Place the 'Spring' reverb at the end of the signal chain for vintage American room ambiance."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block with low gain and high level to push mid-range clarity for solo lifts.",
+    "Apply a high-pass filter around 80 Hz before or at the amp stage to prevent low-end mud in high-headroom clean captures.",
+    "Align the SM57 microphone on-axis to capture smooth transient detail from the G12-65 speakers."
+  ]
+}

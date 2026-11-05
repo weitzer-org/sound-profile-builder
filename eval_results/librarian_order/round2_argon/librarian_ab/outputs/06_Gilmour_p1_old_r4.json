@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 first in the chain to emulate the MXR Dyna Comp.",
+    "Place the TW Tube Drive (or Parametric-3 EQ) immediately AFTER the Fuzz Pi to act as a clean boost/overdrive that smooths the top end and restores midrange before hitting the Watt D103 Normal amp.",
+    "Configure the 412 Watt S4123 cab block with a mix of a dynamic (SM57) and condenser/ribbon mic, and utilize the cab's high-cut filter to tame any piercing fuzz frequencies.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cab block, using a parallel split path or a generous pre-delay on the plate reverb so the initial pick attack punches through cleanly."
+  ]
+}

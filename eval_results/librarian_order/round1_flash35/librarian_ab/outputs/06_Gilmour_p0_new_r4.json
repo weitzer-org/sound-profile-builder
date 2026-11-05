@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Myth Drive",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Run the clean Hiwatt (Watt D103 Normal) with maximum headroom to serve as a high-headroom pedal platform.",
+    "Place the transparent boost (Myth Drive) before the Big Muff (Fuzz Pi) to smooth out harsh attack transients before hitting the amp front end.",
+    "Engage low-cut and high-cut filters on the 412 Watt S4123 cab block to prevent sub-frequency boom and top-end harshness."
+  ]
+}

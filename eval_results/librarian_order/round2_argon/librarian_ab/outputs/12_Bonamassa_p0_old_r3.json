@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use the Dumbbell ODS as the single core amplifier block to achieve the Dumble Overdrive Special's blooming vocal midrange and harmonic sustain.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 cab (loaded with Electro-Voice EVM12L speakers) as your primary cabinet to retain the massive, un-clipped low-end and vocal projection. Alternatively, the 212 Zila Open CL80 19 provides the requested Celestion Classic Lead 80 voicing.",
+    "Avoid Vintage 30 or Greenback cab models, as they make Dumble-style circuits sound overly boxy and congested in the upper-mids.",
+    "In the cab block, blend a Dynamic 57 (Shure SM57) and a Ribbon 160 (Beyerdynamic M160) microphone to capture both the mid-forward bite and smooth high-end warmth.",
+    "Place the Green 808 (or Iba Green capture) BEFORE the amplifier with Drive set low and Level pushed high to goose the front end and tighten the bass frequencies, preventing humbuckers from getting muddy or flubby.",
+    "Since the Way Huge Overrated Special is a modified Tube Screamer circuit with a 500Hz mid-frequency control, you can emulate its role by stacking a second TS-style block (like Iba Green) or a Klon-style block (Myth Drive) in front of the amp, watching the input gain carefully to avoid unnatural digital fizz.",
+    "Place the Circular Delay AFTER the amp and cab blocks to replicate the crisp, clean repeats of the Boss DD-3 Digital Delay.",
+    "Place a Reverb block (such as Studio Plate 70 (ST) or Spring) at the very end of the signal chain to provide essential direct-to-FOH room ambiance."
+  ]
+}

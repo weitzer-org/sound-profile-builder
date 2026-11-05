@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Myth Drive",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain to mimic vintage tape saturation.",
+    "Place the Green 808 or Myth Drive BEFORE the US DLX 58 amp block as a low-gain front-end push, or rely primarily on the capture's input gain to prevent harsh digital clipping and low-end flub.",
+    "Pair the US DLX 58 with the 112 US DLX Tweed WGS-Q 10s cabinet block using a ribbon microphone off-axis to emulate the vintage RCA 77-DX ribbon mic response, and apply a generous low cut in the cab block to tame Tweed low-end mud.",
+    "Place the Spring reverb block AFTER the amp and cab with a dark, short decay to emulate a classic vintage echo chamber without introducing metallic clang."
+  ]
+}

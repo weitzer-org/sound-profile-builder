@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Brit TM45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring",
+    "Legendary 87 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost to tighten the low end and push the midrange into 60s British chime.",
+    "Place the Otso Bender Mk1 at the very front of the signal chain for authentic Sola Sound Tone Bender MkI fuzz interaction.",
+    "Use the 212 UK C30 65 cabinet block paired with a large-diaphragm condenser mic or blending a Ribbon 160 and Dyn 57 to capture the Alnico speaker bark and top-end sparkle.",
+    "Place the Circular Delay and Spring reverb AFTER the amplifier and cabinet blocks to emulate the WEM Copicat tape echo and vintage studio ambiance.",
+    "Watch the input gain staging and Input Gate threshold so the natural chime and sustain tail of the AC30 are not choked, especially when switching between the Gibson ES-339 humbuckers and Fender Telecaster single coils."
+  ]
+}

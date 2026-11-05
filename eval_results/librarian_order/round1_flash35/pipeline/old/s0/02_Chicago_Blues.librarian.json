@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block with drive low and output boosted for dynamic push.",
+    "Position a ribbon microphone off-axis on the 1x12 cabinet block to smooth out high-end transients.",
+    "Place a Spring Reverb post-amp for classic, authentic vintage Tweed ambiance."
+  ]
+}

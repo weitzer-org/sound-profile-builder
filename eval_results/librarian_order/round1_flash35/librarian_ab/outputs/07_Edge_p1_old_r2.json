@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Circular Delay",
+    "Jewel"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain before overdrive blocks to smooth picking dynamics and sustain delay repeats",
+    "Position the Iba Green overdrive before the amp block to boost mids and tighten the low end into edge-of-breakup",
+    "Place the Circular Delay post-amp/cab with dotted-eighth sync and raise the effect mix to maintain dry/wet volume balance",
+    "Use a high-frequency cut on the 212 UK C30 cab or turn up Tone Cut on the amp block to tame high-end harshness on the Top Boost channel"
+  ]
+}

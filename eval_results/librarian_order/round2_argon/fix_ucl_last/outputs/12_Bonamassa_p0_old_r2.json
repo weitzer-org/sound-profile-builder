@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Dumbbell ODS amp block with low drive and elevated level to tighten the low end for humbuckers and push the front end without causing digital fizz.",
+    "The Way Huge Overrated Special is a modified Tube Screamer circuit with a 500Hz mid-focus; you can stack or substitute the Iba Green capture in front of the amp to replicate this extra midrange punch.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 cabinet (loaded with Electro-Voice EVM12L speakers) to retain the massive, un-clipped low end and vocal midrange projection, avoiding V30s or Greenbacks which sound boxy with this circuit.",
+    "In the cab block, blend a Dynamic 57 (Shure SM57) with a Ribbon 160 (Beyerdynamic M160) to capture both the vocal upper-mid bite and smooth, warm high-end roll-off.",
+    "Place the Circular Delay (modeling the Boss DD-3) and a baseline Spring reverb AFTER the amp and cab blocks for spatial depth."
+  ]
+}

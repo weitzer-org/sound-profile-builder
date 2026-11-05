@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain before the overdrive to mimic vintage tape saturation and smooth out input transients.",
+    "Place the Green 808 BEFORE the amp capture as a low-gain mid boost to push the front end without inducing harsh digital clipping; alternatively, rely on the capture block's input gain and guitar volume.",
+    "Since Fender 57 Deluxe - T8 I4 M12 is a full-rig capture of a '57 Tweed Deluxe, bypass the cab block if using the capture's baked-in speaker, or use FNDR TWDLX IN Edge BAL CAB (or native 112 US DLX Tweed WGS-Q 10s with a Ribbon 121 mic off-axis) to emulate the 1x12 Jensen P12R Alnico and RCA 77-DX ribbon mic response.",
+    "Engage a generous low-cut filter on the cab or reduce bass inside the Tweed capture block to prevent low-end flub and muddiness when driven.",
+    "Place the Spring reverb after the amp and cab with a short decay and rolled-off high cut to emulate the warm Chess Records echo chamber without introducing metallic clang."
+  ]
+}

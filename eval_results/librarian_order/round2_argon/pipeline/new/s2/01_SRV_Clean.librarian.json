@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "1964 Fender Super Reverb",
+    "1964 Fender Vibroverb",
+    "US Super 65 Clean",
+    "US Twin 65 Clean",
+    "410 US Super"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Crying Clyde Wah",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain for expressive vocal filter sweeps.",
+    "Place the Green 808 before the US SPR Vibrato amp block with low drive and high output level to act as a mid-focused clean boost that pushes the front end of the amplifier.",
+    "Pair the US SPR Vibrato with the 212 Too Rock EV Vintage 79 cab to replicate the high-headroom Electro-Voice EVM12L speaker response, using a Dynamic 57 and Condenser 87 mic combination.",
+    "Apply a high cut in the cabinet block to tame piercing high-end transients when hitting the clean amp hard with the boost.",
+    "Place the Spring reverb block after the amp and cab for authentic vintage American blues ambiance."
+  ]
+}

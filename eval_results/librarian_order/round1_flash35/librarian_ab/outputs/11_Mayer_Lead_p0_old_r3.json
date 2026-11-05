@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive block before the amp set as a low-drive mid-focused push to prevent low-mid mud",
+    "Place the Chief BD2 before the amp block to stack gain into the clean platform",
+    "Apply high-pass filtering around 80Hz and cut between 120Hz-250Hz on post-amp EQ to mitigate woolly bass response"
+  ]
+}

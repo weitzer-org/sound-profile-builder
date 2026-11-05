@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Graphic-9"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger before the amp block to capture early van Halen style tape/phaser saturation ahead of high-gain clipping",
+    "Utilize Graphic-9 post-amp for mid-frequency push and low-end high-pass filtering without adding unwanted preamp distortion",
+    "Apply high-pass and high-cut filtering on the cabinet block to tame digital top-end harshness and emulate vintage mic responses"
+  ]
+}

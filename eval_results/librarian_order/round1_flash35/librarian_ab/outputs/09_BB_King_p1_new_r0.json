@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor block early in the chain before the amplifier to sustain finger-picked lines without driving the front end into distortion",
+    "Position the Parametric-3 EQ post-amplifier to boost midrange frequencies for enhanced solo clarity and vocal warmth",
+    "Apply a low-pass filter on the cab block to smooth out aggressive top-end transients",
+    "Keep amp block gain low and compensate via master volume to ensure maximum clean headroom"
+  ]
+}

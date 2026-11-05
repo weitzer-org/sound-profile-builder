@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ after the Fuzz Pi block to boost mid-range frequencies and keep the fuzz prominent in the mix.",
+    "Apply high-pass filtering at 80 Hz and low-pass filtering around 5.5 kHz on the 412 Watt S4123 cab to tame aggressive top-end fuzz fizz.",
+    "Keep the mix level low on the Studio Plate 70 (ST) reverb block to prevent clipping on the output lane when sustained by the fuzz drive."
+  ]
+}

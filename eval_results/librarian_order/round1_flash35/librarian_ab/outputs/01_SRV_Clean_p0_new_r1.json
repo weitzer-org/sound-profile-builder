@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block as a low-gain, high-output mid push to tighten bottom end",
+    "Position the 212 Too Rock EV cab after the amplifier and mic with a dynamic 57 to capture bold, clean transients",
+    "Add time-based ambiance after the cab to emulate dynamic 3D room space without obscuring high-headroom clarity"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain before the amp to sustain clean finger-picked lead lines without introducing drive.",
+    "Place the Parametric-3 EQ block post-amp with a subtle mid boost (1.5 kHz - 2.5 kHz) to emulate vocal midrange bite.",
+    "Lower the input gain on the US Twin Vibrato amp block to preserve clean headroom, compensating with overall output volume.",
+    "Apply a Low-Pass Filter around 5.5 kHz - 6.0 kHz on the Cab block to tame high-frequency harshness through FRFR systems."
+  ]
+}

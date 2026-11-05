@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Jewel"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amp input to drive upper-mid punch and classic 60s British chime.",
+    "Place the Jewel optical compressor early in the signal chain for smooth dynamic control and vintage squeeze.",
+    "Apply a high-frequency cut between 8 kHz and 10 kHz post-cab to prevent treble harshness from the Top Boost topology."
+  ]
+}

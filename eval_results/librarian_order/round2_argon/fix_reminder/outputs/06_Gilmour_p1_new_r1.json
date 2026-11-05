@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "RR Big Muff 1976 Original",
+    "TW Tube Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom at the very beginning of the chain to smooth out initial pick transients.",
+    "Place the RR Big Muff 1976 Original capture before the amp for authentic vintage violin-like sustain.",
+    "Place the TW Tube Drive immediately AFTER the Big Muff and BEFORE the amp block to un-scoop the midrange, smooth out high-end fizz, and push the front end of the Hiwatt.",
+    "Pair the Watt D103 Normal amp with the 412 Watt S4123 cabinet, blending a dynamic mic with a condenser or ribbon mic, and apply a high cut on the cab block to tame any digital harshness from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cabinet block, preferably on a parallel split path or with an elevated pre-delay on the reverb so the initial pick attack remains articulate amidst the massive spatial wash."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "US Twin '70 C1-4 (Factory Neural Capture)",
+    "212 US Twin '65 (Cab Block)"
+  ],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ immediately at the start of the signal chain to sculpt a narrow upper-midrange notch and a warm low-mid bump, emulating the classic semi-hollow Varitone circuit.",
+    "Place the Legendary 87 (ST) compressor after the EQ and BEFORE the amplifier with a slow attack to encourage vocal-like sustain and bloom without squashing the initial pick transient.",
+    "Do NOT use an overdrive pedal; push the US TWN Vibrato volume natively to achieve natural, high-headroom tube compression and edge-of-breakup grit.",
+    "Roll back the bass or engage a high-pass filter before the amp to prevent boomy low-end overload from the ES-339 humbuckers.",
+    "In the 212 US TWN C12Q 00s cab block, pair a dynamic mic and a ribbon mic pushed slightly toward the speaker cap edge to smooth out piercing upper-midrange frequencies.",
+    "Place the Spring reverb at the end of the chain with a low mix and darkened tone to provide vintage studio tank ambiance without metallic harshness on high bends."
+  ]
+}

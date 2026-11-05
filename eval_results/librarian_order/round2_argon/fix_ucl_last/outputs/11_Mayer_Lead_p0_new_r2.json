@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "John Mayer klon",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the John Mayer klon or Brit Blues first in the chain as an always-on low-gain foundation or clean push, and stack it into the TS10 JM Settings capture before the Two Rock SSS EQ1 (No Cab) amp block for mid-forward lead tones.",
+    "Back off the output level on the stacked drive blocks to avoid digital input clipping on the single clean amp capture.",
+    "Pair the Two Rock SSS EQ1 (No Cab) amp capture with the 212 Too Rock G65 cab block, blending a Dynamic 57 and a Ribbon 121 mic off-axis with low and high cuts to prevent boominess and fizz.",
+    "Place the Circular Delay and Spring reverb blocks after the cab block to create slapback echo and natural room ambiance."
+  ]
+}

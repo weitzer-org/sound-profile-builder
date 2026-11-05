@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Use the US DLX 58 factory capture paired with the 112 US DLX Tweed WGS-Q 10s cabinet to authentically replicate the 1950s Fender Tweed Deluxe Rig, since third-party cloud captures are disallowed.",
+    "Place the Parametric-3 EQ or use the Cab block's High-Pass Filter before/after the amp to tame the inherently loose low-end of the small Tweed circuit, especially when using the Gibson ES-339 humbuckers.",
+    "Place the Green 808 and Chief BD2 BEFORE the amp block to push the front end naturally rather than boosting the capture's internal input gain.",
+    "In the Cab block, blend a Ribbon microphone slightly lower than a Dynamic microphone to capture the vintage RCA/EV mic character without making the mix overly dark.",
+    "Place the Spring reverb at the end of the chain after the cabinet for authentic 1950s Chess Records style room and spring ambiance."
+  ]
+}

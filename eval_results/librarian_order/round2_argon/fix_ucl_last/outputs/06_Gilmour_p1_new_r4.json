@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom first in the signal chain to provide smooth, sustained compression before hitting the drive stages.",
+    "Use the RR Big Muff 1976 Original user capture as the primary vintage fuzz, and place the TW Tube Drive (or Parametric-3) immediately after it to restore the mid-range and smooth the top end before hitting the Watt D103 Normal.",
+    "Configure the 412 Watt S4123 cabinet block with a combination of a dynamic SM57 and a condenser/ribbon microphone, rolling off the high cut slightly to prevent digital fizz from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the amp and cab, utilizing a parallel path or elevated pre-delay on the reverb so the initial pick attack remains clear."
+  ]
+}

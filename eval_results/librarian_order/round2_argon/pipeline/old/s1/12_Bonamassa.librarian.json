@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' is a full-rig capture of Joe Bonamassa's actual Dumble Overdrive Special; if using it, bypass the separate cab block, or pair the 'Dumbbell ODS' amp block with the '212 Too Rock EV Vintage 79' or '212 Zila Open CL80 19' cab.",
+    "Place the 'Green 808' and 'Myth Drive' BEFORE the amplifier block, using low drive and pushed output level as a clean mid-focused boost to tighten the front end without over-compressing the Dumble's natural midrange.",
+    "In the cab block, blend a Dynamic 57 on-axis with a Ribbon 160 mic, and engage a low-cut filter to prevent humbucker neck pickup flub.",
+    "Place a 'Parametric-8' EQ block AFTER the cab or full-rig capture to sculpt extra low-mid punch, compensating for the missing blended British amp in single-amp mode.",
+    "Place the 'Circular Delay' and 'Studio Plate 70 (ST)' AFTER the amp and cab blocks, rolling back the delay high-cut so the repeats sit darkly behind the dry lead tone."
+  ]
+}

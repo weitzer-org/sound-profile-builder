@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Factory Neural Capture: Friedman BE-100 or EVH 5150III 50W Blue Channel"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz 69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the amplifier shaped in a mid-push frown curve to slam the front end of the Plexi for hot-rodded Brown Sound saturation and solo lift.",
+    "Place both the MX Phase 95 and MX Flanger BEFORE the amplifier block (never in the post-amp loop) to achieve an authentic, organic vintage sweep that chews into the preamp gain.",
+    "Configure the 412 Brit TV GB75Hz 69 cabinet with a Dynamic 57 mic slightly off-axis paired with a Ribbon mic, and apply high/low cuts to tame top-end fizz.",
+    "Place the Circular Delay after the amp set to a subtle, warm single-repeat slapback to mimic the Maestro Echoplex EP-3 tape delay.",
+    "Place the Studio Plate 70 (ST) at the end of the chain, keeping the mix subtle or panned to one side to recreate the Sunset Sound studio chamber ambiance without washing out percussive pick attack."
+  ]
+}

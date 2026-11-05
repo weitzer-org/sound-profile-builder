@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain with a fast attack and low ratio to sustain clean finger-picked lines without adding distortion.",
+    "Position the Parametric-3 EQ block post-amp with a mid-range boost around 1.5 kHz - 2.5 kHz to emulate vocal lead bite and midrange presence.",
+    "Lower the gain on the amp capture/model block and compensate with master output level to preserve high headroom and prevent premature tube breakup.",
+    "Apply a Low Pass Filter around 5.5 kHz to 6 kHz on the cab block to shave off high-frequency harshness when monitoring direct or through FRFR speakers."
+  ]
+}

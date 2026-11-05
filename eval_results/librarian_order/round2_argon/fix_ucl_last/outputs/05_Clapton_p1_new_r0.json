@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block at the very start of the signal chain with a steep high-cut and slight resonant peak to simulate a rolled-off guitar tone capacitor for a vocal 'Woman Tone'.",
+    "Place the Crying Clyde Wah and Facial Fuzz (or Rage Booster) BEFORE the Brit TM45 Patch amplifier block to push the front end for singing sustain.",
+    "Engage a low-cut in the 412 Brit 60B GB 71 cab block or pre-amp EQ to tighten the loose, flubby low-end inherent to dimed JTM45/Plexi circuits.",
+    "Use a combination of Dynamic 57 and Ribbon 160 mics pushed slightly off-axis in the cab block to smooth out high-end fizz and emulate the warmth of a vintage Neumann U67.",
+    "Place the Spring reverb at the end of the chain to provide baseline vintage 1960s room and amp ambiance for direct-to-FOH gigs."
+  ]
+}

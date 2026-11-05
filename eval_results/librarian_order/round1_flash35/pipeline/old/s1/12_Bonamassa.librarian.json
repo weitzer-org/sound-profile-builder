@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the Dumbbell ODS block with low drive and elevated output level as a mid-hump lead push.",
+    "Trim the overall output gain on the Dumbbell ODS block to prevent signal clipping on the output lane during channel switches.",
+    "Pair a Shure SM57 with a Royer R-121 off-axis on the 212 Too Rock EV cabinet to smooth top-end transients while retaining punch."
+  ]
+}

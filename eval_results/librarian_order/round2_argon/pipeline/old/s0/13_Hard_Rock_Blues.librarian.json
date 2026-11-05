@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Green 808",
+    "1981 TS808 1",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Crying Clyde Wah first in the signal chain, followed immediately by Facial Fuzz so the fuzz sees a direct impedance interaction before any buffered drives.",
+    "Use Green 808 (or the user capture 1981 TS808 1) BEFORE Brit Plexi 100 Patch with low gain and high level to tighten the vintage Plexi's sub-bass bloom and push it into saturation.",
+    "If you want the famous Echoplex EP-3 preamp coloration in addition to the echo, place the user capture 'EP3 pre (V-12 EQ-mid)' in front of the amp block, while keeping the native Circular Delay block AFTER the amp for the actual time-based tape echo repeats.",
+    "In the 412 Brit 60A GB75Hz 89 cabinet block, blend a Dynamic 57 microphone with a Ribbon 160 microphone and engage low and high pass filters to tame low-end mud and high-end fizz.",
+    "Place the Spring reverb block at the very end of the chain after the Circular Delay to maintain baseline direct-to-FOH ambiance."
+  ]
+}

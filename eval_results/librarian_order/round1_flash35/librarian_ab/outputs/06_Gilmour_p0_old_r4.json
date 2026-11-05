@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi before the clean amp block to act as the primary distortion engine",
+    "Apply high-pass and low-pass filtering on the cabinet block to trim low-end boom and high-end fizz",
+    "Engage a low-cut filter and moderate pre-delay on the Studio Plate 70 reverb to maintain clarity during heavy fuzz passages",
+    "Position a Dynamic 57 microphone on-axis to capture upper-mid articulation"
+  ]
+}

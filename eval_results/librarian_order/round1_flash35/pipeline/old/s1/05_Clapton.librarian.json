@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah before the amp block to control the frequency sweep entering the preamp stage.",
+    "Pair a Dynamic 57 with a Ribbon 121 mic off-axis on the cabinet block to balance punch and transient smoothness.",
+    "Roll back your physical guitar volume and tone knobs for vintage tone articulation, and apply a low-pass/high-pass cut on the cab block to keep low-end tight."
+  ]
+}

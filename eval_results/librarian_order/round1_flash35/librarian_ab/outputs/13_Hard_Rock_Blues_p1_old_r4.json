@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Green 808 overdrive before the amplifier block to push upper-midrange frequencies into dynamic Plexi crunch",
+    "Position the Shure SM57 microphone slightly off-axis on the cabinet block to smooth harsh high-end transients",
+    "Gain-stage carefully using the amplifier output volume control to prevent downstream reverb clipping"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the amp block to tighten low-end boominess and push the front end of the AC30 for mid-60s chime and punch.",
+    "Alternatively, use the Myth Drive BEFORE the amp with low gain and pushed output level as a clean mid-focused boost.",
+    "Dial up the Cut control on the UK C30 TopBoost block to tame high-end fizz and harshness.",
+    "Engage a low-cut filter in the 212 UK C30 65 cab block and pair a ribbon mic with a dynamic mic to smooth out top-end transients while capturing woody midrange.",
+    "Place the Legendary 87 (ST) compressor AFTER the cab block to replicate vintage 60s studio limiter squish.",
+    "Place the Spring reverb block at the end of the chain to provide authentic vintage ambiance."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "John Mayer klon",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use Two Rock SSS EQ1 (No Cab) as the single high-headroom clean amplifier platform, dropping the secondary Dumble amp to strictly obey single_amp_mode.",
+    "Pair the head capture with the 212 Too Rock G65 cab block, blending a Dynamic 57 and a Ribbon 121 mic with high and low cuts to tame boominess and fizz.",
+    "Place Exotic Z Boost or John Mayer klon first in the drive chain as a clean boost, followed by Brit Blues (or a King of Tone user capture like King Of Tone - Yellow) and TS10 JM Settings for stacked lead midrange.",
+    "Back off the output level on the stacked drive blocks to avoid digital input clipping at the front of the clean amp capture.",
+    "Place Circular Delay (emulating the analog slapback of the Aqua-Puss) and Spring reverb after the amp and cab blocks to create live Trio room ambiance."
+  ]
+}

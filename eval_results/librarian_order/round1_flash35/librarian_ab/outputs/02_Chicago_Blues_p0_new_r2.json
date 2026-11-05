@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Shure 55 Unidyne"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Green 808",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor before the drive section to mimic vintage tube power amp sag and touch sensitivity.",
+    "Set the Myth Drive or Green 808 with low gain and boosted level before the amp block to push the Tweed circuit into edge-of-breakup saturation.",
+    "Position Spring Reverb post-cabinet with a short decay time for authentic 1950s Fender amp tank ambience.",
+    "Apply a cabinet high-cut filter between 7 kHz and 8 kHz to smooth out transient top-end fizz on single-coil pickups."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah BEFORE the amp block for dynamic expression and vintage vocal sweep.",
+    "Avoid running aggressive overdrive pedal blocks in front of the amp to maintain the wide dynamic headroom and natural power-amp sag of the cranked JTM circuit.",
+    "Roll down the physical tone knob on your guitar neck pickup (to around 0-2) to capture the iconic 'Woman Tone' rather than filtering high frequencies with software EQ blocks."
+  ]
+}

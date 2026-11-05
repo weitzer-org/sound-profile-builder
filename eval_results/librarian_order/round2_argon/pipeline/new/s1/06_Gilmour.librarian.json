@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "VCA Comp (S/C)",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Graphic-9",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the VCA Comp (S/C) at the very beginning of the signal chain to provide smooth sustain before hitting the drive stages.",
+    "Place the Fuzz Pi BEFORE the amp to deliver the classic sustaining lead saturation.",
+    "Place the TW Tube Drive AFTER the Fuzz Pi (and BEFORE the amp) to act as a high-headroom clean boost and tone-shaper in the vein of a Colorsound Power Boost / Tube Driver.",
+    "Place the Graphic-9 or Parametric-3 immediately AFTER the fuzz/drive section (and BEFORE the amp) to sculpt the midrange and tame any high-end fizz before hitting the clean Hiwatt preamp.",
+    "Keep the Watt D103 Normal set as a high-headroom clean pedal platform so the fuzz and boost pedals do not collapse into mud.",
+    "In the 412 Watt S4123 cabinet block, pair a Dynamic 57 mic with a Condenser 87 mic to replicate the classic studio mic blend.",
+    "Place the Circular Delay AFTER the cabinet block, and feed it directly into the Studio Plate 70 (ST) reverb at the end of the chain for lush ambient trails, watching output levels to avoid digital clipping."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 phaser before the amplifier block to achieve classic vintage front-end phase modulation.",
+    "Utilize the Graphic-9 EQ block to provide a clean midrange bark and solo volume push without adding harsh diode overdrive clipping.",
+    "Position Circular Delay and Studio Plate 70 (ST) post-cabinet for ambient spatial depth.",
+    "Mic the cabinet with a Shure SM57 off-axis to tame aggressive high-frequency transients from high Master volume Plexi sag."
+  ]
+}

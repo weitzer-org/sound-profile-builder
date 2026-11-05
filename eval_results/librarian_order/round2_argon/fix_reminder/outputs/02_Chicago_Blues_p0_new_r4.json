@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain to add subtle vintage tape-style compression and feel.",
+    "Place the Green 808 BEFORE the amp capture set as a low-gain mid push, or rely primarily on the capture block's input gain to avoid harsh digital clipping on the small tweed circuit.",
+    "Use the FNDR TWDLX IN Edge BAL CAB if additional 1x12 Jensen P12R speaker filtering is desired, or use a native 1x12 US DLX cab with a Ribbon mic off-axis and a generous low cut to tame Tweed low-end flub.",
+    "Place the Spring reverb at the end of the chain with a dark, rolled-off high end to emulate a vintage 1950s studio echo chamber."
+  ]
+}

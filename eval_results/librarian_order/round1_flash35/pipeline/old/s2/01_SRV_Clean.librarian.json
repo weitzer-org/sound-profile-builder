@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "64 Fender Vibroverb",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with low drive and boosted level as a mid-range push to tighten the low end.",
+    "Utilize a native Spring Reverb block downstream of the cabinet for authentic pre-1970 American blues ambiance.",
+    "Position the Shure SM57 microphone off-axis or apply a high-pass/low-pass cut on the cab block to smooth vintage high-end fizz on single-coils."
+  ]
+}

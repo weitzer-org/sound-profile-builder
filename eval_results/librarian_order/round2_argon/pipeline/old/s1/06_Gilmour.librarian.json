@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Exotic Z Boost",
+    "Graphic-9",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Keep the Watt D103 Normal set as a clean, high-headroom pedal platform so it does not fight the fuzz or collapse the low end.",
+    "Place the Jewel compressor first in the chain to smooth out the pick attack before hitting the gain stages.",
+    "Use the RR Big Muff 1976 Original capture from the User Capture Library in front of the amp for the authentic vintage Muff sustain, avoiding fizzy algorithmic fuzz blocks.",
+    "Place the Graphic-9 or Parametric-3 immediately after the Big Muff capture to sculpt the midrange and tame top-end fizz so the lead tone sits properly in the mix.",
+    "Use the Exotic Z Boost as a clean volume and EQ driver to emulate the high-headroom push of the Colorsound Power Boost.",
+    "Configure the 412 Watt S4123 cabinet with a dynamic and condenser mic blend to replicate the SM57 and U87 studio pairing.",
+    "Place the Circular Delay before the Studio Plate 70 (ST) reverb after the cab block, watching main output levels to prevent digital clipping from the long ambient trails."
+  ]
+}

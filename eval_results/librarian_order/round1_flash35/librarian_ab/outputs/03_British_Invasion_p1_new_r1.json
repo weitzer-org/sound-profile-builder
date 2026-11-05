@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Jewel",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amp input block to boost upper-mid frequencies and push the EL84 power section into vintage 60s British chime and saturation.",
+    "Place the Jewel compressor early in the signal chain for dynamic glue and subtle optical compression.",
+    "Use a high-pass / low-pass filter or post-cab low-pass cut between 8 kHz and 10 kHz to tame high-frequency ice-pick transients from the Top Boost circuit."
+  ]
+}

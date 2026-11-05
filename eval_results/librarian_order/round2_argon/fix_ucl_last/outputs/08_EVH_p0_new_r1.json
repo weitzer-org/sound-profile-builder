@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt Custom VH",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use the Watt Custom VH factory capture block (Hermansson modded PA100 VH) or alternately Brit Plexi 100 Patch to nail the variac-starved, hot-rodded 1968 Super Lead Plexi compression in single-amp mode.",
+    "Place the Graphic-9 EQ BEFORE the amp block configured in a mid-boosting frown curve to emulate the vintage MXR 6-Band EQ push and induce spongy variac-style input saturation.",
+    "Place both the MX Phase 95 and MX Flanger strictly BEFORE the amp block so the modulation sweep drives the front end of the dirty amp rather than sounding overly hi-fi.",
+    "Pair the amp with the 412 Brit 60B GB 71 cabinet using a close SM57 mic blended with a Ribbon mic, applying a high-cut roll-off to tame top-end Greenback fizz.",
+    "Place the Circular Delay (emulating the Maestro Echoplex EP-3 slap/echo) and Studio Plate 70 (ST) after the cab block, keeping the plate reverb mix subtle to preserve tight rhythmic palm mutes while capturing the Sunset Sound studio room ambiance."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "MXR Custom Shop Joe Bonamassa FET Driver",
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block configured as a low-gain boost to focus mid-range frequencies and smooth pick attack.",
+    "Place a Ribbon microphone off-axis on the cabinet block alongside the SM57 to tame harsh high-frequency transients.",
+    "Apply a high-pass filter around 80Hz to trim excess low-end boominess typical of D-style overdrive circuits."
+  ]
+}

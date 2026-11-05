@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Place the compressor at the input of the chain to smooth pick attack while preserving maximum clean headroom.",
+    "Position the Parametric EQ post-amp to dial in mid-range response and tame upper treble transients.",
+    "Use high amp volume rather than overdrive pedals to achieve natural saturation without clipping."
+  ]
+}

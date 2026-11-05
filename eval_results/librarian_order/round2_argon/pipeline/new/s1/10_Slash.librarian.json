@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Marshall JCM800 2203 (S.I.R. #34 Frank Levi Mod)"
+  ],
+  "mandatory_blocks": [
+    "Brit 2555 Lead",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 block BEFORE the Brit 2555 Lead amp capture as a clean volume and mid-frequency push to replicate the Boss GE-7 solo boost and hot-rodded SIR #34 mod without introducing Tube Screamer nasal diode clipping.",
+    "Aggressively cut the low-end sliders on the pre-amp Graphic-9 to prevent neck pickup mud, and keep the overall output level boost moderate so it does not digitally clip the fixed-gain input of the Brit 2555 Lead capture.",
+    "Pair a Dynamic 57 slightly off-axis with a Ribbon 121 blended lower in the 412 Brit 60B V30 95 cab block, engaging high-pass and low-pass filters to keep the top end smooth and low end tight.",
+    "Place the Circular Delay and Studio Plate 70 (ST) in series AFTER the cabinet block, rolling off the high frequencies on the delay repeats so they sit underneath the sustaining lead notes."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place Green 808 and Chief BD2 BEFORE the Fender 57 Deluxe amp block to drive the front end into vintage Chess Records grit rather than pushing the capture block's internal input gain.",
+    "Fender 57 Deluxe - T8 I4 M12 is a full-rig capture; if using it standalone, bypass or omit the cab block, or pair with FNDR TWDLX IN Edge BAL CAB if using a separate amp head capture like US DLX 58.",
+    "Place Parametric-3 BEFORE the amp block or use the Cab block's high-pass filter to cut loose low-end frequencies before they hit the small Tweed circuit.",
+    "If using a native Cab block such as 112 US DLX Tweed WGS-Q 10s, blend a Ribbon mic lower than a Dynamic mic to emulate the RCA 77-DX and Electro-Voice pairing without making the tone overly dark.",
+    "Place the Spring reverb block AFTER the amp and cab blocks with zero pre-delay and rolled-back tone for authentic 1950s vintage room and tank ambiance."
+  ]
+}

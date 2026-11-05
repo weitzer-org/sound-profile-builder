@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special",
+    "Tone-Stack Classic R35"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "1981 TS808 1",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost and Brit Blues BEFORE the amp as clean/transparent foundation thickeners.",
+    "Stack the 1981 TS808 1 or Keeley Mod BD-2 3 into the transparent drives BEFORE the amp for vocal midrange push, keeping the Two Rock SSS EQ1 (No Cab) amp capture clean to avoid low-end muddiness.",
+    "Pair the Two Rock SSS EQ1 (No Cab) head capture with the 212 Too Rock G65 cabinet block using a dynamic SM57 and a Ribbon 121 mic off-axis to balance bite and smooth warm transients.",
+    "Place the Circular Delay (emulating the short slapback of the Aqua-Puss) and Studio Plate 70 (ST) AFTER the cab block to create lush room depth without washing out the dry attack."
+  ]
+}

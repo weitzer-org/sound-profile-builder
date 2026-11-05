@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the clean Hiwatt amp capture.",
+    "Use a Graphic-9 EQ or mid-push overdrive block before or after the Fuzz Pi to smooth out the mid-scoop and prevent harsh high-end response into high-headroom clean amps.",
+    "Place Circular Delay and Studio Plate 70 (ST) after the cabinet block to maintain clean, uncorrupted reverb and delay trails.",
+    "Set high-cut / low-pass filtering on the 412 Watt S4123 cab block around 6.5 kHz - 7 kHz to tame high-frequency single-coil fizz."
+  ]
+}

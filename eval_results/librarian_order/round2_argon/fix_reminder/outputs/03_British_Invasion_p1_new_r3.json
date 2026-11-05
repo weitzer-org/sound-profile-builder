@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45",
+    "Marshall BluesBreaker"
+  ],
+  "mandatory_blocks": [
+    "66 AC30 JMP OD",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the 66 AC30 JMP OD capture block to push the front end into authentic 1960s British harmonic saturation.",
+    "Since 66 AC30 JMP OD is a full-rig capture, bypass the 212 UK C30 65 cab block if the capture's baked-in speaker response suffices, or pair it with a condenser-style mic (modeling the Neumann U67) and apply a high-cut filter to tame single-coil harshness on the Telecaster.",
+    "Place the Circular Delay and Spring reverb AFTER the amp/cab section, dialing in a short single-repeat slapback and subtle room ambiance."
+  ]
+}

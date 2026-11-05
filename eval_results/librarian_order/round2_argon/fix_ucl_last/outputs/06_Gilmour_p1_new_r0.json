@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-8",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom first in the chain before the fuzz to smooth out the pick attack and extend sustain.",
+    "Use the RR Big Muff 1976 Original user capture (or native Fuzz Pi) as the primary lead fuzz, and place the TW Tube Drive capture or Parametric-8 EQ immediately AFTER the fuzz (before the amp) to push the mids around the 800Hz-1kHz region and smooth the top end so the tone does not get buried in the mix.",
+    "Set the Watt D103 Normal amp block right on the edge of breakup so it exhibits slight natural power-tube compression when hit by the fuzz/boost stack.",
+    "In the 412 Watt S4123 cab block, pair a dynamic mic (SM57) with a condenser (U87) or ribbon (R121) off-axis, and roll off the High Cut to tame any piercing digital fizz from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cab block, utilizing a parallel split path or a generous pre-delay on the plate reverb so the initial pick transient punches through cleanly without washing out."
+  ]
+}

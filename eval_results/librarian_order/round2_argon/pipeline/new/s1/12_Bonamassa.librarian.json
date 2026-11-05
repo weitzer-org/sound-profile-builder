@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Use Dumbbell ODS as the single mandatory amplifier block to capture the smooth, mid-forward Dumble Overdrive Special circuit under the single_amp_mode and allow_cloud_captures:false constraints.",
+    "Pair the amp with the 212 Too Rock EV Vintage 79 cabinet block to authentically replicate the high-headroom 2x12 Electro-Voice EVM12L speaker response; blend a Dynamic 57 and a Ribbon 160 mic, and engage a low cut in the cab block to prevent neck humbuckers from flubbing out.",
+    "Place Green 808 and Myth Drive BEFORE the amplifier; use Green 808 with low drive and pushed level to emulate the TS808/Overrated Special midrange push, and Myth Drive as a transparent Klon boost—avoid stacking excessive gain into the ODS.",
+    "Place Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block, rolling back high frequencies on the delay repeats so they sit warmly behind the dry lead tone.",
+    "Place Parametric-8 AFTER the cabinet block to sculpt extra low-mid weight and punch that would normally come from a blended multi-amp setup."
+  ]
+}

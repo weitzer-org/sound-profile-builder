@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ and EP3 pre (V-12 EQ-mid) capture BEFORE the Brit Plexi 100 Patch amp block with an inverted-V midrange push to hit the preamp hard and replicate the classic Brown Sound input stage.",
+    "Place the MX Phase 95 and MX Flanger BEFORE the amplifier input rather than in the effects loop so the modulation sweep compresses naturally into the tube saturation.",
+    "Use the native Brit Plexi 100 Patch model and engage power amp Supply Sag to replicate the spongy compression of a Variac-starved 1968 Super Lead.",
+    "In the 412 Brit 60A GB75Hz 89 cabinet block, blend dual dynamic mics (or a Dynamic 57 with an off-axis Ribbon 121) and apply a high-cut filter to tame top-end fizz.",
+    "Route the Circular Delay and Studio Plate 70 (ST) after the cabinet block, keeping the plate reverb mix subtle or panned opposite the dry guitar to emulate the Sunset Sound studio chamber without washing out percussive attack."
+  ]
+}

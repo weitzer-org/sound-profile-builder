@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Iba Green",
+    "Circular Delay",
+    "Jewel",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor at the very front of the signal chain to even out rhythmic picking dynamics and enhance percussive attack.",
+    "Place the Parametric-3 EQ before the amplifier block with a slight high-mid boost and clean level push to replicate the Boss FA-1 FET Amplifier and the Korg SDD-3000 preamp hitting the front of the Vox.",
+    "Place the Iba Green (TS9) before the amplifier for mid-focused overdrive when needed.",
+    "Use the Circular Delay block after the amplifier block (or with low-end rolled off if placed in front) with a dotted-eighth subdivision and subtle modulation to emulate both the Korg SDD-3000 and Electro-Harmonix Deluxe Memory Man.",
+    "In the 212 UK C30 65 cab block, select a Dynamic 57 (Shure SM57) microphone and engage a High Cut to tame any harsh top-end chime.",
+    "Keep the Studio Plate 70 (ST) at the end of the chain for baseline FOH spatial ambiance."
+  ]
+}

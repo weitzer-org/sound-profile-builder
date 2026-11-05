@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Use the 'Fender 57 Deluxe - T8 I4 M12' user capture as the core 1950s 5E3 Tweed Deluxe amplifier.",
+    "Since 'Fender 57 Deluxe - T8 I4 M12' is a full-rig capture, bypass the 'FNDR TWDLX IN Edge BAL CAB' block unless extra speaker filtering is desired; if using a native cab block instead, blend a ribbon mic lower than a dynamic mic and engage the High-Pass Filter to tame the loose Tweed low-end.",
+    "Place the 'Parametric-3' EQ before the amp capture to trim excess low-end bass frequencies before hitting the Tweed circuit, preventing farty breakup.",
+    "Place 'Green 808' and 'Chief BD2' before the amplifier to push the front end naturally rather than boosting the capture block's internal input gain.",
+    "Place the 'Spring' reverb after the amp and cab blocks with the tone rolled back for authentic 1950s vintage ambiance."
+  ]
+}

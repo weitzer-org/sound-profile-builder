@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp as a mid-focused volume push with clean gain to boost lead passages.",
+    "Position the dynamic SM57 on-axis and ribbon M160 mic off-axis on the cabinet block to blend punch with smooth transient warmth.",
+    "Keep the amplifier bass response trimmed low on the Dumbbell ODS to prevent low-end flub and preserve touch sensitivity during heavy saturation."
+  ]
+}

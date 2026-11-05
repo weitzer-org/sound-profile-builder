@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and Myth Drive overdrive blocks BEFORE the amp block to push mid frequencies and saturation subtlely",
+    "Pair a Dynamic 57 microphone with a Ribbon 121 microphone off-axis on the 212 Too Rock G65 cab block to smooth out high-end transients",
+    "Apply a high-pass filter around the low-end on the cabinet block to control resonant bass frequencies when pushing the Dumble clean circuit with overdrive pedals"
+  ]
+}

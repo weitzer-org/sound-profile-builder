@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain with a slow attack and parallel dry mix to preserve the initial slide transient while extending sustain.",
+    "Place the Green 808 overdrive before the Fender 57 Deluxe - T8 I4 M12 amp block to tighten low-end frequencies from the ES-339 humbuckers and push midrange sustain without flub.",
+    "Since Fender 57 Deluxe - T8 I4 M12 is a full rig capture, the FNDR TWDLX IN Edge BAL CAB block can be bypassed or used optionally if switching to an amp-only configuration.",
+    "Place the Spring reverb after the amp/cab section to provide natural vintage room ambiance for direct-to-FOH playing."
+  ]
+}

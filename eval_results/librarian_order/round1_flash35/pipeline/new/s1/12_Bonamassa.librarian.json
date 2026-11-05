@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive BEFORE the amplifier block set to low drive and high output level to provide a clean mid-range boost for solos",
+    "Position Myth Drive prior to the amp block to add transparent gain staging without choking dynamic headroom",
+    "Place Circular Delay after the cabinet block to create smooth ambient solo tails",
+    "Trim overdrive pedal gain levels down to avoid muddying or bloating the sub-100Hz frequencies entering the Dumble circuit"
+  ]
+}

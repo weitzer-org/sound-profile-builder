@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Facial Fuzz",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz block early in the chain before any buffered pedals to preserve dynamic touch response.",
+    "Place the Iba Green overdrive block before the Tweed amp block to boost mid-range frequencies and tighten low-end sag for slide leads.",
+    "Position the Shure SM57 mic off-axis on the cab block and apply a high-cut/low-pass filter around 5.5 kHz–6.5 kHz to control harsh high-frequency spikes during high-position slide playing."
+  ]
+}

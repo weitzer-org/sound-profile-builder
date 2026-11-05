@@ -1,0 +1,14 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block to boost output level and tighten the low end into the high-headroom clean circuit",
+    "Set up a dynamic microphone off-axis on the cabinet block to balance punchy mid-range transients with smooth top end"
+  ]
+}

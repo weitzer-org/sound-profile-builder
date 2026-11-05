@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Circular Delay",
+    "Chorus 229T",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "The selected '66 AC30 JMP Clean' is a full-rig User Capture; if utilizing the '212 UK C30 65' cab block for dedicated microphone placement with a Dynamic 57, ensure cab simulation isn't doubled or switch to the native 'UK C30 TopBoost' amp model.",
+    "Place the 'Legendary 87 (ST)' compressor at the front of the chain to add percussive sustain and even out the rhythmic attack.",
+    "Place the 'Parametric-3' EQ before the amp with a slight upper-midrange lift to replicate the famous Korg SDD-3000 preamp push without clipping the capture input.",
+    "Place the 'Circular Delay' (set to dotted-eighth subdivision with modulation to mimic the Deluxe Memory Man warble) IN FRONT of the AC30 block so the delay repeats push the amp input and compress naturally together.",
+    "Roll down the Cab block high-cut filter to tame top-end fizz, compensating for the lack of an interactive Tone Cut knob on captures.",
+    "Place 'Studio Plate 70 (ST)' at the very end of the chain to provide baseline FOH spatial ambiance."
+  ]
+}

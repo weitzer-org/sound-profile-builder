@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' from the User Capture Library is a full-rig capture of a Joe Bonamassa Dumble Overdrive Special 50W combo; if you prefer to run the separate '212 Too Rock EV Vintage 79' (EVM12L) cab block for custom SM57 and Ribbon 160 mic blending, you can alternatively use the native 'Dumbbell ODS' amp block.",
+    "Place 'Green 808' or the '1981 TS808 1' capture BEFORE the amplifier with low drive and a pushed level to tighten the low end of the ES-339 humbuckers and goose the Dumble midrange.",
+    "Watch the input gain into the 'ODS Joe Lead' capture when stacking drives to avoid digital clipping and fizz.",
+    "Place 'Circular Delay' and 'Studio Plate 70 (ST)' AFTER the amp and cab blocks to provide lush studio ambiance and solo depth for direct-to-FOH gigs."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Parametric-3",
+    "Green 808",
+    "Circular Delay",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place Chief CS3 at the very beginning of the chain for early U2 compression and sustain.",
+    "Use Parametric-3 or Exotic Z Boost BEFORE the delay and amp to replicate the Boss FA-1 FET Amplifier and the Korg SDD-3000 solid-state preamp mid-boost.",
+    "Place Green 808 (or Iba Green) before the delay and amp for additional grit on heavier passages.",
+    "CRITICAL: Place Circular Delay BEFORE the UK C30 TopBoost amp block, synced to a dotted-eighth subdivision with noticeable modulation to mimic the Korg SDD-3000 and Deluxe Memory Man hitting the front of the amp.",
+    "Pair UK C30 TopBoost with 212 UK C30 65 (or 112 UK C15 Blue) and blend a Dynamic 57 with a Ribbon 160 mic, rolling off high end in the cab block to tame Alnico speaker fizz.",
+    "Place Vintage Digital or Studio Plate 70 (ST) at the end of the chain to provide baseline FOH spatial ambiance."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain with a fast attack to sustain clean lines without adding distortion.",
+    "Keep the amplifier gain low and compensate with Master Output to preserve pristine clean headroom without early breakup.",
+    "Place the Parametric-3 EQ block post-amp with a midrange boost around 1.5 kHz to 2.5 kHz for vocal lead bite.",
+    "Apply a Low Pass Filter around 5.5 kHz to 6 kHz on the cabinet block to tame high-frequency harshness on FRFR monitors."
+  ]
+}

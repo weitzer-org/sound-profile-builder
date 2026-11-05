@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Zila Open CL80 19",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Crying Wah"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' from the User Capture Library is a full-rig capture of a Dumble Overdrive Special formerly owned by Joe Bonamassa; if using it directly without a cab, disable the cab block, or pair a native 'Dumbbell ODS' amp block with '212 Zila Open CL80 19' or '212 Too Rock EV Vintage 79' (mic'd with Dynamic 57 and Ribbon 121) and engage a firm low-cut filter to prevent lower-midrange mud with neck humbuckers.",
+    "Place 'Crying Wah' first in the signal chain before any overdrive blocks.",
+    "Place 'Green 808' or 'Myth Drive' BEFORE the amplifier block with low drive and a healthy output level to push the midrange and supply upper-mid bite without clipping the capture input too harshly.",
+    "Place 'Circular Delay' and 'Studio Plate 70 (ST)' in series AFTER the amp/cab section to create lush, wide stage ambiance."
+  ]
+}

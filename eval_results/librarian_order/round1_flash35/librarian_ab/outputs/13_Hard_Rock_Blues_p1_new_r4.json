@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Green 808 boost pedals before the Plexi amplifier block to push mid frequencies and front-end drive.",
+    "Place the Facial Fuzz pedal first in the signal chain before any buffered pedals to preserve touch dynamics and cleanup response via guitar volume knob.",
+    "Mic the 4x12 cab with an SM57 and pair with a ribbon microphone off-axis to smooth upper-mid harshness.",
+    "Keep spatial Reverb placed post-amplifier and cab to avoid over-saturating ambient reflections."
+  ]
+}

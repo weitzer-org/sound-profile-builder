@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Do NOT use an overdrive pedal; Per the Pure Headroom Rule, push the US TWN Vibrato input volume natively to achieve natural vocal bloom and edge-of-breakup compression.",
+    "Place the Parametric-8 block immediately at the start of the chain to emulate the Gibson Varitone circuit (notch the upper-mids and apply a high-pass filter to prevent boomy neck humbucker low-end).",
+    "Place the Legendary 87 (ST) compressor gently before the amp with a slow attack to enhance sustain without squashing the articulate pick attack.",
+    "In the 212 US TWN CK2 cab block, pair a Dynamic 57 with a Ribbon mic pushed slightly toward the cap edge to tame piercing upper-mid frequencies while keeping the fundamental note thick.",
+    "Place the Spring reverb after the cab with a conservative mix and darkened tone to recreate authentic vintage tank splash without metallic artifacts."
+  ]
+}

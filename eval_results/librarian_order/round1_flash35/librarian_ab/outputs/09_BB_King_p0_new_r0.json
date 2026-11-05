@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Spring Reverb block post-cab to emulate traditional Blackface spring reverb ambiance.",
+    "Elevate the midrange control on the amp block to maintain a warm, vocal lead tone and avoid a harsh mid-scoop with humbucker guitars.",
+    "Keep amp preamp gain low to medium to ensure maximum clean headroom."
+  ]
+}

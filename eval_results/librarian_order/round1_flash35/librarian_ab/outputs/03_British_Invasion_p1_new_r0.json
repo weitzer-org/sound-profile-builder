@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Jewel",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amplifier input to drive upper-mid punch and vintage 60s British treble boost chime.",
+    "Position the Jewel compressor early in the signal chain for subtle vintage optical dynamic glue and sag.",
+    "Apply a high-frequency roll-off or post-cab low-pass filter to tame potential harshness from the Top Boost circuit."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "US Tweed Champ C"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Brit Blues",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The 'Fender 57 Deluxe - T8 I4 M12' is a full-rig capture, whereas 'US DLX 58' is an amp-only factory capture that pairs natively with the 'FNDR TWDLX IN Edge BAL CAB' (1957 5E3 Jensen P12R) or '112 US DLX Tweed WGS-Q 10s' cab block.",
+    "Place a Parametric-3 EQ or the Green 808 BEFORE the amp capture to tighten the loose, farty low-end inherent to 5E3 Tweed circuits.",
+    "Avoid pushing the Input Gain parameter on the Neural Capture block itself; rely on the Chief BD2, Green 808, or Brit Blues in front of the amp for natural Chess Records-style grit.",
+    "If utilizing a separate Cab block, blend a Ribbon mic lower than a Dynamic mic and engage the High-Pass Filter (HPF) to prevent the mix from getting overly dark and muddy.",
+    "Place the Spring Reverb AFTER the amp and cab blocks with the tone rolled back for authentic pre-1970 vintage American blues ambiance."
+  ]
+}

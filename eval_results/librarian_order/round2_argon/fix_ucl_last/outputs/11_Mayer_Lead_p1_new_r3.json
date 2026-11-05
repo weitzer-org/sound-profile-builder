@@ -1,0 +1,30 @@
+{
+  "dropped_gear": [
+    "Tone-Stack Classic R35",
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Green 808",
+    "TS10 JM Settings",
+    "Keeley Mod BD-2 3",
+    "Chief BD2",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Keep the Two Rock SSS EQ1 (No Cab) amplifier capture running clean at the edge of breakup to avoid tubby low-end mud, generating all sustain from the front-end drive pedals.",
+    "Place the Exotic Z Boost at the very front of the chain ahead of the overdrive blocks to act as a transparent clean boost.",
+    "Stack the Green 808 or TS10 JM Settings into the Brit Blues or Keeley Mod BD-2 3 before the amp block to smooth out the midrange spike and prevent nasal boxiness.",
+    "Slightly reduce the output level of the second stacked overdrive block before hitting the amp input to prevent unnatural digital fizz on transient attacks.",
+    "Pair the amp block with either the 212 Too Rock G65 or 212 Too Rock EV Vintage 79 cabinet block, blending a dynamic mic on-axis with an off-axis ribbon mic to smooth high-end transients.",
+    "Place the Circular Delay after the cab block as an analog slapback delay, followed by the Spring or Studio Plate 70 (ST) reverb block at the end of the chain for lush room depth without washing out the dry attack."
+  ]
+}

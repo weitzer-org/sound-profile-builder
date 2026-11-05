@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Brit 1962 Jumped",
+    "412 Brit 60s",
+    "Freeman Treble Booster Capture"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very beginning of the signal chain before any EQ or boost blocks.",
+    "Place the Graphic-9 or Parametric-3 block pre-amp with a steep high-cut filter and a midrange bump to simulate a rolled-off guitar tone capacitor for the classic Woman Tone.",
+    "Place the Rage Booster right before the Brit Plexi 100 Patch amplifier block to tighten the low end when high frequencies are rolled back.",
+    "Dial the Brit Plexi 100 Patch for maximum power-tube saturation while pulling back the bass slightly to prevent low-mid muddiness.",
+    "On the 412 Brit 60B GB 71 cabinet block, blend a Dynamic 57 and a condenser or ribbon mic with an aggressive high-cut filter to smooth out harsh top-end fizz.",
+    "Place the Spring reverb after the cabinet block to provide essential baseline room ambiance for direct-to-FOH playing."
+  ]
+}

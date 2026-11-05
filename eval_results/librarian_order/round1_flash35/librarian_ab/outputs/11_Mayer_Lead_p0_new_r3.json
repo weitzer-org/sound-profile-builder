@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp with low drive and higher volume to act as a mid-focused lead push.",
+    "Place the Chief BD2 pedal upstream of the amp for smooth low-to-medium gain texture.",
+    "Position a Shure SM57 mic on the 212 Too Rock G65 cab block near the edge of the speaker cap to smooth out high-end transients.",
+    "Apply a high-pass filter around 80Hz and a slight cut between 120Hz-250Hz to prevent low-end mud on D-Style high-headroom clean circuits."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Chief SD1",
+    "Parametric-8",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Chief CS3 at the start of the signal chain to keep rhythmic arpeggios locked in and consistent.",
+    "Place Chief SD1 and Parametric-8 before the amp; use the EQ to push the upper-mid presence and level into the front end of the AC30 to simulate the Korg SDD-3000 preamp boost and Herdim pick attack.",
+    "Dial the UK C30 TopBoost right at the edge of breakup and use the cab block high-cut filter to tame top-end digital fizz and emulate the traditional Vox Cut control.",
+    "Place Circular Delay and Studio Plate 70 (ST) after the cab block for clean, distinct rhythmic separation on dotted-eighth repeats, ensuring modulation is engaged on the delay to capture the signature chorus-like warble of the SDD-3000 and Deluxe Memory Man."
+  ]
+}

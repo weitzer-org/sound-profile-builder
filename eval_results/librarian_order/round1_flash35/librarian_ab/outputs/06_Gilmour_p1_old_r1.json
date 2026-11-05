@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Fuzz Pi before the Graphic-9 EQ block to push mid frequencies and keep the Big Muff sustain present in a mix.",
+    "Use Graphic-9 as a clean mid-boost lift to transparently push the high-headroom Hiwatt clean platform.",
+    "Pair a dynamic mic on-axis with a condenser mic off-axis on the 412 Watt S4123 cab block to capture crisp transient attack and body.",
+    "Keep the mix low on Studio Plate 70 (ST) to maintain clear output gain staging when combining long reverb tails with heavy fuzz sustain."
+  ]
+}

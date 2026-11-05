@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chorus 229T",
+    "Circular Delay",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block to act as a mid-focused overdrive push.",
+    "Apply a low-pass filter around 5.5kHz on the cab block to tame aggressive high-end AC30 chime.",
+    "Set the delay mix control around 80% to 82.5% to achieve unity gain between dry and delayed signals."
+  ]
+}

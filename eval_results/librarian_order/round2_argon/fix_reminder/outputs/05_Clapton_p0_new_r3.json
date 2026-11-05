@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz at the very beginning of the signal chain before the Crying Clyde Wah to preserve vintage impedance interaction.",
+    "Place the Graphic-9 or Parametric EQ at the start of the chain to simulate the rolled-off guitar tone capacitor ('Woman Tone') by shelving high frequencies and pushing the upper-mids.",
+    "Place the Rage Booster right before the Brit TM45 Patch amplifier block to tighten the low end and prevent flubbiness when the highs are rolled back.",
+    "Pull back the bass control on the Brit TM45 Patch amplifier block to prevent low-mid muddiness when using neck humbuckers or rolled-off tone settings.",
+    "Pair a Dynamic 57 and a condenser or ribbon mic on the 412 Brit 60B GB 71 cabinet block, applying a steep high-cut filter to smooth out harsh top-end fizz.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide natural studio room ambiance for direct-to-FOH routing."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock Cleanish",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and Keeley Mod BD-2 before the amplifier block with low drive and higher output to boost mids during solos.",
+    "Utilize a combination of SM57 and ribbon microphones on the cabinet to capture tight punch and smooth high-end transients.",
+    "Apply high-pass filtering between 80-100 Hz before the clean amp capture to maintain clarity and prevent low-end mud."
+  ]
+}

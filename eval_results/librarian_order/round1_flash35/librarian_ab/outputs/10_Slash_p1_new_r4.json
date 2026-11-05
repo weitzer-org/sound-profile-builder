@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block with zero drive and high level to tighten front-end low end.",
+    "Position dynamic microphones off-axis on the cabinet block to smooth out top-end harshness characteristic of the JCM800 circuit.",
+    "Place Circular Delay and Studio Plate 70 (ST) post-cabinet to preserve ambient depth without muddying amp saturation."
+  ]
+}

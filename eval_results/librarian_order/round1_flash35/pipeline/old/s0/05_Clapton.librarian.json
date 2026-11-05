@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Green 808",
+    "Parametric-8",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Position the Crying Clyde Wah block at the very beginning of the input chain before high gain and drive stages.",
+    "Use the Green 808 block as a clean boost with low gain and high level before the amp to drive power-tube compression.",
+    "Configure the condenser mic option in the 412 Brit 60B GB 90s cab block off-axis to smooth high-end transients and capture vintage U67 character."
+  ]
+}

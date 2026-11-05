@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Keep amp gain around 3.5-4.0 and boost Mids to 6.0-6.5 for maximum clean headroom with rich, warm body.",
+    "Place the Spring Reverb block post-cab with short-to-medium decay to emulate classic blackface spring reverb.",
+    "Use a Shure SM57 mic position on the 2x12 cab to maintain clean transient clarity for blues lead lines."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "Fender Super Reverb",
+    "Fender Twin Reverb",
+    "4x12 Electro-Voice EVM12L",
+    "1x15 JBL D130F"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Crying Clyde Wah",
+    "Spring",
+    "Legendary 87 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah at the very beginning of the signal chain for classic Texas blues vocal sweeps.",
+    "Place the Green 808 BEFORE the US SPR Vibrato amp block, keeping the drive low and output high to push the front end of the amp without losing percussive clean transients.",
+    "Since the user is playing a Gibson ES-339 with humbuckers alongside a Telecaster, apply a low-cut filter in the 410 US Basslad PR10 cab block to prevent the neck humbucker from flubbing out the 4x10 low end.",
+    "Pair a Dynamic 57 mic with a condenser or ribbon mic in the cab block, keeping the high-cut open to retain single-coil snap and chime.",
+    "Place the Spring reverb after the cab block to provide authentic vintage Fender-style American blues ambiance.",
+    "Place the Legendary 87 (ST) compressor post-cab to gently glue the tone together and replicate studio tape/board compression."
+  ]
+}

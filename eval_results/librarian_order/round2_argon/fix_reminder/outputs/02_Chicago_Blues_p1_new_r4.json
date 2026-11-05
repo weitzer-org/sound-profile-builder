@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block BEFORE the amp capture to cut bass frequencies, preventing the small Tweed circuit's low-end from getting loose and farty when pushed.",
+    "Place the Green 808 and Chief BD2 BEFORE the amp as transparent/gritty overdrive pushes rather than boosting the Input Gain on the Neural Capture block itself, avoiding artificial digital fizz.",
+    "Note that 'Fender 57 Deluxe - T8 I4 M12' is a full-rig capture, while 'FNDR TWDLX IN Edge BAL CAB' is a dedicated 5E3 1x12 Jensen P12R cab capture; if pairing with a cab or using native cab filtering, engage a high-pass filter and blend the ribbon mic lower than the dynamic mic to prevent muddiness.",
+    "Place the Spring reverb AFTER the amp/cab section with tone rolled back for authentic 1950s vintage room and spring ambiance."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Shure 55 Unidyne"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Green 808",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor block before drive pedals with low ratio to simulate natural vintage tube power amp sag",
+    "Tunes Myth Drive or Green 808 low-gain with an output level boost to push the US DLX 58 into edge-of-breakup clean dynamics",
+    "Place Spring Reverb post-cab with short decay to maintain authentic vintage combo tank ambience",
+    "Set high-cut between 7 kHz and 8 kHz on the cabinet block to replicate classic 12-inch Alnico speaker roll-off and tame top-end fizz"
+  ]
+}

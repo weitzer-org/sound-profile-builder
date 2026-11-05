@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Keeley Mod BD-2 3",
+    "OG TS808",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Keeley Mod BD-2 3 before the amp as your primary 'always-on' grit stage.",
+    "Use the OG TS808 with low gain and high level to push the mid-range during lead passages.",
+    "Utilize the Graphic-9 block for a transparent volume lift to simulate the Keeley Katana Clean Boost.",
+    "The Two Rock SSS EQ1 capture provides the high-headroom foundation; keep the gain low to maintain the 'Big Dipper' scooped clean character.",
+    "Position the SM57 mic slightly off-axis on the 212 Too Rock G65 cabinet to smooth out high-end transients.",
+    "Baseline reverb is provided via the Studio Plate 70 to ensure the direct signal has appropriate depth for FOH."
+  ]
+}

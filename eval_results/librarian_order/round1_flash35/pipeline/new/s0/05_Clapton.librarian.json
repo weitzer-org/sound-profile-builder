@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah before the amplifier block to achieve classic sweep frequency response.",
+    "Use a Neumann U67 mic capture placed off-axis on the cab block to capture full body while smoothing high-end frequencies.",
+    "Set the amp output volume high to simulate rich JTM/Plexi power-tube saturation."
+  ]
+}

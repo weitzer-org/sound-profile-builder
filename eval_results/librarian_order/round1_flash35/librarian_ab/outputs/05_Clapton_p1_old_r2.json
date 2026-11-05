@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 drive pedal before the amp block to add mid-range push and gain sustain.",
+    "Apply a High-Pass Filter (HPF) around 80-100Hz in the cabinet block to maintain low-end clarity when rolling down guitar tone knobs."
+  ]
+}

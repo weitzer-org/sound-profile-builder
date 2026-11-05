@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Analogman TS-808 TV 1",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Analogman TS-808 TV 1 before the amplifier block to act as a mid-forward volume push for lead sustain.",
+    "In the Cab block, select the Condenser 67 microphone and position it off-axis to capture the smooth, vocal transients characteristic of the Neumann U67.",
+    "Apply a High-Pass Filter in the low-frequency range within the Cab block to maintain clarity and prevent muddiness, especially when using the Gibson ES-339 neck humbucker.",
+    "Set the Brit TM45 Patch to a 'cranked' state to achieve the natural power-amp sag and compression typical of a JTM45/100 circuit.",
+    "Utilize a Spring Reverb algorithm within the Vintage Digital block to maintain historical accuracy for 1960s British Blues tones."
+  ],
+  "verified_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71",
+    "Brit Blues",
+    "Analogman TS-808 TV 1",
+    "Vintage Digital"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "MXR Custom Shop Joe Bonamassa FET Driver",
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Myth Drive before the Dumbbell ODS with low drive settings to act as a mid-focused boost without over-saturating the front end",
+    "Apply a High-Pass Filter around 80Hz and notch lower-mids (200Hz-350Hz) on the amp or EQ block to control D-style low-end boominess",
+    "Use a ribbon mic simulation off-axis on the cabinet block to smooth high-frequency transients for thick lead sustain"
+  ]
+}

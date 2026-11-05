@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring",
+    "Legendary 87 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Otso Bender Mk1 and Rage Booster BEFORE the UK C30 TopBoost amp block; use the Rage Booster to tighten the low end (especially when switching to the Gibson ES-339 humbuckers) and push the midrange into authentic 60s British invasion chime.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 (Alnico Silver Bell) cab block, or utilize the 112 UK C15 Blue cab if strictly prioritizing Alnico Blue speaker character. Use a large-diaphragm condenser mic alongside a ribbon or dynamic mic in the cab block to emulate the vintage Neumann U67 studio warmth and tame top-end fizz.",
+    "Place the Circular Delay (emulating the WEM Copicat tape echo) and Spring reverb AFTER the amp and cab blocks to provide vintage 1960s studio ambiance.",
+    "Be mindful of the input noise gate threshold so it does not choke the natural chime and sustain tail of the AC30, and adjust input gain staging when swapping between the Fender Telecaster single coils and Gibson ES-339 humbuckers."
+  ]
+}

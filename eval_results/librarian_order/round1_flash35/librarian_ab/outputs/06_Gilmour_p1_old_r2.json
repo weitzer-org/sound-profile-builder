@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block after the Fuzz Pi to boost mid-range frequencies, keeping the fuzz from getting lost in the mix when running into the flat Hiwatt circuit.",
+    "Keep the gain low and master volume high on the Watt D103 Normal to act as a high-headroom pedal platform.",
+    "Position Shure SM57 and Neumann U87 microphone captures on the 412 Watt S4123 cabinet to capture punchy transients alongside rich room ambiance.",
+    "Set the Studio Plate 70 (ST) reverb mix low to avoid digital clipping and muddying the fuzz sustain."
+  ]
+}

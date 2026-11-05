@@ -1,0 +1,28 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "John Mayer klon",
+    "TS10 JM Settings",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Chief BD2",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use 'Two Rock SSS EQ1 (No Cab)' as the single high-headroom amplifier foundation and pair it directly with the '212 Too Rock G65' cabinet block.",
+    "Configure the '212 Too Rock G65' cabinet block with a Dynamic 57 and a Ribbon 121 microphone, rolling off the high cut to achieve a smooth, vocal Dumble/Two-Rock high-end roll-off.",
+    "Place a transparent low-gain drive ('Brit Blues' or the user capture 'John Mayer klon') BEFORE the Tube Screamer ('TS10 JM Settings' or 'Green 808') in the pre-amp signal path to stack into the mid-scooped amplifier foundation.",
+    "Use 'Exotic Z Boost' at the front of the chain as a clean volume boost to replicate the Keeley Katana.",
+    "Keep the output level of any drive captures near unity gain to prevent harsh digital input clipping when stacking into the clean amp capture.",
+    "Place 'Circular Delay' and 'Spring' reverb AFTER the amplifier and cabinet blocks for slapback analog echo and classic amp-style ambiance."
+  ]
+}

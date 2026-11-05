@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Fuzz Pi before the Watt D103 Normal amp block for high-headroom vintage fuzz response.",
+    "Insert Graphic-9 after Fuzz Pi to push mid-range frequencies and prevent the fuzz from getting lost in the mix.",
+    "Set the Watt D103 Normal amp with high Master Volume and low Gain to act as a pristine clean pedal platform."
+  ]
+}

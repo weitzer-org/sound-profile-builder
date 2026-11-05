@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Reus Bender Mk2"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah at the very front of the signal chain before drive and amplifier blocks.",
+    "Place the Reus Bender Mk2 fuzz before the amplifier block to saturate the JTM front end.",
+    "Apply a high-pass filter around 80Hz to 100Hz on the cab block to prevent low-end mud when using humbuckers with rolled-off tone.",
+    "Position a condenser microphone off-axis on the 4x12 Greenback cabinet to capture smooth, warm vintage highs."
+  ]
+}

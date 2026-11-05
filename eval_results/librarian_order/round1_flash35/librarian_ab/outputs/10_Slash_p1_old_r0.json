@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Circular Delay",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Position an overdrive like Green 808 before the Brit 2203 amp block with drive at zero and output level boosted to tighten front-end response.",
+    "Place the Circular Delay block post-cab to add spatial depth to lead lines without cluttering input dynamics.",
+    "Use a Shure SM57 dynamic mic off-axis on the 4x12 Vintage 30 cab block to smooth out upper-midrange top-end harshness."
+  ]
+}

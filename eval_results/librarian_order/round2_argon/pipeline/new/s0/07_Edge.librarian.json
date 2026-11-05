@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Parametric-3",
+    "Iba Green",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 at the start of the chain for rhythmic sustain and pick attack snap.",
+    "Use the Parametric-3 EQ before the delay and amp to emulate the Boss FA-1 FET preamp and Korg SDD-3000 preamp push, adding upper-midrange chime without over-saturating the amp input.",
+    "Place the Iba Green (TS9) before the delay and amp as an optional low-gain mid push for dirtier passages.",
+    "CRITICAL: Place the Circular Delay block BEFORE the UK C30 TopBoost amp block so that the modulated dotted-eighth repeats hit the front of the amplifier and trigger its edge-of-breakup compression naturally.",
+    "Pair the UK C30 TopBoost amp with the 212 UK C30 65 Alnico cab block, blending a Dynamic 57 and a Ribbon 160 mic with a high-cut roll-off to tame top-end fizz.",
+    "Place the Studio Plate 70 (ST) reverb at the very end of the chain after the cab for FOH spatial ambiance."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "MK3 Silicon Fuzz",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the UK C30 TopBoost amplifier block to boost treble and push the edge-of-breakup chime without accumulating low-end mud.",
+    "Place the MK3 Silicon Fuzz early in the signal chain before the boost and amp blocks.",
+    "Use high-pass (70-80 Hz) and low-pass (5.5-6.5 kHz) filters on the 212 UK C30 cab block to control upper-mid harshness inherent to Top Boost circuits."
+  ]
+}

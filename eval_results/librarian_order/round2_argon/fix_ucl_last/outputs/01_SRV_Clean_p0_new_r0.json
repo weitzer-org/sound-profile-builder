@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Fender Vibroverb 64 Custom SRV"
+  ],
+  "suggested_blocks": [
+    "1981 TS808 1",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The 'Fender Vibroverb 64 Custom SRV' user capture is a full_rig capture (amp + 1x15 cab included), so omit a separate cab block if using it alone, or swap to 'US SPR Vibrato' paired with '410 US Basslad PR10' if you need discrete microphone control with a Dynamic 57 and Condenser 47 blend.",
+    "Place the '1981 TS808 1' capture (or native 'Green 808') BEFORE the amplifier block to push the front end with reduced input gain and elevated output level.",
+    "Place the 'Spring' reverb block AFTER the amp/cab section with a short decay and modest mix for vintage Texas blues room ambiance.",
+    "Monitor the input and output meters closely when slamming the high-headroom Fender capture with the Tube Screamer boost to avoid digital clipping."
+  ]
+}

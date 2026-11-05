@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Basslad Normal Patch",
+    "US HP Tweed TWN Normal Patch"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor at the start of the signal chain with parallel blend to elongate slide note decay without squashing pick attack.",
+    "Place the Green 808 BEFORE the amp with low gain and high level to tighten woofy humbucker low-end and push the cranked Tweed circuit into singing sustain.",
+    "Pair the US DLX 58 factory capture with the 112 US DLX Tweed WGS-Q 10s cab using a Dynamic 57 and Ribbon 121 mic blend, applying a high-pass filter to tame low-end flub.",
+    "Place the Circular Delay and Spring reverb AFTER the cabinet block for vintage studio slapback and classic American blues ambiance."
+  ]
+}

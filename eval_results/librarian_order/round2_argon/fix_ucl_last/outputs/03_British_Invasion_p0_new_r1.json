@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the UK C30 TopBoost amp block to tighten the low end and push the EL84 power section into authentic 60s British Invasion saturation.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 cabinet block and use a condenser or ribbon microphone model off-axis to emulate the warm, smooth midrange response of a vintage Neumann U67.",
+    "Place the Circular Delay AFTER the amp and cab blocks and dial in warm high-cut filtering and subtle modulation to replicate the magnetic tape warble of a WEM Copicat.",
+    "Place the Spring reverb at the end of the signal chain for vintage 60s room and amp-tank ambiance."
+  ]
+}

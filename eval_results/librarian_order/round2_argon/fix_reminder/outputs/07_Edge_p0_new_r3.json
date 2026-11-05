@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Circular Delay",
+    "Chorus 229T",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that '66 AC30 JMP Clean' is a full-rig User Capture from the User Capture Library; if using it standalone, bypass the '212 UK C30 65' cab block, or swap to the native 'UK C30 TopBoost' amp if pairing with the cab.",
+    "Place the 'Legendary 87 (ST)' compressor at the front of the chain to replicate the MXR Dyna Comp percussive sustain and transient snap.",
+    "Place the 'Parametric-3' EQ before the amplifier with an upper-midrange push to emulate the classic Korg SDD-3000 preamp boost hitting the AC30 input.",
+    "Run the primary 'Circular Delay' set to a dotted-eighth subdivision with modulated repeats BEFORE the amplifier input so the delay repeats push the AC30 into natural compression.",
+    "Use 'Chorus 229T' to capture the TC Electronic 2290 spatial modulation width.",
+    "Include 'Studio Plate 70 (ST)' at the end of the chain to provide essential direct-to-FOH stadium ambiance."
+  ]
+}

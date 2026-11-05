@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Do not use overdrive pedals to simulate grit; achieve edge-of-breakup compression and sustain by pushing the US TWN Vibrato amplifier volume natively.",
+    "Place the Parametric-3 EQ block BEFORE the amplifier to sculpt a vocal, nasal upper-midrange bite and scoop the low-mids, mimicking a Gibson Varitone switch.",
+    "Use a Dynamic 57 microphone in the 212 US TWN C12Q 00s cab block and apply a high-cut filter to tame piercing ice-pick high frequencies on the upper frets.",
+    "Place the Spring reverb block AFTER the cab block with a subtle mix and short decay to preserve staccato picking dynamics and vibrato."
+  ]
+}

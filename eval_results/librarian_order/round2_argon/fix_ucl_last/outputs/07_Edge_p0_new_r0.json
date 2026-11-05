@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Chorus 229T",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ at the very beginning of the signal chain to replicate the Korg SDD-3000 preamp mid/high-mid hit before hitting the compressor and delay.",
+    "Place the Legendary 87 (ST) compressor early in the chain before the amplifier to add percussive sustain and chime to the rhythmic pick attack.",
+    "Run the primary dotted-eighth Circular Delay IN FRONT of the 66 AC30 JMP Clean capture rather than after it, so the delay repeats push the amp input and compress naturally together in classic 80s U2 style.",
+    "Since 66 AC30 JMP Clean is a full-rig capture, either bypass the 212 UK C30 65 cab block or use a low-pass filter after the capture to roll off high-end fizz, as captures lack an interactive Tone Cut control.",
+    "Use Chorus 229T for subtle modulated stereo widening and Studio Plate 70 (ST) at the end of the chain to provide ambient FOH space."
+  ]
+}

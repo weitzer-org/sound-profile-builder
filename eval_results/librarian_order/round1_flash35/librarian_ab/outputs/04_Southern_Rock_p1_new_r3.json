@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp as a low-drive volume boost to gently push the Tweed front end into bloom.",
+    "Place the Facial Fuzz prior to the overdrive pedal to maintain dynamic touch sensitivity.",
+    "Place the Circular Delay post-amp with low mix to provide spatial ambiance without obscuring slide notes.",
+    "Use a low-pass filter around 6 kHz on the cab block to control upper-mid harshness on high slide passages."
+  ]
+}

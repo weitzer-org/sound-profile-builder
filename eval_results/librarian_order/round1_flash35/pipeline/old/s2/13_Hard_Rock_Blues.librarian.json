@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Facial Fuzz",
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Facial Fuzz at the beginning of the chain before the amp for vintage germanium treble-boost dynamics and fuzz saturation.",
+    "Place the Green 808 before the amp input to act as a tight mid-range drive boost.",
+    "Mic the 412 Brit TV cabinet with a dynamic SM57 off-axis to smooth out high-end harshness from the Plexi circuit.",
+    "Add a subtle baseline reverb at the end of the signal path to prevent a dry direct-to-FOH sound."
+  ]
+}

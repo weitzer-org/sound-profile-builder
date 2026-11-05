@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Bassman 59",
+    "US HP Tweed Twin"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "EP3 pre (V-12 EQ-mid)",
+    "1981 TS808 1",
+    "Green 808",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor at the start of the signal chain with parallel mix blended back to elongate slide note decay without squashing pick or finger attack.",
+    "Place the Green 808 or 1981 TS808 1 overdrive BEFORE the amp with low gain and high output level to tighten the woofy low-end of humbuckers and focus the midrange for singing slide sustain.",
+    "Fender 57 Deluxe - T8 I4 M12 is a full-rig capture of a cranked '57 Tweed Deluxe; if using the separate 112 US DLX Tweed WGS-Q 10s cab block, ensure cab simulation isn't double-stacked or pair the cab with an amp-only block.",
+    "In the cab block, blend a Dynamic 57 on-axis with a Ribbon 121 off-axis to balance bite with smooth transients, and roll off the low end to prevent Tweed bass flub.",
+    "Place Circular Delay and Spring (or Studio Plate 70 (ST)) AFTER the amp and cab section for subtle vintage studio ambiance."
+  ]
+}

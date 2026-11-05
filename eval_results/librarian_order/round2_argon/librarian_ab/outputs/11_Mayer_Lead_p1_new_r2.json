@@ -1,0 +1,32 @@
+{
+  "dropped_gear": [
+    "Tone-Stack Classic R35",
+    "2x12 Tone-Stack",
+    "Newcomer",
+    "Mind Hall",
+    "Modulated Plate Reverb"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Green 808",
+    "TS10 JM Settings",
+    "Keeley Mod BD-2 3",
+    "Chief BD2",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Pair the Two Rock SSS EQ1 (No Cab) amplifier capture with the 212 Too Rock G65 or 212 Too Rock EV Vintage 79 cabinet block, using a dynamic SM57 and ribbon R-121 mic combination to smooth out transients.",
+    "Keep the amplifier block clean with high headroom to prevent the low-end from becoming tubby, generating all overdrive and lead sustain from stacked pedals in front of the amp.",
+    "Place a transparent overdrive or boost (such as Brit Blues or Exotic Z Boost) as an always-on foundation before the amp, and stack Green 808, TS10 JM Settings, or Keeley Mod BD-2 3 into it to inject vocal mid-hump without sounding nasal.",
+    "Watch output levels when stacking two drive blocks into the clean amp platform; trim the output of the second drive block slightly to avoid unnatural clipping on the transient attack.",
+    "Place Circular Delay (voiced as a warm analog slapback/short repeat) after the cab, followed by Spring or Studio Plate 70 (ST) reverb to create lush spatial depth without washing out the dry attack."
+  ]
+}

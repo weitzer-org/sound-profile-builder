@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Keep amp gain low around 3.5-4.0 and boost midrange frequencies (800 Hz - 1 kHz) on the US Twin Vibrato block to maintain clean headroom without harsh Blackface mid-scoop, compensating for high-output Gibson ES-339 humbuckers.",
+    "Place the Spring Reverb post-cabinet with short-to-medium decay and 20-25% mix to emulate authentic vintage blackface amp ambiance.",
+    "Position the Shure SM57 microphone off-axis on the cabinet to smooth out high-frequency transients for direct FOH output."
+  ]
+}

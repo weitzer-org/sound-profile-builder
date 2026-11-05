@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "John Mayer klon",
+    "Keeley Mod BD-2 3",
+    "TS10 JM Settings",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Enforce single_amp_mode by routing only the 'Two Rock SSS EQ1 (No Cab)' user capture into the '212 Too Rock G65' native cab block, dropping the secondary Dumble amp.",
+    "Configure the '212 Too Rock G65' cab block with a Dynamic 57 on-axis and a Ribbon 121 slightly off-axis, rolling off the high-cut filter to smooth out the top end.",
+    "Place 'John Mayer klon' first in the drive chain as a clean front-end boost (replacing the Keeley Katana), feeding into 'Keeley Mod BD-2 3' and 'TS10 JM Settings' before the amp.",
+    "When stacking the drive captures ('John Mayer klon', 'Keeley Mod BD-2 3', and 'TS10 JM Settings'), keep output levels near unity to prevent digital input clipping on subsequent capture blocks.",
+    "Insert the 'Graphic-9' EQ block immediately after the cab block and slightly pull back the lower-mid frequencies to prevent boxiness from the single-amp setup.",
+    "Place 'Circular Delay' (configured for a fast analog-style slapback) and 'Studio Plate 70 (ST)' at the end of the signal chain after the cab and EQ blocks."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 overdrive block before the amplifier to add mid-range push and gain sustain.",
+    "Use a ribbon mic off-axis on the 4x12 Greenback cabinet to smooth high-end transients and prevent digital harshness.",
+    "Engage a high-pass filter around 80-100Hz on the cab block or EQ to maintain low-end clarity when rolling back guitar tone knobs."
+  ]
+}

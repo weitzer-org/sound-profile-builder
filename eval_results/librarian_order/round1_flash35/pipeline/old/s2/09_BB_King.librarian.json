@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Vintage Digital",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Position the Parametric EQ block to add a subtle mid-range bump and apply a high-pass filter around 100 Hz to prevent neck humbucker boominess.",
+    "Derive saturation and singing sustain by pushing the amplifier block volume natively rather than adding overdrive pedals.",
+    "Place ambient reverb and subtle delay blocks after the cab block to maintain dry pick attack dynamics and depth."
+  ]
+}

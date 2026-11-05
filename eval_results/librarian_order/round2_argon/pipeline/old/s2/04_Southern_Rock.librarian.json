@@ -1,0 +1,28 @@
+{
+  "dropped_gear": [
+    "1958 Fender Tweed Champ (5F1)",
+    "Fender Champ V2",
+    "Fender Custom Champ 57 Vol4"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Myth Drive",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Fender 57 Deluxe - T8 I4 M12 is a full-rig capture of a cranked 1957 Tweed Deluxe (Mic Volume at 12); if used standalone without a separate cab block, pull back the capture block Volume slightly to prevent digital clipping when boosted, or pair with the native 112 US DLX Tweed WGS-Q 10s cab using an off-axis Dynamic 57 and Ribbon 121 mic blend to smooth upper-register slide transients.",
+    "Place the Parametric-3 EQ block BEFORE the overdrive and amp capture to cut low-end frequencies and prevent the cranked Tweed circuit from farting out with the Gibson ES-339 humbuckers.",
+    "Place the Legendary 87 (ST) compressor BEFORE the overdrive to add slide sustain without squashing initial pick attack.",
+    "Place Green 808 (or Myth Drive) BEFORE the amp capture with low drive and high output level to push the Tweed Deluxe into singing sustain.",
+    "Use the EP3 pre (V-12 EQ-mid) capture BEFORE the amp for authentic Maestro Echoplex EP-3 preamp coloration and mid push, while using the native Circular Delay block AFTER the amp/cab for time-based tape echo repeats.",
+    "Place the Spring reverb block at the end of the chain to provide classic vintage American room and spring ambiance."
+  ]
+}
