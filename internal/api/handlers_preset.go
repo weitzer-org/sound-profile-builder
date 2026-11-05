@@ -804,7 +804,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 						<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
 				`, html.EscapeString(block.Type), html.EscapeString(block.Model), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 
-				blocksHtml.WriteString(blockControlsHTML(editTarget{presetID: p.ID, guitar: guitarName, blockID: block.ID, tabID: safeId}, block))
+				blocksHtml.WriteString(blockControlsHTML(editTarget{presetID: p.ID, guitar: guitarName, blockID: block.ID}, block))
 				blocksHtml.WriteString(`</div></div>`)
 			}
 

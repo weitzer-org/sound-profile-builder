@@ -21,7 +21,7 @@ import (
 
 // editTarget identifies where an edit is saved.
 type editTarget struct {
-	presetID, guitar, blockID, tabID string
+	presetID, guitar, blockID string
 }
 
 // hxVals renders the update request's fields for an hx-vals attribute.

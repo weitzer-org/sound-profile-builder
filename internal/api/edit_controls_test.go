@@ -18,7 +18,7 @@ import (
 // a slider over its real range, a dropdown of its named positions, and the controls the
 // preset leaves alone at their default, tagged as such.
 func TestBlockControlsHTMLForCatalogModel(t *testing.T) {
-	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1", tabID: "strat"}
+	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1"}
 	delay := blockControlsHTML(tgt, storage.EffectBlock{ID: "b1", Type: "Delay", Model: "Analog Delay",
 		Parameters: []storage.BlockParameter{
 			{Name: "Bypass", Type: "toggle", Value: "On"},
@@ -140,7 +140,7 @@ func TestUpdateParameterRecordsDefaultControl(t *testing.T) {
 // inside an event attribute (the browser decodes &#39; back to ' before running it), so
 // every slider's oninput script must be the one constant script, with no preset data in it.
 func TestSliderScriptHasNoPresetData(t *testing.T) {
-	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1');alert(2);//", tabID: "strat"}
+	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1');alert(2);//"}
 	for _, block := range []storage.EffectBlock{
 		{ID: tgt.blockID, Model: "Made Up Pedal", Parameters: []storage.BlockParameter{{Name: "x');alert(1);//", Type: "slider", Value: "5"}}},
 		{ID: tgt.blockID, Model: "Green 808", Parameters: []storage.BlockParameter{{Name: "OVERDRIVE", Type: "slider", Value: "5"}}},
@@ -200,7 +200,7 @@ func TestStoredValueUnit(t *testing.T) {
 
 // A device control whose preset value keeps its unit in Unit is shown in the right units.
 func TestDeviceControlUsesSeparateUnit(t *testing.T) {
-	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1", tabID: "strat"}
+	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1"}
 	out := blockControlsHTML(tgt, storage.EffectBlock{ID: "b1", Model: "Analog Delay",
 		Parameters: []storage.BlockParameter{{Name: "DELAY TIME", Type: "slider", Value: "0.38", Unit: "s"}}})
 	if !strings.Contains(out, `value="380" data-unit=" ms"`) {
