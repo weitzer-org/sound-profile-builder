@@ -1,0 +1,624 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the vintage 1950s Tweed Deluxe 5E3 / Bassman foundation with a mid-hump Tube Screamer push, subtle early-chain compression, and a 1x12 Alnico speaker voiced with an SM57.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the smooth power-amp sag saturation profile, mid-pushed EQ contour, vintage spring reverb ambience, and low/high frequency boundaries around 95 Hz and 6.2 kHz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the need for a pre-amp mid-hump overdrive to prevent Tweed low-end flub with humbuckers, parallel compression via a 4:1 Legendary 87 at 50% mix for slide sustain, and a 57/121 mic pairing.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the mandatory 'Fender 57 Deluxe - T8 I4 M12' capture and '112 US DLX Tweed WGS-Q 10s' cab, while providing 'Legendary 87 (ST)', 'Green 808', and 'Myth Drive' for the front-end gain and dynamics stages.",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Resolved dropped Tweed alternatives against the capture library; however, 'single_amp_mode: true' enforced retaining only the primary 'Fender 57 Deluxe - T8 I4 M12' capture.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup compensation offsets—pulling bass back and trimming input/gain on the warm semi-hollow ES-339 Humbuckers to stop low-end flub, while boosting input/gain and mids with a treble roll-off on the Telecaster Single Coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the cabinet mic placement using a Dynamic 57 at the cap edge (X: 2.5, Y: 1.0) and a Ribbon 121 on the mid-cone 3 inches back (X: 4.5, Y: 3.0) in a 60/40 blend (0 dB / -3.5 dB).",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the high-pass filter at 95 Hz and low-pass filter at 7500 Hz with a -1.5 dB output level trim on the cabinet block to keep the mix clean and prevent stage boom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Specified a 125 ms slapback delay and a 1.2-second spring reverb decay at 15% mix to add vintage depth without washing out note articulation.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) with 'Green 808' active and 'Legendary 87 (ST)' / 'Myth Drive' bypassed, and Scene B (Lead) engaging parallel compression and stacking 'Myth Drive' into 'Green 808' with a lead gain push.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Sequenced the mono-into-stereo front-end chain from compressor into dual overdrives before the Tweed Deluxe capture, cabinet block, and post-amp time effects while adhering to single-amp mode."
+  ],
+  "builder_statement": "This preset captures a singing, sag-rich 1957 Tweed Deluxe tone built around the 'Fender 57 Deluxe - T8 I4 M12' Neural Capture paired with the '112 US DLX Tweed WGS-Q 10s' cabinet. In Scene A (Rhythm), a 'Green 808' tightens the low end before the Tweed circuit for articulate, punchy breakup, while Scene B (Lead) engages a parallel-blended 'Legendary 87 (ST)' compressor and stacks a Klon-style 'Myth Drive' into the 'Green 808' for thick, sustaining slide and lead lines, finished with subtle slapback delay and vintage spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "ATTACK",
+            "RELEASE"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "INPUT",
+              "type": "slider",
+              "value": "-12.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MAKEUP",
+              "type": "slider",
+              "value": "5.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "50 %"
+            }
+          ],
+          "rationale": "Placed first in the chain with a 4:1 ratio and 50% parallel mix to extend lead and slide sustain in Scene B without squashing natural Telecaster pick attack; Input and Makeup are lifted to compensate for lower single-coil output.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "3.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Always active to focus the midrange and push the Tweed capture into smooth saturation; Overdrive and Level are pushed higher for the Telecaster with Tone rolled back slightly to keep the bridge pickup warm.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B to stack a Klon-style midrange push with the Green 808 for thick, singing lead sustain, with higher Gain and slightly warmer Treble tailored for single coils.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Core 1957 Tweed Deluxe Neural Capture (captured at Tone 8, Instrument 4, Mic 12); applies the Acoustician's single-coil compensation with +2.5 dB Gain, boosted Mids (+2.5 dB), and trimmed Treble (-1.0 dB) to fatten the Telecaster and tame ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "7000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Pairs a Dyn 57 and Ribbon 121 on a 1x12 Tweed Alnico speaker; for the brighter Telecaster, the Ribbon 121 is brought up to -2.5 dB with an 85 Hz HPF and 7000 Hz LPF to add body and smooth out top-end harshness.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [],
+          "model": "Slapback Delay",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "125 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15 %"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "20 %"
+            }
+          ],
+          "rationale": "Adds a classic 125 ms slapback echo per the Mix Engineer's target, with a slight Mix lift in Scene B to give single-note leads extra dimension.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "18 %"
+            }
+          ],
+          "rationale": "Provides the authentic vintage spring reverb ambience specified by the Sonic Profiler and Mix Engineer with a 1.2-second decay and 15% rhythm mix.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "INPUT",
+            "ATTACK",
+            "RELEASE",
+            "MAKEUP"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "50 %"
+            }
+          ],
+          "rationale": "Placed early in the chain and engaged in Scene B with a 4:1 ratio and 50% parallel Mix blend to extend slide and lead sustain without squashing pick attack or amplifying fret noise.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Active in both scenes to tighten the ES-339's semi-hollow low end before hitting the Tweed Deluxe capture, stepping up Overdrive, Tone, and Level in Scene B for singing lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Bypassed for rhythm in Scene A and engaged in Scene B to stack a Klon-style mid-focus boost with the Green 808 for thick, harmonically rich lead saturation.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Core 1957 Tweed Deluxe Neural Capture (captured at Tone 8, Instrument 4, Mic 12); trims Gain (-1.5 dB) and Bass (-2.0 dB) in Scene A to prevent input clipping and low-end flub from the ES-339 humbuckers, then pushes Gain and Mid in Scene B for leads.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "105 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Implements the Transducer Tech's 60/40 blend (0.0 dB / -3.5 dB) of a Dyn 57 at the cap edge and a Ribbon 121 at the mid-cone, with the HPF raised to 105 Hz to keep the ES-339's semi-hollow low end tight.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [],
+          "model": "Slapback Delay",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "125 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15 %"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "20 %"
+            }
+          ],
+          "rationale": "Delivers a 125 ms vintage slapback echo at 15% mix for rhythm and 20% for lead, adding room depth without muddying the semi-hollow midrange.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "18 %"
+            }
+          ],
+          "rationale": "Emulates vintage tube spring reverb with a 1.2-second decay and slightly brighter 5.5 Tone setting to keep the ES-339 clear in the mix.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,729 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the classic 1970s blues-rock hardware foundation anchored by a jumpered Marshall 1959SLP 100W Super Lead Plexi, a 1960A 4x12 Greenback cabinet, and an iconic front-end chain of Vox V846 Wah, Dallas-Arbiter Fuzz Face, and Ibanez TS808 Tube Screamer.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the mid-pushed spectral target around 1.8 kHz, asymmetric power-tube clipping behavior, vintage studio plate ambiance, and cab filtering boundaries to keep the overdrive smooth and articulate.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the need to tighten vintage Plexi low-end pre-amp using a low-drive, high-level 808 boost rather than relying solely on post-distortion bass cuts, and reinforced using dual dynamic/ribbon miking with cab high/low pass filters.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the target hardware to verified Quad Cortex models (`Brit Plexi 100 Patch`, `412 Brit 60A GB75Hz 89`, `Crying Clyde Wah`, `Facial Fuzz`, `Green 808`, `Circular Delay`, `Studio Plate 70 (ST)`) and provided tactical placement hints while allowing us to omit the redundant third pre-amp saturation stage (`EP3 pre`) to prevent gain congestion.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no conflicting custom capture overrides were required once the signal path was streamlined to two front-end saturation stages feeding the jumpered algorithmic Plexi model.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation across the Gibson ES-339 Humbuckers and Fender Telecaster Single Coils, trimming bass and input drive for the resonant semi-hollow humbuckers while boosting midrange, low-end body, and input drive for the brighter single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the dual-microphone cabinet blend pairing a close, off-axis Dynamic 57 (`POSITION: 4.5`, `DISTANCE: 1.5`) with a pulled-back Ribbon 160 (`POSITION: 5.5`, `DISTANCE: 3.5`) converted into decibel levels (`0.0 dB` and `-3.5 dB` for humbuckers, rebalanced for single coils).",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set direct-to-FOH spectral boundaries at `95 Hz` HPF and `7500 Hz` LPF with a `-2.5 dB` output trim inside the cabinet block to eliminate sub-bass rumble and harsh upper-frequency fizz.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Defined the temporal space with a `375 ms` tape-voiced echo on `Circular Delay` and a `1.8 s` decay on `Studio Plate 70 (ST)`, scaling wet mixes dynamically between rhythm and lead scenes.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Organized the dual-scene architecture where Scene A delivers an always-on `Green 808` tightening the `Brit Plexi 100 Patch` for dynamic rhythm crunch, and Scene B engages the `Facial Fuzz`, `Crying Clyde Wah`, and `Circular Delay` while pushing amp and reverb levels for searing leads.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the processing blocks across Lane 1 (wah, fuzz, overdrive, and amplifier) and Lane 3 (cabinet, delay, and stereo plate reverb) to optimize Quad Cortex CPU distribution."
+  ],
+  "builder_statement": "This preset recreates a 1970s blues-rock and hard-rock signal chain built around the jumpered `Brit Plexi 100 Patch` and a dual-miked `412 Brit 60A GB75Hz 89` cabinet. An always-on `Green 808` tightens the front end for punchy rhythm work in Scene A, while Scene B engages the `Facial Fuzz`, `Crying Clyde Wah`, and vintage-voiced `Circular Delay` alongside `Studio Plate 70 (ST)` reverb for vocal, sustaining leads.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [],
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "WAH",
+              "type": "slider",
+              "value": "0.45"
+            }
+          ],
+          "rationale": "Placed at the very start of the signal path for authentic vintage wah impedance interaction with the Telecaster's single coils; bypassed in Scene A and active in Scene B.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "PICKUP",
+            "PICKUP LEVEL"
+          ],
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FUZZ",
+              "type": "slider",
+              "value": "8.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Kept on its default `SINGLE` pickup mode so the Fuzz Face circuit interacts naturally with the Telecaster's lower-output pickups, with slightly higher `FUZZ` (`8.0`) and `VOLUME` (`7.5`) engaged in Scene B.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "9.0"
+            }
+          ],
+          "rationale": "Compensates for the Telecaster's lower output and brighter top end by bumping `OVERDRIVE` (`2.0`/`3.0`) and `LEVEL` (`8.0`/`9.0`) while rolling `TONE` back to `4.5`/`5.0` for fat midrange push.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN 1",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN 2",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "BASS",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MID",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "-0.5 dB"
+            }
+          ],
+          "rationale": "Applies the Acoustician's single-coil compensation by raising `GAIN 1` (`6.5`/`7.5`), `GAIN 2` (`5.5`/`6.5`), `BASS` (`5.5`), and `MID` (`7.5`/`8.0`), while lowering `TREBLE` and `PRESENCE` to `4.0` to eliminate ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "412 Brit 60A GB75Hz 89",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6800 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Shifts the Dynamic 57 further toward the speaker edge (`POSITION: 5.5`, `-1.5 dB`) and brings the warmer Ribbon 160 forward (`0.0 dB`) with an `85 Hz` HPF and smoother `6800 Hz` LPF to thicken the Telecaster bridge pickup.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "TAP PRESET",
+            "SYNC NOTE",
+            "DIFFUSION",
+            "MOD RATE",
+            "TRAILS"
+          ],
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "16 %",
+              "value_b": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "35 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "4000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MOD DEPTH",
+              "type": "slider",
+              "value": "15 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VINTAGE MODE",
+              "type": "toggle",
+              "value": "ON"
+            }
+          ],
+          "rationale": "Delivers tape-style `375 ms` repeats in Scene B with a warmer `4000 Hz` low-pass filter and `100 Hz` high-pass filter so the Telecaster's transient snap sits smoothly underneath lead lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [
+            "SIZE",
+            "H-SHELF GAIN",
+            "BASS FREQ",
+            "BASS MULT",
+            "H-SHELF FREQ",
+            "REV ATTACK",
+            "EARLY DIFF",
+            "LATE DIFF",
+            "MOD RATE",
+            "MOD DEPTH",
+            "TRAILS"
+          ],
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "2.0 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRE DELAY",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "110 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "6000 Hz"
+            }
+          ],
+          "rationale": "Adds lush `2.0 s` studio plate sustain with a warmer `6000 Hz` low-pass rolloff and slightly richer wet mix (`18 %` in Scene A, `25 %` in Scene B) to fill out the single-coil notes.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [],
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "WAH",
+              "type": "slider",
+              "value": "0.5"
+            }
+          ],
+          "rationale": "Placed first in the chain to replicate the vocal sweep of a vintage Vox V846 Wah; bypassed in Scene A for clean rhythm picking and active in Scene B for expressive lead phrasing.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "PICKUP LEVEL"
+          ],
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FUZZ",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PICKUP",
+              "type": "dropdown",
+              "value": "HB"
+            }
+          ],
+          "rationale": "Emulates the Dallas-Arbiter Fuzz Face placed before the overdrive, with its pickup impedance switch set to `HB` to match the Gibson ES-339 humbuckers; bypassed in Scene A and engaged in Scene B for thick lead sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Acts as an always-on front-end tightener with low `OVERDRIVE` and high `LEVEL` to prevent the ES-339's semi-hollow low-mids from muddying the Plexi input, pushing harder in Scene B for solo saturation.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN 1",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "GAIN 2",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "BASS",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MID",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.5 dB"
+            }
+          ],
+          "rationale": "Delivers the jumpered 100W Super Lead Plexi roar, translating the Acoustician's humbucker offset into lower `GAIN 1`/`GAIN 2` and trimmed `BASS` (`3.5`) and `OUTPUT` (`-3.0 dB`) to keep the semi-hollow body tight.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "412 Brit 60A GB75Hz 89",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Pairs a close Dynamic 57 (`0.0 dB`) with a pulled-back Ribbon 160 (`-3.5 dB`) for a 60/40 blend, incorporating the FOH Engineer's `95 Hz` HPF and `7500 Hz` LPF cuts to tame semi-hollow low-end resonance.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "TAP PRESET",
+            "SYNC NOTE",
+            "DIFFUSION",
+            "MOD RATE",
+            "TRAILS"
+          ],
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "28 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "32 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "120 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "4500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MOD DEPTH",
+              "type": "slider",
+              "value": "15 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VINTAGE MODE",
+              "type": "toggle",
+              "value": "ON"
+            }
+          ],
+          "rationale": "Replicates the warm repeats of a Maestro Echoplex EP-3 with `VINTAGE MODE` enabled and a `375 ms` delay time; bypassed during rhythm playing in Scene A and active in Scene B for wide lead dimension.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [
+            "SIZE",
+            "H-SHELF GAIN",
+            "BASS FREQ",
+            "BASS MULT",
+            "H-SHELF FREQ",
+            "REV ATTACK",
+            "EARLY DIFF",
+            "LATE DIFF",
+            "MOD RATE",
+            "MOD DEPTH",
+            "TRAILS"
+          ],
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "22 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRE DELAY",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "140 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Provides classic 1970s studio plate ambiance with a `1.8 s` decay and `25 ms` pre-delay to keep pick attack clear, expanding from `15 %` mix in Scene A to `22 %` in Scene B.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}
