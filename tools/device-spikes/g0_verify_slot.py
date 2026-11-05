@@ -61,7 +61,7 @@ def main() -> int:
 
         sc.say("\nNeighbours:")
         near = []
-        for p in range(max(0, pos - 2), pos + 3):
+        for p in range(max(0, pos - 2), min(256, pos + 3)):
             e = sc.slot_entry(folder, p)
             near.append({"position": p, "label": sc.slot_label(p), "name": e.get("name", "")})
             sc.say(f"  {'>>' if p == pos else '  '} {sc.slot_label(p):>4} (pos {p:3d}): {e.get('name', '')!r}")
