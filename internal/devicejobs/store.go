@@ -68,8 +68,20 @@ func (s *Store) exists(ctx context.Context, object string) (bool, error) {
 
 // readLimited reads object and enforces a size cap. found=false means the
 // object does not exist; a read error on an existing object is an error.
+//
+// When the client can read with a bound (storage.LimitedReader: S3 and GCS),
+// at most max+1 bytes are transferred, so an oversized object written with the
+// agent's bucket token can't exhaust QC-2's memory.
 func (s *Store) readLimited(ctx context.Context, object string, max int) (data []byte, found bool, err error) {
-	data, rerr := s.client.ReadFile(ctx, s.bucket, object)
+	var rerr error
+	if lr, ok := s.client.(storage.LimitedReader); ok {
+		data, rerr = lr.ReadFileLimited(ctx, s.bucket, object, int64(max))
+		if errors.Is(rerr, storage.ErrTooLarge) {
+			return nil, true, fmt.Errorf("%s is over the %d-byte limit", object, max)
+		}
+	} else {
+		data, rerr = s.client.ReadFile(ctx, s.bucket, object)
+	}
 	if rerr != nil {
 		ok, lerr := s.exists(ctx, object)
 		if lerr != nil {
@@ -137,10 +149,10 @@ func (s *Store) Enqueue(ctx context.Context, j *Job) error {
 // MaxPendingJobs.
 const maxPendingScan = 4 * MaxPendingJobs
 
-// PendingJobs returns the verifiable pending jobs among the first
-// maxPendingScan objects. Objects that fail verification are skipped (the
-// agent deletes them).
-func (s *Store) PendingJobs(ctx context.Context) ([]*Job, error) {
+// PendingJobs returns the verifiable, unexpired pending jobs for this bucket
+// among the first maxPendingScan objects. Anything else is skipped: the
+// agent deletes it, and old signed jobs copied back in can't fill the queue.
+func (s *Store) PendingJobs(ctx context.Context, now time.Time) ([]*Job, error) {
 	names, err := s.client.ListFiles(ctx, s.bucket, PendingPrefix)
 	if err != nil {
 		return nil, err
@@ -163,7 +175,10 @@ func (s *Store) PendingJobs(ctx context.Context) ([]*Job, error) {
 			continue
 		}
 		j, err := ParseJob(payload)
-		if err != nil || j.JobID != m[1] {
+		if err != nil || j.JobID != m[1] || j.Bucket != s.bucket {
+			continue
+		}
+		if _, expires := j.Times(); !now.Before(expires) {
 			continue
 		}
 		out = append(out, j)

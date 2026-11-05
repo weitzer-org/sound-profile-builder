@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,11 @@ const ConfirmTTL = 10 * time.Minute
 // confirmSkew tolerates a token minted on another machine with a slightly
 // faster clock.
 const confirmSkew = time.Minute
+
+var (
+	expRe = regexp.MustCompile(`^[1-9][0-9]{0,17}$`)
+	macRe = regexp.MustCompile(`^[0-9a-f]{32}$`)
+)
 
 const (
 	confirmPrefix = "c1"
@@ -71,12 +77,17 @@ func (k *Keyring) CheckConfirm(token string, c ConfirmClaims, now time.Time) err
 	if len(parts) != 3 || parts[0] != confirmPrefix || len(parts[2]) != 32 {
 		return ErrConfirmInvalid
 	}
+	// Only the canonical form IssueConfirm writes: ParseInt alone would also
+	// take "+exp" and "0exp", and each spelling would derive a different job id.
+	if !expRe.MatchString(parts[1]) || !macRe.MatchString(parts[2]) {
+		return ErrConfirmInvalid
+	}
 	exp, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil || exp <= 0 {
+	if err != nil {
 		return ErrConfirmInvalid
 	}
 	got, err := hex.DecodeString(parts[2])
-	if err != nil || strings.ToLower(parts[2]) != parts[2] {
+	if err != nil {
 		return ErrConfirmInvalid
 	}
 	ok := 0
@@ -100,8 +111,9 @@ func (k *Keyring) CheckConfirm(token string, c ConfirmClaims, now time.Time) err
 	return nil
 }
 
-// JobIDFromToken derives the push job's id from its confirm token, so a
-// repeated confirm names the same job: a UUID (version 8, RFC 9562 variant)
+// JobIDFromToken derives the push job's id from its confirm token (only ever
+// called on a token CheckConfirm accepted, which is canonical), so a repeated
+// confirm names the same job: a UUID (version 8, RFC 9562 variant)
 // from SHA-256("qc2-job-id/v1\n" || token).
 func JobIDFromToken(token string) string {
 	h := sha256.Sum256([]byte(jobIDTag + token))

@@ -24,6 +24,7 @@ type MemClient struct {
 	mu       sync.Mutex
 	objs     map[string]map[string][]byte
 	failList bool
+	limited  int
 }
 
 // SetFailList makes every later ListFiles call fail (storage-error tests).
@@ -80,6 +81,29 @@ func (c *MemClient) DeleteFile(_ context.Context, bucket, object string) error {
 }
 
 func (c *MemClient) Close() {}
+
+// ReadFileLimited implements storage.LimitedReader like the S3 and GCS
+// backends do, and counts its calls.
+func (c *MemClient) ReadFileLimited(ctx context.Context, bucket, object string, max int64) ([]byte, error) {
+	c.mu.Lock()
+	c.limited++
+	c.mu.Unlock()
+	d, err := c.ReadFile(ctx, bucket, object)
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(d)) > max {
+		return nil, fmt.Errorf("%w (%d bytes)", storage.ErrTooLarge, max)
+	}
+	return d, nil
+}
+
+// LimitedReads counts ReadFileLimited calls.
+func (c *MemClient) LimitedReads() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.limited
+}
 
 // Keys lists a bucket's object keys.
 func (c *MemClient) Keys(bucket string) []string {

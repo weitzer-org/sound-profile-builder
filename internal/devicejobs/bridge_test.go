@@ -141,7 +141,10 @@ func TestConfirmToken(t *testing.T) {
 	if err := kr.CheckConfirm(tok, c, exp); !errors.Is(err, devicejobs.ErrConfirmExpired) {
 		t.Errorf("at expiry: %v", err)
 	}
-	for _, bad := range []string{"", "c1", "c2.1.00", tok + "0", strings.Replace(tok, "c1.", "c1.-", 1), strings.ToUpper(tok)} {
+	// Non-canonical spellings of a valid token (which ParseInt would accept)
+	// are refused, so one approval can't yield several job ids.
+	for _, bad := range []string{"", "c1", "c2.1.00", tok + "0", strings.Replace(tok, "c1.", "c1.-", 1), strings.ToUpper(tok),
+		strings.Replace(tok, "c1.", "c1.+", 1), strings.Replace(tok, "c1.", "c1.0", 1), strings.Replace(tok, "c1.", "c1.00", 1)} {
 		if err := kr.CheckConfirm(bad, c, t0); err == nil {
 			t.Errorf("CheckConfirm(%q) accepted", bad)
 		}
@@ -527,5 +530,39 @@ func TestResultKindAndPendingFlood(t *testing.T) {
 	}
 	if _, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots); err != nil {
 		t.Fatalf("queue with junk pending objects: %v", err)
+	}
+}
+
+// Old signed jobs copied back into jobs/pending/ (expired) don't count against
+// the queue, and an oversized object is refused without being returned.
+func TestPendingIgnoresExpiredCopiesAndOversize(t *testing.T) {
+	ctx := context.Background()
+	r := newRig(t)
+	r.online(t)
+	var copies [][]byte
+	for i := 0; i < devicejobs.MaxPendingJobs; i++ {
+		id, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, _ := r.client.ReadFile(ctx, jobsBucket, devicejobs.PendingKey(id))
+		copies = append(copies, data)
+	}
+	if _, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots); err == nil {
+		t.Fatal("queue cap not enforced")
+	}
+	*r.clock = t0.Add(devicejobs.DefaultJobTTL + time.Minute)
+	_ = r.agent.Heartbeat(0, "idle", nil)
+	if _, err := r.bridge.QueueRead(ctx, devicejobs.KindListSlots); err != nil {
+		t.Fatalf("expired jobs still fill the queue: %v", err)
+	}
+	_ = copies
+	big := make([]byte, devicejobs.MaxHeartbeatBytes+10)
+	_ = r.client.WriteFile(ctx, jobsBucket, devicejobs.HeartbeatKey, big)
+	if hv, err := r.bridge.Store.Heartbeat(ctx, *r.clock); err != nil || hv.Online || !strings.Contains(hv.Reason, "could not be read") {
+		t.Fatalf("oversized heartbeat: %+v %v", hv, err)
+	}
+	if r.client.LimitedReads() == 0 {
+		t.Fatal("the store did not use the bounded read")
 	}
 }

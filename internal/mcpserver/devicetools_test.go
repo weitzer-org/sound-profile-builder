@@ -175,7 +175,7 @@ func TestDeviceStatus_HostileAgentText(t *testing.T) {
 	res := itCall(t, r.cs, deviceStatusToolName, nil)
 	text := okText(t, res)
 	t.Logf("status with hostile agent text:\n%s", text)
-	checkNoInjection(t, deviceStatusToolName, text)
+	checkDeviceText(t, deviceStatusToolName, text)
 	out := itStructured[deviceStatusOutput](t, res)
 	for _, s := range []string{out.AgentVersion, out.Firmware, text} {
 		if strings.ContainsAny(s, "\u202e\u200b\x1b\n\r") && s != text {
@@ -355,7 +355,7 @@ func TestDeviceReads(t *testing.T) {
 	if jo.State != devicejobs.StatusSucceeded || jo.Slots == nil || len(jo.Slots.Slots) != 3 {
 		t.Fatalf("slots %+v", jo)
 	}
-	if text := okText(t, res); !strings.Contains(text, "Empty slots: 20A") || !strings.Contains(text, "created by this app") {
+	if text := okText(t, res); !strings.Contains(text, "Empty slots: `20A`") || !strings.Contains(text, "created by this app") {
 		t.Fatalf("slots text:\n%s", text)
 	}
 
@@ -382,11 +382,46 @@ func TestDeviceReads_HostileDeviceText(t *testing.T) {
 		if strings.Contains(text, "\n# injected") || strings.ContainsRune(text, '\u202e') {
 			t.Errorf("%s: hostile text survived", tool)
 		}
-		if tool == deviceSlotsToolName {
-			checkNoInjection(t, tool, text)
-		}
+		checkDeviceText(t, tool, text)
 		if strings.Count(text, "```") > 2 {
 			t.Errorf("%s: device text opened a code fence", tool)
+		}
+	}
+}
+
+// checkDeviceText asserts hostile device text ("x\n# injected <script>...")
+// arrives only inside an inline code span: no heading line, no bare tag.
+func checkDeviceText(t *testing.T, tool, text string) {
+	t.Helper()
+	for _, line := range strings.Split(text, "\n") {
+		if strings.HasPrefix(line, "# injected") {
+			t.Errorf("%s: device text opened a heading line: %q", tool, line)
+		}
+		for i := strings.Index(line, "<script"); i >= 0; {
+			if strings.Count(line[:i], "`")%2 != 1 {
+				t.Errorf("%s: '<script' outside a code span: %q", tool, line)
+			}
+			break
+		}
+	}
+	if !strings.Contains(text, "`x # injected <script>") {
+		t.Errorf("%s: expected the device text inside a code span", tool)
+	}
+}
+
+func TestDeviceText_LinksAndImagesDoNotRender(t *testing.T) {
+	r := newDeviceRig(t, nil)
+	r.agent.Hostile = "x![p](https://evil.example/t.png) [Fix it](https://evil.example) *b* <b>"
+	r.online(t)
+	r.runAgent(t)
+	text := okText(t, itCall(t, r.cs, deviceSlotsToolName, map[string]any{"wait_seconds": 5}))
+	want := "`x![p](https://evil.example/t.png) [Fix it](https://evil.example) *b* <b>`"
+	if !strings.Contains(text, want) {
+		t.Fatalf("device name not confined to a code span:\n%s", text)
+	}
+	for _, line := range strings.Split(text, "\n") {
+		if i := strings.Index(line, "](https://evil"); i >= 0 && strings.Count(line[:i], "`")%2 != 1 {
+			t.Errorf("link outside a code span: %q", line)
 		}
 	}
 }

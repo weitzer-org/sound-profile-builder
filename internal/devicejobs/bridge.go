@@ -58,7 +58,7 @@ func (b *Bridge) Status(ctx context.Context) (HeartbeatView, int, error) {
 	if err != nil {
 		return hv, 0, err
 	}
-	pend, err := b.Store.PendingJobs(ctx)
+	pend, err := b.Store.PendingJobs(ctx, b.now())
 	if err != nil {
 		return hv, 0, err
 	}
@@ -192,7 +192,7 @@ func (b *Bridge) ConfirmPush(ctx context.Context, sp storage.StructuredPreset, r
 }
 
 func (b *Bridge) checkQueue(ctx context.Context, pushSlot string) error {
-	pend, err := b.Store.PendingJobs(ctx)
+	pend, err := b.Store.PendingJobs(ctx, b.now())
 	if err != nil {
 		return err
 	}

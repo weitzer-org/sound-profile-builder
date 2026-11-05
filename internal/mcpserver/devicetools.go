@@ -60,6 +60,19 @@ func sanitizeDeviceText(s string, n int) string {
 	return truncateRunes(strings.Join(strings.Fields(s), " "), n)
 }
 
+// dcell renders one sanitized device string for Markdown as an inline code
+// span. Inside a code span nothing renders: no links, images, autolinks,
+// emphasis or HTML, which cell()'s block-level escaping alone doesn't stop
+// (a stranger's preset named "x![p](https://evil.example/t.png)" would
+// otherwise become an image). sanitizeDeviceText has already removed
+// backticks and line breaks, so the span can't be closed early.
+func dcell(s string) string {
+	if s == "" {
+		return "(none)"
+	}
+	return "`" + strings.ReplaceAll(s, "|", `\|`) + "`"
+}
+
 func dtext(s string) string { return sanitizeDeviceText(s, maxDeviceTextRune) }
 
 func dptr(s *string) string {
@@ -228,16 +241,16 @@ func renderJob(b *strings.Builder, o deviceJobOutput) {
 		fmt.Fprintf(b, "- Reason: `%s`\n", cell(o.ReasonCode))
 	}
 	if o.Message != "" {
-		fmt.Fprintf(b, "- Bridge message: %s\n", cell(o.Message))
+		fmt.Fprintf(b, "- Bridge message: %s\n", dcell(o.Message))
 	}
 	if o.Firmware != "" {
-		fmt.Fprintf(b, "- Firmware: %s\n", cell(o.Firmware))
+		fmt.Fprintf(b, "- Firmware: %s\n", dcell(o.Firmware))
 	}
 	if o.ExpiresAt != "" && !devicejobs.Terminal(o.State) {
 		fmt.Fprintf(b, "- Expires: %s\n", o.ExpiresAt)
 	}
 	if p := o.Push; p != nil {
-		fmt.Fprintf(b, "- Pushed to slot %s as %s; read-back mismatches: %d", cell(p.Slot), cell(p.Name), p.Mismatches)
+		fmt.Fprintf(b, "- Pushed to slot %s as %s; read-back mismatches: %d", dcell(p.Slot), dcell(p.Name), p.Mismatches)
 		if p.CPULoad != nil {
 			fmt.Fprintf(b, "; CPU load %.0f%%", *p.CPULoad)
 		}
@@ -248,22 +261,22 @@ func renderJob(b *strings.Builder, o deviceJobOutput) {
 		var occ []string
 		for _, it := range s.Slots {
 			if it.State == "empty" {
-				empty = append(empty, cell(it.Slot))
+				empty = append(empty, dcell(it.Slot))
 				continue
 			}
 			mine := ""
 			if it.Owned {
 				mine = " (created by this app)"
 			}
-			occ = append(occ, fmt.Sprintf("  - %s: %s%s", cell(it.Slot), cell(it.Name), mine))
+			occ = append(occ, fmt.Sprintf("  - %s: %s%s", dcell(it.Slot), dcell(it.Name), mine))
 		}
-		fmt.Fprintf(b, "\n%s, %d slots listed.\n\nEmpty slots: %s\n", cell(s.Setlist), len(s.Slots), strings.Join(empty, ", "))
+		fmt.Fprintf(b, "\n%s, %d slots listed.\n\nEmpty slots: %s\n", dcell(s.Setlist), len(s.Slots), strings.Join(empty, ", "))
 		if len(occ) > 0 {
 			b.WriteString("\nOccupied slots:\n" + strings.Join(occ, "\n") + "\n")
 		}
 	}
 	if r := o.Readback; r != nil {
-		fmt.Fprintf(b, "\nPreset on the unit: %s (slot %s), format %s.\n", cell(r.Name), cell(r.Slot), cell(r.Format))
+		fmt.Fprintf(b, "\nPreset on the unit: %s (slot %s), format %s.\n", dcell(r.Name), dcell(r.Slot), dcell(r.Format))
 		raw, _ := json.MarshalIndent(r.Payload, "", " ")
 		if len(raw) > maxReadbackText {
 			raw = append(raw[:maxReadbackText], []byte("\n…(truncated)")...)
@@ -344,16 +357,16 @@ func deviceStatus(b *devicejobs.Bridge) mcp.ToolHandlerFor[deviceStatusInput, de
 			fmt.Fprintf(&t, "Home bridge: **offline**: %s.\n", hv.Reason)
 		}
 		if out.HeartbeatAgeS != nil {
-			fmt.Fprintf(&t, "- Last heartbeat: %d s ago (agent %s, %s)\n", *out.HeartbeatAgeS, cell(out.AgentVersion), cell(out.AgentState))
+			fmt.Fprintf(&t, "- Last heartbeat: %d s ago (agent %s, %s)\n", *out.HeartbeatAgeS, dcell(out.AgentVersion), dcell(out.AgentState))
 			unit := "unknown"
 			if out.UnitPresent != nil {
 				unit = map[bool]string{true: "connected", false: "not connected"}[*out.UnitPresent]
 			}
-			fmt.Fprintf(&t, "- Quad Cortex: %s; firmware %s (bridge expects %s)\n", unit, cell(out.Firmware), cell(out.ExpectedFirmware))
+			fmt.Fprintf(&t, "- Quad Cortex: %s; firmware %s (bridge expects %s)\n", unit, dcell(out.Firmware), dcell(out.ExpectedFirmware))
 			if len(out.AllowedSlots) > 0 {
 				ss := make([]string, len(out.AllowedSlots))
 				for i, s := range out.AllowedSlots {
-					ss[i] = cell(s)
+					ss[i] = dcell(s)
 				}
 				fmt.Fprintf(&t, "- Slots the bridge may write: %s\n", strings.Join(ss, ", "))
 			}
@@ -361,7 +374,7 @@ func deviceStatus(b *devicejobs.Bridge) mcp.ToolHandlerFor[deviceStatusInput, de
 				fmt.Fprintf(&t, "- Stops by itself when idle at: %s\n", out.IdleExitAt)
 			}
 			if out.LastJobID != "" {
-				fmt.Fprintf(&t, "- Last job: `%s` (%s)\n", out.LastJobID, cell(out.LastJobStatus))
+				fmt.Fprintf(&t, "- Last job: `%s` (%s)\n", out.LastJobID, dcell(out.LastJobStatus))
 			}
 		}
 		fmt.Fprintf(&t, "- Jobs waiting: %d\n", pending)
