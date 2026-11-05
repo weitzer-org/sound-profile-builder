@@ -94,6 +94,9 @@ def main() -> int:
     ap.add_argument("--folder-key", default=sc.SETLIST)
     ap.add_argument("--unsaved", action="store_true", help="accept the test layout on the live buffer from `g3 --apply` (blank name, never saved)")
     ap.add_argument("--no-prompt", action="store_true", help="skip the questions about the unit's screen")
+    step = ap.add_mutually_exclusive_group()
+    step.add_argument("--setup", action="store_true", help="single-step mode 1: write the per-scene GAIN and Spring bypass, leave the unit on Scene A, exit")
+    step.add_argument("--goto", choices=["A", "B"], help="single-step mode 2: switch to this scene, read back, exit (run --setup first)")
     ap.add_argument("--hold", type=int, default=0, metavar="SECONDS",
                     help="photo mode: at each scene, ring the bell and wait SECONDS (no typing) so you can photograph the unit; implies --no-prompt")
     args = ap.parse_args()
@@ -111,6 +114,33 @@ def main() -> int:
         result["firmware"] = qc.firmware
         sc.require_open_test_preset(qc, args, tp)
         sc.say("Test preset recognised.\n")
+
+        if args.setup or args.goto:
+            if args.setup:
+                sc.say("Setup 1/2: Myth Drive GAIN per scene (A=0.20, B=0.80)...")
+                qc.set_param_scenes(tp.ROW, tp.DRIVE_COL, tp.DRIVE_GAIN_IDX, [GAIN_A, GAIN_B])
+                time.sleep(0.5)
+                sc.say("Setup 2/2: Spring bypass per scene (A on, B bypassed)...")
+                qc.set_block_bypass(tp.ROW, tp.REVERB_COL, scenes=[False, True])
+                time.sleep(0.5)
+                scene = 0
+            else:
+                scene = "AB".index(args.goto)
+            s = scene_state(qc, mcp, scene)
+            s["gain_shape"] = gain_shape(s["gain"], scene)
+            s["gain_fits_expectation"] = gain_matches(s["gain"], scene)
+            result["stop"] = s
+            result["write_errors"] = qc.write_errors
+            result["verdict"] = "SINGLE_STEP"
+            sc.say(f"\nUnit is now on Scene {'AB'[scene]} (device confirms: {s['device_confirms']}).")
+            sc.say(f"Myth Drive GAIN as read back: {s['gain']}  -> fits expectation: {s['gain_fits_expectation']}")
+            sc.say(f"Bypass section as read back: {s['bypass_raw']}")
+            if args.goto and s["gain_shape"] is None:
+                sc.say("Warning: the GAIN does not fit either expected shape. Did you run --setup first?")
+            sc.say(f"\nOn the unit, open the Myth Drive (first block). Expect GAIN about "
+                   f"{'2.0' if scene == 0 else '8.0'}, and the Spring (last block) "
+                   f"{'active' if scene == 0 else 'bypassed (dimmed in the chain row)'}.")
+            return sc.EXIT_OK if s["device_confirms"] == scene else sc.EXIT_CHECK_FAILED
 
         sc.say("Step 1: Myth Drive GAIN per scene (A=0.20, B=0.80)...")
         qc.set_param_scenes(tp.ROW, tp.DRIVE_COL, tp.DRIVE_GAIN_IDX, [GAIN_A, GAIN_B])

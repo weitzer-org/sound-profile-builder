@@ -662,6 +662,34 @@ class G4G6Tests(FakeDeviceCase):
         self.assertNotIn("UNEXPECTED ERROR", out)
         self.assertTrue(all("error" in s for s in data["stops"]))
 
+    def test_g6_single_steps_setup_then_goto(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        base = ["--slot", "24H", "--firmware", "4.1.0"]
+        code, out, data = self.run_script("g6_scenes", base + ["--setup"], qc)
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(data["verdict"], "SINGLE_STEP")
+        self.assertEqual(data["stop"]["requested"], 0)
+        kinds = [c[0] for c in qc.calls if isinstance(c, tuple)]
+        self.assertIn("set_param_scenes", kinds)
+        self.assertIn("set_block_bypass", kinds)
+        qc.calls.clear()
+        code, out, data = self.run_script("g6_scenes", base + ["--goto", "B"], qc)
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual([c for c in qc.calls if isinstance(c, tuple)], [("set_scene", 1)])
+        self.assertEqual(data["stop"]["gain_shape"], "per_scene_list")
+        self.assertIn("bypassed", out)
+
+    def test_g6_goto_warns_when_setup_was_not_run(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        code, out, data = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--goto", "A"], qc)
+        self.assertIn("run --setup first", out)
+        self.assertEqual([c for c in qc.calls if isinstance(c, tuple)], [("set_scene", 0)])
+
+    def test_g6_setup_and_goto_are_exclusive(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--setup", "--goto", "A"], qc)
+
     def test_g6_refuses_wrong_preset(self):
         code, out, _ = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--no-prompt"],
                                        self.fake(bp=self.blank_preset("x"), open_slot=sc.parse_slot("24H")))
