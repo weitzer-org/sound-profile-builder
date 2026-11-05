@@ -1298,9 +1298,11 @@ EXISTING STRUCTURED PAYLOAD:
 
 	if architectUsesCatalogParams(architectVersion) {
 		// RefineChat isn't told which plugins the user owns (TODO.md). The payload's own
-		// models get their parameters whatever they are (they're already chosen, and an
-		// unowned plugin device is flagged after the run), but the swap list offers no
-		// plugin effects, so a refinement isn't steered toward one the user may not own.
+		// models get their parameters, plugin models included (the zero PluginGate is
+		// inactive; only a plugin_id missing from the plugin table is skipped, which
+		// TestPluginNamesCoverCatalog keeps from happening). They're already chosen, and an
+		// unowned plugin device is flagged after the run. The swap list offers no plugin
+		// effects, so a refinement isn't steered toward one the user may not own.
 		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), PluginGate{}, NewPluginGate(false, nil))
 	}
 

@@ -274,8 +274,9 @@ func IsUserCaptureName(name string) bool {
 // device catalog (internal/catalog), returning a map of [blockName]isCapture. User
 // captures are always treated as captures since they are, by definition, real Cortex
 // Cloud captures. Every catalog model name, and every mono/stereo family name ("412 Brit
-// 60B V30 95" for its (M) and (ST) models), is a native block; the catalog never
-// overrides a name coros_map.json or user_captures.json already set.
+// 60B V30 95" for its (M) and (ST) models), is a native block. The catalog doesn't override
+// a name coros_map.json or user_captures.json already set, except for plugin models, which
+// are always native (false) and plugin-gated whatever another source says.
 func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
