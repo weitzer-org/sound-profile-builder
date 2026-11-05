@@ -77,6 +77,14 @@ func filterEmbeddedCorosMap(raw []byte, allowFactoryCaptures bool, filterPlugins
 	return string(b)
 }
 
+// librarianInputs returns the two gear menus injected into the CorOS Librarian's (Agent 4)
+// context for this run's constraints: the Dictionary JSON and the Amplifier Archetype Menu.
+func librarianInputs(allowFactoryCaptures, filterPlugins bool, allowedPlugins map[string]bool) (dictJSON, ampMenu string) {
+	dictJSON = filterEmbeddedCorosMap(embeddedCorosMap, allowFactoryCaptures, filterPlugins, allowedPlugins)
+	ampMenu = GetCategorizedAmplifiers(allowFactoryCaptures, filterPlugins, allowedPlugins)
+	return dictJSON, ampMenu
+}
+
 // subsetQCBlockSchema returns just the given top-level categories of the embedded QC Block
 // Parameter Vocabulary, JSON-marshaled. Falls back to the full file on any parse/marshal
 // error, or if even one of the requested categories (besides _readme) failed to match --
@@ -492,8 +500,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	// originally written) because Tier 1 grounds Sonic Profiler's frequency/gain estimates
 	// against the same real-parameter vocabulary and user capture library the later phases
 	// already see, and Sonic Profiler now runs as part of Phase 1.
-	dictJSON := filterEmbeddedCorosMap(embeddedCorosMap, effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
-	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
+	dictJSON, ampMenu := librarianInputs(effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
 
 	userCapturesJSON := "[]"
 	if effectiveAllowUserCaptures {

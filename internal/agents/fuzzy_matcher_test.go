@@ -490,3 +490,20 @@ func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {
 		t.Errorf("SnapToClosestBlock(%q) = %q, want ungated %q", "Exotic Z Boos", got, "Exotic Z Boost")
 	}
 }
+
+// Ties between equally close candidates must not depend on map iteration order.
+// "Klon Centaur" is one edit from both "Klon Centaur 1" and "Klon Centaur 2"; the sorted
+// pool means the alphabetically first one wins on every call.
+func TestSnapToClosestBlock_TiesAreDeterministic(t *testing.T) {
+	valid := GetValidNativeBlocks()
+	for _, n := range []string{"Klon Centaur 1", "Klon Centaur 2"} {
+		if _, ok := valid[n]; !ok {
+			t.Skipf("fixture name %q no longer in the valid set", n)
+		}
+	}
+	for i := 0; i < 200; i++ {
+		if got := SnapToClosestBlock("Klon Centaur", valid); got != "Klon Centaur 1" {
+			t.Fatalf("call %d: SnapToClosestBlock(%q) = %q, want %q", i, "Klon Centaur", got, "Klon Centaur 1")
+		}
+	}
+}

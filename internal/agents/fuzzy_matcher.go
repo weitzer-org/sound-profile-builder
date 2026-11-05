@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"unicode"
@@ -14,7 +15,20 @@ import (
 )
 
 var validNativeBlocks = make(map[string]bool)
+
+// validBlocksRunes is the fuzzy-snap candidate pool, keyed by block name while
+// GetValidNativeBlocks builds it. snapPool is the same set as a slice sorted by name,
+// which is what SnapToClosestBlock walks: ranging over the map made ties between two
+// equally close names (e.g. "Klon Centaur" vs "Klon Centaur 1"/"Klon Centaur 2") depend
+// on Go's randomized map order, so the same input could snap differently from run to run.
 var validBlocksRunes = make(map[string][]rune)
+
+type snapCandidate struct {
+	name  string
+	runes []rune
+}
+
+var snapPool []snapCandidate
 
 // exactOnlyBlocks holds block names that every coros_map.json entry producing them gates
 // behind a paid plugin (required_plugin), keyed by lowercase name. They are valid on an
@@ -265,6 +279,11 @@ func GetValidNativeBlocks() map[string]bool {
 			validNativeBlocks[c.Name] = true
 			validBlocksRunes[c.Name] = []rune(strings.ToLower(c.Name))
 		}
+		snapPool = make([]snapCandidate, 0, len(validBlocksRunes))
+		for name, r := range validBlocksRunes {
+			snapPool = append(snapPool, snapCandidate{name: name, runes: r})
+		}
+		sort.Slice(snapPool, func(i, j int) bool { return snapPool[i].name < snapPool[j].name })
 	})
 	return validNativeBlocks
 }
@@ -733,9 +752,18 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 		}
 	})
 
+	// Buckets and the names inside them are emitted in sorted order so the menu (and
+	// so the Librarian's prompt) is byte-identical from run to run.
+	archetypes := make([]string, 0, len(ampMenuBuckets))
+	for archetype := range ampMenuBuckets {
+		archetypes = append(archetypes, archetype)
+	}
+	sort.Strings(archetypes)
+
 	var sb strings.Builder
 	sb.WriteString("=== AVAILABLE AMPLIFIER ARCHETYPES ===\n")
-	for archetype, amps := range ampMenuBuckets {
+	for _, archetype := range archetypes {
+		amps := ampMenuBuckets[archetype]
 		seen := make(map[string]bool)
 		var names []string
 		for _, a := range amps {
@@ -754,6 +782,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 		if len(names) == 0 {
 			continue
 		}
+		sort.Strings(names)
 		sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
 		for _, name := range names {
 			sb.WriteString(fmt.Sprintf("- %s\n", name))
@@ -792,7 +821,10 @@ func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 		return v // plugin device: exact (case-insensitive) matches only, never a fuzzy target
 	}
 
-	for v, vRunes := range validBlocksRunes {
+	// snapPool is sorted by name and only a strictly smaller distance replaces the best
+	// match, so a tie always goes to the alphabetically first candidate.
+	for _, cand := range snapPool {
+		v, vRunes := cand.name, cand.runes
 		if strings.EqualFold(inputStr, v) {
 			return v // Perfect case-insensitive match
 		}
