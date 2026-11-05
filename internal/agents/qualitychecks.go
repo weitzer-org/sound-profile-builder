@@ -52,6 +52,11 @@ type MechanicalQualityReport struct {
 	IncompleteCabinetBlocks     int // FlagIncompleteCabinetBlocks: Cabinet block missing Mic 1/Mic 2/Blend
 	LeftoverValueRanges         int // FlagLeftoverValueRanges: a range ("10-15ms") left in place of one decisive value
 	CriticIssues                int // count of "⚠️ Critic: " notes already baked into Rationale by applyCriticFindings before this ran
+	// Catalog is FlagCatalogParamMismatches's per-kind counts (parameters checked against
+	// the device catalog). Its Defects() are part of TotalDefects; its Checked/Unchecked
+	// block counts are information only. Reports from before this field existed don't
+	// include it, so compare across that boundary by field, not by TotalDefects.
+	Catalog CatalogParamCounts
 }
 
 // TotalDefects sums every defect count into one headline number for a quick per-config
@@ -60,7 +65,7 @@ type MechanicalQualityReport struct {
 // wanting a single pass/fail read should use IsClean() instead.
 func (r MechanicalQualityReport) TotalDefects() int {
 	return r.UnverifiedBlocks + r.CaptureFormattingMismatches + r.IncompleteCabinetBlocks +
-		r.LeftoverValueRanges + r.CriticIssues
+		r.LeftoverValueRanges + r.CriticIssues + r.Catalog.Defects()
 }
 
 // IsClean reports whether this generation both parsed successfully and had zero defects --
@@ -76,7 +81,7 @@ func (r MechanicalQualityReport) IsClean() bool {
 //
 // Check order matches the production call order in internal/api/handlers_preset.go and
 // server.go (FlagCaptureFormattingMismatches, FlagIncompleteCabinetBlocks,
-// FlagLeftoverValueRanges, FlagUnverifiedStructuredBlocks last) since
+// FlagLeftoverValueRanges, FlagUnverifiedStructuredBlocks, then FlagCatalogParamMismatches) since
 // FlagCaptureFormattingMismatches's doc comment requires running before
 // FlagUnverifiedStructuredBlocks rewrites block names with capture-source annotations.
 //
@@ -118,6 +123,7 @@ func RunMechanicalQualityChecks(rawArchitectJSON string, validBlocks map[string]
 	report.IncompleteCabinetBlocks = FlagIncompleteCabinetBlocks(sp)
 	report.LeftoverValueRanges = FlagLeftoverValueRanges(sp)
 	report.UnverifiedBlocks = FlagUnverifiedStructuredBlocks(sp, validBlocks)
+	report.Catalog = FlagCatalogParamMismatches(sp, validBlocks)
 
 	return report
 }

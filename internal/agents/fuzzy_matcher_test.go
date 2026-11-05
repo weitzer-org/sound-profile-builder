@@ -406,6 +406,17 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 				{ID: "4", Type: "Amplifier", Model: "Brit Plexi 100 Patch", Parameters: []storage.BlockParameter{
 					{Name: "Gain", Value: "5.0"},
 				}}, // not a Cabinet block -- must never be flagged by this check
+				{ID: "5", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // v5 device convention: per-mic levels instead of Blend -- complete
+				{ID: "6", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+				}}, // only one mic's level -- incomplete
 			},
 		},
 	}
@@ -424,6 +435,12 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	}
 	if strings.Contains(blocks[3].Rationale, "⚠️") {
 		t.Errorf("expected non-Cabinet block to never be checked, got %q", blocks[3].Rationale)
+	}
+	if strings.Contains(blocks[4].Rationale, "⚠️") {
+		t.Errorf("expected the per-mic-level convention to count as complete, got %q", blocks[4].Rationale)
+	}
+	if !strings.Contains(blocks[5].Rationale, "⚠️") {
+		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
 	}
 }
 

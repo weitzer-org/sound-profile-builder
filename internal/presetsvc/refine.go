@@ -167,6 +167,8 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
 	agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
+	// After FlagUnverifiedStructuredBlocks: it checks the snapped names and skips unverified ones.
+	agents.FlagCatalogParamMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 	// RefineChat corrected the rendered tables against the unfiltered block set (it isn't
 	// told which plugins the user owns). Re-apply the correction with this run's set so the
 	// saved HTML flags the same blocks the structured payload does, e.g. an unowned plugin

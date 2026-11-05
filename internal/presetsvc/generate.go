@@ -194,6 +194,8 @@ func (s *Service) runGenerate(ctx context.Context, lr *liveRun, runID, apiKey, p
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
 	agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
+	// After FlagUnverifiedStructuredBlocks: it checks the snapped names and skips unverified ones.
+	agents.FlagCatalogParamMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 
 	impactsHtml := "<ul>"
 	for _, imp := range archResp.AgentImpact {

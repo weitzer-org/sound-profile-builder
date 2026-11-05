@@ -697,22 +697,22 @@ func appendRationaleNote(block *storage.EffectBlock, note string) {
 	}
 }
 
-const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic placement parameters (Mic 1/Mic 2/Blend)."
+const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic parameters (Mic 1 and Mic 2, plus MIC 1 LEVEL/MIC 2 LEVEL or Blend)."
 
-// cabinetMicParamTokens are normalized (lowercased, whitespace-stripped) substrings that
-// identify a Cabinet block's mic-placement parameters, per Architect Rule 12 ("Every
-// Cabinet block's parameters MUST include the Transducer Tech's mic placement data").
-var cabinetMicParamTokens = []string{"mic1", "mic2", "blend"}
-
-// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing one or more of the
-// mic-placement parameters Rule 12 requires (Mic 1, Mic 2, Blend). Found as a live, real
-// regression during Tier 1 development -- the Architect silently dropped these three
-// parameters from a Cabinet block on one golden-set prompt, keeping only High/Low Cut --
-// and fixed there with a prompt rule, but prompt compliance alone already proved fallible
-// for the analogous capture-formatting case (see FlagCaptureFormattingMismatches), so this
-// gives the same completeness property a deterministic backstop. Detection only, the same
-// way as the rest of this file's Flag* functions: there's no safe default mic
-// position/blend value to fabricate on the block's behalf.
+// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing the two-mic data
+// Architect Rule 12 requires. Found as a live, real regression during Tier 1 development --
+// the Architect silently dropped the mic parameters from a Cabinet block on one golden-set
+// prompt, keeping only High/Low Cut -- and fixed there with a prompt rule, but prompt
+// compliance alone already proved fallible for the analogous capture-formatting case (see
+// FlagCaptureFormattingMismatches), so this gives the same completeness property a
+// deterministic backstop. Detection only, the same way as the rest of this file's Flag*
+// functions: there's no safe default mic position/level value to fabricate on the block's
+// behalf.
+//
+// Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v5's device convention,
+// where Blend (a control the device doesn't have) is replaced by each mic's own level:
+// Mic 1, Mic 2, MIC 1 LEVEL and MIC 2 LEVEL. Names are compared lowercased with spaces
+// removed, by substring, so "MIC 1 LEVEL" also counts as mentioning mic 1.
 // Returns the number of Cabinet blocks flagged incomplete, for callers that want a quality
 // signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing callers that
 // ignore the return value are unaffected.
@@ -727,16 +727,16 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 			if blockType != "cab" && blockType != "cabinet" {
 				continue
 			}
-			present := make(map[string]bool, len(cabinetMicParamTokens))
+			var mic1, mic2, blend, mic1Level, mic2Level bool
 			for _, p := range blocks[i].Parameters {
 				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
-				for _, token := range cabinetMicParamTokens {
-					if strings.Contains(norm, token) {
-						present[token] = true
-					}
-				}
+				mic1 = mic1 || strings.Contains(norm, "mic1")
+				mic2 = mic2 || strings.Contains(norm, "mic2")
+				blend = blend || strings.Contains(norm, "blend")
+				mic1Level = mic1Level || strings.Contains(norm, "mic1level")
+				mic2Level = mic2Level || strings.Contains(norm, "mic2level")
 			}
-			if len(present) < len(cabinetMicParamTokens) {
+			if !(mic1 && mic2 && (blend || (mic1Level && mic2Level))) {
 				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
 				flagged++
 			}
