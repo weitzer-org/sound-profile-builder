@@ -89,7 +89,7 @@ func TestGetCategorizedAmplifiers_Catalog(t *testing.T) {
 
 	for name, want := range map[string]string{
 		"PV-505 Lead":         unclassified, // catalog-only guitar amp
-		"Brit Bass 50 Bright": "BASS AMPS",   // catalog-only bass amp
+		"Brit Bass 50 Bright": "BASS AMPS",  // catalog-only bass amp
 		"Brit 2203":           "BRITISH CRUNCH",
 	} {
 		if got := menuBucketOf(menu, name); got != want {
