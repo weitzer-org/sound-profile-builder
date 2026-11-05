@@ -70,6 +70,11 @@ FAKE_CHILD = textwrap.dedent(r'''
                 reply(rid, st["position"])
             elif name == "directory_summary":
                 reply(rid, {"presets": {"folders": 1, "files": 3}, "source": st["source"]})
+            elif name == "find_devices":
+                sys.stdout.buffer.write((json.dumps({"jsonrpc": "2.0", "id": rid, "result": {
+                    "content": [{"type": "text", "text": "Based on Klon\u00ae Centaur\u00ae"}],
+                    "isError": False}}, ensure_ascii=False) + "\n").encode("utf-8"))
+                sys.stdout.buffer.flush()
             elif name == "list_empty_slots":
                 reply(rid, {"setlist": args.get("setlist_key"), "source": st["source"],
                             "empty_positions": [{"position": p} for p in st["empty"]]})
@@ -141,12 +146,14 @@ class Harness:
 class _Lines(io.TextIOBase):
     def __init__(self):
         self._buf, self._msgs, self._cv = "", {}, threading.Condition()
+        self.raw_lines = []
 
     def write(self, s):
         with self._cv:
             self._buf += s
             while "\n" in self._buf:
                 line, self._buf = self._buf.split("\n", 1)
+                self.raw_lines.append(line)
                 msg = json.loads(line)
                 self._msgs[msg.get("id")] = msg
             self._cv.notify_all()
@@ -306,11 +313,50 @@ class ProxyBehaviour(unittest.TestCase):
         self.assertIn("scenes", text(self.h.call("set_block_bypass", row=0, column=1,
                                                  scenes=[True] * 9)))
 
+    def test_non_ascii_survives_and_is_escaped(self):
+        self.h = Harness(self.tmp.name)
+        self.h.out.raw_lines = []
+        r = self.h.call("find_devices", query="Myth")
+        self.assertEqual(text(r), "Based on Klon\u00ae Centaur\u00ae")
+        self.assertTrue(all(line.isascii() for line in self.h.out.raw_lines))
+
     def test_save_refused_for_other_slot(self):
         self.h = Harness(self.tmp.name)
         self.assertIn("only target", text(self.h.call("save_preset_as", name="T",
                                                      position=-1)))
         self.assertEqual(self.h.calls(), [])
+
+
+class WriteConfig(unittest.TestCase):
+    def test_merges_and_backs_up(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            checkout = os.path.join(tmp, "qc-mcp")
+            os.makedirs(os.path.join(checkout, "src", "qc_mcp"))
+            with open(os.path.join(checkout, "src", "qc_mcp", "ModelRepo.xml"), "w") as fh:
+                fh.write(MINI_REPO)
+            cfg = os.path.join(tmp, "claude_desktop_config.json")
+            with open(cfg, "w", encoding="utf-8-sig") as fh:      # BOM, as some editors write
+                json.dump({"mcpServers": {"other": {"command": "x"}}, "theme": "dark"}, fh)
+            rc = P.main(["--qc-mcp", checkout, "--python", sys.executable, "--mode", "write",
+                         "--firmware", "4.1.0", "--slot", "12H", "--write-config", cfg])
+            self.assertEqual(rc, 0)
+            with open(cfg, "rb") as fh:
+                raw = fh.read()
+            self.assertFalse(raw.startswith(b"\xef\xbb\xbf"))     # written without a BOM
+            data = json.loads(raw)
+            self.assertEqual(data["theme"], "dark")
+            self.assertIn("other", data["mcpServers"])
+            entry = data["mcpServers"]["qc-trial"]
+            self.assertEqual(entry["command"], os.path.abspath(sys.executable))
+            self.assertEqual(entry["args"][0], os.path.abspath(P.__file__))
+            self.assertEqual(entry["args"][-6:], ["--mode", "write", "--firmware", "4.1.0",
+                                                  "--slot", "12H"])
+            self.assertTrue(os.path.exists(cfg + ".bak"))
+
+    def test_bad_slot_rejected_before_writing(self):
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(ValueError):
+            P.main(["--qc-mcp", tmp, "--firmware", "4.1.0", "--slot", "12Z",
+                    "--write-config", os.path.join(tmp, "x.json")])
 
 
 @unittest.skipUnless(os.environ.get("QC_MCP_MODELREPO"), "set QC_MCP_MODELREPO")

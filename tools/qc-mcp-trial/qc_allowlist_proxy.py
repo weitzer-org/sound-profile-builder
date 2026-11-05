@@ -189,23 +189,26 @@ class Proxy:
         self._internal: dict[str, queue.Queue] = {}
         self._list_ids: set = set()
         self._lock = threading.Lock()
+        # Binary pipes, encoded by hand: text-mode pipes on Windows use the local code
+        # page and turn "\n" into "\r\n", which would corrupt MCP's UTF-8 JSON lines.
         self.child = subprocess.Popen(child_cmd, stdin=subprocess.PIPE,
-                                      stdout=subprocess.PIPE, text=True, encoding="utf-8",
-                                      env=child_env, cwd=child_cwd, bufsize=1)
+                                      stdout=subprocess.PIPE, env=child_env, cwd=child_cwd)
 
     # -- plumbing --
     def _emit(self, msg) -> None:
         with self._out_lock:
-            self.out.write(json.dumps(msg, ensure_ascii=False) + "\n")
+            # ensure_ascii: escape every non-ASCII character, so the line is valid
+            # whatever encoding the stream ends up with.
+            self.out.write(json.dumps(msg, ensure_ascii=True) + "\n")
             self.out.flush()
 
     def _to_child(self, msg) -> None:
-        self.child.stdin.write(json.dumps(msg, ensure_ascii=False) + "\n")
+        self.child.stdin.write((json.dumps(msg, ensure_ascii=True) + "\n").encode("ascii"))
         self.child.stdin.flush()
 
     def _pump_child(self) -> None:
-        for line in self.child.stdout:
-            line = line.strip()
+        for raw in self.child.stdout:
+            line = raw.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
             try:
@@ -377,26 +380,76 @@ class Proxy:
         return 0
 
 
+SERVER_NAME = "qc-trial"
+
+
+def write_config(path: str, checkout: str, python: str, server_args: list[str]) -> str:
+    """Add or replace the qc-trial entry in an MCP client config file (Claude Code's
+    project ``.mcp.json`` or Claude Desktop's ``claude_desktop_config.json``), keeping
+    every other entry. An existing file is backed up to ``<path>.bak`` first."""
+    path = os.path.abspath(path)
+    config: dict = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8-sig") as fh:
+            text = fh.read()
+        config = json.loads(text) if text.strip() else {}
+        if not isinstance(config, dict):
+            raise SystemExit(f"{path} is not a JSON object; not touching it.")
+        with open(path + ".bak", "w", encoding="utf-8") as fh:
+            fh.write(text)
+    servers = config.setdefault("mcpServers", {})
+    if not isinstance(servers, dict):
+        raise SystemExit(f"{path}: mcpServers is not an object; not touching it.")
+    servers[SERVER_NAME] = {
+        "command": os.path.abspath(python),
+        "args": [os.path.abspath(__file__), "--qc-mcp", os.path.abspath(checkout),
+                 "--python", os.path.abspath(python)] + server_args,
+    }
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:   # UTF-8, no BOM
+        json.dump(config, fh, indent=2)
+        fh.write("\n")
+    return path
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--qc-mcp", required=True, help="path to the qc-mcp checkout (at f634ecd)")
-    ap.add_argument("--python", required=True, help="the venv python that has qc-mcp's deps")
+    ap.add_argument("--python", default=sys.executable,
+                    help="the venv python that has qc-mcp's deps (default: this python)")
     ap.add_argument("--mode", choices=("read", "write"), default="read")
     ap.add_argument("--firmware", required=True,
                     help="exact CorOS string device_info must report, e.g. 4.1.0")
     ap.add_argument("--slot", required=True, help="sacrificial EMPTY slot, e.g. 12H")
     ap.add_argument("--setlist", default=DEFAULT_SETLIST)
+    ap.add_argument("--write-config", metavar="PATH",
+                    help="don't run: add/replace the 'qc-trial' server with these settings "
+                         "in the MCP config file PATH, then exit")
     a = ap.parse_args(argv)
+    slot = parse_slot(a.slot)                   # validate before anything else
     checkout = os.path.abspath(a.qc_mcp)
     src = os.path.join(checkout, "src")
-    catalog = load_catalog(os.path.join(src, "qc_mcp", "ModelRepo.xml"))
-    env = dict(os.environ, PYTHONPATH=src, QC_BRIDGE="0")
+    repo_xml = os.path.join(src, "qc_mcp", "ModelRepo.xml")
+    if not os.path.exists(repo_xml):
+        raise SystemExit(f"{repo_xml} not found: --qc-mcp must point at the qc-mcp checkout.")
+    if a.write_config:
+        server_args = ["--mode", a.mode, "--firmware", a.firmware, "--slot", a.slot]
+        if a.setlist != DEFAULT_SETLIST:
+            server_args += ["--setlist", a.setlist]
+        written = write_config(a.write_config, checkout, a.python, server_args)
+        print(f"wrote '{SERVER_NAME}' ({a.mode} mode, firmware {a.firmware}, slot "
+              f"{slot_label(slot)}) to {written}")
+        return 0
+    # MCP stdio is UTF-8 with "\n" line ends on every platform; Windows defaults differ.
+    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", newline="\n")
+    catalog = load_catalog(repo_xml)
+    env = dict(os.environ, PYTHONPATH=src, QC_BRIDGE="0", PYTHONUTF8="1")
     env.pop("QC_SHARE", None)
     proxy = Proxy([a.python, "-m", "qc_mcp.server"], env, checkout, mode=a.mode,
-                  firmware=a.firmware, slot=parse_slot(a.slot), setlist=a.setlist,
-                  catalog=catalog)
+                  firmware=a.firmware, slot=slot, setlist=a.setlist, catalog=catalog)
     print(f"qc-mcp trial proxy: mode={a.mode} firmware={a.firmware} "
-          f"slot={slot_label(proxy.slot)}", file=sys.stderr)
+          f"slot={slot_label(slot)}", file=sys.stderr)
     return proxy.run()
 
 
