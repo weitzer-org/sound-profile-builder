@@ -1,0 +1,697 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around the classic Cream-era 'Woman Tone' template using a bridged 100-Watt Marshall Super Lead Plexi head, a Greenback-loaded 1960B 4x12 cabinet, a Dallas Arbiter Fuzz Face, and a Vox V846 Wah-Wah.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the dark, cello-like EQ contour and smooth power-amp compression targets, establishing a pre-amp high-cut behavior alongside a 100 Hz low-cut floor and vintage plate-style ambiance.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Enforced the critical routing rule that the high-frequency roll-off must occur BEFORE the amplifier to generate authentic vocal harmonic compression, while warning to cut sub-bass pre-amp so the cranked Plexi low-end does not flub out.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the hardware to exact Quad Cortex models: Brit Plexi 100 Patch, 412 Brit 60B GB 71, Crying Clyde Wah, Facial Fuzz, Parametric-8 (placed pre-amp for the tone-cap roll-off), and Vintage Digital reverb.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no custom cloud captures were required since the native algorithmic Brit Plexi 100 Patch model provides full bridged-channel Gain 1 and Gain 2 control.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup compensation between the Gibson ES-339 Humbuckers and Fender Telecaster Single Coils, trimming humbucker pre-amp level and Bass (3.0) to prevent semi-hollow mud while boosting single-coil input drive, Mids (7.0), and rolling back Treble (3.5) to eliminate ice-pick highs.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 412 Brit 60B GB 71 cabinet with a 60/40 blend (0.0 dB / -3.5 dB) of a Dynamic 57 at the cap edge and a Ribbon 121 at the cone midpoint to capture woody midrange bloom without upper-mid fizz.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Applied a 95 Hz high-pass filter and 7500 Hz low-pass filter on the cabinet block alongside a -1.5 dB output trim to sit cleanly in a live mix.",
+    "\u003cstrong\u003eAgent 9 (Mix Specifier):\u003c/strong\u003e Established the spatial baseline with a 20% wet reverb mix and a 1.6-second decay tail, expanding slightly in Scene B for lead sustain.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A as a dynamic rhythm Plexi voice (Parametric-8 gentle roll-off at 3500 Hz, Facial Fuzz bypassed) and Scene B as the full solo 'Woman Tone' (Facial Fuzz engaged, Parametric-8 steep high-cut at 1200 Hz with a resonant mid bump, and pushed Plexi gains).",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Split the signal chain across Lane 1 (Crying Clyde Wah, Facial Fuzz, Parametric-8, Brit Plexi 100 Patch) and Lane 3 (412 Brit 60B GB 71, Vintage Digital) to balance DSP load and preserve impedance-accurate front-end pedal behavior."
+  ],
+  "builder_statement": "This preset recreates the quintessential late-1960s British blues-rock 'Woman Tone' and cranked Super Lead rhythm rig. By placing a Crying Clyde Wah and Facial Fuzz at the very front of the chain, followed immediately by a pre-amp Parametric-8 EQ before the bridged Brit Plexi 100 Patch amplifier, the preset emulates the exact impedance interaction and passive tone-capacitor roll-off required for vocal, cello-like sustain through a Greenback-loaded 412 Brit 60B GB 71 cabinet and Vintage Digital reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [],
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "estimate",
+              "name": "WAH",
+              "type": "slider",
+              "value": "0.5"
+            }
+          ],
+          "rationale": "Placed first in the chain to emulate the classic Vox V846 vocal sweep; kept bypassed by default across both scenes so it can be engaged on demand via expression pedal.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "PICKUP",
+            "PICKUP LEVEL"
+          ],
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "FUZZ",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Emulates the Dallas Arbiter Fuzz Face using the default SINGLE pickup impedance mode for the Telecaster, with slightly higher Fuzz and Volume settings to fatten single-coil transients in Scene B.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [
+            "1 GAIN",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 GAIN",
+            "2 Q",
+            "2 TYPE",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS",
+            "4 TYPE",
+            "4 BYPASS",
+            "5 GAIN",
+            "5 Q",
+            "5 TYPE",
+            "5 BYPASS",
+            "6 GAIN",
+            "6 FREQ",
+            "6 Q",
+            "6 TYPE",
+            "6 BYPASS",
+            "7 GAIN",
+            "7 FREQ",
+            "7 Q",
+            "7 TYPE",
+            "7 BYPASS",
+            "8 GAIN",
+            "8 FREQ",
+            "8 Q",
+            "8 TYPE"
+          ],
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "80 Hz",
+              "value_b": "100 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 Q",
+              "type": "slider",
+              "value": "0.707",
+              "value_b": "0.9"
+            },
+            {
+              "basis": "estimate",
+              "name": "4 GAIN",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "4 FREQ",
+              "type": "slider",
+              "value": "650 Hz",
+              "value_b": "600 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "4 Q",
+              "type": "slider",
+              "value": "1.4",
+              "value_b": "2.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "5 FREQ",
+              "type": "slider",
+              "value": "3000 Hz",
+              "value_b": "1050 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "8 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "3.0 dB"
+            }
+          ],
+          "rationale": "Applies the Acoustician's +3.0 dB single-coil level boost and a steeper pre-amp high-cut (3000 Hz in Scene A, 1050 Hz with a +4.5 dB resonant bump at 600 Hz in Scene B) so the Telecaster achieves a thick, humbucker-like 'Woman Tone' before hitting the Plexi.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "GAIN 1",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "9.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "GAIN 2",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "1.0 dB",
+              "value_b": "2.5 dB"
+            }
+          ],
+          "rationale": "Compensates for the Telecaster single coils by raising Bass to 4.5, pushing Mid to 7.0, trimming Treble to 3.5, and lifting OUTPUT by +1.0 dB (and Gain 1/2 higher) to match the smooth power-tube saturation of a humbucker.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "412 Brit 60B GB 71",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "7000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Shifts the Dyn 57 slightly further off-axis (Position 3.0) and brings the warm Ribbon 121 up to -2.0 dB alongside a slightly lower 7000 Hz LPF and 85 Hz HPF to add body and smooth out Telecaster bridge-pickup bite.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "SIZE",
+            "MODULATION",
+            "HIGH PASS",
+            "FREEZE",
+            "TRAILS"
+          ],
+          "model": "Vintage Digital",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "45 %",
+              "value_b": "60 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRE DELAY",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HF DAMPING",
+              "type": "slider",
+              "value": "50 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "5500 Hz"
+            }
+          ],
+          "rationale": "Delivers vintage plate depth after the cabinet with slightly higher HF Damping (50%) and a 5500 Hz Low Pass filter to keep single-coil transients warm and rounded.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [],
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "estimate",
+              "name": "WAH",
+              "type": "slider",
+              "value": "0.5"
+            }
+          ],
+          "rationale": "Placed first in the chain to emulate the classic Vox V846 vocal sweep; kept bypassed by default across both scenes so it can be engaged on demand via expression pedal.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "PICKUP LEVEL"
+          ],
+          "model": "Facial Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "FUZZ",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PICKUP",
+              "type": "dropdown",
+              "value": "HB"
+            }
+          ],
+          "rationale": "Emulates the Dallas Arbiter Fuzz Face with the pickup impedance switch set to HB for the ES-339; bypassed in Scene A for pure Plexi rhythm and engaged in Scene B to drive singing lead sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [
+            "1 GAIN",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 GAIN",
+            "2 Q",
+            "2 TYPE",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS",
+            "4 TYPE",
+            "4 BYPASS",
+            "5 GAIN",
+            "5 Q",
+            "5 TYPE",
+            "5 BYPASS",
+            "6 GAIN",
+            "6 FREQ",
+            "6 Q",
+            "6 TYPE",
+            "6 BYPASS",
+            "7 GAIN",
+            "7 FREQ",
+            "7 Q",
+            "7 TYPE",
+            "7 BYPASS",
+            "8 GAIN",
+            "8 FREQ",
+            "8 Q",
+            "8 TYPE"
+          ],
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "90 Hz",
+              "value_b": "120 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 Q",
+              "type": "slider",
+              "value": "0.707",
+              "value_b": "1.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "4 GAIN",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "4 FREQ",
+              "type": "slider",
+              "value": "700 Hz",
+              "value_b": "650 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "4 Q",
+              "type": "slider",
+              "value": "1.2",
+              "value_b": "1.8"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "5 FREQ",
+              "type": "slider",
+              "value": "3500 Hz",
+              "value_b": "1200 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "8 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Placed strictly before the amplifier to simulate the rolled-off passive guitar tone capacitor ('Woman Tone' in Scene B at 1200 Hz with a resonant 650 Hz peak) while tightening sub-bass at 90-120 Hz and applying the -2.5 dB humbucker input trim so the Plexi low-end stays tight.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Brit Plexi 100 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "GAIN 1",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "GAIN 2",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "0.5 dB",
+              "value_b": "2.0 dB"
+            }
+          ],
+          "rationale": "Bridged-channel 100W Super Lead model with Bass rolled back to 3.0 to prevent semi-hollow humbucker boominess and OUTPUT nudged up +0.5 dB per the Acoustician's offset, surging in Gain 1/2 in Scene B for thick harmonic compression.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "412 Brit 60B GB 71",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Greenback-loaded 1960B 4x12 cabinet miked with a 60/40 blend (0.0 dB / -3.5 dB) of a Dyn 57 at the cap edge and a Ribbon 121 at the cone midpoint, incorporating FOH 95 Hz / 7500 Hz filtering and a -1.5 dB output trim.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "SIZE",
+            "MODULATION",
+            "HIGH PASS",
+            "FREEZE",
+            "TRAILS"
+          ],
+          "model": "Vintage Digital",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "45 %",
+              "value_b": "60 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "PRE DELAY",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HF DAMPING",
+              "type": "slider",
+              "value": "45 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "6000 Hz"
+            }
+          ],
+          "rationale": "Provides warm vintage studio plate ambiance at the end of the chain, expanding from an 18% rhythm blend in Scene A to a lush 25% solo tail in Scene B.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

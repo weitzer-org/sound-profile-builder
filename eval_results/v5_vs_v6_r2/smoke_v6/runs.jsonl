@@ -1,0 +1,1 @@
+{"scenario":"PROD","query":"06_Gilmour","rep":1,"success":true,"output_file":"eval_results/v5_vs_v6_r2/smoke_v6/PROD/rep1/06_Gilmour.html","latency_sec":193.292151565,"integrity_ok":true,"calls_file":"eval_results/v5_vs_v6_r2/smoke_v6/PROD/rep1/06_Gilmour.calls.json","batch_id":"20261105T170222Z"}

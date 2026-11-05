@@ -1,0 +1,594 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core 1950s Fender Tweed Deluxe (5E3) combo architecture paired with a TS808-style mid-push overdrive, 1x12\" Alnico speaker voicing, and warm ribbon mic capture.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the asymmetric cathode-biased saturation profile, mid-pushed EQ contour, 100 Hz low-cut to prevent Tweed bass flub, 6000 Hz high-cut for vintage warmth, and -65 dB noise floor.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted critical Quad Cortex community warnings regarding Tweed capture sub-bass flub, recommended a pre-amp EQ cut below 100 Hz, and advised pushing front-end grit with overdrive blocks rather than raising the capture's internal Gain parameter.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the mandatory 'Fender 57 Deluxe - T8 I4 M12' capture and '112 US DLX Tweed WGS-Q 10s' cabinet, while supplying 'Parametric-3', 'King Of Tone - Yellow', and 'Green 808' for pre-amp shaping and 'John Mayer Spring Reverb' for post-amp ambiance.",
+    "\u003cstrong\u003eAgent 5 (Cloud Navigator):\u003c/strong\u003e Located the 'Fender 65 Princeton' cloud capture for the dropped Princeton item, which was ultimately omitted from the active signal chain to strictly honor the single_amp_mode constraint.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation between the semi-hollow Gibson ES-339 Humbuckers (trimming pre-amp output by -3.0 dB and cutting amp capture Bass to -2.0 dB) and the Fender Telecaster Single Coil (boosting pre-amp output by +3.0 dB, lowering Treble to -0.5 dB, and raising Mid to +2.0 dB).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the '112 US DLX Tweed WGS-Q 10s' cab with a 60/40 blend (0 dB / -3.5 dB) between a cap-edge Dynamic 57 (Position 3.5, Distance 1.5) and a cone-body Ribbon 121 (Position 5.0, Distance 3.0).",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the cabinet filtering boundaries with an 85 Hz HPF and 6000 Hz LPF to sit cleanly in a live mix without sub-bass boom or top-end fizz.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Established the spatial parameters with a 1.20 s reverb decay and 20% wet mix for Scene A, opening up slightly for Scene B lead work.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A (Rhythm) around the active 'King Of Tone - Yellow' capture pushing the Tweed rig, and Scene B (Lead) by engaging 'Green 808', boosting the 800 Hz midrange band on 'Parametric-3', and increasing amp and reverb levels.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Sequenced the pre-amp EQ and dual-stage overdrives into the Tweed amp capture, cab block, and final spring reverb while respecting single-amp routing."
+  ],
+  "builder_statement": "This preset recreates the raw, touch-sensitive bark of a 1950s Fender Tweed Deluxe (5E3) recorded in a vintage studio room. By placing a Parametric-3 EQ before the 'Fender 57 Deluxe - T8 I4 M12' capture to tighten the notorious Tweed sub-bass, and stacking a 'King Of Tone - Yellow' capture with a 'Green 808' overdrive in front of the amp, you get authentic cathode-biased compression that transitions seamlessly from edge-of-breakup rhythm to singing vintage lead.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "1 Q",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 Q",
+            "2 TYPE",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "1 GAIN",
+              "type": "slider",
+              "value": "-2.5 dB",
+              "value_b": "-4.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "95 Hz",
+              "value_b": "105 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "2 FREQ",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Applies a +3.0 dB front-end boost so the Telecaster single coils hit the cathode-biased Tweed capture with enough authority, while gently trimming sub-bass below 95 Hz and adding a +1.5 dB midrange push at 800 Hz in Scene B.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "King Of Tone - Yellow",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Neural Capture of the Analogman King of Tone yellow channel tuned with slightly warmer Bass and Mid and a -0.5 dB Treble trim to fatten the Telecaster single coils before hitting the Tweed amp.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TONE",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Engaged in Scene B with slightly higher Overdrive (4.0) and rolled-back Tone (4.5) to thicken the Telecaster bridge pickup for singing vintage blues-rock leads.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Core Neural Capture of a 1957 Fender Tweed Deluxe tuned for single coils: Bass sits fuller at -0.5 dB, Mid is pushed to +2.0 dB, Treble is tamed to -0.5 dB to smooth out bridge-pickup bite, and Volume is raised +0.5 dB.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "OUTPUT VOLUME",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "5600 Hz"
+            }
+          ],
+          "rationale": "Bypassed by default for the full-rig capture, but pre-configured with a warmer Ribbon 121 blend (-2.5 dB) and a slightly lower 5600 Hz LPF to smooth out single-coil top end if activated.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "TRAILS"
+          ],
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "1.20 s",
+              "value_b": "1.45 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "30 %",
+              "value_b": "35 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Provides vintage 1950s room ambiance after the amp, with Tone rolled slightly darker (30%) to complement the brighter Telecaster attack.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "1 Q",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 Q",
+            "2 TYPE",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "1 GAIN",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-4.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "100 Hz",
+              "value_b": "110 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "2 FREQ",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-3.0 dB"
+            }
+          ],
+          "rationale": "Placed first in the chain to roll off sub-bass below 100 Hz and apply a -3.0 dB output trim for the ES-339 humbuckers so the Tweed capture does not flub out, while adding a +1.5 dB midrange push at 800 Hz in Scene B.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "King Of Tone - Yellow",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Neural Capture of the Analogman King of Tone yellow channel used as an always-on transparent front-end push to coax natural tube grit from the Tweed Deluxe capture without inflating its internal Gain slider.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [
+            "TONE"
+          ],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Classic TS808-style overdrive bypassed in Scene A and engaged in Scene B to focus the midrange and push the Tweed Deluxe capture into saturated lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Core Neural Capture of a 1957 Fender Tweed Deluxe (Tone 8, Instrument 4, Mic 12). Internal Gain is kept at 0.0 dB to preserve dynamic feel, with Bass cut by -2.0 dB and Volume trimmed by -1.0 dB to keep the semi-hollow humbuckers tight and articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "OUTPUT VOLUME",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6000 Hz"
+            }
+          ],
+          "rationale": "Bypassed by default since the Fender 57 Deluxe block is a full-rig capture, but pre-configured with a 60/40 Dyn 57 and Ribbon 121 pairing and 85 Hz to 6000 Hz filtering if engaged for direct amp use.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "TRAILS"
+          ],
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "1.20 s",
+              "value_b": "1.45 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "35 %",
+              "value_b": "40 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Placed at the end of the chain with rolled-back Tone and a subtle 20% Mix to emulate a warm 1950s studio echo chamber, opening up slightly for Scene B leads.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

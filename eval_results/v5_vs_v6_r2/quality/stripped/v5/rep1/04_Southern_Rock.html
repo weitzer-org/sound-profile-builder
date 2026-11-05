@@ -1,0 +1,638 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational 1959 Fender Tweed Bassman 5F6-A paired with a 4x10 Jensen P10R Alnico cabinet, driven by an Ibanez TS808 and compressed up front for authentic blues-rock sustain.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the mid-pushed EQ contour, cranked power-amp sag target, and essential cabinet bandwidth boundaries (100Hz low cut, 6200Hz high cut) to keep the top end fat and creamy.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the need for pre-amp low-mid EQ sculpting (100Hz-250Hz) to prevent cranked Tweed circuits from farting out, and suggested pairing a 1176-style compressor with a Klon/808 drive stack.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the hardware to exact native Quad Cortex algorithmic blocks including US Tweed Basslad Bright Patch, 410 US Basslad PR10, Legendary 87 (ST), Green 808, Myth Drive, Parametric-3, and Studio Plate 70 (ST).",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Returned no mandatory capture overrides, confirming the preset relies on full algorithmic modeling with standard 0-10 dial configurations.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated crucial pickup divergence, trimming Bass to 3.0 and Volume by half a step for the Gibson ES-339 Humbuckers to stop low-end flub, while lifting Volume, Bass (4.0), and Mid (7.5) while taming Treble (4.0) for the Fender Telecaster Single Coil.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 4x10 cabinet microphone blend at 70% using a Dynamic 57 at the cap edge (X=3.5in, Y=1.0in) paired with a Ribbon 121 on the cone (X=4.5in, Y=2.5in).",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set protective global frequency boundaries between 85Hz and 7200Hz with a -1.5 dB lane output pad to ensure clean mix seating.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided ambient spacing targets of 20% wet mix and a tight 1.2s to 1.8s reverb decay window so slide work and lead phrases sit behind the dry punch without washing out.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) with the compressor and pre-amp Parametric-3 active while keeping both drives bypassed (Bypass: On), then engaged (Bypass: Off) both Green 808 and Myth Drive alongside an amp gain/volume push and an 850Hz mid boost for Scene B (Lead).",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the signal chain across Lane 1 (dynamics, dual drives, and pre-EQ) feeding into Lane 3 (amplifier, cabinet, and stereo plate reverb) for optimal CPU balancing."
+  ],
+  "builder_statement": "This preset captures the woody, sagging breakup of a cranked 1959 Tweed Bassman pushed into singing vocal sustain. It places a slow-attack 1176-style compressor and a surgical pre-amp parametric EQ at the front of the chain to extend decay and strip out low-mid mud before hitting the amplifier. Scene A delivers dynamic, touch-sensitive Tweed rhythm crunch, while Scene B engages a stacked Green 808 and Myth Drive combination alongside a midrange EQ push for thick, blooming lead sustain through a 4x10 alnico cabinet.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Placed first in the chain with a 4:1 ratio and slow attack to extend sustain and compensate for lower-output single coils (incorporating the Acoustician's +3.0 dB input lift intent via higher makeup gain) without squashing pick transients.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Bypassed in Scene A and engaged in Scene B to focus the midrange and push the Tweed preamp into singing sustain, with slightly warmer Tone settings to tame Telecaster bridge bite.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Stacked after the Green 808 in Scene B to add Klon-style harmonic thickness and push single-coil notes into vocal bloom.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Freq",
+              "type": "slider",
+              "value": "250 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 1 Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "-2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Q",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "1.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "850 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Q",
+              "type": "slider",
+              "value": "1.0"
+            }
+          ],
+          "rationale": "Placed before the amplifier to keep the 250Hz region tight while requiring less low-mid cut than humbuckers, adding a strong +2.5 dB midrange push at 850Hz in Scene B for lead authority.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Emulates a jumped 1959 Fender Tweed Bassman; tuned with the Acoustician's +0.5 step volume lift (Volume at 7.5/8.5), fuller Bass (4.0), pushed Mid (7.5), and rolled-back Treble (4.0) to fatten the Telecaster and tame bridge-pickup glassiness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: X=3.5in (Cap Edge), Y=1.0in"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: X=4.5in (Cone), Y=2.5in"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "4x10 Jensen P10R alnico cabinet using a Dynamic 57 and Ribbon 121; blended slightly more toward the Ribbon 121 (65%) with a 6200Hz high cut to keep single-coil highs creamy and round.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Placed at the end of the chain to provide lush studio plate dimension that swells from 15% mix in rhythm to 22% in lead without washing out the direct midrange punch.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "1176-style compressor at the start of the chain with a 4:1 ratio and slow attack to extend sustain while trimming makeup gain (reflecting the Acoustician's -3.0 dB input trim for hot semi-hollow humbuckers).",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "2.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Bypassed in Scene A and engaged in Scene B with low drive and high output level to tighten the ES-339's neck/bridge humbucker low end before hitting the Tweed input.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Engaged alongside the Green 808 in Scene B to add Klon-style midrange clarity and goose the Tweed Bassman into vocal, blooming lead sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Freq",
+              "type": "slider",
+              "value": "250 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Gain",
+              "type": "slider",
+              "value": "-2.5 dB",
+              "value_b": "-3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Q",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "1.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "850 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Q",
+              "type": "slider",
+              "value": "1.0"
+            }
+          ],
+          "rationale": "Essential pre-amp sculpting that carves out 250Hz semi-hollow mud (-2.5 dB in Scene A, -3.5 dB in Scene B) so the Tweed Bassman never farts out, while boosting 850Hz in Scene B for lead cut.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Jumped 1959 Tweed Bassman model incorporating the Acoustician's -0.5 step volume offset (Volume at 6.5/7.5), restrained Bass (3.0), and brighter Treble (5.5) to keep the ES-339's warm humbuckers tight, woody, and articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: X=3.5in (Cap Edge), Y=1.0in"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: X=4.5in (Cone), Y=2.5in"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "4x10 Jensen P10R alnico cabinet favoring the Dynamic 57 at 70% blend with a tighter 100Hz low cut and 6800Hz high cut to keep humbucker lows focused and upper-register slide or lead notes creamy.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s",
+              "value_b": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Post-cab studio plate reverb with a slightly brighter Tone (6.0) and 25ms pre-delay to prevent warm semi-hollow resonances from clouding the ambient tail.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}
