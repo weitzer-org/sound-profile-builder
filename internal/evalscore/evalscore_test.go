@@ -163,3 +163,33 @@ func TestScorerFalseNegativeRegressions(t *testing.T) {
 		t.Errorf("BD-2 / TS808 drives must satisfy 11-drive: %+v", m)
 	}
 }
+
+// The amp menu offers device-catalog amps that coros_map.json doesn't list; the scorer must
+// still count them as amps, and native device names must not count as "not in catalog".
+func TestDeviceCatalogNamesAreClassified(t *testing.T) {
+	s := mustScorer(t)
+	var amp string
+	for _, n := range s.device.Names() {
+		if _, inMap := agents.CorosCatalog()[n]; inMap {
+			continue
+		}
+		for _, m := range s.device.Resolve(n) {
+			if m.Category == "Guitar Amplifier" && m.PluginID == "" {
+				amp = n
+			}
+		}
+		if amp != "" {
+			break
+		}
+	}
+	if amp == "" {
+		t.Skip("no catalog-only guitar amp in the embedded device catalog")
+	}
+	if !s.IsAmp(amp) {
+		t.Errorf("catalog-only amp %q not classified as an amp", amp)
+	}
+	r, _ := s.Score("07_Edge", []string{"UK C30 TopBoost", "Spring (ST)", "Analog Delay (M)"}, nil)
+	if r.NotInCatalog != 0 {
+		t.Errorf("native device names must not count as unknown: G1=%d", r.NotInCatalog)
+	}
+}

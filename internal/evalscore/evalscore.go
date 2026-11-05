@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
 )
 
@@ -53,6 +54,10 @@ type Scorer struct {
 	catalog map[string][]agents.CatalogEntry
 	userBT  map[string]string
 	rxCache map[string]*compiled
+	// device is the Quad Cortex's own catalog (internal/catalog). The amp menu now offers
+	// catalog-only amps that coros_map.json doesn't list, so classification consults it too.
+	// Nil in tests that don't need it.
+	device *catalog.Catalog
 }
 
 type compiled struct {
@@ -67,7 +72,30 @@ func New() (*Scorer, error) {
 	for _, c := range agents.GetUserCaptures() {
 		ucs = append(ucs, UserCapture{Name: c.Name, BlockType: c.BlockType})
 	}
-	return NewFrom(evalfixtures.LibrarianChecklistJSON(), agents.CorosCatalog(), ucs)
+	s, err := NewFrom(evalfixtures.LibrarianChecklistJSON(), agents.CorosCatalog(), ucs)
+	if err != nil {
+		return nil, err
+	}
+	dev, err := catalog.Embedded()
+	if err != nil {
+		return nil, fmt.Errorf("device catalog: %w", err)
+	}
+	s.device = dev
+	return s, nil
+}
+
+// deviceAmp reports whether the device catalog lists n (exactly or as a mono/stereo family)
+// as a guitar or bass amplifier.
+func (s *Scorer) deviceAmp(n string) bool {
+	if s.device == nil {
+		return false
+	}
+	for _, m := range s.device.Resolve(n) {
+		if m.Category == "Guitar Amplifier" || m.Category == "Bass Amplifier" {
+			return true
+		}
+	}
+	return false
 }
 
 // NewFrom builds a Scorer from explicit inputs (used by tests).
@@ -151,7 +179,7 @@ func (s *Scorer) IsAmp(n string) bool {
 		}
 	}
 	bt := s.userBT[n]
-	return bt == "amp" || bt == "full_rig"
+	return bt == "amp" || bt == "full_rig" || s.deviceAmp(n)
 }
 
 func (s *Scorer) matches(n, spec string) bool {
@@ -250,7 +278,7 @@ func (s *Scorer) Score(query string, names []string, mandatory []string) (Result
 			res.RangeRverb++
 		}
 		if _, inCat := s.catalog[n]; !inCat {
-			if _, inUser := s.userBT[n]; !inUser {
+			if _, inUser := s.userBT[n]; !inUser && (s.device == nil || !s.device.IsKnownName(n)) {
 				res.NotInCatalog++
 			}
 		}

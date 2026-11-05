@@ -832,10 +832,9 @@
     "confidence_score": 1.0
   },
   "Generic Spring Reverb": {
-    "coros_equivalent": "Range Rverb",
+    "coros_equivalent": "Spring",
     "type": "reverb",
-    "confidence_score": 1.0,
-    "is_capture": true
+    "confidence_score": 1.0
   },
   "Strymon BigSky Bloom": {
     "coros_equivalent": "Blossom (ST)",

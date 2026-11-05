@@ -148,3 +148,43 @@ func TestCaptureNamesAreNotCatalogModels(t *testing.T) {
 		t.Errorf("%s: marked as a capture, but the device catalog lists it as a block model", b)
 	}
 }
+
+// TestTimeBasedEntriesAreNotCaptures: a reverb or delay is never a Neural Capture (the
+// Librarian prompt's rule 11 forbids mapping one to a capture). A wrong is_capture flag here
+// also hides the entry from TestCorosMapNamesExistInCatalog, which is how "Generic Spring
+// Reverb" pointed at "Range Rverb" -- the Orange Rockerverb amp capture's name -- unnoticed.
+func TestTimeBasedEntriesAreNotCaptures(t *testing.T) {
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		typ, _ := rec["type"].(string)
+		if isCap, _ := rec["is_capture"].(bool); isCap && (typ == "reverb" || typ == "delay") {
+			bad = append(bad, gear)
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Errorf("coros_map.json entry %q is a %s marked is_capture: true; time-based effects are native blocks", b, CorosMapRecords()[b]["type"])
+	}
+}
+
+// TestNoNameSharedByAnAmpAndAnEffect: one coros_equivalent must not be both an amp and a
+// reverb/delay, or the Librarian can pick an amp capture when it means a reverb.
+func TestNoNameSharedByAnAmpAndAnEffect(t *testing.T) {
+	types := map[string]map[string]bool{}
+	for _, rec := range CorosMapRecords() {
+		eq, _ := rec["coros_equivalent"].(string)
+		typ, _ := rec["type"].(string)
+		if eq == "" {
+			continue
+		}
+		if types[eq] == nil {
+			types[eq] = map[string]bool{}
+		}
+		types[eq][typ] = true
+	}
+	for eq, ts := range types {
+		if ts["amp"] && (ts["reverb"] || ts["delay"]) {
+			t.Errorf("coros_equivalent %q is used for both an amp and a time-based effect", eq)
+		}
+	}
+}
