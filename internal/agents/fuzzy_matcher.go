@@ -815,12 +815,16 @@ func min(a, b, c int) int {
 	return m
 }
 
-// ampMenuEntry is one amplifier's parsed coros_map.json record, cached once so per-request
-// filtering (factory-capture toggle, plugin ownership) never re-parses the embedded JSON.
+// ampMenuEntry is one amplifier's parsed coros_map.json record, or a device-catalog amp
+// coros_map.json doesn't cover, cached once so per-request filtering (factory-capture
+// toggle, plugin ownership) never re-parses the embedded JSON.
 type ampMenuEntry struct {
 	Name           string
 	IsCapture      bool
 	RequiredPlugin string
+	// UnknownPlugin marks a catalog plugin device whose plugin_id the plugin table
+	// doesn't know: never offered, whatever the filter says.
+	UnknownPlugin bool
 }
 
 var ampMenuBuckets map[string][]ampMenuEntry
@@ -828,6 +832,10 @@ var parseAmpsOnce sync.Once
 
 // GetCategorizedAmplifiers reads the embedded JSON and creates a formatted Markdown menu
 // grouping all available distinct amplifier names by their tonal archetype for LLM injection.
+// Device-catalog amps that coros_map.json doesn't cover are included too: guitar amps
+// under unclassifiedBucket (with coros_map.json amps whose tonal_archetype is empty),
+// bass amps under the existing "Bass Amps" bucket, which is the device's own category
+// rather than a tonal claim.
 // allowFactoryCaptures drops is_capture:true entries; when filterPlugins is true, any entry
 // tagged required_plugin (a plugin archetype's device, e.g. "Plini", "John Mayer") is dropped
 // unless allowedPlugins[requiredPlugin] is set -- mirrors the dictJSON filtering in
@@ -843,7 +851,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 					if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 						arch, _ := props["tonal_archetype"].(string)
 						if arch == "" {
-							arch = "Other / Unique"
+							arch = unclassifiedBucket
 						}
 						isCap, _ := props["is_capture"].(bool)
 						reqPlugin, _ := props["required_plugin"].(string)
@@ -853,6 +861,18 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 					}
 				}
 			}
+		}
+		for _, a := range catalogGearAdditions() {
+			if a.Type != "amp" {
+				continue
+			}
+			arch := unclassifiedBucket
+			if a.Bass {
+				arch = "Bass Amps"
+			}
+			ampMenuBuckets[arch] = append(ampMenuBuckets[arch], ampMenuEntry{
+				Name: a.Family, RequiredPlugin: a.Plugin, UnknownPlugin: a.Gated && a.Plugin == "",
+			})
 		}
 	})
 
@@ -871,7 +891,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 		seen := make(map[string]bool)
 		var names []string
 		for _, a := range amps {
-			if !allowFactoryCaptures && a.IsCapture {
+			if a.UnknownPlugin || (!allowFactoryCaptures && a.IsCapture) {
 				continue
 			}
 			if filterPlugins && a.RequiredPlugin != "" && !allowedPlugins[a.RequiredPlugin] {

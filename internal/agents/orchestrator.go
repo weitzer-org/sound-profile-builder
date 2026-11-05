@@ -79,8 +79,11 @@ func filterEmbeddedCorosMap(raw []byte, allowFactoryCaptures bool, filterPlugins
 
 // librarianInputs returns the two gear menus injected into the CorOS Librarian's (Agent 4)
 // context for this run's constraints: the Dictionary JSON and the Amplifier Archetype Menu.
+// Both are coros_map.json plus the device-catalog gear models it doesn't cover yet (see
+// catalogAddition), with the same capture and plugin filtering.
 func librarianInputs(allowFactoryCaptures bool, plugins PluginGate) (dictJSON, ampMenu string) {
 	dictJSON = filterEmbeddedCorosMap(embeddedCorosMap, allowFactoryCaptures, plugins.Active, plugins.Owned)
+	dictJSON = withCatalogDictionaryEntries(dictJSON, plugins)
 	ampMenu = GetCategorizedAmplifiers(allowFactoryCaptures, plugins.Active, plugins.Owned)
 	return dictJSON, ampMenu
 }
