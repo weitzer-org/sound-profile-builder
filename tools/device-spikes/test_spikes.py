@@ -333,7 +333,7 @@ class G0Tests(FakeDeviceCase):
         code, out, data = self.run_script("g0_verify_slot", ["--position", "255", "--expect-name", "last"], qc)
         self.assertEqual(code, sc.EXIT_OK, out)
         self.assertEqual([n["position"] for n in data["neighbours"]], [253, 254, 255])
-        self.assertNotIn("33", out)
+        self.assertNotRegex(out, r"\b33[A-H]\b")   # labels past the end of the table; plain "33" can appear in temp names
 
     def test_mini_is_refused(self):
         qc = self.fake(device_type="ATMA", library={8: "bb king test 2"})
