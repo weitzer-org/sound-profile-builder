@@ -770,7 +770,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 
 	if len(GetValidNativeBlocks()) > 0 {
-		effectiveBlocks := BuildEffectiveValidBlocks(effectiveAllowFactoryCaptures, effectiveAllowUserCaptures)
+		effectiveBlocks := ExcludeUnownedPluginBlocks(BuildEffectiveValidBlocks(effectiveAllowFactoryCaptures, effectiveAllowUserCaptures), constraints)
 		finalResult = ApplyFuzzyCorrection(finalResult, effectiveBlocks)
 	}
 

@@ -151,6 +151,15 @@ func report(prev, next *catalog.Catalog) {
 			if o.Name != n.Name {
 				fmt.Printf("  ~ %6d  %s -> %s\n", id, o.Name, n.Name)
 			}
+			if o.Category != n.Category {
+				fmt.Printf("  ~ %6d  %s: category %q -> %q\n", id, n.Name, o.Category, n.Category)
+			}
+			if o.BasedOn != n.BasedOn {
+				fmt.Printf("  ~ %6d  %s: based on %q -> %q\n", id, n.Name, o.BasedOn, n.BasedOn)
+			}
+			if o.PluginID != n.PluginID {
+				fmt.Printf("  ~ %6d  %s: plugin id %q -> %q\n", id, n.Name, o.PluginID, n.PluginID)
+			}
 			ob, _ := json.Marshal(o.Params)
 			nb, _ := json.Marshal(n.Params)
 			if !bytes.Equal(ob, nb) {

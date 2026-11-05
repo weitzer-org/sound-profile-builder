@@ -172,12 +172,25 @@ func TestClonedModelInheritsBaseParams(t *testing.T) {
 
 func TestParseModelRepoRejectsBadClones(t *testing.T) {
 	for name, xml := range map[string]string{
-		"unknown base":  `<Models><Category name="A"><Model id="2" name="Y" clones="9"/></Category></Models>`,
-		"replaces past": `<Models><Category name="A"><Model id="1" name="X"><Parameter name="P"/></Model><Model id="2" name="Y" clones="1"><Parameter name="Q" replaces="5"/></Model></Category></Models>`,
+		"duplicated template": `<Models><Category name="A"><Model id="1" name="X" hidden="true"><Parameter name="P"/></Model><Model id="1" name="X2" hidden="true"><Parameter name="Q"/></Model><Model id="2" name="Y" clones="1"/></Category></Models>`,
+		"no models":           `<Error><Message>not a catalog</Message></Error>`,
+		"unknown base":        `<Models><Category name="A"><Model id="2" name="Y" clones="9"/></Category></Models>`,
+		"replaces past":       `<Models><Category name="A"><Model id="1" name="X"><Parameter name="P"/></Model><Model id="2" name="Y" clones="1"><Parameter name="Q" replaces="5"/></Model></Category></Models>`,
 	} {
 		if _, err := ParseModelRepo(strings.NewReader(xml)); err == nil {
 			t.Errorf("%s: expected an error", name)
 		}
+	}
+}
+
+func TestCloneIDsCompareNumerically(t *testing.T) {
+	xml := `<Models><Category name="A"><Model id="001" name="Base" hidden="true"><Parameter name="P" max="1" min="0"/></Model><Model id="2" name="Clone" clones="1"/></Category></Models>`
+	models, err := ParseModelRepo(strings.NewReader(xml))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(models) != 1 || len(models[0].Params) != 1 || models[0].Params[0].Name != "P" {
+		t.Errorf("clone of id 001 via clones=\"1\" should inherit P, got %+v", models)
 	}
 }
 

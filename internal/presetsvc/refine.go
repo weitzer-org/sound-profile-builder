@@ -116,9 +116,12 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 
 	allowFactoryCapturesForFlag := true
 	allowUserCapturesForFlag := true
+	pluginConstraints := map[string]interface{}{}
 	if cfg := s.config(); cfg != nil {
 		allowFactoryCapturesForFlag = cfg.AllowFactoryCaptures
 		allowUserCapturesForFlag = cfg.AllowUserCaptures
+		pluginConstraints["allow_paid_plugins"] = cfg.AllowPaidPlugins
+		pluginConstraints["available_plugins"] = cfg.AvailablePlugins
 	}
 
 	// Run the chat refinement loop
@@ -153,7 +156,7 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		return
 	}
 
-	effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	effectiveBlocksForFlag := agents.ExcludeUnownedPluginBlocks(agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag), pluginConstraints)
 	agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)

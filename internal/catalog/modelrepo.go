@@ -64,7 +64,7 @@ type indexedParam struct {
 // inside the base's parameter list) -- it has not been checked against a device.
 // On a model without clones, replaces holds an old parameter name (a rename note) and
 // is ignored.
-func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexedParam, error) {
+func effectiveParams(m xmlModel, byID map[int]xmlModel, dupIDs map[int]bool, depth int) ([]indexedParam, error) {
 	if strings.TrimSpace(m.Clones) == "" {
 		out := make([]indexedParam, len(m.Params))
 		for i, xp := range m.Params {
@@ -75,11 +75,18 @@ func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexed
 	if depth > 8 {
 		return nil, fmt.Errorf("model %q: clones chain too deep", m.Name)
 	}
-	base, ok := byID[strings.TrimSpace(m.Clones)]
+	baseID, err := strconv.Atoi(strings.TrimSpace(m.Clones))
+	if err != nil {
+		return nil, fmt.Errorf("model %q: bad clones %q", m.Name, m.Clones)
+	}
+	if dupIDs[baseID] {
+		return nil, fmt.Errorf("model %q clones id %d, which is defined more than once", m.Name, baseID)
+	}
+	base, ok := byID[baseID]
 	if !ok {
 		return nil, fmt.Errorf("model %q clones unknown id %q", m.Name, m.Clones)
 	}
-	out, err := effectiveParams(base, byID, depth+1)
+	out, err := effectiveParams(base, byID, dupIDs, depth+1)
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +127,21 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 	if err := xml.NewDecoder(r).Decode(&repo); err != nil {
 		return nil, fmt.Errorf("parse ModelRepo.xml: %w", err)
 	}
-	byID := map[string]xmlModel{}
+	// Every model, hidden templates included, keyed by numeric id: clones="<id>" may name
+	// any of them. An id defined twice is only an error if something clones it (see
+	// effectiveParams); duplicates among kept models are rejected below regardless.
+	byID := map[int]xmlModel{}
+	dupIDs := map[int]bool{}
 	for _, cat := range repo.Categories {
 		for _, xm := range cat.Models {
-			byID[strings.TrimSpace(xm.ID)] = xm
+			id, err := strconv.Atoi(strings.TrimSpace(xm.ID))
+			if err != nil {
+				continue // reported below if the model is kept
+			}
+			if _, dup := byID[id]; dup {
+				dupIDs[id] = true
+			}
+			byID[id] = xm
 		}
 	}
 	var out []Model
@@ -152,7 +170,7 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 				PluginID: strings.TrimSpace(xm.PluginID),
 				Params:   []Param{},
 			}
-			params, err := effectiveParams(xm, byID, 0)
+			params, err := effectiveParams(xm, byID, dupIDs, 0)
 			if err != nil {
 				return nil, err
 			}
@@ -166,6 +184,11 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	if len(out) == 0 {
+		// e.g. an error document or the wrong file: don't let the importer overwrite the
+		// committed catalog with an empty one.
+		return nil, fmt.Errorf("parse ModelRepo.xml: no models found")
+	}
 	return out, nil
 }
 

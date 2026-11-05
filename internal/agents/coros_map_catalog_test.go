@@ -23,8 +23,12 @@ func TestCorosMapNamesExistInCatalog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	records := CorosMapRecords()
+	if len(records) == 0 {
+		t.Fatal("embedded coros_map.json decoded to no records") // CorosMapRecords hides decode errors
+	}
 	var bad []string
-	for gear, rec := range CorosMapRecords() {
+	for gear, rec := range records {
 		if isCap, _ := rec["is_capture"].(bool); isCap {
 			continue
 		}

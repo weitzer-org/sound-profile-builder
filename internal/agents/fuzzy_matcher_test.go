@@ -490,3 +490,46 @@ func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {
 		t.Errorf("SnapToClosestBlock(%q) = %q, want ungated %q", "Exotic Z Boos", got, "Exotic Z Boost")
 	}
 }
+
+// A plugin device the user doesn't own must be flagged, not accepted, in a gear block.
+func TestExcludeUnownedPluginBlocks(t *testing.T) {
+	all := BuildEffectiveValidBlocks(true, true)
+	for _, name := range []string{"Plini Drive", "John Mayer Halfman OD", "Brit 2203"} {
+		if _, ok := all[name]; !ok {
+			t.Fatalf("fixture assumption: %q should be a valid block name", name)
+		}
+	}
+	cases := []struct {
+		name        string
+		constraints map[string]interface{}
+		want        map[string]bool // block name -> kept?
+	}{
+		{"no plugin constraint: unfiltered", map[string]interface{}{},
+			map[string]bool{"Plini Drive": true, "John Mayer Halfman OD": true, "Brit 2203": true}},
+		{"paid plugins off", map[string]interface{}{"allow_paid_plugins": false, "available_plugins": []string{"John Mayer"}},
+			map[string]bool{"Plini Drive": false, "John Mayer Halfman OD": false, "Brit 2203": true}},
+		{"owns John Mayer only", map[string]interface{}{"allow_paid_plugins": true, "available_plugins": []string{"John Mayer"}},
+			map[string]bool{"Plini Drive": false, "John Mayer Halfman OD": true, "Brit 2203": true}},
+	}
+	for _, tc := range cases {
+		got := ExcludeUnownedPluginBlocks(all, tc.constraints)
+		for name, kept := range tc.want {
+			if _, ok := got[name]; ok != kept {
+				t.Errorf("%s: %q kept=%v, want %v", tc.name, name, ok, kept)
+			}
+		}
+	}
+
+	owned := ExcludeUnownedPluginBlocks(all, map[string]interface{}{"allow_paid_plugins": true, "available_plugins": []string{"John Mayer"}})
+	sp := &storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{"Guitar 1": {
+		{ID: "1", Type: "Overdrive", Model: "Plini Drive"},
+		{ID: "2", Type: "Overdrive", Model: "John Mayer Halfman OD"},
+	}}}
+	if n := FlagUnverifiedStructuredBlocks(sp, owned); n != 1 {
+		t.Errorf("flagged %d blocks, want 1 (the unowned Plini Drive)", n)
+	}
+	blocks := sp.Guitars["Guitar 1"]
+	if blocks[0].Model != FlagUnverifiedBlock("Plini Drive") || blocks[1].Model != "John Mayer Halfman OD" {
+		t.Errorf("got %q / %q", blocks[0].Model, blocks[1].Model)
+	}
+}

@@ -185,7 +185,7 @@ func (s *Service) runGenerate(ctx context.Context, lr *liveRun, runID, apiKey, p
 	if v, ok := constraints["allow_user_captures"].(bool); ok {
 		allowUserCapturesForFlag = v
 	}
-	effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	effectiveBlocksForFlag := agents.ExcludeUnownedPluginBlocks(agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag), constraints)
 	agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)

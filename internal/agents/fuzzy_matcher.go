@@ -24,6 +24,10 @@ var validBlocksRunes = make(map[string][]rune)
 // filtered by which plugins the user owns, so snapping into these names would also
 // introduce plugin devices the user can't run.
 var exactOnlyBlocks = make(map[string]string)
+
+// pluginOnlyBlocks maps each exactOnlyBlocks name (canonical spelling) to the plugins
+// whose required_plugin entries produce it; see ExcludeUnownedPluginBlocks.
+var pluginOnlyBlocks = make(map[string][]string)
 var parseBlocksOnce sync.Once
 var validCategories = map[string]bool{
 	"amplifier:": true, "cab:": true, "cabinet:": true,
@@ -241,6 +245,7 @@ func GetValidNativeBlocks() map[string]bool {
 		var corosData map[string]map[string]interface{}
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
 			ungated := make(map[string]bool)
+			gatedBy := make(map[string][]string)
 			for _, props := range corosData {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
@@ -248,6 +253,8 @@ func GetValidNativeBlocks() map[string]bool {
 					validBlocksRunes[equiv] = []rune(strings.ToLower(equiv))
 					if plugin, _ := props["required_plugin"].(string); plugin == "" {
 						ungated[equiv] = true
+					} else {
+						gatedBy[equiv] = append(gatedBy[equiv], plugin)
 					}
 				}
 			}
@@ -255,6 +262,7 @@ func GetValidNativeBlocks() map[string]bool {
 				if !ungated[equiv] {
 					delete(validBlocksRunes, equiv)
 					exactOnlyBlocks[strings.ToLower(equiv)] = equiv
+					pluginOnlyBlocks[equiv] = gatedBy[equiv]
 				}
 			}
 		}
@@ -294,6 +302,42 @@ func BuildEffectiveValidBlocks(allowFactoryCaptures, allowUserCaptures bool) map
 		effective[name] = isCap
 	}
 	return effective
+}
+
+// ExcludeUnownedPluginBlocks returns a copy of validBlocks without the block names that
+// only exist behind a paid plugin the user doesn't own, so the Architect's output can't
+// name such a device without being flagged. It reads the same constraints RunPipeline
+// uses to filter the Librarian's Dictionary: with no "allow_paid_plugins" key nothing is
+// removed (older callers, tests); false removes every plugin-only name; true keeps the
+// names of plugins listed in "available_plugins". A name that an ungated entry also
+// produces is never removed.
+func ExcludeUnownedPluginBlocks(validBlocks map[string]bool, constraints map[string]interface{}) map[string]bool {
+	allowPaid, ok := constraints["allow_paid_plugins"].(bool)
+	if !ok {
+		return validBlocks
+	}
+	owned := map[string]bool{}
+	if allowPaid {
+		available, _ := constraints["available_plugins"].([]string)
+		for _, p := range available {
+			owned[p] = true
+		}
+	}
+	GetValidNativeBlocks() // populates pluginOnlyBlocks
+	out := make(map[string]bool, len(validBlocks))
+	for name, isCap := range validBlocks {
+		if plugins, gated := pluginOnlyBlocks[name]; gated {
+			keep := false
+			for _, p := range plugins {
+				keep = keep || owned[p]
+			}
+			if !keep {
+				continue
+			}
+		}
+		out[name] = isCap
+	}
+	return out
 }
 
 // ApplyFuzzyCorrection iterates over HTML table rows and corrects block names.
