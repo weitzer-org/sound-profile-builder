@@ -72,3 +72,21 @@ func TestCompareLibrarian_UnitNeedsBothOrders(t *testing.T) {
 		t.Errorf("a unit with only one order must not count: %d", c.Units)
 	}
 }
+
+func TestCompareLibrarian_UserCaptureRegressionIsWorse(t *testing.T) {
+	var runs []LibrarianRun
+	for _, q := range []string{"a", "b", "c", "d", "e", "f", "g", "h"} {
+		for rep := 0; rep < 4; rep++ {
+			nr, or := run(q, 0, "new", rep, true, "x"), run(q, 0, "old", rep, true, "y")
+			or.Score.UserCaptures = 1 // old always uses a user capture, new never does
+			runs = append(runs, nr, or)
+		}
+	}
+	c := CompareLibrarian(runs, 0.05)
+	if c.UCVerdict != Worse || c.New.UserCaptureRate != 0 || c.Old.UserCaptureRate != 1 {
+		t.Errorf("want user-capture WORSE: %+v", c)
+	}
+	if c.AllHardVerdict != NotWorse {
+		t.Errorf("checklist identical, want NOT_WORSE: %s", c.AllHardVerdict)
+	}
+}

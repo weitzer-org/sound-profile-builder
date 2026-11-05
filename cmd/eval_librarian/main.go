@@ -59,6 +59,8 @@ func main() {
 		maxUSD    = flag.Float64("max-usd", 30, "abort when estimated spend exceeds this")
 		margin    = flag.Float64("margin", 0.05, "non-inferiority margin on hard-rule pass fraction")
 		dryRun    = flag.Bool("dry-run", false, "print the plan and a rough cost estimate; make no API calls")
+		variant   = flag.String("variant", "", "build the 'new' condition with an eval-only layout variant (reminder | ucl_last); empty = production layout")
+		seedOld   = flag.String("seed-old-from", "", "copy the old-order runs (records + outputs) from this earlier -out dir and do not re-run them; requires the same -phase1-dir")
 	)
 	flag.Parse()
 
@@ -72,12 +74,16 @@ func main() {
 	if *p1Dir == "" {
 		*p1Dir = filepath.Join(*out, "phase1")
 	}
-	nLib := len(order) * *p1Samples * 2 * *samples
+	orders := 2
+	if *seedOld != "" {
+		orders = 1
+	}
+	nLib := len(order) * *p1Samples * orders * *samples
 	nP1 := len(order) * *p1Samples
 	// Rough per-call estimates from the 2026-11-04 runs (~38K input tokens for the
 	// Librarian, a few thousand for Phase 1). Unmeasured for this tool: an estimate only.
 	est := float64(nLib)*0.08 + float64(nP1)*0.05
-	fmt.Printf("plan: %d queries x %d Phase 1 samples x 2 orders x %d reps = %d Librarian calls, %d Phase 1 runs\n", len(order), *p1Samples, *samples, nLib, nP1)
+	fmt.Printf("plan: %d queries x %d Phase 1 samples x %d order(s) x %d reps = %d Librarian calls, %d Phase 1 runs (if not already frozen). variant=%q seed-old-from=%q\n", len(order), *p1Samples, orders, *samples, nLib, nP1, *variant, *seedOld)
 	fmt.Printf("rough cost estimate: ~$%.0f (unmeasured; ceiling -max-usd=%.0f). out=%s\n", est, *maxUSD, *out)
 	if *dryRun {
 		return
@@ -148,6 +154,13 @@ func main() {
 
 	// 2. Build the job list, interleaving orders so time-of-day drift hits both equally.
 	runsPath := filepath.Join(*out, "runs.jsonl")
+	if *seedOld != "" {
+		if _, err := os.Stat(runsPath); os.IsNotExist(err) {
+			if err := seedOldRuns(*seedOld, *out); err != nil {
+				log.Fatalf("seeding old-order runs: %v", err)
+			}
+		}
+	}
 	done := map[string]bool{}
 	var prior []evalscore.LibrarianRun
 	if f, err := os.Open(runsPath); err == nil {
@@ -170,11 +183,14 @@ func main() {
 				continue
 			}
 			for rep := 0; rep < *samples; rep++ {
-				orders := []string{"new", "old"}
+				ords := []string{"new", "old"}
 				if rep%2 == 1 {
-					orders = []string{"old", "new"}
+					ords = []string{"old", "new"}
 				}
-				for _, o := range orders {
+				for _, o := range ords {
+					if o == "old" && *seedOld != "" {
+						continue
+					}
 					j := job{q, p, o, rep}
 					if !done[j.key()] {
 						jobs = append(jobs, j)
@@ -214,7 +230,12 @@ func main() {
 				}
 				p1 := frozen[fmt.Sprintf("%s|%d", j.query, j.p1)]
 				var userCtx string
-				if j.order == "new" {
+				if j.order == "new" && *variant != "" {
+					var verr error
+					if userCtx, verr = agents.LibrarianContextVariant(*variant, p1.LibrarianStatic, p1.Tone, p1.Scrape, constraints); verr != nil {
+						log.Fatal(verr)
+					}
+				} else if j.order == "new" {
 					userCtx = agents.LibrarianContextNewOrder(p1.LibrarianStatic, p1.Tone, p1.Scrape, constraints)
 				} else {
 					userCtx = agents.LibrarianContextOldOrder(p1.LibrarianStatic, p1.Tone, p1.Scrape, constraints)
@@ -261,10 +282,37 @@ func main() {
 	close(ch)
 	wg.Wait()
 
-	// 4. Report.
+	// 4. Report. Re-score every run from its saved output with the current scorer, so seeded
+	// or resumed records scored by an older binary are judged by the same rules.
+	for i := range runs {
+		r := &runs[i]
+		if r.Err != "" {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(*out, "outputs", fmt.Sprintf("%s_p%d_%s_r%d.json", r.Query, r.Phase1, r.Order, r.Rep)))
+		if err != nil {
+			continue
+		}
+		names, mand, perr := evalscore.LibrarianNames(string(b))
+		if perr != nil {
+			r.ParseOK, r.Score = false, nil
+			continue
+		}
+		if sc, serr := scorer.Score(r.Query, names, mand); serr == nil {
+			r.ParseOK, r.Names, r.Score = true, names, &sc
+		}
+	}
 	sort.SliceStable(runs, func(i, j int) bool { return runs[i].Query < runs[j].Query })
 	cmp := evalscore.CompareLibrarian(runs, *margin)
-	md := cmp.Markdown() + fmt.Sprintf("\nEstimated total spend: $%.2f (token counts x geminiPriceTable; cached-input rates unverified for most models)\n", spent)
+	if *variant != "" {
+		md0 := fmt.Sprintf("**'new order' below = eval-only layout variant %q**", *variant)
+		if *seedOld != "" {
+			md0 += fmt.Sprintf("; old-order runs reused from %s (run earlier, same frozen Phase 1)", *seedOld)
+		}
+		fmt.Println(md0)
+		cmpHeader = md0 + "\n\n"
+	}
+	md := cmpHeader + cmp.Markdown() + fmt.Sprintf("\nEstimated total spend: $%.2f (token counts x geminiPriceTable; cached-input rates unverified for most models)\n", spent)
 	if aborted {
 		md = "**ABORTED at the spend ceiling: results below are partial.**\n\n" + md
 	}
@@ -272,6 +320,46 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(md)
+}
+
+var cmpHeader string
+
+// seedOldRuns copies the old-order records and their saved outputs from an earlier run.
+func seedOldRuns(from, to string) error {
+	f, err := os.Open(filepath.Join(from, "runs.jsonl"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if err := os.MkdirAll(filepath.Join(to, "outputs"), 0o755); err != nil {
+		return err
+	}
+	out, err := os.Create(filepath.Join(to, "runs.jsonl"))
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 1<<20), 1<<24)
+	n := 0
+	for sc.Scan() {
+		var r evalscore.LibrarianRun
+		if json.Unmarshal(sc.Bytes(), &r) != nil || r.Order != "old" || r.Err != "" {
+			continue
+		}
+		name := fmt.Sprintf("%s_p%d_old_r%d.json", r.Query, r.Phase1, r.Rep)
+		b, err := os.ReadFile(filepath.Join(from, "outputs", name))
+		if err != nil {
+			continue
+		}
+		if err := os.WriteFile(filepath.Join(to, "outputs", name), b, 0o644); err != nil {
+			return err
+		}
+		out.Write(append(append([]byte{}, sc.Bytes()...), '\n'))
+		n++
+	}
+	log.Printf("seeded %d old-order runs from %s", n, from)
+	return sc.Err()
 }
 
 type usageSnap struct {

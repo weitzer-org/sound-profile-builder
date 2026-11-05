@@ -226,6 +226,7 @@ type Result struct {
 	AmpCount     int          `json:"amp_count"`
 	NotInCatalog int          `json:"g1_not_in_catalog"`
 	RangeRverb   int          `json:"g2_range_rverb"`
+	UserCaptures int          `json:"user_captures"` // chosen names that are in user_captures.json
 	AllHardPass  bool         `json:"all_hard_pass"`
 }
 
@@ -276,6 +277,9 @@ func (s *Scorer) Score(query string, names []string, mandatory []string) (Result
 	for _, n := range names {
 		if s.isAmbiguous(n) {
 			res.RangeRverb++
+		}
+		if _, ok := s.userBT[n]; ok {
+			res.UserCaptures++
 		}
 		if _, inCat := s.catalog[n]; !inCat {
 			if _, inUser := s.userBT[n]; !inUser && (s.device == nil || !s.device.IsKnownName(n)) {

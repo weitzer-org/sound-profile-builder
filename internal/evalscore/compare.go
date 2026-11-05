@@ -34,6 +34,7 @@ type OrderStats struct {
 	NotInCatalog, RangeRverb float64 // mean per run
 	CachedShare              float64
 	CostUSD                  float64
+	UserCaptureRate          float64 // fraction of runs choosing >=1 user capture
 	SelfConsistency          float64 // mean pairwise Jaccard of chosen names within a unit
 }
 
@@ -53,8 +54,14 @@ type LibrarianComparison struct {
 
 	// Noise floor: the same statistic computed between two halves of the SAME condition.
 	NoiseFloorAbsDiff float64
-	Margin            float64
-	PerQuery          []QueryRow
+
+	// User-capture use (the Librarian prompt's "Prefer User Captures" rule): paired per-unit
+	// difference (new - old) in the fraction of runs choosing at least one user capture.
+	UCVerdict          Verdict
+	UCDiff, UCLo, UCHi float64
+	UCMargin           float64
+	Margin             float64
+	PerQuery           []QueryRow
 }
 
 // QueryRow is a per-query readout so a drop can be traced to a query.
@@ -80,6 +87,12 @@ func jaccard(a, b map[string]bool) float64 {
 // CompareLibrarian computes the pre-registered readout. margin is the non-inferiority
 // margin on the hard-rule pass fraction (0.05 = new may be at most 5 points worse).
 func CompareLibrarian(runs []LibrarianRun, margin float64) LibrarianComparison {
+	return CompareLibrarianWith(runs, margin, 0.10)
+}
+
+// CompareLibrarianWith is CompareLibrarian with an explicit non-inferiority margin for
+// user-capture use (ucMargin = 0.10: new may use user captures in at most 10 points fewer runs).
+func CompareLibrarianWith(runs []LibrarianRun, margin, ucMargin float64) LibrarianComparison {
 	type key struct {
 		q string
 		p int
@@ -127,9 +140,16 @@ func CompareLibrarian(runs []LibrarianRun, margin float64) LibrarianComparison {
 		return 0
 	}
 
+	usesUC := func(r LibrarianRun) float64 {
+		if r.Score.UserCaptures > 0 {
+			return 1
+		}
+		return 0
+	}
+
 	var c LibrarianComparison
 	c.Margin = margin
-	var dAll, dHard, dSoft, noise []float64
+	var dAll, dHard, dSoft, dUC, noise []float64
 	qAgg := map[string]*[4][]float64{}
 	var keys []key
 	for k := range byUnit {
@@ -150,6 +170,7 @@ func CompareLibrarian(runs []LibrarianRun, margin float64) LibrarianComparison {
 		dAll = append(dAll, frac(nu, allHard)-frac(ol, allHard))
 		dHard = append(dHard, frac(nu, hardFrac)-frac(ol, hardFrac))
 		dSoft = append(dSoft, frac(nu, softFrac)-frac(ol, softFrac))
+		dUC = append(dUC, frac(nu, usesUC)-frac(ol, usesUC))
 		switch d := frac(nu, allHard) - frac(ol, allHard); {
 		case d > 0:
 			c.SignPos++
@@ -189,6 +210,8 @@ func CompareLibrarian(runs []LibrarianRun, margin float64) LibrarianComparison {
 	c.SoftFracDiff = Mean(dSoft)
 	c.SoftFracLo, c.SoftFracHi = BootstrapMeanCI(dSoft, 10000, 0.95, 3)
 	c.SignP = SignTestP(c.SignPos, c.SignNeg)
+	c.UCMargin = ucMargin
+	c.UCVerdict, c.UCDiff, c.UCLo, c.UCHi = NonInferiority(dUC, ucMargin, 4)
 	c.NoiseFloorAbsDiff = Mean(noise)
 
 	for _, order := range []string{"new", "old"} {
@@ -219,6 +242,7 @@ func CompareLibrarian(runs []LibrarianRun, margin float64) LibrarianComparison {
 			})
 			st.NotInCatalog = frac(u, func(r LibrarianRun) float64 { return float64(r.Score.NotInCatalog) })
 			st.RangeRverb = frac(u, func(r LibrarianRun) float64 { return float64(r.Score.RangeRverb) })
+			st.UserCaptureRate = frac(u, usesUC)
 			var in, ca int64
 			for _, r := range u {
 				in += int64(r.In)
@@ -279,6 +303,7 @@ func (c LibrarianComparison) Markdown() string {
 	p("| exactly one amp (G3) | %.1f%% | %.1f%% |\n", 100*c.New.OneAmp, 100*c.Old.OneAmp)
 	p("| names not in catalog / run (G1) | %.2f | %.2f |\n", c.New.NotInCatalog, c.Old.NotInCatalog)
 	p("| Range Rverb uses / run (G2) | %.2f | %.2f |\n", c.New.RangeRverb, c.Old.RangeRverb)
+	p("| runs choosing >=1 user capture | %.1f%% | %.1f%% |\n", 100*c.New.UserCaptureRate, 100*c.Old.UserCaptureRate)
 	p("| self-consistency (mean Jaccard of picks between repeats) | %.3f | %.3f |\n", c.New.SelfConsistency, c.Old.SelfConsistency)
 	p("| cached input share (NOT representative of production, see note) | %.0f%% | %.0f%% |\n", 100*c.New.CachedShare, 100*c.Old.CachedShare)
 	p("| cost (est., no cache discount applied where rate unverified) | $%.2f | $%.2f |\n\n", c.New.CostUSD, c.Old.CostUSD)
@@ -288,7 +313,8 @@ func (c LibrarianComparison) Markdown() string {
 	p("| metric | mean diff | 95%% CI | verdict |\n|---|---|---|---|\n")
 	p("| runs passing every hard rule | %+.3f | [%+.3f, %+.3f] | **%s** |\n", c.AllHardDiff, c.AllHardLo, c.AllHardHi, c.AllHardVerdict)
 	p("| hard-rule pass fraction | %+.3f | [%+.3f, %+.3f] | **%s** |\n", c.HardFracDiff, c.HardFracLo, c.HardFracHi, c.HardFracVerdict)
-	p("| soft-rule pass fraction | %+.3f | [%+.3f, %+.3f] | (reported only) |\n\n", c.SoftFracDiff, c.SoftFracLo, c.SoftFracHi)
+	p("| soft-rule pass fraction | %+.3f | [%+.3f, %+.3f] | (reported only) |\n", c.SoftFracDiff, c.SoftFracLo, c.SoftFracHi)
+	p("| runs choosing >=1 user capture (margin %.0f points) | %+.3f | [%+.3f, %+.3f] | **%s** |\n\n", 100*c.UCMargin, c.UCDiff, c.UCLo, c.UCHi, c.UCVerdict)
 	p("Sign test on units (all-hard-pass rate): new better %d, old better %d, ties %d, two-sided p = %.3f\n\n", c.SignPos, c.SignNeg, c.SignTies, c.SignP)
 	p("Noise floor (mean |difference| in hard-pass fraction between two halves of the SAME condition): %.3f. A new-vs-old difference smaller than this is indistinguishable from run-to-run noise.\n\n", c.NoiseFloorAbsDiff)
 	p("## Per query (fraction of runs passing all hard rules / mean soft fraction)\n\n| query | new hard | old hard | new soft | old soft |\n|---|---|---|---|---|\n")

@@ -85,3 +85,38 @@ func TestLibrarianContextOrders(t *testing.T) {
 		t.Error("LibrarianContextNewOrder must equal buildLibrarianContext")
 	}
 }
+
+func TestLibrarianContextVariants(t *testing.T) {
+	static := buildLibrarianStaticCatalog("DICT", "MENU", "UCL")
+	c := map[string]interface{}{"x": 1}
+	prod := buildLibrarianContext(static, "TONE", "SCRAPE", c)
+
+	r, err := LibrarianContextVariant("reminder", static, "TONE", "SCRAPE", c)
+	if err != nil || !strings.HasPrefix(r, prod) || !strings.HasSuffix(r, LibrarianReminder) {
+		t.Errorf("reminder must be the production context plus the reminder suffix: %q (%v)", r, err)
+	}
+
+	u, err := LibrarianContextVariant("ucl_last", static, "TONE", "SCRAPE", c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	head := "Dictionary: DICT\nAmplifier Archetype Menu:\nMENU\n"
+	if !strings.HasPrefix(u, head) {
+		t.Errorf("ucl_last must start with Dictionary + Amp Menu (the cached prefix): %q", u)
+	}
+	order := []string{"Dictionary: ", "Amplifier Archetype Menu:", "Tone History: TONE", "Scraper: SCRAPE", "User Capture Library: UCL", "Constraints: "}
+	last := -1
+	for _, s := range order {
+		i := strings.Index(u, s)
+		if i <= last {
+			t.Errorf("ucl_last section %q out of order in %q", s, u)
+		}
+		last = i
+	}
+	if len(u) != len(prod) {
+		t.Errorf("ucl_last must contain exactly the same text as production, reordered: %d vs %d", len(u), len(prod))
+	}
+	if _, err := LibrarianContextVariant("nope", static, "", "", c); err == nil {
+		t.Error("unknown variant must error")
+	}
+}

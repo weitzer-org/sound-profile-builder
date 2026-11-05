@@ -193,3 +193,11 @@ func TestDeviceCatalogNamesAreClassified(t *testing.T) {
 		t.Errorf("native device names must not count as unknown: G1=%d", r.NotInCatalog)
 	}
 }
+
+func TestScoreCountsUserCaptures(t *testing.T) {
+	s := mustScorer(t)
+	r, _ := s.Score("04_Southern_Rock", []string{"Fender 57 Deluxe - T8 I4 M12", "Green 808"}, nil)
+	if r.UserCaptures != 1 {
+		t.Errorf("UserCaptures = %d, want 1", r.UserCaptures)
+	}
+}
