@@ -200,3 +200,71 @@ func TestParseModelRepoRejectsDuplicateIDs(t *testing.T) {
 		t.Fatal("expected a duplicate-id error")
 	}
 }
+
+func TestParseSkew(t *testing.T) {
+	for _, tc := range []struct {
+		in   string
+		want float64 // 0 = nil
+		err  bool
+	}{
+		{"", 0, false}, {"  ", 0, false},
+		{"LIN_SKEW", 1.0, false}, {"LOG_SKEW", 0.3, false},
+		{"3.8018", 3.8018, false}, {" 0.4", 0.4, false}, {"1", 1, false},
+		{"MID_SKEW", 0, true}, {"lin_skew", 0, true}, {"0", 0, true}, {"-1", 0, true},
+		{"NaN", 0, true}, {"Inf", 0, true}, {"0..7", 0, true},
+	} {
+		got, err := parseSkew(tc.in)
+		if (err != nil) != tc.err {
+			t.Errorf("parseSkew(%q) err = %v, want error=%v", tc.in, err, tc.err)
+			continue
+		}
+		if err == nil && ((got == nil) != (tc.want == 0) || (got != nil && *got != tc.want)) {
+			t.Errorf("parseSkew(%q) = %v, want %v", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestParseModelRepoSkewAndParamCount(t *testing.T) {
+	c := parseFixtureWith(t, `<Category id="1" name="Guitar Amplifier">
+  <Model id="1" name="A" tm="">
+    <Parameter max="12" min="-60" name="OUT" skew="3.8018" type="float" units="dB"/>
+    <Parameter max="10" min="0" name="LIN" skew="LIN_SKEW" type="float" units=""/>
+    <Parameter max="500" min="20" name="LOG" skew="LOG_SKEW" type="float" units="Hz"/>
+    <Parameter max="10" min="0" name="NONE" type="float" units=""/>
+    <Parameter max="1" min="0" name="gone" type="switch" steps="2" hidden="true" units=""/>
+  </Model></Category>`)
+	m := c.Models[0]
+	if m.ParamCount != 5 || len(m.Params) != 4 {
+		t.Errorf("ParamCount %d, listed %d; want 5 (hidden counted) and 4", m.ParamCount, len(m.Params))
+	}
+	want := []*float64{f(3.8018), f(1.0), f(0.3), nil}
+	for i, p := range m.Params {
+		if (p.Skew == nil) != (want[i] == nil) || (p.Skew != nil && *p.Skew != *want[i]) {
+			t.Errorf("%s skew = %v, want %v", p.Name, p.Skew, want[i])
+		}
+	}
+	// A cloned model's count is the base list plus appended params.
+	cl := parseFixture(t)
+	if r, _ := cl.Lookup("Cloned Reverb"); r.ParamCount != 3 {
+		t.Errorf("Cloned Reverb ParamCount = %d, want 3 (base 2 + 1 appended)", r.ParamCount)
+	}
+}
+
+func TestParseModelRepoRejectsUnknownSkew(t *testing.T) {
+	doc := `<?xml version="1.0" ?><Models><Category id="1" name="Guitar Amplifier">
+  <Model id="1" name="A" tm=""><Parameter max="10" min="0" name="X" skew="SQUARE_SKEW" type="float"/></Model>
+</Category></Models>`
+	_, err := ParseModelRepo(strings.NewReader(doc))
+	if err == nil || !strings.Contains(err.Error(), "SQUARE_SKEW") {
+		t.Fatalf("err = %v, want an import error naming the skew", err)
+	}
+}
+
+func parseFixtureWith(t *testing.T, categories string) *Catalog {
+	t.Helper()
+	models, err := ParseModelRepo(strings.NewReader(`<?xml version="1.0" ?><Models>` + categories + `</Models>`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return New(models, Source{CorOSVersion: "test"}, "")
+}

@@ -58,8 +58,12 @@ type Model struct {
 	BasedOn string `json:"based_on,omitempty"`
 	// PluginID is set for models that belong to a paid Neural DSP plugin. The model
 	// appears in every unit's catalog, but using it needs that plugin's licence.
-	PluginID string  `json:"plugin_id,omitempty"`
-	Params   []Param `json:"params"`
+	PluginID string `json:"plugin_id,omitempty"`
+	// ParamCount is the number of parameters in the model's full list: ModelRepo.xml's
+	// <Parameter> elements with clones= resolved, hidden ones included (what Params
+	// leaves out). See DeviceParamCount and ValidParamIndex.
+	ParamCount int     `json:"param_count,omitempty"`
+	Params     []Param `json:"params"`
 }
 
 // Param is one user-visible parameter of a model.
@@ -79,8 +83,11 @@ type Param struct {
 	Max       *float64 `json:"max,omitempty"`
 	MinSymbol string   `json:"min_symbol,omitempty"`
 	MaxSymbol string   `json:"max_symbol,omitempty"`
-	Default   *float64 `json:"default,omitempty"`
-	Units     string   `json:"units,omitempty"`
+	// Skew is the exponent of the display-to-wire taper (see ToWire). Nil means the XML
+	// gave none, which is read as linear (1.0). LIN_SKEW is stored as 1.0 and LOG_SKEW as 0.3.
+	Skew    *float64 `json:"skew,omitempty"`
+	Default *float64 `json:"default,omitempty"`
+	Units   string   `json:"units,omitempty"`
 	// Steps is the number of discrete positions for switch-like parameters.
 	Steps     int      `json:"steps,omitempty"`
 	StepNames []string `json:"step_names,omitempty"`
