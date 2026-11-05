@@ -8,6 +8,7 @@
 package devicejobs
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -78,11 +79,26 @@ func NewKeyring(current, next string) (*Keyring, error) {
 		if err != nil {
 			return nil, errors.New("DEVICE_JOB_KEY_NEXT: " + err.Error())
 		}
-		if KID(nk) != kr.cur.kid {
-			kr.next = &namedKey{kid: KID(nk), key: nk}
+		if err := kr.setNext(nk); err != nil {
+			return nil, err
 		}
 	}
 	return kr, nil
+}
+
+// setNext installs nk as the next key. A key identical to the current one is
+// ignored; a different key with the same kid is refused, because Open selects
+// keys by kid and could not tell the two apart.
+func (k *Keyring) setNext(nk []byte) error {
+	kid := KID(nk)
+	if kid == k.cur.kid {
+		if bytes.Equal(nk, k.cur.key) {
+			return nil
+		}
+		return errors.New("DEVICE_JOB_KEY_NEXT: its key id collides with DEVICE_JOB_KEY's; generate another key")
+	}
+	k.next = &namedKey{kid: kid, key: nk}
+	return nil
 }
 
 // CurrentKID is the kid of the signing key.

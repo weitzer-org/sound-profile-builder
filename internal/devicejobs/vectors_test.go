@@ -249,3 +249,19 @@ func TestHasLoneSurrogate(t *testing.T) {
 		}
 	}
 }
+
+// A NEXT key identical to the current one is ignored; a different key that
+// shares the current kid (forced here, since a real 32-bit collision can't be
+// constructed in a test) is refused.
+func TestNextKeyKIDCollision(t *testing.T) {
+	cur := strings.Repeat("ab", 32)
+	kr, err := NewKeyring(cur, cur)
+	if err != nil || kr.next != nil {
+		t.Fatalf("identical NEXT: %v, next set=%v", err, kr != nil && kr.next != nil)
+	}
+	other, _ := ParseKey(strings.Repeat("cd", 32))
+	kr.cur.kid = KID(other) // simulate the collision
+	if err := kr.setNext(other); err == nil || !strings.Contains(err.Error(), "collides") {
+		t.Fatalf("colliding NEXT accepted: %v", err)
+	}
+}

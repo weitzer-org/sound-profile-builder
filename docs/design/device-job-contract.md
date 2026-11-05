@@ -77,7 +77,7 @@ A dedicated bucket, named by `DEVICE_JOBS_BUCKET` on QC-2 and by the agent's own
 - **Format.** `DEVICE_JOB_KEY` is 32 random bytes written as **exactly 64 hex characters** (`openssl rand -hex 32`). Readers trim surrounding whitespace, then **MUST** match `^[0-9a-fA-F]{64}$` before decoding.
   - The regex is not optional in Python: `bytes.fromhex("ab cd")` accepts inner spaces.
   - The HMAC key is the **32 decoded bytes**, never the ASCII hex string. The vectors catch this mistake.
-- **`DEVICE_JOB_KEY_NEXT`** has the same format and is optional. A malformed NEXT is a configuration error, not silently ignored. NEXT without a valid current key disables the feature (the same rule as `MCP_TOKEN_NEXT`).
+- **`DEVICE_JOB_KEY_NEXT`** has the same format and is optional. A malformed NEXT is a configuration error, not silently ignored, and so is a NEXT whose kid equals the current key's while its bytes differ (a 32-bit kid collision: verifiers select keys by kid, so the two couldn't be told apart). A NEXT identical to the current key is ignored. NEXT without a valid current key disables the feature (the same rule as `MCP_TOKEN_NEXT`).
 - **Key id.** `kid = lowercase hex of SHA-256("qc2-device-kid/v1\n" || key_bytes)`, first 4 bytes (8 hex characters). It names the key without revealing anything useful about a 256-bit random secret.
 - **Signing** always uses the current key. **Verifying** selects the key by `kid` from {current, next}. An unknown kid is its own outcome (`unknown_kid`), so a stale side is easy to spot: "unknown key id" tells the owner which side to update; "bad signature" wouldn't.
 - **Rotation** (the same shape as `MCP_TOKEN_NEXT`):
@@ -276,7 +276,7 @@ A heartbeat more than 60 s in the future is offline, with the reason "the bridge
 ## 11. Untrusted text
 
 All text that comes from the device or the agent is **data, not instructions**: preset, slot, capture and IR names, `message`, `firmware`, `agent_version`. Some of it was written by strangers on Cortex Cloud. QC-2 handles it in this order:
-1. drop control characters, Unicode format characters (bidi overrides, zero-width characters), and line breaks;
+1. drop control characters, Unicode format characters (bidi overrides, zero-width characters) and line breaks, and replace backticks (step 4's code span relies on there being none);
 2. collapse whitespace;
 3. cut to the field's length bound;
 4. render it in Markdown as an inline code span. Step 1 has already removed backticks, so nothing inside renders: no links, images, autolinks, emphasis or HTML. A stranger's preset named `x![p](https://evil.example/t.png)` would otherwise show as an image.

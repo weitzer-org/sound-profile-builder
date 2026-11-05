@@ -62,12 +62,19 @@ def kid(key):
 
 
 def keyring(current_hex, next_hex=None):
-    """{kid: key_bytes} for DEVICE_JOB_KEY and the optional DEVICE_JOB_KEY_NEXT."""
-    out = {}
-    for h in (current_hex, next_hex):
-        if h:
-            k = parse_key(h)
-            out[kid(k)] = k
+    """{kid: key_bytes} for DEVICE_JOB_KEY and the optional DEVICE_JOB_KEY_NEXT.
+
+    Same rules as Go's NewKeyring: the current key is required; a NEXT equal
+    to it is ignored; a different NEXT with the same kid is refused."""
+    if not current_hex or not current_hex.strip():
+        raise ValueError("DEVICE_JOB_KEY must be set; DEVICE_JOB_KEY_NEXT requires a valid current key")
+    cur = parse_key(current_hex)
+    out = {kid(cur): cur}
+    if next_hex and next_hex.strip():
+        nxt = parse_key(next_hex)
+        if kid(nxt) in out and nxt != cur:
+            raise ValueError("DEVICE_JOB_KEY_NEXT: its key id collides with DEVICE_JOB_KEY's; generate another key")
+        out.setdefault(kid(nxt), nxt)
     return out
 
 
