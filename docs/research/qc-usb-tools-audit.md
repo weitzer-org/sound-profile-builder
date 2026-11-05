@@ -389,6 +389,30 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 
 The protocol docs that make B possible are the reverse-engineered `.proto` files and docs under MIT (pyquadcortex) and Apache-2.0 (ampersand). cortex's `spec/` is CC-BY-SA-4.0, so text derived from it would have to carry that licence.
 
+### 1.8 Your unit: CorOS 4.1 → 4.1.1 (added 2026-11-05)
+
+You reported your unit is on CorOS 4.1 and is about to go to 4.1.1. Most of what follows is from source, and I couldn't check Neural DSP's release notes from here.
+
+- **No reviewed repo records a test on 4.1.1.** I ran `git grep '4\.1\.1'` over all five repos, excluding lockfiles and XML. The only hits are a comment in ampersand (`include/qc/session.hpp:85-92`, `tests/test_session.cpp:109-112`). Its author says the 4.1.1 on-device UI compares the client version a tool announces against the constant `"4.1.0"`, and logs anything lower as "Cortex-Control version is incompatible". They cite their own disassembly ("Beleg 144"). That is **UNVERIFIED** here. Their note also says the announced version made no measured difference to meter behaviour.
+- **qc-mcp:**
+  - It maps 4.1.1 to its 4.1 schema (`protocol.py:78-94`; `(4,1,1) >= (4,1)`), and it announces "4.1.1" back. On ampersand's account, that passes the version check.
+  - It will run, but on firmware nobody has tested it against.
+  - §1.6 step 0 still lets 4.1.x through. Treat the read-only session (step 7) as the schema-compatibility check: `get_current_preset` must decode a preset whose blocks and values match the unit's screen before any write.
+- **pyquadcortex:**
+  - Its profiles match the exact firmware string. `QuadCortex41.MEASURED_ON = ("4.1.0",)` (`profiles.py:44`), so **a 4.1.1 unit raises `UnsupportedDevice` at connect** (`profiles.py:137-173`). The exact string the unit reports is UNVERIFIED; it is assumed to be "4.1.1".
+  - To use it you'd pass `connect(profile=QuadCortex41, support=Support.EXPERIMENTAL)` (`session.py:155-161`). That is the library telling you this firmware is unmeasured.
+  - It also announces `CC_VERSION = "4.0.1"` (`client.py:550`; `QuadCortex41` doesn't override it). That is below the `"4.1.0"` threshold in ampersand's note. The web editor recorded `GenericError VERSION_IS_OLDER` for exactly that announcement on 4.1.0 (its `docs/protocol-notes.md:27`). Yet pyquadcortex's contributed 4.1.0 hardware run passed. So the practical effect is probably a logged error, not a refusal. That is **inference, UNVERIFIED**.
+  - This affects P4. A pyquadcortex-based push tool on 4.1.1 would run in EXPERIMENTAL mode, and might need a client-side `CC_VERSION` override until pyquadcortex adds a 4.1.1 profile.
+- **Order of operations:**
+  1. Take a Cortex Control local backup before the firmware update anyway; that's standard practice independent of these tools.
+  2. Upgrade through Neural DSP's normal path; none of these tools is involved in that.
+  3. Trial tools afterwards, on 4.1.1, read-only first.
+- **Our catalog.**
+  - `qc_catalog.json` is labelled CorOS 4.1 and was taken from qc-mcp's bundled snapshot, not from your unit.
+  - After the upgrade, a useful and low-risk **first read** is to dump ModelRepo from your own unit and run `go run ./cmd/import_catalog -in <dump> -coros 4.1.1 -diff`, per CLAUDE.md. That shows whether 4.1.1 changed any models or params.
+  - qc-mcp's `tools/dump_model_repo.py` does this with a handshake, a heartbeat and one `ModelRepo` READ. Run it as `QC_BRIDGE=0 … dump_model_repo.py -o <scratch path>`. It defaults to bridge mode (`:31`), and without `-o` it **overwrites the repo's bundled XML** (`:74-75`).
+  - Keep the raw XML out of our repo.
+
 ---
 
 ## Part 2: Development plan for QC-2 Modeler
