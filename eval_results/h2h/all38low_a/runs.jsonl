@@ -1,0 +1,1 @@
+{"scenario":"ALL38","query":"01_SRV_Clean","rep":1,"success":true,"output_file":"eval_results/h2h/all38low_a/ALL38/rep1/01_SRV_Clean.html","latency_sec":47.890206719,"integrity_ok":true,"calls_file":"eval_results/h2h/all38low_a/ALL38/rep1/01_SRV_Clean.calls.json"}
