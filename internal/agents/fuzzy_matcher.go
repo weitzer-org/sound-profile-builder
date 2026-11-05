@@ -415,7 +415,7 @@ func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 		if isCap && !f.AllowFactoryCaptures {
 			continue
 		}
-		if f.Plugins.Active && !f.Plugins.ownsAny(pluginOnlyBlocks[name]) && isPluginOnly(name) {
+		if f.Plugins.Active && isPluginOnly(name) && !f.Plugins.ownsAny(pluginOnlyBlocks[name]) {
 			continue
 		}
 		effective[name] = isCap
