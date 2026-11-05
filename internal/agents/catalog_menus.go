@@ -31,7 +31,8 @@ type catalogAddition struct {
 	Gated   bool   // a plugin device
 }
 
-// catalogDictionaryType maps the catalog's gear categories to coros_map.json types.
+// catalogDictionaryType maps the catalog's gear categories to coros_map.json types. Its
+// keys are also the categories whose models are fuzzy-snap targets (addCatalogBlocks).
 var catalogDictionaryType = map[string]string{
 	"Guitar Amplifier":   "amp",
 	"Bass Amplifier":     "amp",

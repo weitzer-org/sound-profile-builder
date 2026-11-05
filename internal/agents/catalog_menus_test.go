@@ -24,6 +24,9 @@ func menuBucketOf(menu, name string) string {
 	return ""
 }
 
+// TestLibrarianDictionary_CatalogAdditions checks the device-catalog entries added to the
+// Librarian's Dictionary: none duplicates coros_map.json, none carries a tonal_archetype,
+// unowned plugin devices are left out, and the output is the same on every call.
 func TestLibrarianDictionary_CatalogAdditions(t *testing.T) {
 	covered := map[string]bool{}
 	for _, rec := range CorosMapRecords() {
@@ -92,6 +95,9 @@ func TestLibrarianDictionary_CatalogAdditions(t *testing.T) {
 	}
 }
 
+// TestGetCategorizedAmplifiers_Catalog checks where catalog-only amps land in the amp menu
+// (Unclassified for guitar, Bass Amps for bass), that plugin gating applies to them, and
+// that the menu is sorted and identical across calls.
 func TestGetCategorizedAmplifiers_Catalog(t *testing.T) {
 	const unclassified = "UNCLASSIFIED (NO TONAL LABEL YET)"
 	menu := GetCategorizedAmplifiers(true, true, map[string]bool{"Cory Wong": true, "John Mayer": true})

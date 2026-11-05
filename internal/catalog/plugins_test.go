@@ -23,6 +23,8 @@ func TestPluginNamesCoverCatalog(t *testing.T) {
 	}
 }
 
+// TestRequiredPlugin checks the three cases: a non-plugin model, a plugin model with a
+// known plugin_id, and one whose plugin_id the table doesn't know (gated, no name).
 func TestRequiredPlugin(t *testing.T) {
 	for _, tc := range []struct {
 		m         Model
@@ -40,6 +42,8 @@ func TestRequiredPlugin(t *testing.T) {
 	}
 }
 
+// TestCanonicalPluginName checks that plugin names match ignoring case and surrounding
+// space, and that an unknown name is rejected.
 func TestCanonicalPluginName(t *testing.T) {
 	for in, want := range map[string]string{"cory wong": "Cory Wong", " John Mayer ": "John Mayer", "SLO-100": "SLO-100"} {
 		if got, ok := CanonicalPluginName(in); !ok || got != want {

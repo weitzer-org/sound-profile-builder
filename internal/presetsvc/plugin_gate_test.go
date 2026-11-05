@@ -72,6 +72,7 @@ func TestPluginGateFlagsUnownedDevices(t *testing.T) {
 	}
 }
 
+// waitComplete waits for a run to finish and fails the test unless it completed.
 func waitComplete(t *testing.T, h *harness, runID string) *runs.RunRecord {
 	t.Helper()
 	rec, err := h.svc.WaitRun(context.Background(), runID, 10*time.Second)

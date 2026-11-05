@@ -508,6 +508,9 @@ func TestSnapToClosestBlock_TiesAreDeterministic(t *testing.T) {
 	}
 }
 
+// TestPluginGate covers PluginGate construction from constraints: no allow_paid_plugins key
+// means no filtering, available_plugins matches ignoring case, allow_paid_plugins=false owns
+// nothing, and a catalog addition with an unknown plugin_id is never offered.
 func TestPluginGate(t *testing.T) {
 	inactive := PluginGateFromConstraints(map[string]interface{}{})
 	if inactive.Active || !inactive.Allows("Plini") {

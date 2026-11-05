@@ -56,16 +56,6 @@ var exactOnlyBlocks = make(map[string]string)
 // owned. See excludeUnownedPlugins.
 var pluginOnlyBlocks = make(map[string][]string)
 
-// catalogGearCategories are the device-catalog categories whose models join the
-// fuzzy-snap pool: the same amp/cab/drive families gearBlockTypes checks. Every other
-// catalog category is exact-match only (see exactOnlyBlocks).
-var catalogGearCategories = map[string]bool{
-	"Guitar Amplifier": true, "Bass Amplifier": true,
-	"Cabsim Guitar (M)": true, "Cabsim Guitar (ST)": true,
-	"Cabsim Bass (M)": true, "Cabsim Bass (ST)": true,
-	"Guitar Overdrive": true, "Bass Overdrive": true,
-}
-
 // catalogCaptureCategory is the catalog's "Neural Capture" category. Its models are the
 // generic capture block slots, not real gear; Neural Captures themselves come only from
 // coros_map.json and user_captures.json.
@@ -360,7 +350,10 @@ func addCatalogBlocks() {
 				continue
 			}
 			validNativeBlocks[name] = false
-			if catalogGearCategories[m.Category] {
+			// The gear categories (catalogDictionaryType's keys: the amp/cab/drive
+			// families gearBlockTypes checks) join the fuzzy-snap pool. Every other
+			// catalog category is exact-match only (see exactOnlyBlocks).
+			if _, gear := catalogDictionaryType[m.Category]; gear {
 				validBlocksRunes[name] = []rune(strings.ToLower(name))
 			} else {
 				exactOnlyBlocks[strings.ToLower(name)] = name
