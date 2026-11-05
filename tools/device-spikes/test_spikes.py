@@ -594,6 +594,35 @@ class G4G6Tests(FakeDeviceCase):
         self.assertEqual(code, sc.EXIT_REFUSED, out)
 
 
+class GainShapeTests(unittest.TestCase):
+    def setUp(self):
+        import g6_scenes
+        self.g6 = g6_scenes
+
+    def g(self, vals):
+        return {"scene_mode": True, "values": vals}
+
+    def test_per_scene_list(self):
+        v = [0.2, 0.8] + [0.2] * 6
+        for scene in (0, 1):
+            self.assertEqual(self.g6.gain_shape(self.g(v), scene), "per_scene_list")
+
+    def test_active_only_replicated_across_eight(self):
+        # The case the HIGH finding described: eight identical floats equal to the active scene's value.
+        self.assertEqual(self.g6.gain_shape(self.g([0.2] * 8), 0), "active_only")
+        self.assertEqual(self.g6.gain_shape(self.g([0.8] * 8), 1), "active_only")
+
+    def test_wrong_values_fit_neither(self):
+        self.assertIsNone(self.g6.gain_shape(self.g([0.8] * 8), 0))   # scene A still showing B's value
+        self.assertIsNone(self.g6.gain_shape(self.g([0.5] * 8), 1))
+        self.assertIsNone(self.g6.gain_shape(self.g(["x"] * 8), 0))
+        self.assertFalse(self.g6.gain_matches(self.g([0.5] * 8), 0))
+
+    def test_nothing_to_check(self):
+        self.assertIsNone(self.g6.gain_matches(None, 0))
+        self.assertIsNone(self.g6.gain_matches(self.g([]), 0))
+
+
 class G2Tests(FakeDeviceCase):
     def test_a_passes_twice(self):
         bp = self.blank_preset("p")

@@ -57,15 +57,30 @@ def scene_state(qc, mcp, want_scene: int) -> dict:
     return out
 
 
-def gain_matches(g: dict | None, scene: int) -> bool | None:
-    """Does the read-back GAIN fit EITHER reporting shape: all scenes listed, or only the active one?"""
+def gain_shape(g: dict | None, scene: int) -> str | None:
+    """Which reporting shape the read-back GAIN fits, or None if neither.
+
+    "per_scene_list": values[0] is Scene A and values[1] is Scene B (what G1 saw for scene params).
+    "active_only":    the active scene's value, whatever the list length (the device may replicate it).
+    Both are evaluated independently; a list of 8 floats must not hide the second shape.
+    """
     if not g or not g["values"]:
         return None
-    want = GAIN_A if scene == 0 else GAIN_B
     vals = g["values"]
-    if len(vals) >= 2 and all(isinstance(v, float) for v in vals[:2]):
-        return abs(vals[0] - GAIN_A) <= TOL and abs(vals[1] - GAIN_B) <= TOL      # shape 1: one entry per scene
-    return isinstance(vals[0], float) and abs(vals[0] - want) <= TOL            # shape 2: active scene only
+    want = GAIN_A if scene == 0 else GAIN_B
+    if (len(vals) >= 2 and all(isinstance(v, float) for v in vals[:2])
+            and abs(vals[0] - GAIN_A) <= TOL and abs(vals[1] - GAIN_B) <= TOL):
+        return "per_scene_list"
+    if isinstance(vals[0], float) and abs(vals[0] - want) <= TOL:
+        return "active_only"
+    return None
+
+
+def gain_matches(g: dict | None, scene: int) -> bool | None:
+    """True if the read-back GAIN fits either shape; None if there was nothing to check."""
+    if not g or not g["values"]:
+        return None
+    return gain_shape(g, scene) is not None
 
 
 def ask(prompt: str) -> str:
@@ -109,6 +124,7 @@ def main() -> int:
             name = "AB"[scene]
             sc.say(f"\nStep 3: switching to Scene {name}...")
             s = scene_state(qc, mcp, scene)
+            s["gain_shape"] = gain_shape(s["gain"], scene)
             s["gain_fits_expectation"] = gain_matches(s["gain"], scene)
             sc.say(f"  device confirms scene: {s['device_confirms']}")
             sc.say(f"  Myth Drive GAIN as read back: {s['gain']}  -> fits expectation: {s['gain_fits_expectation']}")

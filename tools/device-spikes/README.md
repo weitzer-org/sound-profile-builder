@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 57 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 61 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -76,7 +76,7 @@ On the unit, select **2A** and let it load without editing. Then:
 
 It refuses if the unit doesn't have 2A open, if the preset has unsaved edits, or if the name differs. Paste the console output; it prints, per block, the device's array length **N**, the length under qc-mcp's reading of the XML (**X**), and under our catalog (**O**), and a per-position table for any block where they differ (`--all` for every block). The JSON file in `spike-results` holds the raw preset bytes; keep it, I may ask for it.
 
-How to read it: `N` is the number of readable parameter slots. qc-mcp documents that the bypass control sits at index N and never appears in a read. `O_COUNT_MATCHES` on the cab means the device's count agrees with our clone expansion. Counts alone are necessary, not sufficient, so the name table also has to line up with what the unit's screen shows for that block.
+How to read it: `N` is the number of readable parameter slots. On the first hardware run every block's N was the XML's full parameter list (clones resolved, hidden params included, called EFF) plus one trailing slot, so the verdict is `EFF_PLUS_ONE` (or `EFF_EXACT`). On a cab, either means the device's count agrees with our clone expansion; `UNEXPANDED_COUNT` would mean it follows qc-mcp's unexpanded list. Counts alone are necessary, not sufficient, so the name table also has to line up with what the unit's screen shows for that block.
 
 ### G2: session behaviour
 
