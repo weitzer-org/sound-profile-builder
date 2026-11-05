@@ -154,6 +154,11 @@ func TestLibrarianBlockNames(t *testing.T) {
 	if got != "Spring (ST)|Brit 2203" {
 		t.Errorf("free-text scan = %q", got)
 	}
+	// A shorter name whose first occurrence sits inside a longer one is still found later.
+	got = strings.Join(LibrarianBlockNames("Try Plate Lush on leads; for rhythm a plain Plate."), "|")
+	if got != "Plate Lush|Plate" {
+		t.Errorf("shadowed first occurrence: %q, want Plate Lush|Plate", got)
+	}
 	if tokenIndex("Green 8080", "Green 808") != -1 || tokenIndex("a Green 808.", "Green 808") != 2 {
 		t.Error("tokenIndex must match whole tokens only")
 	}

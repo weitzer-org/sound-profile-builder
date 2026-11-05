@@ -417,6 +417,11 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 					{Name: "Mic 2", Value: "Ribbon 121"},
 					{Name: "MIC 1 LEVEL", Value: "0 dB"},
 				}}, // only one mic's level -- incomplete
+				{ID: "7", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "MIC 1 POSITION", Value: "2"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // per-mic controls but no Mic 1/Mic 2 microphone choice -- incomplete
 			},
 		},
 	}
@@ -441,6 +446,9 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	}
 	if !strings.Contains(blocks[5].Rationale, "⚠️") {
 		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
+	}
+	if !strings.Contains(blocks[6].Rationale, "⚠️") {
+		t.Errorf("expected a cab with MIC n LEVEL/POSITION but no Mic 1/Mic 2 choice to be flagged, got %q", blocks[6].Rationale)
 	}
 }
 

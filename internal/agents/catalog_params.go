@@ -482,7 +482,9 @@ func catalogNamesIn(text string) []string {
 		if name == "" {
 			continue
 		}
-		if i := tokenIndex(text, name); i >= 0 {
+		// Every occurrence, not just the first: the first one may sit inside a longer name
+		// ("Plate" in "Plate Lush") while a later one stands alone.
+		for _, i := range tokenIndices(text, name) {
 			hits = append(hits, hit{name, i})
 		}
 	}
@@ -496,25 +498,30 @@ func catalogNamesIn(text string) []string {
 		return hits[i].name < hits[j].name
 	})
 	var out []string
+	seen := map[string]bool{}
 	coveredUntil := -1
 	for _, h := range hits {
 		if h.at < coveredUntil {
 			continue // inside a longer name already taken
 		}
-		out = append(out, h.name)
 		coveredUntil = h.at + len(h.name)
+		if !seen[h.name] {
+			seen[h.name] = true
+			out = append(out, h.name)
+		}
 	}
 	return out
 }
 
-// tokenIndex is containsAsToken's index form: where needle first appears in haystack as a
-// whole token (no letter or digit right before or after it), or -1.
-func tokenIndex(haystack, needle string) int {
+// tokenIndices returns every position where needle appears in haystack as a whole token
+// (no letter or digit right before or after it), in order.
+func tokenIndices(haystack, needle string) []int {
 	isWordChar := func(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
-	for start := 0; start <= len(haystack)-len(needle); {
+	var out []int
+	for start := 0; needle != "" && start <= len(haystack)-len(needle); {
 		idx := strings.Index(haystack[start:], needle)
 		if idx < 0 {
-			return -1
+			break
 		}
 		at, end := start+idx, start+idx+len(needle)
 		before, after := true, true
@@ -527,9 +534,17 @@ func tokenIndex(haystack, needle string) int {
 			after = !isWordChar(r)
 		}
 		if before && after {
-			return at
+			out = append(out, at)
 		}
 		start = at + 1
+	}
+	return out
+}
+
+// tokenIndex is the first of tokenIndices, or -1.
+func tokenIndex(haystack, needle string) int {
+	if hits := tokenIndices(haystack, needle); len(hits) > 0 {
+		return hits[0]
 	}
 	return -1
 }

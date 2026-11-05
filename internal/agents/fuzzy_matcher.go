@@ -699,6 +699,12 @@ func appendRationaleNote(block *storage.EffectBlock, note string) {
 
 const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic parameters (Mic 1 and Mic 2, plus MIC 1 LEVEL/MIC 2 LEVEL or Blend)."
 
+// micSlotControlPattern matches the device's per-mic cab controls (MIC 1 LEVEL, MIC 2
+// POSITION, ...) in FlagIncompleteCabinetBlocks's normalized form (lower case, no spaces).
+var micSlotControlPattern = regexp.MustCompile(`^mic[12](level|pan|balance|distance|position|gridmode)$`)
+
+func isMicSlotControl(norm string) bool { return micSlotControlPattern.MatchString(norm) }
+
 // FlagIncompleteCabinetBlocks flags any Cabinet-type block missing the two-mic data
 // Architect Rule 12 requires. Found as a live, real regression during Tier 1 development --
 // the Architect silently dropped the mic parameters from a Cabinet block on one golden-set
@@ -712,7 +718,10 @@ const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected 
 // Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v5's device convention,
 // where Blend (a control the device doesn't have) is replaced by each mic's own level:
 // Mic 1, Mic 2, MIC 1 LEVEL and MIC 2 LEVEL. Names are compared lowercased with spaces
-// removed, by substring, so "MIC 1 LEVEL" also counts as mentioning mic 1.
+// removed, by substring. The v4 form is unchanged (any name mentioning mic 1, any naming
+// mic 2, and Blend -- v4's Mic n fields carry the Transducer's mic-and-position text). In the
+// device form the microphone choice must be its own field: a per-mic control such as
+// "MIC 1 LEVEL" or "MIC 1 POSITION" doesn't stand in for it.
 // Returns the number of Cabinet blocks flagged incomplete, for callers that want a quality
 // signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing callers that
 // ignore the return value are unaffected.
@@ -727,16 +736,21 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 			if blockType != "cab" && blockType != "cabinet" {
 				continue
 			}
-			var mic1, mic2, blend, mic1Level, mic2Level bool
+			var mic1, mic2, mic1Choice, mic2Choice, blend, mic1Level, mic2Level bool
 			for _, p := range blocks[i].Parameters {
 				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
 				mic1 = mic1 || strings.Contains(norm, "mic1")
 				mic2 = mic2 || strings.Contains(norm, "mic2")
+				// A per-mic device control ("MIC 1 LEVEL") isn't the microphone choice itself.
+				mic1Choice = mic1Choice || (strings.Contains(norm, "mic1") && !isMicSlotControl(norm))
+				mic2Choice = mic2Choice || (strings.Contains(norm, "mic2") && !isMicSlotControl(norm))
 				blend = blend || strings.Contains(norm, "blend")
 				mic1Level = mic1Level || strings.Contains(norm, "mic1level")
 				mic2Level = mic2Level || strings.Contains(norm, "mic2level")
 			}
-			if !(mic1 && mic2 && (blend || (mic1Level && mic2Level))) {
+			v4Form := blend && mic1 && mic2
+			deviceForm := mic1Level && mic2Level && mic1Choice && mic2Choice
+			if !v4Form && !deviceForm {
 				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
 				flagged++
 			}
