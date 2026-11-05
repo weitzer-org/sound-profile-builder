@@ -116,12 +116,11 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 
 	allowFactoryCapturesForFlag := true
 	allowUserCapturesForFlag := true
-	pluginConstraints := map[string]interface{}{}
+	var pluginGate agents.PluginGate // inactive (no plugin filtering) without a config
 	if cfg := s.config(); cfg != nil {
 		allowFactoryCapturesForFlag = cfg.AllowFactoryCaptures
 		allowUserCapturesForFlag = cfg.AllowUserCaptures
-		pluginConstraints["allow_paid_plugins"] = cfg.AllowPaidPlugins
-		pluginConstraints["available_plugins"] = cfg.AvailablePlugins
+		pluginGate = agents.NewPluginGate(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
 
 	// Run the chat refinement loop
@@ -156,11 +155,22 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		return
 	}
 
-	effectiveBlocksForFlag := agents.ExcludeUnownedPluginBlocks(agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag), pluginConstraints)
+	effectiveBlocksForFlag := agents.BuildEffectiveValidBlocksFor(agents.ValidBlockFilter{
+		AllowFactoryCaptures: allowFactoryCapturesForFlag,
+		AllowUserCaptures:    allowUserCapturesForFlag,
+		Plugins:              pluginGate,
+	})
 	agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
 	agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
+	// RefineChat corrected the rendered tables against the unfiltered block set (it isn't
+	// told which plugins the user owns). Re-apply the correction with this run's set so the
+	// saved HTML flags the same blocks the structured payload does, e.g. an unowned plugin
+	// device. Safe to repeat: capture labels are re-derived and flags aren't doubled.
+	for guitar, html := range archResp.FinalHTMLPayload {
+		archResp.FinalHTMLPayload[guitar] = agents.ApplyFuzzyCorrection(html, effectiveBlocksForFlag)
+	}
 
 	// Append user message
 	p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})

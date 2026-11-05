@@ -99,6 +99,18 @@ set it will cause the next run to needlessly re-research that entry.
   a non-capture `coros_map.json` entry's `coros_equivalent` isn't a real model (or mono/stereo
   family) name. Neural Captures aren't in it. Bounds the device gives symbolically (e.g.
   `MAX_CABSIM_DB`) are left unknown, not guessed.
+  It also feeds the pipeline directly:
+  - Every catalog model and family name is a valid block (`GetValidNativeBlocks`). Only amp/cab/drive
+    names are fuzzy-snap targets; other categories and every plugin model are exact-match only.
+  - Catalog amps/cabs/drives that no `coros_map.json` entry names are added to the Librarian's
+    Dictionary and amp menu at runtime (`internal/agents/catalog_menus.go`), keyed by family name
+    with the device's `based_on` text and no `tonal_archetype`. Uncovered guitar amps sit in the
+    amp menu's "Unclassified (no tonal label yet)" bucket. Don't bulk-copy them into
+    `coros_map.json`; add a real entry (and run `cmd/enrich_captures`) when one is worth it, and the
+    runtime copy drops out by itself.
+  - Plugin gating uses the catalog's `plugin_id` through `internal/catalog/plugins.go`'s table
+    (short names as in `config.json`'s `available_plugins`). A new `plugin_id` after a CorOS update
+    fails `TestPluginNamesCoverCatalog`; until it's added, that plugin's devices are never offered.
 
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,

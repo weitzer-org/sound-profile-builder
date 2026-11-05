@@ -81,3 +81,70 @@ func TestCorosMapPluginEntriesUsePluginModels(t *testing.T) {
 		t.Errorf("coros_map.json entry %q: required_plugin set, but the block is not a plugin model in the device catalog", b)
 	}
 }
+
+// TestPluginTableAgreesWithCorosMap: catalog.PluginName (keyed by the device's plugin_id)
+// and coros_map.json's hand-written required_plugin must name the same plugin for the
+// same model, or one of the two gating paths would check ownership of the wrong plugin.
+// An entry that maps to a plugin model must carry required_plugin at all.
+func TestPluginTableAgreesWithCorosMap(t *testing.T) {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		plugin, _ := rec["required_plugin"].(string)
+		equiv, _ := rec["coros_equivalent"].(string)
+		if equiv == "" {
+			continue
+		}
+		models := cat.Family(catalog.FamilyName(equiv))
+		if m, ok := cat.Lookup(equiv); ok {
+			models = []*catalog.Model{m}
+		}
+		for _, m := range models {
+			if plugin == "" {
+				// The reverse direction: an entry pointing at a plugin model must say
+				// so, or filterEmbeddedCorosMap would offer it to every user.
+				if m.PluginID != "" {
+					bad = append(bad, gear+": no required_plugin, but "+m.Name+" is a plugin model (plugin_id "+m.PluginID+")")
+				}
+				continue
+			}
+			if name, _ := m.RequiredPlugin(); name != plugin {
+				bad = append(bad, gear+": required_plugin "+plugin+", catalog plugin_id "+m.PluginID+" is "+name)
+			}
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Error(b)
+	}
+}
+
+// TestCaptureNamesAreNotCatalogModels: a Neural Capture is not a block model, so no
+// coros_map.json capture entry or user capture may use a name the device catalog lists as
+// a model. If one did, the valid-block set would have to call the same name both a
+// capture and a native block, and the capture flag would win silently.
+func TestCaptureNamesAreNotCatalogModels(t *testing.T) {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		equiv, _ := rec["coros_equivalent"].(string)
+		if isCap, _ := rec["is_capture"].(bool); isCap && cat.IsKnownName(equiv) {
+			bad = append(bad, "coros_map.json "+gear+" -> "+equiv)
+		}
+	}
+	for _, c := range GetUserCaptures() {
+		if cat.IsKnownName(c.Name) {
+			bad = append(bad, "user_captures.json "+c.Name)
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Errorf("%s: marked as a capture, but the device catalog lists it as a block model", b)
+	}
+}
