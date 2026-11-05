@@ -62,6 +62,17 @@ func (g PluginGate) Allows(plugin string) bool {
 	return g.Owned[plugin]
 }
 
+// ownsAny reports whether the user owns at least one of plugins. An empty name (a
+// plugin_id the plugin table doesn't know) is never owned.
+func (g PluginGate) ownsAny(plugins []string) bool {
+	for _, p := range plugins {
+		if p != "" && g.Owned[p] {
+			return true
+		}
+	}
+	return false
+}
+
 // allowsModel applies the gate to a catalog model. A plugin model whose plugin_id isn't
 // in the plugin table is refused even when the gate is inactive: nothing says which
 // licence it needs, so it is never offered.

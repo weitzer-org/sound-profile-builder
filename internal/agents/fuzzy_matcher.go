@@ -46,11 +46,12 @@ var snapPool []snapCandidate
 //     targets: "Double RVB" written on an amp block would snap to the "Doubler" utility.
 var exactOnlyBlocks = make(map[string]string)
 
-// pluginBlocks maps every plugin-device block name to the plugin it needs (by
-// catalog.PluginNames spelling), so BuildEffectiveValidBlocksFor can drop the ones the
-// user doesn't own. An empty value means a catalog plugin_id the plugin table doesn't
-// know: never treated as owned.
-var pluginBlocks = make(map[string]string)
+// pluginOnlyBlocks maps every plugin-device block name to the plugins that unlock it
+// (by catalog.PluginNames spelling): the required_plugin of each coros_map.json entry
+// producing it, or a catalog model's plugin. Owning any one of them is enough. An empty
+// plugin name stands for a catalog plugin_id the plugin table doesn't know, and is never
+// owned. See excludeUnownedPlugins.
+var pluginOnlyBlocks = make(map[string][]string)
 
 // catalogGearCategories are the device-catalog categories whose models join the
 // fuzzy-snap pool: the same amp/cab/drive families gearBlockTypes checks. Every other
@@ -287,7 +288,7 @@ func GetValidNativeBlocks() map[string]bool {
 		var corosData map[string]map[string]interface{}
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
 			ungated := make(map[string]bool)
-			gatedBy := make(map[string]string)
+			gatedBy := make(map[string][]string)
 			for _, props := range corosData {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
@@ -296,7 +297,7 @@ func GetValidNativeBlocks() map[string]bool {
 					if plugin, _ := props["required_plugin"].(string); plugin == "" {
 						ungated[equiv] = true
 					} else {
-						gatedBy[equiv] = plugin
+						gatedBy[equiv] = append(gatedBy[equiv], plugin)
 					}
 				}
 			}
@@ -304,7 +305,7 @@ func GetValidNativeBlocks() map[string]bool {
 				if !ungated[equiv] {
 					delete(validBlocksRunes, equiv)
 					exactOnlyBlocks[strings.ToLower(equiv)] = equiv
-					pluginBlocks[equiv] = gatedBy[equiv]
+					pluginOnlyBlocks[equiv] = gatedBy[equiv]
 				}
 			}
 		}
@@ -349,7 +350,7 @@ func addCatalogBlocks() {
 				validNativeBlocks[name] = false
 				delete(validBlocksRunes, name)
 				exactOnlyBlocks[strings.ToLower(name)] = name
-				pluginBlocks[name] = plugin
+				pluginOnlyBlocks[name] = []string{plugin}
 				continue
 			}
 			if _, exists := validNativeBlocks[name]; exists {
@@ -411,12 +412,36 @@ func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 		if isCap && !f.AllowFactoryCaptures {
 			continue
 		}
-		if plugin, gated := pluginBlocks[name]; gated && f.Plugins.Active && (plugin == "" || !f.Plugins.Owned[plugin]) {
-			continue
-		}
 		effective[name] = isCap
 	}
-	return effective
+	return excludeUnownedPlugins(effective, f.Plugins)
+}
+
+// ExcludeUnownedPluginBlocks returns a copy of validBlocks without the plugin-device
+// names whose plugin the user doesn't own, reading the gate from a pipeline constraints
+// map (see PluginGateFromConstraints): with no "allow_paid_plugins" key nothing is removed
+// (older callers, tests); false removes every plugin device; true keeps the devices of
+// plugins listed in "available_plugins". A name that an ungated coros_map.json entry also
+// produces is not a plugin device and is never removed.
+func ExcludeUnownedPluginBlocks(validBlocks map[string]bool, constraints map[string]interface{}) map[string]bool {
+	return excludeUnownedPlugins(validBlocks, PluginGateFromConstraints(constraints))
+}
+
+// excludeUnownedPlugins applies a PluginGate to a valid-block set. An inactive gate
+// returns validBlocks unchanged.
+func excludeUnownedPlugins(validBlocks map[string]bool, g PluginGate) map[string]bool {
+	if !g.Active {
+		return validBlocks
+	}
+	GetValidNativeBlocks() // populates pluginOnlyBlocks
+	out := make(map[string]bool, len(validBlocks))
+	for name, isCap := range validBlocks {
+		if plugins, gated := pluginOnlyBlocks[name]; gated && !g.ownsAny(plugins) {
+			continue
+		}
+		out[name] = isCap
+	}
+	return out
 }
 
 // ApplyFuzzyCorrection iterates over HTML table rows and corrects block names.

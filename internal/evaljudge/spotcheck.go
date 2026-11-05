@@ -89,7 +89,9 @@ func NewIndex() *Index {
 	for _, k := range keys {
 		rec := Record{Source: "coros_map.json", Key: k, Data: coros[k]}
 		add(k, rec)
-		if eq, _ := coros[k]["coros_equivalent"].(string); eq != "" {
+		// Many entries (e.g. plugin devices) use their own block name as the key; adding the
+		// record under both would list it twice for that name.
+		if eq, _ := coros[k]["coros_equivalent"].(string); eq != "" && normText(eq) != normText(k) {
 			add(eq, rec)
 		}
 	}
