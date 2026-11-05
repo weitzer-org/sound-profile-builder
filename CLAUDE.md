@@ -126,6 +126,15 @@ set it will cause the next run to needlessly re-research that entry.
     nor a library entry and not already flagged unverified, i.e. an invented effect name such as
     "Plate Reverb" (the unverified check only covers gear categories). The input block's gate, the
     output block and the global EQ are real but aren't grid blocks, so they're exempt.
+  - **Deliberate defaults.** A catalog-aware Architect lists only the controls it changes in
+    `parameters` and names the ones it deliberately leaves at the device default in the block's
+    `kept_defaults` (`storage.EffectBlock.KeptDefaults`; required in its response schema only).
+    In a preset that uses the list, `UnconsideredParams` counts and notes any control every model
+    behind the block name has but the block neither sets nor keeps. Older output has no list and
+    isn't checked for this, so it scores 0 by construction.
+  - **Which prompts get the catalog features** is decided by the prompt's own text (it contains
+    `# Device Block Parameters`, `promptUsesCatalogParams`), not its version number, so a prompt
+    without that section gets exactly the context and schema it was written for.
   - **Don't guess display scales.** The check skips pans (L/R labels), unitless 0..1 floats and symbolic
     bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
     as the catalog gives them, which matches how presets already write them (not verified on a device).

@@ -322,17 +322,65 @@ func TestCatalogCheckOnV4StyleVsV5StylePreset(t *testing.T) {
 	}
 
 	v5 := catalogCheckFixture(
-		storage.EffectBlock{Type: "Noise Gate", Model: "Adaptive Gate", Parameters: []storage.BlockParameter{param("NOISE REDUCTION", "30 %")}},
-		storage.EffectBlock{Type: "Drive", Model: "Green 808", Parameters: []storage.BlockParameter{param("Bypass", "Off"), param("OVERDRIVE", "2.0"), param("TONE", "6.0"), param("LEVEL", "7.0")}},
-		storage.EffectBlock{Type: "Drive", Model: "Rodent Drive", Parameters: []storage.BlockParameter{param("DISTORTION", "3.0"), param("FILTER", "5.5"), param("VOLUME", "6.0")}},
-		storage.EffectBlock{Type: "Amplifier", Model: "US DLX 65 Reissue", Parameters: []storage.BlockParameter{param("VOLUME", "4.5"), param("TREBLE", "7.0"), param("MODE", "Vibrato"), param("OUTPUT", "0.0 dB")}},
+		storage.EffectBlock{Type: "Noise Gate", Model: "Adaptive Gate", Parameters: []storage.BlockParameter{param("NOISE REDUCTION", "30 %")}, KeptDefaults: []string{}},
+		storage.EffectBlock{Type: "Drive", Model: "Green 808", Parameters: []storage.BlockParameter{param("Bypass", "Off"), param("OVERDRIVE", "2.0"), param("TONE", "6.0"), param("LEVEL", "7.0")}, KeptDefaults: []string{}},
+		storage.EffectBlock{Type: "Drive", Model: "Rodent Drive", Parameters: []storage.BlockParameter{param("DISTORTION", "3.0"), param("FILTER", "5.5"), param("VOLUME", "6.0")}, KeptDefaults: []string{}},
+		storage.EffectBlock{Type: "Amplifier", Model: "US DLX 65 Reissue", Parameters: []storage.BlockParameter{param("VOLUME", "4.5"), param("TREBLE", "7.0"), param("MODE", "Vibrato"), param("OUTPUT", "0.0 dB")},
+			KeptDefaults: []string{"INPUT", "BASS"}},
 		storage.EffectBlock{Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{param("Mic 1", "Dyn 57"), param("Mic 2", "Ribbon 121"),
 			param("MIC 1 POSITION", "2"), param("MIC 1 DISTANCE", "1"), param("MIC 1 LEVEL", "0 dB"), param("MIC 2 POSITION", "5"), param("MIC 2 DISTANCE", "3"), param("MIC 2 LEVEL", "-4 dB"),
-			param("HPF", "80 Hz"), param("LPF", "6500 Hz")}},
-		storage.EffectBlock{Type: "Delay", Model: "Circular Delay", Parameters: []storage.BlockParameter{param("DELAY TIME", "140 ms"), param("FEEDBACK", "10 %"), param("MIX", "18 %")}},
-		storage.EffectBlock{Type: "Reverb", Model: "Spring", Parameters: []storage.BlockParameter{param("Bypass", "Off"), param("DAMPING", "40 %"), param("MIX", "15 %")}},
+			param("HPF", "80 Hz"), param("LPF", "6500 Hz")}, KeptDefaults: []string{"MIC 1 GRID MODE", "MIC 2 GRID MODE", "OUTPUT VOLUME"}},
+		storage.EffectBlock{Type: "Delay", Model: "Circular Delay", Parameters: []storage.BlockParameter{param("DELAY TIME", "140 ms"), param("FEEDBACK", "10 %"), param("MIX", "18 %")},
+			KeptDefaults: []string{"TAP PRESET", "SYNC", "SYNC NOTE", "DIFFUSION", "HIGH PASS", "LOW PASS", "MOD RATE", "MOD DEPTH", "VINTAGE MODE", "TRAILS"}},
+		storage.EffectBlock{Type: "Reverb", Model: "Spring", Parameters: []storage.BlockParameter{param("Bypass", "Off"), param("DAMPING", "40 %"), param("MIX", "15 %")},
+			KeptDefaults: []string{"TONE", "BOING", "TRAILS"}},
 	)
 	if got := FlagCatalogParamMismatches(v5, valid); got.Defects() != 0 || got.CheckedBlocks != 7 {
 		t.Errorf("v5-style counts = %+v, want no defects on 7 checked blocks", got)
+	}
+}
+
+func TestKeptDefaultsCoverage(t *testing.T) {
+	valid := map[string]bool{"Green 808": false, "412 Brit 60B V30 95": false, "Spring": false}
+	g808 := func(params []storage.BlockParameter, kept []string) storage.EffectBlock {
+		return storage.EffectBlock{Type: "Drive", Model: "Green 808", Parameters: params, KeptDefaults: kept}
+	}
+	for _, tc := range []struct {
+		name   string
+		blocks []storage.EffectBlock
+		want   CatalogParamCounts
+		note   string
+	}{
+		{"every control set or kept", []storage.EffectBlock{g808([]storage.BlockParameter{param("OVERDRIVE", "6")}, []string{"TONE", "level"})},
+			CatalogParamCounts{CheckedBlocks: 1}, ""},
+		{"a control neither set nor kept", []storage.EffectBlock{g808([]storage.BlockParameter{param("OVERDRIVE", "6")}, []string{"TONE"})},
+			CatalogParamCounts{UnconsideredParams: 1, CheckedBlocks: 1}, "not set and not marked as kept at the device default: LEVEL."},
+		{"kept_defaults names a control the model lacks", []storage.EffectBlock{g808([]storage.BlockParameter{param("OVERDRIVE", "6")}, []string{"TONE", "LEVEL", "GAIN"})},
+			CatalogParamCounts{UnknownNames: 1, CheckedBlocks: 1}, "kept_defaults names GAIN, which the device's Green 808 doesn't have."},
+		{"no block uses the convention (v4 output): coverage isn't checked", []storage.EffectBlock{g808([]storage.BlockParameter{param("OVERDRIVE", "6")}, nil)},
+			CatalogParamCounts{CheckedBlocks: 1}, ""},
+		{"the convention is preset-wide: a block that omits the list is checked too", []storage.EffectBlock{
+			g808([]storage.BlockParameter{param("OVERDRIVE", "6")}, []string{"TONE", "LEVEL"}),
+			{Type: "Reverb", Model: "Spring", Parameters: []storage.BlockParameter{param("MIX", "20 %")}}},
+			CatalogParamCounts{UnconsideredParams: 4, CheckedBlocks: 2}, ""},
+		{"a family name doesn't require controls only one member has", []storage.EffectBlock{{Type: "Cabinet", Model: "412 Brit 60B V30 95",
+			Parameters: []storage.BlockParameter{param("Mic 1", "Dyn 57"), param("Mic 2", "Ribbon 121"), param("MIC 1 LEVEL", "0 dB"), param("MIC 2 LEVEL", "-3 dB")},
+			KeptDefaults: []string{"MIC 1 DISTANCE", "MIC 1 POSITION", "MIC 1 GRID MODE", "MIC 2 DISTANCE", "MIC 2 POSITION", "MIC 2 GRID MODE", "HPF", "LPF", "OUTPUT VOLUME"}}},
+			CatalogParamCounts{CheckedBlocks: 1}, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sp := catalogCheckFixture(tc.blocks...)
+			if got := FlagCatalogParamMismatches(sp, valid); got != tc.want {
+				t.Errorf("counts = %+v, want %+v", got, tc.want)
+			}
+			if tc.note != "" && !strings.Contains(sp.Guitars["Guitar"][0].Rationale, tc.note) {
+				t.Errorf("rationale %q lacks %q", sp.Guitars["Guitar"][0].Rationale, tc.note)
+			}
+		})
+	}
+	// The family's pan controls differ by member (PAN on mono, BALANCE on stereo).
+	cab := mustDeviceBlock(t, "412 Brit 60B V30 95")
+	if cab.byKey["MIC1PAN"].Required || cab.byKey["MIC1BALANCE"].Required || !cab.byKey["MIC1LEVEL"].Required {
+		t.Error("only controls every family member has should be required")
 	}
 }

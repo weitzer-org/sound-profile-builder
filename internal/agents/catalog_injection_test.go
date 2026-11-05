@@ -91,8 +91,13 @@ func architectRequestForPipeline(t *testing.T, agentConfig map[string]string) st
 	if architectBody == "" {
 		t.Fatal("no Architect request was captured")
 	}
+	lastArchitectRequestBody = architectBody
 	return requestPromptText(t, architectBody)
 }
+
+// lastArchitectRequestBody is the raw body of the last Architect request
+// architectRequestForPipeline captured (system prompt, contents and generation config).
+var lastArchitectRequestBody string
 
 func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
 	v5 := architectRequestForPipeline(t, map[string]string{"4_coros_librarian": "v2", "12_architect": "v5"})
@@ -112,10 +117,16 @@ func TestRunPipelineInjectsCatalogParamsForV5Only(t *testing.T) {
 			t.Errorf("v5 Architect context should not contain %q", unwanted)
 		}
 	}
+	if !strings.Contains(lastArchitectRequestBody, "kept_defaults") {
+		t.Error("v5 Architect request schema should carry kept_defaults")
+	}
 
 	for _, cfg := range []map[string]string{{"4_coros_librarian": "v2", "12_architect": "v4"}, nil} {
 		if got := architectRequestForPipeline(t, cfg); strings.Contains(got, "Device Block Parameters") || strings.Contains(got, "Device Effect Blocks") {
 			t.Errorf("Architect %v context must be unchanged (no catalog sections)", cfg)
+		}
+		if strings.Contains(lastArchitectRequestBody, "kept_defaults") {
+			t.Errorf("Architect %v request must not carry the kept_defaults schema field", cfg)
 		}
 	}
 }
@@ -191,10 +202,35 @@ func TestRefineArchitectVersion(t *testing.T) {
 			t.Errorf("refineArchitectVersion = %q, want %q", got, tc.want)
 		}
 	}
-	for v, want := range map[string]bool{"v5": true, "v12": true, "V6": true, "v4": false, "v1": false, "": false, "off": false, "v5_flash": false} {
-		if got := architectUsesCatalogParams(v); got != want {
-			t.Errorf("architectUsesCatalogParams(%q) = %v, want %v", v, got, want)
+	for v, want := range map[string]bool{"v5": true, "v4": false, "v3": false} {
+		prompt, err := LoadPrompt("12_architect", v)
+		if err != nil {
+			t.Fatalf("load %s: %v", v, err)
 		}
+		if got := promptUsesCatalogParams(prompt); got != want {
+			t.Errorf("promptUsesCatalogParams(12_architect %s) = %v, want %v", v, got, want)
+		}
+	}
+}
+
+// The kept_defaults field is only in the schema of a catalog-aware prompt, where it is
+// required; older prompts keep exactly their previous schema.
+func TestArchitectSchemaKeptDefaults(t *testing.T) {
+	for _, schema := range []map[string]any{architectGenerationJSONSchema(false), architectRefineJSONSchema(false)} {
+		if b, _ := json.Marshal(schema); strings.Contains(string(b), "kept_defaults") {
+			t.Error("a schema without keptDefaults must not mention kept_defaults")
+		}
+	}
+	block := effectBlockJSONSchema(true)
+	if _, ok := block["properties"].(map[string]any)["kept_defaults"]; !ok {
+		t.Fatal("kept_defaults property missing")
+	}
+	req := block["required"].([]string)
+	if req[len(req)-1] != "kept_defaults" {
+		t.Errorf("kept_defaults should be required, got %v", req)
+	}
+	if base := effectBlockJSONSchema(false)["required"].([]string); len(base) != len(req)-1 {
+		t.Errorf("adding kept_defaults changed the base schema's required list: %v", base)
 	}
 }
 

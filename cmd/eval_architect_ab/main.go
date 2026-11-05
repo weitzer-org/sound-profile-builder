@@ -16,7 +16,8 @@
 //
 // The catalog counts are reported per kind. Read CabConvention on its own: v4's prompt
 // always writes a cab "Blend", which the device doesn't have, so it counts against v4 by
-// construction.
+// construction. Unconsidered (controls neither set nor kept at default) is only measured
+// for output that uses kept_defaults, so it is 0 for v4 by construction, not by merit.
 //
 // Output (under -out/<timestamp>/): runs.jsonl (one line per run, written as it finishes),
 // <query>_<arm>_rep<n>.json (the raw Architect output) and report.md.
@@ -188,11 +189,11 @@ func runOnce(ctx context.Context, apiKey string, cfg *config.AppConfig, arm, que
 func renderReport(lines []runLine, arms []string) string {
 	var sb strings.Builder
 	sb.WriteString("# Architect A/B\n\nAverages per successful run (lower is better). Device* columns are the catalog parameter check; CabConv counts v4-style Blend on cabs.\n\n")
-	sb.WriteString("| Arm | OK/Runs | Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | DevUnknownName | DevRange | DevSwitch | DevUnit | DevBasis | CabConv | Checked blocks | In tok | Out+think tok |\n")
-	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+	sb.WriteString("| Arm | OK/Runs | Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | DevUnknownName | DevRange | DevSwitch | DevUnit | DevBasis | CabConv | Unconsidered | Checked blocks | In tok | Out+think tok |\n")
+	sb.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, arm := range arms {
 		var ok, runs int
-		var sum [16]float64
+		var sum [17]float64
 		for _, l := range lines {
 			if l.Arm != arm {
 				continue
@@ -205,13 +206,13 @@ func renderReport(lines []runLine, arms []string) string {
 			r := l.Report
 			for i, v := range []int{r.TotalDefects(), r.UnverifiedBlocks, r.CaptureFormattingMismatches, r.IncompleteCabinetBlocks,
 				r.LeftoverValueRanges, r.CriticIssues, r.Catalog.UnknownNames, r.Catalog.OutOfRange, r.Catalog.BadSwitchValues,
-				r.Catalog.UnitMismatches, r.Catalog.BasisOverclaims, r.Catalog.CabConvention, r.Catalog.CheckedBlocks,
+				r.Catalog.UnitMismatches, r.Catalog.BasisOverclaims, r.Catalog.CabConvention, r.Catalog.UnconsideredParams, r.Catalog.CheckedBlocks,
 				int(l.InputTokens), int(l.OutputTokens + l.ThinkingTokens)} {
 				sum[i] += float64(v)
 			}
 		}
 		fmt.Fprintf(&sb, "| %s | %d/%d |", arm, ok, runs)
-		for i := 0; i < 15; i++ {
+		for i := 0; i < 16; i++ {
 			if ok == 0 {
 				sb.WriteString(" - |")
 				continue

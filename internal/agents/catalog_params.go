@@ -56,6 +56,10 @@ type deviceParam struct {
 	// Switch: a discrete control (switch, rotary switch, toggle, combo box), with or
 	// without named positions.
 	Switch bool
+	// Required: every model behind the block name has this control, so a catalog-aware
+	// Architect must account for it (set it or keep its default). A control only some
+	// members have -- a stereo cab's BALANCE where the mono one has PAN -- isn't required.
+	Required bool
 }
 
 func (p *deviceParam) numericRange() bool { return p.Min != nil && p.Max != nil }
@@ -152,6 +156,7 @@ func normalizeUnits(u string) string {
 // buildDeviceBlock merges the parameters of every model a name resolves to.
 func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 	b := &deviceBlock{Name: name, Category: models[0].Category, byKey: map[string]*deviceParam{}}
+	modelsWith := map[string]int{}
 	for _, m := range models {
 		if plugin, gated := m.RequiredPlugin(); gated {
 			b.Gated = true
@@ -166,6 +171,7 @@ func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 			}
 		}
 		seen := map[string]int{}
+		inModel := map[string]bool{}
 		for _, p := range m.Params {
 			if isInternalParam(p) {
 				continue
@@ -176,7 +182,14 @@ func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 				label = fmt.Sprintf("%s %d %s", slotPrefix(m.Category), seen[p.Name], p.Name)
 			}
 			b.merge(label, p)
+			inModel[paramNameKey(label)] = true
 		}
+		for k := range inModel {
+			modelsWith[k]++
+		}
+	}
+	for _, p := range b.Params {
+		p.Required = modelsWith[p.Key] == len(models)
 	}
 	return b
 }
@@ -571,6 +584,10 @@ type CatalogParamCounts struct {
 	// in the user's libraries and wasn't already flagged unverified -- in practice invented
 	// effect names, which the gear-only unverified check doesn't cover.
 	UnrecognizedBlocks int
+	// UnconsideredParams counts required device controls a block neither sets in
+	// parameters nor names in kept_defaults. Only checked in a preset that uses the
+	// kept_defaults convention (any block carries the list), i.e. catalog-aware output.
+	UnconsideredParams int
 	// CheckedBlocks resolved in the catalog and were checked; UncheckedBlocks didn't
 	// (captures, unverified or invented names). Information, not defects.
 	CheckedBlocks   int
@@ -579,7 +596,7 @@ type CatalogParamCounts struct {
 
 // Defects is the total of the defect counts (not Checked/UncheckedBlocks).
 func (c CatalogParamCounts) Defects() int {
-	return c.UnknownNames + c.OutOfRange + c.BadSwitchValues + c.UnitMismatches + c.BasisOverclaims + c.CabConvention + c.UnrecognizedBlocks
+	return c.UnknownNames + c.OutOfRange + c.BadSwitchValues + c.UnitMismatches + c.BasisOverclaims + c.CabConvention + c.UnrecognizedBlocks + c.UnconsideredParams
 }
 
 const deviceCheckPrefix = "⚠️ Device check: "
@@ -657,6 +674,14 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 	if sp == nil {
 		return counts
 	}
+	keptDefaultsConvention := false
+	for _, blocks := range sp.Guitars {
+		for i := range blocks {
+			if blocks[i].KeptDefaults != nil {
+				keptDefaultsConvention = true
+			}
+		}
+	}
 	for _, blocks := range sp.Guitars {
 		for i := range blocks {
 			b := &blocks[i]
@@ -688,6 +713,9 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 			}
 			counts.CheckedBlocks++
 			checkBlockParams(b, dev, &counts)
+			if keptDefaultsConvention {
+				checkKeptDefaults(b, dev, &counts)
+			}
 		}
 	}
 	return counts
@@ -742,6 +770,46 @@ func checkBlockParams(b *storage.EffectBlock, dev *deviceBlock, counts *CatalogP
 		appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"%s %s on the device's %s (its controls: %s).",
 			strings.Join(unknown, ", "), verb, dev.Name, strings.Join(labels, ", ")))
 	}
+}
+
+// checkKeptDefaults checks a block's kept_defaults against the device: every name must be
+// one of the block's controls, and every required control must be either set in
+// parameters or kept at its default, so leaving a control alone is a recorded choice.
+func checkKeptDefaults(b *storage.EffectBlock, dev *deviceBlock, counts *CatalogParamCounts) {
+	covered := map[string]bool{}
+	for _, p := range b.Parameters {
+		if dp, ok := dev.lookupParam(p.Name); ok {
+			covered[dp.Key] = true
+		}
+	}
+	var unknown []string
+	for _, name := range b.KeptDefaults {
+		dp, ok := dev.lookupParam(name)
+		if !ok {
+			unknown = append(unknown, name)
+			continue
+		}
+		covered[dp.Key] = true
+	}
+	if len(unknown) > 0 {
+		counts.UnknownNames += len(unknown)
+		appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"kept_defaults names %s, which the device's %s doesn't have.", strings.Join(unknown, ", "), dev.Name))
+	}
+	var missing []string
+	for _, p := range dev.Params {
+		if p.Required && !covered[p.Key] {
+			missing = append(missing, p.Label)
+		}
+	}
+	if len(missing) == 0 {
+		return
+	}
+	counts.UnconsideredParams += len(missing)
+	shown := missing
+	if len(shown) > 12 {
+		shown = append(shown[:12:12], "…")
+	}
+	appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"not set and not marked as kept at the device default: %s.", strings.Join(shown, ", ")))
 }
 
 func checkParamValue(b *storage.EffectBlock, p storage.BlockParameter, dp *deviceParam, value string, counts *CatalogParamCounts) {

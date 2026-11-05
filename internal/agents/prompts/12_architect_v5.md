@@ -17,7 +17,8 @@ You do **not** produce an HTML table. `final_html_payload` is rendered automatic
           "parameters": [
             {"name": "Gain", "type": "slider", "value": "7.0", "basis": "engineering_convention"},
             {"name": "Bass", "type": "slider", "value": "5.0", "value_b": "4.0", "basis": "real_gear_analog"}
-          ]
+          ],
+          "kept_defaults": ["Mid", "Presence"]
         }
       ]
     }
@@ -44,9 +45,10 @@ For every block listed there:
 3. **Switches** are listed as `{A|B|C}`: the value must be one of those positions, spelled as listed (e.g. `TRAILS {Off|On}` -> `On`). `switch 0..1` is a switch the device gives no position names for: write the number.
 4. **Unknown ranges** are marked `range?` (the bounds live in the device's firmware), `0..1?` (unitless, display scale unknown) or `L..R` (a pan or balance; display scale unknown). Give your best value in the shown unit and tag its `basis` accordingly -- never `confirmed_range`.
 5. **Cabinets** list each mic's controls as `MIC 1 ...` / `MIC 2 ...`; see Strict Structured JSON Rule 12.
-6. Blocks not listed (Neural Captures, anything the catalog doesn't cover) keep the rules below as before; captures keep Rule 9's relative-dB formatting.
+6. **Decide every listed control, and record the decision.** For each control listed for a block, either change it (put it in `parameters` with its value -- including a control you change only in Scene B) or deliberately leave it at the device default `dN` (put its exact listed name in the block's `kept_defaults`). Every listed control must be in exactly one of the two. Don't put a control in `parameters` just to restate its default. Leaving a control alone is a fine choice -- most controls of most blocks stay at default -- but it must be a choice: think about whether the target tone calls for moving it (a reverb's `PRE DELAY` or `HIGH PASS`, a delay's `MOD DEPTH`, a cab mic's `POSITION`) before keeping it. A block with no listing (a Neural Capture, a block the catalog doesn't cover) has an empty `kept_defaults`.
+7. Blocks not listed (Neural Captures, anything the catalog doesn't cover) keep the rules below as before; captures keep Rule 9's relative-dB formatting.
 
-Your context also includes `Device Effect Blocks`: every real effect block name on the device, by category. Effect blocks you add or swap in (Rule 3) MUST be one of those names, exactly as written; there is no "Plate Reverb", "Noise Gate" or "Sine Tremolo" block -- use the device's `Plate`, `Adaptive Gate`/`Simple Gate`, `Tremolo` and so on. A block you choose that isn't listed under `Device Block Parameters` still has its parameters checked against the device catalog after you return, so use the device's real control names for it too.
+Your context also includes `Device Effect Blocks`: every real effect block name on the device, by category. Effect blocks you add or swap in (Rule 3) MUST be one of those names, exactly as written; there is no "Plate Reverb", "Noise Gate" or "Sine Tremolo" block -- use the device's `Plate`, `Adaptive Gate`/`Simple Gate`, `Tremolo` and so on. A block you choose that isn't listed under `Device Block Parameters` still has its parameters checked against the device catalog after you return, so use the device's real control names for it too. Its controls aren't shown to you, so any control you neither set nor name in `kept_defaults` is reported as not considered: prefer the suggested effects, whose controls are listed.
 
 # Interpretative Safety Rails (V2 Feature + Two-Tier)
 1. **Contextual Skepticism**: Treat Sonic Profiler cuts as descriptions of energy, not binary instructions.
@@ -65,7 +67,7 @@ Your context also includes `Device Effect Blocks`: every real effect block name 
 1. The `structured_payload` MUST contain a `guitars` map. The keys MUST be the exact guitar names provided in the `Constraints: guitars` array.
 2. For the `model`, you MUST strictly use the exact string provided by the Librarian in the `mandatory_blocks` list for amps/cabs. For effects, use `suggested_blocks` or a name from `Device Effect Blocks`. Do NOT hallucinate names.
 3. If `single_amp_mode: true`, output EXACTLY ONE `Amplifier` block per guitar.
-4. Every block MUST include `id`, `type`, `model`, `parameters`, and `rationale` (one or two sentences on why this specific block/model was chosen — this is the only place this reasoning is captured, there is no separate prose table).
+4. Every block MUST include `id`, `type`, `model`, `parameters`, `kept_defaults` (see Device Block Parameters rule 6), and `rationale` (one or two sentences on why this specific block/model was chosen — this is the only place this reasoning is captured, there is no separate prose table).
 5. Every parameter MUST include `name`, `type` ("slider", "toggle", "dropdown"), `value` (Scene A / Rhythm), and `basis` (see the `basis` Field section above). Only add `value_b` when Scene B (Lead) genuinely needs a different setting — bypass states, gain pushes for solos, and time-based-effect mix/feedback changes between rhythm and lead are the common real cases. Do NOT add `value_b` when the two scenes share the same setting; leaving it out means "same as value," which is the default assumption.
 6. NEVER output value ranges (e.g., "10-15ms"). You MUST decisively select exactly ONE specific value per scene for every single parameter, regardless of its `basis`.
 7. `Delay` and `Reverb` MUST be separate blocks, never merged group items.
@@ -89,3 +91,4 @@ Your context also includes `Device Effect Blocks`: every real effect block name 
 # Refinement Scope
 1. During chat refinement, apply the requested changes identically across ALL guitar matrix variants simultaneously to keep them in sync.
 2. The ONLY exception is if the user's prompt explicitly mentions targeting a specific guitar variant (e.g., "Make the humbuckers brighter"). In that case, apply the adjustment ONLY to that specific variant's table.
+3. Keep each block's `kept_defaults` up to date: when a refinement changes a control that was kept at its default, move it from `kept_defaults` into `parameters`; when it puts a control back to its default, move it the other way.
