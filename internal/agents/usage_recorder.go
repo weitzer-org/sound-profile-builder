@@ -90,29 +90,35 @@ func day(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0,
 // them in sync when prices change (that repo is separate and was not updated in this change).
 var geminiPriceSchedule = map[string][]pricePeriod{
 	"gemini-4-argon": {
-		{Until: day(2026, time.December, 1), geminiPrice: geminiPrice{2.00, 2.00, 10.00}}, // introductory
-		{geminiPrice: geminiPrice{4.00, 4.00, 20.00}},
+		{Until: day(2026, time.December, 1), geminiPrice: geminiPrice{2.00, 0.10, 10.00}}, // introductory
+		{geminiPrice: geminiPrice{4.00, 0.20, 20.00}},
 	},
 	"gemini-3.8-flash": {
-		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 0.75, 3.75}}, // introductory
-		{geminiPrice: geminiPrice{1.50, 1.50, 7.50}},
+		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 0.075, 3.75}}, // introductory
+		{geminiPrice: geminiPrice{1.50, 0.15, 7.50}},
 	},
-	// cachedInput 0.075 rising to 0.15 on 2027-01-01 per ai.google.dev/gemini-api/docs/pricing as
-	// relayed by the owner on 2026-11-04 (not fetched here). VERIFY before relying on it.
 	"gemini-3.6-flash": {
 		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 0.075, 3.75}}, // introductory
 		{geminiPrice: geminiPrice{1.50, 0.15, 7.50}},
 	},
 	"gemini-3.5-flash":       {{geminiPrice: geminiPrice{1.50, 1.50, 9.00}}},
 	"gemini-3.5-flash-lite":  {{geminiPrice: geminiPrice{0.30, 0.30, 2.50}}},
-	"gemini-3.1-pro-preview": {{geminiPrice: geminiPrice{2.00, 2.00, 12.00}}},
+	"gemini-3.1-pro-preview": {{geminiPrice: geminiPrice{2.00, 0.20, 12.00}}},
 	// Not on the 2026-11-05 page; kept for historical usage records only (no longer in any
 	// fallback chain). VERIFY before relying on them; 3-flash-preview's figure was a placeholder.
 	"gemini-3-flash-preview": {{geminiPrice: geminiPrice{1.50, 1.50, 9.00}}},
 	"gemini-2.5-pro":         {{geminiPrice: geminiPrice{1.25, 1.25, 10.00}}},
 }
 
-// Cached-input rates other than gemini-3.6-flash's are NOT verified and equal the input rate.
+// CACHED-INPUT RATES (fetched 2026-11-05, rendered in a headless browser): the same Google Cloud
+// pricing page's "Price (/1M tokens) Cached input" column, global endpoint: gemini-4-argon $0.10
+// (through 2026-11-30) then $0.20; gemini-3.8-flash and gemini-3.6-flash $0.075 (through
+// 2026-12-31) then $0.15; gemini-3.1-pro-preview $0.20 (<=200K prompts). Two caveats, both
+// UNVERIFIED: (1) that page is Google Cloud's; the Gemini Developer API page this app is billed
+// under (ai.google.dev) is blocked from these sessions, so identical rates there are assumed, as
+// for the input/output rates above; (2) the page does not say whether the column also covers
+// IMPLICIT (automatic prefix) caching, which is what this app relies on, or only explicit caches.
+// Models without a listed cached rate keep cachedInput == input, so cost is never understated.
 //
 // Deliberately unpriced: gemini-pro-latest (an alias; served as gemini-3.1-pro-preview, Phase 0.3)
 // and anything unrecognized. Their calls record CostUnknown=true rather than a guessed figure.

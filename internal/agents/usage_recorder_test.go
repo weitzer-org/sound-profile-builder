@@ -136,18 +136,50 @@ func TestComputeCostUSD_CachedTokens(t *testing.T) {
 	}
 }
 
+// sourcedCachedRates are the models whose cached-input rate comes from the Google Cloud pricing
+// page (see the CACHED-INPUT RATES comment on geminiPriceSchedule). Every other model must keep
+// cachedInput == input so caching can never understate its cost.
+var sourcedCachedRates = map[string]bool{
+	"gemini-4-argon": true, "gemini-3.8-flash": true, "gemini-3.6-flash": true, "gemini-3.1-pro-preview": true,
+}
+
 func TestComputeCostUSD_UnverifiedCachedRateNeverDiscounts(t *testing.T) {
-	// Every model except 3.6 Flash has cachedInput == input in every price period until the
-	// real cached rate is verified, so caching can never understate cost for them.
 	for model, periods := range geminiPriceSchedule {
-		if model == "gemini-3.6-flash" {
+		if sourcedCachedRates[model] {
 			continue
 		}
 		for _, p := range periods {
 			if p.cachedInput != p.input {
-				t.Errorf("%s: cachedInput %v != input %v; only set a discount once the real rate is verified", model, p.cachedInput, p.input)
+				t.Errorf("%s: cachedInput %v != input %v; only set a discount once the real rate is sourced", model, p.cachedInput, p.input)
 			}
 		}
+	}
+}
+
+// Pins the cited cached-input figures (Google Cloud pricing page, fetched 2026-11-05, global endpoint).
+func TestCachedInputRatesMatchSource(t *testing.T) {
+	cases := []struct {
+		model  string
+		at     time.Time
+		cached float64
+	}{
+		{"gemini-4-argon", day(2026, time.November, 30), 0.10},
+		{"gemini-4-argon", day(2026, time.December, 1), 0.20},
+		{"gemini-3.8-flash", day(2026, time.December, 31), 0.075},
+		{"gemini-3.8-flash", day(2027, time.January, 1), 0.15},
+		{"gemini-3.6-flash", day(2026, time.December, 31), 0.075},
+		{"gemini-3.6-flash", day(2027, time.January, 1), 0.15},
+		{"gemini-3.1-pro-preview", day(2026, time.November, 5), 0.20},
+	}
+	for _, c := range cases {
+		p, ok := priceAt(c.model, c.at)
+		if !ok || p.cachedInput != c.cached {
+			t.Errorf("%s at %s: cachedInput = %v (ok=%v), want %v", c.model, c.at.Format("2006-01-02"), p.cachedInput, ok, c.cached)
+		}
+	}
+	// A fully cached 1M-token Argon prompt during the promo costs $0.10, not $2.00.
+	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.November, 5), 1_000_000, 1_000_000, 0, 0); got < 0.0999 || got > 0.1001 {
+		t.Errorf("fully cached Argon prompt = %v, want 0.10", got)
 	}
 }
 
