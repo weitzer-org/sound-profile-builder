@@ -12,7 +12,7 @@
 | [mawelo/ampersand](https://github.com/mawelo/ampersand) | `7d69a2870729e23d6d498032f28c5ebef34febba` | Apache-2.0 |
 | [pacharanero/cortex](https://github.com/pacharanero/cortex) | `3245afaac0322a51622166b45f4485c6e7e58011` | AGPL-3.0 code. `*.md` docs and spec are CC-BY-SA-4.0 (`REUSE.toml`). |
 
-**Who reviewed what.** I reviewed qc-mcp and pyquadcortex in depth myself. The other three got lighter passes from three sub-agents, each working from its own clone at the SHA above. I re-checked their load-bearing citations myself: the udev rules, Ampersand's `--allow-writes` gate, the editor's analytics gate, and cortex's `destructive_tools_are_not_registered` test. All four matched.
+**Who reviewed what.** I reviewed qc-mcp and pyquadcortex in depth myself. The other three got lighter passes from three sub-agents, each working from its own clone at the SHA above. I re-checked their load-bearing citations myself: the udev rules, Ampersand's `--allow-writes` gate, the editor's analytics gate, and cortex's `destructive_tools_are_not_registered` test. All four matched. An independent Opus verifier then re-checked ten of the claims this report rests on against source. It **confirmed all the qc-mcp device-side claims** (save guard, no read-only mode, unclamped unknown ranges, NC_Recorder, firmware fallback, no SAVE/Updater/backup sends, daemon raw write). Its corrections are applied: the trial protocol's first save, the `protocol_generation_verified` wording, the stale-cache detail, the pyquadcortex-on-4.1 caveat, and the credits to qc-mcp in §1.6. It did not re-check the pyquadcortex value-refusal code, which is my reading of `catalog.py:389-499`.
 
 **Citation convention.** `file:line` paths are relative to each project's repo root. A claim with no citation is marked **UNVERIFIED**.
 
@@ -24,8 +24,8 @@
 
 | Tool | Verdict | One-line reason |
 |---|---|---|
-| **pyquadcortex** | **Safe to try, with conditions.** Best of the five. | Fails closed. It refuses firmware it hasn't measured, refuses unmeasured or out-of-range values, and denylists the known crash model. It has three runtime dependencies (`hid`, `protobuf`, `typing-extensions`), none with a known advisory. No network, subprocess or file writes. The PyPI 0.40.0 sdist and wheel are byte-identical to tag `v0.40.0`. The `qcctl` CLI has just 4 commands. |
-| **qc-mcp** | **Safe with strict conditions. Not safe as installed by default.** | Host side is clean: no network egress from the Python server, and MCP is stdio only. Device side has no guard rails: an LLM can overwrite the open preset (`save_preset` has no guard), rewrite global I/O, EQ and master volume with no human in the loop, send unclamped out-of-range values, and place the model that crashed a unit (id 20000). It has no read-only mode. On unknown firmware it falls back to the newest schema and spoofs a matching Cortex Control version. `install.sh` ignores the lockfile and registers itself in every Claude Code session. |
+| **pyquadcortex** | **Safe to try, with conditions.** Best of the five. | Fails closed. It refuses firmware it hasn't measured, refuses unmeasured or out-of-range values, and denylists the known crash model. **"Fails closed" fully applies only on CorOS 4.0.1.** On 4.1.0 just two operations are verified. Anything real needs `Support.EXPERIMENTAL`, which turns each refusal into a warning (`client.py:277-285`, `profiles.py:44-48`). It has three runtime dependencies (`hid`, `protobuf`, `typing-extensions`), none with a known advisory. No network, subprocess or file writes. The PyPI 0.40.0 sdist and wheel are byte-identical to tag `v0.40.0`. The `qcctl` CLI has just 4 commands. |
+| **qc-mcp** | **Safe with strict conditions. Not safe as installed by default.** | Host side is clean: no network egress from the Python server, and MCP is stdio only. Device side has no guard rails: an LLM can overwrite the open preset (`save_preset` has no guard), rewrite global I/O, EQ and master volume with no human in the loop, send out-of-range values (for params whose range is symbolic or unknown, or when `device_hash` is omitted; known ranges are clamped), and place the model that crashed a unit (id 20000). It has no read-only mode. On unknown firmware it falls back to the newest schema and spoofs a matching Cortex Control version. `install.sh` ignores the lockfile and registers itself in every Claude Code session. |
 | **quad-cortex-web-editor** | **Safe with conditions.** | WebHID only, limited to the device you pick. No destructive commands beyond a confirmed overwrite-save and global I/O. The hosted copy loads Google Analytics and tracks `main`, so self-host a pinned build. Hardware-verified on CorOS 4.0.1/4.1.0 only. |
 | **ampersand** | **Safe with conditions.** | MCP is read-only unless started with `--allow-writes` (`src/mcp/main.cpp:26-27`, `src/mcp/tools.cpp:170`). No network. Needs a local build: there's no CI, and 10 commits from one author over 5 days. Avoid `backup-restore`: its own README says it is untested on a real unit. |
 | **cortex (pacharanero)** | **Safe with conditions.** | Strongest engineering hygiene: SHA-pinned Actions, `cargo audit` in CI, a 0600 socket, and no save/delete tools over MCP (enforced by a test, `crates/cortex-mcp/src/server.rs:527-546`). Hardware-verified only on CorOS 4.0.1. AGPL. |
@@ -34,14 +34,20 @@ None of the five sends a firmware, updater, factory-reset or capture-upload mess
 
 ### qc-mcp safe-trial protocol (condensed; full version in §1.6)
 
-1. **Back up first.** Take a Cortex Control local backup. Copy any preset you care about to a spare slot.
+0. **Check the firmware.** Read the CorOS version on the unit. Stop if it's newer than 4.1.x; qc-mcp has no firmware gate of its own.
+1. **Back up first.** Take a Cortex Control local backup. Pick one **empty ("Unsaved") slot** as the only write target.
 2. **Pin the code.** Clone `lexasoft123/qc-mcp` at `f634ecd`. Don't download Patchbay `.dmg`/`.exe` and don't run `install.sh`.
 3. **Install with hashes.** Create a venv by hand and run `uv sync --frozen` from the committed `uv.lock`. That pins `mcp` 2.1.1 etc.; `install.sh` resolves unpinned versions with pip.
 4. **Register narrowly.** Register **at project scope in a scratch folder**, not `--scope user`.
 5. **Direct mode only.** Use `QC_BRIDGE=0` and quit Cortex Control yourself. Never build or run `interceptor/`.
 6. **Wrap the server.** Wrap it in a ~40-line proxy that exposes only the read tools in session 1. In session 2, add a short write allowlist that excludes `save_preset`, every global-settings tool, `delete_device_preset`, `level_setlist` and `set_master_volume`.
 7. **Run it alone.** Don't run it in the same Claude session as our QC-2 Modeler MCP server (§1.4, prompt injection).
-8. **First write.** Make one low-risk write on an empty slot you chose on the unit, then `save_preset_as` to that same empty slot. Afterwards, verify by reading it back and confirming it on the unit's screen.
+8. **First write.**
+   1. Recall the empty slot.
+   2. Add one simple block, e.g. a 0–10 dial drive.
+   3. `save_preset_as` to that slot with a new name.
+   4. The proxy, not qc-mcp's guard, checks that the slot is still empty, using a fresh directory read.
+   5. Read it back, and confirm it on the unit's screen.
 
 ### Top development recommendation
 
@@ -222,7 +228,7 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 | **Host-side only** | `audio_devices`, `sample_arm`, `sample_status`, `sample_discard`, `measure_loudness`, `sample_stop` (writes a WAV to a **model-chosen path**), `connect` (may quit Cortex Control or launch the bridge), `disconnect` |
 | **Live device writes** | `recall_preset`, `switch_preset`, `switch_scene`, `build_preset` (`clear=True` by default **deletes every block first**), `clear_grid`, `add_block`, `add_capture`, `add_ir`, `add_split`, `remove_block`, `set_lane_routing`, `set_lane_output`, `set_mixer`, `set_parameter`, `set_parameter_scenes`, `set_block_bypass`, `assign_expression`, `set_preset_meta`, `assign_stomp`, `unassign_stomp`, `load_device_preset`, `measure_preset`, `compare_presets` / `suggest_levels` ("writes nothing", but they **recall other presets**, which discards unsaved edits, and temporarily re-route lanes), `level_preset` (report-only unless `apply=True`) |
 | **Writes by default** | `level_scenes` (`dry_run=False` default, `server.py:970-971`), `level_setlist` (recalls and levels **every listed preset**, no dry run, `server.py:1001-1045`) |
-| **Persistent / destructive** | **`save_preset`**: overwrites the currently loaded slot with **no occupancy guard** (`server.py:1593-1615`). `save_preset_as`: its guard reads a possibly stale on-disk snapshot (`server.py:1434-1444, 1513-1517`), and `overwrite=True` bypasses it. `level_preset` / `level_scenes` / `level_setlist` with `save=True`. `save_device_preset`. **`delete_device_preset`**. |
+| **Persistent / destructive** | **`save_preset`**: overwrites the currently loaded slot with **no occupancy guard** (`server.py:1593-1615`). `save_preset_as`: its occupancy guard (`server.py:1434-1444, 1510-1518`) reads `_catalog()` (`server.py:1665-1693`). That is a **per-process cache that no save invalidates**, whether it came from a live read or the on-disk snapshot. The guard **fails open** when the cache is empty or doesn't know the folder, and it is skipped when the new name equals the occupant's name. `overwrite=True` bypasses it outright. `level_preset` / `level_scenes` / `level_setlist` with `save=True`. `save_device_preset`. **`delete_device_preset`**. |
 | **Global settings** (affect every preset) | `set_master_volume` (unclamped float, `server.py:500-511`), `switch_mode`, `set_mode_cycle`, **`set_io_port`** (input level/impedance/type, output mute — no confirm, `server.py:1933-1955`), **`set_global_eq`** (no confirm), **`load_settings_preset`** (`confirm=True` required only for `io_settings`, `server.py:1868-1872`; Global EQ has no confirm) |
 | Firmware / update / backup restore / factory reset / capture or IR import | **None exposed.** The command table lists `Updater`(60), `LocalBackup`(40), `CloudBackup`(41), `License`(58), `GainCalibration`(62) and others (`protocol.py:29-46`). No code in `src/qc_mcp/` sends them (grep for each name outside the table: 0 hits). |
 
@@ -253,7 +259,7 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 | Message (id) | Action | Where | Notes |
 |---|---|---|---|
 | ResetCommsBuffers (52) | — | `transport.py:313-318` | Handshake. On a shared Windows handle it **kicks Cortex Control off** (`transport.py:90-97`). |
-| Version (10) | READ, **UPDATE** | `:324-334` | **Announces `cortex_control_version` = the firmware the device just reported** (`:323-333`): "we always claim a matching Cortex Control". This defeats the device's own client-compatibility check. |
+| Version (10) | READ, **UPDATE** | `:324-334` | **Announces `cortex_control_version` = the firmware the device just reported** (`:323-333`): "we always claim a matching Cortex Control". A compatibility check exists on the device (`transport.py:297-300`). This mirroring presumably always satisfies it; that is **inference, UNVERIFIED** (the web editor saw `GenericError VERSION_IS_OLDER` when it announced an older version, per its `docs/protocol-notes.md:27`). |
 | Connection (49) | connected true/false | `:337-339`, `:243-245` | |
 | 12 state READs | READ | `:345-353` | ModelRepo, ModuleStats, UndoRedo, IOSettings, GeneralSettings, Mode, GlobalEQ, MasterVolume, GlobalTempo, Scene, PresetDirty, SetlistPosition. |
 | **KeepAlive (32)** | UPDATE `is_online` | `:259-276` | **Every 200 ms, in a background thread, for as long as you're connected.** The others send it every 1 s (cortex, ampersand) or 5 s (pyquadcortex, web editor). It's a heartbeat, not a state change. |
@@ -325,6 +331,7 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 
 - **Host side** is acceptable once pinned: no egress; stdio MCP; a clean, legitimate dependency tree; 181 of 184 offline tests pass here. The 3 failures come from running on Linux: `no HID backend for linux` ×2, and `soundfile` not installed.
 - **Device side** has the five gaps in §1.5. The deciding fact is that **every one of them is reachable by the model with no human step.**
+- **What qc-mcp does protect.** Values with a known range are clamped to [0,1] (`catalog.py:178`). `load_settings_preset('io_settings')` refuses if it can't snapshot the current settings first (`server.py:1865-1867`). CorOS-4.1-only tools are gated with `P.require` and return "needs CorOS 4.1" on older firmware. It refuses to play test audio into the analog outputs (`audio_io.py:96-105`). None of this changes the verdict.
 
 **qc-mcp safe-trial protocol**
 
@@ -332,7 +339,8 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
 1. **Back up.**
    - Cortex Control: create a **local backup** and keep the file.
    - Note your I/O settings (input levels, impedance, type, ground lift, output levels) and Global EQ by hand or by photo.
-   - Pick a target: on the unit, save a throwaway copy of any factory preset to an **empty slot** you'll sacrifice. Note its bank and letter.
+   - Pick a target: one **empty ("Unsaved") slot** in My Presets. Note its bank and letter. It is the only slot anything may write to.
+   - Leave it empty. Don't pre-fill it with a throwaway copy: the proxy's `overwrite=False` would then refuse the save. Writing to an empty slot through `File CREATE` is what qc-mcp's own `list_empty_slots` recommends. The RecallPreset-SAVE hang path is not used by any tool (§1.5).
 2. **Get the code.**
    ```bash
    git clone https://github.com/lexasoft123/qc-mcp.git ~/qc-trial/qc-mcp
@@ -350,20 +358,22 @@ Commands behind the table: `git log --format='%an <%ae>' | sort | uniq -c`, `git
    - **Session 2 (writes):** add `add_block`, `remove_block`, `set_parameter` (and require `device_hash`), `set_block_bypass`, `switch_scene`, `set_preset_meta`, `save_preset_as`. In the proxy, also:
      - refuse `device_hash == 20000`;
      - refuse a `set_parameter` whose param has no numeric range in **our** `qc_catalog.json`;
-     - force `save_preset_as(overwrite=False)` to the one slot you chose in step 1.
+     - force `save_preset_as(overwrite=False)` to the one slot you chose in step 1;
+     - before forwarding that save, call `list_empty_slots` after `directory_summary(refresh=True)`, and refuse unless the slot is still listed empty. **qc-mcp's own guard can't be trusted for this.** It reads a per-process directory cache that saves never invalidate, and it fails open when that cache is empty.
    - **Never forward:** `save_preset`, `build_preset`, `clear_grid`, `load_settings_preset`, `set_global_eq`, `set_io_port`, `set_master_volume`, `switch_mode`, `set_mode_cycle`, `delete_device_preset`, `save_device_preset`, `level_*`, `sample_stop`, `measure_*`, `compare_presets`, `suggest_levels`.
    - Claude Code's own tool-permission rules (deny lists) can stand in for the proxy if you prefer. A proxy is enforceable from version control and survives reinstalls.
 5. **Register narrowly.** Run `claude mcp add --scope local quad-cortex-ro -- <proxy>` from an empty scratch folder. Never use `--scope user`. Don't add our QC-2 Modeler server to that session.
 6. **Connect.**
    - Quit Cortex Control yourself first; the protocol never relies on `quit_app=True`.
    - Export `QC_BRIDGE=0`, then call `connect(mode='direct')` only.
-   - Confirm `device_info.firmware` matches step 0 and `protocol_generation_verified` is true.
+   - Confirm `device_info.firmware` matches step 0.
+   - Don't read `protocol_generation_verified` as a firmware gate. It is only `self.firmware is not None` (`transport.py:224`), so it is true for 4.2 or 5.0 too. Step 0 is the only real gate.
 7. **Session 1, read only.** Read the current preset and list empty slots. Compare one preset's block list with what the unit shows. Disconnect.
 8. **Session 2, one write.**
-   1. On the unit, recall your sacrificial slot.
-   2. Make one change: `set_block_bypass` on one block, or `set_parameter` on a 0–10 dial with `device_hash` given.
+   1. On the unit, recall your empty slot. The grid is blank.
+   2. Make one write: `add_block` with a plain 0–10-dial drive, e.g. `device_hash=1` "Myth Drive" (`find_devices` shows the hash). Optionally follow it with `set_parameter` on one of its dials, with `device_hash` given.
    3. Confirm it on the unit's screen.
-   4. `save_preset_as(name=<new name>, position=<that slot>)`.
+   4. `save_preset_as(name=<new name>, position=<that slot>)`, which passes the proxy's fresh empty-slot check.
    5. Power-cycle the unit, recall the slot, and confirm it saved.
 9. **Stop if** any reply looks wrong, a read times out, or the unit shows an error. Power-cycle, and restore from step 1 if needed.
 
@@ -385,7 +395,7 @@ The protocol docs that make B possible are the reverse-engineered `.proto` files
 
 ### 2.1 Where we stand
 
-- **Catalog.** `internal/catalog/qc_catalog.json` has 605 models and 6,942 params, imported from qc-mcp's `ModelRepo.xml` at `f634ecd` (`source.origin`). Two gaps matter for anything device-exact:
+- **Catalog.** `internal/catalog/qc_catalog.json` has 605 models and 6,942 param entries, imported from qc-mcp's `ModelRepo.xml` at `f634ecd` (`source.origin`). The XML itself has 633 models and 4,683 `<Parameter>` elements. The catalog has more because our importer expands `clones="<id>"` templates such as "Default Cabsim" into each cab (`internal/catalog/modelrepo.go:58,130`). That is why per-catalog counts below, e.g. 386 `MIN_CABSIM_DB`, are larger than the XML's own count (14). Two gaps matter for anything device-exact:
   1. **Taper isn't imported.** `ModelRepo.xml` declares `skew` on 1,487 `<Parameter>`s (`grep -o 'skew="' | wc -l`): `LIN_SKEW` 532, `0.6` 353, `3.8018` 163, `LOG_SKEW` 18, `4.9594844` 20, and others. Our param keys are `default, display_pos, index, max, max_label, max_symbol, min, min_label, min_symbol, name, step_names, steps, type, units`, with no `skew`. Any display→wire mapping we'd do today would be linear and wrong for those params.
   2. **Symbolic bounds are left unknown.** By count of `min_symbol` / `max_symbol` occurrences: `*_CABSIM_DB` 386 each, `*_EQ_DB` 11, `*_FXLOOP_OUT_GAIN_DB` 9, `*_MIXER_DB` 7, `*_FXLOOP_IN_GAIN_DB` 6, `*_EQ_FREQ` 2, `*_TEMPO` 1.
 - **In-flight work.** Two draft PRs are open as of 2026-11-05:
