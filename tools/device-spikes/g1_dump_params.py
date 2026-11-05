@@ -64,7 +64,7 @@ def block_report(ridx, cidx, m, xml_models, our_models, qc_cat) -> dict:
             "x": ({k: xp[k] for k in ("name", "min", "max", "default", "skew", "units", "replaces")} if xp else None),
             "o": ({k: op.get(k) for k in ("name", "min", "max", "default", "min_symbol", "max_symbol", "units")} if op else
                   ({"name": "(hidden or absent in our catalog)"} if (pos < o_len) else None)),
-            "names_agree": bool(xp and op and (xp["name"] or "").lower() == (op["name"] or "").lower()),
+            "names_agree": bool(xp and op and (xp.get("name") or "").lower() == (op.get("name") or "").lower()),
         })
     verdict = ("O_COUNT_MATCHES" if n == o_len and n != len(x_params) else
                "X_COUNT_MATCHES" if n == len(x_params) and n != o_len else
