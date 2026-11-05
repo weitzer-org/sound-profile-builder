@@ -406,7 +406,7 @@ Treat them as **search-sourced, page-unread** until the owner confirms them in t
 | An old job delivered late | Rejected by expiry (step 9). |
 | A job aimed at another bucket or id | Rejected by step 7. |
 
-**Open decision: asymmetric signatures.** The owner specified HMAC with `DEVICE_JOB_KEY` / `_NEXT`, and this version keeps it. The security review's stronger option:
+**Decided: HMAC stays (owner, 2026-11-05).** Asymmetric signatures were considered and declined. The worst case of a leaked `agent.env` is nuisance pushes into empty slots in the allowed range while the bridge runs, and one shared secret is simpler for a single-owner setup. The option that was considered, for the record:
 - QC-2 signs jobs with an **Ed25519** private key, and the agent holds only QC-2's public key;
 - the agent signs results and heartbeats with its own key pair.
 
