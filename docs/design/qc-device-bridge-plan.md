@@ -280,6 +280,24 @@ Every container runtime for Windows hits the same two problems:
 | **G5** | R2 pricing for polling, and bucket-scoped API tokens | Cloudflare docs or dashboard. Record the numbers in the PR. | no |
 | **G6** | Scene semantics: do per-scene parameter writes and per-scene bypass behave as qc-mcp documents? | Push a two-scene test preset and switch scenes on the unit. | yes |
 
+### 7.1 Phase 0 results log
+
+The spikes are in [`tools/device-spikes/`](../../tools/device-spikes/README.md) (PR P0-a). Each result below is the owner's pasted output from their unit; nothing is recorded here from inference. **Offline tests with a fake device cover only the guards and the report logic.** They say nothing about the unit.
+
+| Gate | Spike | Status | Result |
+|---|---|---|---|
+| G0 | `g0_verify_slot.py` | script ready; **not yet run on the unit** | — |
+| G1 | `g1_dump_params.py` | script ready; **not yet run on the unit** | — |
+| G2 (a)(b)(c) | `g2_session.py --check a/b/c` | script ready; **not yet run on the unit** | — |
+| G3 | `g3_build_and_save.py` | script ready; **not yet run on the unit** | — |
+| G4 | `g4_taper_check.py` | script ready; **not yet run on the unit** | — |
+| G5 | — | not a device gate; settled in the P3 chat | — |
+| G6 | `g6_scenes.py` | script ready; **not yet run on the unit** | — |
+
+**How G1 will be read.** Per qc-mcp (`transport.py` `bypass_param_index`), a full-preset read returns N parameter slots per block, and the bypass control sits at index N and never appears in a read. So the device's N for each block is compared with two lengths: X, the block's own `<Parameter>` list in `ModelRepo.xml` (what qc-mcp indexes by), and O, our catalog's `clones=`-expanded list. For the cloned dual-mic cab the XML lists 2 parameters and our catalog 19 (checked against the pinned XML and `qc_catalog.json`; not against a device). A count match is necessary, not sufficient: the per-position names are also compared against the unit's screen.
+
+**Observation from preparing G1 (from the XML, not a device).** In `ModelRepo.xml` at `f634ecd`, Spring (M) (id 8006) has no `clones=`; its 5 parameters are its own. So in "bb king test 2" the **cab** is the cloned block that decides G1, and the Spring reverb is a control (X and O agree for it).
+
 **If G1 shows our catalog's clone expansion is wrong,** fix the importer **first**. That also affects PR #120's Architect parameter context and the preset views. **If G2 (c) fails** (the unit going away isn't detected), keep only the idle-timeout exit. **If G3 shows a write misbehaving,** that operation stays out of v1 until it's understood. That includes per-scene parameters (also G6).
 
 ## 8. Phased PRs
