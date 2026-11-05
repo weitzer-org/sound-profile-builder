@@ -116,13 +116,18 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 
 	allowFactoryCapturesForFlag := true
 	allowUserCapturesForFlag := true
+	var pluginGate agents.PluginGate // inactive (no plugin filtering) without a config
+	refineCtx := ctx
 	if cfg := s.config(); cfg != nil {
 		allowFactoryCapturesForFlag = cfg.AllowFactoryCaptures
 		allowUserCapturesForFlag = cfg.AllowUserCaptures
+		pluginGate = agents.NewPluginGate(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
+		// RefineChat uses the configured Architect prompt version (it used to be fixed at v4).
+		refineCtx = agents.WithPromptVersions(ctx, cfg.AgentPrompts)
 	}
 
 	// Run the chat refinement loop
-	jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	jsonResponse, _, err := orch.RefineChat(refineCtx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
 	if err != nil {
 		s.fail(lr, ErrKindExec, err.Error())
 		return
@@ -153,11 +158,24 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 		return
 	}
 
-	effectiveBlocksForFlag := agents.BuildEffectiveValidBlocks(allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	effectiveBlocksForFlag := agents.BuildEffectiveValidBlocksFor(agents.ValidBlockFilter{
+		AllowFactoryCaptures: allowFactoryCapturesForFlag,
+		AllowUserCaptures:    allowUserCapturesForFlag,
+		Plugins:              pluginGate,
+	})
 	agents.FlagCaptureFormattingMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
 	agents.FlagIncompleteCabinetBlocks(&archResp.StructuredPayload)
 	agents.FlagLeftoverValueRanges(&archResp.StructuredPayload)
 	agents.FlagUnverifiedStructuredBlocks(&archResp.StructuredPayload, effectiveBlocksForFlag)
+	// After FlagUnverifiedStructuredBlocks: it checks the snapped names and skips unverified ones.
+	agents.FlagCatalogParamMismatches(&archResp.StructuredPayload, effectiveBlocksForFlag)
+	// RefineChat corrected the rendered tables against the unfiltered block set (it isn't
+	// told which plugins the user owns). Re-apply the correction with this run's set so the
+	// saved HTML flags the same blocks the structured payload does, e.g. an unowned plugin
+	// device. Safe to repeat: capture labels are re-derived and flags aren't doubled.
+	for guitar, html := range archResp.FinalHTMLPayload {
+		archResp.FinalHTMLPayload[guitar] = agents.ApplyFuzzyCorrection(html, effectiveBlocksForFlag)
+	}
 
 	// Append user message
 	p.ChatHistory = append(p.ChatHistory, storage.ChatMessage{Role: "user", Content: userMessage})

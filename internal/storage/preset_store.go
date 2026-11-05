@@ -43,7 +43,11 @@ type EffectBlock struct {
 	Type       string           `json:"type"` // e.g. "Amplifier", "Overdrive"
 	Model      string           `json:"model"`
 	Parameters []BlockParameter `json:"parameters"`
-	Rationale  string           `json:"rationale,omitempty"`
+	// KeptDefaults names the block's device controls the Architect deliberately left at
+	// their device default (it lists only changed controls in Parameters). Written by
+	// catalog-aware Architect prompts; nil on older presets.
+	KeptDefaults []string `json:"kept_defaults,omitempty"`
+	Rationale    string   `json:"rationale,omitempty"`
 }
 
 // StructuredPreset wraps the signal chain per guitar variation

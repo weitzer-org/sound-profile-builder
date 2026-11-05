@@ -1,0 +1,654 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around a 1950s Fender Tweed Deluxe 5E3 paired with a 1x12 Jensen P12R Alnico speaker and RCA 77-DX ribbon microphone, establishing a raw vintage foundation supplemented by Lovepedal Les Lius and Bluesbreaker-style front-end saturation.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the warm tube edge-of-breakup saturation profile with a 1000 Hz midrange focal point, a -65 dB input noise gate target, and protective frequency boundaries at 90 Hz and 6000 Hz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Surfaced critical Quad Cortex user intelligence warning against cranking the native Gain parameter inside Neural Captures, advising pre-amp low-cut EQ filtering around 80-100 Hz to prevent Tweed sub-bass wooliness, and recommending Bluesbreaker/Tweed-style drives over mid-humped Screamers.",
+    "\u003cstrong\u003eAgent 4 (Block Librarian):\u003c/strong\u003e Enforced mandatory inclusion of the Fender 57 Deluxe - T8 I4 M12 amp capture alongside the FNDR TWDLX IN Edge BAL CAB and 112 US DLX Tweed WGS-Q 10s cabinet blocks, while providing Parametric-3, Love DLX, Brit Blues, and Spring Reverb as core shaping tools.",
+    "\u003cstrong\u003eAgent 5 (Cloud Navigator):\u003c/strong\u003e Resolved dropped small-combo references against the cloud database, though single-amp mode constraints restricted the final signal chain to the primary Fender 57 Deluxe - T8 I4 M12 capture.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation between the warm semi-hollow Gibson ES-339 Humbuckers (-2.5 dB input trim, reduced bass and volume) and bright Fender Telecaster Single Coils (+2.5 dB input boost, pushed mids and tamed treble).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the native 112 US DLX Tweed WGS-Q 10s cabinet block with a Ribbon 160 at the cap edge (15 degrees off-axis) blended at 30% with an on-axis Dynamic 57 to emulate vintage RCA 77-DX warmth.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set protective live mixing boundaries with a 95 Hz low cut, a 7500 Hz high cut to preserve harmonic air without digital fizz, and a -1.5 dB output level pad.",
+    "\u003cstrong\u003eAgent 9 (Mix Specifier):\u003c/strong\u003e Established spatial cohesion targets featuring a short 1.2-second reverb decay and a 20% wet mix blend to sit naturally behind dry edge-of-breakup transients.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) and Scene B (Lead) parameter transitions, engaging the Brit Blues overdrive in Scene B alongside a midrange push on the pre-amp Parametric-3 EQ and a wet mix boost on the Spring Reverb.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Provided the initial multi-lane routing map, which was streamlined during final evaluation to strictly obey the single-amp constraint and eliminate four-drive gain congestion while preserving all mandatory blocks."
+  ],
+  "builder_statement": "This preset recreates an authentic 1950s Chess Records studio tone centered around the Fender 57 Deluxe - T8 I4 M12 Neural Capture paired with both a matched 5E3 Jensen P12R cabinet capture and a dual-mic native Tweed 1x12 cabinet. To honor community best practices for Tweed captures, a pre-amp Parametric-3 EQ trims sub-bass wooliness before hitting the Love DLX capture and Brit Blues overdrive, while a warm post-cab Spring Reverb delivers vintage studio chamber bleed.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-40.0 dB"
+            }
+          ],
+          "rationale": "Applies the Acoustician's +2.5 dB input boost so lower-output Telecaster single coils drive the Tweed front end into warm breakup, paired with the Sonic Profiler's -65 dB noise gate threshold.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Freq",
+              "type": "slider",
+              "value": "90 Hz",
+              "value_b": "100 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Gain",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "-3.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "1000 Hz",
+              "value_b": "850 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Q",
+              "type": "slider",
+              "value": "1.2",
+              "value_b": "1.0"
+            }
+          ],
+          "rationale": "Placed before the drive and amp blocks per Librarian tactical hints to keep the Tweed capture's low end tight while reinforcing the 1000 Hz midrange focal point on single coils.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "Love DLX",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.0 dB"
+            }
+          ],
+          "rationale": "Selected as a confirmed Neural Capture of the Lovepedal Les Lius to push the front end of the Tweed amp capture with woody asymmetric grit and high output volume rather than cranking the amp capture's internal gain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "4.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.2"
+            }
+          ],
+          "rationale": "Engaged in Scene B (Bypass: Off) to stack transparent Bluesbreaker-style saturation with the Love DLX for singing lead sustain without introducing an artificial Tube Screamer mid-hump.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-5",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Serves as the mandatory single-amp 1957 Fender Tweed Deluxe 5E3 Neural Capture (jumpered with Tone at 8, Instrument at 4, Mic at 12), tuned with fuller bass, pushed mids, and slightly rolled-off treble to fatten the Telecaster single coils.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Mandatory 1957 Fender Tweed Deluxe 5E3 1x12 Jensen P12R speaker cabinet Neural Capture providing authentic Alnico cone compression and slightly softened top-end for single-coil snap.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 160 | Cap Edge (X: 3.5, Y: 2.0) | 15 deg Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57 | Cone Mid-Way (X: 5.0, Y: 1.0) | On-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "25%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            }
+          ],
+          "rationale": "Mandatory native Tweed 1x12 cabinet block utilizing an off-axis Ribbon 160 to emulate the RCA 77-DX ribbon mic's warm vintage roll-off, blended at 25% with a Dynamic 57 to keep Telecaster highs smooth.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s",
+              "value_b": "1.5 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "4.0"
+            }
+          ],
+          "rationale": "Placed after the amp and cab blocks with low decay and rolled-back tone to recreate early 1950s Chess Records studio tank and chamber bleed.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-40.0 dB"
+            }
+          ],
+          "rationale": "Trims input gain by -2.5 dB per the Acoustician's specification so the warm low-mid resonance of the semi-hollow ES-339 humbuckers does not overwhelm the Tweed front end into mud.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Freq",
+              "type": "slider",
+              "value": "95 Hz",
+              "value_b": "110 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-4.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "400 Hz",
+              "value_b": "750 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Band 2 Q",
+              "type": "slider",
+              "value": "1.4",
+              "value_b": "1.0"
+            }
+          ],
+          "rationale": "Placed first in the chain per Librarian tactical hints to aggressively cut sub-bass wooliness at 95-110 Hz so the semi-hollow neck humbucker never farts out the Tweed capture.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "Love DLX",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of the Lovepedal Les Lius dialed with reduced bass and slightly lower gain to push the Fender 57 Deluxe capture cleanly with humbuckers.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Bypassed in Scene A (Bypass: On) for raw woody rhythm and engaged in Scene B (Bypass: Off) to add articulate Bluesbreaker lead compression without congesting the ES-339's midrange.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-5",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Mandatory 1957 Fender Tweed Deluxe 5E3 Neural Capture configured with a -1.5 dB bass cut and +0.5 dB treble lift to keep the semi-hollow humbuckers crisp and woody.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Mandatory 1957 Fender Tweed Deluxe 5E3 1x12 Jensen P12R speaker cabinet Neural Capture tuned with a slight low-end trim and treble lift to complement the darker ES-339 humbuckers.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 160 | Cap Edge (X: 3.5, Y: 2.0) | 15 deg Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57 | Cone Mid-Way (X: 5.0, Y: 1.0) | On-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "30%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "Mandatory native Tweed 1x12 cabinet block combining an off-axis Ribbon 160 with a 30% blend of on-axis Dynamic 57 and a 95 Hz low cut to keep humbucker transients defined.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s",
+              "value_b": "1.5 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "4.0"
+            }
+          ],
+          "rationale": "Placed at the end of the chain with warm tone damping and a short 1.2-second decay to provide vintage 1950s room and spring tank dimension.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

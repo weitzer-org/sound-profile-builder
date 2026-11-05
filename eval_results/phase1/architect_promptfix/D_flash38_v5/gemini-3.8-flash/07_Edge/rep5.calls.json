@@ -1,0 +1,26 @@
+[
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 7352,
+    "output_tokens": 4688,
+    "thinking_tokens": 1877,
+    "latency_ms": 45730,
+    "grounded": false
+  },
+  {
+    "agent": "Preset Critic",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 5301,
+    "output_tokens": 9,
+    "thinking_tokens": 1505,
+    "latency_ms": 9194,
+    "grounded": false
+  }
+]

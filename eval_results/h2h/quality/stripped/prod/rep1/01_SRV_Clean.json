@@ -1,0 +1,578 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core SRV-inspired Texas blues-funk rig around a 1964 Fender Super Reverb pushed by an Ibanez TS808 Tube Screamer into 4x10 speakers miked with an SM57.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the symmetrical soft-clipping profile centered around a 720Hz vocal mid push, a -65dB noise gate target, and a 90Hz to 6.5kHz bandwidth window with spring reverb.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the critical technique of running the TS808 with minimal gain and high output level into a high-headroom Super Reverb capture, alongside an 1176-style compressor for funk rhythm glue.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the mandatory '1964 Fender Super Reverb' full-rig capture and '410 US Basslad P10Q '16' cabinet, while supplying 'OG TS808', 'Legendary 87 (ST)', and 'Spring Reverb' as suggested blocks.",
+    "\u003cstrong\u003eAgent 5 (Cloud Navigator):\u003c/strong\u003e Located the '64 Fender Vibroverb' capture on Cortex Cloud, though it was ultimately excluded from the final signal chain to strictly honor the single_amp_mode constraint.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup compensation offsets, trimming the Gibson ES-339 humbuckers by -3.0dB with scooped bass and boosted treble, while boosting the Fender Telecaster single coils by +3.0dB with fuller mids and rolled-off highs.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Specified a 60/40 blend between an on-axis Dynamic 57 at the cap edge and a 45-degree off-axis Ribbon 121 on the cone body with targeted high/low cuts for the 4x10 cabinet block.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set protective live-mix boundaries with Global EQ cuts at 95Hz and 7.2kHz and a -1.5dB lane output trim to prevent digital clipping when slamming the capture front end.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided ambient baselines of a 115ms slapback delay and a 1.8s reverb decay at 20% mix to create vintage three-dimensional depth without washing out percussive attack.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A for compressed clean funk-blues rhythm (Compressor active, TS808 bypassed) and Scene B for pushed lead (Compressor bypassed, TS808 active with amp gain/volume boosts).",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Proposed a multi-lane layout; however, to enforce single_amp_mode and prevent gain congestion, the redundant second amp and duplicate drive block were stripped into a streamlined single-amp path."
+  ],
+  "builder_statement": "This preset captures classic Texas blues-funk snap and scorching lead sustain by pairing a 1964 Fender Super Reverb neural capture with an original TS808 Tube Screamer capture in front. A studio 1176-style compressor glues together percussive rhythm work in Scene A, while Scene B bypasses the compressor and engages the TS808 as a high-output, mid-focused boost to slam the Super Reverb into thick, vocal saturation.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "45 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Applies the Sonic Profiler's -65dB noise gate threshold alongside the Acoustician's +3.0dB input boost so lower-output Telecaster single coils hit the capture sweet spot.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off",
+              "value_b": "On"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "40%"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Placed at the start of the chain to glue together snappy single-coil funk scratches in Scene A, and bypassed in Scene B so the TS808 can hit the amp with unrestrained dynamics.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "OG TS808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.5 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+3.0 dB",
+              "value_b": "+4.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of an original Ibanez TS808 pedal; bypassed in Scene A and engaged in Scene B with reduced internal gain, a strong 720Hz-style mid push, tamed treble for the Telecaster, and high output volume to slam the Super Reverb front end.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "1964 Fender Super Reverb",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a 1964 Fender Super Reverb blackface combo; tuned for the Telecaster with boosted bass and mids, rolled-off treble (-1.5 dB) to prevent ice-pick highs, and a +0.5 dB volume baseline.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "410 US Basslad P10Q '16",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: +1.5 in, Y: 0.5 in (On-Axis, 250Hz Low Cut, 7.5kHz High Cut to tame 10-inch speaker bite while retaining upper-mid vocal snap for pushed blues/funk transients)."
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Body, X: +3.0 in, Y: 2.0 in (45-deg Off-Axis, 80Hz Low Cut, 6.0kHz High Cut to warm up the transient response and emulate the smooth, compressed low-mid bloom of a big-iron amp)."
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Provides the authentic 4x10 speaker response and essential 6.5kHz high-cut filtering for the Telecaster to eliminate harsh blackface digital fizz.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Analog Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "115 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "16%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Implements the Mix Engineer's 115ms slapback thickening during Scene B leads while keeping Scene A rhythm bone-dry and punchy.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "2.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "28%"
+            }
+          ],
+          "rationale": "Delivers vintage American tube-spring ambiance at the end of the chain with a warmer Tone setting for the Telecaster and an expanded decay tail for Scene B solos.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB"
+            }
+          ],
+          "rationale": "Applies the Sonic Profiler's -65dB noise gate threshold alongside the Acoustician's -3.0dB input pad to prevent the ES-339's warm semi-hollow humbuckers from prematurely overloading the chain.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off",
+              "value_b": "On"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "40%"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Placed at the start of the chain with a slightly slower attack for humbucker transients to glue together percussive funk rhythm in Scene A, and bypassed in Scene B for open lead dynamics.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "OG TS808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of an original Ibanez TS808 pedal; bypassed in Scene A and engaged in Scene B with minimal internal clipping, tightened bass for semi-hollow humbuckers, and a massive output volume boost to drive the Super Reverb capture.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "1964 Fender Super Reverb",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a 1964 Fender Super Reverb blackface combo; sculpted for the ES-339 humbuckers with reduced bass (-1.5 dB) to prevent low-end flub, focused mids (+1.5 dB), and a -0.5 dB rhythm volume trim.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "410 US Basslad P10Q '16",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: +1.5 in, Y: 0.5 in (On-Axis, 250Hz Low Cut, 7.5kHz High Cut to tame 10-inch speaker bite while retaining upper-mid vocal snap for pushed blues/funk transients)."
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Body, X: +3.0 in, Y: 2.0 in (45-deg Off-Axis, 80Hz Low Cut, 6.0kHz High Cut to warm up the transient response and emulate the smooth, compressed low-mid bloom of a big-iron amp)."
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "105 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7200 Hz"
+            }
+          ],
+          "rationale": "Provides the 4x10 Jensen speaker response with a slightly higher 65% Dynamic 57 blend and 105Hz low cut to keep the ES-339's semi-hollow low end tight and articulate.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Analog Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "115 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "18%"
+            }
+          ],
+          "rationale": "Adds the Mix Engineer's 115ms slapback delay in Scene B to give leads room-filling thickness without cluttering Scene A's percussive funk rhythm.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.0 s",
+              "value_b": "2.6 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "18 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "26%"
+            }
+          ],
+          "rationale": "Delivers authentic vintage American spring reverb at the end of the chain, expanding in Decay and Mix for Scene B leads.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

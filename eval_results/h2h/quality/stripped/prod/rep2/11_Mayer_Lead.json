@@ -1,0 +1,692 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the John Mayer Trio / Continuum era reference rig built around a Two-Rock / Dumble style high-headroom tube platform, stacked Klon/Bluesbreaker and Tube Screamer drives, a 2x12 G12-65 cabinet miked with an SM57 and Royer R-121, and an analog slapback delay.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the scooped midrange EQ profile, smooth soft-clipping saturation, a -65 dB noise gate target, and bandwidth boundaries at 90 Hz low-cut and 7000 Hz high-cut.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Advised using Neural Captures for the Klon, TS10, and Two-Rock platform while warning against pushing Capture EQ controls beyond +/- 2 dB or exceeding unity output on stacked drive captures, recommending an external Parametric EQ block to handle midrange scooping.",
+    "\u003cstrong\u003eAgent 4 (Block Librarian):\u003c/strong\u003e Locked in the mandatory Two Rock SSS EQ1 (No Cab) and 212 Too Rock G65 blocks, and provided tactical routing hints for stacking John Mayer klon into TS10 JM Settings before the amp, followed by Parametric-3, Circular Delay, and Nordic Concert Hall (ST).",
+    "\u003cstrong\u003eAgent 5 (Cloud Navigator):\u003c/strong\u003e Resolved the dropped Dumble Overdrive Special reference to the ODS Joe Lead capture; because single_amp_mode is true, we strictly honored the single-amp constraint by using the mandatory Two Rock SSS EQ1 (No Cab) as our sole amplifier block and omitting the secondary parallel amp.",
+    "\u003cstrong\u003eAgent 6 (Instrument Acoustician):\u003c/strong\u003e Calculated distinct input trims (-3.0 dB for the Gibson ES-339 Humbuckers vs +3.0 dB for the Fender Telecaster Single Coil) and divergent tonal targets to prevent low-end mud on the semi-hollow humbuckers while warming up the Telecaster's single-coil snap.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 Too Rock G65 cabinet with a Dynamic 57 at the Cap Edge (X: 2.5, Y: 1.0) and a Ribbon 121 on the Cone Body (X: 4.5, Y: 2.5) at a 45% blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set high-pass and low-pass filtering boundaries at 95 Hz and 7500 Hz alongside a -2.5 dB output trim for live stage readiness.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Dialed in the temporal ambiance with a 145 ms slapback delay time, a 2.4 s reverb decay, and a 22% lead wet mix target.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A (Rhythm) with the Klon capture engaged for edge-of-breakup chime and Scene B (Lead) engaging the TS10 JM Settings capture, Circular Delay, and boosted amp/reverb parameters for vocal Trio-style sustain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the multi-lane signal flow; we adapted this layout to enforce the single_amp_mode constraint and prevent 4-pedal gain congestion by retaining the core two-stage Klon into TS10 drive stack into the single Two-Rock capture."
+  ],
+  "builder_statement": "This preset recreates the iconic John Mayer Trio edge-of-breakup clean and vocal lead tones using the Two Rock SSS EQ1 (No Cab) Neural Capture paired with the 212 Too Rock G65 cabinet. For authentic 2-stage gain stacking without congestion, the John Mayer klon capture stays engaged in Scene A for touch-sensitive rhythm chime, while Scene B stacks it into the TS10 JM Settings capture alongside a post-amp Parametric-3 midrange scoop, Circular Delay slapback, and Nordic Concert Hall (ST) reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            }
+          ],
+          "rationale": "Applies the Acoustician's +3.0 dB input boost for the lower-output Telecaster single coils to reach proper edge-of-breakup saturation, paired with the Sonic Profiler's -65 dB noise gate threshold.",
+          "type": "Input"
+        },
+        {
+          "id": "block-2",
+          "model": "John Mayer klon",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Always-on Klon Centaur Neural Capture acting as the first gain stage to thicken the Telecaster's single-coil transients; kept at 0.0 dB unity volume to prevent digital input clipping on downstream captures.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "TS10 JM Settings",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Ibanez TS10 Neural Capture bypassed in Scene A and engaged in Scene B to create the classic Klon-into-TS10 two-stage mid-pushed lead sustain, with Treble trimmed -0.5 dB to smooth single-coil bite.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Mandatory Two-Rock Silver Sterling Signature Neural Capture serving as our single amp platform; EQ stays within the Scraper's +/- 2.0 dB safe capture range while translating the Acoustician's Telecaster mid push (+1.5 dB) and treble rollback (-1.0 dB).",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Freq",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Gain",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Freq",
+              "type": "slider",
+              "value": "450 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Gain",
+              "type": "slider",
+              "value": "-2.5 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Q",
+              "type": "slider",
+              "value": "1.4"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Freq",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Gain",
+              "type": "slider",
+              "value": "-1.0 dB"
+            }
+          ],
+          "rationale": "Placed after the amp capture per Scraper and Librarian guidance to carve out 450 Hz boxy frequencies for the Continuum rhythm scoop (-2.5 dB in Scene A), relaxing to -1.0 dB in Scene B so solos cut through.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 2.5, Y: 1.0)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Body (X: 4.5, Y: 2.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "45%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Pairs the Celestion G12-65 2x12 cab with the Transducer Tech's SM57 and Ribbon 121 blend, setting High Cut to 6800 Hz to smooth out Telecaster single-coil top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "145 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Emulates the Way Huge Aqua-Puss slapback delay at 145 ms; bypassed in Scene A for tight rhythm work and engaged in Scene B at 22% mix to widen lead lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Nordic Concert Hall (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Provides the lush Trio live concert hall ambiance at the end of the chain with a 2.4 s decay, expanding from 18% mix in Scene A to 24% in Scene B.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "-3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            }
+          ],
+          "rationale": "Applies the Acoustician's -3.0 dB input trim for the warm semi-hollow ES-339 humbuckers to preserve clean headroom before hitting the capture chain, paired with a -65 dB gate threshold.",
+          "type": "Input"
+        },
+        {
+          "id": "block-2",
+          "model": "John Mayer klon",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Always-on Klon Centaur Neural Capture with slightly lower gain (-1.5 dB in Scene A) and a +0.5 dB treble lift to keep the ES-339's semi-hollow humbuckers articulate and airy.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "TS10 JM Settings",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Ibanez TS10 Neural Capture bypassed in Scene A and engaged in Scene B to stack with the Klon for singing lead sustain, tightening the ES-339 low end (-0.5 dB Bass) while adding +0.5 dB Treble clarity.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Mandatory Two-Rock Silver Sterling Signature Neural Capture configured for the ES-339; applies the Acoustician's -1.0 dB volume offset, trims Bass and Mid (-1.0 dB) to prevent semi-hollow mud, and boosts Treble (+1.5 dB) within the safe +/- 2.0 dB capture limit.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Freq",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Gain",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Freq",
+              "type": "slider",
+              "value": "420 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid Gain",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mid Q",
+              "type": "slider",
+              "value": "1.6"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Freq",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Gain",
+              "type": "slider",
+              "value": "+1.0 dB"
+            }
+          ],
+          "rationale": "Post-amp Parametric-3 EQ scooping 420 Hz (-3.0 dB in Scene A, -1.5 dB in Scene B) and attenuating 95 Hz (-1.5 dB) to clear out semi-hollow body resonance without over-driving the capture's internal tone stack.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 2.5, Y: 1.0)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Body (X: 4.5, Y: 2.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Combines the Dynamic 57 and Ribbon 121 on the 2x12 G12-65 cabinet, shifting the blend toward the brighter SM57 (35% Ribbon blend) and extending High Cut to 7500 Hz to preserve humbucker chime.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "145 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Delivers the 145 ms slapback echo; bypassed in Scene A for clean rhythm articulation and active at 22% mix in Scene B for spacious lead phrasing.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Nordic Concert Hall (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.4 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "25 ms"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Replicates the Trio live hall ambiance with a 2.4 s decay and slightly brighter Tone (6.0) to keep the ES-339's reverb tail clear, rising from 18% mix in Scene A to 24% in Scene B.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

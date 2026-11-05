@@ -243,7 +243,9 @@ func TestHandleViewPreset_StaticMode(t *testing.T) {
 	if rrFallback.Code != http.StatusOK {
 		t.Fatalf("Static view fallback: expected 200, got %d", rrFallback.Code)
 	}
-	if !strings.Contains(rrFallback.Body.String(), "SCENE A (RHYTHM)") {
+	// The table now comes from the shared structured renderer (agents.RenderAllGuitarsHTML),
+	// whose headers are mixed case; CSS shows them uppercase.
+	if !strings.Contains(strings.ToUpper(rrFallback.Body.String()), "SCENE A (RHYTHM)") {
 		t.Errorf("Static view fallback: expected auto-generated table, got: %s", rrFallback.Body.String())
 	}
 }

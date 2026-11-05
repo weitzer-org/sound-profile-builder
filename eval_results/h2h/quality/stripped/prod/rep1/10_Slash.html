@@ -1,0 +1,432 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the core rig as a Marshall JCM800 2203 paired with a Marshall 1960AV 4x12 (Celestion Vintage 30s) miced with a Shure SM57, boosted by a Boss GE-7 Equalizer and followed by a Boss DD-3 Digital Delay.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the mid-pushed cascaded tube saturation target (1200 Hz focus), a -58 dB input noise gate target, and initial high/low frequency boundaries (90 Hz to 6200 Hz).",
+    "\u003cstrong\u003eAgent 3 (Web Scraper):\u003c/strong\u003e Warned against low-mid mud (100-250 Hz) when hitting a JCM800 with warm neck pickups, advised using a pre-amp graphic EQ mid-push at 800 Hz and 1.6 kHz, and recommended rolling off delay highs around 3-3.5 kHz.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the rig to native Quad Cortex blocks: Brit 2203, 412 Brit 60B V30 '95, Graphic-9, Circular Delay, and Studio Plate 70 (ST), while providing tactical placement hints.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified the dropped Marshall Silver Jubilee 2555 had no direct cloud capture match required, keeping the single-amp Brit 2203 selection intact.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation: trimmed input gain (-2.5 dB) and lowered amp Volume by 0.5 for the warm Gibson ES-339 Humbuckers, while boosting input gain (+3.0 dB), raising amp Volume by 0.5, and pushing mids to 7.0 for the Fender Telecaster Single Coil.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 412 Brit 60B V30 '95 cabinet with dual Dynamic 57 mics (Cap Edge and Off-Axis Cone Body) at a 75% blend ratio to balance midrange bite with warm body.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Specified live FRFR frequency guardrails (95 Hz to 7200 Hz) and a -1.5 dB lane output trim to prevent digital clipping.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Defined spatial parameters for the time-based effects, targeting around 400 ms delay timing and a 1.6s reverb decay.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) with Graphic-9 and Circular Delay bypassed (Bypass: On) and lower amp gain, transitioning to Scene B (Lead) with Graphic-9 and Circular Delay active (Bypass: Off), boosted amp gain, and expanded reverb mix/decay.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Organized the signal routing across Lane 1 (In 1 -\u003e Graphic-9 -\u003e Brit 2203 -\u003e 412 Brit 60B V30 '95) feeding into Lane 3 (Circular Delay -\u003e Studio Plate 70 (ST) -\u003e Multi Out)."
+  ],
+  "builder_statement": "This preset recreates a classic hard rock modded-Marshall tone centered on the Brit 2203 amplifier and 412 Brit 60B V30 '95 cabinet. Rather than using a diode-clipping overdrive, a pre-amp Graphic-9 EQ sculpts away low-end mud while slamming the preamp with an 800 Hz and 1.6 kHz mid-push in Scene B for singing lead sustain, complemented by post-cab Circular Delay and Studio Plate 70 (ST) ambience.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "100Hz Slider",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "200Hz Slider",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Placed before the amp to emulate a Boss GE-7 lead push; bypassed in Scene A and engaged in Scene B with a stronger 800 Hz boost (+4.0 dB) and +3.0 dB Level push to thicken the single-coil signal into smooth solo compression.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit 2203",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Core JCM800 2203 algorithmic model tuned for Telecaster single coils by applying the Acoustician's +0.5 Volume offset (6.5 Rhythm / 7.0 Lead), elevated Gain (7.0 / 8.5), fuller Bass (5.5), pushed Mid (7.0), and tamed Treble (4.5) to control bridge-pickup bite.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "412 Brit 60B V30 '95",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge (X: 3.5, Y: 1.0 in) - Tight midrange bite with tamed V30 high-end fizz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57 Off-Axis: Cone Body (X: 5.5, Y: 2.0 in) - Warm low-mid body to smooth out direct FRFR feeds"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "75%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Pairs Celestion Vintage 30 speakers with dual Dynamic 57 mics at a 75% blend, using a slightly lower High Cut (6800 Hz) and 85 Hz Low Cut to smooth out single-coil top-end transients on FRFR monitors.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "420 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "0%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "3500 Hz"
+            }
+          ],
+          "rationale": "Post-cab digital delay emulating the Boss DD-3, bypassed in Scene A and active in Scene B with a 3500 Hz High Cut so repeats sit warmly behind the lead guitar.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-5",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Always-on post-cab stereo reverb providing cohesive room depth in Scene A (12% Mix, 1.6 s Decay) and expanding in Scene B (20% Mix, 2.2 s Decay) for wide solo sustain.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "100Hz Slider",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "200Hz Slider",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "+2.0 dB"
+            }
+          ],
+          "rationale": "Placed in front of the amp to replicate a Boss GE-7 mid boost; bypassed in Scene A and engaged in Scene B with deeper 100 Hz (-2.0 dB) and 200 Hz (-1.5 dB) cuts to prevent semi-hollow humbucker neck-pickup mud while boosting 800 Hz and 1.6 kHz for lead articulation.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit 2203",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Delivers the cascaded Marshall 2203 crunch, incorporating the Acoustician's -0.5 Volume offset (5.5 Rhythm / 6.0 Lead) and reduced Bass (4.5) with brighter Treble (5.5) to keep the warm ES-339 humbuckers tight and articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "412 Brit 60B V30 '95",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge (X: 3.5, Y: 1.0 in) - Tight midrange bite with tamed V30 high-end fizz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57 Off-Axis: Cone Body (X: 5.5, Y: 2.0 in) - Warm low-mid body to smooth out direct FRFR feeds"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "75%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7200 Hz"
+            }
+          ],
+          "rationale": "Emulates the 1960AV Vintage 30 4x12 cabinet using dual Dynamic 57 mics at a 75% blend, with a 95 Hz Low Cut to curb semi-hollow low-end resonance and a 7200 Hz High Cut to remove FRFR fizz.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "420 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "0%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "3500 Hz"
+            }
+          ],
+          "rationale": "Post-cab digital delay modeled after the Boss DD-3, bypassed in Scene A for dry rhythm punch and engaged in Scene B at 420 ms with a 3500 Hz High Cut to tuck repeats under the lead tone.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-5",
+          "model": "Studio Plate 70 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.6 s",
+              "value_b": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Provides studio ambience after the delay block, staying active in both scenes while stepping up from 12% Mix / 1.6 s Decay in Scene A to 20% Mix / 2.2 s Decay in Scene B for lush lead dimension.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

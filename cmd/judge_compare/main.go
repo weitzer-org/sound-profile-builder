@@ -55,6 +55,14 @@ func main() {
 	if outFile == "" {
 		outFile = "/tmp/qc2-judge-results.json"
 	}
+	// JUDGE_MODEL selects the judge (default: the historical gemini-3.1-pro-preview). Plan §6.2
+	// judges with TWO models and counts only verdicts both agree on, so the model must be a
+	// parameter; it is recorded in the output so a result file always says who judged it.
+	judgeModel := os.Getenv("JUDGE_MODEL")
+	if judgeModel == "" {
+		judgeModel = "gemini-3.1-pro-preview"
+	}
+	log.Printf("judge model: %s", judgeModel)
 	if labelA == labelB {
 		log.Fatalf("LABEL_A and LABEL_B must be distinct (both %q) -- winCount's map keys would collapse into one, silently conflating both sides' win tallies", labelA)
 	}
@@ -88,12 +96,22 @@ func main() {
 
 	winCount := map[string]int{labelA: 0, labelB: 0, "Equal": 0}
 	type row struct {
-		Name      string
-		Winner    string
-		Conf      float64
-		Ground    string
-		Struct    string
-		Rationale string
+		Name        string
+		Winner      string
+		Conf        float64
+		Ground      string
+		Struct      string
+		Rationale   string
+		Judge       string // JUDGE_MODEL that produced this verdict
+		JudgeServed string // API-reported ModelVersion actually served (may differ from Judge)
+		SwappedAB   bool   // true when the presentation order was [labelB as "A", labelA as "B"]
+		// Audit fields (Phase 2.3): what the judge literally said and what it was shown, so a
+		// consumer can re-derive Winner (cmd/eval_judge_agree does, and refuses a mismatch).
+		Preference string // the judge's raw answer: A | B | Equal
+		PresentedA string // label of the preset shown as "Preset A"
+		PresentedB string // label of the preset shown as "Preset B"
+		DirA       string // DIR_A / DIR_B of this comparison (identifies scenario+rep when pointed at <batch>/<scenario>/rep<N>)
+		DirB       string
 	}
 	var rows []row
 
@@ -109,6 +127,10 @@ func main() {
 			continue
 		}
 
+		// Per-query coin flip for which side is shown as "A" (position bias control). The
+		// outcome is recorded in each row so position bias can be audited afterwards.
+		// isTier0A (historical name) == "labelB is shown as Preset A", i.e. the order is SWAPPED relative
+		// to (labelA, labelB). Recorded as-is in row.SwappedAB below.
 		isTier0A := rand.Float32() > 0.5
 		var aData, bData []byte
 		var aLabel, bLabel string
@@ -122,7 +144,7 @@ func main() {
 
 		prompt := fmt.Sprintf(`You are a master guitar tone/gear judge evaluating two AI-generated Quad Cortex presets for the same target: %q.
 
-Both are the final rendered HTML preset pages produced by the pipeline (a builder statement in prose, followed by the full block table and per-block rationale, and -- where present -- an agent-impact summary of what each upstream reasoning agent contributed). Parameter rows may optionally carry a "Scene B / Lead" override value (when it genuinely differs from the Scene A value) and a basis tag (one of confirmed_range/real_gear_analog/engineering_convention/estimate, disclosing how confident that value is). Both are a legitimate, intentional part of newer presets -- do NOT treat their presence as hallucinated or non-standard; only their absence in an otherwise-legitimate preset is neutral (older presets simply predate them), never count for or against a preset on its own.
+Both are the final rendered HTML preset pages produced by the pipeline (a builder statement in prose, followed by the full block table and per-block rationale, and -- where present -- an agent-impact summary of what each upstream reasoning agent contributed). Parameter rows may optionally carry a "Scene B / Lead" override value (when it genuinely differs from the Scene A value) and a basis tag (one of confirmed_range/real_gear_analog/engineering_convention/estimate, disclosing how confident that value is). Both are a legitimate, intentional part of newer presets -- do NOT treat their presence as hallucinated or non-standard; only their absence in an otherwise-legitimate preset is neutral (older presets simply predate them), never count for or against a preset on its own. Likewise a block may carry a kept_defaults list naming device controls deliberately left at the device's default value: those controls ARE set (to the default) and are not missing parameters; a block listing only the controls it changes, plus that list, is as complete as one listing every control. Neither the list's presence nor its absence counts for or against a preset on its own.
 
 Evaluate on: (1) plausibility and specificity of the tonal/historical reasoning — does it read like it's grounded in real, specific facts about the gear/artist/era, or generic/hand-wavy claims that could apply to almost any similar tone; (2) internal consistency — do the parameter choices and rationale actually support each other (including: does a block's Bypass/active state in the block table match what the builder_statement and rationale say is active in that scene?); (3) structural correctness — a complete, sensible block list rendered without missing or malformed rows; (4) overall usefulness as an actual preset a guitarist could load and tweak.
 
@@ -134,7 +156,7 @@ Preset B:
 
 Respond with your structured judgement.`, name, string(aData), string(bData))
 
-		resp, err := client.Models.GenerateContent(ctx, "gemini-3.1-pro-preview", []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
+		resp, err := client.Models.GenerateContent(ctx, judgeModel, []*genai.Content{genai.NewContentFromText(prompt, genai.RoleUser)}, genConfig)
 		if err != nil {
 			log.Printf("judge failed for %s: %v", name, err)
 			continue
@@ -153,7 +175,7 @@ Respond with your structured judgement.`, name, string(aData), string(bData))
 			winner = bLabel
 		}
 		winCount[winner]++
-		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale})
+		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale, judgeModel, resp.ModelVersion, isTier0A, j.Preference, aLabel, bLabel, dirA, dirB})
 		log.Printf("⚖️ %s -> %s (conf %.2f)", name, winner, j.Confidence)
 	}
 

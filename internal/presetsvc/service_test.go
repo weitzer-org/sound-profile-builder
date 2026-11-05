@@ -135,10 +135,12 @@ type fakeOrch struct {
 	gen    []byte
 	refine []byte
 
-	mu       sync.Mutex
-	gate     chan struct{} // nil means never block
-	emitLoop bool
-	released bool
+	mu   sync.Mutex
+	gate chan struct{} // nil means never block
+	// refineVersions is the prompt-version map the last RefineChat call's ctx carried.
+	refineVersions map[string]string
+	emitLoop       bool
+	released       bool
 }
 
 // hold makes subsequent pipeline calls block until release.
@@ -193,7 +195,10 @@ func (f *fakeOrch) RunPipeline(_ context.Context, _ string, _ map[string]interfa
 	return string(f.gen), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil
 }
 
-func (f *fakeOrch) RefineChat(_ context.Context, _ *storage.Preset, _ string, _, _ bool) (string, *agents.TokenUsage, error) {
+func (f *fakeOrch) RefineChat(ctx context.Context, _ *storage.Preset, _ string, _, _ bool) (string, *agents.TokenUsage, error) {
+	f.mu.Lock()
+	f.refineVersions = agents.PromptVersionsFrom(ctx)
+	f.mu.Unlock()
 	f.block(nil)
 	return string(f.refine), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil
 }
@@ -216,6 +221,12 @@ type harness struct {
 // Service's run slots drained, at test cleanup so no goroutine stays blocked.
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessWithConfig(t, nil)
+}
+
+// newHarnessWithConfig is newHarness with a fixed app config (nil = none).
+func newHarnessWithConfig(t *testing.T, cfg *config.AppConfig) *harness {
+	t.Helper()
 	gen, refine := loadFixtures(t)
 	h := &harness{
 		client:  newMemClient(),
@@ -236,7 +247,7 @@ func newHarness(t *testing.T) *harness {
 			}
 			return h.orch, nil
 		},
-		Config: func() *config.AppConfig { return nil },
+		Config: func() *config.AppConfig { return cfg },
 	})
 	t.Cleanup(func() {
 		h.orch.release()
@@ -476,6 +487,30 @@ func TestRefineAppendsRunID(t *testing.T) {
 	}
 	if want := []string{runID}; !reflect.DeepEqual(got.RunIDs, want) {
 		t.Errorf("preset.RunIDs = %v, want %v", got.RunIDs, want)
+	}
+}
+
+// RefineChat used to load Architect v4 whatever config.json said; the run must now hand it
+// the configured versions.
+func TestRefinePassesConfiguredPromptVersions(t *testing.T) {
+	h := newHarnessWithConfig(t, &config.AppConfig{AgentPrompts: map[string]string{"12_architect": "v6"}})
+	ctx := context.Background()
+	p := &storage.Preset{Name: "Warm Lead"}
+	if err := h.store.Save(ctx, p); err != nil {
+		t.Fatalf("store.Save: %v", err)
+	}
+	runID, err := h.svc.StartRefine(ctx, p.ID, "make it brighter", true)
+	if err != nil {
+		t.Fatalf("StartRefine: %v", err)
+	}
+	if _, err := h.svc.WaitRun(ctx, runID, 10*time.Second); err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	h.orch.mu.Lock()
+	got := h.orch.refineVersions["12_architect"]
+	h.orch.mu.Unlock()
+	if got != "v6" {
+		t.Errorf("RefineChat saw 12_architect = %q, want the configured v6", got)
 	}
 }
 

@@ -1,0 +1,516 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around a Fender '65 Twin Reverb platform paired with a 2x12 C12K speaker configuration and Shure SM57 microphone, establishing a pure pedal-free vintage blues signal path.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the mid-pushed EQ contour, subtle power-amp compression saturation style, spring reverb ambience, and critical frequency roll-offs at 100 Hz and 7000 Hz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Surfaced the crucial pre-amp Parametric EQ notch technique to emulate a passive Varitone vocal honk, recommended the 1176-style compressor for stinging sustain, and warned against ice-pick highs above 6.5–7.5 kHz.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Verified and locked in the mandatory US TWN Vibrato and 212 US TWN CK2 models alongside the Legendary 87 (ST), Parametric-3, and Spring reverb blocks with tactical pre-amp placement rules.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no custom user captures were required for this preset, keeping the signal chain grounded in verified native algorithmic Quad Cortex models.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated distinct pickup compensation profiles for the semi-hollow Gibson ES-339 humbuckers versus the Fender Telecaster single coils, diverging amp Volume, Bass, Mid, and Treble settings.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the dual-mic cabinet setup combining an on-axis Dynamic 57 at the cap edge with a 15-degree off-axis Ribbon 121 on the cone in a 55/45 blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the high-pass filter near 95 Hz and low-pass filter between 6000–6500 Hz in the cabinet block while trimming overall output by -1.5 dB for mix-ready headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Refined the ambient space parameters so the spring reverb decay and mix stay tight and articulate around staccato blues phrasing.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) and Scene B (Lead) parameter transitions, deepening the Varitone notch, boosting pre-amp EQ output, increasing compressor mix, and pushing amp Volume in Scene B for natural tube breakup.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the signal chain across Lane 1 (compression, pre-EQ, amplifier) and Lane 3 (cabinet, spring reverb) to optimize Quad Cortex CPU load."
+  ],
+  "builder_statement": "This preset captures classic stinging electric blues tone centered on the US TWN Vibrato amplifier and 212 US TWN CK2 cabinet pushed into natural power-tube warmth without overdrive pedals. An early Legendary 87 (ST) compressor enhances sustain for expressive vibrato while a pre-amp Parametric-3 EQ carves a narrow midrange notch to emulate a passive Varitone circuit, finished with a subtle Spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "ATTACK",
+            "RELEASE",
+            "MAKEUP"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "INPUT",
+              "type": "slider",
+              "value": "-12.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "50 %",
+              "value_b": "70 %"
+            }
+          ],
+          "rationale": "Placed first in the chain with a slow 0.8 ms default attack and 4:1 ratio to add singing sustain without squashing pick attack; INPUT is raised 2.5 dB from default to compensate for lower-output single coils, and MIX increases in Scene B for lead sustain.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "1 GAIN",
+            "1 FREQ",
+            "1 Q",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 TYPE",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "2 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 FREQ",
+              "type": "slider",
+              "value": "800 Hz",
+              "value_b": "1100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 Q",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-6.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "0 dB",
+              "value_b": "2.5 dB"
+            }
+          ],
+          "rationale": "Placed before the amplifier to emulate a passive Varitone midrange notch, shifting from a subtle 800 Hz scoop in Scene A to a deeper 1100 Hz vocal honk with a +2.5 dB lead boost in Scene B.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [
+            "BRIGHT"
+          ],
+          "model": "US TWN Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "0.5 dB",
+              "value_b": "2.0 dB"
+            }
+          ],
+          "rationale": "Pushed cleanly without overdrive pedals per the Pure Headroom Rule; Telecaster single coils use a higher VOLUME (6.0 Rhythm / 8.0 Lead), fuller BASS (5.0), pushed MID (7.5 / 8.5), and tamed TREBLE (4.0) to prevent ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "212 US TWN CK2",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-1.7 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "6000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Pairs a Dyn 57 at the cap edge with a warm Ribbon 121 on the cone in a 55/45 blend (0 dB and -1.7 dB), rolling off highs at 6500 Hz (6000 Hz in Scene B) to smooth out Twin Reverb brightness.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "TONE",
+            "TRAILS"
+          ],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "24 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DAMPING",
+              "type": "slider",
+              "value": "35 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "BOING",
+              "type": "slider",
+              "value": "35 %",
+              "value_b": "42 %"
+            }
+          ],
+          "rationale": "Swapped to the exact catalog name 'Spring' from Device Effect Blocks; dialed in with a low MIX and controlled BOING/DAMPING so staccato blues phrasing stays crisp and articulate.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "ATTACK",
+            "RELEASE",
+            "MAKEUP"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "INPUT",
+              "type": "slider",
+              "value": "-17.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "50 %",
+              "value_b": "70 %"
+            }
+          ],
+          "rationale": "Placed early in the chain with a slow 0.8 ms default attack and 4:1 ratio for singing vibrato sustain; INPUT is trimmed by 2.5 dB from default (-17.5 dB) to prevent semi-hollow humbuckers from overloading the front end.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "1 GAIN",
+            "1 FREQ",
+            "1 Q",
+            "1 TYPE",
+            "1 BYPASS",
+            "2 TYPE",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "2 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 FREQ",
+              "type": "slider",
+              "value": "800 Hz",
+              "value_b": "1100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 Q",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-6.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "0 dB",
+              "value_b": "2.5 dB"
+            }
+          ],
+          "rationale": "Placed before the amplifier to emulate Gibson Lucille's passive Varitone circuit, moving from a subtle 800 Hz notch in Scene A to a pronounced 1100 Hz vocal honk with a +2.5 dB output push in Scene B.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [
+            "BRIGHT"
+          ],
+          "model": "US TWN Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "1.0 dB"
+            }
+          ],
+          "rationale": "Driven natively via VOLUME (5.0 Rhythm / 7.0 Lead) for warm tube compression; tailored for the ES-339 humbuckers with reduced BASS (3.5) to prevent low-mid mud, focused MID (6.5 / 7.5), and open TREBLE (5.5).",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [
+            "MIC 1 PAN",
+            "MIC 1 GRID MODE",
+            "MIC 2 PAN",
+            "MIC 2 GRID MODE",
+            "MIC 1 BALANCE",
+            "MIC 2 BALANCE"
+          ],
+          "model": "212 US TWN CK2",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-1.7 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "6000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "-1.5 dB"
+            }
+          ],
+          "rationale": "Blends an on-axis Dyn 57 at the cap edge with an off-axis Ribbon 121 on the cone in a 55/45 ratio (0 dB / -1.7 dB), with a 95 Hz HPF and 6500 Hz LPF (6000 Hz in Scene B) to keep highs smooth.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "TONE",
+            "TRAILS"
+          ],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "24 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DAMPING",
+              "type": "slider",
+              "value": "35 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "BOING",
+              "type": "slider",
+              "value": "35 %",
+              "value_b": "42 %"
+            }
+          ],
+          "rationale": "Swapped to the exact catalog name 'Spring' from Device Effect Blocks; provides authentic vintage spring ambience at 18% mix for rhythm and 24% for lead without washing out note definition.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

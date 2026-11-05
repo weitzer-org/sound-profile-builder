@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 	"github.com/weitzer-org/sound-builder/internal/runs"
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -524,6 +525,105 @@ func isBareSliderNumber(value string) bool {
 	return err == nil && !math.IsNaN(f) && !math.IsInf(f, 0)
 }
 
+// applyParamEdit sets a block's parameter to an edited value and reports whether the block
+// has that parameter. A device control the preset leaves at its default (the Edit view
+// shows every control of a catalog model) is added as a parameter, and an edited control
+// leaves the block's kept_defaults.
+func applyParamEdit(b *storage.EffectBlock, paramName, newValue string) bool {
+	updated := false
+	for j, param := range b.Parameters {
+		if param.Name != paramName {
+			continue
+		}
+		v, unit := storedValueUnit(newValue, param.Unit)
+		b.Parameters[j].Unit = unit
+		b.Parameters[j].Value = v
+		updated = true
+		break
+	}
+	if !updated {
+		if ctl, ok := agents.DeviceControlsFor(b.Model); ok {
+			if k := ctl.Index(paramName); k >= 0 {
+				c := ctl.Controls[k]
+				typ := "slider"
+				if len(c.Steps) > 0 {
+					typ = "dropdown"
+				}
+				b.Parameters = append(b.Parameters, storage.BlockParameter{Name: c.Name, Type: typ, Value: newValue})
+				updated = true
+			}
+		}
+	}
+	if updated {
+		b.KeptDefaults = withoutControl(b.KeptDefaults, b.Model, paramName)
+	}
+	return updated
+}
+
+// numberWithUnit splits a written value into its number and trailing unit ("-65.0 dB",
+// "300ms"); ok is false for text ("OFF", "1/4").
+var numberWithUnit = regexp.MustCompile(`^\s*([+-]?\d+(?:\.\d+)?)\s*([A-Za-z%]*)\s*$`)
+
+// storedValueUnit is how an edited value is stored on a parameter whose unit is kept
+// separately in Unit. The editor shows such a parameter as "Value Unit", and a device
+// slider posts its own unit, so the posted value usually carries a unit:
+//   - the parameter's own unit (any case, with or without the space) is stripped back off,
+//     so it isn't baked into Value and duplicated ("-65.0 dB dB") on the next render;
+//   - a different unit ("300 ms" on a parameter stored as seconds) is kept in Value and
+//     Unit is cleared, rather than stored as 300 seconds (or, by suffix-matching, "300 m");
+//   - a bare number or text keeps the parameter's unit.
+func storedValueUnit(value, unit string) (string, string) {
+	if unit == "" {
+		return value, ""
+	}
+	m := numberWithUnit.FindStringSubmatch(value)
+	switch {
+	case m == nil || m[2] == "":
+		return value, unit
+	case strings.EqualFold(m[2], strings.TrimSpace(unit)):
+		return m[1], unit
+	}
+	return strings.TrimSpace(value), ""
+}
+
+// withoutControl drops from a kept_defaults list the entries naming the same device
+// control as paramName (names compare the way the catalog check compares them).
+func withoutControl(kept []string, model, paramName string) []string {
+	if len(kept) == 0 {
+		return kept
+	}
+	ctl, ok := agents.DeviceControlsFor(model)
+	target := -1
+	if ok {
+		target = ctl.Index(paramName)
+	}
+	out := make([]string, 0, len(kept)) // a new slice: the caller's may alias stored data
+	for _, k := range kept {
+		same := strings.EqualFold(strings.TrimSpace(k), strings.TrimSpace(paramName))
+		if !same && target >= 0 {
+			same = ctl.Index(k) == target
+		}
+		if !same {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
+// structuredHasRationale reports whether any block carries a rationale, i.e. the structured
+// data is the complete record (presets from before the rationale field kept their
+// narration only in legacy_html).
+func structuredHasRationale(sp storage.StructuredPreset) bool {
+	for _, blocks := range sp.Guitars {
+		for _, b := range blocks {
+			if strings.TrimSpace(b.Rationale) != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // pillToggleStyle returns the inline style for one side of a two-button
 // segmented toggle (View/Edit, etc.), so each toggle doesn't hand-roll its
 // own active/inactive style swap.
@@ -627,38 +727,15 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		legacyMode = true
 	}
 
-	// TODO: Add effect rationale into this version of the table when available in StructuredPreset.
-	// Fallback: If we need static view but only have structured data, generate a simple table
-	if legacyMode && len(legacyMatrices) == 0 && len(structured.Guitars) > 0 {
-		legacyMatrices = make(map[string]string)
-		for guitarName, blocks := range structured.Guitars {
-			var sb strings.Builder
-			sb.WriteString(`<table class="grid-matrix" style="width:100%; border-collapse: collapse;">`)
-			sb.WriteString(`<thead><tr style="background: var(--bg-card);"><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">EFFECT TYPE & NAME</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">SCENE A (RHYTHM)</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border);">SCENE B (LEAD)</th></tr></thead>`)
-			sb.WriteString(`<tbody>`)
-			for _, block := range blocks {
-				var params []string
-				for _, pr := range block.Parameters {
-					params = append(params, fmt.Sprintf("%s: %s%s", html.EscapeString(pr.Name), html.EscapeString(pr.Value), html.EscapeString(pr.Unit)))
-				}
-				paramsStr := strings.Join(params, "<br>")
-
-				var title string
-				if block.Model != "" {
-					title = fmt.Sprintf("%s: %s", block.Type, block.Model)
-				} else {
-					title = block.Type
-				}
-
-				// TODO: Add effect rationale into this version of the table when available in StructuredPreset.
-				sb.WriteString(fmt.Sprintf(`<tr style="border-bottom: 1px solid var(--border);"><td style="padding: 0.75rem; vertical-align: top;"><b>%s</b></td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td><td style="padding: 0.75rem; color: var(--text-sub); vertical-align: top;">%s</td></tr>`,
-					html.EscapeString(title),
-					paramsStr,
-					paramsStr))
-			}
-			sb.WriteString(`</tbody></table>`)
-			legacyMatrices[guitarName] = sb.String()
-		}
+	// The read-only table is rendered from the structured data each time it's shown, so it
+	// is always current: edits made in the Edit view, the post-generation checks' Rationale
+	// notes and the "At device default" line all appear. The legacy_html stored at
+	// generation time is a render of the same data taken before those checks, and is never
+	// updated on edit. It's kept only where it holds something the structured data lacks:
+	// older presets whose narration exists only in that HTML (no block has a rationale).
+	// Sanitized like stored HTML so the same CSS applies.
+	if legacyMode && len(structured.Guitars) > 0 && (len(legacyMatrices) == 0 || structuredHasRationale(structured)) {
+		legacyMatrices = sanitizeLegacyMatrices(agents.RenderAllGuitarsHTML(structured.Guitars))
 	}
 
 	tabsHtml := `<div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">`
@@ -727,60 +804,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 						<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
 				`, html.EscapeString(block.Type), html.EscapeString(block.Model), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
 
-				for _, param := range block.Parameters {
-					safeParamId := strings.ReplaceAll(strings.ToLower(param.Name), " ", "-")
-					if param.Type == "slider" && param.Unit == "" && isBareSliderNumber(param.Value) {
-						// Sliders are hard-coded 0-10, which only makes sense
-						// for a true dimensionless 0-10 value (Gain/Tone/Volume).
-						// A param carrying a real-world Unit (dB/Hz/ms/%) can't
-						// be represented on that fixed range, so it falls into
-						// the shared text-input branch below instead -- the
-						// same control "Mic 1"/"Mic 2" already uses.
-						// storage.BlockParameter has a separate Unit field, but
-						// in practice the live agent pipeline often doesn't
-						// split it out -- it just puts the whole "+3.0 dB" /
-						// "6500 Hz" string in Value and leaves Unit empty.
-						// Checking Unit alone missed that case (confirmed
-						// against a real generated preset, not just the
-						// hand-built test fixture), so decide off whether Value
-						// itself parses as a finite bare number instead.
-						blocksHtml.WriteString(fmt.Sprintf(`
-							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-								<div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-sub);">
-									<span>%[1]s</span>
-									<span id="val-%[2]s-%[3]s">%[4]s</span>
-								</div>
-								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[5]s", "guitar":"%[6]s", "block_id":"%[7]s", "param_name":"%[1]s"}' min="0" max="10" step="0.1" value="%[4]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('val-%[2]s-%[3]s').innerText = this.value">
-							</div>
-						`, html.EscapeString(param.Name), safeId, safeParamId, param.Value, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
-					} else if param.Type == "toggle" {
-						checked := ""
-						if param.Value == "on" || param.Value == "true" {
-							checked = "checked"
-						}
-						blocksHtml.WriteString(fmt.Sprintf(`
-							<div class="param-group" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-sub); margin-top: 1.5rem;">
-								<input type="checkbox" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' %[2]s style="cursor: pointer;">
-								<span>%[1]s</span>
-							</div>
-						`, html.EscapeString(param.Name), checked, p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
-					} else {
-						// Shared text-input control for everything else:
-						// unit-bearing sliders (dB/Hz/ms/%), and ordinary text
-						// params like "Mic 1"/"Mic 2" (Unit is always "" for
-						// those, so displayValue just falls back to Value).
-						displayValue := param.Value
-						if param.Unit != "" {
-							displayValue = param.Value + " " + param.Unit
-						}
-						blocksHtml.WriteString(fmt.Sprintf(`
-							<div class="param-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
-								<label style="font-size: 0.9rem; color: var(--text-sub);">%[1]s</label>
-								<input type="text" name="value" hx-post="/api/preset/update_parameter" hx-trigger="keyup delay:500ms" hx-vals='{"preset_id":"%[3]s", "guitar":"%[4]s", "block_id":"%[5]s", "param_name":"%[1]s"}' value="%[2]s" style="padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 4px; color: white; font-size: 0.9rem;">
-							</div>
-						`, html.EscapeString(param.Name), html.EscapeString(displayValue), p.ID, html.EscapeString(guitarName), html.EscapeString(block.ID)))
-					}
-				}
+				blocksHtml.WriteString(blockControlsHTML(editTarget{presetID: p.ID, guitar: guitarName, blockID: block.ID}, block))
 				blocksHtml.WriteString(`</div></div>`)
 			}
 
@@ -1060,35 +1084,18 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 
 		structured, legacyMatrices, hasEnvelope := parseStructuredPayload(p.Payload)
 
-		// Update the parameter
+		// Update the parameter. A slider over a device control posts a bare number plus
+		// the control's unit, which is put back on the value ("-3" + "dB" -> "-3 dB").
+		newValue := strings.TrimSpace(value)
+		if unit := strings.TrimSpace(r.FormValue("unit")); unit != "" && isBareSliderNumber(newValue) {
+			newValue += " " + unit
+		}
 		updated := false
-		if blocks, ok := structured.Guitars[guitar]; ok {
-			for i, block := range blocks {
-				if block.ID == blockID {
-					for j, param := range block.Parameters {
-						if param.Name == paramName {
-							newValue := strings.TrimSpace(value)
-							if param.Unit != "" {
-								// The rendered field displays "Value Unit"
-								// (see the text-input branch in
-								// renderTweakingWorkspaceHTML); strip that
-								// suffix back off before storing so Unit
-								// doesn't get baked into Value and duplicated
-								// ("-65.0 dB" -> "-65.0 dB dB") on the next
-								// render. Match case-insensitively and with or
-								// without the separating space, since a user
-								// editing the field by hand won't necessarily
-								// preserve either exactly.
-								if strings.HasSuffix(strings.ToLower(newValue), strings.ToLower(param.Unit)) {
-									newValue = strings.TrimSpace(newValue[:len(newValue)-len(param.Unit)])
-								}
-							}
-							structured.Guitars[guitar][i].Parameters[j].Value = newValue
-							updated = true
-							break
-						}
-					}
-				}
+		blocks := structured.Guitars[guitar]
+		for i := range blocks {
+			if blocks[i].ID == blockID {
+				updated = applyParamEdit(&blocks[i], paramName, newValue)
+				break
 			}
 		}
 

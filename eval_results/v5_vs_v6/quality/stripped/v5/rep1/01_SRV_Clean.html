@@ -1,0 +1,424 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core SRV and John Mayer blues-rock architecture centered on a Dumble Steel String Singer head, EVM12L speakers, SM57 miking, and an Ibanez TS808 Tube Screamer.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the symmetrical diode soft-clipping characteristic, spring reverb spatial goal, -65 dB noise gate target, and a 720 Hz mid-pushed EQ profile with 90 Hz to 7000 Hz bandwidth bounds.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted single-amp capture staging techniques, advising pulling back the amp capture output slightly when boosting and rolling off cab high-end between 6.5 kHz and 7.5 kHz to eliminate Tube Screamer fizz.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Enforced single-amp constraints by locking in the mandatory Two Rock SSS EQ1 (No Cab) capture and 212 Too Rock EV Vintage 79 cabinet, while suggesting the Green 808 and John Mayer Spring Reverb.",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Identified cloud captures for the dropped Vibroverb and Super Reverb combos and confirmed the Two-Rock Silver Sterling Signature and OG TS808 capture profiles, though multi-amp captures were set aside to strictly obey single_amp_mode.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific input gain and EQ offsets, trimming the Gibson ES-339 Humbuckers by -3.0 dB with lowered bass and boosting the Fender Telecaster Single Coil by +3.0 dB with enhanced mids and tamed highs.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 Too Rock EV Vintage 79 cabinet with a Dynamic 57 at the Cap Edge (X: 3.5, Y: 1.0) and a Ribbon 121 at the Cone Center (X: 5.0, Y: 2.5) at a 65% blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Applied live mix readiness via a Global EQ high-pass at 85 Hz and low-pass at 6500 Hz alongside a -1.5 dB output pad to maintain digital headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided time-based baseline targets of 115 ms slapback delay, 2.2 seconds reverb decay, and a 25% wet mix to keep blues phrases articulate.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A for high-headroom clean rhythm (Green 808 bypassed, amp capture at baseline) and Scene B for pushed blues lead (Green 808 engaged, amp capture Gain and Volume boosted, cab high-cut lowered to 5800 Hz, and reverb expanded).",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Proposed a multi-lane layout with secondary amp captures and dual 808s, which was consolidated by the Architect into a single-amp, single-drive signal chain to strictly honor single_amp_mode and prevent gain congestion."
+  ],
+  "builder_statement": "This preset delivers an authentic, high-headroom Dumble Steel String Singer blues-rock platform using the Two Rock SSS EQ1 (No Cab) neural capture paired with the 212 Too Rock EV Vintage 79 cabinet. Scene A offers glassy, articulate clean rhythm with lush spring reverb and subtle slapback delay, while Scene B engages the Green 808 overdrive and pushes the amplifier capture for thick, singing lead sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Utility Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-62.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "55 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-45.0 dB"
+            }
+          ],
+          "rationale": "Tames single-coil 60-cycle hum and compensates for the +3.0 dB input boost required to push the Telecaster into the clipping threshold.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.5"
+            }
+          ],
+          "rationale": "Provides the classic symmetrical diode soft-clipping 720 Hz mid-hump boost in Scene B, with Drive nudged slightly higher and Tone slightly warmer for single-coil bridge pickups.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a Two-Rock Silver Sterling Signature on the EQ1 setting, with relative dB EQ offsets tailored to thicken Telecaster single coils and tame ice-pick highs.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock EV Vintage 79",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Center (X: 5.0, Y: 2.5)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6300 Hz",
+              "value_b": "5600 Hz"
+            }
+          ],
+          "rationale": "Delivers the high-headroom punch of vintage EVM12L speakers, blended slightly closer to the Ribbon 121 with a smoother High Cut in Scene B to eliminate single-coil and Tube Screamer fizz.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Simple Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "115 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Adds a tight 115 ms studio slapback echo that thickens single-note blues phrasing without cluttering fast rhythm work.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "3.5 s",
+              "value_b": "4.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22%",
+              "value_b": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Placed after the cabinet to provide authentic vintage Fender-style spring ambiance, expanding in decay and mix for Scene B solos.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Utility Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-40.0 dB"
+            }
+          ],
+          "rationale": "Keeps the signal path silent at the Sonic Profiler's -65 dB target while preserving the natural decay of semi-hollow humbuckers.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B with low Drive and high Level to push the amp capture into singing blues sustain, with slightly lower Drive and brighter Tone to keep the ES-339's warm low-mids articulate.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of a Two-Rock Silver Sterling Signature on the EQ1 setting, incorporating the Acoustician's humbucker input trim, reduced bass (-1.0 dB), and -0.5 dB volume offset to prevent semi-hollow mud.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock EV Vintage 79",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Center (X: 5.0, Y: 2.5)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "5800 Hz"
+            }
+          ],
+          "rationale": "Pairs the Dynamic 57 and Ribbon 121 on EVM12L speakers with a 95 Hz Low Cut for humbucker clarity and a Scene B High Cut drop to 5800 Hz to smooth out overdrive harmonics.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Simple Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "115 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Delivers a 115 ms slapback delay with a slightly drier mix in Scene A to keep warm semi-hollow chord voicings clean and punchy.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "3.5 s",
+              "value_b": "4.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "18 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Post-cab spring reverb providing three-dimensional depth, dialed with slightly brighter Tone and longer Pre-Delay so the ES-339's fundamental note attack stays upfront.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

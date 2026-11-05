@@ -1,0 +1,35 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 2174,
+    "output_tokens": 95,
+    "thinking_tokens": 814,
+    "latency_ms": 7365,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 764,
+    "output_tokens": 290,
+    "thinking_tokens": 1208,
+    "latency_ms": 12696,
+    "grounded": true,
+    "search_queries": 2
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-3.1-pro-preview",
+    "success": false,
+    "error": "doRequest: error sending request: Post \"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent\": read tcp 127.0.0.1:45106-\u003e127.0.0.1:33357: read: connection reset by peer",
+    "latency_ms": 13934,
+    "grounded": false
+  }
+]

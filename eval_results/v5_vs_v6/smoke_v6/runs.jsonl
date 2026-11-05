@@ -1,0 +1,1 @@
+{"scenario":"PROD","query":"01_SRV_Clean","rep":1,"success":true,"output_file":"eval_results/v5_vs_v6/smoke_v6/PROD/rep1/01_SRV_Clean.html","latency_sec":105.583426511,"integrity_ok":true,"calls_file":"eval_results/v5_vs_v6/smoke_v6/PROD/rep1/01_SRV_Clean.calls.json","batch_id":"20261105T154513Z"}

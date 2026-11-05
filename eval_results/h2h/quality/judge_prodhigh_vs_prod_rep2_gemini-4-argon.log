@@ -1,0 +1,36 @@
+2026/11/05 14:54:14 judge model: gemini-4-argon
+2026/11/05 14:54:14 skip 01_SRV_Clean: open eval_results/h2h/quality/stripped/prodhigh/rep2/01_SRV_Clean.html: no such file or directory
+2026/11/05 14:54:23 ⚖️ 02_Chicago_Blues -> prodhigh (conf 0.95)
+2026/11/05 14:54:23 skip 03_British_Invasion: open eval_results/h2h/quality/stripped/prodhigh/rep2/03_British_Invasion.html: no such file or directory
+2026/11/05 14:54:23 skip 04_Southern_Rock: open eval_results/h2h/quality/stripped/prodhigh/rep2/04_Southern_Rock.html: no such file or directory
+2026/11/05 14:54:23 skip 05_Clapton: open eval_results/h2h/quality/stripped/prodhigh/rep2/05_Clapton.html: no such file or directory
+2026/11/05 14:54:23 skip 06_Gilmour: open eval_results/h2h/quality/stripped/prodhigh/rep2/06_Gilmour.html: no such file or directory
+2026/11/05 14:54:40 ⚖️ 07_Edge -> prodhigh (conf 0.85)
+2026/11/05 14:54:40 skip 08_EVH: open eval_results/h2h/quality/stripped/prodhigh/rep2/08_EVH.html: no such file or directory
+2026/11/05 14:54:40 skip 09_BB_King: open eval_results/h2h/quality/stripped/prodhigh/rep2/09_BB_King.html: no such file or directory
+2026/11/05 14:54:55 ⚖️ 10_Slash -> prodhigh (conf 0.85)
+2026/11/05 14:54:55 skip 11_Mayer_Lead: open eval_results/h2h/quality/stripped/prodhigh/rep2/11_Mayer_Lead.html: no such file or directory
+2026/11/05 14:54:55 skip 12_Bonamassa: open eval_results/h2h/quality/stripped/prodhigh/rep2/12_Bonamassa.html: no such file or directory
+2026/11/05 14:54:55 skip 13_Hard_Rock_Blues: open eval_results/h2h/quality/stripped/prodhigh/rep2/13_Hard_Rock_Blues.html: no such file or directory
+
+=== JUDGE RESULTS ===
+prod wins: 0 | prodhigh wins: 3 | equal: 0
+
+--- 02_Chicago_Blues ---
+Winner: prodhigh (confidence 0.95)
+Grounding: Preset A uses real, verifiable Quad Cortex factory blocks (US DLX 58, 112 US DLX Tweed WGS-Q 10s, Green 808, Spring Reverb) and cites accurate CorOS 3.3.0 V2 capture architecture along with specific historical details (RCA 77-DX ribbon mic, Chess Records echo chamber). Preset B fabricates or hallucinates several non-existent QC block names ('Vemural Ray', 'John Mayer Spring Reverb', 'FNDR TWDLX IN Edge BAL CAB') and crams rationale text directly into the Mic 1 and Mic 2 parameter values.
+Structural: Preset A has clean, well-formatted parameter values and consistent block structure across both guitars. Preset B stuffs prose descriptions ('for midrange focus and controlled low-end') inside the dropdown value strings for Mic 1 and Mic 2, and unnecessarily assigns Scene A and Scene B parameter changes to a block ('1981 TS808 1') that is bypassed in Scene A.
+Rationale: Preset A is vastly superior in both Quad Cortex accuracy and vintage tone craft. It uses actual native Quad Cortex models and factory captures ('US DLX 58', '112 US DLX Tweed WGS-Q 10s', 'Green 808', 'Spring Reverb') and keeps the signal chain appropriately streamlined and authentic to 1950s Chicago blues. Preset B relies on hallucinated/misspelled block names ('Vemural Ray', 'John Mayer Spring Reverb') and overcomplicates a 1950s Chicago blues tone with a pre-amp parametric EQ and stacked boutique/modern drives, while also polluting the cabinet microphone parameter fields with rationale text.
+
+--- 07_Edge ---
+Winner: prodhigh (confidence 0.85)
+Grounding: Both presets cite authentic U2 / The Edge gear history (1964 Vox AC30 Top Boost, 2x12 Celestion Alnico Blue speakers, Korg SDD-3000 preamp/delay, EHX Deluxe Memory Man, compressor/boost front-end). Preset A stays grounded in standard algorithmic Quad Cortex models (`UK C30 TopBoost` and active `212 UK C30 '65` cab) where EQ and mic adjustments actually affect the sound. Preset B adds Boss FA-1 FET preamp emulation and TS-9 lead boost, which are also historically accurate for The Edge, but relies on a full-rig Neural Capture (`66 AC30 JMP Clean`) with a permanently bypassed cabinet block (`212 UK C30 '65`), making its detailed mic/filter configurations non-functional in default operation.
+Structural: Preset A has a minor trailing underscore typo on two block names (`Dual (ST)_` and `Studio Plate 70 (ST)_`) and omits explicit Bypass toggles on the Amp and Cab blocks (though both are clearly always-on). Preset B includes a fully parameterized Cabinet block that is bypassed (`Bypass: On`) in both scenes because the amp block is a full-rig capture, and omits frequency parameters (`Low Freq`, `High Freq`) on the `Parametric-3` EQ block while only listing `Low Gain` and `High Gain`.
+Rationale: Preset A is more practical, cohesive, and immediately playable as an actual Quad Cortex preset. By using the algorithmic `UK C30 TopBoost` amplifier and an active `212 UK C30 '65` cabinet block, all of the guitar-specific EQ adjustments, mic placements, blends, and high/low cuts actively shape the tone. Furthermore, Preset A includes critical low-cut and high-cut filtering (120 Hz and 4500 Hz) inside the `Dual (ST)` delay block to authentically emulate the warm band-limited repeats of a Korg SDD-3000 / Memory Man. Preset B uses a full-rig capture (`66 AC30 JMP Clean`) and bypasses the `212 UK C30 '65` cab block in both scenes, rendering all of the Transducer Tech's mic placement and cab filtering work inactive by default. Preset B also uses `Parametric-3` to emulate the Boss FA-1 / SDD-3000 preamp boost without specifying any frequency bands for its gain adjustments.
+
+--- 10_Slash ---
+Winner: prodhigh (confidence 0.85)
+Grounding: Preset A accurately cites S.I.R. #34 (the famous Frank Levi-modded Marshall 2203 used on Appetite for Destruction and Use Your Illusion) and correctly notes that Slash pushed the front of his JCM800 with a Boss GE-7 mid-hump rather than a diode-clipping overdrive pedal. Preset B adds a Chief SD1 (Boss SD-1) alongside the GE-7, which is less historically accurate to Slash's actual rig (though common for generic stock JCM800 modeling).
+Structural: Both presets are structurally valid, with complete block lists, consistent Bypass states between Scene A/B and the builder statement, and clean parameter values. Preset A includes both 'Volume' and 'Master Volume' on the Brit 2203 block (slightly redundant for a 2203), whereas Preset B includes redundant Scene B values for parameters inside blocks that are completely bypassed in Scene A (e.g., Circular Delay Time changing from 380 ms in Scene A when bypassed to 420 ms in Scene B when active).
+Rationale: Preset A is preferred because it is both more historically accurate to Slash's actual gear/staging approach and more practical to play. Slash famously avoided diode-clipping overdrive pedals (like the SD-1 or Tube Screamer) in front of his modded JCM800s, relying instead on a Boss GE-7 with an inverted-V mid boost around 800 Hz to push the preamp for solos. Preset A explicitly calls this out in the builder statement and uses the Graphic-9 in both scenes (mildly sculpting and tightening 100 Hz in Scene A, then slamming 800 Hz and 1.6 kHz in Scene B). Preset B stacks a Chief SD1 (Level 8.5, Drive 2.5), a Graphic-9 (+4.5 dB at 800 Hz AND +2.5 dB Level), and boosts the amp's own Gain to 7.8/8.4 in Scene B, which would result in excessive compression and noise on the Quad Cortex's Brit 2203 model.
+

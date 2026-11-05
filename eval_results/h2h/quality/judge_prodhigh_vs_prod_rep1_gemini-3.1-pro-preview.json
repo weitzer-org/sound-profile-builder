@@ -1,0 +1,79 @@
+[
+  {
+    "Name": "01_SRV_Clean",
+    "Winner": "prod",
+    "Conf": 5,
+    "Ground": "Preset A uses realistic and verified Quad Cortex models and capture naming conventions (1964 Fender Super Reverb, OG TS808, Legendary 87 ST, 410 US Basslad). Preset B hallucinates a non-existent 'John Mayer Spring Reverb' model.",
+    "Struct": "Preset B contains a malformed JSON string in the model name for Block 5 (`\"model\": \"Legendary 87 (ST)','parameters'\"`). Preset A is structurally perfect.",
+    "Rationale": "Preset A is the clear winner. It provides excellent historical and tonal reasoning for an SRV tone (Super Reverb + TS808 with a clean 1176 for funk rhythm), applies the Bypass logic correctly across Scenes A and B, and is structurally flawless. Preset B introduces a formatting error in Block 5 and hallucinates an unverified reverb model name.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": false
+  },
+  {
+    "Name": "04_Southern_Rock",
+    "Winner": "prod",
+    "Conf": 5,
+    "Ground": "Preset A demonstrates solid grounding, properly citing real Quad Cortex native models (US Tweed Basslad, Green 808, Facial Fuzz) and assigning them their correct, historically accurate parameters. Preset B has a major domain hallucination, explicitly overriding the parameter sets of algorithmic pedals (4-Comp Custom, Iba Green) with standard Neural Capture relative-dB EQ/Gain controls, which is impossible on the real hardware.",
+    "Struct": "Preset A is structurally clean and correctly utilizes the 'Bypass' parameter to toggle effects between Scene A and Scene B. Preset B features malformed parameter blocks for its compressor and overdrive, hallucinating capture-style parameters (Gain, Bass, Mid, Treble, Volume in dB) on algorithm blocks that should have pedal-specific controls like Drive, Tone, and Level.",
+    "Rationale": "Preset A provides a realistic, historically plausible Southern Rock rig using appropriate Quad Cortex amp models and pedal blocks with correct parameter mapping. Preset B critically fails by applying Neural Capture parameter schemas to standard algorithmic effect pedals, rendering its parameter tables invalid for actual Quad Cortex usage.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": false
+  },
+  {
+    "Name": "05_Clapton",
+    "Winner": "prod",
+    "Conf": 0.95,
+    "Ground": "Both presets show incredibly specific and plausible historical grounding. The 'Community Scraper' technique of using a Parametric EQ block (high-cut with a resonant peak) to simulate a guitar's rolled-off tone capacitor for Clapton's 'Woman Tone' is an excellent, deep-cut gear trick. Both use appropriate amps, cabs, and mic placements.",
+    "Struct": "Preset A has a severe structural/formatting issue: Block 7's model name is malformed due to an escaping/concatenation error (`\"model\": \"Studio Plate 70 (ST)','type':'Reverb\"`). Preset B is structurally sound, adheres to the schema perfectly, and includes cleanly formatted JSON.",
+    "Rationale": "While both presets deliver fantastic, advanced tonal reasoning (specifically the EQ trick to emulate a rolled-off vintage tone pot without losing articulation), Preset A contains a fatal structural error where JSON key-value syntax was accidentally injected directly into the 'model' string for the Reverb block. Preset B executes the exact same high-level concepts flawlessly and maintains complete schema integrity.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  },
+  {
+    "Name": "08_EVH",
+    "Winner": "prodhigh",
+    "Conf": 0.9,
+    "Ground": "Both presets show excellent historical grounding for the EVH 'Brown Sound' (1968 Marshall Plexi, pre-amp Phase/Flanger, Echoplex preamp, EMT 140 plate reverb, Variac sag). Preset A goes a step further by utilizing a known digital modeling community trick (post-cab compressor to emulate the 'squish' of a 90V Variac transformer when amp block sag isn't quite enough), explicitly sourced via the 'Community Scraper' agent.",
+    "Struct": "Preset A accurately structures its Scene A/B overrides, mapping the Flanger to Scene A (Rhythm) and Phaser to Scene B (Lead) via the 'Bypass' toggles. Preset B neglects the Scene overrides for the Flanger (leaving it permanently Bypassed as 'On' with no value_b) and groups EQ parameters incorrectly into a single malformed row ('500Hz-1kHz Sliders'). Preset A does include a 'Low/High Shelves' row in a Graphic EQ block, which is technically inaccurate, but Preset B's grouped slider row is a more severe schema violation.",
+    "Rationale": "Preset A is more useful and consistent as an actual preset. It perfectly executes the intended Rhythm/Lead (Scene A/B) paradigm by seamlessly swapping the modulation blocks between the Flanger and Phaser, matching EVH's historical usage (rhythm sweeps vs. lead swirls). Preset A also effectively differentiates the single-coil and humbucker variants with logical EQ, gain, and mic blend adjustments. Preset B has minor typos, ignores the Flanger in its Scene B transitions, and invents a grouped EQ slider parameter.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Preset B displays exceptional grounding in the specific historical reality of the target tone, explicitly citing the legendary 'S.I.R. Stock #34' modded Marshall JCM800 (which is the exact rental amp famously associated with Slash's 'Appetite for Destruction' tone), as well as his known live use of the MXR CAE MC-401 Boost/Line Driver. Preset A is decent but relies on more generic 'modded-Marshall' and 'classic hard rock' descriptions.",
+    "Struct": "Both presets are structurally sound. All blocks, parameters, and Bypass states are correctly formatted. Value overriding for Scene B is handled correctly in both JSON structures.",
+    "Rationale": "Preset B stands out as the superior preset because its generative reasoning digs into the highly specific, famous lore of the target's gear (S.I.R. #34 mod, CAE line driver). Furthermore, the way it translates its upstream agent directives into explicit parameter offsets (e.g., translating an Acoustician's dB boost into an exact 0-10 Level dial offset on the Graphic-9 block, or assigning the MC-401 to a transparent post-amp Parametric-3 line driver) shows a deep, cohesive understanding of digital modeling and signal flow.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": false
+  },
+  {
+    "Name": "12_Bonamassa",
+    "Winner": "prodhigh",
+    "Conf": 0.95,
+    "Ground": "Both presets correctly identify Joe Bonamassa's signature Dumble Overdrive Special and EVM12L tone profile, along with accurate references to stacking TS-style overdrives (like the Overrated Special/Green 808). Preset B uses a more realistic approach for a Dumble on the Quad Cortex by explicitly using a Neural Capture ('ODS Joe Lead') and correctly utilizing the Input block for guitar-specific trimming, while Preset A hallucinates a native amp model ('Dumbbell ODS') and an 'Iba Green' capture.",
+    "Struct": "Preset B suffers from a severe structural/schema violation: it leaks full sentences of explanatory rationale directly into the 'value' fields for Mic 1 and Mic 2 in the Cabinet block (e.g., '...to capture articulate upper-midrange bite and pick attack without harsh dust-cap fizz.'). Parameter values must be strictly discrete values/settings. Preset A avoids this egregious leakage, though it still slightly groups mic position data into the dropdown string (a common LLM shortcut). Both presets correctly execute Scene A/B bypass logic and value overrides.",
+    "Rationale": "While Preset B demonstrates slightly better knowledge of the Quad Cortex UI (by using the actual Input block to handle the Acoustician's dB offsets and recognizing that Dumbles are typically accessed via Neural Captures on this platform), its structural integrity is completely compromised by shoving paragraphs of text into the parameter value fields for the microphones. Preset A remains structurally sound, parses cleanly as a preset table, and still provides a highly plausible, well-reasoned Dumble-style rig with consistent Scene A/B mapping.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  },
+  {
+    "Name": "13_Hard_Rock_Blues",
+    "Winner": "prod",
+    "Conf": 0.95,
+    "Ground": "Both presets show good historical grounding for a vintage British hard rock/blues tone (Plexi, Greenbacks, Fuzz Face, EP-3, TS808). Preset B stands out slightly for its specific citations of capture names like '1981 TS808 1' and 'EP3 pre (V-12 EQ-mid)'.",
+    "Struct": "Preset A has a critical structural flaw: the model name for block 8 is malformed as 'Studio Plate 70 (ST)','parameters'', injecting JSON schema syntax into the string value. Preset B is structurally sound.",
+    "Rationale": "Preset B is the clear winner due to the structural error in Preset A's reverb block model name. Aside from the technical flaw, Preset B also features highly cohesive internal logic: the scene mapping specifically dictates which blocks are bypassed vs active (e.g., TS808 and Delay are bypassed in Scene A and active in Scene B), and the parameter mappings accurately reflect this with 'Bypass: On / value_b: Off'. Preset B also sensibly leaves the Fuzz bypassed in both scenes to avoid gain stacking congestion, allowing for manual toggling, which is a very practical touch for a real-world gigging preset.",
+    "Judge": "gemini-3.1-pro-preview",
+    "JudgeServed": "gemini-3.1-pro-preview",
+    "SwappedAB": true
+  }
+]

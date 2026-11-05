@@ -1,0 +1,164 @@
+{
+  "builder_statement": "Synthetic fixture: v4-style output -- invented knob names, Blend on a cab, an invented block name, and a factory capture.",
+  "name": "Data grid: v4-style preset with device-check notes",
+  "payload": {
+    "structured": {
+      "guitars": {
+        "Gibson ES-339 Humbuckers": [
+          {
+            "id": "b1",
+            "type": "Overdrive",
+            "model": "Green 808",
+            "parameters": [
+              {
+                "name": "Bypass",
+                "type": "toggle",
+                "value": "On",
+                "value_b": "Off",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "Drive",
+                "type": "slider",
+                "value": "2.0",
+                "value_b": "4.5",
+                "basis": "estimate"
+              },
+              {
+                "name": "Tone",
+                "type": "slider",
+                "value": "6.0",
+                "basis": "estimate"
+              },
+              {
+                "name": "Level",
+                "type": "slider",
+                "value": "7.5",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "A classic mid-hump boost into the amp."
+          },
+          {
+            "id": "b2",
+            "type": "Amplifier",
+            "model": "US DLX 58",
+            "parameters": [
+              {
+                "name": "Gain",
+                "type": "slider",
+                "value": "+1.5 dB",
+                "value_b": "+3.0 dB",
+                "basis": "estimate"
+              },
+              {
+                "name": "Bass",
+                "type": "slider",
+                "value": "-1.0 dB",
+                "basis": "estimate"
+              },
+              {
+                "name": "Mid",
+                "type": "slider",
+                "value": "+0.5 dB",
+                "basis": "estimate"
+              },
+              {
+                "name": "Treble",
+                "type": "slider",
+                "value": "+1.0 dB",
+                "basis": "estimate"
+              },
+              {
+                "name": "Volume",
+                "type": "slider",
+                "value": "0.0 dB",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "Factory capture of a tweed Deluxe pushed into breakup."
+          },
+          {
+            "id": "b3",
+            "type": "Cabinet",
+            "model": "412 Brit 60B V30 95",
+            "parameters": [
+              {
+                "name": "Mic 1",
+                "type": "dropdown",
+                "value": "Dyn 57 On-Axis 1.0 in",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "Mic 2",
+                "type": "dropdown",
+                "value": "Ribbon 121 Off-Axis 2.0 in",
+                "basis": "real_gear_analog"
+              },
+              {
+                "name": "Blend",
+                "type": "slider",
+                "value": "60",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "Low Cut",
+                "type": "slider",
+                "value": "100 Hz",
+                "basis": "engineering_convention"
+              },
+              {
+                "name": "High Cut",
+                "type": "slider",
+                "value": "8000 Hz",
+                "basis": "engineering_convention"
+              }
+            ],
+            "rationale": "A 4x12 for body under the lead."
+          },
+          {
+            "id": "b4",
+            "type": "Reverb",
+            "model": "Plate Reverb",
+            "parameters": [
+              {
+                "name": "Mix",
+                "type": "slider",
+                "value": "20 %",
+                "value_b": "28 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "Decay",
+                "type": "slider",
+                "value": "2.0 s",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "Smooth studio plate."
+          },
+          {
+            "id": "b5",
+            "type": "Reverb",
+            "model": "Spring",
+            "parameters": [
+              {
+                "name": "Mix",
+                "type": "slider",
+                "value": "15 %",
+                "basis": "estimate"
+              },
+              {
+                "name": "Decay",
+                "type": "slider",
+                "value": "2.5 s",
+                "basis": "estimate"
+              }
+            ],
+            "rationale": "Amp-style spring for the rhythm part."
+          }
+        ]
+      }
+    }
+  }
+}

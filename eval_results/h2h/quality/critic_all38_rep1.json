@@ -1,0 +1,139 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-4",
+        "issue": "The rationale claims the block 'Simulates vintage Watkins Copicat rhythmic slap and tape bloom', which contradicts the selected 'Circular Delay' model (a clean digital lexicon-style circular delay rather than a tape echo model).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-4",
+        "issue": "The rationale describes this as a 'tape-style delay emulating vintage Copicat repeats', which contradicts the selected 'Circular Delay' model (a digital circular delay rather than a tape echo model).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The rationale claims the block \"Simulates classic warm tape slap\", which contradicts the assigned \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The rationale describes the block as a \"Post-cab tape-delay emulation\", which contradicts the assigned \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-6",
+        "issue": "The rationale and builder_statement claim this block is a 'tape slap simulating an Echoplex EP-3', but the selected model is 'Circular Delay' (a digital/Lexicon-style circular delay algorithm, rather than a tape delay model).",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-4",
+        "issue": "The rationale claims the amp is dialed with 'adjusted channel volume to prevent humbucker low-end flub', but the 'Volume' parameter is set to identical values ('6.0' and '6.5') as the Fender Telecaster Single Coil preset.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-6",
+        "issue": "The rationale and builder_statement claim this block is a 'tape echo calibrated to Echoplex EP-3 slapback specifications', but the selected model is 'Circular Delay' rather than a tape delay model.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-6",
+        "issue": "The rationale claims the block is 'Configured as an analog bucket-brigade slapback echo replicating the warm decay of the Way Huge Aqua-Puss', which contradicts the selected 'Circular Delay' model (a multi-tap digital delay based on the Lexicon PCM70 rather than an analog BBD delay).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The rationale describes this block as a \"tape-style echo\", which contradicts the selected \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The rationale describes this block as a \"tape-style echo\", which contradicts the selected \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      }
+    ]
+  }
+]

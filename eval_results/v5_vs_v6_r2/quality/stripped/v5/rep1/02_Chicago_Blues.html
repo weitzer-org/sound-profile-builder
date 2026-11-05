@@ -1,0 +1,474 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around the classic Fender Tweed Deluxe 5E3 amp circuit, an Ibanez TS808 Tube Screamer front-end boost, a 1x12 Jensen P12R Alnico speaker, and an RCA 77-DX ribbon microphone.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the mid-pushed EQ envelope and cathode-biased asymmetric saturation character, recommending a 100Hz low cut, 6000Hz high cut, and vintage room ambiance.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Surfaced critical warnings regarding low-end flub on small Tweed Neural Captures, prompting the placement of a pre-amp Parametric EQ to tighten sub-100Hz frequencies and adding a transparent Chief BD2 overdrive alongside the Green 808.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the target hardware to the mandatory US DLX 58 amp capture and FNDR TWDLX IN Edge BAL CAB speaker capture, while establishing tactical routing for Parametric-8, Green 808, Chief BD2, and Spring Reverb.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed capture availability in the library without requiring additional cloud override substitutions.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup divergence between the warm Gibson ES-339 humbuckers and bright Fender Telecaster single coils, prescribing trimmed bass and volume for the semi-hollow and boosted mids and volume for the Telecaster.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Formulated the dual-mic studio blend combining a pulled-back off-axis Ribbon 121 with a close on-axis Dynamic 57 at a 65% blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the master spectrum boundaries with high-pass filtering at 95Hz and low-pass filtering at 7200Hz to prevent harsh transients while maintaining -1.5 dB of output headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided time-based spatial targets with a 1.2s reverb decay and 15% wet mix to emulate a vintage Chess Records studio room chamber.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A as a dynamic edge-of-breakup rhythm platform using the Chief BD2 and Scene B as a stacked lead voice engaging the Green 808 and pushing amp gain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Arranged the single-lane signal path sequencing the pre-amp Parametric-8 EQ and dual overdrives directly into the US DLX 58 capture and cabinet block."
+  ],
+  "builder_statement": "This preset captures authentic Chicago and vintage studio blues using the US DLX 58 Neural Capture paired with the matching 1957 5E3 Jensen P12R cabinet capture. A pre-amp Parametric-8 EQ tames low-end flub before hitting the cathode-biased circuit, while the Chief BD2 provides an always-on edge-of-breakup foundation that stacks with the Green 808 in Scene B for saturated, woody lead tones, finished with subtle post-cab Spring Reverb for classic studio room depth.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Freq (High-Pass)",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 4 Freq (Low-Mid Push)",
+              "type": "slider",
+              "value": "400 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 4 Gain",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "+3.0 dB"
+            }
+          ],
+          "rationale": "Placed at the very front of the chain per Librarian and Scraper tactical hints to roll off sub-95Hz frequencies while applying the Acoustician's +3.0 dB input boost and a slight 400Hz thicken for the Telecaster single coils.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Bypassed in Scene A and engaged in Scene B with low Drive and high Level to push the Tweed capture into thick, mid-forward lead saturation, with Tone slightly lowered to tame Telecaster bridge bite.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Chief BD2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Acts as the always-on transparent overdrive platform recommended by the community to coax dynamic, touch-sensitive breakup from the 5E3 capture, with Tone dialed back slightly to smooth out single-coil highs.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "US DLX 58",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "This confirmed Neural Capture delivers the authentic cathode-biased 1958 Tweed Deluxe bark, tuned with relative dB offsets featuring a +2.5 dB Mid push, -1.0 dB Treble trim, and +0.5 dB Volume boost for the Telecaster single coils.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 121: X: 3.5 (Cap Edge), Y: 4.0 (Pulled Back), Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57: X: 2.0 (Cap Edge), Y: 1.0 (Close), On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Captures the exact 1957 Fender Tweed Deluxe 5E3 1x12 Jensen P12R speaker character, incorporating the Transducer Tech's ribbon-heavy blend and a slightly warmer 6800Hz High Cut to round off single-coil transients.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s",
+              "value_b": "1.5 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "18%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Added early in the post-cab chain per the Librarian's tactical hint and Mix Engineer's targets to provide authentic Chess Records vintage studio room ambiance.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 1 Freq (High-Pass)",
+              "type": "slider",
+              "value": "110 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 2 Freq (Low-Mid Cut)",
+              "type": "slider",
+              "value": "250 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-3.0 dB"
+            }
+          ],
+          "rationale": "Placed at the very front of the chain per the Librarian and Scraper tactical hints to cut sub-110Hz mud and apply the Acoustician's -3.0 dB input trim so the ES-339's warm semi-hollow humbuckers do not cause low-end flub in the Tweed capture.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Kept bypassed in Scene A and engaged in Scene B to tighten the lower mids and push the US DLX 58 front-end into singing Chess Records lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Chief BD2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Serves as the always-on transparent overdrive platform in Scene A for dynamic edge-of-breakup rhythm tones, stepping up in Drive and Level in Scene B when stacked with the Green 808.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "US DLX 58",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "This confirmed Neural Capture provides the core 1958 Fender Tweed Deluxe 5E3 cathode-biased compression, dialed with relative dB offsets that cut Bass by -2.0 dB and trim Volume by -1.0 dB to keep the ES-339 humbuckers woody and articulate.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "FNDR TWDLX IN Edge BAL CAB",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Ribbon 121: X: 3.5 (Cap Edge), Y: 4.0 (Pulled Back), Off-Axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Dynamic 57: X: 2.0 (Cap Edge), Y: 1.0 (Close), On-Axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7200 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Pairs the amp with the exact 1957 5E3 1x12 Jensen P12R speaker capture, using a 60% blend toward the pulled-back Ribbon 121 and a 7200Hz High Cut to retain top-end clarity for the warm humbuckers.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.2 s",
+              "value_b": "1.5 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "18%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Placed early in the post-cab chain per the Librarian's tactical hint and Mix Engineer's parameters to recreate the short, lively room ambiance of classic Chicago blues recordings.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

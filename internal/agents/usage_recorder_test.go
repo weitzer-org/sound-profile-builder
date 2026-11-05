@@ -109,7 +109,8 @@ func TestComputeCostUSD_ThinkingTokensBilledAtOutputRate(t *testing.T) {
 }
 
 func TestComputeCostUSD_CachedTokens(t *testing.T) {
-	const m = "gemini-3.6-flash" // input 1.50, cachedInput 0.075, output 7.50
+	const m = "gemini-3.6-flash"
+	std := day(2027, time.February, 1) // standard period: input 1.50, cachedInput 0.15, output 7.50
 	const eps = 1e-9
 	cases := []struct {
 		name                          string
@@ -117,29 +118,35 @@ func TestComputeCostUSD_CachedTokens(t *testing.T) {
 		want                          float64
 	}{
 		{"cached=0 bills all at input rate", 1_000_000, 0, 0, 0, 1.50},
-		{"partial cache", 1_000_000, 600_000, 0, 0, 0.4*1.50 + 0.6*0.075},
-		{"fully cached", 1_000_000, 1_000_000, 0, 0, 0.075},
-		{"cached > input is clamped to input", 1_000_000, 5_000_000, 0, 0, 0.075},
+		{"partial cache", 1_000_000, 600_000, 0, 0, 0.4*1.50 + 0.6*0.15},
+		{"fully cached", 1_000_000, 1_000_000, 0, 0, 0.15},
+		{"cached > input is clamped to input", 1_000_000, 5_000_000, 0, 0, 0.15},
 		{"negative cached is clamped to 0", 1_000_000, -5, 0, 0, 1.50},
-		{"output and thinking unaffected by cache", 1_000_000, 500_000, 100_000, 100_000, 0.5*1.50 + 0.5*0.075 + 0.2*7.50},
+		{"output and thinking unaffected by cache", 1_000_000, 500_000, 100_000, 100_000, 0.5*1.50 + 0.5*0.15 + 0.2*7.50},
 	}
 	for _, c := range cases {
-		got := computeCostUSD(m, c.input, c.cached, c.output, c.thinks)
+		got := computeCostUSDAt(m, std, c.input, c.cached, c.output, c.thinks)
 		if d := got - c.want; d > eps || d < -eps {
 			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
 		}
 	}
+	// Introductory period: input 0.75, cachedInput 0.075.
+	if got := computeCostUSDAt(m, day(2026, time.November, 5), 1_000_000, 1_000_000, 0, 0); got-0.075 > eps || 0.075-got > eps {
+		t.Errorf("intro-period fully cached: got %v, want 0.075", got)
+	}
 }
 
 func TestComputeCostUSD_UnverifiedCachedRateNeverDiscounts(t *testing.T) {
-	// Every model except 3.6 Flash has cachedInput == input until verified, so
-	// caching can never understate cost for them.
-	for model, p := range geminiPriceTable {
+	// Every model except 3.6 Flash has cachedInput == input in every price period until the
+	// real cached rate is verified, so caching can never understate cost for them.
+	for model, periods := range geminiPriceSchedule {
 		if model == "gemini-3.6-flash" {
 			continue
 		}
-		if p.cachedInput != p.input {
-			t.Errorf("%s: cachedInput %v != input %v; only set a discount once the real rate is verified", model, p.cachedInput, p.input)
+		for _, p := range periods {
+			if p.cachedInput != p.input {
+				t.Errorf("%s: cachedInput %v != input %v; only set a discount once the real rate is verified", model, p.cachedInput, p.input)
+			}
 		}
 	}
 }
@@ -280,6 +287,8 @@ func TestRecordAttemptUsage_PopulatesCachedInputTokens(t *testing.T) {
 			PromptTokenCount: 1_000_000, CachedContentTokenCount: 600_000, CandidatesTokenCount: 0,
 		},
 	}
+	defer func(f func() time.Time) { nowFunc = f }(nowFunc)
+	nowFunc = func() time.Time { return day(2027, time.February, 1) } // standard-period prices
 	recordAttemptUsage(context.Background(), o, "CorOS Librarian", "gemini-3.6-flash", 100, resp, nil)
 
 	rec := fake.firstRecord(t)
@@ -289,7 +298,7 @@ func TestRecordAttemptUsage_PopulatesCachedInputTokens(t *testing.T) {
 	if rec.CachedInputTokens != 600_000 {
 		t.Errorf("CachedInputTokens = %d, want 600000", rec.CachedInputTokens)
 	}
-	want := 0.4*1.50 + 0.6*0.075
+	want := 0.4*1.50 + 0.6*0.15
 	if d := rec.CostUSD - want; d > 1e-9 || d < -1e-9 {
 		t.Errorf("CostUSD = %v, want %v", rec.CostUSD, want)
 	}
@@ -309,5 +318,41 @@ func TestRecordAttemptUsage_Failure(t *testing.T) {
 	}
 	if rec.InputTokens != 0 || rec.CostUSD != 0 {
 		t.Errorf("expected zero tokens/cost on failure, got %+v", rec)
+	}
+}
+
+// Prices from Google Cloud's pricing page (2026-11-05): introductory windows end on fixed dates.
+func TestPriceSchedule_IntroductoryWindows(t *testing.T) {
+	cases := []struct {
+		model   string
+		at      time.Time
+		in, out float64
+	}{
+		{"gemini-4-argon", day(2026, time.November, 5), 2.00, 10.00},
+		{"gemini-4-argon", day(2026, time.November, 30).Add(23 * time.Hour), 2.00, 10.00},
+		{"gemini-4-argon", day(2026, time.December, 1), 4.00, 20.00},
+		{"gemini-3.8-flash", day(2026, time.December, 31), 0.75, 3.75},
+		{"gemini-3.8-flash", day(2027, time.January, 1), 1.50, 7.50},
+		{"gemini-3.6-flash", day(2026, time.November, 5), 0.75, 3.75},
+		{"gemini-3.5-flash-lite", day(2026, time.November, 5), 0.30, 2.50},
+	}
+	for _, c := range cases {
+		p, ok := priceAt(c.model, c.at)
+		if !ok || p.input != c.in || p.output != c.out {
+			t.Errorf("priceAt(%s, %s) = %+v %v, want %v/%v", c.model, c.at.Format("2006-01-02T15"), p, ok, c.in, c.out)
+		}
+	}
+	// 1M in + 1M out + 1M thinking on Argon after Dec 1: 4 + 20 + 20.
+	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.December, 2), 1_000_000, 0, 1_000_000, 1_000_000); got != 44 {
+		t.Errorf("Argon standard cost = %v, want 44", got)
+	}
+}
+
+func TestComputeCostUSD_UsesNow(t *testing.T) {
+	old := nowFunc
+	defer func() { nowFunc = old }()
+	nowFunc = func() time.Time { return day(2027, time.February, 1) }
+	if got := computeCostUSD("gemini-3.8-flash", 1_000_000, 0, 0, 0); got != 1.50 {
+		t.Errorf("3.8 Flash input after the intro window = %v, want 1.50", got)
 	}
 }

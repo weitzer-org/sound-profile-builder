@@ -1,0 +1,626 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the John Mayer Trio / continuum-era signal path built around a Two-Rock / Dumble high-headroom 6L6 platform, a 2x12 G12-65 cabinet, a Keeley Katana clean boost, an Ibanez TS808 stacked into a Keeley Phat-Mod BD-2, and a Way Huge Aqua-Puss analog slapback delay.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the scooped clean foundation with symmetrical soft-clipping 6L6 compression, a -65 dB noise gate target, a 90 Hz to 6800 Hz bandwidth profile, and lush tube spring reverb.",
+    "\u003cstrong\u003eAgent 3 (Web Scraper):\u003c/strong\u003e Warned against pushing Neural Captures with excessive drive output level to avoid unnatural digital clipping, emphasized keeping mids intact inside the overdrive blocks, and advised a sub-100 Hz cab low-cut to prevent Two-Rock/Dumble low-end bloom.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the mandatory Two Rock SSS EQ1 (No Cab) amplifier capture and 212 Too Rock G65 cabinet, while suggesting Exotic Z Boost, Green 808, Keeley Mod BD-2 3, and Circular Delay; note that Range Rverb was swapped out for native Spring Reverb because Selected Capture Details revealed Range Rverb is actually a High-Gain Modern amp capture.",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Matched the dropped Dumble Overdrive Special to the ODS Joe Lead capture from JohnNathanCordy, though single_amp_mode constraints required keeping strictly the mandatory Two Rock SSS EQ1 (No Cab) as the sole amplifier block per guitar.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation, trimming the ES-339 humbuckers' input and bass to prevent hollow-body low-mid mud while boosting the Telecaster single coils' input and midrange to hit 6L6 compression without ice-pick highs.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 Too Rock G65 cabinet with a Dynamic 57 at the Cap Edge (X: 2.5 in, Y: 1.0 in) and a Ribbon 121 at the Cone Mid (X: 4.0 in, Y: 2.5 in) blended at 60% to smooth out top-end harshness.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set high-pass and low-pass boundary targets of 95 Hz and 7500 Hz alongside a -2.5 dB output pad to sit cleanly in a live mix without sub-bass rumble or fizzy highs.",
+    "\u003cstrong\u003eAgent 9 (Mix Specifier):\u003c/strong\u003e Defined time-based ambient targets centered around a 135 ms analog slapback delay and a 2.4-second spring reverb decay at up to 22% wet mix.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A (Rhythm) with the Exotic Z Boost always engaged and the Green 808 and Keeley Mod BD-2 3 bypassed, then engaged both drives in Scene B (Lead) with expanded delay and reverb tails; adhered to Safety Rail 6 by omitting the redundant Chief BD2 so only two saturation pedals stack.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the pre-amp drive cascade into the amp capture followed by the 212 Too Rock G65 cabinet and post-cab delay and reverb blocks, consolidated into a single-amp path to obey single_amp_mode."
+  ],
+  "builder_statement": "This preset recreates the quintessential high-headroom 6L6 blues-rock trio tone using the Two Rock SSS EQ1 (No Cab) Neural Capture paired with the 212 Too Rock G65 cabinet. In Scene A (Rhythm), the Exotic Z Boost provides an always-on front-end lift into the glassy amp platform with a short Circular Delay slapback and lush Spring Reverb; in Scene B (Lead), the Green 808 stacks directly into the Keeley Mod BD-2 3 capture for a thick, vocal midrange sustain without overloading the amp capture's input ceiling.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-40.0 dB"
+            }
+          ],
+          "rationale": "Tames single-coil 60-cycle hum at the -65 dB threshold specified by the Sonic Profiler while preserving natural pick attack.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Exotic Z Boost",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Acts as an always-on Keeley Katana-style clean preamp lift, dialed with extra Gain and Volume to translate the Acoustician's +2.5 dB single-coil input boost intent and softened Treble to prevent bridge-pickup harshness.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "4.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Provides the classic TS808 midrange hump in Scene B (Lead) to push the scooped Two-Rock capture forward in the mix, with Tone slightly rolled back for the brighter Telecaster.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Keeley Mod BD-2 3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of the Keeley Phat-Mod Boss BD-2 stacked after the Green 808 in Scene B, adding full-range grit and a +0.5 dB low-end enhancement for single coils while keeping Volume near unity to avoid clipping the amp capture.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-5",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of the Two-Rock Silver Sterling Signature on EQ1; formatted strictly in relative dB with a +2.0 dB Mid push, -0.5 dB Treble trim, and +0.5 dB Volume lift to compensate for lower-output Telecaster single coils.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: 2.5 in, Y: 1.0 in (On-Axis)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Mid, X: 4.0 in, Y: 2.5 in (On-Axis)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7000 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Emulates the 2x12 Celestion Heritage G12-65 cabinet with the Blend shifted slightly toward the warm Ribbon 121 (65%) and a 7000 Hz High Cut to smooth out Telecaster top-end snap, plus the FOH -2.5 dB output pad.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "135 ms",
+              "value_b": "220 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "12%",
+              "value_b": "18%"
+            }
+          ],
+          "rationale": "Replicates the Way Huge Aqua-Puss short analog slapback at 135 ms in Scene A for rhythmic depth, expanding to a 220 ms ambient lead delay in Scene B.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.4 s",
+              "value_b": "3.0 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Swapped in for the misclassified Range Rverb capture to deliver authentic lush tube spring reverb at the Mix Specifier's 2.4 s decay target.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-68.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "45 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-35.0 dB"
+            }
+          ],
+          "rationale": "Set with a slightly more relaxed -68.0 dB threshold since the ES-339 humbuckers are naturally quieter than single coils and benefit from unimpeded semi-hollow sustain.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Exotic Z Boost",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "2.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "5.8"
+            }
+          ],
+          "rationale": "Provides the Keeley Katana clean boost role while translating the Acoustician's -3.0 dB humbucker input trim into lower Gain, Volume, and Bass settings so the semi-hollow resonance does not prematurely clip the chain.",
+          "type": "Boost"
+        },
+        {
+          "id": "block-3",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.2"
+            }
+          ],
+          "rationale": "Tightens the ES-339's warm low-mids during Scene B solos with slightly lower Drive and brighter Tone (6.0) than the Telecaster variant.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "Keeley Mod BD-2 3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of the Keeley Phat-Mod BD-2 engaged in Scene B, using a -1.0 dB Bass trim and +0.5 dB Treble lift to keep stacked humbucker leads articulate and free of low-end bloom.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-5",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Confirmed Neural Capture of the Two-Rock Silver Sterling Signature on EQ1; applies the Acoustician's humbucker EQ profile via relative dB offsets (-1.5 dB Bass, +1.0 dB Treble, and -0.5 dB Volume) to keep semi-hollow chords glassy and clear.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "212 Too Rock G65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57: Cap Edge, X: 2.5 in, Y: 1.0 in (On-Axis)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121: Cone Mid, X: 4.0 in, Y: 2.5 in (On-Axis)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "55%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Pairs the G12-65 cabinet with a slightly lower 55% Ribbon blend, a firmer 95 Hz Low Cut to curb semi-hollow sub-100 Hz bloom, and a 7500 Hz High Cut to preserve humbucker air.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "135 ms",
+              "value_b": "220 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "14%",
+              "value_b": "20%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "11%",
+              "value_b": "16%"
+            }
+          ],
+          "rationale": "Emulates the Aqua-Puss slapback at 135 ms in Scene A and 220 ms in Scene B, with Mix trimmed slightly so the thicker ES-339 midrange remains crisp.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s",
+              "value_b": "2.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "16%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Native tube spring reverb replacing the misclassified Range Rverb capture, tuned with a slightly brighter Tone (5.5) and controlled Mix to complement the semi-hollow acoustic body.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

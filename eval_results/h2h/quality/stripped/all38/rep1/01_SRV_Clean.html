@@ -1,0 +1,374 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the foundational Dumble Steel String Singer high-headroom topology combined with an Ibanez TS808 front-end boost and EVM12L speaker cab, capturing Stevie Ray Vaughan's iconic glass-and-snarl clean/lead balance.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Prescribed symmetrical soft clipping saturation dynamics, spring reverb spatialization, a scooped midrange baseline, and strict high/low cutoff boundaries (90 Hz and 7.0 kHz) to control high-frequency spike.",
+    "\u003cstrong\u003eAgent 3 (Neural Search Engine / Scraper):\u003c/strong\u003e Sourced verified community settings and warnings recommending high-headroom factory captures paired with a Green 808 dialed with drive low and level high, warning against digital front-end clipping into Neural Captures.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Selected the exact native blocks: 'Two Rock SSS EQ1 (No Cab)' Neural Capture, '212 Too Rock EV' cabinet, 'Jewel' optical compressor, 'Green 808' overdrive, and 'Vintage Spring' reverb.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified availability and routing hierarchy within Quad Cortex factory libraries without triggering fallback models.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Implemented pickup compensation between Gibson ES-339 humbuckers (-3 dB input trim, volume reduced, mids scooped to avoid wooliness) and Fender Telecaster single coils (input boosted, mids increased to 6.5, treble rolled back to tame bridge ice-pick).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 Too Rock EV dual-mic configuration using Shure SM57 Cap Edge at 1.0\" on-axis combined with Cone at 2.5\" 45° off-axis at a 65% blend ratio.",
+    "\u003cstrong\u003eAgent 8 (Front of House):\u003c/strong\u003e Applied a 80 Hz low-cut and 6.5 kHz high-cut alongside a -3.0 dB lane output trim to safeguard digital headroom against hot boosted transients.",
+    "\u003cstrong\u003eAgent 9 (Mix \u0026 Master Engineer):\u003c/strong\u003e Refined ambient time-based dimensions specifying a snappy 2.2s–2.8s spring decay with 18%–24% mix across rhythm and lead scenes.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Constructed Scene A (Rhythm) with bypassed Green 808 for clean chime and percussive funk snapping, and Scene B (Lead) with Green 808 engaged (Drive 2.5, Level 8.0) and capture pushed +1.5 dB.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the dual-lane routing topology across Lane 1 (Dynamics -\u003e Drive -\u003e Amp Capture) split into Lane 2 (Stereo IR Cabinet -\u003e Spring Reverb) ensuring zero phase cancellation."
+  ],
+  "builder_statement": "This preset is designed around the Two-Rock Silver Sterling Signature clean capture and EVM12L cabinet to deliver pristine Texas-style clean snap in Scene A, stepping on the Green 808 in Scene B for thick, focused mid-boost sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Comp",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Provides front-end makeup gain and snap to lift lower-output Telecaster single coils without thinning attack.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.5"
+            }
+          ],
+          "rationale": "Dialed with slightly lower tone to avoid shrillness when pushing the single coil bridge pickup into solo saturation.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Bass",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Compensates for thin single coil bridge bite by adding low-mid punch while rounding off high treble frequencies.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 1.0 in distance, on-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone, 2.5 in distance, 45 deg off-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "High-power EVM 2x12 IR pairing smoothing brittle transients via 6.5 kHz cut and off-axis cone warmth.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Vintage Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.8",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Adds vintage blackface spring shimmer with damped high tone to complement bright Telecaster snap.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Comp",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.5"
+            }
+          ],
+          "rationale": "Acts as an upfront dynamic stabilizer to clamp humbucker peak transients and enhance percussive snapping.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.0"
+            }
+          ],
+          "rationale": "Classic TS808 circuit providing mid-focused push with low drive and high output for lead sustain in Scene B.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Two Rock SSS EQ1 (No Cab)",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Mid",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "+0.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-0.5 dB"
+            }
+          ],
+          "rationale": "High-headroom Neural Capture tuned with slightly recessed bass and lower master trim to prevent ES-339 humbuckers from muddying the front end.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 Too Rock EV",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Cap Edge, 1.0 in distance, on-axis"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Cone, 2.5 in distance, 45 deg off-axis"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Electro-Voice 12L loaded cab pairing focused on-axis edge bite with smooth off-axis cone low end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Vintage Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.8",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "24%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Simulates classic spring drip and mechanical reverb tank tail for vintage tube amplifier bloom.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

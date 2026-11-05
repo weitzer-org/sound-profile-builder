@@ -1,0 +1,139 @@
+[
+  {
+    "file": "01_SRV_Clean.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "02_Chicago_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "03_British_Invasion.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "04_Southern_Rock.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-6",
+        "issue": "The rationale describes the effect as a \"110 ms vintage tape-style echo\", which contradicts the block's digital model \"Circular Delay\" (based on the TC Electronic 2290).",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "05_Clapton.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "06_Gilmour.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "07_Edge.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "08_EVH.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-7",
+        "issue": "The rationale claims this block provides a \"tape-style slapback echo\", which contradicts the selected \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-7",
+        "issue": "The rationale claims this block provides a \"tape-style slapback echo\", which contradicts the selected \"Circular Delay\" digital delay model.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "09_BB_King.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "10_Slash.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale claims Circular Delay is \"bypassed in Scene A for bone-dry rhythm riffs\", but Scene A is not dry because block-6 (Studio Plate 70 (ST)) is always active (no Bypass parameter) with a \"Mix\" of \"15%\" and \"Decay\" of \"1.5 s\" in Scene A.",
+        "severity": "medium"
+      }
+    ]
+  },
+  {
+    "file": "11_Mayer_Lead.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": []
+  },
+  {
+    "file": "12_Bonamassa.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-2",
+        "issue": "The builder_statement claims \"Scene B engages the Green 808 and Iba Green front-end boosts\", whereas block-2 (Iba Green) has Bypass set to \"On\" (inactive) with no value_b override and its own rationale states it is \"kept bypassed across both scenes\".",
+        "severity": "high"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-2",
+        "issue": "The builder_statement claims \"Scene B engages the Green 808 and Iba Green front-end boosts\", whereas block-2 (Iba Green) has Bypass set to \"On\" (inactive) across both scenes and its rationale states it is \"left bypassed to avoid stacking redundant drives\".",
+        "severity": "high"
+      }
+    ]
+  },
+  {
+    "file": "13_Hard_Rock_Blues.json",
+    "critic_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "issues": [
+      {
+        "guitar": "Fender Telecaster Single Coil",
+        "block_id": "block-6",
+        "issue": "The rationale claims the block \"Emulates the warm tape-echo repeats of an EP-3\", which contradicts the selected \"Circular Delay\" model (a digital Lexicon PCM70-style delay rather than a tape echo).",
+        "severity": "high"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-5",
+        "issue": "The rationale states a \"60% blend toward the off-axis Dynamic 57\" (Mic 1), whereas for the Telecaster a 55% Blend is described as \"shifting the blend slightly toward the warmer Ribbon 121\" (Mic 2), creating an internal contradiction about which microphone higher Blend percentages favor.",
+        "severity": "medium"
+      },
+      {
+        "guitar": "Gibson ES-339 Humbuckers",
+        "block_id": "block-6",
+        "issue": "The rationale claims the block \"Delivers warm EP-3 tape-style delay repeats\" and is bypassed in Scene A for \"dry rhythm punch\", which contradicts both the digital \"Circular Delay\" model and the fact that \"Studio Plate 70 (ST)\" (block-7) is active (`Bypass: Off`, `Mix: 15%`) in Scene A.",
+        "severity": "high"
+      }
+    ]
+  }
+]

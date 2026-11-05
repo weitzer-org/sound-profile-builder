@@ -3,6 +3,7 @@ package agents
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"regexp"
 	"sort"
@@ -11,11 +12,55 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 var validNativeBlocks = make(map[string]bool)
+
+// validBlocksRunes is the fuzzy-snap candidate pool, keyed by block name while
+// GetValidNativeBlocks builds it. snapPool is the same set as a slice sorted by name,
+// which is what SnapToClosestBlock walks: ranging over the map made ties between two
+// equally close names (e.g. "Klon Centaur" vs "Klon Centaur 1"/"Klon Centaur 2") depend
+// on Go's randomized map order, so the same input could snap differently from run to run.
 var validBlocksRunes = make(map[string][]rune)
+
+type snapCandidate struct {
+	name  string
+	runes []rune
+}
+
+var snapPool []snapCandidate
+
+// exactOnlyBlocks holds block names that are valid on an exact (case-insensitive) match
+// but are kept out of the fuzzy-snap candidate pool, keyed by lowercase name:
+//
+//   - Plugin devices: names that every coros_map.json entry producing them gates behind a
+//     paid plugin (required_plugin), and every device-catalog model with a plugin_id. A
+//     plugin device's name is a distinctive brand name, so a near miss like "Spring
+//     Reverb" is a generic block, not a misspelled "Plini Reverb". The pool is not
+//     filtered by which plugins the user owns, so snapping into these names would also
+//     introduce plugin devices the user can't run.
+//   - Device-catalog models outside the gear categories (delays, reverbs, utilities, ...)
+//     that coros_map.json doesn't already name. Short generic names there make bad snap
+//     targets: "Double RVB" written on an amp block would snap to the "Doubler" utility.
+var exactOnlyBlocks = make(map[string]string)
+
+// pluginOnlyBlocks maps every plugin-device block name to the plugins that unlock it
+// (by catalog.PluginNames spelling); owning any one of them is enough. A name only
+// coros_map.json gates gets the required_plugin of each entry producing it. A name that
+// is a catalog plugin model gets that model's plugin instead, replacing whatever
+// coros_map.json said: the device catalog, not the hand-written map, says which licence
+// a device needs (TestPluginTableAgreesWithCorosMap keeps the two in agreement). An empty
+// plugin name stands for a catalog plugin_id the plugin table doesn't know, and is never
+// owned. See excludeUnownedPlugins.
+var pluginOnlyBlocks = make(map[string][]string)
+
+// catalogCaptureCategory is the catalog's "Neural Capture" category. Its models are the
+// generic capture block slots, not real gear; Neural Captures themselves come only from
+// coros_map.json and user_captures.json.
+const catalogCaptureCategory = "Neural Capture"
+
 var parseBlocksOnce sync.Once
 var validCategories = map[string]bool{
 	"amplifier:": true, "cab:": true, "cabinet:": true,
@@ -225,18 +270,36 @@ func IsUserCaptureName(name string) bool {
 	return userCaptureNameSet[name]
 }
 
-// GetValidNativeBlocks parses the embedded coros_map.json and user_captures.json,
-// returning a map of [blockName]isCapture. User captures are always treated as
-// captures since they are, by definition, real Cortex Cloud captures.
+// GetValidNativeBlocks parses the embedded coros_map.json, user_captures.json and the
+// device catalog (internal/catalog), returning a map of [blockName]isCapture. User
+// captures are always treated as captures since they are, by definition, real Cortex
+// Cloud captures. Every catalog model name, and every mono/stereo family name ("412 Brit
+// 60B V30 95" for its (M) and (ST) models), is a native block. The catalog doesn't override
+// a name coros_map.json or user_captures.json already set, except for plugin models, which
+// are always native (false) and plugin-gated whatever another source says.
 func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
+			ungated := make(map[string]bool)
+			gatedBy := make(map[string][]string)
 			for _, props := range corosData {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
 					validNativeBlocks[equiv] = isCap
 					validBlocksRunes[equiv] = []rune(strings.ToLower(equiv))
+					if plugin, _ := props["required_plugin"].(string); plugin == "" {
+						ungated[equiv] = true
+					} else {
+						gatedBy[equiv] = append(gatedBy[equiv], plugin)
+					}
+				}
+			}
+			for equiv := range validBlocksRunes {
+				if !ungated[equiv] {
+					delete(validBlocksRunes, equiv)
+					exactOnlyBlocks[strings.ToLower(equiv)] = equiv
+					pluginOnlyBlocks[equiv] = gatedBy[equiv]
 				}
 			}
 		}
@@ -247,8 +310,57 @@ func GetValidNativeBlocks() map[string]bool {
 			validNativeBlocks[c.Name] = true
 			validBlocksRunes[c.Name] = []rune(strings.ToLower(c.Name))
 		}
+		addCatalogBlocks()
+		snapPool = make([]snapCandidate, 0, len(validBlocksRunes))
+		for name, r := range validBlocksRunes {
+			snapPool = append(snapPool, snapCandidate{name: name, runes: r})
+		}
+		sort.Slice(snapPool, func(i, j int) bool { return snapPool[i].name < snapPool[j].name })
 	})
 	return validNativeBlocks
+}
+
+// addCatalogBlocks adds the device catalog's model and family names to the valid-block
+// set. Called once, from GetValidNativeBlocks, after the coros_map.json and user-capture
+// passes. A catalog that fails to load is logged and skipped: the pipeline then runs on
+// coros_map.json and user_captures.json alone, as it did before the catalog existed.
+func addCatalogBlocks() {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		log.Printf("device catalog unavailable, valid blocks come from coros_map.json and user_captures.json only: %v", err)
+		return
+	}
+	for i := range cat.Models {
+		m := &cat.Models[i]
+		if m.Category == catalogCaptureCategory {
+			continue
+		}
+		plugin, gated := m.RequiredPlugin()
+		for _, name := range []string{m.Name, catalog.FamilyName(m.Name)} {
+			if gated {
+				// A plugin device is a native block (never a capture), exact-match only
+				// and plugin-gated, even if a coros_map.json entry named it without
+				// required_plugin.
+				validNativeBlocks[name] = false
+				delete(validBlocksRunes, name)
+				exactOnlyBlocks[strings.ToLower(name)] = name
+				pluginOnlyBlocks[name] = []string{plugin}
+				continue
+			}
+			if _, exists := validNativeBlocks[name]; exists {
+				continue
+			}
+			validNativeBlocks[name] = false
+			// The gear categories (catalogDictionaryType's keys: the amp/cab/drive
+			// families gearBlockTypes checks) join the fuzzy-snap pool. Every other
+			// catalog category is exact-match only (see exactOnlyBlocks).
+			if _, gear := catalogDictionaryType[m.Category]; gear {
+				validBlocksRunes[name] = []rune(strings.ToLower(name))
+			} else {
+				exactOnlyBlocks[strings.ToLower(name)] = name
+			}
+		}
+	}
 }
 
 // BuildEffectiveValidBlocks filters GetValidNativeBlocks() by which capture sources are
@@ -260,22 +372,83 @@ func GetValidNativeBlocks() map[string]bool {
 // also strip every real user capture out of the valid set, causing a correctly-chosen
 // user capture to be flagged "Unverified" purely because it shares the isCapture flag
 // with the factory captures being excluded.
+//
+// It applies no plugin filtering: every plugin device counts as valid. Eval tooling uses
+// it as ground truth for "is this a real block name"; the production pipeline uses
+// BuildEffectiveValidBlocksFor with the run's PluginGate.
 func BuildEffectiveValidBlocks(allowFactoryCaptures, allowUserCaptures bool) map[string]bool {
+	return BuildEffectiveValidBlocksFor(ValidBlockFilter{
+		AllowFactoryCaptures: allowFactoryCaptures,
+		AllowUserCaptures:    allowUserCaptures,
+	})
+}
+
+// ValidBlockFilter selects which entries of GetValidNativeBlocks() a run may use.
+type ValidBlockFilter struct {
+	AllowFactoryCaptures bool
+	AllowUserCaptures    bool
+	// Plugins drops plugin devices the user doesn't own, so the Architect naming one
+	// (e.g. "Tim Henson Lead" without that plugin) is flagged unverified instead of
+	// passing as a real block. An inactive gate keeps every plugin device.
+	Plugins PluginGate
+}
+
+// BuildEffectiveValidBlocksFor is BuildEffectiveValidBlocks with plugin gating. With an
+// active gate, a plugin device whose plugin isn't owned, or whose plugin_id the plugin
+// table doesn't know, is left out.
+func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 	all := GetValidNativeBlocks()
 	effective := make(map[string]bool, len(all))
 	for name, isCap := range all {
 		if IsUserCaptureName(name) {
-			if allowUserCaptures {
+			if f.AllowUserCaptures {
 				effective[name] = isCap
 			}
 			continue
 		}
-		if isCap && !allowFactoryCaptures {
+		if isCap && !f.AllowFactoryCaptures {
+			continue
+		}
+		if f.Plugins.Active && isPluginOnly(name) && !f.Plugins.ownsAny(pluginOnlyBlocks[name]) {
 			continue
 		}
 		effective[name] = isCap
 	}
 	return effective
+}
+
+// isPluginOnly reports whether name is a plugin device (see pluginOnlyBlocks).
+func isPluginOnly(name string) bool {
+	_, ok := pluginOnlyBlocks[name]
+	return ok
+}
+
+// ExcludeUnownedPluginBlocks returns a copy of validBlocks without the plugin-device
+// names whose plugin the user doesn't own, reading the gate from a pipeline constraints
+// map (see PluginGateFromConstraints): with no "allow_paid_plugins" key nothing is removed
+// (older callers, tests); false removes every plugin device; true keeps the devices of
+// plugins listed in "available_plugins". A name that an ungated coros_map.json entry also
+// produces is not a plugin device and is never removed, unless the device catalog lists
+// it as a plugin model (see pluginOnlyBlocks).
+func ExcludeUnownedPluginBlocks(validBlocks map[string]bool, constraints map[string]interface{}) map[string]bool {
+	return excludeUnownedPlugins(validBlocks, PluginGateFromConstraints(constraints))
+}
+
+// excludeUnownedPlugins applies a PluginGate to a valid-block set. An inactive gate
+// returns validBlocks unchanged.
+func excludeUnownedPlugins(validBlocks map[string]bool, g PluginGate) map[string]bool {
+	if !g.Active {
+		return validBlocks
+	}
+	GetValidNativeBlocks() // populates pluginOnlyBlocks
+	out := make(map[string]bool, len(validBlocks))
+	for name, isCap := range validBlocks {
+		if isPluginOnly(name) && !g.ownsAny(pluginOnlyBlocks[name]) {
+			continue
+		}
+		out[name] = isCap
+	}
+	return out
 }
 
 // ApplyFuzzyCorrection iterates over HTML table rows and corrects block names.
@@ -320,6 +493,13 @@ func resolveBlockName(rawName, category string, validBlocks map[string]bool) str
 			return annotateCaptureSource(snapped)
 		}
 		return snapped
+	}
+
+	// A plugin device the caller's validBlocks left out needs a plugin the user doesn't
+	// own (see BuildEffectiveValidBlocksFor). Flag it in every category: a paid device
+	// in a delay or reverb block is just as unusable as one in an amp block.
+	if _, plugin := pluginOnlyBlocks[snapped]; plugin {
+		return FlagUnverifiedBlock(snapped)
 	}
 
 	// Nothing in the Dictionary or the user's Capture Library — as allowed by the
@@ -518,22 +698,31 @@ func appendRationaleNote(block *storage.EffectBlock, note string) {
 	}
 }
 
-const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic placement parameters (Mic 1/Mic 2/Blend)."
+const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic parameters (Mic 1 and Mic 2, plus MIC 1 LEVEL/MIC 2 LEVEL or Blend)."
 
-// cabinetMicParamTokens are normalized (lowercased, whitespace-stripped) substrings that
-// identify a Cabinet block's mic-placement parameters, per Architect Rule 12 ("Every
-// Cabinet block's parameters MUST include the Transducer Tech's mic placement data").
-var cabinetMicParamTokens = []string{"mic1", "mic2", "blend"}
+// micSlotControlPattern matches the device's per-mic cab controls (MIC 1 LEVEL, MIC 2
+// POSITION, ...) in FlagIncompleteCabinetBlocks's normalized form (lower case, no spaces).
+var micSlotControlPattern = regexp.MustCompile(`^mic[12](level|pan|balance|distance|position|gridmode)$`)
 
-// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing one or more of the
-// mic-placement parameters Rule 12 requires (Mic 1, Mic 2, Blend). Found as a live, real
-// regression during Tier 1 development -- the Architect silently dropped these three
-// parameters from a Cabinet block on one golden-set prompt, keeping only High/Low Cut --
-// and fixed there with a prompt rule, but prompt compliance alone already proved fallible
-// for the analogous capture-formatting case (see FlagCaptureFormattingMismatches), so this
-// gives the same completeness property a deterministic backstop. Detection only, the same
-// way as the rest of this file's Flag* functions: there's no safe default mic
-// position/blend value to fabricate on the block's behalf.
+func isMicSlotControl(norm string) bool { return micSlotControlPattern.MatchString(norm) }
+
+// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing the two-mic data
+// Architect Rule 12 requires. Found as a live, real regression during Tier 1 development --
+// the Architect silently dropped the mic parameters from a Cabinet block on one golden-set
+// prompt, keeping only High/Low Cut -- and fixed there with a prompt rule, but prompt
+// compliance alone already proved fallible for the analogous capture-formatting case (see
+// FlagCaptureFormattingMismatches), so this gives the same completeness property a
+// deterministic backstop. Detection only, the same way as the rest of this file's Flag*
+// functions: there's no safe default mic position/level value to fabricate on the block's
+// behalf.
+//
+// Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v6's device convention,
+// where Blend (a control the device doesn't have) is replaced by each mic's own level:
+// Mic 1, Mic 2, MIC 1 LEVEL and MIC 2 LEVEL. Names are compared lowercased with spaces
+// removed, by substring. The v4 form is unchanged (any name mentioning mic 1, any naming
+// mic 2, and Blend -- v4's Mic n fields carry the Transducer's mic-and-position text). In the
+// device form the microphone choice must be its own field: a per-mic control such as
+// "MIC 1 LEVEL" or "MIC 1 POSITION" doesn't stand in for it.
 // Returns the number of Cabinet blocks flagged incomplete, for callers that want a quality
 // signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing callers that
 // ignore the return value are unaffected.
@@ -548,16 +737,28 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 			if blockType != "cab" && blockType != "cabinet" {
 				continue
 			}
-			present := make(map[string]bool, len(cabinetMicParamTokens))
+			var mic1, mic2, mic1Choice, mic2Choice, blend, mic1Level, mic2Level bool
+			// A control named in kept_defaults was deliberately left at the device
+			// default (e.g. the louder mic's LEVEL at 0 dB): it's accounted for too.
+			names := make([]string, 0, len(blocks[i].Parameters)+len(blocks[i].KeptDefaults))
 			for _, p := range blocks[i].Parameters {
-				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
-				for _, token := range cabinetMicParamTokens {
-					if strings.Contains(norm, token) {
-						present[token] = true
-					}
-				}
+				names = append(names, p.Name)
 			}
-			if len(present) < len(cabinetMicParamTokens) {
+			names = append(names, blocks[i].KeptDefaults...)
+			for _, name := range names {
+				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", ""))
+				mic1 = mic1 || strings.Contains(norm, "mic1")
+				mic2 = mic2 || strings.Contains(norm, "mic2")
+				// A per-mic device control ("MIC 1 LEVEL") isn't the microphone choice itself.
+				mic1Choice = mic1Choice || (strings.Contains(norm, "mic1") && !isMicSlotControl(norm))
+				mic2Choice = mic2Choice || (strings.Contains(norm, "mic2") && !isMicSlotControl(norm))
+				blend = blend || strings.Contains(norm, "blend")
+				mic1Level = mic1Level || strings.Contains(norm, "mic1level")
+				mic2Level = mic2Level || strings.Contains(norm, "mic2level")
+			}
+			v4Form := blend && mic1 && mic2
+			deviceForm := mic1Level && mic2Level && mic1Choice && mic2Choice
+			if !v4Form && !deviceForm {
 				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
 				flagged++
 			}
@@ -674,12 +875,16 @@ func min(a, b, c int) int {
 	return m
 }
 
-// ampMenuEntry is one amplifier's parsed coros_map.json record, cached once so per-request
-// filtering (factory-capture toggle, plugin ownership) never re-parses the embedded JSON.
+// ampMenuEntry is one amplifier's parsed coros_map.json record, or a device-catalog amp
+// coros_map.json doesn't cover, cached once so per-request filtering (factory-capture
+// toggle, plugin ownership) never re-parses the embedded JSON.
 type ampMenuEntry struct {
 	Name           string
 	IsCapture      bool
 	RequiredPlugin string
+	// UnknownPlugin marks a catalog plugin device whose plugin_id the plugin table
+	// doesn't know: never offered, whatever the filter says.
+	UnknownPlugin bool
 }
 
 var ampMenuBuckets map[string][]ampMenuEntry
@@ -687,6 +892,10 @@ var parseAmpsOnce sync.Once
 
 // GetCategorizedAmplifiers reads the embedded JSON and creates a formatted Markdown menu
 // grouping all available distinct amplifier names by their tonal archetype for LLM injection.
+// Device-catalog amps that coros_map.json doesn't cover are included too: guitar amps
+// under unclassifiedBucket (with coros_map.json amps whose tonal_archetype is empty),
+// bass amps under the existing "Bass Amps" bucket, which is the device's own category
+// rather than a tonal claim.
 // allowFactoryCaptures drops is_capture:true entries; when filterPlugins is true, any entry
 // tagged required_plugin (a plugin archetype's device, e.g. "Plini", "John Mayer") is dropped
 // unless allowedPlugins[requiredPlugin] is set -- mirrors the dictJSON filtering in
@@ -702,7 +911,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 					if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 						arch, _ := props["tonal_archetype"].(string)
 						if arch == "" {
-							arch = "Other / Unique"
+							arch = unclassifiedBucket
 						}
 						isCap, _ := props["is_capture"].(bool)
 						reqPlugin, _ := props["required_plugin"].(string)
@@ -713,24 +922,22 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 				}
 			}
 		}
-		// corosData is a map, so bucket order is random per process. Sort once
-		// (total order, so the first-wins dedup below is deterministic too).
-		for _, amps := range ampMenuBuckets {
-			sort.Slice(amps, func(i, j int) bool {
-				a, b := amps[i], amps[j]
-				if a.Name != b.Name {
-					return a.Name < b.Name
-				}
-				if a.IsCapture != b.IsCapture {
-					return !a.IsCapture
-				}
-				return a.RequiredPlugin < b.RequiredPlugin
+		for _, a := range catalogGearAdditions() {
+			if a.Type != "amp" {
+				continue
+			}
+			arch := unclassifiedBucket
+			if a.Bass {
+				arch = "Bass Amps"
+			}
+			ampMenuBuckets[arch] = append(ampMenuBuckets[arch], ampMenuEntry{
+				Name: a.Family, RequiredPlugin: a.Plugin, UnknownPlugin: a.Gated && a.Plugin == "",
 			})
 		}
 	})
 
-	// Archetypes in sorted order: the output must be byte-identical on every
-	// call so the Librarian's static prompt prefix can hit Gemini's implicit cache.
+	// Buckets and the names inside them are emitted in sorted order so the menu (and
+	// so the Librarian's prompt) is byte-identical from run to run.
 	archetypes := make([]string, 0, len(ampMenuBuckets))
 	for archetype := range ampMenuBuckets {
 		archetypes = append(archetypes, archetype)
@@ -744,7 +951,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 		seen := make(map[string]bool)
 		var names []string
 		for _, a := range amps {
-			if !allowFactoryCaptures && a.IsCapture {
+			if a.UnknownPlugin || (!allowFactoryCaptures && a.IsCapture) {
 				continue
 			}
 			if filterPlugins && a.RequiredPlugin != "" && !allowedPlugins[a.RequiredPlugin] {
@@ -759,6 +966,7 @@ func GetCategorizedAmplifiers(allowFactoryCaptures bool, filterPlugins bool, all
 		if len(names) == 0 {
 			continue
 		}
+		sort.Strings(names)
 		sb.WriteString(fmt.Sprintf("\n%s:\n", strings.ToUpper(archetype)))
 		for _, name := range names {
 			sb.WriteString(fmt.Sprintf("- %s\n", name))
@@ -793,7 +1001,14 @@ func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 
 	inputRunes := []rune(strings.ToLower(inputStr))
 
-	for v, vRunes := range validBlocksRunes {
+	if v, ok := exactOnlyBlocks[strings.ToLower(inputStr)]; ok {
+		return v // plugin device: exact (case-insensitive) matches only, never a fuzzy target
+	}
+
+	// snapPool is sorted by name and only a strictly smaller distance replaces the best
+	// match, so a tie always goes to the alphabetically first candidate.
+	for _, cand := range snapPool {
+		v, vRunes := cand.name, cand.runes
 		if strings.EqualFold(inputStr, v) {
 			return v // Perfect case-insensitive match
 		}

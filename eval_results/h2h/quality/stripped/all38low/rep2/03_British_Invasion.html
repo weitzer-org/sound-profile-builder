@@ -1,0 +1,361 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the classic Vox AC30 Top Boost platform pairing Celestion Alnico Blue speakers with a vintage Dallas Rangemaster treble booster and Sola Sound Tone Bender Mk 1.5 setup.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the Class A cathode-biased EL84 saturation targets, vintage spring reverb requirements, noise gate target of -65 dB, and bandpass filtering (95 Hz low cut, 7.0 kHz high cut).",
+    "\u003cstrong\u003eAgent 3 (Scraper):\u003c/strong\u003e Highlighted critical community warnings regarding AC30 input sensitivity, harsh top-end fizz around 4–6 kHz, and the imperative avoidance of double-cabbing when using full-rig captures.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Filtered gear to enforce the mandatory '66 AC30 JMP OD' full-rig capture engine, assigned native Rage Booster and MK3 Silicon Fuzz pre-amp blocks, and omitted standalone cab blocks to avoid double-cabbing.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Verified user captures across the cloud library, confirming authentic captures for '66 AC30 JMP Clean' (ToneJunkie) and 'AC30ish' (MartinMiller) to validate capture lineage.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Tailored pickup profiles by dialing an input trim of -3.0 dB and low-end attenuation for the Gibson ES-339 humbuckers, versus a +2.5 dB gain boost and smoothed treble for the Fender Telecaster.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Specified dual-mic placement geometries (Cap Edge at 1.5\" and Cone at 3.0\" with a 70% blend) reflected within the cabinet impulse response simulation context.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Implemented structural high/low-pass boundaries (80 Hz to 6.5 kHz) and set the final lane output ceiling to -2.5 dB to ensure dynamic mix headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Master):\u003c/strong\u003e Configured spatial depth with a 375 ms vintage delay and a 1.8-second decay vintage spring reverb running at a 22% wet mix.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Assigned Scene A (Rhythm edge-of-breakup) and Scene B (Lead boost with engaged Rage Booster and +1.5 dB capture push) seamless switching parameters.",
+    "\u003cstrong\u003eAgent 11 (DSP Optimizer):\u003c/strong\u003e Mapped linear Lane 1 routing enforcing single-amp mode compliance, positioning boost and fuzz blocks prior to the capture while adhering strictly to Quad Cortex CPU limits."
+  ],
+  "builder_statement": "This preset captures the quintessential 1966 Vox AC30 Top Boost chime and punch, powered by the full-rig '66 AC30 JMP OD' Neural Capture. Pre-amp saturation is spearheaded by the native Rage Booster and MK3 Silicon Fuzz to deliver articulate classic British saturation with distinct pickup compensation across both scenes.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Emulates the Dallas Rangemaster to push upper midrange presence into the AC30 front-end during lead solos.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "MK3 Silicon Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Provides an authentic Tone Bender-style saturated fuzz option when engaged for vintage British dirt.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-3",
+          "model": "66 AC30 JMP OD",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Full-rig capture of an overdriven 1966 jumpered AC30 combo tuned with a +2.5 dB input perception lift and rolled-off highs for Telecaster single coils.",
+          "type": "Capture"
+        },
+        {
+          "id": "block-4",
+          "model": "Vintage Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "28 %",
+              "value_b": "35 %"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "26 %"
+            }
+          ],
+          "rationale": "Delivers a warm 375 ms tape/analog slap-echo that expands naturally during solos without obscuring chime.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-5",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22 %"
+            }
+          ],
+          "rationale": "Simulates classic combo tank spring reflections to anchor the AC30 tone in organic dimensional space.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Authentic Rangemaster treble booster emulation to cut through low-mid mud and drive the EL84 front end for lead lines.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-2",
+          "model": "MK3 Silicon Fuzz",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Provides British silicon fuzz textures tailored after the Sola Sound Tone Bender Mk 1.5.",
+          "type": "Fuzz"
+        },
+        {
+          "id": "block-3",
+          "model": "66 AC30 JMP OD",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            }
+          ],
+          "rationale": "Full-rig capture of a 1966 jumpered AC30 combo configured with tight bass and controlled input levels to prevent wooliness with humbuckers.",
+          "type": "Capture"
+        },
+        {
+          "id": "block-4",
+          "model": "Vintage Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "30 %",
+              "value_b": "35 %"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22 %",
+              "value_b": "28 %"
+            }
+          ],
+          "rationale": "Delivers rhythmic ambient repeats to add dimension behind humbucker crunch and lead lines.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-5",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "22 %"
+            }
+          ],
+          "rationale": "Adds vintage tube combo spring reverberation matching the classic British tone aesthetic.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,524 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Anchored the rig around a cranked Marshall JTM45/100 into a 1960B Greenback 4x12 with a Vox Clyde McCoy Wah at the front.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Established the dark, vocal 'Woman Tone' envelope using power-amp overdrive, a 80 Hz low cut, a steep 5500 Hz high cut, and vintage room ambiance.",
+    "<strong>Agent 3 (Community Scraper):</strong> Highlighted the necessity of a steep post-cab low-pass filter (4.5–5.5 kHz) and low-gain mid-push overdrive to achieve smooth vocal sustain without low-end flub.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the core hardware to native Quad Cortex blocks: Brit TM45 Patch, 412 Brit 60B GB 90s, Crying Clyde Wah, Brit Blues, and Parametric-3.",
+    "<strong>Agent 5 (Navigator):</strong> Enforced the local-only constraint by disabling Cloud Captures and relying strictly on built-in algorithmic models.",
+    "<strong>Agent 6 (Acoustician):</strong> Applied a -3.0 dB input gain offset Conceptually translated into lower preamp Gain (5.5 vs 7.0) and Bass (3.5 vs 4.5) for the Gibson ES-339 humbuckers relative to the Fender Telecaster single coils.",
+    "<strong>Agent 7 (Transducer Tech):</strong> Configured the 412 Brit 60B GB 90s cabinet with a 57 Dynamic at Cap Edge (1.0 in) and an off-axis 121 Ribbon at Cone Edge (2.0 in) blended at 55%.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Set the global frequency boundaries (80 Hz to 6500 Hz) and attenuated lane output by -3.0 dB to prevent digital clipping during Scene B lead boosts.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Provided time-based spatial targets of 375 ms delay time and 1.8 s vintage room reverb decay at a 20% mix.",
+    "<strong>Agent 10 (Control Mapper):</strong> Structured Scene A for dynamic rhythm and Scene B for saturated 'Woman Tone' leads by engaging the Brit Blues overdrive, pushing amp gain/midrange, and lowering the Parametric-3 low-pass filter from 5.5 kHz to 4.5 kHz.",
+    "<strong>Agent 11 (DSP Architect):</strong> Sequenced the signal chain across two lanes (Wah -> Drives -> Amp on Lane 1; Cab -> EQ -> Spatial on Lane 2) while we omitted the redundant Green 808 to prevent gain congestion."
+  ],
+  "builder_statement": "This preset captures the quintessential late-60s British blues-rock 'Woman Tone' using the jumpered Brit TM45 Patch into a Greenback-loaded 412 Brit 60B GB 90s cabinet. To achieve that hollow, vocal lead sustain without touching your guitar's tone knob, Scene B engages a Brit Blues overdrive alongside a Parametric-3 block that shifts the steep high-cut filter down to 4.5 kHz, smoothing out all upper-register fizz.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Placed first in the chain to deliver authentic vintage Vox Clyde McCoy vocal sweeps before hitting the overdrive and amplifier stages.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B to push the JTM45 front end into thick, singing sustain; the Level dial is set to 7.5 to translate the upstream +3.0 dB boost intent with extra drive and darker tone to fatten the Telecaster single coils.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit TM45 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "9.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.5",
+              "value_b": "9.0"
+            }
+          ],
+          "rationale": "Emulates a cranked, jumpered Marshall JTM45/100; preamp Gain and Bass are pushed higher for the lower-output Telecaster single coils while Treble and Presence are rolled back to prevent bridge-pickup ice-pick harshness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit 60B GB 90s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "57 Dynamic - Cap Edge, 1.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "121 Ribbon - Cone Edge, 45-degree off-axis, 2.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Pairs a 1960B Greenback 4x12 with a 57 Dynamic and off-axis 121 Ribbon, shifting the blend toward the Ribbon (65%) to add warmth and body to the single-coil pickup.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Band 1 Freq (High-Pass)",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 2 Freq (Mid Peak)",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+1.0 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 3 Freq (Low-Pass)",
+              "type": "slider",
+              "value": "5200 Hz",
+              "value_b": "4300 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.5 dB"
+            }
+          ],
+          "rationale": "Applies the steep low-pass filter required to sculpt the rolled-off 'Woman Tone' envelope in Scene B while incorporating the FOH -3.0 dB output trim to prevent lane clipping.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Simple Delay",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "28%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Adds a subtle 375 ms echo that thickens lead lines in Scene B without cluttering rhythm work.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Room Reverb",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Provides natural vintage studio room ambiance around the dry cabinet signal.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Placed at the front of the chain to recreate the classic Vox Clyde McCoy vocal filter sweep into the cranked Marshall stack.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0"
+            }
+          ],
+          "rationale": "Engaged in Scene B for a focused midrange push; the upstream +3.0 dB Level offset is translated to 7.0 on the dial while omitting the redundant Green 808 to prevent low-mid congestion with semi-hollow humbuckers.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit TM45 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "9.0"
+            }
+          ],
+          "rationale": "Captures the cranked JTM45/100 power-tube saturation; translates the Acoustician's -3.0 dB humbucker input offset by lowering preamp Gain to 5.5 (Scene A) and 8.0 (Scene B) alongside a tight 3.5 Bass setting to eliminate semi-hollow low-end flub.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit 60B GB 90s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "57 Dynamic - Cap Edge, 1.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "121 Ribbon - Cone Edge, 45-degree off-axis, 2.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "55"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Combines the 57 Dynamic and off-axis 121 Ribbon at the exact 55% blend ratio to balance upper-mid bite with smooth Greenback speaker compression.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Band 1 Freq (High-Pass)",
+              "type": "slider",
+              "value": "80 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 2 Freq (Mid Peak)",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 3 Freq (Low-Pass)",
+              "type": "slider",
+              "value": "5500 Hz",
+              "value_b": "4500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "-1.5 dB"
+            }
+          ],
+          "rationale": "Implements the steep 5.5 kHz (Scene A) and 4.5 kHz (Scene B) low-pass filters to replicate the rolled-off humbucker 'Woman Tone' envelope while applying the -3.0 dB FOH lane attenuation.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-6",
+          "model": "Simple Delay",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Provides a 375 ms delay tail that opens up to a 20% mix during Scene B solos for added dimension.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "model": "Room Reverb",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%"
+            }
+          ],
+          "rationale": "Simulates a live 1960s studio room with a 1.8 s decay to keep the heavily filtered guitar tone breathing naturally in the mix.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

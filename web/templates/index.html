@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
     <!-- HTMX CDN -->
-    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="/static/htmx.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -353,6 +353,28 @@
             white-space: normal;
             line-height: 1.4;
             margin-top: 4px;
+        }
+
+        /* One parameter per line: a short "NAME: value" stays together, so a narrow column
+           widens to fit instead of splitting a value from its unit. A long one (the renderer
+           adds "long") wraps, so a long text value can't force the scene columns wide. */
+        table.grid-matrix .param {
+            white-space: nowrap;
+        }
+        table.grid-matrix .param.long {
+            white-space: normal;
+        }
+
+        /* A Scene B value that differs from Scene A. */
+        table.grid-matrix .param.diff {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* The controls left at the device default, named once under the block. */
+        table.grid-matrix td div.defaults-note {
+            font-style: italic;
+            opacity: 0.75;
         }
 
         /* Architecture Log styling */

@@ -58,8 +58,8 @@ func TestOrchestrator_MaxTokensTruncation_RetriesFallbackChain(t *testing.T) {
 			requestedModels = append(requestedModels, "gemini-3.1-pro-preview")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(truncatedResponse))
-		case strings.Contains(r.URL.Path, "gemini-3.5-flash"):
-			requestedModels = append(requestedModels, "gemini-3.5-flash")
+		case strings.Contains(r.URL.Path, "gemini-4-argon"):
+			requestedModels = append(requestedModels, "gemini-4-argon")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(goodResponse))
 		default:
@@ -93,6 +93,8 @@ func TestOrchestrator_MaxTokensTruncation_RetriesFallbackChain(t *testing.T) {
 	}
 	defer orch.Close()
 	orch.Reporter = NewUsageReporter(reportServer.URL, "test-shared-secret", "weitzer-org/sound-profile-builder")
+	// Pin the primary so this test exercises the retry mechanism, not the current defaults.
+	orch.AgentModels = map[string]string{"1_tone_historian": "gemini-3.1-pro-preview"}
 
 	res, err := orch.RunAgentSplit(ctx, "Tone Historian", "System prompt", "User prompt")
 	if err != nil {
@@ -102,7 +104,7 @@ func TestOrchestrator_MaxTokensTruncation_RetriesFallbackChain(t *testing.T) {
 		t.Errorf("expected the fallback model's response to be returned, got: %q", res)
 	}
 
-	if len(requestedModels) != 2 || requestedModels[0] != "gemini-3.1-pro-preview" || requestedModels[1] != "gemini-3.5-flash" {
+	if len(requestedModels) != 2 || requestedModels[0] != "gemini-3.1-pro-preview" || requestedModels[1] != "gemini-4-argon" {
 		t.Errorf("expected primary model to be tried and truncate, then the fallback to be tried and succeed; got sequence: %v", requestedModels)
 	}
 
@@ -111,9 +113,9 @@ func TestOrchestrator_MaxTokensTruncation_RetriesFallbackChain(t *testing.T) {
 
 	byModel := map[string]reportedUsageRecord{rec1.Model: rec1, rec2.Model: rec2}
 	truncatedRec, ok1 := byModel["gemini-3.1-pro-preview"]
-	recoveredRec, ok2 := byModel["gemini-3.5-flash"]
+	recoveredRec, ok2 := byModel["gemini-4-argon"]
 	if !ok1 || !ok2 {
-		t.Fatalf("expected one record per model in {gemini-3.1-pro-preview, gemini-3.5-flash}, got: %+v, %+v", rec1, rec2)
+		t.Fatalf("expected one record per model in {gemini-3.1-pro-preview, gemini-4-argon}, got: %+v, %+v", rec1, rec2)
 	}
 
 	if truncatedRec.Success {

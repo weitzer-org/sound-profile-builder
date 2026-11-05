@@ -13,7 +13,7 @@ func TestRenderPresetHTML_NoDoubleEscapedBreaks(t *testing.T) {
 			ID: "b1", Type: "Amplifier", Model: "Brit 2203", Rationale: "Classic British crunch.",
 			Parameters: []storage.BlockParameter{
 				{Name: "Gain", Type: "slider", Value: "5.0", ValueB: "7.5"},
-				{Name: "Bass", Type: "slider", Value: "5.0"},
+				{Name: "Bass", Type: "slider", Value: "6.0"}, // not the device default (5), so it stays a row
 			},
 		},
 	}
@@ -26,7 +26,7 @@ func TestRenderPresetHTML_NoDoubleEscapedBreaks(t *testing.T) {
 	if strings.Contains(out, "&lt;br") {
 		t.Errorf("found double-escaped <br/> tag in rendered HTML: %s", out)
 	}
-	if !strings.Contains(out, "Gain: 5.0<br/>Bass: 5.0") {
+	if !strings.Contains(out, "Gain: 5.0</span><br/><span class='param'>Bass: 6.0") {
 		t.Errorf("expected a real <br/> separator between parameters, got: %s", out)
 	}
 }
@@ -96,5 +96,47 @@ func TestInjectRenderedHTML_ErrorsOnMalformedStructuredPayload(t *testing.T) {
 	out, err := injectRenderedHTML(raw)
 	if err == nil {
 		t.Fatalf("expected an error for malformed structured_payload, got none (output: %s)", out)
+	}
+}
+
+// Device controls left at the default -- kept_defaults, listed with the default value in
+// both scenes, or never mentioned -- are named once in a muted line instead of listed as
+// rows; a Scene B
+// value that differs from Scene A is marked.
+func TestRenderPresetHTML_DefaultsLineAndSceneDiff(t *testing.T) {
+	blocks := []storage.EffectBlock{{
+		ID: "b1", Type: "Delay", Model: "Analog Delay",
+		Parameters: []storage.BlockParameter{
+			{Name: "MIX", Value: "30 %", ValueB: "40 %"},
+			{Name: "FEEDBACK", Value: "25 %"}, // the default, in both scenes
+		},
+		KeptDefaults: []string{"TRAILS", "WIDTH"},
+	}}
+	out := renderPresetHTML(blocks)
+	for _, want := range []string{
+		"<div class='defaults-note'>At device default: FEEDBACK, HIGH PASS, LOW PASS, SYNC, SYNC NOTE, DELAY TIME, MOD RATE, MOD DEPTH, DRIVE, TRAILS, PING PONG, WIDTH</div>",
+		"<span class='param'>MIX: 30 %</span>",
+		"<span class='param diff'>MIX: 40 %</span>",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in %s", want, out)
+		}
+	}
+	if strings.Contains(out, "FEEDBACK: 25") {
+		t.Error("a control at its default should not be listed as a row")
+	}
+}
+
+// A long text value may wrap (class "long"); a short "NAME: value" stays on one line.
+func TestRenderPresetHTML_LongValuesWrap(t *testing.T) {
+	out := renderPresetHTML([]storage.EffectBlock{{Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+		{Name: "Mic 1", Type: "dropdown", Value: "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)"},
+		{Name: "OUTPUT VOLUME", Type: "slider", Value: "-1.5", Unit: "dB"},
+	}}})
+	if !strings.Contains(out, "<span class='param long'>Mic 1: Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0)</span>") {
+		t.Errorf("long value should carry the long class:\n%s", out)
+	}
+	if !strings.Contains(out, "<span class='param'>OUTPUT VOLUME: -1.5 dB</span>") {
+		t.Errorf("short value should stay a plain param:\n%s", out)
 	}
 }

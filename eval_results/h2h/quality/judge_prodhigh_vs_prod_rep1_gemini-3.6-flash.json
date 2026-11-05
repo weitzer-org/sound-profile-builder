@@ -1,0 +1,79 @@
+[
+  {
+    "Name": "01_SRV_Clean",
+    "Winner": "prodhigh",
+    "Conf": 4,
+    "Ground": "Preset A accurately models the Green 808 overdrive with realistic circuit parameters ('Drive', 'Tone', 'Level') and uses clean, standard parameter value strings. Preset B hallucinated a 3-band EQ ('Bass', 'Mid', 'Treble') on the 'OG TS808' overdrive pedal, which is inaccurate for a Tube Screamer topology. Furthermore, Preset B injected full explanatory prose paragraphs into the cabinet block's mic selection dropdown values.",
+    "Struct": "Preset A contains a template string rendering defect in Block 5's model field (\"model\": \"Legendary 87 (ST)','parameters'\") across both guitar signal chains. Preset B has malformed dropdown value strings in the cabinet block that stuff rationale notes directly into the parameter value fields.",
+    "Rationale": "Preset A is preferred because its parameter modeling for real-world gear is much more accurate and believable for a guitarist dialing in a Quad Cortex. It correctly parameters the 808 overdrive with Drive, Tone, and Level, whereas Preset B incorrectly assigns Bass, Mid, and Treble controls to a TS808 pedal capture. Preset A's signal path (Crying Clyde Wah -\u003e Green 808 -\u003e '64 Super Reverb -\u003e 4x10 Cab -\u003e Studio 87 Compressor -\u003e Spring Reverb) perfectly captures the classic Stevie Ray Vaughan clean/edge-of-breakup architecture. Preset A has a minor structural string artifact in the block 5 model name, but its actual parameter setup and audio logic are superior to Preset B.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "04_Southern_Rock",
+    "Winner": "prod",
+    "Conf": 4.8,
+    "Ground": "Preset A grounds its design in the quintessential 1959 5F6-A Tweed Bassman 4x10 setup widely associated with classic Southern Rock tone, accurately detailing microphone pairings (SM57 on-axis cap edge and Royer R-121 off-axis mid cone) and authentic impedance/EQ considerations. Preset B opts for a 5E3 Tweed Deluxe capture rig but struggles with authentic block formatting.",
+    "Struct": "Preset A uses authentic Quad Cortex native models and realistic parameter names (Drive, Tone, Level, Volume, Bass, Mid, Treble, Presence, Master Volume). Preset B artificially overrides standard algorithmic pedals (4-Comp Custom, Iba Green) with generic Neural Capture dB controls (Gain, Bass, Mid, Treble, Volume) and uses band descriptions as parameter names in the Parametric-8 block (e.g., 'Low Shelf (100 Hz)') instead of proper QC EQ parameter controls (Frequency, Gain, Q).",
+    "Rationale": "Preset A is superior in both realism and structural fidelity. A 1959 Tweed Bassman 4x10 pushed by a Tube Screamer and Fuzz Face is a legendary foundation for Southern Rock tone. The block parameterization in Preset A reflects standard Quad Cortex controls accurately and handles guitar-specific variations (Telecaster vs ES-339) logically. Preset B introduces non-standard parameter abstractions across several standard Quad Cortex blocks (compressor, drive, and parametric EQ), making it less realistic and practical.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": false
+  },
+  {
+    "Name": "05_Clapton",
+    "Winner": "prod",
+    "Conf": 0.98,
+    "Ground": "Both presets cite accurate Cream-era Eric Clapton historical gear details (Marshall Plexi Super Lead, 1960B Greenbacks, Clyde McCoy wah, vintage fuzz, and using a pre-amp EQ to recreate the rolled-off 'woman tone' capacitor interaction).",
+    "Struct": "Preset A is structurally clean and correctly formatted across all fields. Preset B contains a major string formatting defect in Block 7 where key-value syntax was concatenated into the model string ('Studio Plate 70 (ST)\\',\\'type\\':\\'Reverb'). Preset B also invents non-standard Quad Cortex parameter names in the Parametric-8 block (such as '750 Hz Resonant Peak').",
+    "Rationale": "Preset A is significantly better due to structural and schema correctness. Preset B contains a severe string corruption error in Block 7's model name field (\"Studio Plate 70 (ST)', 'type':'Reverb\") and fabricates non-standard parameter names within its EQ block rather than adhering to actual Quad Cortex parameter designations. Preset A provides realistic, plausible parameters for both guitar profiles, clean scene transitions (Bypass: On -\u003e Off with Scene B parameter overrides), and flawless structural integrity.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": false
+  },
+  {
+    "Name": "08_EVH",
+    "Winner": "prodhigh",
+    "Conf": 4.5,
+    "Ground": "Both presets demonstrate outstanding grounding in EVH history (1968 100W Super Lead Plexi on a 90V Variac, Sunset Sound EMT 140 plate reverb, Echoplex EP-3 preamp, MXR Phase 90/Flanger, inverted-V Graphic EQ). Preset A offers slightly more detailed rationale around specific cabinet filtering and mic placement to prevent plate reverb fizz.",
+    "Struct": "Preset A has immaculate block structure and accurate scene toggle handling across both modulation pedals (Flanger active in Scene A, Phase 95 active in Scene B). Preset B groups two EQ sliders into a single parameter name ('500Hz-1kHz Sliders'), which deviates from QC single-parameter formatting, and leaves the MX Flanger bypassed without scene variations.",
+    "Rationale": "Preset A is extremely well executed. Its builder statement, agent impact notes, and block parameters are 100% synchronized—specifically the seamless scene switching where MX Flanger provides rhythm jet-sweep in Scene A while swapping to MX Phase 95 for solos in Scene B. Furthermore, Preset A's guitar pickup adaptations are thoroughly thought out (compensating Telecaster single coils with higher amp gain/volume and warmer cab filtering while trimming low-end on the semi-hollow ES-339). Preset B is also high quality, but suffers slightly from parameter grouping in the Graphic-9 block and less active scene utilization for the flanger.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "prodhigh",
+    "Conf": 4.5,
+    "Ground": "Preset A accurately details specific Slash historical rig nuances: the S.I.R. Stock #34 Marshall JCM800 modification, an always-on GE-7 pre-shaping EQ, an MXR CAE MC-401 clean boost post-amp (represented by the Parametric-3 block), and a classic SM57 / Royer R-121 ribbon mic blend on V30s. Preset B is much more generic, missing the CAE boost concept and using dual SM57 mics instead of the ribbon blend.",
+    "Struct": "Both presets are fully valid, complete, and properly structured with basis tags and scene override parameters.",
+    "Rationale": "Preset A delivers a far more authentic and nuanced model of Slash's actual rig architecture. By keeping the Graphic-9 active across both scenes to replicate the S.I.R. #34 pre-amp tone sculpting and using a dedicated post-amp Parametric-3 block as the MXR CAE MC-401 line driver for Scene B solo boosts, it provides better playability and scene switching. The mic pairing in Preset A (SM57 + R121 ribbon) is also vastly superior for taming V30 high-end harshness compared to Preset B's dual SM57 configuration.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "12_Bonamassa",
+    "Winner": "Equal",
+    "Conf": 4.5,
+    "Ground": "Both presets exhibit exceptional historical and technical grounding in Joe Bonamassa's gear and tone profile. Preset A accurately references and models his cascading dual overdrive setup (Ibanez TS9 / Way Huge Overrated Special represented via Iba Green Neural Capture and Green 808) into a Dumble Overdrive Special with EVM12L speakers. Preset B accurately references the factory 'ODS Joe Lead' Neural Capture, using an Input Gate for pickup-specific level matching and a post-amp Parametric EQ to simulate the low-end filtering and midrange push of a Dumbleator-buffered loop.",
+    "Struct": "Both presets are structurally perfect. All blocks match between guitar options, parameter basis tags are cleanly applied, relative dB formatting is correctly used on capture and EQ blocks, and Scene B override logic is perfectly consistent between the builder statements, rationales, and block tables.",
+    "Rationale": "This is a tie between two outstanding Quad Cortex presets. Both presets demonstrate master-level knowledge of Joe Bonamassa's signal chain and tone architecture. Preset A excels by capturing his dual-stage front-end drive stacking (a low-gain TS9 Neural Capture paired with a switchable Green 808 overdrive into the Dumbbell ODS amp model) along with an active Crying Wah. Preset B excels by utilizing the dedicated factory 'ODS Joe Lead' Neural Capture alongside post-amp Parametric EQ to manage the notorious Dumble 120 Hz low-end boominess and shape the 850 Hz lead bark. Both offer ideal pickup compensation for Telecaster vs ES-339 and provide highly practical, ready-to-gig Scene A/B structures.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  },
+  {
+    "Name": "13_Hard_Rock_Blues",
+    "Winner": "prod",
+    "Conf": 0.95,
+    "Ground": "Preset B demonstrates deeper Quad Cortex domain knowledge by incorporating specific Neural Captures like 'EP3 pre (V-12 EQ-mid)' as an always-on preamp sweetener ahead of the Brit Plexi 100 Patch, alongside the '1981 TS808 1' capture for Scene B lead pushes. Preset A also uses captures but suffers from structural errors.",
+    "Struct": "Preset A has a severe string syntax bug in block-8 for both guitar options where the model key contains corrupted text: 'Studio Plate 70 (ST)','parameters'. Preset B is structurally clean, formatted properly, and has explicit bypass toggles matching its scene routing rationale.",
+    "Rationale": "Preset B is the clear winner. Preset A contains corrupted text in the model field for block-8 ('Studio Plate 70 (ST)','parameters'), rendering the JSON payload structurally flawed. Beyond the error, Preset B is tonally superior and more authentically grounded in British blues-rock rig engineering, using an EP3 preamp capture to push the Plexi into organic edge-of-breakup for rhythm, and engaging the 1981 TS808 capture and delay for lead scenes.",
+    "Judge": "gemini-3.6-flash",
+    "JudgeServed": "gemini-3.6-flash",
+    "SwappedAB": true
+  }
+]

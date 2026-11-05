@@ -1,0 +1,606 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around a 1959 Fender Tweed Bassman 5F6-A into a 4x10 Jensen P10R open-back cabinet miked with an SM57, pushed by an Ibanez TS9 and finished with a 1960s Fender 6G15 outboard spring reverb.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the mid-pushed asymmetric tube saturation with power amp sag, establishing a -60 dB noise gate threshold and targeting low/high cuts around 90 Hz and 6.2 kHz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the need for a pre-amp low-end cut to stop cranked Tweed circuits from farting out with humbuckers, and suggested a post-cab 1176-style compressor for slide sustain.",
+    "\u003cstrong\u003eAgent 4 (Quad Cortex Librarian):\u003c/strong\u003e Mapped the hardware to verified Quad Cortex models including US Tweed Basslad Normal Patch, 410 US Basslad PR10, Parametric-3, Iba Green, Myth Drive, Legendary 87 (ST), and John Mayer Spring Reverb.",
+    "\u003cstrong\u003eAgent 5 (Capture Navigator):\u003c/strong\u003e Confirmed capture availability and flagged Iba Green as a static Neural Capture requiring relative dB parameter formatting.",
+    "\u003cstrong\u003eAgent 6 (Guitar Acoustician):\u003c/strong\u003e Calculated pickup compensation offsets, pulling bass back and reducing input drive for the warm semi-hollow Gibson ES-339 Humbuckers while boosting input drive and mids for the Fender Telecaster Single Coil.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 410 US Basslad PR10 cabinet with a Dynamic 57 at the cap edge and a Ribbon 121 at the cone center blended at 25%.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the global frequency boundaries from 95 Hz to 7500 Hz with a -1.5 dB lane output trim for clean live mix seating.",
+    "\u003cstrong\u003eAgent 9 (Mix \u0026 Space Architect):\u003c/strong\u003e Omitted delay blocks and dialed in the spring reverb decay and wet mix proportions for authentic vintage depth.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) and Scene B (Lead) parameter transitions, engaging the Iba Green capture boost and increasing compression/reverb mix for lead slide work.",
+    "\u003cstrong\u003eAgent 11 (DSP Grid Architect):\u003c/strong\u003e Distributed the signal chain across Lane 1 (pre-amp EQ, drives, and Tweed amplifier) and Lane 3 (4x10 cabinet, post-amp studio compressor, and spring reverb)."
+  ],
+  "builder_statement": "This preset delivers authentic Southern Rock and blues-rock slide bloom built around the US Tweed Basslad Normal Patch and matching 410 US Basslad PR10 cabinet. A pre-amp Parametric-3 EQ and a stacked combination of an always-on Myth Drive with a scene-switched Iba Green capture tighten the low end and push the Tweed circuit into singing sustain, while a post-cab Legendary 87 (ST) compressor and John Mayer Spring Reverb provide studio-grade glue and outboard tank ambiance.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz",
+              "value_b": "105 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid Freq",
+              "type": "slider",
+              "value": "750 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid Gain",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "+2.5 dB"
+            }
+          ],
+          "rationale": "Applies the Acoustician's +2.5 dB input boost so the lower-output Telecaster single coils hit asymmetric tube saturation while relaxing the low cut to 90 Hz to preserve body.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+3.5 dB",
+              "value_b": "+4.5 dB"
+            }
+          ],
+          "rationale": "Engaged in Scene B as a TS9 Neural Capture with intact Bass, a stronger +2.5 dB Mid push, and slightly attenuated Treble to fatten single-coil slide leads.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.8",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "8.0"
+            }
+          ],
+          "rationale": "Always-on Klon-style boost dialed with extra Drive and a warmer Tone setting (4.8) to thicken the Telecaster bridge pickup before the Tweed amp.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "US Tweed Basslad Normal Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Applies the Acoustician's +0.5 Volume offset (7.0 Rhythm, 8.5 Lead), fuller Bass (5.0), pushed Mid (7.5), and reduced Treble (4.0) to tame Telecaster bridge bite and match humbucker compression.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 2.5, Y: 1.0) w/ Aggressive Low Cut"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Center (X: 4.0, Y: 2.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "35%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Increases the warm Ribbon 121 blend to 35% and lowers the high cut to 6200 Hz and low cut to 95 Hz to give the single-coil Telecaster thicker low-mids and smoother top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "35%",
+              "value_b": "60%"
+            }
+          ],
+          "rationale": "Post-cab 1176 parallel compression bumped slightly to 35% in Rhythm and 60% in Lead to give single-coil notes extra sustain and body.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-7",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Dwell",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Emulates the outboard Fender 6G15 spring tank with a slightly warmer Tone (5.0) to prevent excessive spring splash from the brighter Telecaster pickups.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz",
+              "value_b": "120 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid Freq",
+              "type": "slider",
+              "value": "800 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid Gain",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "-2.5 dB"
+            }
+          ],
+          "rationale": "Placed first in the chain to apply the Acoustician's -2.5 dB input cut for the warm semi-hollow humbuckers and roll off sub-bass below 100 Hz (120 Hz in Lead) so the Tweed circuit never farts out.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-2",
+          "model": "Iba Green",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-2.0 dB",
+              "value_b": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+3.0 dB",
+              "value_b": "+4.0 dB"
+            }
+          ],
+          "rationale": "This TS9 Neural Capture is bypassed in Scene A and engaged in Scene B with reduced Gain, tightened Bass, and boosted Volume to push the Tweed amp into endless singing lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Included per the DSP Grid Architect as an always-on Klon-style clean boost with low Drive and high Level to add upper-midrange vocal clarity before the Tweed input.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "model": "US Tweed Basslad Normal Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Models the 1959 Fender Tweed Bassman 5F6-A with the Acoustician's -0.5 Volume offset and Bass pulled down to 3.5 to keep the ES-339's semi-hollow low end tight during power-tube sag.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 2.5, Y: 1.0) w/ Aggressive Low Cut"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Center (X: 4.0, Y: 2.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "25%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "110 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Pairs the 4x10 Jensen P10R Alnico cabinet with a Dynamic 57 and a 25% Ribbon 121 blend, applying a 110 Hz low cut to keep humbucker bass tight in the mix.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "30%",
+              "value_b": "55%"
+            }
+          ],
+          "rationale": "Placed post-cab in parallel blend (30% Rhythm, 55% Lead) to add studio 1176 sustain and glue to slide notes without choking the initial pick attack.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-7",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Dwell",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.2 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Replicates the 1960s Fender 6G15 outboard spring reverb tank after the cabinet, increasing Mix and Dwell in Scene B for lush lead dimension.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

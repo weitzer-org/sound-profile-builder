@@ -1,0 +1,608 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Identified the core vintage blues-rock architecture built around a cranked Fender '57 Tweed Deluxe (5E3) with a 1x12\" Jensen P12Q Alnico speaker, pushed by an Ibanez TS808 Tube Screamer and captured with a Shure SM57.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Established the mid-pushed EQ contour, cranked power-amp sag characteristics, -58 dB noise gate threshold, 90 Hz to 6200 Hz bandwidth framing, and warm vintage spring reverb specification.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the notorious low-end flub of cranked 5E3 Tweed captures when driven by humbuckers, prompting the inclusion of a pre-amp Parametric-3 high-pass/low-shelf cut and keeping capture Gain adjustments conservative.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the target rig to the mandatory 'Fender 57 Deluxe - T8 I4 M12' full-rig capture and '112 US DLX Tweed WGS-Q 10s' cabinet, while supplying 'Green 808', 'Myth Drive', and 'Parametric-3' with tactical advice to bypass the cab block when running the full-rig capture.",
+    "\u003cstrong\u003eAgent 5 (Cloud Navigator):\u003c/strong\u003e Confirmed no external cloud capture overrides were required beyond the verified local library selection.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated the acoustic divergence between the Gibson ES-339 Humbuckers (-3.0 dB input trim, lower bass and volume offsets to prevent semi-hollow mud) and Fender Telecaster Single Coil (+3.0 dB input boost, pushed mids, and rolled-off treble to tame bridge bite).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the '112 US DLX Tweed WGS-Q 10s' cabinet block with a 75% blend between a Dynamic 57 at the Cap Edge (X: 3.5, Y: 1.0) and a Ribbon 121 at the Cone Body (X: 5.5, Y: 3.0) for users who engage the cab block.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the global output boundary filtering from 95 Hz to 7500 Hz and attenuated the final lane output by -2.5 dB for clean front-of-house headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Formulated the spatial architecture using a 125 ms slapback delay and a 1.5-second spring reverb decay at a 20% mix level so slide and lead notes bloom naturally without washing out the dry attack.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A (Rhythm) around pure cranked Tweed capture saturation with pre-EQ tightening, and Scene B (Lead) by engaging the Green 808 and Myth Drive pedals alongside a +2.0 dB capture gain push for singing sustain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Organized the signal path across Lane 1 (In 1 through drives, pre-EQ, and the 57 Deluxe capture) routing into Lane 3 for the cabinet block, delay, spring reverb, and stereo output."
+  ],
+  "builder_statement": "This preset delivers authentic cranked '57 Tweed Deluxe (5E3) grit and blooming sustain by pairing the full-rig 'Fender 57 Deluxe - T8 I4 M12' neural capture with a pre-amp Parametric-3 low-end tightener and a dual-stage overdrive setup ('Green 808' and 'Myth Drive'). Scene A lets the raw, saggy tube compression of the jumpered Tweed capture breathe on its own, while Scene B engages the mid-focused drives and a subtle spatial tail of slapback delay and vintage spring reverb for soaring lead and slide work.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "+3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "80 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-45.0 dB"
+            }
+          ],
+          "rationale": "Boosts the lower-output Telecaster single coils by +3.0 dB so they hit the Tweed capture hard enough to trigger natural power-amp sag, while gating single-coil 60-cycle hum at -58 dB.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            }
+          ],
+          "rationale": "Emulates the classic TS808 mid-hump boost in front of the 5E3 circuit; bypassed in Scene A and engaged in Scene B with a slightly warmer Tone setting to fatten the Telecaster for singing lead sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            }
+          ],
+          "rationale": "Provides transparent Klon-style harmonic bloom and upper-midrange thickness when stacked in Scene B, pushing the Tweed capture into rich even-order compression without losing single-coil clarity.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Shelf",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "-2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6500 Hz"
+            }
+          ],
+          "rationale": "Applies only a gentle pre-amp low-shelf trim for the tighter Telecaster pickups so the cranked 5E3 bottom end stays firm without sounding thin.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "-0.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-0.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of a cranked '57 Tweed Deluxe (Tone 8, Instrument Vol 4, Mic Vol 12); tuned for the Telecaster with fuller bass, pushed +2.5 dB mids, and slightly rolled-back treble to smooth out single-coil bridge bite.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0) to tame high-end fizz while retaining upper-midrange bite and reducing proximity bass buildup from the cranked 5E3 circuit"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Body (X: 5.5, Y: 3.0) positioned slightly further back to capture warm woody low-mids and natural cabinet resonance without overwhelming the humbucker bottom end"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "65%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6000 Hz"
+            }
+          ],
+          "rationale": "Bypassed by default because 'Fender 57 Deluxe - T8 I4 M12' is a full-rig capture with baked-in speaker response; pre-configured with a 65% Dynamic 57 / Ribbon 121 blend to add extra Ribbon warmth if swapped to a direct amp block.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Analog Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "125 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "18%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Engages in Scene B to add a 125 ms vintage slapback echo that thickens single-note Telecaster leads without cluttering fast blues phrasing.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "63 Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.5 s",
+              "value_b": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "24%"
+            }
+          ],
+          "rationale": "Supplies the essential vintage American spring reverb bloom at the end of the chain, compensating for the 5E3 circuit's lack of an onboard reverb tank.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "-3.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-58.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "60 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Reduction",
+              "type": "slider",
+              "value": "-40.0 dB"
+            }
+          ],
+          "rationale": "Trims the hot semi-hollow ES-339 humbucker signal by -3.0 dB right at the input to prevent front-end clipping and keep the cranked Tweed capture from turning flubby.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "1.5",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Placed before the amp capture with low drive and boosted output in Scene B to shelve off sub-bass mud from the ES-339 humbuckers and push the 5E3 circuit into singing sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-3",
+          "model": "Myth Drive",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "2.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Engages in Scene B alongside the Green 808 to add Klon-style upper-midrange bite and articulation so the warm semi-hollow humbuckers cut cleanly through the mix.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Shelf",
+              "type": "slider",
+              "value": "-2.5 dB",
+              "value_b": "-3.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "Remains active in both scenes to carve out -2.5 dB to -3.5 dB of low-shelf energy before the capture block, directly solving the notorious low-end woofiness of humbuckers into a cranked 5E3.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "-2.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of a jumpered and cranked '57 Tweed Deluxe; Bass is cut by -1.5 dB to -2.0 dB and Treble nudged up to keep the ES-339 tight, woody, and articulate across rhythm and lead scenes.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-6",
+          "model": "112 US DLX Tweed WGS-Q 10s",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.0) to tame high-end fizz while retaining upper-midrange bite and reducing proximity bass buildup from the cranked 5E3 circuit"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Cone Body (X: 5.5, Y: 3.0) positioned slightly further back to capture warm woody low-mids and natural cabinet resonance without overwhelming the humbucker bottom end"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Blend",
+              "type": "slider",
+              "value": "75%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6200 Hz"
+            }
+          ],
+          "rationale": "Bypassed by default to avoid double-cab filtering on the full-rig capture, but pre-dialed with a 75% Dynamic 57 blend and 95 Hz low cut to keep humbucker lows tight if enabled.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-7",
+          "model": "Analog Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Time",
+              "type": "slider",
+              "value": "125 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "15%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "14%",
+              "value_b": "18%"
+            }
+          ],
+          "rationale": "Engages in Scene B with a 125 ms slapback and slightly lower feedback/mix than the single-coil preset so the thicker semi-hollow humbucker notes remain defined.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "63 Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.5 s",
+              "value_b": "1.7 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "20 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "20%"
+            }
+          ],
+          "rationale": "Provides warm vintage spring ambiance with a slightly brighter Tone setting and 20 ms pre-delay to keep the resonant ES-339 low-mids from clouding the reverb tail.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

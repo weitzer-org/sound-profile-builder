@@ -1,0 +1,416 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around a classic Fender '65 Twin Reverb feeding a 2x12 Jensen C12N speaker cabinet with no external overdrive pedals.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the high-headroom edge-of-breakup saturation profile with a mid-pushed EQ contour, vintage spring reverb, and an initial 100Hz to 6800Hz frequency window.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Surfaced the crucial Varitone simulation trick using a pre-amp parametric EQ notch at 1.5kHz alongside a low-mid boost, plus early solid-state compression to mimic the Lab Series L5 punch and a darker cab high-cut to eliminate Twin ice-pick.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Mapped the architecture to native Quad Cortex blocks: US TWN Vibrato, 212 US TWN CK2, Solid State Comp, Parametric-8, and John Mayer Spring Reverb, establishing strict pre-amp and post-cab placement rules.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no custom cloud or factory captures were required, keeping the signal path entirely on responsive algorithmic models.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation, trimming input gain and volume while lowering Bass to 3.5 for the warm ES-339 humbuckers, and boosting input gain, Volume, and Mid to 7.5 while pulling Treble to 4.0 with Bright Switch Off for the Telecaster single coils.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 US TWN CK2 cabinet with an off-axis Dynamic 57 and a cone-edge Ribbon 160 at a 45% blend ratio to smooth out harsh upper-mid transients.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the overarching mix boundaries between 85Hz and 6500Hz while maintaining a 0.0 dB lane output ceiling to prevent digital clipping on high-register bends.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Established wet-mix guardrails so the spring reverb adds subtle three-dimensional studio space without washing out the immediate pick attack.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Programmed Scene A (Rhythm) and Scene B (Lead) transitions by tightening compressor ratio, deepening the Parametric-8 Varitone curve, pushing the US TWN Vibrato volume harder into breakup, and darkening the cab high cut on leads.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Distributed the processing load across Lane 1 (compression, pre-EQ, and amp) and Lane 3 (cabinet IR and spring reverb) for optimal CPU balance."
+  ],
+  "builder_statement": "This preset captures classic high-headroom blues tone by pairing the native US TWN Vibrato and 212 US TWN CK2 cabinet with a pre-amp Parametric-8 EQ sculpted to emulate a vintage Varitone switch and a Solid State Comp that imparts the punchy, immediate sustain of a Lab Series L5 without relying on overdrive pedals.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Solid State Comp",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "2:1",
+              "value_b": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "2.0 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.0"
+            }
+          ],
+          "rationale": "Placed first in the chain with a fast attack and low ratio to replicate the natural solid-state compression of a Lab Series L5, with a slightly higher makeup Gain setting to compensate for lower-output single coils.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "350 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+3.5 dB",
+              "value_b": "+5.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 5 Freq",
+              "type": "slider",
+              "value": "1500 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 5 Gain",
+              "type": "slider",
+              "value": "-3.5 dB",
+              "value_b": "-5.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "+3.0 dB",
+              "value_b": "+5.0 dB"
+            }
+          ],
+          "rationale": "Simulates the Gibson Varitone switch before the amplifier by boosting low-mids at 350 Hz and scooping 1500 Hz, while incorporating the Acoustician's +3.0 dB single-coil input lift on the Output Level control.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "US TWN Vibrato",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bright Switch",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Delivers pure tube edge-of-breakup saturation without pedals; for the Telecaster, the Acoustician's +0.5 volume offset and +3.0 dB input lift are translated into higher Volume (7.0 Rhythm / 8.5 Lead), fuller Bass (5.0), pushed Mid (7.5), rolled-off Treble (4.0), and Bright Switch Off.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 US TWN CK2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 Off-Axis (X: +3.5, Y: 1.5, Angle: 45 deg)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160 Cone Edge (X: +5.0, Y: 3.0, Angle: 0 deg)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "55%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5200 Hz",
+              "value_b": "4800 Hz"
+            }
+          ],
+          "rationale": "Emulates the 2x12 Jensen C12N speaker complement; for the brighter Telecaster single coils, the mic blend leans slightly more toward the warm Ribbon 160 (55%) and lowers the High Cut to 5200 Hz (4800 Hz on Lead) to eliminate ice-pick highs.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Placed after the cab block with a short decay and low mix to add subtle vintage room dimension without surf-style splash.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Solid State Comp",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "2:1",
+              "value_b": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "2.0 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Placed early in the chain with a fast 2.0 ms attack and gentle 2:1 ratio (4:1 on Lead) to replicate the natural solid-state compression and vocal sustain of a Lab Series L5.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 2 Freq",
+              "type": "slider",
+              "value": "350 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 2 Gain",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Band 5 Freq",
+              "type": "slider",
+              "value": "1500 Hz"
+            },
+            {
+              "basis": "estimate",
+              "name": "Band 5 Gain",
+              "type": "slider",
+              "value": "-4.0 dB",
+              "value_b": "-5.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "-3.0 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Placed before the amplifier to simulate the classic Gibson Varitone switch by boosting 350 Hz and scooping 1500 Hz, while using the Output Level control to apply the Acoustician's -3.0 dB input trim for the hotter ES-339 humbuckers in Scene A and 0.0 dB in Scene B.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-3",
+          "model": "US TWN Vibrato",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Bright Switch",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Generates soft tube compression and edge-of-breakup grit natively without overdrive pedals; incorporates the Acoustician's -1.0 volume offset for the ES-339 humbuckers (Volume at 5.5 Rhythm / 7.5 Lead) with Bass pulled back to 3.5 to prevent semi-hollow low-mid mud.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "212 US TWN CK2",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 Off-Axis (X: +3.5, Y: 1.5, Angle: 45 deg)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 160 Cone Edge (X: +5.0, Y: 3.0, Angle: 0 deg)"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "45%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5500 Hz",
+              "value_b": "5000 Hz"
+            }
+          ],
+          "rationale": "Pairs an off-axis Dynamic 57 with a cone-edge Ribbon 160 at a 45% blend ratio, applying a 100 Hz Low Cut to tighten the ES-339's semi-hollow resonance and a 5500 Hz High Cut (5000 Hz on Lead) to keep high-register bends smooth and singing.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "22%"
+            }
+          ],
+          "rationale": "Positioned post-cab with a short 2.5 decay and 15% mix (expanding to 3.0 and 22% on Lead) to provide authentic vintage spring depth without obscuring note definition.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

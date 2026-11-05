@@ -83,7 +83,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 	_ = GetValidNativeBlocks()
 
 	validBlocks := map[string]bool{
-		"US Twin Vibrato": true,
+		"US TWN Vibrato":  true,
 		"UK C30 TopBoost": true,
 		"Parametric-3":    true,
 	}
@@ -92,9 +92,9 @@ func TestSnapToClosestBlock(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"US Twin Vibrato", "US Twin Vibrato"},
-		{"us twin vibrato", "US Twin Vibrato"}, // case insensitive match
-		{"US Twin V", "US Twin V"},             // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
+		{"US TWN Vibrato", "US TWN Vibrato"},
+		{"us twn vibrato", "US TWN Vibrato"}, // case insensitive match
+		{"US Twin V", "US Twin V"},           // distance to "US Prince" is 4, which is > threshold of 3, so it should not snap (no match)
 		{"UK C30 TopBoost", "UK C30 TopBoost"},
 		{"Bypassed", "Bypassed"},
 		{"-3.5dB", "-3.5dB"},
@@ -111,7 +111,7 @@ func TestSnapToClosestBlock(t *testing.T) {
 
 func TestApplyFuzzyCorrection(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US Twin Vibrato": true,
+		"US TWN Vibrato":  true,
 		"UK C30 TopBoost": false,
 	}
 
@@ -120,8 +120,8 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 		expected string
 	}{
 		{
-			input:    `<td>Amplifier: US Twin Vibrato</td>`,
-			expected: `<td>Amplifier: US Twin Vibrato (Factory Capture)</td>`, // valid + capture, not in the user's library
+			input:    `<td>Amplifier: US TWN Vibrato</td>`,
+			expected: `<td>Amplifier: US TWN Vibrato (Factory Capture)</td>`, // valid + capture, not in the user's library
 		},
 		{
 			input:    `<td>Cabinet: UK C30 TopBoost</td>`,
@@ -150,8 +150,8 @@ func TestApplyFuzzyCorrection(t *testing.T) {
 			// The model sometimes writes "(Capture)" into the name itself, redundant with
 			// the suffix this file adds programmatically. A real, valid name pre-annotated
 			// this way must still match its bare dictionary entry, not get flagged.
-			input:    `<td>Amplifier: US Twin Vibrato (Capture)</td>`,
-			expected: `<td>Amplifier: US Twin Vibrato (Factory Capture)</td>`,
+			input:    `<td>Amplifier: US TWN Vibrato (Capture)</td>`,
+			expected: `<td>Amplifier: US TWN Vibrato (Factory Capture)</td>`,
 		},
 		{
 			input:    `<td>Utility: Input & Noise Gate</td>`,
@@ -272,7 +272,7 @@ func TestBuildEffectiveValidBlocks(t *testing.T) {
 
 func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	validBlocks := map[string]bool{
-		"US Twin Vibrato":            true,
+		"US TWN Vibrato":             true,
 		"FNDR TWDLX IN Edge BAL CAB": true, // real user_captures.json entry
 		"Boss Blues Driver Waza":     true, // real user_captures.json entry, block_type "drive"
 	}
@@ -280,7 +280,7 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	sp := &storage.StructuredPreset{
 		Guitars: map[string][]storage.EffectBlock{
 			"Guitar 1": {
-				{ID: "1", Type: "Amplifier", Model: "US Twin Vibrato"},
+				{ID: "1", Type: "Amplifier", Model: "US TWN Vibrato"},
 				{ID: "2", Type: "Amplifier", Model: "57 Tweed Champ Bright"},
 				{ID: "3", Type: "Utility", Model: "Bypassed"},
 				{ID: "4", Type: "Reverb", Model: "Spring Reverb"},
@@ -294,7 +294,7 @@ func TestFlagUnverifiedStructuredBlocks(t *testing.T) {
 	FlagUnverifiedStructuredBlocks(sp, validBlocks)
 
 	blocks := sp.Guitars["Guitar 1"]
-	if blocks[0].Model != "US Twin Vibrato (Factory Capture)" {
+	if blocks[0].Model != "US TWN Vibrato (Factory Capture)" {
 		t.Errorf("expected valid factory capture to be labeled, got %q", blocks[0].Model)
 	}
 	if blocks[1].Model != FlagUnverifiedBlock("57 Tweed Champ Bright") {
@@ -406,6 +406,27 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 				{ID: "4", Type: "Amplifier", Model: "Brit Plexi 100 Patch", Parameters: []storage.BlockParameter{
 					{Name: "Gain", Value: "5.0"},
 				}}, // not a Cabinet block -- must never be flagged by this check
+				{ID: "5", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // v6 device convention: per-mic levels instead of Blend -- complete
+				{ID: "6", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+				}}, // only one mic's level -- incomplete
+				{ID: "7", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "MIC 1 POSITION", Value: "2"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // per-mic controls but no Mic 1/Mic 2 microphone choice -- incomplete
+				{ID: "8", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 2 LEVEL", Value: "-3.5 dB"},
+				}, KeptDefaults: []string{"MIC 1 LEVEL"}}, // the louder mic left at its 0 dB default -- complete
 			},
 		},
 	}
@@ -413,17 +434,29 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	FlagIncompleteCabinetBlocks(sp)
 
 	blocks := sp.Guitars["Guitar 1"]
-	if strings.Contains(blocks[0].Rationale, "⚠️") {
+	if strings.Contains(blocks[0].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected complete Cabinet block to get no warning, got %q", blocks[0].Rationale)
 	}
-	if !strings.Contains(blocks[1].Rationale, "⚠️") {
+	if !strings.Contains(blocks[1].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing all mic-placement params to be flagged, got %q", blocks[1].Rationale)
 	}
-	if !strings.Contains(blocks[2].Rationale, "⚠️") {
+	if !strings.Contains(blocks[2].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing just Blend to still be flagged, got %q", blocks[2].Rationale)
 	}
-	if strings.Contains(blocks[3].Rationale, "⚠️") {
+	if strings.Contains(blocks[3].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected non-Cabinet block to never be checked, got %q", blocks[3].Rationale)
+	}
+	if strings.Contains(blocks[4].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected the per-mic-level convention to count as complete, got %q", blocks[4].Rationale)
+	}
+	if !strings.Contains(blocks[5].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
+	}
+	if strings.Contains(blocks[7].Rationale, cabinetIncompleteNote) {
+		t.Errorf("a mic level named in kept_defaults should count as present, got %q", blocks[7].Rationale)
+	}
+	if !strings.Contains(blocks[6].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected a cab with MIC n LEVEL/POSITION but no Mic 1/Mic 2 choice to be flagged, got %q", blocks[6].Rationale)
 	}
 }
 
@@ -539,5 +572,292 @@ func TestBuildLibrarianContext_StaticCatalogIsSharedPrefix(t *testing.T) {
 	}
 	if len(static) < 50_000 {
 		t.Errorf("static catalog suspiciously small: %d chars", len(static))
+	}
+}
+
+// Plugin-gated device names are valid on an exact (case-insensitive) match but are never
+// fuzzy-snap targets: "Spring Reverb" must not become the paid "Plini Reverb".
+func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {
+	_ = GetValidNativeBlocks()
+	for _, tc := range []struct{ in, want string }{
+		{"plini reverb", "Plini Reverb"}, // exact, any case
+		{"Plini Reverb", "Plini Reverb"},
+		{"Spring Reverb", "Spring Reverb"}, // 3 edits from "Plini Reverb": not snapped
+		{"Plini Reverbb", "Plini Reverbb"}, // near miss of a plugin name: not snapped
+	} {
+		if got := SnapToClosestBlock(tc.in, nil); got != tc.want {
+			t.Errorf("SnapToClosestBlock(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+	// Ungated names stay normal fuzzy candidates. ("Exotic Z Boost" is the only valid
+	// name within 4 edits of the probe, so map iteration order can't pick another.)
+	if got := SnapToClosestBlock("Exotic Z Boos", nil); got != "Exotic Z Boost" {
+		t.Errorf("SnapToClosestBlock(%q) = %q, want ungated %q", "Exotic Z Boos", got, "Exotic Z Boost")
+	}
+}
+
+// Ties between equally close candidates must not depend on map iteration order.
+// "Klon Centaur" is one edit from both "Klon Centaur 1" and "Klon Centaur 2"; the sorted
+// pool means the alphabetically first one wins on every call.
+func TestSnapToClosestBlock_TiesAreDeterministic(t *testing.T) {
+	valid := GetValidNativeBlocks()
+	for _, n := range []string{"Klon Centaur 1", "Klon Centaur 2"} {
+		if _, ok := valid[n]; !ok {
+			t.Skipf("fixture name %q no longer in the valid set", n)
+		}
+	}
+	for i := 0; i < 200; i++ {
+		if got := SnapToClosestBlock("Klon Centaur", valid); got != "Klon Centaur 1" {
+			t.Fatalf("call %d: SnapToClosestBlock(%q) = %q, want %q", i, "Klon Centaur", got, "Klon Centaur 1")
+		}
+	}
+}
+
+// TestPluginGate covers PluginGate construction from constraints: no allow_paid_plugins key
+// means no filtering, available_plugins matches ignoring case, allow_paid_plugins=false owns
+// nothing, and a catalog addition with an unknown plugin_id is never offered.
+func TestPluginGate(t *testing.T) {
+	inactive := PluginGateFromConstraints(map[string]interface{}{})
+	if inactive.Active || !inactive.Allows("Plini") {
+		t.Errorf("no allow_paid_plugins constraint: want an inactive gate that allows everything, got %+v", inactive)
+	}
+
+	g := PluginGateFromConstraints(map[string]interface{}{
+		"allow_paid_plugins": true,
+		"available_plugins":  []string{"cory wong", "John Mayer"},
+	})
+	for plugin, want := range map[string]bool{"": true, "Cory Wong": true, "John Mayer": true, "Plini": false, "Tim Henson": false} {
+		if got := g.Allows(plugin); got != want {
+			t.Errorf("Allows(%q) = %v, want %v (owned: %v)", plugin, got, want, g.Owned)
+		}
+	}
+
+	none := PluginGateFromConstraints(map[string]interface{}{
+		"allow_paid_plugins": false,
+		"available_plugins":  []string{"Cory Wong"},
+	})
+	if !none.Active || none.Allows("Cory Wong") {
+		t.Errorf("allow_paid_plugins=false must own nothing, got %+v", none)
+	}
+
+	// A catalog addition whose plugin_id is missing from the plugin table (gated, no
+	// plugin name) is refused even by an inactive gate.
+	unknown := catalogAddition{Family: "Future Device", Type: "amp", Gated: true}
+	if unknown.allowedBy(inactive) || unknown.allowedBy(g) {
+		t.Errorf("a model with an unknown plugin_id must never be offered")
+	}
+	if !(catalogAddition{Family: "Brit 2203", Type: "amp"}).allowedBy(g) {
+		t.Errorf("a non-plugin model must always be offered")
+	}
+}
+
+// Device-catalog names join the valid-block set as native (non-capture) blocks: exact
+// model names, mono/stereo family names, and models coros_map.json never mentions.
+func TestGetValidNativeBlocks_Catalog(t *testing.T) {
+	valid := GetValidNativeBlocks()
+	for _, name := range []string{
+		"PV-505 Lead",             // catalog amp no coros_map.json entry names
+		"412 Brit 60B V30 95 (M)", // exact cab model
+		"412 Brit 60B V30 95",     // its family name
+		"Room",                    // non-gear catalog model (exact-match only)
+		"Tim Henson Lead",         // plugin model no coros_map.json entry names
+		"Love Meat",               // native Filter model, formerly flagged as a capture
+	} {
+		isCap, ok := valid[name]
+		if !ok {
+			t.Errorf("%q: want a valid block", name)
+		} else if isCap {
+			t.Errorf("%q: want a native block, got a capture", name)
+		}
+	}
+	// The catalog's generic Neural Capture slots are not gear and must not be offered.
+	for _, name := range []string{"Capture 2", "Eltron 30"} {
+		if _, ok := valid[name]; ok {
+			t.Errorf("%q (catalog Neural Capture category) must not be a valid block", name)
+		}
+	}
+	// User captures keep their capture flag.
+	for _, c := range GetUserCaptures() {
+		if isCap, ok := valid[c.Name]; !ok || !isCap {
+			t.Errorf("user capture %q: valid=%v isCapture=%v, want a valid capture", c.Name, ok, isCap)
+		}
+		break
+	}
+}
+
+// Catalog names outside the gear categories, and every plugin model, are exact-match only.
+// Gear-category catalog names are normal fuzzy candidates. Each probe below has a single
+// nearest candidate, so the result can't depend on tie-breaking.
+func TestSnapToClosestBlock_CatalogNames(t *testing.T) {
+	valid := GetValidNativeBlocks()
+	for _, tc := range []struct{ in, want string }{
+		{"room", "Room"},                       // exact, any case
+		{"Double RVB", "Double RVB"},           // not snapped to the "Doubler" utility
+		{"Tim Henson Leed", "Tim Henson Leed"}, // near miss of a plugin model: not snapped
+		{"tim henson lead", "Tim Henson Lead"}, // plugin model, exact match
+	} {
+		if got := SnapToClosestBlock(tc.in, valid); got != tc.want {
+			t.Errorf("SnapToClosestBlock(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+	// A gear-category catalog model that no coros_map.json entry names still snaps.
+	for _, tc := range []struct{ in, want string }{
+		{"Bogna Uber Clen", "Bogna Uber Clean"},
+		{"Freeman 100 Clea", "Freeman 100 Clean"},
+	} {
+		requireUniqueNearest(t, tc.in, tc.want)
+		if got := SnapToClosestBlock(tc.in, valid); got != tc.want {
+			t.Errorf("SnapToClosestBlock(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+// requireUniqueNearest fails the test if want isn't the single closest snap candidate to
+// probe, so a snapping test can't pass or fail on tie-breaking alone.
+func requireUniqueNearest(t *testing.T, probe, want string) {
+	t.Helper()
+	GetValidNativeBlocks()
+	in := []rune(strings.ToLower(probe))
+	best, count, bestName := -1, 0, ""
+	for _, c := range snapPool {
+		d := LevenshteinDistance(in, c.runes)
+		switch {
+		case best < 0 || d < best:
+			best, count, bestName = d, 1, c.name
+		case d == best:
+			count++
+		}
+	}
+	if bestName != want || count != 1 {
+		t.Fatalf("probe %q: nearest candidate is %q (%d at distance %d), want %q alone", probe, bestName, count, best, want)
+	}
+}
+
+// With an active plugin gate, plugin devices the user doesn't own leave the valid set,
+// whether coros_map.json names them (John Mayer Smooth Operator) or only the catalog does
+// (Tim Henson Lead). An inactive gate, as the eval tools use, keeps them all.
+func TestBuildEffectiveValidBlocksFor_Plugins(t *testing.T) {
+	const mayer, henson, native = "John Mayer Smooth Operator", "Tim Henson Lead", "Brit 2203"
+	for _, tc := range []struct {
+		name   string
+		gate   PluginGate
+		mayer  bool
+		henson bool
+	}{
+		{"inactive gate", PluginGate{}, true, true},
+		{"owns John Mayer", NewPluginGate(true, []string{"John Mayer"}), true, false},
+		{"owns Tim Henson", NewPluginGate(true, []string{"tim henson"}), false, true},
+		{"paid plugins off", NewPluginGate(false, []string{"John Mayer", "Tim Henson"}), false, false},
+	} {
+		valid := BuildEffectiveValidBlocksFor(ValidBlockFilter{AllowFactoryCaptures: true, AllowUserCaptures: true, Plugins: tc.gate})
+		if _, ok := valid[mayer]; ok != tc.mayer {
+			t.Errorf("%s: %q valid=%v, want %v", tc.name, mayer, ok, tc.mayer)
+		}
+		if _, ok := valid[henson]; ok != tc.henson {
+			t.Errorf("%s: %q valid=%v, want %v", tc.name, henson, ok, tc.henson)
+		}
+		if _, ok := valid[native]; !ok {
+			t.Errorf("%s: native %q must always be valid", tc.name, native)
+		}
+	}
+}
+
+// End to end through the flagger: an amp block naming an unowned plugin device is flagged
+// unverified; the same block passes once the plugin is owned.
+func TestFlagUnverifiedStructuredBlocks_UnownedPluginAmp(t *testing.T) {
+	for _, tc := range []struct {
+		owned       []string
+		wantFlagged bool
+	}{
+		{nil, true},
+		{[]string{"Tim Henson"}, false},
+	} {
+		valid := BuildEffectiveValidBlocksFor(ValidBlockFilter{
+			AllowFactoryCaptures: true, AllowUserCaptures: true,
+			Plugins: NewPluginGate(true, tc.owned),
+		})
+		sp := &storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {{ID: "1", Type: "Amplifier", Model: "Tim Henson Lead"}},
+		}}
+		n := FlagUnverifiedStructuredBlocks(sp, valid)
+		if got := n == 1; got != tc.wantFlagged {
+			t.Errorf("owned %v: flagged=%v (model now %q), want %v", tc.owned, got, sp.Guitars["Guitar 1"][0].Model, tc.wantFlagged)
+		}
+	}
+}
+
+func TestExcludeUnownedPluginBlocks(t *testing.T) {
+	all := BuildEffectiveValidBlocks(true, true)
+	for _, name := range []string{"Plini Drive", "John Mayer Halfman OD", "Brit 2203"} {
+		if _, ok := all[name]; !ok {
+			t.Fatalf("fixture assumption: %q should be a valid block name", name)
+		}
+	}
+	cases := []struct {
+		name        string
+		constraints map[string]interface{}
+		want        map[string]bool // block name -> kept?
+	}{
+		{"no plugin constraint: unfiltered", map[string]interface{}{},
+			map[string]bool{"Plini Drive": true, "John Mayer Halfman OD": true, "Brit 2203": true}},
+		{"paid plugins off", map[string]interface{}{"allow_paid_plugins": false, "available_plugins": []string{"John Mayer"}},
+			map[string]bool{"Plini Drive": false, "John Mayer Halfman OD": false, "Brit 2203": true}},
+		{"owns John Mayer only", map[string]interface{}{"allow_paid_plugins": true, "available_plugins": []string{"John Mayer"}},
+			map[string]bool{"Plini Drive": false, "John Mayer Halfman OD": true, "Brit 2203": true}},
+	}
+	for _, tc := range cases {
+		got := ExcludeUnownedPluginBlocks(all, tc.constraints)
+		for name, kept := range tc.want {
+			if _, ok := got[name]; ok != kept {
+				t.Errorf("%s: %q kept=%v, want %v", tc.name, name, ok, kept)
+			}
+		}
+	}
+
+	owned := ExcludeUnownedPluginBlocks(all, map[string]interface{}{"allow_paid_plugins": true, "available_plugins": []string{"John Mayer"}})
+	sp := &storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{"Guitar 1": {
+		{ID: "1", Type: "Overdrive", Model: "Plini Drive"},
+		{ID: "2", Type: "Overdrive", Model: "John Mayer Halfman OD"},
+	}}}
+	if n := FlagUnverifiedStructuredBlocks(sp, owned); n != 1 {
+		t.Errorf("flagged %d blocks, want 1 (the unowned Plini Drive)", n)
+	}
+	blocks := sp.Guitars["Guitar 1"]
+	if blocks[0].Model != FlagUnverifiedBlock("Plini Drive") || blocks[1].Model != "John Mayer Halfman OD" {
+		t.Errorf("got %q / %q", blocks[0].Model, blocks[1].Model)
+	}
+}
+
+// An unowned plugin device is flagged in any block category, not only amp/cab/drive:
+// "Tim Henson Delay Modern" in a delay block passes once the plugin is owned.
+func TestFlagUnverifiedStructuredBlocks_UnownedPluginEffect(t *testing.T) {
+	for _, tc := range []struct {
+		owned       []string
+		wantFlagged bool
+	}{
+		{nil, true},
+		{[]string{"Tim Henson"}, false},
+	} {
+		valid := BuildEffectiveValidBlocksFor(ValidBlockFilter{
+			AllowFactoryCaptures: true, AllowUserCaptures: true,
+			Plugins: NewPluginGate(true, tc.owned),
+		})
+		sp := &storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{
+			"Guitar 1": {
+				{ID: "1", Type: "Delay", Model: "Tim Henson Delay Modern"},
+				{ID: "2", Type: "Delay", Model: "Not A Real Delay XYZ"}, // non-gear unknown: still unflagged
+			},
+		}}
+		n := FlagUnverifiedStructuredBlocks(sp, valid)
+		blocks := sp.Guitars["Guitar 1"]
+		if got := strings.HasSuffix(blocks[0].Model, unverifiedSuffix); got != tc.wantFlagged {
+			t.Errorf("owned %v: plugin delay flagged=%v (model now %q), want %v", tc.owned, got, blocks[0].Model, tc.wantFlagged)
+		}
+		if strings.HasSuffix(blocks[1].Model, unverifiedSuffix) {
+			t.Errorf("owned %v: unknown non-gear name %q was flagged; only plugin devices widen the check", tc.owned, blocks[1].Model)
+		}
+		if want := map[bool]int{true: 1, false: 0}[tc.wantFlagged]; n != want {
+			t.Errorf("owned %v: flagged %d blocks, want %d", tc.owned, n, want)
+		}
 	}
 }

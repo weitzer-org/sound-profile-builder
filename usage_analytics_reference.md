@@ -193,12 +193,15 @@ snippet calling it directly rather than reinventing the listing/reading logic.
 
 ## Pricing table maintenance
 
-`internal/agents/usage_recorder.go`'s `geminiPriceTable` mirrors the
-sibling `job_tracker` project's `internal/scoring/pricing.go` for the models
-both share (`gemini-3.1-pro-preview`, `gemini-3.5-flash`,
-`gemini-3.6-flash`). This repo's own fallback chain (`getFallbackChain`)
-additionally uses `gemini-2.5-pro` and `gemini-3-flash-preview`, which
-`job_tracker` doesn't reference — those two figures are this repo's own and
-should be verified against Google's published pricing before relying on
-them for a real cost report (the `3-flash-preview` figure is currently a
-placeholder matching `3.5-flash`'s rate).
+`internal/agents/usage_recorder.go`'s `geminiPriceSchedule` is a dated price list: each model has
+one or more periods (an introductory rate until a date, then the standard rate), and each call is
+priced at the rate in effect when it was recorded. Source and fetch date are in its doc comment
+(Google Cloud's generative AI pricing page, fetched 2026-11-05). Current production models:
+`gemini-4-argon` ($2/$10 per 1M input/output through 2026-11-30, then $4/$20) and
+`gemini-3.8-flash` ($0.75/$3.75 through 2026-12-31, then $1.50/$7.50). Thinking tokens bill at the
+output rate. Google Search grounding is billed per query (5,000/month free, then $14 per 1,000) and
+is recorded as `groundingQueries` on each usage record, not folded into `costUsd`.
+
+It mirrors the sibling `job_tracker` project's `internal/scoring/pricing.go` for the models both
+share; keep them in sync when prices change. `gemini-2.5-pro` and `gemini-3-flash-preview` are kept
+only for historical records (no longer in any fallback chain) and were not re-verified.

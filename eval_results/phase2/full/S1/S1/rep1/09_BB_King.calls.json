@@ -1,0 +1,130 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1662,
+    "output_tokens": 99,
+    "thinking_tokens": 1034,
+    "latency_ms": 11721,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 626,
+    "output_tokens": 320,
+    "thinking_tokens": 921,
+    "latency_ms": 14975,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-3.1-pro-preview",
+    "served_model": "gemini-3.1-pro-preview",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 809,
+    "output_tokens": 59,
+    "thinking_tokens": 1090,
+    "latency_ms": 16007,
+    "grounded": false
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 37916,
+    "output_tokens": 264,
+    "thinking_tokens": 2873,
+    "latency_ms": 22955,
+    "grounded": false
+  },
+  {
+    "agent": "Transducer Tech",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 353,
+    "output_tokens": 63,
+    "thinking_tokens": 352,
+    "latency_ms": 4522,
+    "grounded": false
+  },
+  {
+    "agent": "FOH Optimizer",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 160,
+    "output_tokens": 36,
+    "thinking_tokens": 926,
+    "latency_ms": 8820,
+    "grounded": false
+  },
+  {
+    "agent": "Acoustician",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1925,
+    "output_tokens": 127,
+    "thinking_tokens": 837,
+    "latency_ms": 9091,
+    "grounded": false
+  },
+  {
+    "agent": "Mix Engineer",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 130,
+    "output_tokens": 27,
+    "thinking_tokens": 383,
+    "latency_ms": 5223,
+    "grounded": false
+  },
+  {
+    "agent": "DSP Dispatcher",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 440,
+    "output_tokens": 42,
+    "thinking_tokens": 655,
+    "latency_ms": 6144,
+    "grounded": false
+  },
+  {
+    "agent": "Control Mapper",
+    "attempt_model": "gemini-3.8-flash",
+    "served_model": "gemini-3.8-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 665,
+    "output_tokens": 411,
+    "thinking_tokens": 1073,
+    "latency_ms": 11580,
+    "grounded": false
+  },
+  {
+    "agent": "Architect \u0026 Evaluator",
+    "attempt_model": "gemini-3.1-pro-preview",
+    "success": false,
+    "error": "doRequest: error sending request: Post \"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent\": read tcp 127.0.0.1:33646-\u003e127.0.0.1:33357: read: connection reset by peer",
+    "latency_ms": 43745,
+    "grounded": false
+  }
+]
