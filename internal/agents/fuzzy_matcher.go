@@ -415,9 +415,18 @@ func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 		if isCap && !f.AllowFactoryCaptures {
 			continue
 		}
+		if f.Plugins.Active && !f.Plugins.ownsAny(pluginOnlyBlocks[name]) && isPluginOnly(name) {
+			continue
+		}
 		effective[name] = isCap
 	}
-	return excludeUnownedPlugins(effective, f.Plugins)
+	return effective
+}
+
+// isPluginOnly reports whether name is a plugin device (see pluginOnlyBlocks).
+func isPluginOnly(name string) bool {
+	_, ok := pluginOnlyBlocks[name]
+	return ok
 }
 
 // ExcludeUnownedPluginBlocks returns a copy of validBlocks without the plugin-device
@@ -440,7 +449,7 @@ func excludeUnownedPlugins(validBlocks map[string]bool, g PluginGate) map[string
 	GetValidNativeBlocks() // populates pluginOnlyBlocks
 	out := make(map[string]bool, len(validBlocks))
 	for name, isCap := range validBlocks {
-		if plugins, gated := pluginOnlyBlocks[name]; gated && !g.ownsAny(plugins) {
+		if isPluginOnly(name) && !g.ownsAny(pluginOnlyBlocks[name]) {
 			continue
 		}
 		out[name] = isCap
