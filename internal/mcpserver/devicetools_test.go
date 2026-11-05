@@ -295,19 +295,26 @@ func TestSendPreset_Refusals(t *testing.T) {
 		{"bad preset id", pushArgs(map[string]any{"preset_id": "../x"}), "preset_id must be"},
 		{"missing preset", pushArgs(map[string]any{"preset_id": "nope"}), "does not exist"},
 		{"wait too long", pushArgs(map[string]any{"wait_seconds": 500}), "wait_seconds"},
-		{"forged token", pushArgs(map[string]any{"dry_run": false, "confirm_token": "c1.9999999999.00000000000000000000000000000000"}), "does not match"},
 	}
+	// Every case above runs with the bridge offline; none changes the rig.
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if c.name == "forged token" {
-				r.online(t)
-			}
 			text := errText(t, itCall(t, r.cs, devicePushToolName, c.args))
 			if !strings.Contains(text, c.want) {
 				t.Fatalf("error %q, want it to contain %q", text, c.want)
 			}
 		})
 	}
+	// Online from here on, so the token check (not the offline check) is
+	// what refuses the forged token.
+	r.online(t)
+	t.Run("forged token", func(t *testing.T) {
+		text := errText(t, itCall(t, r.cs, devicePushToolName,
+			pushArgs(map[string]any{"dry_run": false, "confirm_token": "c1.9999999999.00000000000000000000000000000000"})))
+		if !strings.Contains(text, "does not match") {
+			t.Fatalf("forged token: %q", text)
+		}
+	})
 	if keys := r.client.Keys(devJobsBucket); len(keys) != 1 || keys[0] != devicejobs.HeartbeatKey {
 		t.Fatalf("a refused call wrote jobs: %v", keys)
 	}
