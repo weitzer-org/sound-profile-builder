@@ -148,6 +148,9 @@ func main() {
 	if !agents.EvalNoFallbackEnabled() && !*allowFallback {
 		log.Fatalf("%s=true is required for live runs. Set it, or pass -allow-fallback (NOT scoreable).", agents.EvalNoFallbackEnv)
 	}
+	if set := agents.AblationEnvSet(); len(set) > 0 {
+		log.Fatalf("%v set: those agents would return a stub without calling a model; unset them for a live eval", set)
+	}
 	if os.Getenv("TARGET_MODEL") != "" {
 		log.Fatal("TARGET_MODEL is set; unset it")
 	}
@@ -266,6 +269,10 @@ func freezeQuery(ctx context.Context, orch *agents.Orchestrator, cfg *config.App
 			ok = false
 			issues = append(issues, fmt.Sprintf("pipeline never reached the Architect: %v", runErr))
 		}
+		if missing := missingUpstreamCalls(upCalls); len(missing) > 0 {
+			ok = false
+			issues = append(issues, fmt.Sprintf("no successful model call recorded for: %s", strings.Join(missing, ", ")))
+		}
 		if missing := missingUpstream(obs.Upstream); len(missing) > 0 {
 			ok = false
 			issues = append(issues, fmt.Sprintf("missing upstream outputs from: %s", strings.Join(missing, ", ")))
@@ -292,6 +299,25 @@ func freezeQuery(ctx context.Context, orch *agents.Orchestrator, cfg *config.App
 // so it makes no call and has no frozen output; its text is still inside the frozen Architect prompt.
 var requiredUpstream = []string{"Tone Historian", "Sonic Profiler", "Community Scraper", "CorOS Librarian",
 	"Acoustician", "Transducer Tech", "FOH Optimizer", "Mix Engineer", "Control Mapper", "DSP Dispatcher"}
+
+// missingUpstreamCalls returns the required upstream agents with no successful model call. An
+// output alone is not enough: an ablated agent (ABLATE_AGENT_N=true) produces a stub output with
+// no call, which missingUpstream would accept.
+func missingUpstreamCalls(calls []agents.CallRecord) []string {
+	ok := map[string]bool{}
+	for _, c := range calls {
+		if c.Success {
+			ok[c.Agent] = true
+		}
+	}
+	var miss []string
+	for _, r := range requiredUpstream {
+		if !ok[r] {
+			miss = append(miss, r)
+		}
+	}
+	return miss
+}
 
 func missingUpstream(got []UpstreamOutput) []string {
 	have := map[string]bool{}

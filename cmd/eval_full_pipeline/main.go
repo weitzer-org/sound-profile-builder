@@ -45,9 +45,18 @@ func main() {
 	thinkingLevel := flag.String("thinking-level", "", "orchestrator-wide ThinkingLevel for every agent (MINIMAL|LOW|MEDIUM|HIGH); empty = per-model default (production)")
 	allowCloud := flag.Bool("allow-cloud-captures", false, "set allow_cloud_captures=true in the run constraints so agent 5 (Cloud Navigator) is actually called; evalfixtures.DefaultConstraints has it false, which bypasses the agent without a model call")
 	archPrompt := flag.String("architect-prompt", "", "override config.json's 12_architect prompt version for EVERY scenario (e.g. v5), baseline included, so the prompt is not a variable between scenarios")
-	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
+	smoke := flag.Bool("smoke", false, "plan §5 cost-gate smoke pass: "+SmokeQuery+" x 1 rep x every selected scenario (8 executable runs for the full set). Cannot be combined with -queries/-reps. Then run: go run ./cmd/eval_cost -root <out>")
+	outDir := flag.String("out", "", "output directory (default: eval_results/full_pipeline_gemini_upgrade/<UTC timestamp>, or .../smoke-<UTC timestamp> with -smoke; a fresh one per invocation); an existing one that already has runs.jsonl is refused so earlier artifacts are never overwritten")
 	flag.Parse()
 
+	if *smoke {
+		explicit := map[string]bool{}
+		flag.Visit(func(f *flag.Flag) { explicit[f.Name] = true })
+		var err error
+		if *queriesFlag, *reps, err = ApplySmoke(explicit, *queriesFlag, *reps); err != nil {
+			log.Fatal(err)
+		}
+	}
 	if *reps < 1 {
 		log.Fatal("-reps must be >= 1")
 	}
@@ -63,6 +72,9 @@ func main() {
 	}
 	plan := MakePlan(selected, len(queryNames), *reps, *includeSkipped)
 
+	if *smoke {
+		fmt.Printf("SMOKE PASS (plan §5 cost gate): %s x 1 rep x every selected scenario\n", SmokeQuery)
+	}
 	fmt.Printf("Plan: %d scenarios x %d queries x %d reps\n", plan.Scenarios, plan.Queries, plan.Reps)
 	for _, s := range selected {
 		note := ""
@@ -81,6 +93,9 @@ func main() {
 		return
 	}
 
+	if set := agents.AblationEnvSet(); len(set) > 0 {
+		log.Fatalf("%v set: those agents would return a stub without calling a model; unset them for a live eval", set)
+	}
 	if !agents.EvalNoFallbackEnabled() && !*allowFallback {
 		log.Fatalf("%s=true is required for live runs (otherwise a failed candidate is silently scored on a fallback model). Set it, or pass -allow-fallback to override.", agents.EvalNoFallbackEnv)
 	}
@@ -100,8 +115,13 @@ func main() {
 	defer orch.Close()
 	orch.ThinkingLevel = genai.ThinkingLevel(strings.ToUpper(strings.TrimSpace(*thinkingLevel)))
 
+	now := time.Now().UTC() // one clock read for both the directory name and the manifest batch id
 	if *outDir == "" {
-		*outDir = filepath.Join("eval_results", "full_pipeline_gemini_upgrade", time.Now().UTC().Format("20060102T150405Z"))
+		stamp := now.Format("20060102T150405Z")
+		if *smoke {
+			stamp = "smoke-" + stamp
+		}
+		*outDir = filepath.Join("eval_results", "full_pipeline_gemini_upgrade", stamp)
 	}
 	if _, err := os.Stat(filepath.Join(*outDir, "runs.jsonl")); err == nil {
 		log.Fatalf("%s already has runs.jsonl; pick a fresh -out so earlier outputs are not overwritten (a failed rerun would otherwise leave stale HTML that eval_checks still scores)", *outDir)
@@ -125,6 +145,14 @@ func main() {
 		}
 		agentPrompts["12_architect"] = *archPrompt
 	}
+
+	// The manifest is the batch's identity (plan §2 principle 5): the Phase 2 report/cost tools
+	// refuse to compare runs that do not share it.
+	manifest := BuildManifest(selected, queryNames, *reps, *smoke, *includeSkipped, now)
+	if err := evalcheck.WriteManifest(*outDir, manifest); err != nil {
+		log.Fatalf("manifest: %v", err)
+	}
+
 	constraints := evalfixtures.DefaultConstraints()
 	if *allowCloud {
 		constraints["allow_cloud_captures"] = true
@@ -155,7 +183,7 @@ func main() {
 				orch.Usage = &agents.TokenUsage{ModelsUsed: map[string]int{}}
 				start := time.Now()
 				out, _, runErr := orch.RunPipeline(ctx, goldenQueries[name], constraints, agentPrompts, nil)
-				rec := evalcheck.RunRecord{Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
+				rec := evalcheck.RunRecord{BatchID: manifest.BatchID, Scenario: sc.ID, Query: name, Rep: rep, LatencySec: time.Since(start).Seconds(), Success: runErr == nil}
 				if runErr != nil {
 					rec.Error = runErr.Error()
 				} else {

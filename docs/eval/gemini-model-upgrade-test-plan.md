@@ -1,6 +1,6 @@
 # Gemini Model Upgrade — Test Plan
 
-Status: **Phase 0-1 complete; Phase 2 gates done (quality scoring §6.2 pending); production routing + fixes shipped in PR #114 (§9a); Phase 1B complete (control failed R1, so candidates were compared against the control's own rate; see Phase 1 results)** · Written 2026-11-04 · Owner: bweitzer
+Status: **Phase 0-1 complete; Phase 2 readiness tooling (from main) and the Phase 2 live run both landed; quality scoring and the Argon vs 3.8 Flash head-to-head done (§9b); production routing + fixes shipped in PR #114 (§9a)** · Written 2026-11-04 · Owner: bweitzer
 
 ## 1. Goal
 
@@ -299,13 +299,183 @@ A1/A2/A3, and the report must say so prominently.
 **Size:** 9 scenarios × 13 queries × 2 reps = **234 pipeline runs (~3,000 agent calls)**.
 
 **Cost gate.** Run a smoke pass first: 1 query (`07_Edge`) × 1 rep × every scenario,
-9 runs in total. Multiply the measured cost per run by 234, using the post-introductory
-3.8 Flash price if one is known. Then get explicit sign-off before the full run.
-Don't estimate from list prices alone; Argon has no published price yet.
+9 runs planned, **8 executable** (S3 is skipped), `eval_full_pipeline -smoke`. Then
+`eval_cost` prices the measured per-run cost from recorded tokens × `geminiPriceSchedule` (dated official prices since PR #114) and
+multiplies by the full matrix: **208 runs = 8 executable scenarios × 13 queries × 2 reps (26
+per scenario)**, not 234. Models with no official price are UNKNOWN, never $0, so until Google
+publishes prices the projected total is a *lower bound* and the tool prints exactly what it
+leaves out. Get explicit sign-off before the full run. Don't estimate from list prices alone;
+Argon has no published price yet.
 
 **Argon note:** Argon's 32,768 output limit is above every current
 `agentMaxOutputTokens` cap (Architect = 16,000), so the caps bind first. Don't
 raise any cap during this eval (principle 5).
+
+### Phase 2 readiness (built 2026-11-04; zero live Gemini calls were made to build or validate it)
+
+| # | Prerequisite | Status | Where |
+|---|---|---|---|
+| 2.1 | Smoke pass + cost extrapolation | **Exists** | `eval_full_pipeline -smoke`; `cmd/eval_cost`; `internal/evalcost` |
+| 2.2 | Uniform re-critic | **Exists** | `cmd/eval_recritic`; `internal/evalcritic` |
+| 2.3 | Two-judge agreement + spot-check sampler | **Exists** (`judge_compare` gained audit fields) | `cmd/eval_judge_agree`; `internal/evaljudge` |
+| 2.4 | Report: gates, §7 rules, refuse cross-batch | **Exists** | `cmd/eval_report`; `internal/evalreport` |
+| – | Batch identity | **New**: `eval_full_pipeline` now writes `manifest.json` (batch id, frozen per-scenario routing and pins, queries, reps) and stamps `batch_id` on every `runs.jsonl` line | `internal/evalcheck/batch.go` |
+
+None of the tools make a Gemini call except `eval_recritic -dry-run=false` and `judge_compare`
+(both are opt-in; `eval_recritic` defaults to a dry run that prints the call count).
+
+**Run order.** `B` is the results directory. Every command below is a dry run or offline unless
+it says LIVE.
+
+```bash
+# 0. Plan only (no calls): 8 executable runs
+go run ./cmd/eval_full_pipeline -smoke
+# 1. LIVE smoke pass (~104 agent calls) -> eval_results/full_pipeline_gemini_upgrade/smoke-<ts>
+EVAL_NO_FALLBACK=true go run ./cmd/eval_full_pipeline -smoke -dry-run=false
+# 2. Cost gate (offline). -assume is a labelled what-if, never merged into the figures.
+go run ./cmd/eval_cost -root <smoke dir> -assume gemini-3.8-flash=0.75/3.75
+#    --> get sign-off here
+# 3. LIVE full matrix (208 runs, ~2,700 agent calls), baseline in the SAME batch
+EVAL_NO_FALLBACK=true go run ./cmd/eval_full_pipeline -dry-run=false -out B
+# 4. Uniform re-critic: dry run prints the call count (one per scoreable output, <= 208)
+go run ./cmd/eval_recritic -root B
+EVAL_NO_FALLBACK=true go run ./cmd/eval_recritic -root B -dry-run=false     # LIVE, resumable
+# 5. Pairwise judging: per candidate C in {S1,S2,S4,S5,A1,A2,A3} and rep R in {1,2}, twice (<= 364 LIVE calls)
+JUDGE_MODEL=gemini-3.1-pro-preview DIR_A=B/S0/rep$R DIR_B=B/$C/rep$R LABEL_A=S0 LABEL_B=$C OUT_FILE=B/judge/${C}_rep${R}_a.json go run ./cmd/judge_compare
+JUDGE_MODEL=<second judge>         DIR_A=B/S0/rep$R DIR_B=B/$C/rep$R LABEL_A=S0 LABEL_B=$C OUT_FILE=B/judge/${C}_rep${R}_b.json go run ./cmd/judge_compare
+# 6. Agreement + spot-check sample (offline); then a human fills "discard" in B/judge/spotcheck.json
+go run ./cmd/eval_judge_agree -batch B -out B -pair S1=B/judge/S1_rep1_a.json,B/judge/S1_rep1_b.json -pair S1=... (repeat)
+go run ./cmd/eval_judge_agree -batch B -out B <same -pair flags> -review B/spotcheck.json
+# 7. The report (offline). Reads manifest, runs.jsonl, calls files, outputs, recritic.jsonl, judge_summary.json
+go run ./cmd/eval_report -root B -baseline-flash-deprecated unknown -critic-sample 30
+```
+
+**Call budget for Phase 2:** 208 pipeline runs (~2,700 agent calls; the 234/~3,000 in the
+original estimate included S3) + ≤ 208 re-critic calls + ≤ 364 judge calls
+(7 candidates × 26 pairs × 2 judges) + 8 smoke runs first.
+
+**How each tool was validated (all offline):**
+
+- `eval_full_pipeline -smoke`: `-dry-run` prints `9 planned, 8 executable`; `-smoke` with
+  `-queries`/`-reps` is refused; manifest contents are unit-tested.
+- `eval_cost`: unit tests on synthetic smoke batches with hand-computed expected dollars
+  (fully priced S0, partially priced S1/S4, an all-unpriced scenario, a failed run, a run whose
+  `runs.jsonl` says clean but whose calls file shows a fallback). There is no live smoke output
+  to run it on yet, and the July report only has aggregate tokens, not per-model tokens.
+  Caveat on the extrapolation: in the July runs, 07_Edge's input tokens were within 4% of
+  the all-query mean in all three scenarios but its output tokens were 8-13% below the mean
+  (per-query output range 4.6k to 7.0k baseline, 3.2k to 10.4k flash-tier; computed from the
+  July report's per-query token totals), so a
+  single-query smoke figure probably under-reads the output share of the cost.
+- `eval_recritic`: unit tests with a fake caller (input has the pipeline Critic's notes and the
+  rendered table stripped; `{}`/garbage/missing `issues` is a failure, never 0; a wrong served
+  id, fallback attempt or API error is recorded as not scored; resume skips only successes).
+  Dry run on the July outputs: `eval_recritic -root eval_results/full_pipeline -legacy` = 35 calls.
+- `eval_judge_agree`: unit tests on synthetic judge files, plus the two July files
+  (`judge_flash_vs_baseline_v2.json`, `judge_pro_vs_baseline_v2.json`) used as real judge text.
+  The sampler puts `ODS Joe Lead`'s `user_captures.json` record (a Dumble ODS, the thing the judge
+  called "fabricated") next to the flash 12_Bonamassa verdict, and the `Circular Delay` `coros_map.json`
+  records next to the pro 12_Bonamassa verdict ("Axe-Fx exclusive"): the two July judge errors.
+  The July files have one judge only, so the second judge in those tests is synthesized.
+- `eval_report`: unit tests on synthetic 9-scenario batches (including an `integrity_ok=false`
+  run, a fallback-served call that `runs.jsonl` calls clean, a truncation, R1/R2, invented names,
+  a missing run, mixed and foreign batch ids). On July:
+  `eval_report -legacy -baseline-id baseline` reproduces `eval_checks` exactly (baseline
+  R1/R2 0/0, 4 unverified names, 3 own-Critic flags; flash-tier 0/0, 2 unverified, 0 flags;
+  pro-tier R1 2, R2 16, 0 unverified, 8 flags), and marks served-model integrity, success
+  rate, MAX_TOKENS, latency, tokens, cost, the batch and every §7 rule UNMEASURED because that
+  layout has none of them. Deleting the integrity re-derivation, or the success-rate gate's
+  comparison, makes the corresponding unit tests fail.
+
+**Not validated (cannot be without live calls):** the live `eval_recritic`/`judge_compare` paths
+against the real API, the orchestrator-backed `Caller`, and real `calls.json`/`manifest.json`
+files from a live run. The first smoke pass is their first real test; `eval_report` on the smoke
+batch is the check that the files are shaped as the tools expect.
+
+### Corrections and ambiguities found while building Phase 2
+
+Where the plan could not be implemented literally, this is what the tools do. Each item marked
+**DECISION** wants an explicit yes/no from the owner.
+
+1. **234 → 208.** §5's cost-gate "multiply by 234" includes S3, which is skipped. The matrix is 208.
+2. **Which model id prices a call? Decided (default requested).** `gemini-3.5-flash` is *served* as `gemini-3.6-flash`
+   (Phase 0.4) and the table prices them differently ($9.00 vs $7.50 per M output). Which one Google
+   bills is unverified. `eval_cost` and `eval_report` price by the *requested* id by default
+   (matches the `usage/` records) and accept `-price-basis served`.
+3. **§6.1 pipeline success rate.** Numerator = scoreable runs (success *and* integrity-clean),
+   denominator = planned runs, so an excluded run counts as a failure (principle 3).
+4. **§6.1 truncation "≤ S0, per agent".** Compared as rate per recorded run, counting only the
+   *routed* model's own attempts (a fallback's truncation is not the candidate's), over all
+   recorded runs including failed ones (truncation is why they failed).
+5. **§6.1 "R1 = 0".** Implemented as an absolute 0 on every scenario *including S0*. Under the
+   redefinition (Phase 0 correction 3) R1 = `capture_claim_on_modeled`, R2 = `capture_db_on_modeled`.
+   If S0 itself shows R1 > 0, S0 fails its own gate and the tool says so but does not block the batch.
+6. **§6.1 "fuzzy-corrected names ≤ S0". Decided (snapped + unverified).** `ApplyFuzzyCorrection` is a no-op (Phase 0
+   correction 2), so the gate uses *snapped + unverified* gear names per scoreable output. The
+   literal "snapped only" would let a candidate invent names too far from any real block to snap.
+7. **§6.2.1 "Critic defect count".** = number of re-critic findings that point at a real
+   guitar/block id of the output (findings pointing at nothing are counted separately as
+   `unmatched`, as the pipeline silently drops them), mean per run; spread = sample sd and the
+   mean within-query range across reps. It is how much one fixed reviewer flags, not how many
+   true errors exist (the Critic is not ground truth). Fidelity limit, unverified: the re-critic
+   input is rebuilt from the saved envelope (rendered table and Critic notes removed), which should
+   equal what the pipeline's Critic saw but was not byte-compared. `cmd/critic_probe` was left
+   alone: it hard-codes `gemini-3.1-pro-preview` (S0's Critic is 3.5-flash, served 3.6) and does no
+   served-model check.
+8. **§6.2.2 spot-check size. DECISION.** The sampler includes *every* agreed verdict that names an
+   indexed block/capture (exact or fuzzy) or uses claim wording ("fabricated", "Axe-Fx",
+   "does not exist", …), **plus** a seeded random ≥ 20% of the *remaining* agreed verdicts. In
+   practice nearly every verdict names gear: on the two July files, 17 of 19 agreed verdicts
+   qualify, so "≥ 20% plus every citing verdict" is ≈ "review everything". Narrowing options
+   (claim wording only; or mentions only when the judge asserts something negative) trade
+   review effort for missed judge errors.
+9. **§6.2.2 "both judges agree".** An agreed `Equal` is a tie (neither a win nor a loss).
+   Unpaired, unusable (winner outside the label set, or A/B mapping inconsistent with the raw
+   preference), and runs excluded for integrity are reported, never counted. Judging the same
+   model twice, or two requests served by the same model, is refused.
+10. **§6.2.2 judge "non-contestant". Decided (note, not refusal).** The plan's judge #1, `gemini-3.1-pro-preview`, is
+    itself S0's Pro tier, so it is a contestant in every comparison; only judge #2 is
+    non-contestant. `eval_judge_agree` prints a self-preference note when a judge is routed into S0
+    or the candidate; it does not refuse.
+11. **Judges also judge unscoreable runs.** `judge_compare` reads each golden query's `.html` from both
+    directories whatever the run's integrity, so the money is spent on integrity-failed outputs too; `eval_judge_agree -batch` only drops them
+    afterward. Pre-filtering would need `judge_compare` to read `runs.jsonl`.
+12. **§7 "Critic defect count ≤ baseline" and "wins ≥ losses".** Plain comparison of means and
+    counts, no significance test. With 26 runs per scenario small differences are noise; the report
+    prints the spread so a human can see that.
+13. **§7 Flash "quality not worse (tie acceptable)" and Mechanical "ties on quality".** Both are
+    implemented as *not worse* (defects ≤ S0 and agreed wins ≥ losses). A literal "tie" for the
+    Mechanical tier would reject an improvement.
+14. **§7 Flash "cheaper, faster, or later deprecation".** Cheaper needs both costs fully priced
+    (an unpriced model makes it UNMEASURED); faster = lower p50 pipeline latency; deprecation is an
+    external, unverified fact (§10) supplied as `-baseline-flash-deprecated yes|no|unknown`
+    (default `unknown`, which leaves the clause UNMEASURED). Phase 0 correction 4 notes
+    "3.5 Flash is deprecated" may be moot if it aliases 3.6.
+15. **§7 Mechanical (S4) has no cost clause**, although §5 asks "cheaper mechanical agents?".
+    Implemented literally: an S4 that ties on quality is ADOPT even if Lite saves nothing, and
+    Lite has no official price so savings cannot be measured today. The report now prints the cost and latency comparison next to the verdict as information only; adding a real cost clause to the rule remains a **DECISION** for the owner.
+16. **§7 Critic rule** ("of 30 sampled flags, how many are true contradictions") is manual:
+    `eval_report -critic-sample 30` prints a seeded sample of the pipeline Critic's flags (S0 and
+    Critic-tier scenarios) with the `coros_map.json`/`user_captures.json` ground truth next to each.
+17. **§7 "Argon anywhere in production".** The tool cannot know whether Google has published
+    pricing or a non-provisional id; it treats the ids in `-provisional-models` (default
+    `gemini-4-argon`) as provisional and caps any would-be ADOPT to UNDETERMINED ("preview signal
+    only"). Argon is also absent from `geminiPriceTable`, so its cost is UNKNOWN. *(Superseded 2026-11-05: official Argon and 3.8 Flash prices are now in `geminiPriceSchedule`, §9a.)*
+18. **§7 A1/A2/A3 "wins". Decided (this definition).** Interpreted as: all gates pass, defects ≤ S0, and agreed
+    judge wins strictly exceed losses. Attribution then follows the plan's text.
+19. **p50/p95 pipeline latency** are nearest-rank over *scoreable* runs. With 26 runs p95 is the
+    second-slowest run, so it is noisy.
+20. **Refusing to compare across batches** means: mixed `batch_id`s in `runs.jsonl`, a `recritic.jsonl`
+    line or `judge_summary.json` stamped with a different batch, or a second results directory
+    (`-baseline-root`) from another invocation. A directory without `manifest.json` (the July
+    layout) is only accepted with `-legacy`, and then everything that needs batch identity,
+    calls files, latency or tokens is UNMEASURED and no decision is produced.
+21. **Preconditions block verdicts.** If the baseline is missing/empty, the matrix is incomplete
+    (a planned run has no record), or S0 itself has served-model violations, the gates still print
+    but every ADOPT/DO NOT ADOPT is shown as UNDETERMINED.
+22. **Pre-existing, unrelated:** `TestOrchestrator_OpenLLM_Integration` fails when `GEMINI_API_KEY`
+    is set in the environment (`NewOrchestrator` creates the Gemini client whenever the env var is set, even
+    for an empty key argument, so the test's "client must be nil" assertion breaks); it passes with `env -u GEMINI_API_KEY go test ./...`. Not changed here.
 
 ## 5a. Phase 2 results (run 2026-11-05)
 
@@ -360,8 +530,8 @@ raise any cap during this eval (principle 5).
 ### 6.2 Quality (scenarios that pass every gate)
 
 1. **Critic defect count per run, re-scored uniformly.** After every scenario,
-   re-run one fixed Critic over all outputs (`cmd/critic_probe`, pinned to the S0
-   Critic model). This keeps S5 and A1, whose own Critic is Argon, comparable with
+   re-run one fixed Critic over all outputs (`cmd/eval_recritic`, pinned to the S0
+   Critic model with its served-id check; `cmd/critic_probe` is not suitable, see Phase 2 readiness item 7). This keeps S5 and A1, whose own Critic is Argon, comparable with
    the others. Lower is better. Report mean and spread across reps.
 2. **Pairwise judge** (`cmd/judge_compare`, each scenario vs. S0):
    - Judge with **two** models, `gemini-3.1-pro-preview` plus one non-contestant

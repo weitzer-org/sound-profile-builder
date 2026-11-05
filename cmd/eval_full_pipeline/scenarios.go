@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/evalcheck"
 )
 
 // Model ids used by the Gemini-upgrade scenarios (docs/eval/gemini-model-upgrade-test-plan.md §5).
@@ -204,4 +207,50 @@ func MakePlan(sel []Scenario, queries, reps int, includeSkipped bool) Plan {
 	}
 	p.AgentCalls = p.Executable * 13
 	return p
+}
+
+// SmokeQuery is the single golden query the §5 cost-gate smoke pass runs.
+const SmokeQuery = "07_Edge"
+
+// ApplySmoke resolves -smoke: it pins queries to SmokeQuery and reps to 1, and refuses an
+// explicit -queries/-reps (a "smoke" pass that silently ran something else would make the cost
+// extrapolation meaningless). explicit is the set of flag names the user actually passed.
+func ApplySmoke(explicit map[string]bool, queries string, reps int) (string, int, error) {
+	if explicit["queries"] || explicit["reps"] {
+		return queries, reps, fmt.Errorf("-smoke fixes the run to %s x 1 rep and cannot be combined with -queries/-reps", SmokeQuery)
+	}
+	return SmokeQuery, 1, nil
+}
+
+// BuildManifest freezes the invocation (scenario routing included) into the batch manifest.
+// Skipped scenarios are listed with their reason so a reader can tell "not run" from "lost".
+func BuildManifest(selected []Scenario, queries []string, reps int, smoke, includeSkipped bool, now time.Time) evalcheck.Manifest {
+	m := evalcheck.Manifest{
+		BatchID:   now.Format("20060102T150405Z"),
+		CreatedAt: now.Format(time.RFC3339),
+		Smoke:     smoke,
+		Reps:      reps,
+		Queries:   append([]string(nil), queries...),
+		Git:       gitRevision(),
+	}
+	for _, s := range selected {
+		skip := s.Skip
+		if includeSkipped {
+			skip = ""
+		}
+		m.Scenarios = append(m.Scenarios, evalcheck.ManifestScenario{ID: s.ID, Label: s.Label, AgentModels: s.AgentModels, Pins: s.Pins, Skip: skip})
+	}
+	return m
+}
+
+// gitRevision is the vcs.revision stamped into the binary by `go build` (empty under `go run`).
+func gitRevision() string {
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		for _, kv := range bi.Settings {
+			if kv.Key == "vcs.revision" {
+				return kv.Value
+			}
+		}
+	}
+	return ""
 }

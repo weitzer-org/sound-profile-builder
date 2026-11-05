@@ -28,7 +28,7 @@ import (
 // (disable thinking) is only honored by gemini-3.5-flash -- both gemini-3.6-flash and
 // gemini-3.1-pro-preview reject it outright (400 INVALID_ARGUMENT, "This model only works in
 // thinking mode"), and gemini-3.6-flash additionally has no working fallback at budget=0
-// (its only fallback, gemini-2.5-pro, rejects it too -- see getFallbackChain's default case).
+// (at the time its only fallback, gemini-2.5-pro, rejected it too; getFallbackChain has since changed).
 // Testing those cells would either error every rep or (worse) silently substitute a different
 // model via the fallback chain, which cmd/probe_thinking caught happening for
 // gemini-3.1-pro-preview/budget=0 before this exclusion was added.

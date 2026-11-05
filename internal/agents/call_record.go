@@ -1,6 +1,7 @@
 package agents
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -12,9 +13,24 @@ import (
 // "retry without grounding" degrade path in runAgentSplit). Production never sets it.
 //
 // Why it exists: getFallbackChain routes a failing model to a different one, so an eval of a
-// candidate that fails (or truncates) could silently be scored on a completely different model. With this set to "true" a failed
+// candidate that fails (or truncates) could silently be scored on a completely different model.
+// With this set to "true" a failed
 // candidate call fails visibly instead. See docs/eval/gemini-model-upgrade-test-plan.md §3 0.1.
 const EvalNoFallbackEnv = "EVAL_NO_FALLBACK"
+
+// AblationEnvSet returns the ABLATE_AGENT_* variables set to "true" (runAgentSplit then returns a
+// stub for that agent without calling any model and without recording a call). Live eval tools
+// refuse to run with any set, so a leftover shell variable cannot leak a stub into results.
+func AblationEnvSet() []string {
+	var set []string
+	for i := 1; i <= 13; i++ {
+		k := fmt.Sprintf("ABLATE_AGENT_%d", i)
+		if os.Getenv(k) == "true" {
+			set = append(set, k)
+		}
+	}
+	return set
+}
 
 // EvalNoFallbackEnabled is the exported form of evalNoFallback, so eval tools gate on exactly
 // the same parsing (trimmed, case-insensitive "true") the orchestrator uses.

@@ -125,3 +125,18 @@ func TestJudgeForSubset(t *testing.T) {
 		t.Fatal("subset control should pass")
 	}
 }
+
+func TestMissingUpstreamCalls(t *testing.T) {
+	var calls []agents.CallRecord
+	for _, r := range requiredUpstream {
+		calls = append(calls, agents.CallRecord{Agent: r, Success: true})
+	}
+	if m := missingUpstreamCalls(calls); len(m) != 0 {
+		t.Fatalf("complete set flagged: %v", m)
+	}
+	// An ablated agent has an output but no call; a failed call does not count either.
+	calls[0].Success = false
+	if m := missingUpstreamCalls(calls[:len(calls)-1]); len(m) != 2 {
+		t.Fatalf("want 2 missing (failed + absent), got %v", m)
+	}
+}

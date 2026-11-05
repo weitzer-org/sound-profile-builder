@@ -74,6 +74,9 @@ func main() {
 	if !agents.EvalNoFallbackEnabled() && !*allowFallback {
 		log.Fatalf("%s=true is required for live runs. Set it, or pass -allow-fallback (results will NOT be scoreable).", agents.EvalNoFallbackEnv)
 	}
+	if set := agents.AblationEnvSet(); len(set) > 0 {
+		log.Fatalf("%v set: those agents would return a stub without calling a model; unset them for a live eval", set)
+	}
 	if os.Getenv("TARGET_MODEL") != "" {
 		log.Fatal("TARGET_MODEL is set; unset it so it cannot interfere with per-agent routing")
 	}

@@ -8,25 +8,31 @@ import (
 	"google.golang.org/genai"
 )
 
-func TestGetFallbackChain_DefaultUnchanged(t *testing.T) {
-	t.Setenv(EvalNoFallbackEnv, "")
-	cases := map[string][]string{
-		"gemini-4-argon":         {"gemini-3.8-flash", "gemini-3.1-pro-preview"},
-		"gemini-3.8-flash":       {"gemini-4-argon", "gemini-3.1-pro-preview"},
-		"gemini-3.1-pro-preview": {"gemini-4-argon", "gemini-3.8-flash"},
-		"gemini-3.5-flash":       {"gemini-3.8-flash", "gemini-4-argon"},
-		"totally-bogus-model":    {"gemini-3.8-flash", "gemini-4-argon"},
-	}
-	for model, want := range cases {
-		for _, m := range want {
-			if m == "gemini-2.5-pro" || m == "gemini-3-flash-preview" || m == "gemini-3.5-flash" {
-				t.Errorf("chain for %s ends on deprecated model %s", model, m)
+// fallbackChainCases is the full expected routing table (EVAL_NO_FALLBACK unset). Since PR #114
+// production runs on gemini-4-argon / gemini-3.8-flash and every chain uses only current models;
+// unknown models get no fallback (kept from main's 5e9b2e0).
+var fallbackChainCases = map[string][]string{
+	"gemini-4-argon":         {"gemini-3.8-flash", "gemini-3.1-pro-preview"},
+	"gemini-3.8-flash":       {"gemini-4-argon", "gemini-3.1-pro-preview"},
+	"gemini-3.1-pro-preview": {"gemini-4-argon", "gemini-3.8-flash"},
+	// legacy ids that may still arrive via config/TARGET_MODEL fall forward to current models
+	"gemini-3.5-flash":      {"gemini-3.8-flash", "gemini-4-argon"},
+	"gemini-3.6-flash":      {"gemini-3.8-flash", "gemini-4-argon"},
+	"gemini-3.5-flash-lite": {"gemini-3.8-flash", "gemini-4-argon"},
+	// unknown or retired: no fallback, never a guessed model
+	"gemini-3-flash-preview": nil,
+	"gemini-2.5-pro":         nil,
+	"totally-bogus-model":    nil,
+	"":                       nil,
+}
+
+func TestGetFallbackChain_Table(t *testing.T) {
+	for _, v := range []string{"", "false", "1", "yes"} { // anything but "true" is production behavior
+		t.Setenv(EvalNoFallbackEnv, v)
+		for model, want := range fallbackChainCases {
+			if got := getFallbackChain(model); !reflect.DeepEqual(got, want) {
+				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want %v", v, model, got, want)
 			}
-		}
-	}
-	for model, want := range cases {
-		if got := getFallbackChain(model); !reflect.DeepEqual(got, want) {
-			t.Errorf("getFallbackChain(%q) = %v, want %v", model, got, want)
 		}
 	}
 }
@@ -34,17 +40,34 @@ func TestGetFallbackChain_DefaultUnchanged(t *testing.T) {
 func TestGetFallbackChain_EvalNoFallback(t *testing.T) {
 	for _, v := range []string{"true", "TRUE", " true "} {
 		t.Setenv(EvalNoFallbackEnv, v)
-		for _, m := range []string{"gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-4-argon", "totally-bogus-model"} {
-			if got := getFallbackChain(m); got != nil {
-				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want nil", v, m, got)
+		for model := range fallbackChainCases {
+			if got := getFallbackChain(model); got != nil {
+				t.Errorf("EVAL_NO_FALLBACK=%q: getFallbackChain(%q) = %v, want nil", v, model, got)
 			}
 		}
 	}
-	// Only the literal "true" enables it; anything else keeps production behavior.
-	for _, v := range []string{"false", "1", "yes", ""} {
-		t.Setenv(EvalNoFallbackEnv, v)
-		if getFallbackChain("gemini-4-argon") == nil {
-			t.Errorf("EVAL_NO_FALLBACK=%q must not disable fallback", v)
+}
+
+// Unknown models never get a guessed fallback; no chain contains a deprecated/retired model or
+// its own primary; and every production default (DefaultModelFor) has a non-empty chain.
+func TestGetFallbackChain_Invariants(t *testing.T) {
+	t.Setenv(EvalNoFallbackEnv, "")
+	for _, m := range []string{"totally-bogus-model", "", "gemini-5-unreleased", "GEMINI-3.5-FLASH"} {
+		if got := getFallbackChain(m); len(got) != 0 {
+			t.Errorf("unknown model %q must have no fallback, got %v", m, got)
+		}
+	}
+	deprecated := map[string]bool{"gemini-2.5-pro": true, "gemini-3-flash-preview": true, "gemini-3.5-flash": true, "gemini-3.6-flash": true, "gemini-3.5-flash-lite": true}
+	for model := range fallbackChainCases {
+		for _, target := range getFallbackChain(model) {
+			if deprecated[target] || target == model {
+				t.Errorf("chain for %q contains %q", model, target)
+			}
+		}
+	}
+	for _, key := range AgentRoleKeys {
+		if m := DefaultModelFor(key); len(getFallbackChain(m)) == 0 {
+			t.Errorf("production default %s for %s has no fallback chain", m, key)
 		}
 	}
 }

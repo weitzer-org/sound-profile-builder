@@ -216,6 +216,12 @@ type harness struct {
 // Service's run slots drained, at test cleanup so no goroutine stays blocked.
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessWithConfig(t, nil)
+}
+
+// newHarnessWithConfig is newHarness with a fixed app config (nil = none).
+func newHarnessWithConfig(t *testing.T, cfg *config.AppConfig) *harness {
+	t.Helper()
 	gen, refine := loadFixtures(t)
 	h := &harness{
 		client:  newMemClient(),
@@ -236,7 +242,7 @@ func newHarness(t *testing.T) *harness {
 			}
 			return h.orch, nil
 		},
-		Config: func() *config.AppConfig { return nil },
+		Config: func() *config.AppConfig { return cfg },
 	})
 	t.Cleanup(func() {
 		h.orch.release()

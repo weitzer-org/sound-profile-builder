@@ -77,6 +77,17 @@ func filterEmbeddedCorosMap(raw []byte, allowFactoryCaptures bool, filterPlugins
 	return string(b)
 }
 
+// librarianInputs returns the two gear menus injected into the CorOS Librarian's (Agent 4)
+// context for this run's constraints: the Dictionary JSON and the Amplifier Archetype Menu.
+// Both are coros_map.json plus the device-catalog gear models it doesn't cover yet (see
+// catalogAddition), with the same capture and plugin filtering.
+func librarianInputs(allowFactoryCaptures bool, plugins PluginGate) (dictJSON, ampMenu string) {
+	dictJSON = filterEmbeddedCorosMap(embeddedCorosMap, allowFactoryCaptures, plugins.Active, plugins.Owned)
+	dictJSON = withCatalogDictionaryEntries(dictJSON, plugins)
+	ampMenu = GetCategorizedAmplifiers(allowFactoryCaptures, plugins.Active, plugins.Owned)
+	return dictJSON, ampMenu
+}
+
 // subsetQCBlockSchema returns just the given top-level categories of the embedded QC Block
 // Parameter Vocabulary, JSON-marshaled. Falls back to the full file on any parse/marshal
 // error, or if even one of the requested categories (besides _readme) failed to match --
@@ -398,22 +409,17 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		prompt = "[GLOBAL USER CONFIG FLAG: SINGLE AMP ONLY. The generated preset MUST route through one single amplifier block.]\n\n" + prompt
 	}
 
-	// pluginsFilterActive/allowedPlugins gate every required_plugin-tagged coros_map.json
-	// entry (dictJSON below and GetCategorizedAmplifiers) the same way the prompt text
-	// does, so an unowned plugin's devices (e.g. Plini, Gojira) are never offered as an
+	// pluginGate gates every plugin device offered to the Librarian (dictJSON and the amp
+	// menu below) the same way the prompt text does, so an unowned plugin's devices (e.g. Plini, Gojira) are never offered as an
 	// option in the first place rather than merely discouraged by a prompt sentence. When
 	// the "allow_paid_plugins" constraint is absent entirely (older callers, tests), no
 	// filtering happens -- unchanged from the pre-existing prompt-only behavior.
 	allowPaidPlugins, hasAllowPaidPlugins := constraints["allow_paid_plugins"].(bool)
-	pluginsFilterActive := hasAllowPaidPlugins
-	allowedPlugins := map[string]bool{}
+	pluginGate := PluginGateFromConstraints(constraints)
 	if hasAllowPaidPlugins && !allowPaidPlugins {
 		prompt = "[GLOBAL USER CONFIG FLAG: NO PAID PLUGINS. The generated preset MUST NOT use any paid plugins.]\n\n" + prompt
 	} else if hasAllowPaidPlugins && allowPaidPlugins {
 		if availablePlugins, ok := constraints["available_plugins"].([]string); ok {
-			for _, p := range availablePlugins {
-				allowedPlugins[p] = true
-			}
 			if len(availablePlugins) > 0 {
 				prompt = fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(availablePlugins, ", ")) + prompt
 			}
@@ -496,8 +502,7 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	// originally written) because Tier 1 grounds Sonic Profiler's frequency/gain estimates
 	// against the same real-parameter vocabulary and user capture library the later phases
 	// already see, and Sonic Profiler now runs as part of Phase 1.
-	dictJSON := filterEmbeddedCorosMap(embeddedCorosMap, effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
-	ampMenu := GetCategorizedAmplifiers(effectiveAllowFactoryCaptures, pluginsFilterActive, allowedPlugins)
+	dictJSON, ampMenu := librarianInputs(effectiveAllowFactoryCaptures, pluginGate)
 
 	userCapturesJSON := "[]"
 	if effectiveAllowUserCaptures {
@@ -774,7 +779,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	}
 
 	if len(GetValidNativeBlocks()) > 0 {
-		effectiveBlocks := BuildEffectiveValidBlocks(effectiveAllowFactoryCaptures, effectiveAllowUserCaptures)
+		effectiveBlocks := BuildEffectiveValidBlocksFor(ValidBlockFilter{
+			AllowFactoryCaptures: effectiveAllowFactoryCaptures,
+			AllowUserCaptures:    effectiveAllowUserCaptures,
+			Plugins:              pluginGate,
+		})
 		finalResult = ApplyFuzzyCorrection(finalResult, effectiveBlocks)
 	}
 
@@ -793,17 +802,25 @@ func DefaultModelFor(key string) string {
 	return "gemini-4-argon"
 }
 
-// getFallbackChain generates a progressive chronological backup pathway list for standard model components
+// getFallbackChain generates the backup models tried, in order, after the primary fails.
 //
 // With EVAL_NO_FALLBACK=true (eval tooling only, see EvalNoFallbackEnv) it returns nil for
 // every model, so a failing candidate fails visibly instead of being scored on a fallback.
+//
+// Since PR #114 (2026-11-05 owner decision, docs/eval/gemini-model-upgrade-test-plan.md §9a)
+// production runs on gemini-4-argon and gemini-3.8-flash, and older Flash ids are being
+// deprecated, so every chain uses only current models (Argon, 3.8 Flash, and 3.1 Pro as the last
+// resort) and never gemini-2.5-pro or gemini-3-flash-preview. Legacy ids that may still arrive
+// via config or TARGET_MODEL (gemini-3.5-flash, which is served as gemini-3.6-flash, plus 3.6
+// Flash and 3.5 Flash-Lite) fall forward to current models.
+//
+// An unrecognized model gets NO fallback (nil), not a guessed one, so a failure surfaces for the
+// model that was actually requested (kept from main's 5e9b2e0). Every model that can be a primary
+// must therefore have an explicit case below.
 func getFallbackChain(primaryModel string) []string {
 	if evalNoFallback() {
 		return nil
 	}
-	// Only current-generation models (2026-11 Gemini upgrade eval): older Flash ids are being
-	// deprecated, gemini-3.5-flash is already served as gemini-3.6-flash, and gemini-2.5-pro /
-	// gemini-3-flash-preview must not be where an unknown or failing model silently lands.
 	switch primaryModel {
 	case "gemini-4-argon":
 		return []string{"gemini-3.8-flash", "gemini-3.1-pro-preview"}
@@ -811,8 +828,10 @@ func getFallbackChain(primaryModel string) []string {
 		return []string{"gemini-4-argon", "gemini-3.1-pro-preview"}
 	case "gemini-3.1-pro-preview":
 		return []string{"gemini-4-argon", "gemini-3.8-flash"}
-	default: // gemini-3.5-flash and anything unrecognized
+	case "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite":
 		return []string{"gemini-3.8-flash", "gemini-4-argon"}
+	default:
+		return nil
 	}
 }
 

@@ -105,6 +105,13 @@ func main() {
 		Judge       string // JUDGE_MODEL that produced this verdict
 		JudgeServed string // API-reported ModelVersion actually served (may differ from Judge)
 		SwappedAB   bool   // true when the presentation order was [labelB as "A", labelA as "B"]
+		// Audit fields (Phase 2.3): what the judge literally said and what it was shown, so a
+		// consumer can re-derive Winner (cmd/eval_judge_agree does, and refuses a mismatch).
+		Preference string // the judge's raw answer: A | B | Equal
+		PresentedA string // label of the preset shown as "Preset A"
+		PresentedB string // label of the preset shown as "Preset B"
+		DirA       string // DIR_A / DIR_B of this comparison (identifies scenario+rep when pointed at <batch>/<scenario>/rep<N>)
+		DirB       string
 	}
 	var rows []row
 
@@ -168,7 +175,7 @@ Respond with your structured judgement.`, name, string(aData), string(bData))
 			winner = bLabel
 		}
 		winCount[winner]++
-		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale, judgeModel, resp.ModelVersion, isTier0A})
+		rows = append(rows, row{name, winner, j.Confidence, j.GroundingNotes, j.StructuralNotes, j.Rationale, judgeModel, resp.ModelVersion, isTier0A, j.Preference, aLabel, bLabel, dirA, dirB})
 		log.Printf("⚖️ %s -> %s (conf %.2f)", name, winner, j.Confidence)
 	}
 
