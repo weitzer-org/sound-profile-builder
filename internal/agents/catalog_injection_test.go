@@ -180,12 +180,16 @@ func TestRefineChatUsesConfiguredArchitectVersionAndPayloadParams(t *testing.T) 
 	}
 
 	for name, c := range map[string]context.Context{
-		"no versions": ctx,
-		"v4":          WithPromptVersions(ctx, map[string]string{"12_architect": "v4"}),
+		"v4": WithPromptVersions(ctx, map[string]string{"12_architect": "v4"}),
+		"v5": WithPromptVersions(ctx, map[string]string{"12_architect": "v5"}),
 	} {
 		if got := refine(c); strings.Contains(got, "Device Block Parameters") {
 			t.Errorf("%s: refine context must not carry the catalog sections", name)
 		}
+	}
+	// With no versions passed, refine uses refineArchitectPromptVersion (v6, production).
+	if got := refine(ctx); !strings.Contains(got, "Device Block Parameters") {
+		t.Error("refine without versions should use the production v6 prompt and its catalog sections")
 	}
 }
 

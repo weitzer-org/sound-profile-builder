@@ -114,7 +114,7 @@ set it will cause the next run to needlessly re-research that entry.
   - **Architect parameters** (`internal/agents/catalog_params.go`). For a catalog-aware Architect prompt
     (`12_architect_v6`, see below), the Architect's context gets the chosen blocks' real parameters (names,
     ranges, defaults, switch positions; from the Librarian's picks in generate, the preset's blocks in refine)
-    and the real effect names for Rule 3 swaps. v5 (production, from PR #114) and older get none of it, so
+    and the real effect names for Rule 3 swaps; v6 is production (config.json). v5 and older get none of it, so
     they stay a like-for-like baseline. `qc_block_schema.json` is still injected for blocks the catalog doesn't cover.
   - **Parameter check.** `FlagCatalogParamMismatches` runs on every generate/refine (last, after
     `FlagUnverifiedStructuredBlocks`) and in `RunMechanicalQualityChecks`. It notes in Rationale, never

@@ -1273,7 +1273,7 @@ func (o *Orchestrator) Close() {
 // caller passes no prompt versions (eval tools, tests). presetsvc passes config.json's
 // agent_prompts, so production refines with the configured version. Keep this in step with
 // config.json's agent_prompts["12_architect"].
-const refineArchitectPromptVersion = "v5"
+const refineArchitectPromptVersion = "v6"
 
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
