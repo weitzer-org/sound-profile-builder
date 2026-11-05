@@ -242,6 +242,10 @@ key, not Claude's — and are now the sole default gate for routine PRs.
   CodeRabbit review it. No automatic Claude review step. Read and address
   `security-high`/`security-critical` findings before merging regardless of
   what else ran.
+- **Always subscribe to the PR and address its comments.** After opening a PR, call
+  `subscribe_pr_activity` on it and keep it subscribed until it is merged or closed; work
+  review comments, bot findings and CI as they arrive (owner standing instruction, 2026-11-05).
+  Merging stays the owner's call: never merge unless asked.
 - **Run `/quick-review` on demand, not automatically** — when you explicitly
   want a local pass before opening a PR, or a bot finding is worth a second
   look. Still the project's own **`/quick-review`** (`.claude/skills/quick-review/`):
