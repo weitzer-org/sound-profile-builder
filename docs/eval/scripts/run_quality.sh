@@ -2,8 +2,12 @@
 # Quality scoring for the 2026-11-05 head-to-head (plan §6.2): strip each run's own Critic notes,
 # re-score every preset with one fixed Critic, and judge each challenger arm against PROD with four
 # judges. Needs GEMINI_API_KEY. Usage: docs/eval/scripts/run_quality.sh [arms...]
+# ROOT (default eval_results/h2h) holds <arm>_a/ and <arm>_b/ eval_full_pipeline outputs; BASE
+# (default prod) is the arm every other arm is judged against. E.g. for the Architect v5-vs-v6 eval:
+#   ROOT=eval_results/v5_vs_v6 BASE=v5 docs/eval/scripts/run_quality.sh v5 v6
 set -euo pipefail
-ROOT=eval_results/h2h
+ROOT=${ROOT:-eval_results/h2h}
+BASE=${BASE:-prod}
 OUT=$ROOT/quality
 CRITIC=${CRITIC_MODEL:-gemini-4-argon}
 JUDGES=(gemini-3.1-pro-preview gemini-3.6-flash gemini-4-argon gemini-3.8-flash)
@@ -26,12 +30,12 @@ for arm in "${ARMS[@]}"; do
 done
 
 for arm in "${ARMS[@]}"; do
-  [ "$arm" = prod ] && continue
+  [ "$arm" = "$BASE" ] && continue
   for rep in 1 2; do
     for j in "${JUDGES[@]}"; do
-      DIR_A="$OUT/stripped/prod/rep$rep" DIR_B="$OUT/stripped/$arm/rep$rep" LABEL_A=prod LABEL_B="$arm" \
-        JUDGE_MODEL="$j" OUT_FILE="$OUT/judge_${arm}_vs_prod_rep${rep}_${j}.json" \
-        go run ./cmd/judge_compare > "$OUT/judge_${arm}_vs_prod_rep${rep}_${j}.log" 2>&1 &
+      DIR_A="$OUT/stripped/$BASE/rep$rep" DIR_B="$OUT/stripped/$arm/rep$rep" LABEL_A="$BASE" LABEL_B="$arm" \
+        JUDGE_MODEL="$j" OUT_FILE="$OUT/judge_${arm}_vs_${BASE}_rep${rep}_${j}.json" \
+        go run ./cmd/judge_compare > "$OUT/judge_${arm}_vs_${BASE}_rep${rep}_${j}.log" 2>&1 &
     done
     wait
   done
