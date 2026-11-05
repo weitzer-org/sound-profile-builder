@@ -364,7 +364,7 @@ func TestKeptDefaultsCoverage(t *testing.T) {
 			{Type: "Reverb", Model: "Spring", Parameters: []storage.BlockParameter{param("MIX", "20 %")}}},
 			CatalogParamCounts{UnconsideredParams: 4, CheckedBlocks: 2}, ""},
 		{"a family name doesn't require controls only one member has", []storage.EffectBlock{{Type: "Cabinet", Model: "412 Brit 60B V30 95",
-			Parameters: []storage.BlockParameter{param("Mic 1", "Dyn 57"), param("Mic 2", "Ribbon 121"), param("MIC 1 LEVEL", "0 dB"), param("MIC 2 LEVEL", "-3 dB")},
+			Parameters:   []storage.BlockParameter{param("Mic 1", "Dyn 57"), param("Mic 2", "Ribbon 121"), param("MIC 1 LEVEL", "0 dB"), param("MIC 2 LEVEL", "-3 dB")},
 			KeptDefaults: []string{"MIC 1 DISTANCE", "MIC 1 POSITION", "MIC 1 GRID MODE", "MIC 2 DISTANCE", "MIC 2 POSITION", "MIC 2 GRID MODE", "HPF", "LPF", "OUTPUT VOLUME"}}},
 			CatalogParamCounts{CheckedBlocks: 1}, ""},
 	} {
