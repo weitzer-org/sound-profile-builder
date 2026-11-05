@@ -52,3 +52,29 @@ func findParam(m *Model, name string) *Param {
 	}
 	return nil
 }
+
+func TestResolveIncludesDuplicateNamesAndFamilies(t *testing.T) {
+	c, err := Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The device lists two different "Graphic-9" equalizers; Lookup sees only one of them.
+	eqs := c.Resolve("Graphic-9")
+	if len(eqs) != 2 || eqs[0].ID == eqs[1].ID {
+		t.Fatalf("Resolve(Graphic-9) = %d models, want 2 distinct", len(eqs))
+	}
+	if len(eqs[0].Params) == len(eqs[1].Params) {
+		t.Errorf("the two Graphic-9 models should differ in parameters (%d vs %d)", len(eqs[0].Params), len(eqs[1].Params))
+	}
+	// A family name resolves to its (M) and (ST) members.
+	if got := c.Resolve("412 Brit 60B V30 95"); len(got) != 2 {
+		t.Errorf("Resolve(family) = %d models, want 2", len(got))
+	}
+	// An exact (M) name resolves to just that model.
+	if got := c.Resolve("412 Brit 60B V30 95 (M)"); len(got) != 1 {
+		t.Errorf("Resolve(exact) = %d models, want 1", len(got))
+	}
+	if got := c.Resolve("Not A Real Block"); got != nil {
+		t.Errorf("Resolve(unknown) = %v, want nil", got)
+	}
+}

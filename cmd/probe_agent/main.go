@@ -208,7 +208,7 @@ func main() {
 							qtext = PipelinePrefix + qtext
 						}
 						user, uerr := UserPrompt(a, qtext, sonic)
-						gc := orch.GenerationConfigFor(roles[a], a)
+						gc := orch.GenerationConfigFor(roles[a], a, sys)
 						if err == nil && uerr == nil {
 							user, uerr = ApplyVariant(v, gc, user)
 						}

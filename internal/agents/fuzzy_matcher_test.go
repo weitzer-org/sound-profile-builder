@@ -406,6 +406,27 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 				{ID: "4", Type: "Amplifier", Model: "Brit Plexi 100 Patch", Parameters: []storage.BlockParameter{
 					{Name: "Gain", Value: "5.0"},
 				}}, // not a Cabinet block -- must never be flagged by this check
+				{ID: "5", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // v6 device convention: per-mic levels instead of Blend -- complete
+				{ID: "6", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+				}}, // only one mic's level -- incomplete
+				{ID: "7", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "MIC 1 POSITION", Value: "2"},
+					{Name: "MIC 1 LEVEL", Value: "0 dB"},
+					{Name: "MIC 2 LEVEL", Value: "-4 dB"},
+				}}, // per-mic controls but no Mic 1/Mic 2 microphone choice -- incomplete
+				{ID: "8", Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
+					{Name: "Mic 1", Value: "Dyn 57"},
+					{Name: "Mic 2", Value: "Ribbon 121"},
+					{Name: "MIC 2 LEVEL", Value: "-3.5 dB"},
+				}, KeptDefaults: []string{"MIC 1 LEVEL"}}, // the louder mic left at its 0 dB default -- complete
 			},
 		},
 	}
@@ -413,17 +434,29 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	FlagIncompleteCabinetBlocks(sp)
 
 	blocks := sp.Guitars["Guitar 1"]
-	if strings.Contains(blocks[0].Rationale, "⚠️") {
+	if strings.Contains(blocks[0].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected complete Cabinet block to get no warning, got %q", blocks[0].Rationale)
 	}
-	if !strings.Contains(blocks[1].Rationale, "⚠️") {
+	if !strings.Contains(blocks[1].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing all mic-placement params to be flagged, got %q", blocks[1].Rationale)
 	}
-	if !strings.Contains(blocks[2].Rationale, "⚠️") {
+	if !strings.Contains(blocks[2].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing just Blend to still be flagged, got %q", blocks[2].Rationale)
 	}
-	if strings.Contains(blocks[3].Rationale, "⚠️") {
+	if strings.Contains(blocks[3].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected non-Cabinet block to never be checked, got %q", blocks[3].Rationale)
+	}
+	if strings.Contains(blocks[4].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected the per-mic-level convention to count as complete, got %q", blocks[4].Rationale)
+	}
+	if !strings.Contains(blocks[5].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
+	}
+	if strings.Contains(blocks[7].Rationale, cabinetIncompleteNote) {
+		t.Errorf("a mic level named in kept_defaults should count as present, got %q", blocks[7].Rationale)
+	}
+	if !strings.Contains(blocks[6].Rationale, cabinetIncompleteNote) {
+		t.Errorf("expected a cab with MIC n LEVEL/POSITION but no Mic 1/Mic 2 choice to be flagged, got %q", blocks[6].Rationale)
 	}
 }
 

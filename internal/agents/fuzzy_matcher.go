@@ -274,8 +274,9 @@ func IsUserCaptureName(name string) bool {
 // device catalog (internal/catalog), returning a map of [blockName]isCapture. User
 // captures are always treated as captures since they are, by definition, real Cortex
 // Cloud captures. Every catalog model name, and every mono/stereo family name ("412 Brit
-// 60B V30 95" for its (M) and (ST) models), is a native block; the catalog never
-// overrides a name coros_map.json or user_captures.json already set.
+// 60B V30 95" for its (M) and (ST) models), is a native block. The catalog doesn't override
+// a name coros_map.json or user_captures.json already set, except for plugin models, which
+// are always native (false) and plugin-gated whatever another source says.
 func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
@@ -697,22 +698,31 @@ func appendRationaleNote(block *storage.EffectBlock, note string) {
 	}
 }
 
-const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic placement parameters (Mic 1/Mic 2/Blend)."
+const cabinetIncompleteNote = "⚠️ Verify: Cabinet block is missing expected mic parameters (Mic 1 and Mic 2, plus MIC 1 LEVEL/MIC 2 LEVEL or Blend)."
 
-// cabinetMicParamTokens are normalized (lowercased, whitespace-stripped) substrings that
-// identify a Cabinet block's mic-placement parameters, per Architect Rule 12 ("Every
-// Cabinet block's parameters MUST include the Transducer Tech's mic placement data").
-var cabinetMicParamTokens = []string{"mic1", "mic2", "blend"}
+// micSlotControlPattern matches the device's per-mic cab controls (MIC 1 LEVEL, MIC 2
+// POSITION, ...) in FlagIncompleteCabinetBlocks's normalized form (lower case, no spaces).
+var micSlotControlPattern = regexp.MustCompile(`^mic[12](level|pan|balance|distance|position|gridmode)$`)
 
-// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing one or more of the
-// mic-placement parameters Rule 12 requires (Mic 1, Mic 2, Blend). Found as a live, real
-// regression during Tier 1 development -- the Architect silently dropped these three
-// parameters from a Cabinet block on one golden-set prompt, keeping only High/Low Cut --
-// and fixed there with a prompt rule, but prompt compliance alone already proved fallible
-// for the analogous capture-formatting case (see FlagCaptureFormattingMismatches), so this
-// gives the same completeness property a deterministic backstop. Detection only, the same
-// way as the rest of this file's Flag* functions: there's no safe default mic
-// position/blend value to fabricate on the block's behalf.
+func isMicSlotControl(norm string) bool { return micSlotControlPattern.MatchString(norm) }
+
+// FlagIncompleteCabinetBlocks flags any Cabinet-type block missing the two-mic data
+// Architect Rule 12 requires. Found as a live, real regression during Tier 1 development --
+// the Architect silently dropped the mic parameters from a Cabinet block on one golden-set
+// prompt, keeping only High/Low Cut -- and fixed there with a prompt rule, but prompt
+// compliance alone already proved fallible for the analogous capture-formatting case (see
+// FlagCaptureFormattingMismatches), so this gives the same completeness property a
+// deterministic backstop. Detection only, the same way as the rest of this file's Flag*
+// functions: there's no safe default mic position/level value to fabricate on the block's
+// behalf.
+//
+// Two conventions are complete: v4's Mic 1, Mic 2 and Blend, and v6's device convention,
+// where Blend (a control the device doesn't have) is replaced by each mic's own level:
+// Mic 1, Mic 2, MIC 1 LEVEL and MIC 2 LEVEL. Names are compared lowercased with spaces
+// removed, by substring. The v4 form is unchanged (any name mentioning mic 1, any naming
+// mic 2, and Blend -- v4's Mic n fields carry the Transducer's mic-and-position text). In the
+// device form the microphone choice must be its own field: a per-mic control such as
+// "MIC 1 LEVEL" or "MIC 1 POSITION" doesn't stand in for it.
 // Returns the number of Cabinet blocks flagged incomplete, for callers that want a quality
 // signal alongside the mutation (e.g. RunMechanicalQualityChecks). Existing callers that
 // ignore the return value are unaffected.
@@ -727,16 +737,28 @@ func FlagIncompleteCabinetBlocks(sp *storage.StructuredPreset) int {
 			if blockType != "cab" && blockType != "cabinet" {
 				continue
 			}
-			present := make(map[string]bool, len(cabinetMicParamTokens))
+			var mic1, mic2, mic1Choice, mic2Choice, blend, mic1Level, mic2Level bool
+			// A control named in kept_defaults was deliberately left at the device
+			// default (e.g. the louder mic's LEVEL at 0 dB): it's accounted for too.
+			names := make([]string, 0, len(blocks[i].Parameters)+len(blocks[i].KeptDefaults))
 			for _, p := range blocks[i].Parameters {
-				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.Name), " ", ""))
-				for _, token := range cabinetMicParamTokens {
-					if strings.Contains(norm, token) {
-						present[token] = true
-					}
-				}
+				names = append(names, p.Name)
 			}
-			if len(present) < len(cabinetMicParamTokens) {
+			names = append(names, blocks[i].KeptDefaults...)
+			for _, name := range names {
+				norm := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", ""))
+				mic1 = mic1 || strings.Contains(norm, "mic1")
+				mic2 = mic2 || strings.Contains(norm, "mic2")
+				// A per-mic device control ("MIC 1 LEVEL") isn't the microphone choice itself.
+				mic1Choice = mic1Choice || (strings.Contains(norm, "mic1") && !isMicSlotControl(norm))
+				mic2Choice = mic2Choice || (strings.Contains(norm, "mic2") && !isMicSlotControl(norm))
+				blend = blend || strings.Contains(norm, "blend")
+				mic1Level = mic1Level || strings.Contains(norm, "mic1level")
+				mic2Level = mic2Level || strings.Contains(norm, "mic2level")
+			}
+			v4Form := blend && mic1 && mic2
+			deviceForm := mic1Level && mic2Level && mic1Choice && mic2Choice
+			if !v4Form && !deviceForm {
 				appendRationaleNote(&blocks[i], cabinetIncompleteNote)
 				flagged++
 			}
