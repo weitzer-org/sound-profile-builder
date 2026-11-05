@@ -107,7 +107,7 @@ def print_block(b: dict, verbose: bool) -> None:
             lo = o.get("min") if o.get("min") is not None else o.get("min_symbol")
             hi = o.get("max") if o.get("max") is not None else o.get("max_symbol")
             orng = f"{lo}..{hi}"
-        if r["pos"] == (b["n_eff"] or -1) and d:
+        if r["pos"] == (b["n_eff"] if b["n_eff"] is not None else -1) and d:
             dv += "  <extra slot beyond the XML list>"
         sc.say(f"    {r['pos']:>3}  {dv:<26} {(x or {}).get('name') or '':<22} {(o or {}).get('name') or '':<22} {orng:<18} "
                f"{'yes' if r['names_agree'] else ('-' if not (x and o) else 'NO')}")

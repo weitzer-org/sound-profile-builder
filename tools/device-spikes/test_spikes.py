@@ -668,6 +668,18 @@ class G4G6Tests(FakeDeviceCase):
         self.assertEqual(code, sc.EXIT_REFUSED, out)
 
 
+class G1PrintTests(unittest.TestCase):
+    def test_extra_slot_is_annotated_even_when_the_xml_list_is_empty(self):
+        import g1_dump_params as g1
+        block = {"grid": {"row_idx": 0, "array_idx": 0, "column_field": 0}, "hash": 1, "name": "x", "category": "c",
+                 "xml_clones": None, "n_device_params": 1, "n_eff": 0, "n_x": 0, "n_o": 0, "verdict": "EFF_PLUS_ONE",
+                 "rows": [{"pos": 0, "device": {"values": [0.0], "scene_mode": False}, "x": None, "o": None, "names_agree": False}]}
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            g1.print_block(block, verbose=True)
+        self.assertIn("<extra slot beyond the XML list>", buf.getvalue())
+
+
 class GainShapeTests(unittest.TestCase):
     def setUp(self):
         import g6_scenes
