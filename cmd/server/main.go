@@ -11,6 +11,7 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/devicejobs"
 	"github.com/weitzer-org/sound-builder/internal/mcpserver"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -144,7 +145,22 @@ func main() {
 	// MCP front end on the same mux. It shares the UI's per-IP rate limiter and
 	// the same preset service (and so the same concurrency cap). Without a usable
 	// MCP_TOKEN its routes reject everything; the UI is unaffected.
-	mcpserver.Mount(server.Mux(), server.Service(), mcpserver.ConfigFromEnv(), server.RateLimit())
+	//
+	// Quad Cortex device tools (docs/design/device-job-contract.md) are added
+	// only when DEVICE_JOBS_BUCKET and DEVICE_JOB_KEY are set. A bad device
+	// config disables those tools and is logged; it never stops the app.
+	var mcpOpts []mcpserver.Option
+	switch dcfg, err := devicejobs.ConfigFromEnv(bucket); {
+	case err != nil:
+		log.Printf("Device tools disabled: %v", err)
+	case dcfg != nil:
+		// The device export (plan P2) isn't built yet: pushes are refused with
+		// a clear message until it replaces UnavailableExporter here.
+		bridge := devicejobs.NewBridge(storeClient, dcfg, devicejobs.UnavailableExporter{})
+		mcpOpts = append(mcpOpts, mcpserver.WithDevice(bridge))
+		log.Println("Device tools enabled (jobs bucket configured)")
+	}
+	mcpserver.Mount(server.Mux(), server.Service(), mcpserver.ConfigFromEnv(), server.RateLimit(), mcpOpts...)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -49,6 +49,7 @@ services:
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
       S3_BUCKET: ${S3_BUCKET:-sound-builder-local}
+      DEVICE_JOBS_BUCKET: ${DEVICE_JOBS_BUCKET:-}
     entrypoint: >
       /bin/sh -c "
       until mc alias set local http://minio:9000 $${S3_ACCESS_KEY_ID} $${S3_SECRET_ACCESS_KEY}; do
@@ -56,6 +57,7 @@ services:
       done;
       mc mb --ignore-existing local/$${S3_BUCKET};
       echo 'Bucket ready: '$${S3_BUCKET};
+      if [ x$${DEVICE_JOBS_BUCKET} != x ]; then mc mb --ignore-existing local/$${DEVICE_JOBS_BUCKET}; fi;
       exit 0;
       "
 
