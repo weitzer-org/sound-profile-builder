@@ -210,13 +210,13 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 **Running it on Windows**
 
 - **Install:** clone this repo, then `py -3.12 -m venv`, then `pip install --require-hashes -r deploy/qc-agent/requirements.lock.txt`.
-- **Configuration** goes in `%LOCALAPPDATA%\qc-agent\agent.env`:
-  - R2 endpoint, bucket and token;
-  - `DEVICE_JOB_KEY`;
-  - the allowed slot range;
-  - the expected firmware.
+- **Configuration** goes in `%LOCALAPPDATA%\qc-agent\agent.env`, written by `deploy/qc-agent/write_agent_env.py`. That script prompts for each value with secrets hidden, tests the bridge token against R2 with a read-only listing, and restricts the file to the user with `icacls`. Its variables, which the agent must read under exactly these names:
+  - `QC_AGENT_R2_ENDPOINT`, `QC_AGENT_R2_BUCKET`;
+  - `QC_AGENT_R2_ACCESS_KEY_ID`, `QC_AGENT_R2_SECRET_ACCESS_KEY` (the bridge token: Object Read & Write on the jobs bucket only);
+  - `DEVICE_JOB_KEY` (the same value as the Fly secret) and, only during a rotation, `DEVICE_JOB_KEY_NEXT`;
+  - `QC_AGENT_ALLOWED_SLOTS` (e.g. `20A-25H`), `QC_AGENT_EXPECTED_FIRMWARE` (`4.1.0` today), `QC_AGENT_IDLE_MINUTES` (`30`).
 
-  The file is ACL-restricted to the user. No secret goes on the command line.
+  No secret goes on the command line.
 - **On demand, never always-on** (owner's requirement).
   - **Start: a desktop shortcut** (owner's decision). `python -m qc_agent install-shortcut` creates "Start QC bridge" on the desktop, running `<venv>\Scripts\python.exe -m qc_agent run`. It's a `.lnk` written by Python: no PowerShell script, no execution-policy change, no admin rights.
     - The window it opens shows "Bridge running: waiting for jobs", then each job and its result.
@@ -327,12 +327,18 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 
 ## 10. Open decisions for the owner
 
-1. **Slot range** the agent may write to, e.g. banks 20–25 in My Presets. The agent refuses anything outside it, even if empty.
+1. ~~Slot range~~ **Decided (2026-11-05):** creation is allowed in **every** bank (`QC_AGENT_ALLOWED_SLOTS=1A-32H`, the setup script's default). The bridge still writes only into **empty** slots, so the range is a filter, not the safety rule. A narrower range remains possible by re-running the setup script.
 2. **Confirm UX:** dry run plus confirm token (proposed), or a single call.
 3. ~~Container vs native Windows~~ **Decided:** native Windows. No pyquadcortex, no containers (section 5.1).
 4. **Job expiry** (proposed 15 minutes), **idle exit** (proposed 30 minutes) and **polling interval while running** (proposed 3–5 s), settled after G5.
 6. ~~Start mode~~ **Decided:** desktop shortcut only. No automatic start.
 5. **Read-back import:** should reading a slot automatically create a QC-2 draft (proposed: only when asked)?
+7. **Editing existing presets: deferred, a future to-do (owner, 2026-11-05).** v1 never overwrites a slot it didn't create. When this is picked up, the proposed guardrails are:
+   - an automatic read-back backup of the old preset as a QC-2 draft before any overwrite;
+   - a dry run that names the preset being replaced, with a confirm token bound to that slot **and** that preset name, so the push is refused if the slot changed in between;
+   - an optional list of protected banks the bridge never touches.
+
+   This changes the contract (a new job kind or args) and the agent's slot rule, so it needs a contract version bump.
 
 ## 11. Kickoff prompts for the implementation chats
 
