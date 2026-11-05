@@ -28,7 +28,7 @@
   - UI parity rules for `generate_preset` untouched;
   - security review for auth, storage or LLM-content changes.
 - **The home side runs natively on the owner's Windows PC, and only on demand.** It is a Python program in a pinned virtual environment.
-  - It is **not** always running. Task Scheduler starts it when the Quad Cortex connects over USB, or the owner starts it from a shortcut.
+  - It is **not** always running. The owner starts it from a **desktop shortcut** ("Start QC bridge") when they want to use it (owner's decision).
   - It exits when the unit disconnects, or after 30 minutes without a job (owner's requirement: most of the time it shouldn't run).
   - It uses **qc-mcp's transport code**, vendored into this repo at the reviewed commit `f634ecd` (`deploy/qc-agent/vendor/qc_mcp/`). That code already drove the owner's unit (CorOS 4.1.0) in direct mode.
   - **pyquadcortex is not used** (owner's decision).
@@ -42,7 +42,7 @@ Phone: Claude app ── QC-2 Modeler connector (existing /mcp, MCP_TOKEN) ─�
                                                                      ▼
                                                      R2 bucket "<app>-device-jobs" (NEW, separate)
                                                                      ▲ polls (outbound HTTPS only)
-Home: Windows PC ─ qc-agent (on demand: starts on QC USB connect) ──┘
+Home: Windows PC ─ qc-agent (on demand: desktop shortcut) ──────────┘
                      │ Windows HID (hid.dll), via qc-mcp's transport (vendored at f634ecd)
                      ▼
                  Quad Cortex (USB)
@@ -218,12 +218,12 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 
   The file is ACL-restricted to the user. No secret goes on the command line.
 - **On demand, never always-on** (owner's requirement).
-  - **Primary:** `python -m qc_agent install-task` registers a **Task Scheduler** task through `schtasks`. Its trigger is **the Quad Cortex connecting**: a Windows device-arrival event matched on VID `152A` / PID `880A`.
-    - The task runs as the current user, not elevated, with a hidden window. Task Scheduler's "don't start a new instance" setting stops duplicates.
-    - Which event log and event ID to use is **UNVERIFIED**. Candidates are the `Microsoft-Windows-DriverFrameworks-UserMode/Operational` log, which is off by default and would need enabling once, and the `Microsoft-Windows-Kernel-PnP` device-configuration events. It is gate G2.
-  - **Fallback:** a desktop shortcut, "Start QC bridge", running `python -m qc_agent run`.
-  - **Either way the agent exits by itself** when the unit disappears (a USB read error or device removal), or after **30 minutes with no job** (`QC_AGENT_IDLE_MINUTES`). It runs nothing and polls nothing between sessions.
-  - `python -m qc_agent uninstall-task` removes the task. There are no PowerShell scripts, so no execution-policy changes.
+  - **Start: a desktop shortcut** (owner's decision). `python -m qc_agent install-shortcut` creates "Start QC bridge" on the desktop, running `<venv>\Scripts\python.exe -m qc_agent run`. It's a `.lnk` written by Python: no PowerShell script, no execution-policy change, no admin rights.
+    - The window it opens shows "Bridge running: waiting for jobs", then each job and its result.
+    - Closing the window stops the bridge.
+    - A second launch while one is running says so and exits, using a lock file in `%LOCALAPPDATA%\qc-agent\`.
+  - **It exits by itself** when the unit disappears (a USB read error or device removal), or after **30 minutes with no job** (`QC_AGENT_IDLE_MINUTES`). It runs nothing and polls nothing between sessions.
+  - **No Task Scheduler task and no autostart.** `python -m qc_agent uninstall-shortcut` removes the shortcut.
   - A Windows *service* is rejected: services run outside the user session, and qc-mcp's HID access has only been exercised in a user session (UNVERIFIED for services).
 - **Logs** go to `%LOCALAPPDATA%\qc-agent\logs\`, rotated, with no tokens and no job HMACs.
 - **Exclusive access:** qc-mcp opens the unit exclusively on Windows. So the agent connects **only while running a job**, then disconnects.
@@ -274,13 +274,13 @@ Every container runtime for Windows hits the same two problems:
 |---|---|---|---|
 | **G0** | Did the hand-run "bb king test 2" save actually land in slot 2A? | Check on the unit, or run `directory_summary(refresh=true)` then `search_directory`. | yes |
 | **G1** | **Which parameter-index scheme does the device use for the 196 cloned models (cabs, some reverbs)?** Our catalog expands `clones=` templates. qc-mcp ignores them. Their indexes disagree for all 196 (checked against ModelRepo.xml). | Read back a preset containing a cab and a cloned reverb. Compare the raw per-block `params` array length and positions with both schemes. The "bb king test 2" preset has a cab and Spring (M). Use a library-mode script on the `qc-trial` qc-mcp clone. | yes |
-| **G2** | (a) Which Windows event reliably fires when the Quad Cortex connects or powers on, and can a non-elevated Task Scheduler task trigger on it? (b) Does a **library-mode** qc-mcp script connect, read and disconnect cleanly when started that way? (c) Does it fail cleanly when Cortex Control holds the unit? (d) Does the idle and disconnect exit work? | Plug and power-cycle the unit while watching Event Viewer. Register a spike task on the candidate event. A second run with Cortex Control open. | yes |
+| **G2** | (a) Does a **library-mode** qc-mcp script, started from a desktop shortcut, connect, read and disconnect cleanly? (b) Does it fail cleanly when Cortex Control holds the unit? (c) Does it notice the unit being switched off or unplugged, and exit? | Run the spike from a shortcut. Repeat with Cortex Control open. Power off the unit mid-wait. | yes |
 | **G3** | Do qc-mcp's transport writes behave on 4.1.0 when driven with **wire** values? That means `set_routing`, `add_block`, `set_param` with an explicit 0..1, `set_param_scenes`, and `write_preset_file` into an empty slot. | One test preset into an empty slot. Read it back and compare. | yes |
 | **G4** | Taper and symbolic-bound constants on **4.1.0**. Our proposed constants come from pyquadcortex's 4.0.1 measurements. They are used here as **data, not code**, so they need confirming on this unit. | Set three known display values through the export path, and read the unit's screen. | yes |
 | **G5** | R2 pricing for polling, and bucket-scoped API tokens | Cloudflare docs or dashboard. Record the numbers in the PR. | no |
 | **G6** | Scene semantics: do per-scene parameter writes and per-scene bypass behave as qc-mcp documents? | Push a two-scene test preset and switch scenes on the unit. | yes |
 
-**If G1 shows our catalog's clone expansion is wrong,** fix the importer **first**. That also affects PR #120's Architect parameter context and the preset views. **If G2 fails** (no usable device-arrival trigger), use the desktop-shortcut start only. The idle and disconnect exit still applies. **If G3 shows a write misbehaving,** that operation stays out of v1 until it's understood. That includes per-scene parameters (also G6).
+**If G1 shows our catalog's clone expansion is wrong,** fix the importer **first**. That also affects PR #120's Architect parameter context and the preset views. **If G2 (c) fails** (the unit going away isn't detected), keep only the idle-timeout exit. **If G3 shows a write misbehaving,** that operation stays out of v1 until it's understood. That includes per-scene parameters (also G6).
 
 ## 8. Phased PRs
 
@@ -288,11 +288,11 @@ Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-co
 
 | PR | Scope | Device? | Risk | Tests | Depends on |
 |---|---|---|---|---|---|
-| **P0-a** | Phase 0 spike scripts under `tools/device-spikes/`, built on qc-mcp's transport in library mode (the trial's `qc-trial\qc-mcp` clone at `f634ecd` is fine for spikes): G1 read-back dump, G2 Task Scheduler run, G3/G4/G6 checks. Results written up in this doc. | **yes** (owner runs) | low; read-mostly, one write to an empty slot | Manual. Outputs pasted into the PR. | — |
+| **P0-a** | Phase 0 spike scripts under `tools/device-spikes/`, built on qc-mcp's transport in library mode (the trial's `qc-trial\qc-mcp` clone at `f634ecd` is fine for spikes): G1 read-back dump, G2 shortcut-start and disconnect checks, G3/G4/G6 checks. Results written up in this doc. | **yes** (owner runs) | low; read-mostly, one write to an empty slot | Manual. Outputs pasted into the PR. | — |
 | **P1** | Catalog: import `skew`; `firmware_constants.go` with the symbolic-bound values. These are data points taken from pyquadcortex's published measurements, with MIT attribution and no pyquadcortex code, and are confirmed on the owner's unit by G4. `Param.ToWire` / `ToDisplay` that refuse rather than clamp; **clone fix if G1 requires it**; re-import `qc_catalog.json` (`-diff` reviewed). | no | low–medium; the catalog feeds the pipeline | Golden vectors: G4's on-device readings, plus qc-mcp's measured points (Gain LEVEL 0 dB at 0.5, mixer −40..+12). Every symbolic bound resolved or listed as unmeasured. `go test ./...` plus the e2e suite. | G1, G4 |
 | **P2** | Device export: `internal/deviceexport` (section 4), plus `get_preset(format=device)` on MCP and a "Download device JSON" link. | no | medium; mapping rules | Golden exports for 3 eval presets. Round-trip display → wire → display. Every id and index exists. Refusal cases. | P1, PR #120 |
 | **P3** | Job queue and tools: `internal/devicejobs` (job schema, HMAC sign/verify, jobs-bucket config `DEVICE_JOBS_BUCKET`, `DEVICE_JOB_KEY[_NEXT]`); MCP tools `device_status`, `send_preset_to_device` (dry run, then confirm token), `get_device_job`, `list_device_slots`, `read_device_preset`; server instructions and style guide updated. | no (fake agent in tests) | **high**: auth, storage, new attack surface | `httptest` MCP integration tests as in `internal/mcpserver/*_test.go`, with an in-memory store. Signature, expiry and replay tests. A golden dry-run. | P2, G5 |
-| **P4** | Home agent: `deploy/qc-agent/` (Python; vendored qc-mcp transport behind a `DeviceBackend` interface, plus the vendoring checksum test), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-task` / `uninstall-task` (Task Scheduler), Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
+| **P4** | Home agent: `deploy/qc-agent/` (Python; vendored qc-mcp transport behind a `DeviceBackend` interface, plus the vendoring checksum test), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-shortcut` / `uninstall-shortcut` (desktop shortcut), single-instance lock, idle and disconnect exit, Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
 | **P5** | Read-back import: device preset → `StructuredPreset` draft (inverse mapping, wire → display), so the phone can say "refine what's on my unit". | acceptance yes | medium | Round trip: push a preset, read it back, compare the two `StructuredPreset`s. | P4 |
 | **P6** | Hardware acceptance and runbook: the owner's end-to-end run from the phone, with failure drills (agent offline, slot occupied, wrong firmware, unplugged mid-job). | **yes** | — | A checklist in `docs/design/`. | P4, P5 |
 | v2 | `sync_device_library` (and feeding owned captures to the Librarian), `audition_on_device`, owned-slot re-push, scene labels and stomps, captures and IRs | mixed | medium | — | P6 |
@@ -316,7 +316,7 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 | P3 implementation | **Opus 5.5**, main session | Security-sensitive. Fewer review rounds pays for the higher per-token cost. |
 | P3 review | `security-reviewer` (**Opus**) **and** `/security-review`; `/code-review high` with the effort level stated; GSR `deep-review` label | Required for auth, storage and LLM-content changes. |
 | P4 agent: device backend, allowlist, job loop | **Opus 5.5**, main session | Code that writes to the owner's hardware. Device quirks (write stalls, uncorrelated pushes, save echoes) reward the stronger model. |
-| P4 Task Scheduler install and uninstall, Windows setup guide | **Sonnet 5.5** | Packaging and documentation. |
+| P4 desktop-shortcut install and uninstall, Windows setup guide | **Sonnet 5.5** | Packaging and documentation. |
 | P4 review | `security-reviewer` (**Opus**) for credential and job handling; `reviewer` (**Sonnet**) for the rest | — |
 | P5 read-back import | **Sonnet 5.5** | Inverse of P2's well-tested mapping. |
 | Running tests after every change | `test-runner` agent (**Haiku**) | Cheap. Keeps long logs out of the main context. |
@@ -331,13 +331,13 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 2. **Confirm UX:** dry run plus confirm token (proposed), or a single call.
 3. ~~Container vs native Windows~~ **Decided:** native Windows. No pyquadcortex, no containers (section 5.1).
 4. **Job expiry** (proposed 15 minutes), **idle exit** (proposed 30 minutes) and **polling interval while running** (proposed 3–5 s), settled after G5.
-6. **Start mode:** automatic on Quad Cortex connect (proposed, if G2 passes), or shortcut only.
+6. ~~Start mode~~ **Decided:** desktop shortcut only. No automatic start.
 5. **Read-back import:** should reading a slot automatically create a QC-2 draft (proposed: only when asked)?
 
 ## 11. Starting the new chat
 
 Suggested first message:
 
-> Read `docs/design/qc-device-bridge-plan.md` and `docs/research/qc-usb-tools-audit.md` on branch `claude/qc-usb-tools-audit`. Start with Phase 0: write the spike scripts for gates G1 (clone parameter indexing), G2 (start-on-USB-connect trigger and library-mode qc-mcp) and G3 (qc-mcp transport writes with wire values on CorOS 4.1.0) under `tools/device-spikes/`. Use qc-mcp's transport in library mode from my existing qc-trial clone at f634ecd; don't use pyquadcortex. Keep it read-only except the single empty-slot save in G3. Give me exact Windows/PowerShell steps to run them. Don't start P1–P4 until I've pasted the results.
+> Read `docs/design/qc-device-bridge-plan.md` and `docs/research/qc-usb-tools-audit.md` on branch `claude/qc-usb-tools-audit`. Start with Phase 0: write the spike scripts for gates G1 (clone parameter indexing), G2 (shortcut-started library-mode qc-mcp, clean failure when Cortex Control is open, exit on unit power-off) and G3 (qc-mcp transport writes with wire values on CorOS 4.1.0) under `tools/device-spikes/`. Use qc-mcp's transport in library mode from my existing qc-trial clone at f634ecd; don't use pyquadcortex. Keep it read-only except the single empty-slot save in G3. Give me exact Windows/PowerShell steps to run them. Don't start P1–P4 until I've pasted the results.
 
 Use **Sonnet 5.5** for that session (spike scripts). Switch to **Opus 5.5** with `/model` when interpreting the results and for P3/P4.
