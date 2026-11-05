@@ -1,0 +1,86 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 2327,
+    "output_tokens": 94,
+    "thinking_tokens": 1202,
+    "latency_ms": 8774,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-3.1-pro-preview",
+    "served_model": "gemini-3.1-pro-preview",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 597,
+    "output_tokens": 59,
+    "thinking_tokens": 787,
+    "latency_ms": 11841,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 647,
+    "output_tokens": 262,
+    "thinking_tokens": 1174,
+    "latency_ms": 13530,
+    "grounded": false
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 37858,
+    "output_tokens": 191,
+    "thinking_tokens": 1823,
+    "latency_ms": 10797,
+    "grounded": false
+  },
+  {
+    "agent": "FOH Optimizer",
+    "attempt_model": "gemini-3.5-flash-lite",
+    "served_model": "gemini-3.5-flash-lite",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 160,
+    "output_tokens": 53,
+    "latency_ms": 788,
+    "grounded": false
+  },
+  {
+    "agent": "Transducer Tech",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 280,
+    "output_tokens": 52,
+    "thinking_tokens": 337,
+    "latency_ms": 3182,
+    "grounded": false
+  },
+  {
+    "agent": "Acoustician",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[Acoustician] response truncated at the MaxOutputTokens limit (model gemini-3.5-flash) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 1920,
+    "output_tokens": 7161,
+    "thinking_tokens": 820,
+    "latency_ms": 56773,
+    "grounded": false
+  }
+]

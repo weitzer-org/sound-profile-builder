@@ -1,0 +1,86 @@
+[
+  {
+    "agent": "Sonic Profiler",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 1673,
+    "output_tokens": 91,
+    "thinking_tokens": 824,
+    "latency_ms": 6257,
+    "grounded": false
+  },
+  {
+    "agent": "Community Scraper",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 576,
+    "output_tokens": 189,
+    "thinking_tokens": 981,
+    "latency_ms": 9704,
+    "grounded": false
+  },
+  {
+    "agent": "Tone Historian",
+    "attempt_model": "gemini-4-argon",
+    "served_model": "gemini-4-argon",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 852,
+    "output_tokens": 174,
+    "latency_ms": 38312,
+    "grounded": false
+  },
+  {
+    "agent": "CorOS Librarian",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 37825,
+    "output_tokens": 206,
+    "thinking_tokens": 2147,
+    "latency_ms": 14282,
+    "grounded": false
+  },
+  {
+    "agent": "Transducer Tech",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 295,
+    "output_tokens": 50,
+    "thinking_tokens": 402,
+    "latency_ms": 3488,
+    "grounded": false
+  },
+  {
+    "agent": "FOH Optimizer",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "STOP",
+    "success": true,
+    "input_tokens": 160,
+    "output_tokens": 35,
+    "thinking_tokens": 406,
+    "latency_ms": 3698,
+    "grounded": false
+  },
+  {
+    "agent": "Acoustician",
+    "attempt_model": "gemini-3.5-flash",
+    "served_model": "gemini-3.6-flash",
+    "finish_reason": "MAX_TOKENS",
+    "success": false,
+    "error": "[Acoustician] response truncated at the MaxOutputTokens limit (model gemini-3.5-flash) -- output is incomplete/invalid JSON, not a usable result",
+    "input_tokens": 1917,
+    "output_tokens": 6744,
+    "thinking_tokens": 1237,
+    "latency_ms": 34369,
+    "grounded": false
+  }
+]
