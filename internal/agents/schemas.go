@@ -188,7 +188,7 @@ func agentResponseSchema(key string) *genai.Schema {
 			"saturation_style":      strSchema("Style of overdrive/saturation, e.g. asymmetric clipping, tape saturation, hard clipping."),
 			"reverb_type":           strSchema("Characteristic reverb space for this tone."),
 			"noise_gate_target_db":  intSchema("Global input gate threshold in dB (-65 for single coils, -55 to -60 for humbuckers/high gain)."),
-		}, []string{"saturation_style", "reverb_type", "noise_gate_target_db"})
+		}, []string{"saturation_style", "reverb_type", "noise_gate_target_db", "eq_profile", "suggested_low_cut_hz", "suggested_high_cut_hz"}) // v2+ fields required since 2026-11-05: gemini-4-argon omitted suggested_high_cut_hz in about half of its probe calls. Production routes v4 (a v2-family prompt); the v1 prompt is unused.
 
 	case "3_community_scraper":
 		return objSchema(map[string]*genai.Schema{

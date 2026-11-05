@@ -31,7 +31,7 @@ func TestValidateAgainstSchema_Agent1(t *testing.T) {
 
 func TestValidateAgainstSchema_EnumAndNumber(t *testing.T) {
 	s := agents.AgentResponseSchema("2_sonic_profiler")
-	ok := `{"eq_profile":"flat","saturation_style":"hard clipping","reverb_type":"plate","noise_gate_target_db":-60}`
+	ok := `{"eq_profile":"flat","suggested_low_cut_hz":90,"suggested_high_cut_hz":6500,"saturation_style":"hard clipping","reverb_type":"plate","noise_gate_target_db":-60}`
 	if got := ValidateAgainstSchema(ok, s); len(got) != 0 {
 		t.Fatalf("valid flagged: %v", got)
 	}

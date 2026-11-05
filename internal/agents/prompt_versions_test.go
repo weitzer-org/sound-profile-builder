@@ -41,6 +41,15 @@ func TestWholeNumberFieldsAreIntegers(t *testing.T) {
 			t.Errorf("2_sonic_profiler.%s is %s, want INTEGER", f, sp.Properties[f].Type)
 		}
 	}
+	req := map[string]bool{}
+	for _, f := range sp.Required {
+		req[f] = true
+	}
+	for _, f := range []string{"eq_profile", "suggested_low_cut_hz", "suggested_high_cut_hz", "noise_gate_target_db"} {
+		if !req[f] {
+			t.Errorf("2_sonic_profiler.%s must be required", f)
+		}
+	}
 	foh := agentResponseSchema("8_foh_optimizer").Properties["global_eq_cuts"]
 	for _, f := range []string{"hz_start", "hz_end"} {
 		if foh.Properties[f].Type != genai.TypeInteger {
