@@ -440,6 +440,35 @@ func LibrarianBlockNames(librarianResult string) []string {
 	return names
 }
 
+// payloadBlockModels returns the block model names in a saved preset payload, for
+// RefineChat's CatalogParamContext. It reads the {structured, legacy_html} envelope or a
+// bare StructuredPreset; an older HTML-only payload yields nothing (scanning HTML prose for
+// short names like "Room" or "Gain" would list blocks the preset doesn't have). Guitars are
+// visited in name order so the listing is stable.
+func payloadBlockModels(payload string) []string {
+	var envelope struct {
+		Structured storage.StructuredPreset `json:"structured"`
+	}
+	sp := storage.StructuredPreset{}
+	if err := json.Unmarshal([]byte(payload), &envelope); err == nil && len(envelope.Structured.Guitars) > 0 {
+		sp = envelope.Structured
+	} else if err := json.Unmarshal([]byte(payload), &sp); err != nil {
+		return nil
+	}
+	guitars := make([]string, 0, len(sp.Guitars))
+	for g := range sp.Guitars {
+		guitars = append(guitars, g)
+	}
+	sort.Strings(guitars)
+	var names []string
+	for _, g := range guitars {
+		for _, b := range sp.Guitars[g] {
+			names = append(names, b.Model)
+		}
+	}
+	return names
+}
+
 // catalogNamesIn finds catalog block names in free text as whole tokens, longest first, so
 // "Spring (ST)" wins over "Spring" at the same place. Order of appearance is kept.
 func catalogNamesIn(text string) []string {

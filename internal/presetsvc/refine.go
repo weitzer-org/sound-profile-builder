@@ -117,14 +117,17 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 	allowFactoryCapturesForFlag := true
 	allowUserCapturesForFlag := true
 	var pluginGate agents.PluginGate // inactive (no plugin filtering) without a config
+	refineCtx := ctx
 	if cfg := s.config(); cfg != nil {
 		allowFactoryCapturesForFlag = cfg.AllowFactoryCaptures
 		allowUserCapturesForFlag = cfg.AllowUserCaptures
 		pluginGate = agents.NewPluginGate(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
+		// RefineChat uses the configured Architect prompt version (it used to be fixed at v4).
+		refineCtx = agents.WithPromptVersions(ctx, cfg.AgentPrompts)
 	}
 
 	// Run the chat refinement loop
-	jsonResponse, _, err := orch.RefineChat(ctx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	jsonResponse, _, err := orch.RefineChat(refineCtx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
 	if err != nil {
 		s.fail(lr, ErrKindExec, err.Error())
 		return

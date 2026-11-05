@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +21,53 @@ type ContextKey string
 
 const (
 	MockModeKey ContextKey = "mock_mode"
+	// promptVersionsKey carries the run's agent prompt versions (config.json's
+	// agent_prompts) to RefineChat, whose signature has no agentConfig parameter.
+	promptVersionsKey ContextKey = "prompt_versions"
 )
+
+// WithPromptVersions returns ctx carrying the run's agent prompt versions, keyed like
+// config.json's agent_prompts. RefineChat reads "12_architect" from it.
+func WithPromptVersions(ctx context.Context, versions map[string]string) context.Context {
+	return context.WithValue(ctx, promptVersionsKey, versions)
+}
+
+// refineArchitectVersion is the Architect prompt version RefineChat uses: the run's
+// configured version when the caller passed one (WithPromptVersions), else v4, the version
+// RefineChat always used before it read the config (eval tools and tests rely on that).
+func refineArchitectVersion(ctx context.Context) string {
+	if v := PromptVersionsFrom(ctx)["12_architect"]; v != "" && v != "off" {
+		return v
+	}
+	return "v4"
+}
+
+// PromptVersionsFrom returns the prompt versions WithPromptVersions put on ctx, or nil.
+func PromptVersionsFrom(ctx context.Context) map[string]string {
+	versions, _ := ctx.Value(promptVersionsKey).(map[string]string)
+	return versions
+}
+
+// architectUsesCatalogParams reports whether an Architect prompt version expects the
+// device-catalog sections (v5 and later). Older versions get exactly the context they were
+// written for, so v4 stays a like-for-like baseline and rollback.
+func architectUsesCatalogParams(version string) bool {
+	n, err := strconv.Atoi(strings.TrimPrefix(strings.ToLower(strings.TrimSpace(version)), "v"))
+	return err == nil && n >= 5
+}
+
+// catalogArchitectSections renders the two device-catalog sections appended to the
+// Architect's context for v5+ prompts: the chosen blocks' real parameters, and the real
+// effect names for Rule 3 swaps.
+func catalogArchitectSections(blockNames []string, validBlocks map[string]bool, paramGate, effectsGate PluginGate) string {
+	params := CatalogParamContext(blockNames, validBlocks, paramGate)
+	if params == "" {
+		params = "(none of the chosen blocks are in the device catalog)"
+	}
+	return "\n\nDevice Block Parameters (from the Quad Cortex's own catalog -- exact parameter names, ranges, defaults and switch positions for the blocks chosen so far; see \"Device Block Parameters\" in your instructions):\n" +
+		params + "\n\nDevice Effect Blocks (every real effect block name on the device, by category; a swapped-in effect must be one of these):\n" +
+		CatalogEffectNames(effectsGate)
+}
 
 //go:embed coros_map.json
 var embeddedCorosMap []byte
@@ -730,6 +777,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	var finalResult string
 	var err12 error
 	version12 := agentConfig["12_architect"]
+	if architectUsesCatalogParams(version12) {
+		sections := catalogArchitectSections(LibrarianBlockNames(librarianResult), GetValidNativeBlocks(), pluginGate, pluginGate)
+		architectPrompt += sections
+		log.Printf("[Architect] device catalog sections: %d bytes", len(sections))
+	}
 	if version12 == "off" {
 		finalResult = "Architect skipped by configuration."
 	} else {
@@ -1204,7 +1256,8 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v4")
+	architectVersion := refineArchitectVersion(ctx)
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", architectVersion)
 
 	// RunPipeline scans Librarian/Navigator's raw output for capture names; RefineChat has
 	// no equivalent raw text (it never re-runs those agents), but p.Payload's structured
@@ -1242,6 +1295,14 @@ Selected Capture Details (for Rule 9 formatting -- real descriptive color for wh
 EXISTING STRUCTURED PAYLOAD:
 %s
 `, GetQCBlockSchemaJSON(), captureContext, p.Payload)
+
+	if architectUsesCatalogParams(architectVersion) {
+		// RefineChat isn't told which plugins the user owns (TODO.md). The payload's own
+		// models get their parameters whatever they are (they're already chosen, and an
+		// unowned plugin device is flagged after the run), but the swap list offers no
+		// plugin effects, so a refinement isn't steered toward one the user may not own.
+		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), PluginGate{}, NewPluginGate(false, nil))
+	}
 
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
 	for _, msg := range p.ChatHistory {
