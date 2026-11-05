@@ -53,6 +53,17 @@ DISCRETE_TYPES = frozenset({"switch", "rotarySwitch", "comboBox", "toggleButton"
 WRITABLE_TYPES = CONTINUOUS_TYPES | DISCRETE_TYPES  # never string, grMeter (a meter), empty
 
 _SHA_RE = re.compile(r"[0-9a-f]{64}")
+# Preset names become a file name on the unit (write_preset_file: "<folder>/<name>.pb"). How CorOS
+# sanitises them is unverified, so the agent is stricter than the contract: no path separators,
+# no Windows-reserved characters, no leading dot and no "..".
+_NAME_RE = re.compile(r"[A-Za-z0-9 _()+,!'&#.-]{1,32}")
+
+
+def check_preset_name(name: str) -> None:
+    if (not isinstance(name, str) or not _NAME_RE.fullmatch(name) or name != name.strip()
+            or name.startswith(".") or ".." in name):
+        raise ExportRefused("the preset name may use letters, digits, spaces and _ ( ) + , ! ' & # . - only "
+                            "(no leading dot, no '..')")
 _GEN_RE = re.compile(r"[0-9]+\.[0-9]+")
 
 
@@ -75,6 +86,7 @@ class PlannedBlock:
     model: str
     params: list[PlannedParam]
     bypass_scenes: list[bool]  # 8 flags, A, B, then A for C-H
+    max_param_index: int = 0   # the catalog's highest listed index for this model (wire guard)
 
     @property
     def bypass_varies(self) -> bool:
@@ -244,6 +256,7 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
         ba, bb = b["bypass"]["A"], b["bypass"]["B"]
         if not isinstance(ba, bool) or not isinstance(bb, bool):
             raise ExportRefused(f"{where}.bypass flags must be true/false")
-        planned.append(PlannedBlock(bi, mid, cm["name"], params, [ba, bb] + [ba] * (SCENES - 2)))
+        planned.append(PlannedBlock(bi, mid, cm["name"], params, [ba, bb] + [ba] * (SCENES - 2),
+                                    max(cm["params_by_index"], default=0)))
 
     return Plan(ROW, IN_PORT, OUT_PORT, planned, labels)

@@ -223,6 +223,28 @@ class Push(Base):
         self.assertIn("My favourite tone", r["message"])
         self.assert_no_writes()
 
+    def test_unsafe_names_refused_before_connecting(self):
+        for name in ("../../../opt/x", "a/b", "a\\b", ".hidden", "a..b", "x:y", 'q"q', "a*b"):
+            with self.subTest(name):
+                self.dev.calls.clear()
+                args = {"slot": "20A", "name": name, "source": {"preset_id": "p", "guitar": "g"}, "export": export()}
+                r = self.push(args=args)
+                self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
+                self.assertNotIn(("connect",), self.dev.calls)
+
+    def test_duplicate_name_elsewhere_refused(self):
+        self.dev.slots = {19: " texas BLUES "}
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
+        self.assertIn("3D", r["message"])
+        self.assert_no_writes()
+
+    def test_unknown_device_type_refused(self):
+        self.dev.dtype = None
+        r = self.push()
+        self.assertEqual(r["reason_code"], "firmware_mismatch")
+        self.assert_no_writes()
+
     def test_space_named_preset_counts_as_occupied(self):
         self.dev.slots = {152: "   "}
         r = self.push()
@@ -434,12 +456,23 @@ class Recovery(Base):
 
     def test_finished_without_done_reuploads_stored_bytes(self):
         jid, key = self.queue("list_slots")
+        self.store.fail["put"] = S3Error("put", None, "URLError")  # crash window: finished, never uploaded
         self.poll()
-        stored = self.store.objects.pop(f"jobs/done/{jid}.json")  # a bucket-token holder deletes it
-        agent = self.make_agent()
+        stored = self.agent.ledger.finished[jid]["result"].encode()
+        del self.store.fail["put"]
+        agent = self.make_agent()  # restart; the in-memory retry list is gone
         self.clock.advance(3600)
         agent.recover()
         self.assertEqual(self.store.objects[f"jobs/done/{jid}.json"], stored, "never a newly minted result")
+        self.assertNotIn(key, self.store.objects)
+        self.assertIn(jid, self.make_agent().ledger.uploaded)
+
+    def test_restart_does_not_recheck_confirmed_uploads(self):
+        jid, _ = self.queue("list_slots")
+        self.poll()
+        self.store.ops.clear()
+        self.make_agent().recover()
+        self.assertNotIn(("head", f"jobs/done/{jid}.json"), self.store.ops)
 
     def test_recovery_ignores_the_bucket_for_decisions(self):
         # A done object for an unfinished ledger entry doesn't stop the interrupted report from the ledger.

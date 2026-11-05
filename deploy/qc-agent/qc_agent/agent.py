@@ -151,6 +151,7 @@ class Agent:
             self._unuploaded[job_id] = data
             return
         self._unuploaded.pop(job_id, None)
+        self.ledger.mark_uploaded(job_id, contract.format_time(self.now()))
         self._delete(contract.PENDING_PREFIX + job_id + ".json")
 
     def _delete(self, key):
@@ -198,7 +199,10 @@ class Agent:
             self.finish(job_id, kind, jobs.failed(
                 "interrupted", "The bridge stopped in the middle of this job (crash, closed window or power). "
                 "It is not retried. For a push, check the slot on the unit before sending again."), at)
-        for job_id, e in self.ledger.finished.items():
+        # Results whose upload was never confirmed. One whose upload the ledger records is not re-checked:
+        # a bucket-token holder deleting it later is the "delete objects" power contract 15 already concedes.
+        for job_id in self.ledger.not_uploaded():
+            e = self.ledger.finished[job_id]
             key = contract.DONE_PREFIX + job_id + ".json"
             try:
                 if self.store.exists(key):

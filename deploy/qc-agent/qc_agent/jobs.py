@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 
 from . import contract, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, DeviceError, UnitAbsent, UnitBusy
-from .export_validator import SUPPORTED_FORMATS, ExportRefused, validate
+from .export_validator import SUPPORTED_FORMATS, ExportRefused, check_preset_name, validate
 
 log = logging.getLogger("qc_agent")
 
@@ -71,6 +71,15 @@ class _Gone(Exception):
     pass
 
 
+def _same_name(listing, pos, name):
+    """Another slot whose preset has this name (case and surrounding spaces ignored), or None."""
+    want = name.strip().casefold()
+    for p, n in listing.items():
+        if p != pos and isinstance(n, str) and n.strip().casefold() == want:
+            return p
+    return None
+
+
 def _occupied(listing, pos) -> bool:
     """Only an exactly blank name is an empty slot. A missing position or a name that is just
     spaces counts as occupied: the agent refuses rather than risk overwriting a preset."""
@@ -98,7 +107,7 @@ def _connect_checked(ctx):
         return refused("firmware_mismatch",
                        f"The unit reports firmware {text.clean(fw or 'unknown', 32)}; this bridge only works with "
                        f"{ctx.config.expected_firmware}. Nothing was changed.", firmware=_fw(fw))
-    if dev.device_type not in (None, "QC"):
+    if dev.device_type != "QC":
         return refused("firmware_mismatch",
                        f"The unit reports device type {text.clean(str(dev.device_type), 16)}; this bridge "
                        "supports a full Quad Cortex only. Nothing was changed.", firmware=_fw(fw))
@@ -308,6 +317,7 @@ def push_preset(ctx, job) -> Outcome:
         return refused("slot_not_allowed", f"Slot {slot} is outside the bridge's allowed slots "
                        f"({', '.join(ctx.config.allowed_slots.labels())}).")
     try:
+        check_preset_name(name)
         plan = validate(a["export"], ctx.catalog, ctx.config.expected_firmware)
     except ExportRefused as e:
         return refused("validation", "The export failed the bridge's own checks: " + text.clean(str(e), 400))
@@ -324,6 +334,11 @@ def push_preset(ctx, job) -> Outcome:
             return refused("slot_not_empty", f"Slot {slot} is not empty on the unit "
                            f"(it holds {text.clean(listing.get(pos), NAME_LIMIT)!r}). The bridge never "
                            "overwrites a preset; pick an empty slot.", firmware=fw)
+        dup = _same_name(listing, pos, name)
+        if dup is not None:
+            return refused("validation", f"Slot {slots.label(dup)} already has a preset named {name!r}. Pick a "
+                           "different name: if the unit stores presets by name, a save could replace it.",
+                           firmware=fw)
         cur = dev.setlist_position() or {}
         if cur.get("folder_key") != SETLIST_KEY or cur.get("position") != pos or cur.get("is_factory"):
             return refused("unsupported_arg", f"Select slot {slot} (empty) on the Quad Cortex first, then send "
@@ -380,7 +395,7 @@ def push_preset(ctx, job) -> Outcome:
         listing = dev.list_my_presets()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        if _occupied(listing, pos) or cur.get("position") != pos or cur.get("folder_key") != SETLIST_KEY:
+        if _occupied(listing, pos) or _same_name(listing, pos, name) is not None or cur.get("position") != pos or cur.get("folder_key") != SETLIST_KEY:
             return refused("slot_not_empty", f"Slot {slot} changed while the preset was being built. "
                            "Nothing was saved.", firmware=fw, push=result_push)
         dev.save_to_slot(pos, name)

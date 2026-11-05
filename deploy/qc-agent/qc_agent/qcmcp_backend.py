@@ -2,9 +2,9 @@
 
 Three layers keep the transport to the operations the plan allows (section 5):
 
-1. load_vendored() refuses to import the transport unless every vendored file
-   matches its f634ecd SHA-256 pin, and checks the imported modules really are the
-   vendored ones (not a qc-mcp installed in the venv).
+1. load_vendored() refuses to import the transport unless every file in vendor/
+   matches its f634ecd SHA-256 pin (and nothing else is there), then compiles each
+   module from the bytes it just hashed; the folder is never on sys.path.
 2. Guarded exposes only the transport methods this backend calls. A NEVER list,
    which a grant can't include, names the forbidden ones: save_preset (RecallPreset
    SAVE, the documented hang), recall, clear_grid, delete_block, load_preset, raw
@@ -22,7 +22,8 @@ Three layers keep the transport to the operations the plan allows (section 5):
        Scene UPDATEs (the transport switches scenes to write per-scene values);
      * while a save is armed: one File CREATE of My Presets at the armed position
        with the armed name and nothing else (no payload).
-   Everything else raises WireRefused before a byte reaches the unit, including any
+   Messages with unknown fields, compressed payloads, or empty model entries (the shape
+   of a delete) are refused too. Everything else raises WireRefused before a byte reaches the unit, including any
    RecallPreset UPDATE (save_preset), SetlistPosition UPDATE (recall), Grid DELETE,
    File DELETE, and every IOSettings / GlobalEQ / MasterVolume / Mode / ModelPreset write.
 
@@ -32,15 +33,14 @@ the Phase 0 spikes did; nothing is written to them.
 """
 from __future__ import annotations
 
-import importlib
 import logging
 import sys
 import threading
-import time
+import types
 from pathlib import Path
 
 from .device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
-from .vendor_pins import VENDOR_DIR, mismatches
+from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
 
 log = logging.getLogger("qc_agent")
 
@@ -56,9 +56,20 @@ class GuardError(DeviceError):
 # ---------------------------------------------------------------- loading
 
 _loaded = None
+# Dependency order: each module's relative imports are already in sys.modules when it runs.
+_MODULES = ("backend", "protocol", "directory", "winhid", "transport")
 
 
 def load_vendored(vendor_dir: Path = VENDOR_DIR):
+    """Import the vendored transport from its hash-checked bytes.
+
+    Each module's source is read once, checked against its f634ecd pin and compiled from those
+    bytes in memory. The vendor folder is never put on sys.path and no bytecode is read or
+    written, so nothing planted beside the pinned files (an extra package, a .pyc) can be
+    imported instead, and there is no gap between checking a file and running it. The package's
+    __path__ is empty, so a lazy import of anything not loaded here (bridge, iohid) fails rather
+    than finding a file. The descriptor sets are pinned too; protocol.py reads them from the folder.
+    """
     global _loaded
     if _loaded is not None:
         return _loaded
@@ -66,18 +77,30 @@ def load_vendored(vendor_dir: Path = VENDOR_DIR):
     if bad:
         raise DeviceError("the vendored qc-mcp transport differs from the reviewed f634ecd copy: "
                           + "; ".join(bad[:4]) + ". Refusing to drive the unit with it.")
-    root = vendor_dir.resolve()
-    existing = sys.modules.get("qc_mcp")
-    if existing is not None and Path(getattr(existing, "__file__", "") or "").resolve().parent != root / "qc_mcp":
-        raise DeviceError("another qc_mcp package is already imported; refusing to mix it with the vendored one")
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
-    mods = {}
-    for name in ("backend", "protocol", "directory", "winhid", "transport"):
-        m = importlib.import_module(f"qc_mcp.{name}")
-        if Path(m.__file__).resolve().parent != root / "qc_mcp":
-            raise DeviceError(f"qc_mcp.{name} was imported from {m.__file__}, not the vendored copy")
-        mods[name] = m
+    if any(n == "qc_mcp" or n.startswith("qc_mcp.") for n in sys.modules):
+        raise DeviceError("a qc_mcp package is already imported; refusing to mix it with the vendored one")
+    root = (vendor_dir / "qc_mcp").resolve()
+    try:
+        pkg = types.ModuleType("qc_mcp")
+        pkg.__path__ = []
+        pkg.__package__ = "qc_mcp"
+        pkg.__file__ = str(root / "__init__.py")
+        exec(compile(verified_bytes("qc_mcp/__init__.py", vendor_dir), pkg.__file__, "exec"), pkg.__dict__)
+        sys.modules["qc_mcp"] = pkg
+        mods = {}
+        for name in _MODULES:
+            full, path = f"qc_mcp.{name}", root / f"{name}.py"
+            m = types.ModuleType(full)
+            m.__file__, m.__package__ = str(path), "qc_mcp"
+            sys.modules[full] = m
+            code = compile(verified_bytes(f"qc_mcp/{name}.py", vendor_dir), str(path), "exec")
+            exec(code, m.__dict__)
+            setattr(pkg, name, m)
+            mods[name] = m
+    except Exception as e:  # noqa: BLE001
+        for n in [n for n in sys.modules if n == "qc_mcp" or n.startswith("qc_mcp.")]:
+            del sys.modules[n]
+        raise DeviceError(f"could not load the vendored transport: {type(e).__name__}: {e}") from None
     _loaded = mods
     return mods
 
@@ -167,6 +190,7 @@ class WireGuard:
                       "params": {(b.col, p.index) for b in plan.blocks for p in b.params},
                       "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
                       "bypass_cols": {b.col for b in plan.blocks if any(b.bypass_scenes)},
+                      "max_index": {b.col: b.max_param_index for b in plan.blocks},
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
 
     def arm_save(self, folder_key, position, name):
@@ -207,6 +231,8 @@ class WireGuard:
 
     def _check(self, message):
         P = self.P
+        if message[:3] == b"\x1f\x8b\x08":  # decode_message would gunzip it; we never send compressed
+            raise WireRefused("compressed payloads are not allowed")
         cmd, pb, _h = P.decode_message(message)
         name = P.COMMANDS.get(cmd)
         if name is None:
@@ -215,6 +241,11 @@ class WireGuard:
             msg = P.message_class(cmd).FromString(pb)
         except Exception:  # noqa: BLE001
             raise WireRefused(f"{name}: does not decode") from None
+        bare = P.message_class(cmd)()
+        bare.CopyFrom(msg)
+        bare.DiscardUnknownFields()
+        if bare.SerializeToString() != msg.SerializeToString():
+            raise WireRefused(f"{name}: unknown fields")
         fields = _names(msg)
         action = getattr(msg, "action", None) if "action" in msg.DESCRIPTOR.fields_by_name else None
         A = P.ACTION
@@ -261,6 +292,8 @@ class WireGuard:
                 col = m.column
                 if col not in push["cols"]:
                     raise WireRefused(f"Grid: column {col} is not in the plan")
+                if not mf & {"hash", "params"}:
+                    raise WireRefused(f"Grid: an empty entry for column {col} (the shape of a delete)")
                 if "hash" in mf:
                     if m.hash != push["cols"][col] or "params" in mf:
                         raise WireRefused(f"Grid: placing model {m.hash} in column {col} is not the plan")
@@ -270,8 +303,10 @@ class WireGuard:
                     if qf == {"scene_mode"} or qf == {"index", "scene_mode"}:
                         # "Assign to Scenes": only for the plan's scene-varying params, or a
                         # scene-varying block's bypass (index one past its read, set by the transport).
-                        if (col, p.index) in push["scene_params"] or col in push["bypass_cols"]:
+                        if (col, p.index) in push["scene_params"]:
                             continue
+                        if col in push["bypass_cols"] and p.index > push["max_index"][col]:
+                            continue  # the bypass control sits past every listed parameter (one past the read)
                         raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
                     if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
                         raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")

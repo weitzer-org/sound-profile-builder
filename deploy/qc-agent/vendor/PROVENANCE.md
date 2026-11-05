@@ -37,9 +37,11 @@ git -C qc-mcp show f634ecd:src/qc_mcp/transport.py | sha256sum
 
 ## How the pins are enforced
 
-- `tests/test_vendor_pins.py` fails if any file differs, is missing, or an unpinned file appears under `qc_mcp/`.
-- At runtime `qcmcp_backend.load_vendored()` recomputes the same hashes and refuses to import the transport on any
-  mismatch, then checks the imported modules came from this folder (not a qc-mcp installed in the venv).
+- `tests/test_vendor_pins.py` fails if any file differs or is missing, or if anything else appears anywhere under
+  `vendor/` (an extra package, a `__pycache__`), apart from this file and `.gitattributes`.
+- At runtime `qcmcp_backend.load_vendored()` runs the same check, then compiles each module from the bytes it just
+  hashed. This folder is never put on `sys.path` and no bytecode is read or written, so nothing planted beside the
+  pinned files can be imported instead, and a qc-mcp installed in the venv is never picked up.
 - The pins live in `qc_agent/vendor_pins.py`; this table must list the same values (the test checks).
 
 ## Not vendored, and why

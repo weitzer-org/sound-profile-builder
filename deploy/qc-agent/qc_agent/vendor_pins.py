@@ -27,6 +27,9 @@ PINS = {
 }
 
 
+UNPINNED_OK = frozenset({"PROVENANCE.md", ".gitattributes"})
+
+
 def mismatches(vendor_dir: Path = VENDOR_DIR) -> list[str]:
     """Vendored files that are missing or differ from their pin, plus unexpected extra files."""
     import hashlib
@@ -40,10 +43,21 @@ def mismatches(vendor_dir: Path = VENDOR_DIR) -> list[str]:
             continue
         if got != want:
             bad.append(f"{rel}: sha256 {got[:12]}..., pinned {want[:12]}...")
-    pkg = vendor_dir / "qc_mcp"
-    if pkg.is_dir():
-        for p in pkg.rglob("*"):
+    if vendor_dir.is_dir():
+        # The whole tree, __pycache__ included: an extra module (e.g. vendor/google/) or a planted .pyc
+        # must not hide behind green pins. The agent loads the vendored modules from their hashed bytes
+        # (qcmcp_backend.load_vendored), so it never writes bytecode here itself.
+        for p in vendor_dir.rglob("*"):
             rel = p.relative_to(vendor_dir).as_posix()
-            if p.is_file() and rel not in PINS and "__pycache__" not in rel:
+            if p.is_file() and rel not in PINS and rel not in UNPINNED_OK:
                 bad.append(f"{rel}: not a pinned file")
     return bad
+
+
+def verified_bytes(rel: str, vendor_dir: Path = VENDOR_DIR) -> bytes:
+    """A pinned file's bytes, read once and checked against its pin (no gap between check and use)."""
+    import hashlib
+    data = (vendor_dir / rel).read_bytes()
+    if hashlib.sha256(data).hexdigest() != PINS[rel][1]:
+        raise ValueError(f"{rel} differs from its f634ecd pin")
+    return data

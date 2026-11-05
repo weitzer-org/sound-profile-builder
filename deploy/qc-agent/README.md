@@ -23,9 +23,11 @@ For a push, before anything is written:
    `qc_agent/export_validator.py` against the agent's own catalog copy (`internal/catalog/qc_catalog.json` in this
    clone, hash-matched with the export): known models in allowed categories, no plugin/capture/IR/FX-loop/splitter
    models, NC_Recorder denied, only listed parameter indexes with numeric ranges, values in range, wire values 0..1,
-   one row (in 1, out 19), at most 8 blocks, zero unresolved items;
+   one row (in 1, out 19), at most 8 blocks, zero unresolved items. The preset name may use letters, digits, spaces
+   and `_ ( ) + , ! ' & # . -` only (it becomes a file name on the unit);
 2. the slot is inside `QC_AGENT_ALLOWED_SLOTS`;
-3. a **fresh** directory listing shows the slot **empty**. The bridge never overwrites a preset, including its own
+3. a **fresh** directory listing (all 256 slots, or it's refused) shows the slot **empty** (an exactly blank name),
+   and no other slot already has a preset with the same name. The bridge never overwrites a preset, including its own
    (editing existing presets is deferred: plan section 10, item 7);
 4. that empty slot is the one **open on the unit** and its live grid is blank. This is the only save path Phase 0
    verified (G3). The agent never recalls a preset or clears a grid, so it can't disturb what you have loaded;
@@ -34,8 +36,8 @@ For a push, before anything is written:
 Then it builds the chain on the live grid, reads it back and diffs it, and saves only if the diff is clean and a
 second fresh listing still shows the slot empty. The save is `write_preset_file` (File CREATE), never `save_preset`.
 
-Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SHA-256 pin check of the vendored
-files before import; a method allowlist with a never-list (`save_preset`, `recall`, `clear_grid`, deletes, raw
+Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SHA-256 pin check of everything in
+`vendor/`, with each module compiled from the bytes just hashed (the folder is never on `sys.path`); a method allowlist with a never-list (`save_preset`, `recall`, `clear_grid`, deletes, raw
 `send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, captures/IRs, splits, scene labels);
 and a **wire guard** that decodes every outgoing message and lets through only session plumbing, reads, and, while a
 push is armed, exactly the plan's grid writes and one File CREATE to the armed slot and name.

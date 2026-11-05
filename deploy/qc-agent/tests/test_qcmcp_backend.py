@@ -193,6 +193,48 @@ class Guard(Base):
         self.refused(self.qc.set_param_typed, 0, 0, 1, [[None, None, "x"]])
         self.qc.set_param(0, 0, 1, 0.3)                           # the plan's own write passes
 
+    def raw_grid(self, build, extra=b""):
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        build(g)
+        full = P.encode_message("Grid", g.SerializeToString() + extra)
+        guard = self.dev._guard
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            for r in P.message_to_reports(full):
+                guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
+        self.assertEqual(len(self.hid.received), n)
+
+    def test_empty_model_entry_refused(self):
+        self.dev.begin_push(152, "x", self.plan)
+        self.raw_grid(lambda g: g.preset.chains.add().models.add())
+
+    def test_unknown_fields_refused(self):
+        self.dev.begin_push(152, "x", self.plan)
+        self.raw_grid(lambda g: g.preset.chains.add(), extra=bytes([0xF8, 0xFF, 0x03, 0x01]))
+
+    def test_compressed_payload_refused(self):
+        self.dev.begin_push(152, "x", self.plan)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        full = P.encode_message("Grid", P.gzip_bytes(g.SerializeToString()))
+        with self.assertRaises(WireRefused):
+            for r in P.message_to_reports(full):
+                self.dev._guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
+
+    def test_scene_assign_on_bypass_column_only_past_the_params(self):
+        self.dev.begin_push(152, "x", self.plan)  # the Spring (column 4) has scene-varying bypass
+
+        def assign(idx):
+            def build(g):
+                m = g.preset.chains.add().models.add()
+                m.column = 4
+                p = m.params.add()
+                p.index, p.scene_mode = idx, True
+            return build
+        self.raw_grid(assign(1))       # DAMPING: a real parameter, not the bypass control
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        assign(6)(g)                   # one past the Spring's listed params: the bypass control
+        self.qc.send("Grid", g)
+
     def test_save_only_to_the_armed_slot(self):
         self.dev.begin_push(152, "Texas Blues", self.plan)
         self.refused(self.qc.write_preset_file, fake_hid.SETLIST, 152, "Texas Blues")  # not armed for a save yet
@@ -256,9 +298,12 @@ class VendoredLoad(unittest.TestCase):
                 qcmcp_backend._loaded = saved
 
     def test_imports_are_the_vendored_copy(self):
+        import sys
         mods = qcmcp_backend.load_vendored()
         for m in mods.values():
             self.assertTrue(Path(m.__file__).resolve().is_relative_to(VENDOR_DIR.resolve()))
+        self.assertNotIn(str(VENDOR_DIR.resolve()), sys.path)
+        self.assertEqual(sys.modules["qc_mcp"].__path__, [])
 
 
 if __name__ == "__main__":

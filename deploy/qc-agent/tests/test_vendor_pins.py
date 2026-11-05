@@ -27,6 +27,27 @@ class VendorPins(unittest.TestCase):
         have = {rel.split("qc_mcp/", 1)[1] for rel in PINS}
         self.assertTrue(want <= have, want - have)
 
+    def test_extra_files_anywhere_are_refused(self):
+        import shutil
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            v = Path(d) / "vendor"
+            shutil.copytree(VENDOR_DIR, v)
+            self.assertEqual(mismatches(v), [])
+            (v / "google").mkdir()
+            (v / "google" / "__init__.py").write_text("raise SystemExit")
+            (v / "qc_mcp" / "__pycache__").mkdir(exist_ok=True)
+            (v / "qc_mcp" / "__pycache__" / "backend.cpython-312.pyc").write_bytes(b"x")
+            bad = mismatches(v)
+            self.assertTrue(any("google/__init__.py" in b for b in bad))
+            self.assertTrue(any("__pycache__" in b for b in bad))
+
+    def test_loading_writes_no_bytecode(self):
+        from qc_agent.qcmcp_backend import load_vendored
+        load_vendored()
+        self.assertFalse((VENDOR_DIR / "qc_mcp" / "__pycache__").exists())
+
     def test_provenance_lists_every_pin(self):
         text = (VENDOR_DIR / "PROVENANCE.md").read_text(encoding="utf-8")
         self.assertIn(COMMIT, text)

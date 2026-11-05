@@ -3,6 +3,8 @@
 executed_jobs.jsonl: one JSON object per line, appended and fsynced, never pruned.
   {"event": "taken", "job_id", "kind", "at"}         before any device contact (step 10)
   {"event": "finished", "job_id", "at", "result"}    the signed result envelope text (step 12)
+  {"event": "uploaded", "job_id", "at"}              the result reached jobs/done/ (so a restart
+                                                     needn't HEAD every job the agent ever ran)
 
 owned_slots.jsonl: one line per save the agent issued:
   {"slot", "position", "name", "job_id", "at"}
@@ -76,6 +78,7 @@ class JobLedger:
         self.path = path
         self.taken: dict[str, dict] = {}
         self.finished: dict[str, dict] = {}
+        self.uploaded: set[str] = set()
         self.order: list[str] = []
         for e in _read_lines(path):
             jid = e.get("job_id")
@@ -89,6 +92,8 @@ class JobLedger:
                 if not isinstance(e.get("result"), str):
                     raise LedgerError(f"{path}: finished entry for {jid} has no result")
                 self.finished[jid] = e
+            elif e.get("event") == "uploaded":
+                self.uploaded.add(jid)
             else:
                 raise LedgerError(f"{path}: unknown event {e.get('event')!r}")
 
@@ -105,6 +110,15 @@ class JobLedger:
         e = {"event": "finished", "job_id": job_id, "at": at, "result": result.decode("ascii")}
         _append(self.path, e)
         self.finished[job_id] = e
+
+    def mark_uploaded(self, job_id: str, at: str) -> None:
+        if job_id in self.uploaded:
+            return
+        _append(self.path, {"event": "uploaded", "job_id": job_id, "at": at})
+        self.uploaded.add(job_id)
+
+    def not_uploaded(self) -> list[str]:
+        return [j for j in self.order if j in self.finished and j not in self.uploaded]
 
     def unfinished(self) -> list[str]:
         return [j for j in self.order if j not in self.finished]
