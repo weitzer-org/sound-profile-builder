@@ -781,6 +781,18 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	return finalResult, o.Usage, nil
 }
 
+// DefaultModelFor is the production model for an agent key when neither TARGET_MODEL nor
+// config.json agent_models overrides it. Chosen by the 2026-11 Gemini upgrade eval
+// (docs/eval/gemini-model-upgrade-test-plan.md §4a/§5a): gemini-4-argon everywhere except the
+// Sonic Profiler, where Argon failed the Phase 1A screen (schema-valid 16/26, 10/26 truncated)
+// and gemini-3.8-flash passed it. Older Flash ids are being deprecated and are not used.
+func DefaultModelFor(key string) string {
+	if key == "2_sonic_profiler" {
+		return "gemini-3.8-flash"
+	}
+	return "gemini-4-argon"
+}
+
 // getFallbackChain generates a progressive chronological backup pathway list for standard model components
 //
 // With EVAL_NO_FALLBACK=true (eval tooling only, see EvalNoFallbackEnv) it returns nil for
@@ -789,17 +801,18 @@ func getFallbackChain(primaryModel string) []string {
 	if evalNoFallback() {
 		return nil
 	}
+	// Only current-generation models (2026-11 Gemini upgrade eval): older Flash ids are being
+	// deprecated, gemini-3.5-flash is already served as gemini-3.6-flash, and gemini-2.5-pro /
+	// gemini-3-flash-preview must not be where an unknown or failing model silently lands.
 	switch primaryModel {
+	case "gemini-4-argon":
+		return []string{"gemini-3.8-flash", "gemini-3.1-pro-preview"}
+	case "gemini-3.8-flash":
+		return []string{"gemini-4-argon", "gemini-3.1-pro-preview"}
 	case "gemini-3.1-pro-preview":
-		return []string{"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"}
-	case "gemini-3.5-flash":
-		return []string{"gemini-3-flash-preview", "gemini-2.5-pro"}
-	case "gemini-3-flash-preview":
-		return []string{"gemini-2.5-pro"}
-	case "gemini-2.5-pro":
-		return nil
-	default:
-		return []string{"gemini-2.5-pro"}
+		return []string{"gemini-4-argon", "gemini-3.8-flash"}
+	default: // gemini-3.5-flash and anything unrecognized
+		return []string{"gemini-3.8-flash", "gemini-4-argon"}
 	}
 }
 
@@ -867,12 +880,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 		if o.useOpenLLM {
 			modelName = o.openLLMClient.Model
 		} else {
-			// Apply production routing defaults (Agent 1 & 12 use 3.1 Pro, others use 3.5 Flash)
-			if key == "1_tone_historian" || key == "12_architect" {
-				modelName = "gemini-3.1-pro-preview"
-			} else {
-				modelName = "gemini-3.5-flash"
-			}
+			modelName = DefaultModelFor(key)
 		}
 	}
 
@@ -928,11 +936,11 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 				(strings.Contains(lower, "context") && strings.Contains(lower, "limit"))
 
 			if isContextLimit {
-				log.Printf("⚠️ WARNING: [%s] Open-LLM hit context window max: %v. Falling back to default production model: gemini-3.1-pro-preview", agentRole, err)
+				log.Printf("⚠️ WARNING: [%s] Open-LLM hit context window max: %v. Falling back to default production model: %s", agentRole, err, DefaultModelFor(key))
 				if o.client == nil {
 					return "", fmt.Errorf("[%s] Open-LLM hit context limit, but Gemini fallback client is not initialized (missing API key)", agentRole)
 				}
-				modelName = "gemini-3.1-pro-preview"
+				modelName = DefaultModelFor(key)
 				// Fall through to standard Gemini execution path below!
 			} else {
 				return "", fmt.Errorf("[%s] Open-LLM failure: %w", agentRole, err)
@@ -1114,6 +1122,12 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 // raw-JSON-Schema path (ResponseJsonSchema) because its payload has guitar-name-keyed
 // dynamic objects the typed OpenAPI-subset Schema can't express; every other agent uses the
 // typed ResponseSchema.
+// GenerationConfigFor is the exported form of buildGenerationConfig, for eval probes that must
+// send exactly what production sends (temperature, tools, caps, schema) through a raw client.
+func (o *Orchestrator) GenerationConfigFor(agentRole, key string) *genai.GenerateContentConfig {
+	return o.buildGenerationConfig(agentRole, key)
+}
+
 func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.GenerateContentConfig {
 	cfg := &genai.GenerateContentConfig{
 		Temperature:     agentTemperature(key),
@@ -1149,7 +1163,7 @@ func (o *Orchestrator) PromptForAgent(key, version string) (string, error) {
 }
 
 func (o *Orchestrator) loadPromptForAgent(key string, version string) (string, error) {
-	model := "gemini-3.1-pro-preview" // default
+	model := DefaultModelFor(key)
 	if o.AgentModels != nil {
 		if m, ok := o.AgentModels[key]; ok {
 			model = m
@@ -1175,6 +1189,10 @@ func (o *Orchestrator) Close() {
 }
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
+// refineArchitectPromptVersion is the Architect prompt the Refinement Architect uses. Keep it in
+// step with config.json's agent_prompts["12_architect"].
+const refineArchitectPromptVersion = "v5"
+
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
@@ -1187,7 +1205,9 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	sysPrompt, _ := o.loadPromptForAgent("12_architect", "v4")
+	// v5 (not config.json's agent_prompts, which RefineChat does not receive): same rule set as
+	// generation, including the dial-format rules (10, 14) that stop dB offsets on modeled amps.
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", refineArchitectPromptVersion)
 
 	// RunPipeline scans Librarian/Navigator's raw output for capture names; RefineChat has
 	// no equivalent raw text (it never re-runs those agents), but p.Payload's structured

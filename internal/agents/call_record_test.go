@@ -11,11 +11,18 @@ import (
 func TestGetFallbackChain_DefaultUnchanged(t *testing.T) {
 	t.Setenv(EvalNoFallbackEnv, "")
 	cases := map[string][]string{
-		"gemini-3.1-pro-preview": {"gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro"},
-		"gemini-3.5-flash":       {"gemini-3-flash-preview", "gemini-2.5-pro"},
-		"gemini-2.5-pro":         nil,
-		"gemini-4-argon":         {"gemini-2.5-pro"}, // the silent-substitution hazard EVAL_NO_FALLBACK exists for
-		"totally-bogus-model":    {"gemini-2.5-pro"},
+		"gemini-4-argon":         {"gemini-3.8-flash", "gemini-3.1-pro-preview"},
+		"gemini-3.8-flash":       {"gemini-4-argon", "gemini-3.1-pro-preview"},
+		"gemini-3.1-pro-preview": {"gemini-4-argon", "gemini-3.8-flash"},
+		"gemini-3.5-flash":       {"gemini-3.8-flash", "gemini-4-argon"},
+		"totally-bogus-model":    {"gemini-3.8-flash", "gemini-4-argon"},
+	}
+	for model, want := range cases {
+		for _, m := range want {
+			if m == "gemini-2.5-pro" || m == "gemini-3-flash-preview" || m == "gemini-3.5-flash" {
+				t.Errorf("chain for %s ends on deprecated model %s", model, m)
+			}
+		}
 	}
 	for model, want := range cases {
 		if got := getFallbackChain(model); !reflect.DeepEqual(got, want) {

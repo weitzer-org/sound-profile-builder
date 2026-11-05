@@ -117,6 +117,19 @@ func strSchema(desc string) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeString, Description: desc}
 }
 
+// acousticianRationaleMaxLen bounds the Acoustician's free-text rationale. Its truncations
+// (MAX_TOKENS at the 8,000 cap, ~28% of gemini-3.5-flash calls in the Phase 2 eval) were a
+// degenerate loop inside this one string: a probe captured 43,675 characters of filler ending in
+// "...valid standard parseable JSON object baseline output format" repeated (see
+// docs/eval/gemini-model-upgrade-test-plan.md). Normal rationales are well under 300 characters.
+const acousticianRationaleMaxLen = 400
+
+// boundedStrSchema is a string with a maxLength the model is asked to respect. Whether the API
+// enforces it during decoding (rather than only accepting it) was checked in the 2026-11-05 probe.
+func boundedStrSchema(desc string, maxLen int64) *genai.Schema {
+	return &genai.Schema{Type: genai.TypeString, Description: desc, MaxLength: &maxLen}
+}
+
 func numSchema(desc string) *genai.Schema {
 	return &genai.Schema{Type: genai.TypeNumber, Description: desc}
 }
@@ -204,19 +217,19 @@ func agentResponseSchema(key string) *genai.Schema {
 			// v2 (per-pickup-type) fields:
 			"humbucker": objSchema(map[string]*genai.Schema{
 				"input_gain_db":  numSchema(""),
-				"amp_vol_offset": numSchema(""),
+				"amp_vol_offset": numSchema("Change to the amp Volume dial in 0-10 dial steps (e.g. -1.0 = one step lower). Not decibels."),
 				"eq_params": objSchema(map[string]*genai.Schema{
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
-				"rationale": strSchema("Why gain/EQ were adjusted this way for humbuckers."),
+				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for humbuckers. One or two short sentences.", acousticianRationaleMaxLen),
 			}, nil),
 			"single_coil": objSchema(map[string]*genai.Schema{
 				"input_gain_db":  numSchema(""),
-				"amp_vol_offset": numSchema(""),
+				"amp_vol_offset": numSchema("Change to the amp Volume dial in 0-10 dial steps (e.g. -1.0 = one step lower). Not decibels."),
 				"eq_params": objSchema(map[string]*genai.Schema{
 					"bass": numSchema(""), "mid": numSchema(""), "treble": numSchema(""),
 				}, nil),
-				"rationale": strSchema("Why gain/EQ were adjusted this way for single coils."),
+				"rationale": boundedStrSchema("Why gain/EQ were adjusted this way for single coils. One or two short sentences.", acousticianRationaleMaxLen),
 			}, nil),
 		}, nil) // v1 and v2 share no common field name, so nothing can be marked required here; the active prompt's instructions drive which shape is actually used.
 
