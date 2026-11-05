@@ -37,6 +37,9 @@ CASES = [
 ]
 
 
+CASE_KEYS = ("amp", "cab", "hpf")   # CASES[i] is selected by CASE_KEYS[i]
+
+
 def parse_reading(s: str) -> float | None:
     s = s.strip().lower().replace(",", ".")
     if not s or s in ("s", "skip"):
@@ -59,11 +62,23 @@ def main() -> int:
     ap.add_argument("--slot", required=True, help="the slot G3 saved the test preset into")
     ap.add_argument("--folder-key", default=sc.SETLIST)
     ap.add_argument("--no-prompt", action="store_true", help="write and read back only; skip the screen readings")
+    ap.add_argument("--case", choices=CASE_KEYS, help="single-step mode: write ONE value to this parameter (amp OUTPUT, cab LEVEL or HPF FREQ), then exit; needs --wire")
+    ap.add_argument("--wire", type=float, help="the wire value (0..1) for --case")
     ap.add_argument("--hold", type=int, default=0, metavar="SECONDS",
                     help="photo mode: after each write, ring the bell and wait SECONDS (no typing) so you can photograph the unit; implies --no-prompt")
     args = ap.parse_args()
     if args.hold:
         args.no_prompt = True
+    if (args.case is None) != (args.wire is None):
+        ap.error("--case and --wire go together")
+    if args.wire is not None and not (0.0 <= args.wire <= 1.0):
+        ap.error("--wire must be between 0 and 1")
+    cases = CASES
+    if args.case:
+        base = CASES[CASE_KEYS.index(args.case)]
+        cases = [base[:7] + ([args.wire],) + base[8:]]
+        args.no_prompt = True
+        args.hold = 0
 
     mcp = sc.load_qc_mcp(args.qc_mcp, allow_unpinned=args.allow_unpinned)
     sc.banner("G4: taper and symbolic-bound constants  (live edits only, never saves)")
@@ -77,9 +92,9 @@ def main() -> int:
 
         rows = []
         quit_all = False
-        total = sum(len(c[7]) for c in CASES)
+        total = sum(len(c[7]) for c in cases)
         step = 0
-        for label, col, idx, vmin, vmax, skew, unit, wires, tol in CASES:
+        for label, col, idx, vmin, vmax, skew, unit, wires, tol in cases:
             if quit_all:
                 break
             sc.say(f"--- {label}: block at col {col}, param index {idx}, {vmin}..{vmax} {unit}, skew {skew}")
@@ -133,11 +148,11 @@ def main() -> int:
         result["wire_roundtrip_failures"] = len(wire_bad)
         result["readings"] = n_read
         result["taper_matches"] = n_taper
-        result["verdict"] = ("NO_READINGS" if n_read == 0 else "TAPER_CONFIRMED" if n_taper == n_read and not wire_bad else "TAPER_NOT_CONFIRMED")
+        result["verdict"] = ("SINGLE_STEP" if args.case else "NO_READINGS" if n_read == 0 else "TAPER_CONFIRMED" if n_taper == n_read and not wire_bad else "TAPER_NOT_CONFIRMED")
         sc.say(f"\nWire round-trip failures: {len(wire_bad)}.  Screen readings: {n_read}, matching the taper: {n_taper}.")
         sc.say(f"G4 {result['verdict']}")
         sc.say("\nNow select any OTHER preset on the unit WITHOUT saving, to discard these edits.")
-        return sc.EXIT_OK if result["verdict"] == "TAPER_CONFIRMED" else sc.EXIT_CHECK_FAILED
+        return sc.EXIT_OK if result["verdict"] in ("TAPER_CONFIRMED", "SINGLE_STEP") else sc.EXIT_CHECK_FAILED
     finally:
         result["close"] = sc.close_with_timeout(qc)
         path = sc.write_result(args.out, "g4", result)

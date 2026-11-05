@@ -586,6 +586,23 @@ class G4G6Tests(FakeDeviceCase):
         code, out, data = self.run_script("g6_scenes", ["--slot", "24H", "--firmware", "4.1.0", "--hold", "5"], qc2, stdin=[])
         self.assertEqual(out.count(">>> PHOTO"), 3, out)
 
+    def test_g4_single_step_writes_exactly_one_value(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        code, out, data = self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", "--case", "cab", "--wire", "0.01"], qc, stdin=[])
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(data["verdict"], "SINGLE_STEP")
+        sets = [c for c in qc.calls if isinstance(c, tuple)]
+        self.assertEqual(sets, [("set_param", 0, tp.CAB_COL, tp.CAB_LEVEL_IDX, 0.01)])
+        self.assertIn("-21.82", out)
+        self.assertNotIn(">>> PHOTO", out)
+
+    def test_g4_case_and_wire_must_go_together(self):
+        qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
+        for extra in (["--case", "amp"], ["--wire", "0.5"], ["--case", "amp", "--wire", "1.5"]):
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                self.run_script("g4_taper_check", ["--slot", "24H", "--firmware", "4.1.0", *extra], qc)
+        self.assertEqual([c for c in qc.calls if isinstance(c, tuple)], [])
+
     def test_g4_detects_linear_unit(self):
         qc = self.fake(bp=self.saved_preset(), open_slot=sc.parse_slot("24H"))
         readings = []

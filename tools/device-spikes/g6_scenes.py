@@ -34,8 +34,8 @@ def scene_state(qc, mcp, want_scene: int) -> dict:
     """Switch scene, wait for the device to confirm, read everything relevant back."""
     qc.set_scene(want_scene)
     confirmed = None
-    deadline = time.time() + 3.0
-    while time.time() < deadline:
+    deadline = time.monotonic() + 3.0
+    while time.monotonic() < deadline:
         st = qc.read_state("Scene", timeout_ms=600)
         if st is not None and int(getattr(st, "selected_scene", -1)) == want_scene:
             confirmed = want_scene

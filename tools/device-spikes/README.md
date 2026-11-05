@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 63 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 65 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -139,7 +139,7 @@ Select the G3 test preset on the unit, then:
 & $PY "$S\g4_taper_check.py" --slot 24H --firmware 4.1.0
 ```
 
-It writes known wire values to three parameters on the live buffer and asks what the unit's screen shows for each (9 readings). **Photo mode:** add `--hold 20` and it asks nothing; it sets each value, rings the terminal bell, prints `PHOTO n/9`, and waits 20 seconds so you can photograph the unit, then moves on. Tap the block on the unit first so its parameter is visible. Afterwards, select another preset **without saving**.
+It writes known wire values to three parameters on the live buffer and asks what the unit's screen shows for each (9 readings). **Photo mode:** add `--hold 20` and it asks nothing; it sets each value, rings the terminal bell, prints `PHOTO n/9`, and waits 20 seconds so you can photograph the unit, then moves on. Tap the block on the unit first so its parameter is visible. **Fewest photos (4), one command each:** `--case amp --wire 0.25`, `--case cab --wire 0.01`, `--case cab --wire 1.0`, `--case hpf --wire 0.25`. Each writes ONE value, prints what the taper predicts (and what linear would give), and exits; the edit stays on the unit's live buffer until you select another preset. Tap the block to see its value. Afterwards, select another preset **without saving**.
 
 ### G6: scenes (after G3)
 
