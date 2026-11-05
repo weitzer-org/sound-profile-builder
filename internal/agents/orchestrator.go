@@ -107,7 +107,19 @@ func buildLibrarianStaticCatalog(dictJSON, ampMenu, userCapturesJSON string) str
 // sections (Tone History, Scraper, Constraints). Gemini's implicit prompt
 // caching keys on an identical prompt PREFIX, so any per-run text placed
 // before the catalog makes every run a cache miss. Do not reorder.
+//
+// It ends with LibrarianReminder. Moving the catalog first put the per-run text after the
+// User Capture Library, and on gemini-4-argon that cut how often the Librarian used the
+// user's own captures from 57% to 23% of runs (its prompt's "Prefer User Captures" rule).
+// With the reminder it was 73% at the same checklist score, with the cached prefix intact
+// (docs/plans/2026-11-librarian-quality-results.md). Don't drop it without re-measuring.
 func buildLibrarianContext(staticCatalog, toneResult, scrapeResult string, constraints map[string]interface{}) string {
+	return buildLibrarianContextNoReminder(staticCatalog, toneResult, scrapeResult, constraints) + "\n" + LibrarianReminder
+}
+
+// buildLibrarianContextNoReminder is the catalog-first layout without the trailing reminder:
+// the first cache-friendly layout, kept so evals can compare against it.
+func buildLibrarianContextNoReminder(staticCatalog, toneResult, scrapeResult string, constraints map[string]interface{}) string {
 	return fmt.Sprintf("%sTone History: %s\nScraper: %s\nConstraints: %v", staticCatalog, toneResult, scrapeResult, constraints)
 }
 

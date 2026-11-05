@@ -78,8 +78,8 @@ func TestLibrarianContextOrders(t *testing.T) {
 	if strings.HasPrefix(old, static) || !strings.Contains(old, static) {
 		t.Error("old order must contain the catalog but not start with it")
 	}
-	if len(nw) != len(old) {
-		t.Errorf("same content, different order expected: %d vs %d", len(nw), len(old))
+	if plain := buildLibrarianContextNoReminder(static, "T", "S", c); len(plain) != len(old) {
+		t.Errorf("old order and the no-reminder layout must hold the same text, reordered: %d vs %d", len(plain), len(old))
 	}
 	if nw != buildLibrarianContext(static, "T", "S", c) {
 		t.Error("LibrarianContextNewOrder must equal buildLibrarianContext")
@@ -90,10 +90,21 @@ func TestLibrarianContextVariants(t *testing.T) {
 	static := buildLibrarianStaticCatalog("DICT", "MENU", "UCL")
 	c := map[string]interface{}{"x": 1}
 	prod := buildLibrarianContext(static, "TONE", "SCRAPE", c)
+	if !strings.HasSuffix(prod, "\n"+LibrarianReminder) {
+		t.Errorf("production Librarian context must end with the user-capture reminder: %q", prod)
+	}
+	plain := buildLibrarianContextNoReminder(static, "TONE", "SCRAPE", c)
+	if prod != plain+"\n"+LibrarianReminder {
+		t.Error("production context must be the no-reminder layout plus the reminder")
+	}
 
 	r, err := LibrarianContextVariant("reminder", static, "TONE", "SCRAPE", c)
-	if err != nil || !strings.HasPrefix(r, prod) || !strings.HasSuffix(r, LibrarianReminder) {
-		t.Errorf("reminder must be the production context plus the reminder suffix: %q (%v)", r, err)
+	if err != nil || r != prod {
+		t.Errorf("the reminder variant must equal production: %v", err)
+	}
+	nr, err := LibrarianContextVariant("no_reminder", static, "TONE", "SCRAPE", c)
+	if err != nil || nr != plain {
+		t.Errorf("no_reminder must equal the plain catalog-first layout: %v", err)
 	}
 
 	u, err := LibrarianContextVariant("ucl_last", static, "TONE", "SCRAPE", c)
@@ -113,8 +124,8 @@ func TestLibrarianContextVariants(t *testing.T) {
 		}
 		last = i
 	}
-	if len(u) != len(prod) {
-		t.Errorf("ucl_last must contain exactly the same text as production, reordered: %d vs %d", len(u), len(prod))
+	if len(u) != len(plain) {
+		t.Errorf("ucl_last must contain exactly the same text as the no-reminder layout, reordered: %d vs %d", len(u), len(plain))
 	}
 	if _, err := LibrarianContextVariant("nope", static, "", "", c); err == nil {
 		t.Error("unknown variant must error")

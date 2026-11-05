@@ -129,3 +129,26 @@ says to prefer user captures when they fit, so by its own policy the new order r
 checklist (amp class only) and the judge (doesn't know what the user owns) could not see this.
 Hypothesis (untested): in the old order the User Capture Library sat last before Constraints;
 in the new order the per-run Tone/Scraper text follows it.
+
+## Fix for the user-capture regression (2026-11-05)
+
+Two layouts tested on the same frozen Phase 1 as the second run, 130 Librarian calls each on
+gemini-4-argon, compared with the 128 successful old-order runs from that run (run ~2 hours
+earlier; same inputs). Rule fixed before running: pass if user-capture use is at most 10 points
+below old (paired 95% CI) AND the checklist hard-pass verdict is NOT_WORSE (5-point margin).
+
+| layout | runs using >=1 user capture (old: 57.0%) | verdict | runs passing all hard rules (old: 92.2%) | verdict | spend |
+|---|---|---|---|---|---|
+| catalog first, no reminder (first fix) | 23.1% | WORSE | 85.4% | INCONCLUSIVE | (2nd run) |
+| **reminder**: catalog first + one fixed sentence at the end | **73.1%** (+0.17 [+0.06, +0.30]) | **NOT_WORSE** | **92.3%** | **NOT_WORSE** | $1.51 |
+| ucl_last: User Capture Library moved after the per-run text | 44.6% (-0.12 [-0.27, +0.03]) | INCONCLUSIVE | 85.4% | INCONCLUSIVE | $1.80 |
+
+The reminder passes both criteria and keeps the full cached prefix (avg 29.1K of 31.6K input
+tokens cached across its repeats), so it is now the production layout (`buildLibrarianContext`).
+The captures it adds look like good fits (e.g. `ODS Joe Lead` + `1981 TS808 1` + `Klon Centaur 1`
+for Bonamassa; `66 AC30 JMP OD` for British Invasion). It picks user captures MORE often than the
+old order did, which the prompt's rule asks for; the checklist score is unchanged.
+
+Not yet measured: the reminder inside full pipelines (Librarian-only so far), and whether it shifts
+final preset quality. The pick-distribution test still shows the reminder's picks differ from the
+old order's (+0.075 [+0.030, +0.124]); the difference is mostly the extra user captures.

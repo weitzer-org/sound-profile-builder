@@ -82,23 +82,27 @@ func (o *Orchestrator) RunLibrarian(ctx context.Context, agentConfig map[string]
 
 func fmtConstraints(c map[string]interface{}) string { return fmt.Sprintf("%v", c) }
 
-// LibrarianReminder is the fixed sentence appended by the "reminder" variant. It names the
-// rule by title, not number, because rule numbers differ between prompt versions.
+// LibrarianReminder is the fixed sentence the production Librarian user turn ends with (see
+// buildLibrarianContext). It names the rule by title, not number, because rule numbers differ
+// between prompt versions.
 const LibrarianReminder = "Reminder: before choosing any amp, cab or pedal, check the User Capture Library above and prefer an entry there that closely matches the tonal target (the \"Prefer User Captures\" rule)."
 
 // LibrarianContextVariant builds the Librarian user turn for an EVAL-ONLY prompt-layout
-// variant, used to test fixes for the new order's lower user-capture use (see
-// docs/plans/2026-11-librarian-quality-results.md). Production uses buildLibrarianContext.
+// variant, used to test fixes for the catalog-first order's lower user-capture use (see
+// docs/plans/2026-11-librarian-quality-results.md). Production uses buildLibrarianContext,
+// which is the "reminder" layout.
 //
-//	"reminder": the production (catalog-first) layout plus LibrarianReminder at the end. The
-//	            cached prefix is unchanged; only a short static suffix is added.
-//	"ucl_last": Dictionary and Amp Menu first (cached), then Tone History and Scraper, then
+//	"reminder":    the production layout (catalog first, LibrarianReminder at the end).
+//	"no_reminder": catalog first without the reminder (the first cache-friendly layout).
+//	"ucl_last":    Dictionary and Amp Menu first (cached), then Tone History and Scraper, then
 //	            the User Capture Library, then Constraints -- restoring the library's position
 //	            right before Constraints, at the cost of not caching the library itself.
 func LibrarianContextVariant(variant, staticCatalog, toneResult, scrapeResult string, constraints map[string]interface{}) (string, error) {
 	switch variant {
 	case "reminder":
-		return buildLibrarianContext(staticCatalog, toneResult, scrapeResult, constraints) + "\n" + LibrarianReminder, nil
+		return buildLibrarianContext(staticCatalog, toneResult, scrapeResult, constraints), nil
+	case "no_reminder":
+		return buildLibrarianContextNoReminder(staticCatalog, toneResult, scrapeResult, constraints), nil
 	case "ucl_last":
 		i := strings.LastIndex(staticCatalog, "User Capture Library: ")
 		if i < 0 {
