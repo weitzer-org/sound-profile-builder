@@ -1,0 +1,3 @@
+# Vendored upstream code: keep bytes exactly as upstream (no CRLF conversion on Windows),
+# so tests/test_vendor_pins.py and the runtime pin check see the f634ecd hashes.
+* -text
