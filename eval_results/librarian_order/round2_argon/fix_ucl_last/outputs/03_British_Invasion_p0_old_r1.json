@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM45 (Brit TM45 Patch)"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Otso Bender Mk1 and Rage Booster BEFORE the UK C30 TopBoost amp block so they hit the preamp input directly to tighten the low end and push the mids into authentic 60s British invasion chime.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 cabinet block using a condenser and ribbon mic combination slightly off-axis to emulate the warm, vintage response of a Neumann U67 on Alnico speakers.",
+    "Place the Circular Delay and Spring reverb AFTER the amplifier and cabinet blocks to recreate the vintage WEM Copicat tape echo ambiance and classic studio room space.",
+    "Adjust the input gain staging carefully when switching between the Gibson ES-339 humbuckers and Fender Telecaster single coils so the humbuckers do not overly choke the natural chime and sustain tail of the AC30."
+  ]
+}

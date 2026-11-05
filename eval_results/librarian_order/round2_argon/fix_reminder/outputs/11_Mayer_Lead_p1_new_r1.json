@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use Two Rock SSS EQ1 (No Cab) as the single high-headroom clean/edge-of-breakup amp capture and keep its gain restrained to prevent low-end muddiness.",
+    "Pair the amp capture with the 212 Too Rock G65 cabinet block using an SM57 and Ribbon 121 mic combination to capture both midrange bite and smooth high-end transients.",
+    "Place Exotic Z Boost and Brit Blues before the amp as always-on clean/transparent foundation thickeners.",
+    "Stack Green 808 or Keeley Mod BD-2 3 into the transparent drive before the amp to inject vocal midrange sustain for leads while smoothing out any nasal spike.",
+    "Place Circular Delay and Spring or Studio Plate 70 (ST) after the amp and cab blocks for slapback and lush room ambiance."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Jewel",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain to smooth slide attack dynamics and lengthen decay without prematurely choking subtle vibrato",
+    "Position Facial Fuzz or Green 808 before the amplifier block with high level and lower gain to boost mid-range clarity for dual humbucker slide solos",
+    "Crank gain natively on the US Tweed Basslad Normal Patch amp block for natural Tweed sag and compression, while rolling back the amp Bass control to prevent low-end flub",
+    "Use a short slapback echo setting (120-160 ms) on the Circular Delay with low feedback to preserve precise slide intonation",
+    "Mic the 410 US Basslad PR10 cabinet with an SM57 and engage a high-cut filter between 5.5 kHz and 6.5 kHz to smooth out harsh high-frequency spikes"
+  ]
+}

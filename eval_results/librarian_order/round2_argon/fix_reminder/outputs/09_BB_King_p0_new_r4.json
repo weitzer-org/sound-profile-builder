@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN CK2"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 block immediately after the input to mimic the ES-355 'Lucille' Varitone switch and roll off boomy low-end before hitting the amp.",
+    "Place the Legendary 87 (ST) compressor gently ahead of the amplifier with a slow attack to replicate the natural vocal-like bloom and sustain of a loud Twin Reverb.",
+    "Do not use any overdrive pedals; achieve edge-of-breakup saturation and compression natively by pushing the US TWN Vibrato amplifier block volume and input gain.",
+    "In the 212 US TWN CK2 cab block, use a Dynamic 57 or a combination of dynamic and ribbon mics positioned slightly toward the cap edge to tame piercing high-mid frequencies while keeping the fundamental note thick.",
+    "Place the Spring reverb block after the cab with a low mix and dark tone to capture a snappy vintage studio tank splash without metallic drip."
+  ]
+}

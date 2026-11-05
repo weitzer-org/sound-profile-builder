@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "John Mayer klon",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost (representing the Katana clean boost) or John Mayer klon BEFORE the Brit Blues and TS10 JM Settings captures to stack gain stages without clipping the amp block's input.",
+    "Use the TS10 JM Settings user capture rather than the stock Green 808 block for a more authentic, less stiff midrange push into the Two-Rock amp capture.",
+    "In the 212 Too Rock G65 cabinet block, pair a Dynamic 57 with a Ribbon 121 mic and apply high and low cuts to keep the high-headroom Dumble/Two-Rock style low-end tight and prevent top-end fizz.",
+    "Place the Circular Delay (set for short analog slapback like an Aqua-Puss) and Spring Reverb AFTER the amp and cab blocks to create live room ambiance."
+  ]
+}

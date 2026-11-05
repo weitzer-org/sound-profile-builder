@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Normal",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor at the start of the signal chain with a gentle ratio and high mix to capture a snappy, percussive blues attack.",
+    "Place the Parametric-3 EQ before the amplifier block with a narrow midrange emphasis and low-end cut to emulate a semi-hollow Varitone circuit.",
+    "Rely on pushing the US TWN Normal amplifier block's volume natively for natural output-section bark rather than using an overdrive pedal, avoiding Bright channel harshness.",
+    "Pair an off-axis Dynamic 57 with a Ribbon 121 microphone in the 212 US TWN C12Q 00s cab block to round out the top end and smooth out sharp pick transients.",
+    "Place the Spring reverb after the cab block with a relatively short decay and modest mix so rapid staccato lead bursts remain articulate."
+  ]
+}

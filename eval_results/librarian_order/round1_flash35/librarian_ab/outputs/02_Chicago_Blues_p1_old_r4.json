@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Opto Comp",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block with drive set low and volume high to achieve a warm midrange push without stripping lower-mid sag",
+    "Position a Ribbon 121 mic model off-axis on the cabinet block to smooth top-end transients for Chess Records style Chicago blues tone",
+    "Place the Spring Reverb block after the cab block for authentic pre-1970 American combo ambiance"
+  ]
+}

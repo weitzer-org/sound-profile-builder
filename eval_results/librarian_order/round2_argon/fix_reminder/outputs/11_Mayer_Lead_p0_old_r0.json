@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost (representing the Katana clean boost), Brit Blues (Bluesbreaker MK1), and TS10 JM Settings (or Green 808) BEFORE the Two Rock SSS EQ1 (No Cab) amp capture to stack gain stages.",
+    "When stacking the Bluesbreaker and TS10 drives into the single high-headroom amp capture, back off the Output Level on the drive blocks to prevent digital input clipping.",
+    "In the 212 Too Rock G65 cab block, blend a Dynamic 57 and a Ribbon 121 microphone, and apply high and low cuts to keep the high-headroom platform from sounding boomy or fizzy through FRFR monitors.",
+    "Place the Circular Delay (set for a quick slapback to emulate the Aqua-Puss) and the Spring reverb AFTER the cab block to recreate the live room ambiance."
+  ]
+}

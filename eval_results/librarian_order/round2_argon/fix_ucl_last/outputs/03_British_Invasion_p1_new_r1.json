@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45",
+    "66 AC30 JMP Clean",
+    "AC30ish"
+  ],
+  "mandatory_blocks": [
+    "66 AC30 JMP OD",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The selected '66 AC30 JMP OD' is a full-rig user capture that already includes the cab; if a separate cab block ('212 UK C30 65') is desired for mic customization (e.g., blending a Condenser 67 or Ribbon 160 with a Dynamic 57), consider substituting the native 'UK C30 TopBoost' amp model instead of the full-rig capture.",
+    "Place the 'Rage Booster' (Dallas Rangemaster) and 'Otso Bender Mk1' (Tone Bender MkI capture) BEFORE the amplifier block to push the front end into authentic 60s British saturation.",
+    "If using a capture block, apply a High Cut filter in the Cab block or post-EQ to tame potential single-coil harshness on the Telecaster, as captures lack the interactive Vox Tone Cut circuit.",
+    "Place the 'Circular Delay' (configured as an analog/tape slapback) and 'Spring' reverb AFTER the amp/cab section to provide vintage room ambiance for direct-to-FOH performance."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Bassman 59",
+    "US HP Tweed Twin"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "1981 TS808 1",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor at the very start of the signal chain with parallel mix to elongate slide note decay without squashing pick or finger attack.",
+    "Place the 1981 TS808 1 overdrive capture BEFORE the Fender 57 Deluxe - T8 I4 M12 capture with low gain and a higher output level to tighten up the woofy low-end of the ES-339 humbuckers and push mid-focused singing sustain.",
+    "Optionally place the EP3 pre (V-12 EQ-mid) capture before the amp for authentic Echoplex preamp coloration and mid-focus.",
+    "Since Fender 57 Deluxe - T8 I4 M12 is a full-rig capture, bypass the 112 US DLX Tweed WGS-Q 10s cab block by default, or use the cab block only if swapping to a cabless amp model; if the cab block is used, pair a Dynamic 57 and Ribbon 121 mic blend with high-pass and low-pass filtering.",
+    "Lower the bass on the Tweed amp capture block or use a pre-EQ cut to prevent flubby low-end saturation when using neck or dual humbuckers.",
+    "Place the Circular Delay and Spring (or Studio Plate 70 (ST)) reverb AFTER the amp/cab section for subtle vintage studio room and slapback ambiance.",
+    "Keep the input noise gate threshold very low or off so it does not prematurely choke out natural fading slide trails."
+  ]
+}

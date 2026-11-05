@@ -1,0 +1,90 @@
+[
+  {
+    "Name": "01_SRV_Clean",
+    "Winner": "old-order",
+    "Conf": 0.95,
+    "Ground": "Both presets display an exceptional level of historical grounding for the SRV tone. Preset A effectively leverages the Dumble Steel String Singer (via a Two-Rock SSS capture) and EVM12L speakers. Preset B opts for SRV's other iconic rig: the '64 Fender Vibroverb, specifically noting the use of a 1x15 cabinet to emulate his famous EVM15L speaker swap. Preset B goes a step further in practical application by utilizing a dedicated pre-overdrive Parametric EQ to thin out the low-end and drop the input gain of the ES-339 humbuckers to better approximate the lower-output, chimey characteristics of a Strat/Tele single coil.",
+    "Struct": "Both presets are structurally flawless. The JSON schemas are complete, the 'Scene B' overrides are utilized correctly for parameter mapping, and the basis confidence tags are well-implemented across the blocks. Bypass states logically match their rationales.",
+    "Rationale": "While both presets are masterclasses in tone building and accurately represent two different eras/approaches to SRV's rig (Dumble SSS vs. Vibroverb), Preset B edges out a victory due to its tactical approach to the user constraints. Forced to use an ES-339 for an undeniably single-coil target tone, Preset B places an EQ block at the front of the chain specifically to drop the input level and aggressively high-pass the humbuckers, transforming the guitar's front-end response to behave more like a vintage Stratocaster hitting a TS808."
+  },
+  {
+    "Name": "02_Chicago_Blues",
+    "Winner": "old-order",
+    "Conf": 0.95,
+    "Ground": "Preset A shows excellent historical and tonal grounding for a 'Chicago Blues' target by utilizing slapback delay (crucial for capturing the vintage Chess Records/50s era vibe), spring reverb, and a Blues Driver to emulate natural, asymmetrical small-amp breakup. Preset B relies on a Klon, an LA-2A style optical compressor, and a vintage digital reverb, which leans heavily into modern, generic 'blues rock' (more John Mayer than Muddy Waters) rather than authentic 1950s Chicago blues.",
+    "Struct": "Both presets are structurally sound. They correctly utilize the schema, incorporating legitimate 'value_b' overrides for Scene B (Lead) and accurate basis tags. Both perfectly manage the formatting of 'Bypass' as a toggle to properly dictate block active/inactive states.",
+    "Rationale": "Preset A captures the target aesthetic with much better historical specificity. The inclusion of a 120ms slapback delay into a Tweed Deluxe capture is a classic, period-accurate studio technique for vintage blues. Additionally, Preset A's acoustic divergence is exceptionally well thought out: rolling off the treble and boosting the bass/mids for the Telecaster to tame the 'ice-pick' frequencies, while cutting the input gain and bass for the ES-339 to prevent humbucker flub. Preset B's signal chain is overly modern and processed for a 1950s target."
+  },
+  {
+    "Name": "03_British_Invasion",
+    "Winner": "new-order",
+    "Conf": 4.5,
+    "Ground": "Both presets show excellent grounding in the historical gear of the British Invasion, citing the Vox AC30, Dallas Rangemaster, Tone Bender, and Alnico Blue speakers. Preset B gets a nod for mentioning the 'reversed Cut control' on Vox amps, which is a great piece of specific historical and community knowledge.",
+    "Struct": "Preset B has notable structural/schema issues: it assigns a 'Gain' parameter to a Noise Gate block to act as an input pad, which is functionally incorrect, and it completely omits the actual microphone names (e.g., Dynamic 57, Ribbon 121) from the Cabinet block's mic selection dropdowns. Preset A structures its parameters correctly and includes the mic models in the Cab block. Note that Preset A leaves the Fuzz block bypassed in both scenes, but explicitly states this in the rationale so the user can activate it manually.",
+    "Rationale": "Preset A is chosen because it avoids the structural and parameter hallucinations present in Preset B. While Preset B's grounding and historical notes are slightly more detailed (specifically regarding the Vox Cut control), its execution fails by inventing a Gain knob on a Noise Gate and missing the microphone types in the Cab block. Preset A delivers a complete, internally consistent, and properly formatted preset that a user could load and play immediately."
+  },
+  {
+    "Name": "04_Southern_Rock",
+    "Winner": "new-order",
+    "Conf": 0.95,
+    "Ground": "Both presets demonstrate exceptional historical grounding. Preset A leans into the classic live Southern Rock rig (a pushed Tweed Bassman, favored by many including the Allman Brothers live), while Preset B astutely references a studio secret (the Tweed Champ, famously used by Duane Allman on 'Layla'). Both intelligently adapt the EQ and drive staging for Telecasters vs. ES-339s.",
+    "Struct": "Preset A is structurally pristine, using exact Quad Cortex formatting for Mic positions ('Cap Edge, 1.0 in, 45-deg Off-Axis') and standard 0.0-10.0 slider scales for its algorithmic amp. Preset B impressively attempts to format a Factory Capture using relative dB values (which is correct for QC Captures) and notes this in the rationale, but it maps it to the 'Amplifier' block type rather than 'Neural Capture', and its Mic position strings ('Cap Edge, 1 inch distance, 0 degrees') are slightly conversational rather than exact UI strings. Preset B also appends '%' to Mix and Feedback sliders, whereas A uses standard floats.",
+    "Rationale": "Both presets are masterclasses in AI tone generation, showing deep understanding of how to build a tone (down to bypassing the Green 808 in Scene A and engaging it in Scene B, and handling single coil vs humbucker low-end). Preset A wins slightly on structural execution and formatting accuracy for the Quad Cortex UI (mic string conventions, proper algorithmic amp parameter scaling, and omitting string symbols like '%' in float values)."
+  },
+  {
+    "Name": "05_Clapton",
+    "Winner": "old-order",
+    "Conf": 0.95,
+    "Ground": "Preset A demonstrates superb historical grounding, referencing the JTM45/100, Rangemaster (Beano era), and Clyde McCoy/Fuzz Face (Cream era). It accurately notes the tendency for vintage Marshall circuits to get 'flubby' with humbuckers and implements a thoughtful input pad. Preset B relies on a 'cocked wah' trick for its lead tone, which is historically associated with Michael Schenker or Mick Ronson, not Eric Clapton (whose signature 'Woman Tone' relies on rolling the guitar's tone knob down, not a stationary wah).",
+    "Struct": "Both presets are structurally well-formed with no malformed JSON or missing fields. Preset A expertly manages multiple blocks, utilizing the Bypass toggle correctly for its fuzz and wah blocks while utilizing the Rage Booster and Amp gain parameters for its Scene B transitions. Preset B is also structurally sound but much more sparse.",
+    "Rationale": "Preset A is vastly superior in both scope and historical accuracy. It builds a comprehensive 1960s Clapton rig that allows a user to access Beano tones (Rangemaster + JTM45) and Cream tones (Wah + Fuzz), correctly utilizing scene changes to boost the front end. Preset B's reliance on a cocked wah for Clapton leads misses the historical mark, and its rig is far less versatile."
+  },
+  {
+    "Name": "07_Edge",
+    "Winner": "old-order",
+    "Conf": 5,
+    "Ground": "Preset A exhibits outstanding historical grounding. It correctly identifies Edge's use of the Boss FA-1 (substituting it with an EQ boost) and intentionally places the delay block before the AC30 amp model so the repeats compress naturally into the preamp, which is the defining secret of his rhythmic sound. Preset B is decent but defaults to a standard post-amp delay and relies on a generic compressor.",
+    "Struct": "Preset A has clean, standard parameters, though it entirely omits Scene B overrides (resulting in a static preset). Preset B successfully utilizes Scene B overrides for a lead boost but severely hallucinates the Cabinet block's parameters by concatenating mic type, placement, and distance into a single compound string (e.g., 'Dynamic 57 - Cap Edge, 1 inch distance...').",
+    "Rationale": "Preset A is the winner due to its superior domain knowledge. The decision to run the delay into the front of the amplifier to replicate the SDD-3000 -\u003e AC30 interaction shows phenomenal target-specific reasoning. While Preset B offers better scene dynamics, its hallucination of compound UI strings for the microphone parameters makes it structurally flawed compared to A's clean data."
+  },
+  {
+    "Name": "08_EVH",
+    "Winner": "old-order",
+    "Conf": 0.9,
+    "Ground": "Both presets correctly identify the foundational EVH gear (Plexi, Greenbacks, Variac sag simulation via high Master Volume, Phase 90/95, Flanger). Preset B includes slightly more specific historical nods (Sunset Sound plate, woody 800Hz midrange peak).",
+    "Struct": "Both presets are structurally sound and make good use of the basis tags and Scene B overrides. Preset B includes a pipeline Critic warning flagging a mismatch between the delay rationale ('tape-style') and the chosen model ('Circular Delay'). This is a correct and expected safety feature of the pipeline when a reasoning agent hallucinates a model capability.",
+    "Rationale": "Preset B is much more practical as a playable preset. Preset A leaves the Flanger active (Bypass: Off) in both Scene A and Scene B with a high feedback setting, which would drown the core tone in a constant jet-engine sweep. Preset B wisely includes the Flanger for historical accuracy but leaves it bypassed by default. Furthermore, Preset B's choice to use the Amp block's output Level parameter for a pure volume boost in Scene B is a cleaner approach to solos than Preset A's complex cascading gain adjustments. Preset B's minor hallucination about the delay type was successfully caught and flagged by the internal critic, which shows the system working as intended without breaking the preset itself."
+  },
+  {
+    "Name": "09_BB_King",
+    "Winner": "new-order",
+    "Conf": 0.9,
+    "Ground": "Both presets correctly identify the Fender Twin Reverb as the core platform for B.B. King's clean, high-headroom tone. Preset B mentions the Gibson Lucille's Varitone circuit (excellent historical detail) but fundamentally misunderstands how it works by boosting 1.6kHz to 'simulate a notch filter' (a notch cuts frequencies, it doesn't boost them).",
+    "Struct": "Preset B contains an unaddressed Critic warning in the final HTML payload regarding a mismatch between the Reverb block's rationale (which claims to emulate a spring tank) and its actual block model (Vintage Digital). Preset A correctly structures its Neural Capture reverb block with the standard Capture parameters (Gain, Bass, Mid, Treble, Volume).",
+    "Rationale": "Preset A is the superior choice because it avoids the internal inconsistencies found in Preset B. Preset B's attempt to simulate a Varitone notch by boosting a single frequency is technically contradictory, and it features an active Critic warning about a mismatch between the reverb rationale and the selected model. Preset A provides a logical, consistent mid-pushed EQ approach for B.B.'s vocal-like phrasing and correctly formats its capture block without structural errors."
+  },
+  {
+    "Name": "10_Slash",
+    "Winner": "old-order",
+    "Conf": 0.95,
+    "Ground": "Both presets correctly identify the Marshall JCM800 (Brit 2203) and Vintage 30 cabinet as the foundation for a Slash-style tone. Preset A, however, goes further by including a Wah block (essential for Slash's signature lead style) and a noise gate (practical for high-gain modeler usage). While Preset B historically justifies relying purely on amp gain (nodding to Slash's modded S.I.R. Marshalls), Preset A's use of a low-gain SD-1 is a highly accurate community standard for replicating that modded amp feel and tightening the low-end on a stock JCM800 model.",
+    "Struct": "Both presets are structurally sound with correct JSON schema, no missing fields, and properly formatted HTML block tables. Bypass states in both correctly map 'Bypass: On' to mean the block is bypassed/inactive in Scene A, and 'Off' meaning it is engaged in Scene B.",
+    "Rationale": "Preset A is the superior choice because it provides a much more complete and usable rig for a guitarist. The inclusion of the Wah pedal is absolutely critical for a 'Slash' preset. Additionally, putting a noise gate at the front of a high-gain JCM800 chain is best practice on the Quad Cortex. Preset A's strategy of using a drive pedal to tighten the amp for leads is extremely common and results in a highly playable preset, whereas Preset B's minimalist 4-block approach feels a bit bare for a flagship artist preset."
+  },
+  {
+    "Name": "12_Bonamassa",
+    "Winner": "new-order",
+    "Conf": 0.95,
+    "Ground": "Preset A exhibits outstanding historical grounding. It specifically references Joe Bonamassa's signature rig elements, such as stacking a Klon (Myth Drive) and a TS808 (Green 808) into a Dumble ODS, his standard 375ms delay time, and exact live FOH microphone choices (an SM57-style and M160-style ribbon blend). Preset B provides a solid generic Dumble tone but lacks the hyper-specific artist details that A includes.",
+    "Struct": "Both presets are structurally perfect. They both correctly utilize 'value_b' for Scene B overrides, include the new 'basis' tags appropriately, and have consistent mapping between the JSON payload and the HTML table. Preset A's inclusion of a Noise Gate specifically because of the dual-drive stacking shows excellent DSP foresight.",
+    "Rationale": "Preset A wins because it goes beyond a generic 'blues rock Dumble' preset and dials in the specific pedals (Klon + TS808) and FOH miking techniques (SM57 + M160 blend) that Bonamassa actually uses. Furthermore, Preset A's acoustic divergence (compensating the single coil Telecaster with slightly more gain and rolled-back tone/high-cut compared to the humbucker) is logical, clearly explained in the rationale, and flawlessly implemented in the parameters."
+  },
+  {
+    "Name": "13_Hard_Rock_Blues",
+    "Winner": "new-order",
+    "Conf": 0.85,
+    "Ground": "Both presets cite accurate gear for a hard rock/blues tone, such as the 'Brit Plexi 100 Patch' and classic overdrive pairings. However, Preset A hallucinates 'Range Rverb' as a Neural Capture; in reality, the Quad Cortex cannot capture time-based effects like reverb. Preset B is better grounded in DSP reality with its standard Spring Reverb.",
+    "Struct": "Preset B is missing the essential 'Bypass' parameter for its Noise Gate, Amplifier, Cabinet, Delay, and Reverb blocks in the structured payload, making it structurally incomplete. Preset B also uses 'High Pass' and 'Low Pass' for the Cab block, whereas the standard Quad Cortex terminology is 'Low Cut' and 'High Cut' (which Preset A correctly uses). Preset A includes a complete set of Bypass states for all blocks.",
+    "Rationale": "Despite Preset A's hallucination about a Reverb Neural Capture, it provides a much more structurally sound and complete JSON payload. Preset B fails to include Bypass toggles for the majority of its blocks, which represents a significant schema omission. Preset A successfully tracks Scene A/B toggles, correctly labels the cab block filters, and provides a fully populated block list."
+  }
+]

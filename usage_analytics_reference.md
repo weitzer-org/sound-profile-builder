@@ -112,7 +112,8 @@ was run for it.
   "callType": "Tone Historian",               // agent role
   "refId": "",                                // not populated yet — see "What's NOT covered"
   "model": "gemini-3.1-pro-preview",
-  "inputTokens": 1345,
+  "inputTokens": 1345,                        // FULL prompt size, cached tokens included
+  "cachedInputTokens": 1000,                  // subset of inputTokens served from Gemini's prompt cache; omitted when zero
   "outputTokens": 210,
   "thinkingTokens": 0,                        // omitted when zero
   "latencyMs": 2431,
@@ -121,6 +122,12 @@ was run for it.
   "errorKind": "rate_limit"                   // present only when success is false
 }
 ```
+
+`costUsd` bills `(inputTokens - cachedInputTokens)` at the input rate and
+`cachedInputTokens` at the model's cached rate (`geminiPriceTable.cachedInput`;
+equal to the input rate, i.e. no discount, wherever the real cached rate is not
+yet verified). Cache hit rate = `sum(cachedInputTokens) / sum(inputTokens)`.
+Records written before this field existed simply lack it (read as 0).
 
 ## How to query it
 
@@ -175,9 +182,9 @@ snippet calling it directly rather than reinventing the listing/reading logic.
 {
   "date": "2026-07-29",
   "totalCalls": 42, "successCount": 40, "failureCount": 2,
-  "totalInputTokens": 58000, "totalOutputTokens": 9200, "totalThinkingTokens": 4100,
+  "totalInputTokens": 58000, "totalCachedInputTokens": 41000, "totalOutputTokens": 9200, "totalThinkingTokens": 4100,
   "totalCostUsd": 0.87, "avgLatencyMs": 2103.4,
-  "byCallType": { "Tone Historian": { "calls": 12, "successCount": 12, "failureCount": 0, "inputTokens": 15000, "outputTokens": 2200, "costUsd": 0.20 }, "...": "..." },
+  "byCallType": { "Tone Historian": { "calls": 12, "successCount": 12, "failureCount": 0, "inputTokens": 15000, "cachedInputTokens": 11000, "outputTokens": 2200, "costUsd": 0.20 }, "...": "..." },
   "byModel":    { "gemini-3.1-pro-preview": { "...": "..." } },
   "byProvider": { "gemini": { "...": "..." }, "openllm": { "...": "..." } },
   "byErrorKind": { "rate_limit": 2 }

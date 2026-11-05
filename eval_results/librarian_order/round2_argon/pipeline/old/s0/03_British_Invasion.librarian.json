@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost amp block to push the EL84 front-end into classic British chime and saturation.",
+    "Place the Parametric-8 EQ BEFORE the amp block to roll off sub-bass mud and tighten the low-end response, especially when switching to the Gibson ES-339 humbuckers.",
+    "Use the 212 UK C30 65 cabinet block with a blend of a dynamic mic and a ribbon or condenser mic, applying a smooth high-cut filter in the cab block to prevent the treble booster from sounding piercing.",
+    "Place the Spring reverb block AFTER the cabinet to provide natural room ambiance for direct-to-FOH playing."
+  ]
+}

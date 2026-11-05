@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Jewel",
+    "Circular Delay",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz and Green 808 overdrive upfront before the amplifier block to naturally drive the Tweed input section for singing slide sustain",
+    "Position the Jewel compressor at the very start of the chain with moderate threshold to smooth attack transients and maintain even slide decay",
+    "Set Circular Delay to a short slapback setting (120-160ms) after the cab block to add vintage spatial room air without muddying intonation",
+    "Use Range Rverb at the end of the chain for authentic vintage spring reverb ambiance appropriate for 1950s tweed circuits",
+    "Filter low frequencies slightly at the cab stage or trim the amp gain/bass controls to avoid low-end mud when using humbucker pickups"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Back off amp input gain and use a high-pass/low-pass filter around 4kHz-5kHz to smooth out Vox top-end sizzle.",
+    "Place delay blocks after the amplifier and cabinet to maintain clear, uncompressed repeats.",
+    "Ensure delay Tempo Sync is enabled and set to 1/8D (dotted-eighth) division to capture classic rhythmic pulse."
+  ]
+}

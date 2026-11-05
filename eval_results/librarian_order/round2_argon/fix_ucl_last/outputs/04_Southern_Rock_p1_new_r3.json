@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that 'Fender 57 Deluxe - T8 I4 M12' is a full-rig user capture; if using it directly, you may bypass the separate '112 US DLX Tweed WGS-Q 10s' cab block, or alternatively use 'US DLX 58' (factory capture) paired with the '112 US DLX Tweed WGS-Q 10s' cab block.",
+    "When using the native '112 US DLX Tweed WGS-Q 10s' cab block, blend a Dynamic 57 mic with a Ribbon 121 mic and apply a high-pass filter to tame low-end flub from the Gibson ES-339 humbuckers.",
+    "Place the 'Legendary 87 (ST)' compressor at the very start of the signal chain using parallel mix to elongate slide note decay without squashing attack.",
+    "Place 'Green 808' BEFORE the amp with low gain and high level to tighten the low-end before hitting the Tweed circuit and push the midrange for singing slide sustain.",
+    "Place 'Circular Delay' (configured for vintage slapback) and 'Spring' or 'Studio Plate 70 (ST)' reverb AFTER the amp/cab section for classic studio room ambiance.",
+    "Keep the Input Gate threshold very low so it does not prematurely choke the natural fading trail of slide notes."
+  ]
+}

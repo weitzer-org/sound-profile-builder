@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Iba Green overdrive before the amplifier block to tighten low frequencies and boost mid-range push",
+    "Set delay mix around 80% to 82.5% to achieve unity gain balance between dry signal and delay repeats",
+    "Apply a high-frequency cut around 5.5kHz on the cab block to smooth out upper-treble chime transients from the Top Boost circuit"
+  ]
+}

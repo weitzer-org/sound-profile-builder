@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Brit Blues",
+    "Parametric-3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost amp block to drive the front end into classic British chime and saturation.",
+    "Insert the Parametric-3 EQ block BEFORE the amp to roll off low-end mud from the Gibson ES-339 humbuckers and tighten the bass response.",
+    "In the 212 UK C30 65 cab block, pair a Condenser mic (emulating the Neumann U67) with a Ribbon mic, and engage the cab's high-cut filter to tame any piercing upper-midrange fizz from the treble booster.",
+    "Place the Studio Plate 70 (ST) reverb at the end of the chain to provide essential room ambiance for direct-to-FOH playing."
+  ]
+}

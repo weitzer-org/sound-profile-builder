@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "OG TS808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The '1964 Fender Super Reverb' user capture is a full_rig capture (amp + cab baked in); do not place a separate cab block after it unless bypassing cab simulation.",
+    "Alternatively, if a Vibroverb flavor is desired, the user library also contains 'Fender Vibroverb 64 Custom SRV' as a full_rig capture, though only one amp block may be used due to single_amp_mode.",
+    "Place the 'Green 808' (or the 'OG TS808' user capture) BEFORE the amplifier block configured as a clean/mid-focused volume push to drive the front end of the Super Reverb.",
+    "Place the 'Spring' reverb block AFTER the amp/cab section with a modest mix and short decay to provide authentic vintage Texas blues room ambiance."
+  ]
+}

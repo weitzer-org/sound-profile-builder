@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock Cleanish",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier capture with low gain and high level output to act as a mid-push boost.",
+    "Utilize a post-amp Parametric EQ to boost upper-mid punch around 2.5 kHz and clean up low-end boominess characteristic of Dumble/Two-Rock captures.",
+    "Pair a Dynamic 57 mic on-axis with a Ribbon 121 mic off-axis to smooth out high-end transients on the Celestion G12-65 cabinet."
+  ]
+}

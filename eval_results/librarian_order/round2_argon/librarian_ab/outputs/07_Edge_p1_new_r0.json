@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Chief SD1",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 at the very beginning of the chain to lock in consistent dynamics for rhythmic arpeggios.",
+    "Place the Chief SD1 and Parametric-3 EQ BEFORE the amplifier; use the EQ to push the upper-midrange and output level to emulate the classic Korg SDD-3000 preamp boost.",
+    "Configure the 212 UK C30 65 cab block with a Dynamic 57 mic and engage the cab's high-cut filter to tame top-end digital fizz and emulate the traditional Vox AC30 Cut control.",
+    "Place the Circular Delay AFTER the amp and cab blocks rather than in front to keep the dotted-eighth and quarter-note rhythmic repeats clean and distinct, and engage delay modulation for the signature 80s chorus-like warble.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide baseline direct-to-FOH spatial ambiance."
+  ]
+}

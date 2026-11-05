@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the amplifier input stage to drive the high-headroom Hiwatt clean channel.",
+    "Roll back low frequencies on the amp block slightly to keep the low end tight when engaged with heavy fuzz.",
+    "Use high-pass filtering at 120Hz or higher on the Studio Plate 70 (ST) reverb to prevent low-end mud during long sustained lead lines."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the signal chain to provide optical compression and a lively transient snap into the front of the amp.",
+    "Place the Parametric-8 EQ block BEFORE the amplifier to sculpt the midrange (emulating the Gibson Varitone filter) and use its output level to cleanly push the amp into natural saturation without using an overdrive pedal.",
+    "Push the US TWN Vibrato volume natively for authentic high-headroom blues edge-of-breakup grit, keeping the signal path free of diode-clipping overdrive pedals.",
+    "In the 212 US TWN C12Q 00s cab block, pair a Dynamic 57 mic with a Ribbon 121 mic and apply a high-cut filter to keep the top end round, vocal, and free of ice-pick highs.",
+    "Place the Spring reverb at the end of the chain after the cab block with a subtle mix to preserve the dry, articulate pick attack."
+  ]
+}

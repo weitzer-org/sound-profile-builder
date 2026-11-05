@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive BEFORE the Brit 2203 amp with gain set low and output volume cranked as a front-end mid boost.",
+    "Use Graphic-9 EQ to boost mid frequencies between 800Hz and 1kHz for solo lifts and aggressive mid punch.",
+    "Position Circular Delay post-amplifier and cab block for clear ambient trails without muddying amp saturation.",
+    "Engage High-Pass Filter around 80 Hz and Low-Pass Filter around 6.5 kHz on the cab block to tame low-end boominess and top-end fizz.",
+    "Position the Shure SM57 mic model off-axis on the cabinet block to smooth out aggressive high-frequency transients."
+  ]
+}

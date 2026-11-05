@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Brit Blues",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Single amp mode is active: use 'Two Rock SSS EQ1 (No Cab)' as the sole amplifier block, keeping its gain clean so all saturation comes from the front-end pedals.",
+    "Pair the amp head capture with the '212 Too Rock G65' cabinet block using a blend of Dynamic 57 and Ribbon 121 mics to balance midrange bite and smooth out high-end transients.",
+    "Place 'Exotic Z Boost' at the start of the drive chain as a clean volume lift (standing in for the Keeley Katana), followed by 'Green 808' stacked into 'Keeley Mod BD-2 3' or 'Brit Blues' to smooth out the Tube Screamer's midrange hump.",
+    "Watch output levels when stacking multiple drive blocks into the high-headroom clean amp capture; trim the output of the second drive block slightly to avoid unnatural digital clipping on transient attacks.",
+    "Place 'Circular Delay' after the cab block for a quick slapback echo, feeding into 'Studio Plate 70 (ST)' at the end of the chain for lush room depth without washing out the dry attack."
+  ]
+}

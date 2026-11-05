@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65",
+    "112 UK C15 Blue"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Legendary 87 (ST)",
+    "Chief SD1",
+    "Graphic-9",
+    "Parametric-8",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that '66 AC30 JMP Clean' is a full-rig capture from your User Capture Library; if using it, bypass the separate cab block, or pair an amp-only model like 'UK C30 TopBoost' with '212 UK C30 65' or '112 UK C15 Blue'.",
+    "Place the compressor ('Chief CS3' or 'Legendary 87 (ST)') at the very start of the signal chain to keep rhythmic arpeggios consistent and locked in.",
+    "Place 'Graphic-9' or 'Parametric-8' immediately before the amp block to boost upper-mids and overall level, simulating the Korg SDD-3000 preamp push and pick attack.",
+    "Place 'Chief SD1' before the amp for additional midrange drive when transitioning from chiming cleans to overdriven rhythm or lead sections.",
+    "Place 'Circular Delay' AFTER the amp and cab blocks rather than in front of the amp to prevent rhythmic dotted-eighth repeats from mushing together.",
+    "Engage modulation within the delay block to recreate the signature chorus-like warble of the Korg SDD-3000 and Deluxe Memory Man.",
+    "Use a high-cut filter in the cab block or post-amp EQ to emulate the traditional Vox AC30 'Cut' control and tame high-end digital fizz."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive before the amplifier block with low gain and boosted level for lead mid-push",
+    "Position the Chief BD2 prior to the amplifier for smooth secondary gain staging",
+    "Utilize a dynamic mic off-axis on the 212 Too Rock G65 cab block to smooth out upper-transient edge",
+    "Place the Studio Plate reverb at the very end of the signal path to maintain baseline direct-to-FOH spatial depth"
+  ]
+}

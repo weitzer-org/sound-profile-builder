@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Set the Watt D103 Normal clean on the edge of breakup to serve as a high-headroom pedal platform without mushy internal clipping.",
+    "Place the Fuzz Pi BEFORE the amp, and stack the TW Tube Drive immediately AFTER the Fuzz Pi (still before the amp) to tame top-end fizz, compress transients, and restore midrange punch.",
+    "Pair the 412 Watt S4123 cabinet with a Dynamic 57 and Condenser 87 microphone combination to replicate the classic studio mic blend.",
+    "Place the Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block, engaging low-cut filtering on the reverb to prevent low-mid buildup from the fuzz."
+  ]
+}

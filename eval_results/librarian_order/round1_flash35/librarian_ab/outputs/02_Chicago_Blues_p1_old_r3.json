@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Opto Comp (S/C)",
+    "Vintage Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 boost before the amplifier block to push midrange harmonics with low drive and high volume.",
+    "Place the Opto Comp early in the signal chain to smooth out transient attacks while preserving dynamic response.",
+    "Position the Vintage Spring Reverb after the cabinet block to replicate classic early Fender combo room ambiance.",
+    "If using the full-rig capture Fender 57 Deluxe - T8 I4 M12, ensure secondary cab blocks are bypassed to prevent double-cab filtering."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain to add sustain and smooth out the pick attack for both single-coil and humbucker guitars.",
+    "Run the Fuzz Pi BEFORE the TW Tube Drive (used as a clean/mild boost in place of the Colorsound Power Boost) and Parametric-3 EQ; boosting the mids immediately after the fuzz is critical to prevent the Big Muff mid-scoop from disappearing in the mix and to smooth out high-gain fizz before hitting the high-headroom Hiwatt.",
+    "Set the Watt D103 Normal right on the edge of breakup so it has a touch of natural power-tube compression to absorb the fuzz without digital harshness.",
+    "On the 412 Watt S4123 cabinet block, pair a Dynamic 57 with a Condenser 87 or Ribbon mic and apply a high cut in the cab block to tame any piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay (emulating the Binson Echorec) and Studio Plate 70 (ST) after the amp/cab section, preferably in a parallel split path or with an elevated pre-delay on the plate reverb so the initial pick transient punches through the massive ambient wash."
+  ]
+}

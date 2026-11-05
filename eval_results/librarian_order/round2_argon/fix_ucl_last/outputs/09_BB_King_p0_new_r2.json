@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "US Twin '70 C1-4",
+    "212 US Twin '65"
+  ],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 block immediately at the start of the chain to emulate the ES-355 'Lucille' Varitone filter (Position 2 or 3) using a narrow mid-frequency notch and a gentle low-mid bump, while also rolling off excessive sub-bass to prevent a boomy neck humbucker response.",
+    "Place the Legendary 87 (ST) compressor ahead of the amplifier with a slow attack and gentle ratio to replicate the natural vocal sustain and room bloom of a loud Twin Reverb.",
+    "Strictly avoid adding any overdrive pedals; per the Pure Headroom Rule, push the US TWN Vibrato input drive and master volume natively to achieve authentic edge-of-breakup compression and transient snap.",
+    "In the 212 US TWN C12Q 00s cab block, pair a dynamic and ribbon microphone pushed slightly toward the speaker cap edge to smooth out piercing upper-midrange frequencies while keeping the fundamental note thick.",
+    "Place the Spring reverb block at the end of the chain with a conservative mix, reduced dwell, and darkened tone to capture a classic studio tank splash without metallic artifacts on high-register bends."
+  ]
+}

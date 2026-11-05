@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Rage Booster",
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with low gain and high level to push upper-mids without muddying low end",
+    "Place Facial Fuzz early in the signal path prior to the boost/amp blocks for optimal guitar volume knob cleanup response",
+    "Pair a Dynamic 57 mic on-axis with a Ribbon 121 mic off-axis on the cabinet to smooth upper-mid transients",
+    "Apply high-pass filtering around 80 Hz and low-pass filtering around 8 kHz post-cabinet to control high-frequency fizz and low-end rumble"
+  ]
+}

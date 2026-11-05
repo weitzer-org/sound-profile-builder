@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Super Reverb"
+  ],
+  "mandatory_blocks": [
+    "Fender Vibroverb 64 Custom SRV",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Crying Clyde Wah",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Crying Clyde Wah first in the signal chain before any drive pedals.",
+    "Place Green 808 BEFORE the amp capture with low drive and high output level to act as a mid-focused clean boost, pulling back the amp capture block output level if needed to prevent digital clipping.",
+    "Since Fender Vibroverb 64 Custom SRV is a full_rig capture, you may optionally bypass the 212 Too Rock EV Vintage 79 cab block, or if utilizing the cab block for its EVM12L speaker characteristics, pair a Dynamic 57 mic with a condenser mic and engage a high-cut filter to smooth out piercing high-end transients.",
+    "Place the Spring reverb block AFTER the amp and cab blocks with a subtle mix for authentic vintage Texas blues ambiance."
+  ]
+}

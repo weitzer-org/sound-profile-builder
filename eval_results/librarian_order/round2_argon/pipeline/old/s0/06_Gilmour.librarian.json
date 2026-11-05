@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Boss BD-2",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use Watt D103 Normal set to high-headroom edge-of-breakup as the single amplifier platform.",
+    "Route the RR Big Muff 1976 Original (from User Capture Library) or Fuzz Pi BEFORE the amp, and immediately follow the fuzz with TW Tube Drive, Boss BD-2, or Parametric-3 BEFORE the amp to boost the midrange and restore vocal lead definition instead of getting scooped out.",
+    "Pair the amp with the 412 Watt S4123 cab block, using a dynamic SM57-style mic slightly off-axis blended with a condenser mic, and apply an aggressive high-cut filter on the cab block to emulate the darker, woody midrange of vintage WEM Starfinder Fane Crescendo speakers.",
+    "Place Circular Delay and Studio Plate 70 (ST) AFTER the cab block, and slightly attenuate the amp output level before hitting the reverb to prevent digital clipping when stacking fuzz and boost."
+  ]
+}

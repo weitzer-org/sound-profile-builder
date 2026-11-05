@@ -1,0 +1,411 @@
+{
+ "calibration": [
+  {
+   "query": "05_Clapton",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "07_Edge",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "09_BB_King",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "10_Slash",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "11_Mayer_Lead",
+   "sample": 0,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "12_Bonamassa",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "01_SRV_Clean",
+   "sample": 0,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "02_Chicago_Blues",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "03_British_Invasion",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "13_Hard_Rock_Blues",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "04_Southern_Rock",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  }
+ ],
+ "head_to_head": [
+  {
+   "query": "13_Hard_Rock_Blues",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "13_Hard_Rock_Blues",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "02_Chicago_Blues",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "02_Chicago_Blues",
+   "sample": 2,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "02_Chicago_Blues",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "04_Southern_Rock",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "04_Southern_Rock",
+   "sample": 1,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "04_Southern_Rock",
+   "sample": 2,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "05_Clapton",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "05_Clapton",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "05_Clapton",
+   "sample": 2,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "07_Edge",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "07_Edge",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "07_Edge",
+   "sample": 2,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "10_Slash",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "10_Slash",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "10_Slash",
+   "sample": 2,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "01_SRV_Clean",
+   "sample": 2,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "01_SRV_Clean",
+   "sample": 1,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "01_SRV_Clean",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "03_British_Invasion",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "03_British_Invasion",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "03_British_Invasion",
+   "sample": 2,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "06_Gilmour",
+   "sample": 0,
+   "winner": "first",
+   "verdicts": [
+    "A",
+    "B"
+   ]
+  },
+  {
+   "query": "06_Gilmour",
+   "sample": 2,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "08_EVH",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "08_EVH",
+   "sample": 2,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "09_BB_King",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "09_BB_King",
+   "sample": 2,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "09_BB_King",
+   "sample": 0,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  },
+  {
+   "query": "11_Mayer_Lead",
+   "sample": 2,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "12_Bonamassa",
+   "sample": 0,
+   "winner": "inconsistent",
+   "verdicts": [
+    "Equal",
+    "A"
+   ]
+  },
+  {
+   "query": "12_Bonamassa",
+   "sample": 1,
+   "winner": "inconsistent",
+   "verdicts": [
+    "A",
+    "A"
+   ]
+  },
+  {
+   "query": "12_Bonamassa",
+   "sample": 2,
+   "winner": "second",
+   "verdicts": [
+    "B",
+    "A"
+   ]
+  }
+ ]
+}

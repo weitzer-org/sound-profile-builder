@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor at the very beginning of the signal chain with a blended parallel mix to elongate slide sustain without squashing natural pick or finger attack.",
+    "Place the Green 808 overdrive BEFORE the Fender 57 Deluxe - T8 I4 M12 capture with low drive and high output level to tighten the low-end of the Gibson ES-339 humbuckers and push the midrange for singing slide sustain.",
+    "Because Fender 57 Deluxe - T8 I4 M12 is a full-rig capture, the downstream Architect may bypass or omit the 112 US DLX Tweed WGS-Q 10s cab block if cab simulation is kept active on the capture, or use the cab block with a dynamic 57 and ribbon 121 mic blend and aggressive low-cut filtering to prevent Tweed low-end flub.",
+    "Place the Circular Delay and Spring (or Studio Plate 70 (ST)) reverb AFTER the amp and cab blocks to provide subtle vintage slapback and classic studio room/plate ambiance."
+  ]
+}

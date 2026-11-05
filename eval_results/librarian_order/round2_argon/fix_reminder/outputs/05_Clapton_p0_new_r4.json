@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Marshall Super Lead 100"
+  ],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ at the very start of the signal chain (pre-drive and pre-amp) with a steep high-cut and a midrange bump to simulate a rolled-off humbucker tone capacitor ('Woman Tone'), especially helpful when using the brighter Telecaster or ES-339.",
+    "Place the Crying Clyde Wah and Facial Fuzz early in the signal chain before the amplifier.",
+    "Place the Rage Booster right before the Brit TM45 Patch amplifier block to tighten the low-end and prevent flubbiness when the high frequencies are rolled back.",
+    "Pull back the bass control on the Brit TM45 Patch amp block to prevent low-mid muddiness when feeding it a rolled-off front-end signal.",
+    "On the 412 Brit 60B GB 71 cabinet block, blend a Dynamic 57 and a condenser or ribbon mic with a warm high-cut filter to smooth out the top end.",
+    "Place the Spring reverb after the cabinet block at a subtle mix to provide baseline room ambiance for direct-to-FOH playing."
+  ]
+}

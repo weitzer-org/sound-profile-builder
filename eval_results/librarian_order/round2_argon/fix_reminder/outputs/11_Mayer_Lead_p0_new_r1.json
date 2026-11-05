@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "John Mayer klon",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost, Brit Blues, or John Mayer klon before the TS10 JM Settings in front of the Two Rock SSS EQ1 (No Cab) amp capture to replicate the stacked Trio drive staging.",
+    "Back off the output level on the drive blocks when stacking into the Two Rock SSS EQ1 (No Cab) capture to prevent digital input clipping while preserving high-headroom dynamics.",
+    "Pair the Two Rock SSS EQ1 (No Cab) head capture with the 212 Too Rock G65 cab block, blending a Dynamic 57 and a Ribbon 121 microphone with low and high cuts applied to control boominess and high-end fizz.",
+    "Place the Circular Delay (emulating the slapback analog BBD delay of the Aqua-Puss) and the Spring reverb after the amp and cab blocks to create live Trio room ambiance."
+  ]
+}

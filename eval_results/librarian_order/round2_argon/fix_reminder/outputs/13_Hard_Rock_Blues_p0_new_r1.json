@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [
+    "Brit 2203",
+    "Chief BD2"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Iba Green",
+    "Crying Clyde Wah",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Legendary 87 (ST)",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Crying Clyde Wah first in the signal chain, followed by Facial Fuzz and Iba Green before the Brit Plexi 100 Patch amplifier block to tighten the vintage low-end and push the front end.",
+    "Use the EP3 pre (V-12 EQ-mid) user capture before the amp to replicate the authentic Maestro Echoplex EP-3 preamp coloration, while using the native Circular Delay block post-cab for the actual tape echo time-based repeats.",
+    "Configure the 412 Brit 60A GB75Hz 89 cab block with a dynamic SM57 and ribbon 121 microphone blend, applying high and low cuts to tame FRFR fizz and boominess.",
+    "Place the Legendary 87 (ST) compressor post-cab to simulate vintage 1970s and 80s studio console and tape compression.",
+    "Place Circular Delay and Studio Plate 70 (ST) at the end of the chain for era-correct studio ambiance without washing out the dry attack."
+  ]
+}

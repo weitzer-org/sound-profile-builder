@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier",
+    "Korg SDD-3000"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the overdrive block before the amp block to push edge-of-breakup saturation",
+    "Set the delay mix high near unity scaling to keep delay repeats prominent",
+    "Apply a high-frequency roll-off low-pass filter on the cab block to smooth out upper-treble AC30 chime",
+    "Position dynamic mic slightly off-axis to tame harsh high-end transients"
+  ]
+}

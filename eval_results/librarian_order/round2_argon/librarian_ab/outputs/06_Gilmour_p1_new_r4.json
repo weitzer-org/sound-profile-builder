@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom at the very beginning of the signal chain to smooth out pick attack and add sustain before hitting the fuzz.",
+    "Run the Fuzz Pi directly into the TW Tube Drive (or Parametric-3) BEFORE the amplifier; use the TW Tube Drive set to low gain or the Parametric-3 to boost the midrange and smooth out high-end fizz from the Big Muff circuit.",
+    "Pair the Watt D103 Normal with the 412 Watt S4123 cabinet, utilizing a combination of Dynamic 57 and Condenser 87 (or Ribbon 121) microphones, and apply a high-cut filter on the cab block to tame any piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cabinet block, ideally on a parallel split path or with an elevated pre-delay on the plate reverb so the initial guitar transient punches through the massive ambient wash."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp capture with low drive and high output level boost to tighten low-end response and push the front-end cleanly.",
+    "Place the 212 Too Rock EV cabinet block immediately after the amplifier capture using a Shure SM57 mic model off-axis for smooth upper-mid push.",
+    "Add a native Spring Reverb block late in the signal path after the cab to achieve authentic vintage 3D spatial dimension."
+  ]
+}

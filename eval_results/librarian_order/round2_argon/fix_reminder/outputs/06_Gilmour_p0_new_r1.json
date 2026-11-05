@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "RR Big Muff 1976 Original",
+    "TW Tube Drive",
+    "Graphic-9",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Set the Watt D103 Normal right at the edge of breakup so that subtle power-amp compression smooths out the fuzz transients without losing high-headroom clarity.",
+    "Place the 4-Comp Custom at the very beginning of the signal chain before the drive blocks to add sustain and even out pick attack.",
+    "Use the RR Big Muff 1976 Original capture from the User Capture Library as the core sustain fuzz, and place the TW Tube Drive or Graphic-9 immediately AFTER the fuzz (before the amp) to push the vocal midrange and prevent the scooped fuzz from getting lost in the mix.",
+    "Pair the 412 Watt S4123 cabinet with a dynamic and condenser microphone blend (referencing SM57 and U87 characteristics) and apply a high-cut filter to tame any top-end fizz from the fuzz.",
+    "Place the MX Flanger after the drive section, followed by the Circular Delay and Studio Plate 70 (ST) at the end of the chain for a lush, expansive stadium ambiance."
+  ]
+}

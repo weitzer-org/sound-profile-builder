@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the Two Rock SSS EQ1 (No Cab) user capture as the single high-headroom clean amplifier platform, paired directly with the 212 Too Rock G65 cabinet block.",
+    "In the 212 Too Rock G65 cabinet block, blend a Dynamic 57 microphone on-axis with a Ribbon 121 microphone to capture both articulate midrange snap and smooth low-end warmth, applying low and high cuts to prevent boominess or fizz.",
+    "Place the Exotic Z Boost (or Myth Drive) first in the drive chain as a transparent clean volume and fatness push.",
+    "Stack the Brit Blues (Bluesbreaker) into the TS10 JM Settings capture BEFORE the amp block; keep output levels balanced when stacking to avoid digital input clipping on the amp capture.",
+    "Place the Circular Delay (emulating the analog bucket-brigade slapback of the Aqua-Puss) and the Spring reverb AFTER the amplifier and cabinet blocks for classic American blues-rock room ambiance."
+  ]
+}

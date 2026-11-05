@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 boost pedal before the amplifier to add focused mid-range push and gain sustain for solo lifts.",
+    "Use a Ribbon 121 mic off-axis on the 4x12 cabinet to smooth out high transients and capture a warm, vocal top-end.",
+    "Apply a High-Pass Filter (HPF) around 80-100Hz in the cabinet block or utility EQ to clean up low-end mud when rolling down guitar tone knobs."
+  ]
+}

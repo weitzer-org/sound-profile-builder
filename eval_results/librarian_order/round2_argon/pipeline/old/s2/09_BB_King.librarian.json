@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Jewel",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ block BEFORE the amplifier to sculpt the out-of-phase Gibson Varitone mid-scoop and bass cut.",
+    "Place the Jewel compressor BEFORE the amplifier to mimic a built-in limiter and push the amp input for natural sustain without using an overdrive pedal.",
+    "Push the US TWN Vibrato amplifier block volume natively to achieve loud, compressed edge-of-breakup saturation rather than adding any drive pedals.",
+    "In the 212 US TWN C12Q 00s cabinet block, blend a Dynamic 57 or Dynamic 421 with a Ribbon 160 mic and apply a firm high-cut to prevent ice-picky highs.",
+    "Place the Spring reverb block AFTER the cabinet with a short dwell for authentic vintage American blues ambiance."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Dumbbell ODS amp block as a low-gain, high-output boost to tighten low-end flub from humbuckers and accentuate the vocal midrange.",
+    "The Way Huge Overrated Special is a modified Green Rhino (Tube Screamer circuit) with a 500Hz mid-frequency control; use the Green 808 or stack it with Myth Drive to achieve a similar pushed, mid-focused overdrive.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 cabinet block to authentically replicate the massive, un-clipped low end and clear midrange projection of a 2x12 Electro-Voice EVM12L speaker setup.",
+    "Blend a Dynamic 57 mic on-axis with a Ribbon 160 mic on the cab block to capture both the articulate bite and smooth, warm midrange.",
+    "Place the Circular Delay and Spring reverb AFTER the amp and cab blocks for spacious lead ambiance and baseline FOH room feel."
+  ]
+}

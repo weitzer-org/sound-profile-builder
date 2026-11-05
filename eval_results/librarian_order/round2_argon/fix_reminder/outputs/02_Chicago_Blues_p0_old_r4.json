@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain before the overdrive to add subtle vintage tape-like compression and sustain.",
+    "Place the Green 808 BEFORE the US DLX 58 capture block with low gain and higher level to push the front end of the amp without causing harsh digital clipping.",
+    "Rely primarily on the US DLX 58 capture block's Input Gain parameter and reduce its Bass parameter to prevent the low end from getting flubby when pushed, especially when switching to the Gibson ES-339 humbuckers.",
+    "In the 112 US DLX Tweed WGS-Q 10s cab block, select a Ribbon 121 microphone and position it slightly off-axis to emulate the warm, smooth transient response of an RCA 77-DX ribbon mic, and engage a generous Low Cut to keep the bottom end tight.",
+    "Place the Spring reverb block AFTER the cab block with a short decay and rolled-off high end to emulate the warm Chess Records echo chamber without introducing metallic clang."
+  ]
+}

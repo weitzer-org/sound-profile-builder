@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or 1981 TS808 1 BEFORE the amp block as a low-drive, high-level mid-push to tighten the low end for humbuckers without causing digital input fizz.",
+    "Note that 'ODS Joe Lead' is a full-rig user capture of Joe Bonamassa's Dumble Overdrive Special; if you pair it with the '212 Too Rock EV Vintage 79' cab block for dual-mic blending (Dynamic 57 + Ribbon 160), ensure you do not double-cab Filter the tone.",
+    "Place Circular Delay and Studio Plate 70 (ST) AFTER the amplifier and cabinet section for ambient spatial depth."
+  ]
+}

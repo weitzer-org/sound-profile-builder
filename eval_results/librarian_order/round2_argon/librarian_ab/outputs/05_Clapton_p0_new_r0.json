@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Brit 1962 Jumped",
+    "Freeman Treble Booster Capture"
+  ],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-8",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah at the very beginning of the signal chain before any fuzz or booster blocks.",
+    "Place the Facial Fuzz early in the signal chain so it interacts directly with the guitar pickups.",
+    "Place the Parametric-8 at the start of the pre-amp chain to sculpt high frequencies and midrange resonance if simulating a rolled-off tone knob for the Woman Tone.",
+    "Place the Rage Booster immediately before the Brit TM45 Patch amplifier block to tighten up the low end and push the front end without flubbing out.",
+    "Pair a Dynamic 57 and a Ribbon 160 or condenser microphone on the 412 Brit 60B GB 71 cabinet block, rolling off harsh high-end frequencies to smooth out the vintage British crunch.",
+    "Place the Studio Plate 70 (ST) at the very end of the chain after the cabinet block to provide essential room ambiance for direct-to-FOH operation."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier with low Drive and high Level to provide a mid-focused clean volume push.",
+    "Pad the input level on the Fender amp model to prevent early digital input clipping and preserve pure clean headroom.",
+    "Position the SM57 microphone off-axis on the cab block to smooth out aggressive top-end transients.",
+    "Add a native Spring or Vintage Reverb post-amp/cab to establish essential baseline vintage ambiance."
+  ]
+}

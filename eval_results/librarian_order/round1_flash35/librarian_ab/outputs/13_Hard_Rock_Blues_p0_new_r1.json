@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place overdrive and treble booster blocks before the amp block to boost mid-range sustain and shape input saturation.",
+    "Position a dynamic Shure SM57 microphone off-axis on the 4x12 cabinet to smooth high-frequency transients."
+  ]
+}

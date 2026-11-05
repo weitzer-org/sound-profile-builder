@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 block BEFORE the Brit 2203 87 amp capture to act as a transparent mid-boost and volume push (mimicking the Boss GE-7 trick) to drive the hot-rodded 80s stadium rock lead tone into singing sustain without diode-clipping coloration.",
+    "Apply a low-cut filter in the pre-EQ or Cab block to prevent low-mid muddiness when using the Gibson ES-339 neck humbucker into the boosted Marshall capture.",
+    "Pair the 412 Brit 60B V30 95 cabinet with a Dynamic 57 and Dynamic 421 (or Ribbon 121) microphone combination to capture the classic bite and midrange punch.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb AFTER the amp and cab blocks for a clean, studio-style post-amp ambiance that preserves pick attack, and monitor the output level to prevent clipping from the pre-amp mid boost."
+  ]
+}

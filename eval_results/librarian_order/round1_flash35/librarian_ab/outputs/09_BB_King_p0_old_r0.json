@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Keep Gain on the US TWN Vibrato between 3.5 and 4.0 to maintain clean headroom while pushing volume natively for natural power amp warmth.",
+    "Place a Graphic-9 EQ block before the amplifier to elevate midrange (800 Hz - 1 kHz) to capture a rich, vocal lead tone.",
+    "Place a Spring Reverb block post-cab to emulate authentic 1960s Fender blackface spring reverb ambiance."
+  ]
+}

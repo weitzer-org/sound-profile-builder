@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "John Mayer klon",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use 'Two Rock SSS EQ1 (No Cab)' as the single mandatory amplifier block to capture the high-headroom Two-Rock/SSS tonal foundation, pairing it directly with the '212 Too Rock G65' cabinet block.",
+    "In the '212 Too Rock G65' cab block, blend a Dynamic 57 and a Ribbon 121 microphone and apply high and low cuts to keep the high-headroom low end tight and the top end smooth.",
+    "Place 'Exotic Z Boost' (or 'John Mayer klon') first in the drive chain as a clean volume push, followed by 'Brit Blues' for light edge-of-breakup grit, stacking into 'TS10 JM Settings' for mid-pushed lead tones before the amp.",
+    "Watch input levels when stacking drive captures into the 'Two Rock SSS EQ1 (No Cab)' block; back off the output level on the drive blocks to prevent unnatural digital clipping.",
+    "Place 'Circular Delay' (voiced as an analog BBD slapback for the Aqua-Puss) and 'Spring' reverb after the amp and cab blocks to recreate the live room and vintage spring ambiance."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Zila Open CL80 19",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "1981 TS808 1",
+    "Klon Centaur 1",
+    "Green 808",
+    "Myth Drive",
+    "Crying Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "ODS Joe Lead in the User Capture Library is a full-rig capture of a 50W Dumble Overdrive Special lead channel previously owned by Joe Bonamassa; if using it as a full rig, bypass the cab block, or pair with 212 Zila Open CL80 19 / 212 Too Rock EV Vintage 79 if using a separate cab.",
+    "Place the Crying Wah first in the signal chain before any overdrive blocks.",
+    "Place the overdrive (1981 TS808 1 or Klon Centaur 1 user captures, or native Green 808 / Myth Drive) BEFORE the amp block as a mid-focused boost, keeping input drive conservative so the amp capture does not clip harshly.",
+    "Way Huge Overrated Special is a modified 808-style circuit with a 500Hz mid control; use Green 808 or 1981 TS808 1 to cover this mid-hump role.",
+    "Use a Dynamic 57 and a Ribbon 121 mic on the cab block and apply a firm Low Cut to prevent neck humbucker muddiness in the lower-midrange.",
+    "Place Circular Delay and Studio Plate 70 (ST) in series AFTER the amp and cab to recreate the lush stage ambiance."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ block at the very start of the signal chain to simulate a rolled-off guitar tone capacitor (steep high-cut with a slight resonant bump before the cutoff) and apply a low-cut to prevent the neck pickup from muddying the vintage Marshall front-end.",
+    "Place the Crying Clyde Wah and Facial Fuzz before the Brit TM45 Patch amplifier block; use the fuzz gently to add vocal, singing sustain.",
+    "Use a combination of Dynamic 57 and Ribbon 160 microphones pushed slightly off-axis on the 412 Brit 60B GB 71 cabinet block, and engage the cab low-cut to tighten up the loose vintage Plexi/JTM45 low-end.",
+    "Place the Spring reverb block after the cabinet for baseline vintage room ambiance."
+  ]
+}

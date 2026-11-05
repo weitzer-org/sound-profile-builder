@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Graphic-9 at the very start of the signal chain before any drives with a steep high-cut filter and a upper-mid bump to simulate a rolled-off guitar tone capacitor for the classic Woman Tone.",
+    "Place Crying Clyde Wah and Facial Fuzz before the amplifier.",
+    "Use Rage Booster right before the Brit Plexi 100 Patch amp block to tighten the low-end and prevent flubbiness when the highs are rolled back.",
+    "Push the Brit Plexi 100 Patch volume and gain high to replicate uncompressed KT66/EL34 power-tube saturation, and pull back the bass control slightly to avoid low-mid muddiness.",
+    "On the 412 Brit 60B GB 71 cabinet block, blend a Dynamic 57 and a Ribbon 160 or Condenser mic, applying an aggressive high-cut filter to keep the top end smooth and vocal.",
+    "Place the Spring reverb block at the end of the chain after the cabinet for baseline FOH room ambiance."
+  ]
+}

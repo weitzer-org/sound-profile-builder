@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the Tweed amp block as a low-drive, high-level boost to push front-end harmonic bloom for slide guitar.",
+    "Place the Facial Fuzz pedal first in the signal chain before any compressors or buffers to maintain touch sensitivity and impedance interaction.",
+    "Apply a subtle low-pass filter around 6 kHz in the cabinet block to smooth out upper-mid harshness when hitting the cranked Tweed model with humbuckers."
+  ]
+}

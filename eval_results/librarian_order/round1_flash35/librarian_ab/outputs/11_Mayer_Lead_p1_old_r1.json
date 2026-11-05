@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Analogman TS-808 TV 1",
+    "Keeley Mod BD-2 3",
+    "TR KOTyellow Boost SC",
+    "John Mayer Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Keeley Mod BD-2 3 before the Analogman TS-808 TV 1 to allow for gain stacking, providing a smoother, more compressed lead tone.",
+    "Use the TR KOTyellow Boost SC at the end of the drive chain but before the amp to act as a clean volume jump for solos.",
+    "Position the SM57 mic close to the grille and slightly off-axis on the 212 Too Rock G65 to capture the characteristic mid-range punch of the G12-65 speakers.",
+    "Engage the John Mayer Spring Reverb with a moderate mix to provide the classic American boutique ambiance characteristic of the Two-Rock sound."
+  ],
+  "verified_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65",
+    "Analogman TS-808 TV 1",
+    "Keeley Mod BD-2 3",
+    "TR KOTyellow Boost SC",
+    "John Mayer Spring Reverb"
+  ]
+}

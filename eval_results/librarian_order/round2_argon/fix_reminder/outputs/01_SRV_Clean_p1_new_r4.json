@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "1964 Fender Super Reverb",
+    "Fender Vibroverb 64 Custom SRV",
+    "US SPR Vibrato"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 (or the 1981 TS808 1 user capture) BEFORE the Two Rock SSS EQ1 (No Cab) capture block as a clean volume and midrange push with low drive and high output level.",
+    "Pair the Two Rock SSS EQ1 (No Cab) amp capture with the 212 Too Rock EV Vintage 79 cabinet block to authentically replicate the massive, uncompressed Dumble Steel String Singer headroom through Electro-Voice EVM12L speakers.",
+    "Inside the 212 Too Rock EV Vintage 79 cab block, use a Dynamic 57 mic slightly off-axis blended with a Ribbon 121 mic to smooth out the pushed high-end transients.",
+    "Place the Spring reverb block AFTER the cabinet with a low mix and short decay to provide vintage Fender-style ambiance without washing out the percussive attack.",
+    "Because single_amp_mode is active, secondary amplifiers like the 1964 Fender Super Reverb and Fender Vibroverb 64 Custom SRV have been dropped to maintain a single-amp signal path."
+  ]
+}

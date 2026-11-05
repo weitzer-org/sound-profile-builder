@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 block at the very start of the signal chain to simulate a passive guitar tone capacitor roll-off with a steep high-cut and slight resonant peak for a vocal 'Woman Tone', while also applying a low-cut to prevent the dimed Plexi low-end from flubbing out.",
+    "Place the Crying Clyde Wah and Facial Fuzz (or Rage Booster) BEFORE the Brit Plexi 100 Patch amp block to gently push the front end for singing, vocal sustain.",
+    "In the 412 Brit 60B GB 71 cab block, blend a Dynamic 57 and a Ribbon 160 or Condenser 67 style mic pushed slightly off-axis to smooth out high-end fizz, and engage the cab's low-cut filter to keep the Gibson ES-339 neck humbucker tight.",
+    "Place the Spring reverb block at the end of the chain after the cab to provide baseline direct-to-FOH room ambiance."
+  ]
+}

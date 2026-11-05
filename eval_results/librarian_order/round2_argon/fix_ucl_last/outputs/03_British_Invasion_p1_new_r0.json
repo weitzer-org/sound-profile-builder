@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45",
+    "66 AC30 JMP OD",
+    "AC30ish"
+  ],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "112 UK C15 Blue"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the 66 AC30 JMP Clean user capture as the single primary amp foundation; since it is a full-rig capture, bypass the 112 UK C15 Blue cab block unless switching to a native amp model like UK C30 TopBoost.",
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the amp capture to push the front end into authentic 1960s British edge-of-breakup and raspy fuzz saturation.",
+    "If routing through the 112 UK C15 Blue cab block, blend a condenser or ribbon mic with a dynamic mic and engage the cab High Cut filter to tame any ice-picky top end on the Telecaster single coils.",
+    "Place the Circular Delay and Spring Reverb AFTER the amp/cab section; set the delay to a short, low-mix single-repeat slapback to thicken the vintage room ambiance."
+  ]
+}

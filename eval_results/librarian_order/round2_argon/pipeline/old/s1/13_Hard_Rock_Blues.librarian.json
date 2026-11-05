@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Green 808",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain, followed by the Facial Fuzz and Green 808 before the Brit Plexi 100 Patch amplifier.",
+    "Use the Green 808 with low drive and a higher output level to push the midrange of the Plexi circuit for lead breaks.",
+    "In the 412 Brit 60A GB75Hz 89 cab block, blend a dynamic 57 mic with a ribbon 121 mic and engage a high-cut filter to smooth out top-end fizz on direct FRFR systems.",
+    "Place the Circular Delay and Spring reverb after the cabinet block to provide tape-style echo and baseline spatial ambiance."
+  ]
+}

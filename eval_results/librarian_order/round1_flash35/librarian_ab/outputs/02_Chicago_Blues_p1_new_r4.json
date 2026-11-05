@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Opto Comp (S/C)",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with minimal drive and high level to serve as a warm midrange push for blues solos.",
+    "Place the Opto Comp block early in the signal path to maintain organic dynamic response without squashing picking sensitivity.",
+    "Place the Spring Reverb block after the cabinet block to replicate classic pre-1970 American amp spring tank ambiance.",
+    "Utilize a ribbon microphone model positioned off-axis on the cabinet block to reproduce the smooth transients of the RCA 77-DX ribbon mic."
+  ]
+}

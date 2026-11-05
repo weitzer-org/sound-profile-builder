@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Marshall Silver Jubilee 2555"
+  ],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 block BEFORE the Brit 2203 87 amp capture to act as a transparent mid-boost and clean volume push, mimicking the Boss GE-7 trick to drive the JCM800 into singing AFD-style sustain.",
+    "Apply a low-cut filter in the pre-amp EQ or cab block to prevent the Gibson ES-339 humbuckers from getting muddy in the low-mids when boosted.",
+    "Use a Dynamic 57 and Dynamic 421 (or Ribbon 121) mic pairing on the 412 Brit 60B V30 95 cabinet to capture the classic biting yet full studio rock speaker response.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb AFTER the amp and cab blocks for clean, studio-style post-amp spatial ambiance without blurring the pick attack."
+  ]
+}

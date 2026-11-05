@@ -49,16 +49,17 @@ func evalNoFallback() bool {
 //
 // Every attempt is recorded, including failed and truncated ones, so a retry is never hidden.
 type CallRecord struct {
-	Agent          string `json:"agent"`
-	AttemptModel   string `json:"attempt_model"`          // the model name sent in this request
-	ServedModel    string `json:"served_model,omitempty"` // resp.ModelVersion; empty if the API returned no response
-	FinishReason   string `json:"finish_reason,omitempty"`
-	Success        bool   `json:"success"`
-	Error          string `json:"error,omitempty"`
-	InputTokens    int32  `json:"input_tokens,omitempty"`
-	OutputTokens   int32  `json:"output_tokens,omitempty"`
-	ThinkingTokens int32  `json:"thinking_tokens,omitempty"`
-	LatencyMs      int64  `json:"latency_ms"`
+	Agent             string `json:"agent"`
+	AttemptModel      string `json:"attempt_model"`          // the model name sent in this request
+	ServedModel       string `json:"served_model,omitempty"` // resp.ModelVersion; empty if the API returned no response
+	FinishReason      string `json:"finish_reason,omitempty"`
+	Success           bool   `json:"success"`
+	Error             string `json:"error,omitempty"`
+	InputTokens       int32  `json:"input_tokens,omitempty"`
+	CachedInputTokens int32  `json:"cached_input_tokens,omitempty"` // subset of InputTokens served from the prompt cache
+	OutputTokens      int32  `json:"output_tokens,omitempty"`
+	ThinkingTokens    int32  `json:"thinking_tokens,omitempty"`
+	LatencyMs         int64  `json:"latency_ms"`
 	// Grounded is true when the response carries Google Search grounding evidence: at least one
 	// web search query or grounding chunk in Candidate.GroundingMetadata. A request can ask for
 	// the GoogleSearch tool and still get Grounded=false (the model chose not to search, or
@@ -113,6 +114,7 @@ func NewCallRecord(agent, attemptModel string, latencyMs int64, resp *genai.Gene
 	rec.Grounded, rec.SearchQueries = responseGrounding(resp)
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
+		rec.CachedInputTokens = resp.UsageMetadata.CachedContentTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
 	}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Keep pre-amp gain low to preserve clean headroom for authentic B.B. King style dynamics.",
+    "Place the Jewel compressor first in the signal chain to smooth out pick dynamics and add sustain without adding digital distortion.",
+    "Place the Parametric-8 EQ post-amp to shape mid-range response and tame harsh upper-treble frequencies.",
+    "Disable the bright switch on the US Twin Vibrato block to avoid overly sharp transients with humbucker pickups."
+  ]
+}

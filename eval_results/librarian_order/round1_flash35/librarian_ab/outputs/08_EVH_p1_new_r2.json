@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger before the amp block to recreate early 80s brown sound modulation interaction.",
+    "Position the Graphic-9 EQ after the amplifier block to boost 800 Hz and 1.6 kHz mids for dynamic solo lifts.",
+    "Set the Shure SM57 microphone slightly off-axis on the Greenback cab to smooth high-frequency transients."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Brit 2203"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "1981 TS808 1",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Crying Clyde Wah first in the signal chain, followed immediately by Facial Fuzz so the fuzz sees a direct signal path before any buffered or mid-pushed drives.",
+    "Place the 1981 TS808 1 capture BEFORE the Brit Plexi 100 Patch amp as a clean volume and midrange push for blues-rock sustain.",
+    "Place the EP3 pre (V-12 EQ-mid) capture just before the amp block to replicate the classic Maestro Echoplex EP-3 preamp coloration.",
+    "Use a Dynamic 57 mic on the 412 Brit 60A GB75Hz 89 cab block and engage the cab low cut and high cut filters to tighten the sub-bass and smooth harsh top-end fizz.",
+    "Place Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block to provide vintage 70s arena depth without washing out the dry attack."
+  ]
+}

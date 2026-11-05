@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Jewel",
+    "Circular Delay",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor at the very front of the signal chain to smooth slide attack dynamics and lengthen sustain.",
+    "Position the Facial Fuzz and Green 808 before the amplifier block to boost midrange clarity and drive the Tweed circuit.",
+    "Position a Dynamic 57 microphone on-axis to capture classic vintage Tweed upper-mid bite.",
+    "Place the Circular Delay and Range Rverb post-amplifier/cabinet to provide vintage spatial room air without obscuring slide intonation."
+  ]
+}

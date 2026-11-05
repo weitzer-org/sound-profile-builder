@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt Custom Clean",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the amp block to push the high-headroom Hiwatt clean platform naturally.",
+    "Apply high-pass filtering at 80Hz and low-pass filtering at 6.5kHz on the cabinet block to shave off sub-bass rumble and harsh top-end fuzz fizz.",
+    "Set pre-delay on Studio Plate 70 (ST) between 35-50ms with a low-cut filter engaged to maintain note definition during heavy fuzz passages."
+  ]
+}

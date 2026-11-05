@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' is a full-rig user capture of a Joe Bonamassa Dumble Overdrive Special, or pair a native 'Dumbbell ODS' amp block with the '212 Too Rock EV Vintage 79' cabinet.",
+    "Place the 'Green 808' BEFORE the amplifier block with low drive and high output level to tighten the low end of the Gibson ES-339 humbuckers and push the Dumble midrange without causing input fizz.",
+    "Blend a Dynamic 57 on-axis with a Ribbon 160 mic on the '212 Too Rock EV Vintage 79' cab block to capture the vocal midrange projection and smooth high-end roll-off.",
+    "Place the 'Circular Delay' and 'Studio Plate 70 (ST)' AFTER the amp and cab blocks to provide a lush, studio-grade ambient tail for direct-to-FOH performance."
+  ],
+  "verified_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79",
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ]
+}

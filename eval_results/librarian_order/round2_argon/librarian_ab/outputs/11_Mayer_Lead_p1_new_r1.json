@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [
+    "Tone-Stack Classic R35",
+    "Newcomer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost at the front of the chain as a clean boost to emulate the Keeley Katana.",
+    "Stack the Green 808 into the Brit Blues (or Keeley Mod BD-2 3 capture) BEFORE the amp block to smooth out the Tube Screamer midrange spike while driving the clean Two-Rock capture.",
+    "Keep the Two Rock SSS EQ1 (No Cab) amplifier block clean and generate sustain from the stacked drive pedals to avoid low-end muddiness.",
+    "Pair the 212 Too Rock G65 cabinet with a dynamic 57 and a Ribbon 121 mic off-axis to balance bite and warm low-end.",
+    "Place the Circular Delay (emulating analog slapback) and Reverb blocks AFTER the cab for lush spatial depth."
+  ]
+}

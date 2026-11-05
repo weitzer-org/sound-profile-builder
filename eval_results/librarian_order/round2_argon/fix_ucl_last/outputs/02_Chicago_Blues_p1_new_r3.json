@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and Chief BD2 BEFORE the US DLX 58 capture block to drive the front end naturally rather than pushing the capture's internal input gain.",
+    "Insert a Parametric-3 EQ block BEFORE the amp capture or engage the Cab block's High-Pass Filter to tighten up the inherently loose, wooly sub-bass of the small Tweed circuit.",
+    "In the 112 US DLX Tweed WGS-Q 10s cab block, pair a dynamic microphone with a ribbon microphone blended lower in the mix to capture vintage warmth without making the tone overly dark or muddy.",
+    "Place the Spring reverb block AFTER the cab block with minimal pre-delay and a rolled-off tone to achieve authentic 1950s American blues room and tank ambiance."
+  ]
+}

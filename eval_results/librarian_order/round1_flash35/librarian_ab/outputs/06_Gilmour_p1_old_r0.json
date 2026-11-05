@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Position Graphic-9 after Fuzz Pi to boost mid-range frequencies, keeping the Big Muff thick and present in the mix.",
+    "Apply low-pass filtering on the cabinet block around 5.5 kHz to tame high-end harshness from fuzz transients.",
+    "Place Studio Plate 70 (ST) at the end of the chain with a low mix ratio to add space without cluttering fuzz sustain."
+  ]
+}

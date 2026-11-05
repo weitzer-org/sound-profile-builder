@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz, Green 808, and Rage Booster before the amplifier block to drive the front end dynamically.",
+    "Use dynamic mic positioning off-axis on the cabinet to smooth high-end transients.",
+    "Gain-stage the amp output volume carefully to prevent clipping into downstream ambient reverb blocks."
+  ]
+}

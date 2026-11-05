@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Opto Comp (S/C)",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier with low drive and high level to provide a warm midrange push without stripping away lower-mid sag.",
+    "Drive the US DLX 58 block volume directly to achieve natural 5E3 tube compression and dynamic edge-of-breakup saturation.",
+    "Position a ribbon microphone off-axis on the 1x12 speaker cabinet to smooth transient treble for a classic Chicago blues tone.",
+    "Place the Spring Reverb post-amp/cab with a light mix setting to maintain dry studio intimacy."
+  ]
+}

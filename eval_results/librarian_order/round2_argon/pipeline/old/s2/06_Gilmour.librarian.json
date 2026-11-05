@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Set the Watt D103 Normal clean on the edge of breakup to act as a high-headroom pedal platform without clipping heavily before the fuzz hits it.",
+    "Place the RR Big Muff 1976 Original (or Fuzz Pi) BEFORE the amp as the core fuzz voice.",
+    "Stack the TW Tube Drive (or Exotic Z Boost) immediately AFTER the Big Muff and BEFORE the amp to compress high-end fizz, restore midrange punch, and replicate the Colorsound Power Boost / Tube Driver smoothing role.",
+    "Pair the Watt D103 Normal with the 412 Watt S4123 cabinet block mic'd with a Dynamic 57 and Condenser 87 combination.",
+    "Place the Circular Delay AFTER the amp and cab to emulate the Binson Echorec magnetic drum delay repeat structure.",
+    "Place the Studio Plate 70 (ST) at the end of the signal chain for stadium plate wash, engaging its low-cut filter to prevent bass buildup from the fuzz."
+  ]
+}

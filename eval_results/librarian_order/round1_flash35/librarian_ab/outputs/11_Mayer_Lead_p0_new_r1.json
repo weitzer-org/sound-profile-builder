@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block as a mid-focused boost with low drive and elevated output level",
+    "Stage the Chief BD2 ahead of the amp block to serve as a secondary gain stage for dynamic crunch",
+    "Position the Shure SM57 dynamic microphone on-axis against the speaker cone for clear transient punch",
+    "Apply high-pass filtering and low-mid reduction post-amplifier to prevent woolly sub-bass buildup inherent to D-style clean circuits"
+  ]
+}

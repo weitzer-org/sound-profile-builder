@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "MK3 Silicon Fuzz",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and MK3 Silicon Fuzz before the amp block in the signal chain.",
+    "Apply a high-pass filter around 80Hz–100Hz on the cabinet block to control sub-bass bloom and prevent low-end mud when rolling back guitar volume/tone controls.",
+    "Utilize baseline Studio Plate 70 (ST) reverb at the end of the chain to provide spatial ambiance for direct-to-FOH mixing."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the amp to tighten the low end and push the midrange into classic 60s British chime.",
+    "Place the Otso Bender Mk1 BEFORE the amp for vintage MkI Tone Bender fuzz textures.",
+    "Use the 212 UK C30 65 cab block paired with a condenser or ribbon mic and dynamic mic to capture the Alnico speaker midrange bark and top-end sparkle, applying a high cut in the cab block to tame fizz.",
+    "Place Circular Delay and Spring reverb AFTER the amp and cab blocks to emulate vintage tape echo repeats and baseline room ambiance."
+  ]
+}

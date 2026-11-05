@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah block before the amplifier block to capture the vintage sweep dynamics.",
+    "Apply a high-pass filter (low cut) around 80-100 Hz on the cab or post-EQ block to avoid low-end mud when rolling off guitar tone controls for Cream-era sounds.",
+    "Use a condenser or ribbon mic on the 4x12 cab slightly off-axis to capture smooth, warm high-end transients."
+  ]
+}

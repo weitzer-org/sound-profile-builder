@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Graphic-9"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 phaser before the amplifier block to reproduce authentic early EVH phase sweep dynamics.",
+    "Position the mic off-axis on the 4x12 cabinet with a high cut around 6.5 kHz to control harsh top-end sizzle from Greenback speakers.",
+    "Insert a Graphic-9 EQ block post-amp to cut around 100 Hz to tighten low-end power amp sag."
+  ]
+}

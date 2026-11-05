@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "US Tweed Champ C"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Brit Blues",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Parametric-3 BEFORE the US DLX 58 amp capture to cut loose low-end frequencies before they hit the Tweed circuit, preventing farty bass.",
+    "Place Green 808 or Chief BD2 BEFORE the amp to push the Tweed capture into authentic Chess Records grit rather than pushing the digital input gain on the capture block itself.",
+    "Pair a dynamic mic with an off-axis ribbon mic on the 112 US DLX Tweed WGS-Q 10s cab block, keeping the ribbon mic blended lower than the dynamic mic to avoid a dark, muddy mix, and engage the cab block's high-pass filter.",
+    "Place the Spring reverb AFTER the cab block with rolled-back high end for authentic 1950s vintage American blues room and tank ambiance."
+  ]
+}

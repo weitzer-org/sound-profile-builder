@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the Dumbbell ODS factory capture as the single core amplifier block to achieve the authentic Dumble Overdrive Special lead and vocal midrange response.",
+    "Pair the amp with the 212 Too Rock EV Vintage 79 cabinet (loaded with EVM12L speakers) as the primary cab, or blend with the 212 Zila Open CL80 19 (Classic Lead 80) to retain massive un-clipped low-end and vocal projection.",
+    "Mic the cabinet using a Dynamic 57 (Shure SM57) paired with a Ribbon 160 (Beyerdynamic M160) to capture both the upper-mid bite and smooth transient warmth.",
+    "Place the Green 808 (or Iba Green capture) BEFORE the amp with Drive set low and Level pushed high to goose the front end and tighten the bass frequencies from humbuckers.",
+    "Watch the Input Gain when running an overdrive into the Dumbbell ODS capture to avoid unnatural digital fizz; let the amp capture provide the primary smooth tube compression.",
+    "Place the Circular Delay and a baseline Spring reverb AFTER the amp and cab blocks for spatial depth on direct-to-FOH gigs."
+  ]
+}

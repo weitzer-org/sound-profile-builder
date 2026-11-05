@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster or Brit Blues before the UK C30 TopBoost to push the front end into authentic 60s British edge-of-breakup.",
+    "Place the Otso Bender Mk1 at the very start of the signal chain so it interacts directly with the guitar pickups and cleans up with volume knob roll-off.",
+    "Use the 212 UK C30 65 cab block with a condenser (like a U67 style) or a blend of Ribbon 160 and Dynamic 57 mics, and engage the cab High Cut to tame any top-end harshness from the Telecaster single coils.",
+    "Place the Circular Delay and Spring reverb after the amplifier and cabinet blocks, setting the delay for a subtle, filtered single-repeat slapback to thicken the vintage room sound."
+  ]
+}

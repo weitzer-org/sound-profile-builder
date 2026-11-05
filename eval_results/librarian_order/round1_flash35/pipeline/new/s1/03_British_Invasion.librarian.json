@@ -1,0 +1,14 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amp block to push top-end chime and dynamic edge-of-breakup crunch.",
+    "Set the cabinet low-pass filter between 6.5 kHz and 7.5 kHz to tame high-frequency upper-mid fizz on the Top Boost circuit."
+  ]
+}

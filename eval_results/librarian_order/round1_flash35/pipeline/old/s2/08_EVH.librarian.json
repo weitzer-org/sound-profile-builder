@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 phaser BEFORE the amp block to achieve the classic pre-gain Eddie Van Halen phase sweep.",
+    "Place the MX Flanger before the amp block for vintage jet-flange distortion dynamics.",
+    "Position the Shure SM57 microphone slightly off-axis on the 4x12 Greenback cab IR with a high cut applied above 6.5 kHz to eliminate top-end sizzle.",
+    "Place the Circular Delay (Echoplex tape emulation) and Studio Plate 70 (ST) post-amp in the signal chain for clean time-based ambiance processing."
+  ]
+}

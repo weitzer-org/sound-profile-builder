@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ immediately after the input to mimic the classic ES-355 Varitone switch by cutting upper-mids and adding a subtle low-mid bump, while also using a high-pass filter to prevent boomy neck pickup response with humbuckers.",
+    "Place the Legendary 87 (ST) compressor gently ahead of the amplifier with a slow attack to replicate the vocal-like bloom and sustain of a loud amp in a room.",
+    "Do not use overdrive pedals for grit; achieve natural edge-of-breakup compression and authentic transients by pushing the US TWN Vibrato amplifier block natively.",
+    "Pair the 212 US TWN C12Q 00s cabinet with dynamic and ribbon microphones positioned slightly toward the cap edge to tame piercing high frequencies while keeping the fundamental note thick.",
+    "Place the Spring reverb after the cab with a low mix and pulled-back tone to achieve a classic studio tank splash without sounding overly metallic on high-register bends."
+  ]
+}

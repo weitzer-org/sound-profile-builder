@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "John Mayer klon",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost (representing the clean boost), John Mayer klon, Brit Blues, and TS10 JM Settings BEFORE the Two Rock SSS EQ1 (No Cab) amp capture, stacking the Bluesbreaker/Klon into the TS10 for classic Mayer Trio lead saturation while watching input clipping.",
+    "Pair the Two Rock SSS EQ1 (No Cab) head capture with the 212 Too Rock G65 cabinet block using a blend of Dynamic 57 and Ribbon 121 mics to smooth transients and capture the Celestion G12-65 speaker response.",
+    "Place the Circular Delay (set for a quick slapback like the Aqua-Puss) and Spring reverb AFTER the cabinet block to recreate the vintage American blues room and spring ambiance."
+  ]
+}

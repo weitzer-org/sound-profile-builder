@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Vibroverb"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The '1964 Fender Super Reverb' from the User Capture Library is a full_rig capture (amp and cab combined), so a separate cabinet block is not strictly required unless bypassing the capture's baked-in speaker response.",
+    "Place the Green 808 BEFORE the amp capture as a clean volume and midrange push to slam the front end into Texas blues breakup.",
+    "Place the Spring reverb AFTER the amp capture with a modest mix and short decay for vintage pre-1970 American blues room ambiance.",
+    "Watch input/output clipping meters when boosting the front end of the full-rig capture, compensating with the capture block's output volume."
+  ]
+}

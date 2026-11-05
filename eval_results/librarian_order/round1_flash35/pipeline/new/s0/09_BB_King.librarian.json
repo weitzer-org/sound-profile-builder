@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain with a gentle ratio to smooth picking dynamics while keeping natural sustain.",
+    "Position the Myth Drive before the amp block configured with low gain and elevated volume as a transparent boost.",
+    "Place the Range Rverb after the cabinet block to replicate authentic vintage Fender combo spring tank decay.",
+    "Engage a high-cut filter around 6.5 kHz on the 212 US TWN C12Q 00s cab block to eliminate high-frequency harshness when playing with humbuckers."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the Brit 2203 87 amplifier capture, shaping an inverted-V midrange push and clean volume boost to hit the front end for sustain without diode-clipping congestion.",
+    "In the 412 Brit 60B V30 95 cabinet block, pair a Dynamic 57 off-axis with a Dynamic 421 or Ribbon 121 to capture aggressive midrange bite while smoothing out upper-frequency harshness.",
+    "Engage a high-pass filter in the cabinet block or pre-amp EQ to tighten the low-end response and prevent the neck humbucker of the ES-339 from flubbing out the amplifier.",
+    "Place the Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block to provide a spacious, non-intrusive stadium lead tail and baseline direct-to-FOH ambiance."
+  ]
+}

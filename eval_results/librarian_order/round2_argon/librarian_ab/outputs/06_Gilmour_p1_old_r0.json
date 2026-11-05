@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the compressor (Chief CS3) at the very front of the chain to smooth out pick attack and add sustain before hitting the fuzz.",
+    "Use the 'RR Big Muff 1976 Original' user capture (or native 'Fuzz Pi') for the vintage Big Muff sustain, and immediately follow it with the 'TW Tube Drive' factory capture or 'Parametric-3' EQ before the amplifier to boost the midrange and prevent the fuzz from disappearing in the mix.",
+    "Set the 'Watt D103 Normal' amplifier right on the edge of breakup to provide natural power-tube compression and tame any digital fuzz harshness.",
+    "In the '412 Watt S4123' cabinet block, pair a Dynamic 57 mic with a condenser or ribbon mic and roll off the high cut to smooth out piercing top-end frequencies.",
+    "Place 'Circular Delay' (emulating the Binson Echorec) and 'Studio Plate 70 (ST)' (emulating the EMT 140 Plate) after the cab block, utilizing a parallel split path or elevated pre-delay on the plate reverb so the initial guitar transient punches through cleanly without washing out."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi before the amp block into the high-headroom clean platform",
+    "Use a Dynamic 57 microphone on the 412 Watt S4123 cab block to capture direct mid-range punch",
+    "Position the Studio Plate 70 (ST) reverb post-amp at the end of the chain with low-cut filtering engaged to keep fuzz tones tight"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive BEFORE the amplifier block with drive set low to push upper-mids into front-end crunch without causing mud.",
+    "Place the Graphic-9 EQ AFTER the amplifier to boost between 800 Hz and 1 kHz to capture the mid-focused lead voicing.",
+    "Position a Low Pass Filter around 6.5 kHz on the cabinet block to control top-end fizz inherent to cranked JCM circuits."
+  ]
+}

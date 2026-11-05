@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "MXR Custom Shop Joe Bonamassa FET Driver",
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Myth Drive before the amp block as a low-gain mid boost to focus midrange frequencies and smooth pick attack.",
+    "Position a dynamic microphone on-axis and a ribbon microphone off-axis on the cabinet to balance transient bite with warm, smooth high-end roll-off.",
+    "Place the Circular Delay and Studio Plate reverb after the cabinet block to replicate wet 3D lead ambiance without muddying the amp saturation."
+  ]
+}

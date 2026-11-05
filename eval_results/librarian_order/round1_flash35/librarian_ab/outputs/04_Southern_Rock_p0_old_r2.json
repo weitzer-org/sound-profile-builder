@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Jewel",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz and Green 808 before the amp block to push mid-range clarity and add singing sustain for slide leads.",
+    "Position the Jewel compressor at the beginning of the chain to smooth slide attack dynamics while retaining natural amp compression.",
+    "Engage a high-pass filter around 80-100 Hz and high-cut around 5.5-6.5 kHz on the 410 US Basslad PR10 cabinet block to eliminate flubby low end and harsh treble spikes.",
+    "Avoid tight Noise Gate thresholds to ensure smooth slide vibrato decay and finger-tail sustain are not chopped off."
+  ]
+}

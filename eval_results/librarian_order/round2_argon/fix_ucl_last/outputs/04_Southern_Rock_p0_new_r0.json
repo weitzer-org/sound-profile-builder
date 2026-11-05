@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place Legendary 87 (ST) at the very beginning of the signal chain with a slow attack and parallel dry mix to preserve the slide transient while extending sustain.",
+    "Place Green 808 BEFORE the US DLX 58 amp capture as a low-end tightener and mid-hump push to prevent bloated bass from neck humbuckers.",
+    "Pair the US DLX 58 factory capture with the FNDR TWDLX IN Edge BAL CAB user capture (or a 112 US DLX Tweed WGS-Q 10s cab block mic'd with a Dynamic 57) for authentic 5E3 Jensen P12R response.",
+    "Place the Spring reverb block after the cab for classic vintage American room and spring ambiance."
+  ]
+}

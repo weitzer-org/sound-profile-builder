@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 before the amplifier block to achieve classic early Eddie-style phaser swirl and front-end saturation response.",
+    "Position the Graphic-9 EQ block to provide a clean mid boost around 800 Hz and 1.6 kHz without adding unwanted pedal gain clipping.",
+    "Route the Circular Delay after the amplifier block to simulate the classic Echoplex EP-3 tape delay in the FX loop.",
+    "Position the Studio Plate 70 (ST) at the end of the chain to maintain ambient room depth for direct-to-FOH audio balance."
+  ]
+}

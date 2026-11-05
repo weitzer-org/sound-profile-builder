@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "EP3 pre (V-12 EQ-mid)",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Position modulation effects like MX Phase 95 and MX Flanger before the amplifier block to saturate through the cranked front end.",
+    "Use the EP3 pre (V-12 EQ-mid) capture upstream of the amplifier for authentic tape preamp tonal coloration and boost.",
+    "Leverage the Graphic-9 EQ block for mid-range boost and volume lifts rather than adding extra diode clipping.",
+    "Route Circular Delay and Studio Plate 70 (ST) post-cabinet to preserve stereo width and simulate classic studio room plate ambiance."
+  ]
+}

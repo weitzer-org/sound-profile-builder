@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "4-Comp Custom",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the 4-Comp Custom first in the signal chain to smooth out pick attack and add sustain.",
+    "Place the TW Tube Drive immediately AFTER the Fuzz Pi (before the amp) set as a clean/mid-pushed boost to restore the midrange scooped by the Big Muff and smooth out high-end fizz.",
+    "Dial the Watt D103 Normal right on the edge of breakup so the fuzz compresses naturally rather than sounding harsh against a sterile clean platform.",
+    "On the 412 Watt S4123 cabinet block, blend a dynamic mic (SM57) and a condenser/ribbon mic, and engage the high cut to tame piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cab block, preferably in a parallel split path or with a generous pre-delay on the plate reverb so the initial pick transient punches through the wash."
+  ]
+}

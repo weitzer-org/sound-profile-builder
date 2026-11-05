@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)",
+    "Circular Delay",
+    "Graphic-9"
+  ],
+  "tactical_hints": [
+    "Place a Graphic-9 EQ or mid-boost drive block adjacent to the Fuzz Pi to smooth out mid-scoop before hitting the clean Watt D103 Normal amp.",
+    "Pair dynamic (SM57) and condenser (U87) microphone options on the 412 Watt S4123 cabinet block and apply a high-cut/low-pass filter around 6.5 kHz to 7 kHz to remove harsh single-coil fizz.",
+    "Set the Watt D103 Normal amplifier block for high clean headroom to allow the Fuzz Pi block to drive saturation without premature power section clipping."
+  ]
+}

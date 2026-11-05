@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Green 808 before the amp block to push the mid-range sustain and drive input headroom.",
+    "Place the Facial Fuzz at the start of the signal chain before any buffers to preserve impedance response.",
+    "Pair a Shure SM57 dynamic mic off-axis on the 4x12 cab to smooth upper-mid transients and prevent harsh digital clipping when over-driving the amplifier block input."
+  ]
+}

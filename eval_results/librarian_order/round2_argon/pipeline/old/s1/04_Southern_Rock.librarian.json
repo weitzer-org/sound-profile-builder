@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "US TWD Bass 59",
+    "410 US TWD 59 P10R"
+  ],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain before the overdrive blocks to sustain notes for slide and lead work.",
+    "Place the Iba Green or Myth Drive BEFORE the US Tweed Basslad Normal Patch amp block with low gain and high output to tighten up the woofy Tweed low-end, especially when using the Gibson ES-339 humbuckers.",
+    "Optionally place a Parametric-3 EQ block before the amp as a high-pass filter to further prevent low-end flub.",
+    "On the 410 US Basslad PR10 cab block, blend a Dynamic 57 mic with a Ribbon 160 mic and roll off the high-end cut to smooth out any brittle upper-mid spikes.",
+    "Place the Spring reverb block after the cab at the end of the chain to provide classic pre-1970 American vintage ambiance."
+  ]
+}

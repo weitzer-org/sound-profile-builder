@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with drive low and level high to tighten bottom end and boost upper mids",
+    "Use the Graphic-9 EQ block post-amp to boost mid frequencies around 800Hz to 1kHz for solo lifts",
+    "Engage a low-pass filter on the cab block around 6.5kHz to smooth high-frequency fizz from the JCM800 crunch"
+  ]
+}

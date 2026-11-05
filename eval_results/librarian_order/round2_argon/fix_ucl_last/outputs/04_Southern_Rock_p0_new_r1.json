@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 compressor first in the signal chain with a slow attack and blended dry signal to preserve the natural transient attack while extending sustain.",
+    "Place the Green 808 overdrive before the US DLX 58 amp capture to tighten the sub-lows of the Gibson ES-339 humbuckers and push midrange vocal projection without bloating the bass.",
+    "Pair the US DLX 58 factory capture with the FNDR TWDLX IN Edge BAL CAB user capture (1957 5E3 1x12 Jensen P12R) to accurately fulfill the requested Tweed Deluxe speaker and mic profile.",
+    "Place the Spring reverb after the cabinet block to provide vintage American ambiance for direct-to-FOH routing."
+  ]
+}

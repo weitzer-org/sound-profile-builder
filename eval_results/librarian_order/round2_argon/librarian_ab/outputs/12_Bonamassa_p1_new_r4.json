@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Crying Clyde Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Nordic Concert Hall (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain, followed by the Myth Drive and Green 808 BEFORE the Dumbbell ODS amp block to push the midrange dynamically.",
+    "Since Way Huge Overrated Special is a modified Green Rhino (Tube Screamer circuit) with a 500Hz mid-focus, use the Green 808 with a pronounced mid push to supply upper-mid bite without over-clipping the input of the Dumbbell ODS.",
+    "Pair the Dumbbell ODS with either the 212 Zila Open CL80 19 (matching the requested Celestion Classic Lead 80 speakers) or 212 Too Rock EV Vintage 79 (matching the high-powered EVM12L recommendation), and engage a firm low-cut on the cab block to prevent lower-midrange muddiness with neck humbuckers.",
+    "In the cab block, blend a Dynamic 57 mic with a Ribbon 121 mic to capture both vocal midrange bite and smooth high-end warmth.",
+    "Place the Circular Delay and Studio Plate 70 (ST) or Nordic Concert Hall (ST) in series AFTER the cabinet block with high-end damping to replicate lush stage ambiance within a single-amp layout."
+  ]
+}

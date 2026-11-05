@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive block before the amplifier as a mid-focused push to tighten the low end.",
+    "Keep the Bass control on the Dumbbell ODS trimmed below 4.0 to prevent low-end flub on fast lead runs.",
+    "Position the Circular Delay post-amp for smooth lead depth."
+  ]
+}

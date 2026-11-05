@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Circular Delay",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amplifier block to drive the input into signature compressed chime.",
+    "Position delay blocks after the amplifier or in a parallel path to prevent repeats from over-compressing into the breaking-up amp.",
+    "Use high-cut filtering on the cabinet block to smooth top-end harshness and keep the chime balanced."
+  ]
+}

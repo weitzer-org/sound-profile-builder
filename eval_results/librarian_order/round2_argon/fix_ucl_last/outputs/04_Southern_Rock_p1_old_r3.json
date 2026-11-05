@@ -1,0 +1,38 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "Fender Tweed Bassman 59",
+    "Fender High Power Tweed Twin 5F8-A"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Note that 'Fender 57 Deluxe - T8 I4 M12' is a full-rig User Capture of a cranked 5E3 Tweed Deluxe (Mic Volume at 12, Instrument at 4); if using it alone, bypass the native cab block, or pair an amp-only setup with the '112 US DLX Tweed WGS-Q 10s' cab block.",
+    "When using the '112 US DLX Tweed WGS-Q 10s' cab block, blend a Dynamic 57 and a Ribbon 121 microphone, applying a high-pass filter and a dark low-pass filter roll-off to smooth out the top end for slide work.",
+    "Place the 'Legendary 87 (ST)' compressor at the very beginning of the signal chain with parallel mix to elongate slide note decay while preserving natural pick and finger attack.",
+    "Place the 'Green 808' (or 'Myth Drive') BEFORE the amplifier capture with low drive and high output level to tighten the woofy low-end of the Gibson ES-339 humbuckers and push midrange singing sustain.",
+    "Insert a 'Parametric-3' EQ block before the amp capture (or lower the capture's native Bass control) to cut flubby low frequencies before hitting the cranked Tweed circuit.",
+    "Keep the Input Gate threshold very conservative so it does not prematurely choke out the natural fading trail of glass or brass slide notes.",
+    "Place 'Circular Delay' (for subtle vintage tape slapback) and 'Studio Plate 70 (ST)' after the amp/cab section to provide studio room and plate glue."
+  ],
+  "verified_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s",
+    "Green 808",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ]
+}

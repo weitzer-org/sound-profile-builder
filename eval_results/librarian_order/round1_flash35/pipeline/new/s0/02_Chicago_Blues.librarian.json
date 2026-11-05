@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place overdrive blocks like Green 808 before the amp block with low gain to push edge-of-breakup dynamics without turning low frequencies muddy.",
+    "Position a ribbon microphone off-axis on the cabinet block to smooth high-frequency transients.",
+    "Place the spring reverb block post-amp to maintain traditional pre-1970 Fender tweed ambiance."
+  ]
+}

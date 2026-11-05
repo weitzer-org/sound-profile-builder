@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Crying Clyde Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very beginning of the signal chain before any buffers or overdrives so the fuzz reacts naturally to guitar volume knob adjustments.",
+    "Place the Green 808 BEFORE the Brit Plexi 100 Patch amplifier block with low drive and high output level to tighten the low-end and push the preamp into sustain.",
+    "Engage the Low Cut filter in the 412 Brit 60A GB75Hz 89 cabinet block to tame sub-bass flub, and use a dynamic 57-style microphone on the speaker cone.",
+    "Place the Circular Delay and Studio Plate 70 (ST) AFTER the cabinet block to create vintage arena depth without washing out the dry attack."
+  ]
+}

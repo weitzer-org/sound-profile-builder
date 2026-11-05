@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "RR Big Muff 1976 Original",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain before the fuzz to even out pick attack and add sustain for both single-coil and humbucker guitars.",
+    "Use the RR Big Muff 1976 Original from the User Capture Library as the primary fuzz, and place the TW Tube Drive (or Parametric-3 EQ) immediately AFTER the fuzz but BEFORE the Watt D103 Normal amp to smooth the top end, restore the scooped midrange, and prevent digital harshness.",
+    "Dial the Watt D103 Normal right on the edge of breakup so it provides natural power-tube compression when hit by the fuzz and boost.",
+    "Pair the amp with the 412 Watt S4123 cabinet using a blend of a dynamic mic and a condenser or ribbon mic off-axis, and apply a high-cut roll-off on the cab block to tame any piercing upper frequencies from the fuzz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cab block, ideally on a parallel split path or with an elevated pre-delay on the plate reverb so the initial pick transient punches through the massive ambient wash."
+  ]
+}

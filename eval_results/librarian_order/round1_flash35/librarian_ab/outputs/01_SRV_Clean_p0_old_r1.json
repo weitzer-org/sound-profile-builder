@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief DC2W",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier block with low drive and high output volume to tighten low frequencies without introducing unwanted transistor harshness.",
+    "Pair the Two Rock Steel String Singer capture with the 212 Too Rock EV cabinet block mic'd off-axis with a dynamic SM57 microphone.",
+    "Position modulation and reverb effects post-amplifier to preserve clean 3D spatial dimension and room ambience."
+  ]
+}

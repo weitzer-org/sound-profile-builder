@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 BEFORE the Brit Plexi 100 Patch amp block with a mid-focused 'frown' curve to push the front end and emulate the MXR 6-Band EQ and Variac sag.",
+    "Place the MX Phase 95 and MX Flanger BEFORE the amplifier block so they sweep into the dirty preamp saturation rather than sounding overly hi-fi post-amp.",
+    "Use the Brit Plexi 100 Patch amp block pushed hard to simulate the jumpered 1968 Marshall Super Lead 100W Brown Sound.",
+    "In the 412 Brit 60B GB 71 cab block, pair an SM57 with a Ribbon mic and engage a high-cut filter to tame top-end Greenback fizz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cab block, keeping the plate reverb mix subtle for the Sunset Sound studio room ambiance without washing out tight rhythmic palm mutes."
+  ]
+}

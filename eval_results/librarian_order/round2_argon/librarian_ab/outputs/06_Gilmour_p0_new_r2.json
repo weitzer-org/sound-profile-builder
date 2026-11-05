@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "RR Big Muff 1976 Original",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Exotic Z Boost",
+    "Parametric-3",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain before the fuzz to smooth out pick attack and sustain.",
+    "Use the RR Big Muff 1976 Original user capture (or native Fuzz Pi) before the amp as the core singing lead distortion.",
+    "Place the TW Tube Drive, Exotic Z Boost, or Parametric-3 immediately AFTER the Big Muff and BEFORE the amp to restore the vocal midrange and emulate the Colorsound Power Boost post-fuzz EQ shaping.",
+    "Dial in the Watt D103 Normal just at the edge of power-amp compression so the fuzz blends smoothly without sounding fizzy or detached.",
+    "Pair the amp with the 412 Watt S4123 cabinet using a dynamic 57 and a condenser 87 mic blend, applying a high-cut filter to tame top-end fuzz fizz.",
+    "Place the MX Flanger, Circular Delay, and Studio Plate 70 (ST) after the amp and cab block for lush, expansive stadium modulation and ambiance."
+  ]
+}

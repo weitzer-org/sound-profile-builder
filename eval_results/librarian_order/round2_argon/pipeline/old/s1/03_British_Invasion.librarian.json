@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost to push the front end for mid-60s chime and woody midrange punch while tightening up low-end boominess.",
+    "Use a condenser mic (such as a U67 or U87 style equivalent) or blend a ribbon and dynamic mic on the 212 UK C30 65 cab block, and engage the cab's low-cut filter to tame low-end rumble.",
+    "Dial up the Cut knob on the UK C30 TopBoost amp block to smooth out any harsh high-end fizz.",
+    "Place the Legendary 87 (ST) compressor after the amp/cab section to replicate 1960s studio limiter compression, followed by the Spring reverb block for vintage ambiance."
+  ]
+}

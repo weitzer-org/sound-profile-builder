@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief CE2W",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block as a clean level push to boost mids and goad the front end without introducing excessive pedal overdrive distortion.",
+    "Mic the 212 Too Rock EV cabinet block with a dynamic microphone slightly off-axis to smooth upper-mid transients and preserve clean headroom punch.",
+    "Position spatial reverb and modulation blocks post-amp and cab in the signal path to maintain clear stereo ambience."
+  ]
+}

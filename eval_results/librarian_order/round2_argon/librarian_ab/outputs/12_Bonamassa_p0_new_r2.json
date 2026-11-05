@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Dumbbell ODS amp block with low drive and elevated level to tighten the low end for the Gibson ES-339 humbuckers and goose the Dumble front end.",
+    "Optionally stack or alternate with the Myth Drive before the amp to emulate the vocal midrange push of the Way Huge Overrated Special without causing digital clipping.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 cab block to deliver the requested 2x12 Electro-Voice EVM12L un-clipped low end and vocal midrange projection.",
+    "Inside the cab block, blend a Dynamic 57 mic on-axis with a Ribbon 160 mic to replicate the classic Shure SM57 and Beyerdynamic M160 studio miking pairing.",
+    "Place the Circular Delay and Studio Plate 70 (ST) in the post-cab effects loop to provide clean digital delay repeats and essential studio ambiance for direct-to-FOH operation."
+  ]
+}

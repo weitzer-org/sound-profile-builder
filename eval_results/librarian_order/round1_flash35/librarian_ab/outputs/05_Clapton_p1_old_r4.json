@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place overdrive blocks such as Brit Blues or Green 808 BEFORE the amp block as a mid-range gain push for sustain.",
+    "Position ribbon mic off-axis on the 4x12 cabinet block to smooth out top-end transients and reproduce dark Clapton-style tone.",
+    "Apply a High-Pass Filter (HPF) around 80-100Hz in the cabinet or post-EQ block to avoid low-end mud when rolling back guitar tone controls."
+  ]
+}

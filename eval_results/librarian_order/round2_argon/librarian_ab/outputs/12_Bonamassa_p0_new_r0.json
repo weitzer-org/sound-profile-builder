@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the Dumbbell ODS amp block with low drive and elevated level to tighten the low end (especially for the Gibson ES-339 humbuckers) and push the front end into vocal midrange saturation.",
+    "Carefully manage the input level hitting the Dumbbell ODS block when stacking or boosting with drives to avoid unnatural digital fizz and preserve smooth tube-like compression.",
+    "Pair the Dumbbell ODS with the 212 Too Rock EV Vintage 79 cabinet block (loaded with Electro-Voice EVM12L speakers) to retain massive, un-clipped low-end headroom and authentic Dumble-style midrange projection.",
+    "Mic the cabinet using a combination of a dynamic mic (SM57 style) and a ribbon mic (M160 style) to balance midrange bite with smooth high-end transients.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb AFTER the cabinet block to provide essential spatial depth and ambiance for direct-to-FOH performance."
+  ]
+}

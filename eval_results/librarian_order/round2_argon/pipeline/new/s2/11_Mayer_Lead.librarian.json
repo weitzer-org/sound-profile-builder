@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Myth Drive",
+    "Green 808",
+    "Chief BD2",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost, Brit Blues, or Myth Drive BEFORE the amp as a transparent low-gain foundation, and stack it into the Green 808 to push the mids for vocal lead tones.",
+    "Keep the output level of stacked overdrive blocks near unity to prevent harsh input clipping into the clean high-headroom amp.",
+    "Pair the 212 Too Rock G65 cabinet with a Dynamic 57 and a Ribbon 121 mic, and roll off the high cut significantly to achieve a smooth, vocal Dumble/Two-Rock high-end response.",
+    "Place the Circular Delay (set for short analog slapback) and Spring reverb AFTER the amplifier and cabinet blocks for classic American blues-rock ambiance."
+  ]
+}

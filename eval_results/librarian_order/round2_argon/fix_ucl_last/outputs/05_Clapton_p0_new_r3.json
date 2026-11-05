@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very start of the signal chain before any buffers or EQ blocks to preserve vintage impedance behavior.",
+    "Optionally place the Graphic-9 EQ before the amplifier with a steep high-cut roll-off and a mid-frequency bump to simulate a rolled-off humbucker tone control ('Woman Tone') without touching the physical guitar knob.",
+    "Place the Rage Booster right before the Brit Plexi 100 Patch amplifier block to tighten the low-end and prevent flubbiness when pushing the dimed KT66/EL34 power section.",
+    "Pair the 412 Brit 60B GB 71 cabinet with a blend of a Dynamic 57 and a condenser or ribbon microphone, applying an aggressive high-cut filter on the cab block to tame harshness.",
+    "Pull back the bass control on the Brit Plexi 100 Patch amplifier block to avoid low-mid muddiness when driving it hard with neck humbuckers.",
+    "Place the Spring reverb at the end of the chain after the cabinet for baseline FOH room ambiance."
+  ]
+}

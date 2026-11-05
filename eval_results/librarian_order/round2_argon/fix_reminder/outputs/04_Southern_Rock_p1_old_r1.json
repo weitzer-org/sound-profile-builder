@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Bassman 59",
+    "US HP Tweed Twin"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Legendary 87 (ST)",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor at the start of the signal chain with parallel mix to elongate slide note decay without squashing pick or finger attack.",
+    "Place the Green 808 or EP3 pre (V-12 EQ-mid) BEFORE the Fender 57 Deluxe - T8 I4 M12 capture as a mid-focused push to tighten low-end flub from humbuckers and enhance singing slide sustain.",
+    "Use a Parametric-3 EQ block before the amp capture or lower the Bass on the capture block to tame the natural low-end woofiness of a cranked 5E3 Tweed circuit.",
+    "Since Fender 57 Deluxe - T8 I4 M12 is a full-rig capture, bypass the 112 US DLX Tweed WGS-Q 10s cab block unless running a separate cab simulation is desired; if using the cab block, blend a Dynamic 57 and Ribbon 121 mic with high-pass and low-pass filtering to smooth out the top end.",
+    "Place Circular Delay (for subtle vintage tape slapback) and Studio Plate 70 (ST) after the amp/cab section to recreate the classic Layla studio room and plate ambiance.",
+    "Keep the input gate threshold very low or off so it does not prematurely choke out the natural fading trail of slide notes."
+  ]
+}

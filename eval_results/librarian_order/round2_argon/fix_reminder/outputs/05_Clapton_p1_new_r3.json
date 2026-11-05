@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Parametric-3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ at the very beginning of the signal chain to simulate a passive guitar tone capacitor roll-off for the vocal Woman Tone, and cut low-end mud before hitting the amplifier.",
+    "Place the Crying Clyde Wah and Facial Fuzz before the amplifier block; use the fuzz gently to add singing sustain without overwhelming the vintage Plexi front end.",
+    "Pair the Brit Plexi 100 Patch with the 412 Brit 60B GB 71 cabinet and use a combination of dynamic and ribbon or condenser microphones pushed slightly off-axis to smooth out high-end fizz, engaging a low-cut filter in the cab block to tighten the flubby bottom end.",
+    "Place the Studio Plate 70 (ST) reverb at the end of the chain to provide essential baseline room ambiance for direct-to-FOH playback."
+  ]
+}

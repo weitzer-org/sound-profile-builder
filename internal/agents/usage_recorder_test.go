@@ -93,7 +93,7 @@ func (f *fakeStorageClient) firstRecord(t *testing.T) UsageRecord {
 }
 
 func TestComputeCostUSD_KnownModel(t *testing.T) {
-	cost := computeCostUSD("gemini-3.1-pro-preview", 1_000_000, 1_000_000, 0)
+	cost := computeCostUSD("gemini-3.1-pro-preview", 1_000_000, 0, 1_000_000, 0)
 	want := 2.00 + 12.00
 	if cost != want {
 		t.Errorf("computeCostUSD = %v, want %v", cost, want)
@@ -101,15 +101,90 @@ func TestComputeCostUSD_KnownModel(t *testing.T) {
 }
 
 func TestComputeCostUSD_ThinkingTokensBilledAtOutputRate(t *testing.T) {
-	withThinking := computeCostUSD("gemini-3.1-pro-preview", 0, 0, 500_000)
-	withOutput := computeCostUSD("gemini-3.1-pro-preview", 0, 500_000, 0)
+	withThinking := computeCostUSD("gemini-3.1-pro-preview", 0, 0, 0, 500_000)
+	withOutput := computeCostUSD("gemini-3.1-pro-preview", 0, 0, 500_000, 0)
 	if withThinking != withOutput {
 		t.Errorf("thinking tokens should bill at the output rate: got %v vs %v", withThinking, withOutput)
 	}
 }
 
+func TestComputeCostUSD_CachedTokens(t *testing.T) {
+	const m = "gemini-3.6-flash"
+	std := day(2027, time.February, 1) // standard period: input 1.50, cachedInput 0.15, output 7.50
+	const eps = 1e-9
+	cases := []struct {
+		name                          string
+		input, cached, output, thinks int32
+		want                          float64
+	}{
+		{"cached=0 bills all at input rate", 1_000_000, 0, 0, 0, 1.50},
+		{"partial cache", 1_000_000, 600_000, 0, 0, 0.4*1.50 + 0.6*0.15},
+		{"fully cached", 1_000_000, 1_000_000, 0, 0, 0.15},
+		{"cached > input is clamped to input", 1_000_000, 5_000_000, 0, 0, 0.15},
+		{"negative cached is clamped to 0", 1_000_000, -5, 0, 0, 1.50},
+		{"output and thinking unaffected by cache", 1_000_000, 500_000, 100_000, 100_000, 0.5*1.50 + 0.5*0.15 + 0.2*7.50},
+	}
+	for _, c := range cases {
+		got := computeCostUSDAt(m, std, c.input, c.cached, c.output, c.thinks)
+		if d := got - c.want; d > eps || d < -eps {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+	// Introductory period: input 0.75, cachedInput 0.075.
+	if got := computeCostUSDAt(m, day(2026, time.November, 5), 1_000_000, 1_000_000, 0, 0); got-0.075 > eps || 0.075-got > eps {
+		t.Errorf("intro-period fully cached: got %v, want 0.075", got)
+	}
+}
+
+// sourcedCachedRates are the models whose cached-input rate comes from the Google Cloud pricing
+// page (see the CACHED-INPUT RATES comment on geminiPriceSchedule). Every other model must keep
+// cachedInput == input so caching can never understate its cost.
+var sourcedCachedRates = map[string]bool{
+	"gemini-4-argon": true, "gemini-3.8-flash": true, "gemini-3.6-flash": true, "gemini-3.1-pro-preview": true,
+}
+
+func TestComputeCostUSD_UnverifiedCachedRateNeverDiscounts(t *testing.T) {
+	for model, periods := range geminiPriceSchedule {
+		if sourcedCachedRates[model] {
+			continue
+		}
+		for _, p := range periods {
+			if p.cachedInput != p.input {
+				t.Errorf("%s: cachedInput %v != input %v; only set a discount once the real rate is sourced", model, p.cachedInput, p.input)
+			}
+		}
+	}
+}
+
+// Pins the cited cached-input figures (Google Cloud pricing page, fetched 2026-11-05, global endpoint).
+func TestCachedInputRatesMatchSource(t *testing.T) {
+	cases := []struct {
+		model  string
+		at     time.Time
+		cached float64
+	}{
+		{"gemini-4-argon", day(2026, time.November, 30), 0.10},
+		{"gemini-4-argon", day(2026, time.December, 1), 0.20},
+		{"gemini-3.8-flash", day(2026, time.December, 31), 0.075},
+		{"gemini-3.8-flash", day(2027, time.January, 1), 0.15},
+		{"gemini-3.6-flash", day(2026, time.December, 31), 0.075},
+		{"gemini-3.6-flash", day(2027, time.January, 1), 0.15},
+		{"gemini-3.1-pro-preview", day(2026, time.November, 5), 0.20},
+	}
+	for _, c := range cases {
+		p, ok := priceAt(c.model, c.at)
+		if !ok || p.cachedInput != c.cached {
+			t.Errorf("%s at %s: cachedInput = %v (ok=%v), want %v", c.model, c.at.Format("2006-01-02"), p.cachedInput, ok, c.cached)
+		}
+	}
+	// A fully cached 1M-token Argon prompt during the promo costs $0.10, not $2.00.
+	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.November, 5), 1_000_000, 1_000_000, 0, 0); got < 0.0999 || got > 0.1001 {
+		t.Errorf("fully cached Argon prompt = %v, want 0.10", got)
+	}
+}
+
 func TestComputeCostUSD_UnknownModel_ReturnsZero(t *testing.T) {
-	if got := computeCostUSD("some-future-model", 1000, 1000, 0); got != 0 {
+	if got := computeCostUSD("some-future-model", 1000, 500, 1000, 0); got != 0 {
 		t.Errorf("computeCostUSD for an unknown model = %v, want 0", got)
 	}
 }
@@ -236,6 +311,31 @@ func TestRecordAttemptUsage_Success(t *testing.T) {
 	}
 }
 
+func TestRecordAttemptUsage_PopulatesCachedInputTokens(t *testing.T) {
+	fake := newFakeStorageClient()
+	o := &Orchestrator{gcs: fake, UsageBucket: "test-bucket"}
+	resp := &genai.GenerateContentResponse{
+		UsageMetadata: &genai.GenerateContentResponseUsageMetadata{
+			PromptTokenCount: 1_000_000, CachedContentTokenCount: 600_000, CandidatesTokenCount: 0,
+		},
+	}
+	defer func(f func() time.Time) { nowFunc = f }(nowFunc)
+	nowFunc = func() time.Time { return day(2027, time.February, 1) } // standard-period prices
+	recordAttemptUsage(context.Background(), o, "CorOS Librarian", "gemini-3.6-flash", 100, resp, nil)
+
+	rec := fake.firstRecord(t)
+	if rec.InputTokens != 1_000_000 {
+		t.Errorf("InputTokens must stay the full PromptTokenCount, got %d", rec.InputTokens)
+	}
+	if rec.CachedInputTokens != 600_000 {
+		t.Errorf("CachedInputTokens = %d, want 600000", rec.CachedInputTokens)
+	}
+	want := 0.4*1.50 + 0.6*0.15
+	if d := rec.CostUSD - want; d > 1e-9 || d < -1e-9 {
+		t.Errorf("CostUSD = %v, want %v", rec.CostUSD, want)
+	}
+}
+
 func TestRecordAttemptUsage_Failure(t *testing.T) {
 	fake := newFakeStorageClient()
 	o := &Orchestrator{gcs: fake, UsageBucket: "test-bucket"}
@@ -275,7 +375,7 @@ func TestPriceSchedule_IntroductoryWindows(t *testing.T) {
 		}
 	}
 	// 1M in + 1M out + 1M thinking on Argon after Dec 1: 4 + 20 + 20.
-	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.December, 2), 1_000_000, 1_000_000, 1_000_000); got != 44 {
+	if got := computeCostUSDAt("gemini-4-argon", day(2026, time.December, 2), 1_000_000, 0, 1_000_000, 1_000_000); got != 44 {
 		t.Errorf("Argon standard cost = %v, want 44", got)
 	}
 }
@@ -284,7 +384,7 @@ func TestComputeCostUSD_UsesNow(t *testing.T) {
 	old := nowFunc
 	defer func() { nowFunc = old }()
 	nowFunc = func() time.Time { return day(2027, time.February, 1) }
-	if got := computeCostUSD("gemini-3.8-flash", 1_000_000, 0, 0); got != 1.50 {
+	if got := computeCostUSD("gemini-3.8-flash", 1_000_000, 0, 0, 0); got != 1.50 {
 		t.Errorf("3.8 Flash input after the intro window = %v, want 1.50", got)
 	}
 }

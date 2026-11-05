@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Otso Bender Mk1 and Rage Booster BEFORE the UK C30 TopBoost amp to tighten the low end and push the upper-midrange into authentic 60s British invasion chime.",
+    "Pair the UK C30 TopBoost with the 212 UK C30 65 cab block, blending a large-diaphragm condenser or ribbon mic with a dynamic mic to capture the Alnico top-end sparkle and midrange bark.",
+    "Use the Cab block's High Cut filter to tame any excessive top-end fizz, mimicking the behavior of a traditional Vox Cut control.",
+    "Place the Circular Delay (voiced for vintage magnetic tape echo) and Spring reverb AFTER the cabinet block to provide authentic 1960s studio ambiance."
+  ]
+}

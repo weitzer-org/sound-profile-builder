@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "66 AC30 JMP Clean",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Chief SD1",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that '66 AC30 JMP Clean' is a full_rig User Capture (1966 Vox AC30 with jumpered channels), which natively includes the 2x12 speaker response; if you choose to pair it with the '212 UK C30 65' cab block or switch to the native 'UK C30 TopBoost' amp model, apply a high-cut filter inside the cab block to emulate the traditional AC30 Cut control and tame high-end fizz.",
+    "Place the 'Chief CS3' compressor at the very beginning of the signal chain to keep rhythmic arpeggios locked in and consistent.",
+    "Place the 'Parametric-3' EQ and 'Chief SD1' overdrive BEFORE the amplifier block to simulate the Korg SDD-3000 preamp boost and accentuate pick attack.",
+    "Place the 'Circular Delay' AFTER the amp and cab blocks rather than in front of the amp to ensure clean, distinct dotted-eighth rhythmic separation without repeats mushing together, and engage modulation on the delay repeats to capture the signature 80s chorus-like warble of the SDD-3000 and Deluxe Memory Man.",
+    "Place 'Studio Plate 70 (ST)' at the end of the chain to provide essential direct-to-FOH spatial ambiance."
+  ]
+}

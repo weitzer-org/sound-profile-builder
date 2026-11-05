@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60B V30 95"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the Brit 2203 87 amp capture and shape it with an inverted-V mid-hump and level boost to mimic the Boss GE-7 trick, pushing the stock JCM800 circuit into hot-rodded S.I.R. #34 sustain while rolling off low-end mud for neck pickup clarity.",
+    "Pair the amp with the 412 Brit 60B V30 95 cabinet block and blend a Dynamic 57 microphone with a Dynamic 421 microphone (or a Ribbon 121 off-axis) to capture the classic bite and low-mid punch, engaging the cab block's low-cut filter to keep the boosted low-mids tight.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb blocks AFTER the amp and cab blocks to deliver clean, studio-polished 80s stadium lead ambiance without blurring the pick attack."
+  ]
+}

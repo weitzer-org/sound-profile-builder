@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Facial Fuzz",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor at the beginning of the signal chain to provide smooth sustain for slide work while preserving pick dynamics.",
+    "Position the Facial Fuzz before the amp block to push the Tweed circuit into rich harmonic saturation.",
+    "Use a high-pass filter before the amplifier block to prevent low-end flub and keep humbucker bass tight.",
+    "Apply a low-pass filter on the cabinet block output to smooth out high-frequency slide fizz.",
+    "Position the Range Rverb after the cabinet for vintage spring reverb ambiance."
+  ]
+}

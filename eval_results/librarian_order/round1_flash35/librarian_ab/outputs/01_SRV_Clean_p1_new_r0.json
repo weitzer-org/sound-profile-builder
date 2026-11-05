@@ -1,0 +1,14 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp with low drive and high output level to push the front end with a focused midrange boost.",
+    "Use a Dynamic SM57 microphone off-axis on the 410 US Basslad PR10 speaker cone to tame high-end transient glassiness."
+  ]
+}

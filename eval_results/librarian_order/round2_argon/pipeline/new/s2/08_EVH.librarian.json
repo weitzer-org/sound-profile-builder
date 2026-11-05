@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Friedman HBE100",
+    "EVH 5150 III 100S EL34"
+  ],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger strictly BEFORE the Brit Plexi 100 Patch amplifier block to preserve the authentic vintage 1978 modulation feel.",
+    "Place the Graphic-9 EQ block BEFORE the amplifier arranged in a midrange-focused frown curve to push the preamp Tubes transparently without using a diode-clipping overdrive pedal.",
+    "Optionally place the EP3 pre (V-12 EQ-mid) user capture before the amp to replicate the Maestro Echoplex EP-3 preamp coloration and front-end push.",
+    "Mic the 412 Brit 60B GB 71 cabinet with a Dynamic 57 slightly off-axis to capture the classic bite while smoothing harsh high-end transients.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cabinet block, keeping the reverb mix subtle or panned to emulate the Sunset Sound studio echo chamber without washing out the dry guitar attack."
+  ]
+}

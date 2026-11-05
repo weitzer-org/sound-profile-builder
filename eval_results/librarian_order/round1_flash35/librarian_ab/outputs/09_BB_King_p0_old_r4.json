@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Spring Reverb block post-cab to accurately emulate classic blackface combo spring reverb.",
+    "Elevate the midrange control on the amp block while keeping gain modest to ensure clean headroom with rich, vocal body for humbucker pickups.",
+    "Position the Shure SM57 microphone off-axis on the 2x12 cab speaker cone to smooth out aggressive high-frequency transients."
+  ]
+}

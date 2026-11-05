@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier block with low drive and boosted level boost to tighten the low end and drive the clean front-end.",
+    "Position a dynamic mic on the 212 Too Rock EV cabinet block slightly off-axis to smooth out high-frequency transients.",
+    "Place a vintage Spring Reverb block after the cabinet block to create 3D Texas blues room ambiance."
+  ]
+}

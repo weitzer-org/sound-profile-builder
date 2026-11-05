@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place overdrive blocks before the amplifier block to tighten low end and provide mid-focused gain staging.",
+    "Pair a dynamic mic with a ribbon mic off-axis on the cabinet to smooth out upper midrange harmonics and transients.",
+    "Keep overall drive level low and output level higher on the boost pedals to avoid clipping downstream digital internal routing."
+  ]
+}

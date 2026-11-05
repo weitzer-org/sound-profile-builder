@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the amplifier block with drive low and level high to act as a focused mid push.",
+    "Use the Graphic-9 EQ block after the amp to boost upper frequencies around 800 Hz to 1 kHz for solo lifts.",
+    "Apply low-pass filtering around 6.5 kHz to 7.5 kHz and high-pass filtering at 80 Hz on the cab block to control fizz and bottom-end boominess."
+  ]
+}

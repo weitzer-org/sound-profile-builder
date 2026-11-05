@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Parametric-3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the compressor block early in the chain with a fast attack and low ratio to sustain clean lines without adding saturation.",
+    "Place the Parametric EQ post-amp to boost midrange frequencies around 1.5 kHz to 2.5 kHz for iconic vocal lead bite.",
+    "Lower the amp input gain and compensate with master volume to prevent early tube breakup and maintain high clean headroom.",
+    "Apply a high-cut filter around 5.5 kHz to 6.0 kHz on the cabinet block to eliminate harsh high-frequency fizz on FRFR monitors."
+  ]
+}

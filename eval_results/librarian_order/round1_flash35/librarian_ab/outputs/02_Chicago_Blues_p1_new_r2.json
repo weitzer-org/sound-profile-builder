@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Opto Comp (S/C)",
+    "Green 808",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive before the amplifier block with low gain and high volume for a warm midrange boost.",
+    "Position the Opto Comp early in the chain to maintain touch dynamics while smoothing pick attack.",
+    "Place a native Spring Reverb block post-amp/cab to recreate authentic pre-1970s Chicago blues studio ambiance.",
+    "Use a ribbon microphone capture off-axis on the cabinet to match the smooth top-end of the RCA 77-DX."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Jewel",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amplifier block to boost upper-mids and drive classic British chime.",
+    "Position the Jewel optical compressor near the input for gentle dynamic glue and subtle sag.",
+    "Use a high-frequency low-pass filter cut after the cabinet block to smooth out harsh top-end frequencies from the Vox circuit."
+  ]
+}

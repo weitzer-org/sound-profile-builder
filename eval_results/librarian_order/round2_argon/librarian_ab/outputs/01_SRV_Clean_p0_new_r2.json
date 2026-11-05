@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1x15 JBL D130F in a 1964 Fender Vibroverb"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad P10Q 16"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the amp block as a low-gain, high-output clean mid push to hit the front end of the US SPR Vibrato.",
+    "Since single_amp_mode is active, push the US SPR Vibrato volume to the edge of breakup to capture both high-headroom Texas blues punch and natural tube compression.",
+    "Pair the 410 cabinet with a Dynamic 57 and a condenser/ribbon mic blend, rolling off the high cut to keep the top end glassy without harshness.",
+    "Place the Spring reverb at the end of the chain after the cabinet for authentic vintage American blues ambiance."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special",
+    "Tone-Stack Classic R35",
+    "2x12 Tone-Stack",
+    "4x10 US Super"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "John Mayer klon",
+    "Brit Blues",
+    "TS10 JM Settings",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the transparent drive or boost ('John Mayer klon' or 'Brit Blues') BEFORE the amp as an always-on low-gain thickener to smooth out the midrange.",
+    "Stack the Tube Screamer ('TS10 JM Settings') or Blues Driver ('Keeley Mod BD-2 3') into the transparent drive BEFORE the amp to inject vocal mid-hump for leads, while slightly trimming the second drive's output level to avoid digital input clipping.",
+    "Keep the 'Two Rock SSS EQ1 (No Cab)' amp capture clean to edge-of-breakup so the low-end stays tight and does not become tubby; generate lead sustain from the stacked drive pedals in front.",
+    "Pair the amp with the '212 Too Rock G65' cabinet using a Dynamic 57 and a Ribbon 121 mic off-axis to blend articulation with warm, smooth transients.",
+    "Place 'Circular Delay' AFTER the amp/cab for a short, low-mix analog-style slapback, followed by 'Spring' reverb at the end of the chain to maintain lush room depth without washing out the dry attack."
+  ]
+}

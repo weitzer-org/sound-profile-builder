@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Fuzz Pi",
+    "TW Tube Drive",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor first in the chain before the drive section to smooth out pick attack and add sustain.",
+    "Place the Fuzz Pi BEFORE the amp to generate the core violin-like lead sustain.",
+    "Place the TW Tube Drive or Parametric-3 immediately AFTER the Fuzz Pi (and BEFORE the Watt D103 Normal amp) to boost the midrange, smooth out high-end fizz, and prevent the scooped fuzz from getting lost in the mix.",
+    "Set the Watt D103 Normal right on the edge of breakup with slight natural compression so the fuzz and boost stack smoothly without digital harshness.",
+    "Pair the 412 Watt S4123 cab with a blend of dynamic (SM57) and condenser/ribbon microphones, and apply a high-cut filter in the cab block to tame piercing upper frequencies from the fuzz.",
+    "Route the Circular Delay and Studio Plate 70 (ST) after the cab block, ideally in a parallel split path or with an elevated pre-delay on the plate reverb so the initial pick attack remains clear and unwashed."
+  ]
+}

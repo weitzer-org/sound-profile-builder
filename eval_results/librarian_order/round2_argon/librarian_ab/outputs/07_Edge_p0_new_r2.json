@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Circular Delay",
+    "Chorus 229T",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 at the very start of the signal chain before the compressor and amp to replicate the Korg SDD-3000 preamp mid-high chime boost.",
+    "Place the Legendary 87 (ST) before the amplifier to add percussive sustain and even out the rhythmic picking dynamics.",
+    "Place the Circular Delay IN FRONT of the UK C30 TopBoost amplifier block set to a dotted-eighth subdivision with modulated repeats so the delay trails push the amp input and compress naturally together like an Electro-Harmonix Deluxe Memory Man.",
+    "Use the 212 UK C30 65 cabinet with a dynamic 57-style microphone and roll off the high-end low-pass filter to tame top-end fizz.",
+    "Place the Studio Plate 70 (ST) at the end of the chain to provide baseline direct-to-FOH spatial ambiance."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Rage Booster",
+    "Green 808",
+    "Facial Fuzz",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Position the Crying Clyde Wah at the very front of the signal chain prior to gain stages.",
+    "Place the Rage Booster and Green 808 before the amplifier block to push the front-end input stage for lead solos.",
+    "Place the Facial Fuzz before overdrive and boost pedals to clean up dynamically with guitar volume adjustments.",
+    "Set the Range Rverb after the cabinet block to create a natural vintage room ambiance.",
+    "Position a dynamic mic off-axis on the 412 cabinet block to smooth out high-frequency harshness."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Vibroverb",
+    "1x15 JBL D130F"
+  ],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad P10Q 16"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 BEFORE the US SPR Vibrato amplifier block, configuring it with low drive and high output level to act as a midrange-focused volume push into the front end of the amp.",
+    "Pair the US SPR Vibrato with the 410 US Basslad P10Q 16 cabinet block using a blend of a Dynamic 57 mic on-axis for bite and a large-diaphragm condenser or Ribbon 121 mic slightly off-axis to capture the full-bodied low-end punch.",
+    "Place the Spring reverb block AFTER the cabinet block with a modest mix and short decay to provide authentic vintage Texas blues room ambiance.",
+    "Since the user is playing both a Gibson ES-339 (humbuckers) and a Fender Telecaster (single-coils), set the amplifier's clean headroom right at the edge of breakup so the single-coils remain glassy while the humbuckers naturally push the tubes into warm compression."
+  ]
+}

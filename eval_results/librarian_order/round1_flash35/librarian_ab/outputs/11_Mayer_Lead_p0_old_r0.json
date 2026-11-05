@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost",
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Keeley Mod BD-2 3"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier input with low drive as a mid-focused boost to push the lead tone without adding mud.",
+    "Place the Keeley Mod BD-2 3 drive block before the amplifier for primary touch-sensitive overdrive saturation.",
+    "Position a Shure SM57 microphone block on the 212 Too Rock G65 cabinet to capture crisp mid-range detail.",
+    "Apply post-amp high-pass filtering and low-mid EQ cuts around 120-250Hz to keep the Two-Rock low end tight and prevent woolly bass response."
+  ]
+}

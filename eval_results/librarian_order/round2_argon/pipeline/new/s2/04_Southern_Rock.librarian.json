@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "1958 Fender Tweed Champ (5F1)",
+    "Fender '59 Bassman"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Parametric-3",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ BEFORE the amp block to cut low-end frequencies and prevent the cranked Tweed amp from farting out with the Gibson ES-339 humbuckers.",
+    "Place the Legendary 87 (ST) compressor early in the chain BEFORE the overdrive to enhance slide sustain without squashing pick attack.",
+    "Place the Green 808 (or Myth Drive) BEFORE the amp block configured with low gain and high output level to push the Tweed circuit into singing sustain.",
+    "If utilizing a native cab block (112 US DLX Tweed WGS-Q 10s), pair an off-axis Dynamic 57 with a condenser or ribbon mic to smooth out upper-register slide harshness.",
+    "Place the Circular Delay (modeling the Maestro Echoplex EP-3 tape echo) and Spring reverb AFTER the amp and cab blocks for vintage 1970s Southern Rock spatial depth."
+  ]
+}

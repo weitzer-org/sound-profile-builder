@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "Fender Super Reverb",
+    "1x15 JBL D130F",
+    "4x10 CTS Alnico"
+  ],
+  "mandatory_blocks": [
+    "Fender Vibroverb 64 Custom SRV",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Crying Clyde Wah",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah first in the signal chain, followed by the Green 808 before the amplifier to act as a clean midrange and volume push with very low drive.",
+    "Fender Vibroverb 64 Custom SRV is a full_rig user capture with a baked-in 1x15 combo cabinet; if adding a separate cab block like the 212 Too Rock EV Vintage 79, keep cab routing appropriate and apply a low-cut filter to prevent muddy low-end.",
+    "Use a Dynamic 57 and Ribbon 121 microphone pairing on the cabinet block with the high-cut left open for single-coil chime.",
+    "Place the Legendary 87 (ST) compressor gently post-amp to replicate natural sag and studio tape compression.",
+    "Place the Spring reverb at the end of the chain to provide classic vintage Fender-style Texas blues ambiance."
+  ]
+}

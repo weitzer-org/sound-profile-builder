@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use 'Two Rock SSS EQ1 (No Cab)' from the User Capture Library as the single mandatory amplifier block to nail the high-headroom Two-Rock/Dumble clean platform, and keep its gain low so all saturation comes from pedals.",
+    "Pair the head capture with the '212 Too Rock G65' cabinet block using a dynamic SM57 and off-axis Ribbon 121 mic blend to smooth out transients.",
+    "Place 'Exotic Z Boost' first in the chain as a clean front-end boost (standing in for the Keeley Katana), followed by 'Brit Blues' as an always-on low-gain transparent thickener.",
+    "Stack 'Green 808' and 'Keeley Mod BD-2 3' (from the User Capture Library) into the transparent drive before the amp to achieve the vocal mid-pushed 'Try!' lead tone without nasal boxiness.",
+    "Place 'Circular Delay' (analog/BBD style slapback) and 'Studio Plate 70 (ST)' after the cab block for lush post-amp spatial depth."
+  ]
+}

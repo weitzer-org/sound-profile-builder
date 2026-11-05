@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Per the Pure Headroom Rule, do NOT use any overdrive or distortion pedals. Achieve grit and singing sustain strictly by pushing the US TWN Vibrato amplifier block volume and input level natively.",
+    "Place the Parametric-8 EQ block BEFORE the amplifier to emulate the Gibson Varitone notch filter by scooping low-mids and accentuating upper-mid vocal bite.",
+    "Use a Dynamic 57 microphone in the 212 US TWN C12Q 00s cab block and apply a gentle high cut to tame any piercing upper-register frequencies while rolling back amp bass to keep the low end tight.",
+    "Place the Spring reverb block AFTER the cab with a subtle mix and short decay to preserve staccato picking dynamics and vibrato clarity."
+  ]
+}

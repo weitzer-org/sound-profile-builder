@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123",
+    "RR Big Muff 1976 Original"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "TW Tube Drive",
+    "Parametric-3",
+    "MX Flanger",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Chief CS3 at the very beginning of the chain as a clean sustain compressor.",
+    "Place RR Big Muff 1976 Original in the drive section before the amplifier.",
+    "Place TW Tube Drive or Parametric-3 immediately AFTER the Big Muff capture to restore the vocal midrange and emulate the Colorsound Power Boost mid-push.",
+    "Set Watt D103 Normal just at the edge of breakup so the fuzz capture compresses naturally without sounding fizzy.",
+    "Use 412 Watt S4123 with a Dynamic 57 and Condenser 87 microphone pairing and engage a high-cut to smooth top-end fizz.",
+    "Place MX Flanger, Circular Delay, and Studio Plate 70 (ST) in series after the amplifier and cabinet blocks for a wide stadium ambiance."
+  ]
+}

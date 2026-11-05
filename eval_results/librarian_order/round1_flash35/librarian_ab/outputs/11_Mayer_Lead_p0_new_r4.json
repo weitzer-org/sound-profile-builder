@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amplifier as a mid-focused volume push with low drive to prevent low-mid mud.",
+    "Place the Chief BD2 before the amplifier for main gain staging and crunch tone.",
+    "Mic the 212 Too Rock G65 cabinet using a Shure SM57 to capture focused mid-range detail.",
+    "Include baseline reverb at the end of the signal chain to preserve ambient spatial depth for direct FOH performance."
+  ]
+}

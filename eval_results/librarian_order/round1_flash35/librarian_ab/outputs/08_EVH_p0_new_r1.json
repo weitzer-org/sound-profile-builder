@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger BEFORE the amplifier block to capture front-end modulation compression through the cranked preamp.",
+    "Use the Graphic-9 block to shape mids and boost volume akin to the classic Boss GE-10 setup without adding unwanted pedal diode distortion.",
+    "Position the Circular Delay and Studio Plate 70 (ST) post-cab to emulate the classic Echoplex EP-3 slapback and Sunset Sound plate reverberation."
+  ]
+}

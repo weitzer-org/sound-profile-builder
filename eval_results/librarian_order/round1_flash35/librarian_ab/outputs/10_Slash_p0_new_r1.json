@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203",
+    "412 Brit 60B V30 '95"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier block with drive set low and level high to tighten the low end and boost upper mids.",
+    "Place the Graphic-9 EQ after the amplifier to boost midrange frequencies and apply low-pass filtering around upper highs to eliminate JCM800 top-end fizz.",
+    "Position the Circular Delay post-amp to add lush lead ambiance without clouding the primary rhythm tone."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Nordic Concert Hall (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and Myth Drive BEFORE the Dumbbell ODS block to push the front end with low drive and high output level, mimicking both the standard TS808 and the modified Way Huge Overrated Special mid-focused push.",
+    "Since single-amp mode restricts blending a secondary British-style amp, push the midrange EQ on the Dumbbell ODS block slightly to retain vocal bark and punch.",
+    "In the 212 Too Rock EV Vintage 79 cabinet block, pair a Dynamic 57 microphone with a Ribbon 121 or Ribbon 160 microphone, and roll off the high cut and low cut to keep the EVM12L speakers smooth, horn-like, and free of bridge-pickup harshness.",
+    "Place the Circular Delay and Nordic Concert Hall (ST) in series AFTER the cabinet block for a polished post-amp ambient tail."
+  ]
+}

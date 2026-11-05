@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "MK3 Silicon Fuzz",
+    "Parametric-3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the UK C30 TopBoost amp model to push upper-mid chime and sustain without muddying low frequencies",
+    "Place the MK3 Silicon Fuzz ahead of the treble booster and amp block for classic vintage British fuzz response",
+    "Use a Neumann U67 condenser mic simulation on the 212 UK C30 '65 cabinet block with high-pass and low-pass filtering to tame top-end fizz",
+    "Utilize a post-cab Parametric-3 EQ block with a slight notch around 3-4 kHz to smooth out harsh resonant peaks inherent to Vox Top Boost circuits"
+  ]
+}

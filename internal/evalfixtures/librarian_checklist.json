@@ -1,0 +1,510 @@
+{
+  "status": "APPROVED by owner 2026-11-04. Amended 2026-11-05 with owner approval: BD-2/TS808/TS9 added to the drive patterns and Watt Custom* treated as amps (both fix scorer false negatives found in the Librarian-only A/B; they apply equally to both orders). Further changes need owner sign-off.",
+  "doc": {
+    "purpose": "Deterministic, judge-free quality checklist for the 13 golden queries. Scored by code against (a) the CorOS Librarian's chosen block names and (b) the final preset's block models. No LLM involved.",
+    "how_rules_work": "Each rule matches case-insensitive regex patterns against the chosen block NAMES. 'require' passes if at least one chosen name matches; 'forbid' fails if any does. 'scope' restricts which names are considered: 'amp' = names classified as amps (coros_map type 'amp', or a user capture whose block_type is 'amp' or 'full_rig'); 'any' = every chosen name. A pattern of the form '@archetype:<name>' expands to every amp in coros_map.json with that tonal_archetype; '@type:<t>' expands to every catalog entry of that type.",
+    "levels": "'hard' rules must pass for a run to count as correct on that item. 'soft' rules are things a good preset usually has but a defensible one might not; they are reported separately and never fail a run.",
+    "sources": "'query' = the requirement is stated in the golden query's own text (objective). 'domain' = it comes from general knowledge of the artist/genre (the owner should check these hardest).",
+    "limits": "Name-level only. Cannot score parameter values, scene logic, or whether effects are left engaged. The Architect's flanger-left-on and similar choices are out of scope here and are covered by the existing mechanical quality checks and the judge.",
+    "single_amp": "The eval constraints set single_amp_mode: true, so global rule G3 expects exactly one amp.",
+    "scope_non_amp": "'non_amp' = names NOT classified as amps; used for pedals/effects rules so a full rig or amp that merely has 'Drive' or 'Delay' in its name can't satisfy them.",
+    "scope": "Allowed scopes: 'amp', 'non_amp', 'any'."
+  },
+  "patterns": {
+    "HIGH_GAIN_MODERN": "@archetype:High-Gain Modern",
+    "FENDER_HEADROOM_CLEAN": "US Twin|US TWN|US SPR|US DLX 65|US DLX 58|Vibroverb|Twin 57|Super Reverb|Twin Reverb",
+    "FENDER_TWIN": "US Twin|US TWN|Twin Reverb|Twin 57",
+    "SMALL_COMBO": "Tweed|Basslad|Bassman|5E3|DLX|Deluxe|Champ|Prince|Harvard|Vibrolux|1Star|Silvertone|Duo|TWDLX",
+    "AMERICAN_TWEED": "Tweed|Basslad|Bassman|5E3|5F8|Deluxe 57|Fender 57|Champ 57",
+    "VOX_AC30": "UK C30|AC30",
+    "VOX_AC": "UK C30|UK C15|AC30|AC15",
+    "MARSHALL_VINTAGE": "Plexi|TM45|JTM|Super Lead|Marshall 1959|1959",
+    "MARSHALL_JCM800": "2203|JCM ?800",
+    "HIWATT": "Watt D103|Watt Custom|Hiwatt|DR103",
+    "DUMBLE_TWO_ROCK": "Dumbbell|ODS|Dumble|Two Rock|Too Rock|TRCK",
+    "BIG_MUFF": "Fuzz Pi|Big Muff|Ram'?s? Head",
+    "TS808": "Green 808|Iba Green|TS808|Tube Screamer",
+    "DRIVE_PEDAL": "@type:drive|@type:overdrive|BD2|Blues Driver|Brit Blues|BluesBreaker|Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Rage Booster|Range Master|Screamer|BD-?2|TS-?808|TS-?9",
+    "SMOOTH_DRIVE": "Green 808|Iba Green|Myth Drive|Klon|Obsessive|Jewel|Chief SD1|Chief OD|Drive|Overdrive|Screamer|BD2|Blues Driver|Boost|BD-?2|TS-?808|TS-?9",
+    "FUZZ": "Fuzz Pi|Facial Fuzz|Fuzz Face|Soviet Fuzz|Big Muff|Muff|Fuzz",
+    "TREBLE_BOOST_OR_FUZZ": "Rage Booster|Range Master|Facial Fuzz|Fuzz Face|Fuzz Pi|Soviet Fuzz|Muff|Treble Boost|Fuzz",
+    "WAH": "Wah",
+    "DELAY": "delay|echo",
+    "PLATE_REVERB": "plate",
+    "SPRING_REVERB": "spring",
+    "CAB_4X12": "^412 |4x12"
+  },
+  "global_rules": [
+    {
+      "id": "G1",
+      "kind": "metric",
+      "what": "Count of chosen block names that are in neither coros_map.json's coros_equivalent values nor user_captures.json. Reported per condition as a defect count; not pass/fail. Names that are generic native blocks (Spring Reverb, Noise Gate, ...) land here too, so this is a comparison between conditions, not an absolute error rate."
+    },
+    {
+      "id": "G2",
+      "kind": "metric",
+      "what": "Count of times 'Range Rverb' is chosen (see ambiguous_names). Reported as a defect count per condition."
+    },
+    {
+      "id": "G3",
+      "kind": "hard",
+      "scope": "amp",
+      "what": "Exactly one distinct amp among mandatory blocks (the eval constraints set single_amp_mode: true).",
+      "source": "constraint"
+    }
+  ],
+  "queries": {
+    "01_SRV_Clean": {
+      "query": "Clean funk blues tone. Stevie Ray Vaughan style with high headroom. Wants to push it with a TS808.",
+      "rules": [
+        {
+          "id": "01-amp-fender",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "FENDER_HEADROOM_CLEAN",
+          "source": "query+domain",
+          "why": "High-headroom clean SRV platform: Fender Twin/Super/Vibroverb/Deluxe class."
+        },
+        {
+          "id": "01-ts808",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "TS808",
+          "source": "query",
+          "why": "Query asks to push it with a TS808."
+        },
+        {
+          "id": "01-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "Clean, high-headroom brief; a modern high-gain amp contradicts it."
+        }
+      ]
+    },
+    "02_Chicago_Blues": {
+      "query": "Chicago Blues style. Warm Chess Records style overdrive into a small combo amp. Slightly gritty but clean platform.",
+      "rules": [
+        {
+          "id": "02-amp-small",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "SMALL_COMBO",
+          "source": "query+domain",
+          "why": "Small combo amp: tweed/Deluxe/Champ/Princeton class."
+        },
+        {
+          "id": "02-drive",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "DRIVE_PEDAL",
+          "source": "query",
+          "why": "Query asks for overdrive."
+        },
+        {
+          "id": "02-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "'Clean platform'; slightly gritty only."
+        },
+        {
+          "id": "02-no-jcm",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "MARSHALL_JCM800",
+          "source": "domain",
+          "why": "A hot Marshall isn't a small combo or a clean platform."
+        }
+      ]
+    },
+    "03_British_Invasion": {
+      "query": "Early British Invasion tone. Vox AC30/JTM45 chime and edge of breakup. Punchy mids, sparkle.",
+      "rules": [
+        {
+          "id": "03-amp-vox-jtm",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "VOX_AC|MARSHALL_VINTAGE",
+          "source": "query",
+          "why": "Query names AC30 or JTM45."
+        },
+        {
+          "id": "03-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "Edge of breakup, not high gain."
+        }
+      ]
+    },
+    "04_Southern_Rock": {
+      "query": "Southern Rock slide style. Dual lead humbuckers into a cranked American Tweed amp. Singing sustain.",
+      "rules": [
+        {
+          "id": "04-amp-tweed",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "AMERICAN_TWEED",
+          "source": "query",
+          "why": "Query asks for an American Tweed amp."
+        },
+        {
+          "id": "04-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "domain",
+          "why": "A modern high-gain amp isn't an American Tweed."
+        }
+      ]
+    },
+    "05_Clapton": {
+      "query": "Vintage Cream-era Clapton tone. Rolled-off Les Paul tone knobs into a cranked Marshall.",
+      "rules": [
+        {
+          "id": "05-amp-vintage-marshall",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "MARSHALL_VINTAGE",
+          "source": "query+domain",
+          "why": "Cranked Marshall, Cream era (1966-68): JTM45 / Plexi, not a later model."
+        },
+        {
+          "id": "05-no-jcm",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "MARSHALL_JCM800",
+          "source": "domain",
+          "why": "A JCM800 is 1981+, after the Cream era."
+        },
+        {
+          "id": "05-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "domain",
+          "why": "Not a modern high-gain amp."
+        },
+        {
+          "id": "05-boost-or-fuzz",
+          "level": "soft",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "TREBLE_BOOST_OR_FUZZ",
+          "source": "domain",
+          "why": "Cream-era rigs commonly used a treble booster or fuzz; judge reasons repeatedly cited this."
+        },
+        {
+          "id": "05-wah",
+          "level": "soft",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "WAH",
+          "source": "domain",
+          "why": "Clapton's Cream lead tones use wah."
+        }
+      ]
+    },
+    "06_Gilmour": {
+      "query": "David Gilmour preset using a Hiwatt Custom 100, Ram's Head Big Muff, WEM 4x12, and a massive Plate Reverb.",
+      "rules": [
+        {
+          "id": "06-amp-hiwatt",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "HIWATT",
+          "source": "query",
+          "why": "Query names a Hiwatt Custom 100."
+        },
+        {
+          "id": "06-big-muff",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "BIG_MUFF",
+          "source": "query",
+          "why": "Query names a Ram's Head Big Muff."
+        },
+        {
+          "id": "06-plate",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "PLATE_REVERB",
+          "source": "query",
+          "why": "Query asks for a massive plate reverb."
+        },
+        {
+          "id": "06-cab-4x12",
+          "level": "soft",
+          "kind": "require",
+          "scope": "any",
+          "pattern": "CAB_4X12",
+          "source": "query",
+          "why": "Query asks for a 4x12. The catalog has no WEM cab, so any 4x12 is the closest available."
+        }
+      ]
+    },
+    "07_Edge": {
+      "query": "The Edge style chime. 1964 Vox AC30 edge-of-breakup with rhythmic dotted-eighth delays.",
+      "rules": [
+        {
+          "id": "07-amp-ac30",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "VOX_AC30",
+          "source": "query",
+          "why": "Query names a 1964 Vox AC30."
+        },
+        {
+          "id": "07-delay",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "DELAY",
+          "source": "query",
+          "why": "Query asks for rhythmic delays."
+        },
+        {
+          "id": "07-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "Edge of breakup."
+        }
+      ]
+    },
+    "08_EVH": {
+      "query": "Van Halen Brown Sound. Hot-rodded 1968 Marshall Plexi, variac sag, plate reverb.",
+      "rules": [
+        {
+          "id": "08-amp-plexi",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "Plexi|Super Lead",
+          "source": "query",
+          "why": "Query names a 1968 Marshall Plexi."
+        },
+        {
+          "id": "08-plate",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "PLATE_REVERB",
+          "source": "query",
+          "why": "Query asks for plate reverb."
+        },
+        {
+          "id": "08-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "domain",
+          "why": "A modded Plexi, not a modern high-gain amp (e.g. a 5150)."
+        }
+      ]
+    },
+    "09_BB_King": {
+      "query": "BB King Lucille tone. High-headroom American Twin Reverb clean platform.",
+      "rules": [
+        {
+          "id": "09-amp-twin",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "FENDER_TWIN",
+          "source": "query",
+          "why": "Query names an American Twin Reverb."
+        },
+        {
+          "id": "09-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "High-headroom clean."
+        },
+        {
+          "id": "09-no-fuzz",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "non_amp",
+          "pattern": "FUZZ",
+          "source": "domain",
+          "why": "A BB King clean platform has no fuzz."
+        }
+      ]
+    },
+    "10_Slash": {
+      "query": "Guns N' Roses Slash lead. Les Paul neck pickup into a hot JCM800 with standard delay.",
+      "rules": [
+        {
+          "id": "10-amp-jcm800",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "MARSHALL_JCM800",
+          "source": "query",
+          "why": "Query names a JCM800."
+        },
+        {
+          "id": "10-delay",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "DELAY",
+          "source": "query",
+          "why": "Query asks for delay."
+        },
+        {
+          "id": "10-wah",
+          "level": "soft",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "WAH",
+          "source": "domain",
+          "why": "Slash leads use wah; the judge cited its absence."
+        },
+        {
+          "id": "10-drive",
+          "level": "soft",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "DRIVE_PEDAL",
+          "source": "domain",
+          "why": "A boost/drive in front of the JCM800 is common practice; the judge cited its absence."
+        }
+      ]
+    },
+    "11_Mayer_Lead": {
+      "query": "John Mayer Trio Lead. Smooth Two-Rock/Dumble platform, mid-scooped clean with a subtle drive push.",
+      "rules": [
+        {
+          "id": "11-amp-dumble-tworock",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "DUMBLE_TWO_ROCK",
+          "source": "query",
+          "why": "Query names a Two-Rock/Dumble platform."
+        },
+        {
+          "id": "11-drive",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "SMOOTH_DRIVE",
+          "source": "query",
+          "why": "Query asks for a subtle drive push."
+        },
+        {
+          "id": "11-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "query",
+          "why": "Clean platform."
+        }
+      ]
+    },
+    "12_Bonamassa": {
+      "query": "Joe Bonamassa modern blues lead features, smooth tube drive into a Dumble style amplifier.",
+      "rules": [
+        {
+          "id": "12-amp-dumble",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "DUMBLE_TWO_ROCK",
+          "source": "query",
+          "why": "Query asks for a Dumble-style amp."
+        },
+        {
+          "id": "12-drive",
+          "level": "hard",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "SMOOTH_DRIVE",
+          "source": "query",
+          "why": "Query asks for smooth tube drive."
+        },
+        {
+          "id": "12-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "domain",
+          "why": "Dumble-style, not a modern high-gain amp."
+        }
+      ]
+    },
+    "13_Hard_Rock_Blues": {
+      "query": "hard rock blues from the 1960s - 1980s",
+      "rules": [
+        {
+          "id": "13-amp-british",
+          "level": "hard",
+          "kind": "require",
+          "scope": "amp",
+          "pattern": "MARSHALL_VINTAGE|MARSHALL_JCM800",
+          "source": "domain",
+          "why": "The query is vague. A 1960s-80s hard rock blues sound is a vintage British Marshall-class amp. This is the loosest rule in the set."
+        },
+        {
+          "id": "13-no-hg",
+          "level": "hard",
+          "kind": "forbid",
+          "scope": "amp",
+          "pattern": "HIGH_GAIN_MODERN",
+          "source": "domain",
+          "why": "Nothing modern in a 1960s-80s brief."
+        },
+        {
+          "id": "13-drive",
+          "level": "soft",
+          "kind": "require",
+          "scope": "non_amp",
+          "pattern": "DRIVE_PEDAL|TREBLE_BOOST_OR_FUZZ",
+          "source": "domain",
+          "why": "A boost, drive or fuzz is typical for the era."
+        }
+      ]
+    }
+  },
+  "ambiguous_names": {
+    "Range Rverb": {
+      "treat_as": "reverb",
+      "why": "coros_map.json maps this one name to an Orange Rockerverb amp capture AND to generic/plugin spring reverbs. No golden query wants an Orange amp, so the scorer treats it as a reverb (never as an amp) and counts every use in G2."
+    }
+  },
+  "amp_name_prefixes": {
+    "Watt Custom": "Hiwatt Custom PA100 captures are typed 'fx' in coros_map.json but are amps. Without this the scorer reported zero amps for a run that chose one."
+  }
+}

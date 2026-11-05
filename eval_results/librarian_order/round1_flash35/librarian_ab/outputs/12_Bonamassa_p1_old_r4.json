@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp input configured as a mid-focused boost to push the lead channel without over-saturating.",
+    "Trim the low-end frequencies on the Dumbbell ODS block to prevent low-end flub during fast lead passages.",
+    "Position the Circular Delay post-amp in the FX loop for lead depth.",
+    "Mic the 212 Too Rock EV cabinet with a dynamic mic on-axis paired with a ribbon mic off-axis to smooth transients."
+  ]
+}

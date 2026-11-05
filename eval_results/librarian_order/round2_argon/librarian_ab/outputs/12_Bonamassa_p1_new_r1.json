@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Crying Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Nordic Concert Hall (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Wah first in the signal chain before any overdrive blocks.",
+    "Place the Green 808 and Myth Drive BEFORE the Dumbbell ODS amp block to act as mid-focused boosts and replicate the vocal midrange bloom of the TS808, Klon, and Overrated Special.",
+    "Monitor the input level into the Dumbbell ODS closely when stacking drives to avoid harsh digital clipping artifacts.",
+    "Use a Dynamic 57 and Ribbon 121 microphone pairing on the cabinet block, and engage an aggressive low cut on the cab block to prevent lower-midrange muddiness, especially when using neck humbuckers.",
+    "Place the Circular Delay and Studio Plate 70 (ST) or Nordic Concert Hall (ST) in series AFTER the cabinet block with high-end damping to create a lush, wide stage ambiance within a single-amp signal path."
+  ]
+}

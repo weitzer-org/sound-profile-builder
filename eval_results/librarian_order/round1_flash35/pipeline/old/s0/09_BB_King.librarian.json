@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Twin Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive"
+  ],
+  "tactical_hints": [
+    "Place the Myth Drive overdrive before the amplifier block with near-zero drive and boosted level as a transparent clean push",
+    "Position the Jewel compressor early in the signal chain to smooth out picking dynamics and add natural sustain",
+    "Use a ribbon mic off-axis on the 212 US TWN cab block and apply a high-cut filter to smooth out ice-pick treble spikes"
+  ]
+}

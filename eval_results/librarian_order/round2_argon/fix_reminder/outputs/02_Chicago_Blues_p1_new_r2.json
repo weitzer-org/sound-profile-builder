@@ -1,0 +1,29 @@
+{
+  "dropped_gear": [
+    "US Tweed Champ C",
+    "US Tweed Deluxe C",
+    "Morning Drive C",
+    "Brit Blues C",
+    "110 US Tweed C59",
+    "112 US Deluxe 58 Cab Block",
+    "US DLX 58 1",
+    "Fender 57 Deluxe - T8 I4 M12"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "FNDR TWDLX IN Edge BAL CAB"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 and Chief BD2 BEFORE the US DLX 58 amp block to provide overdrive and mid-focus into the front end of the Tweed circuit.",
+    "Insert a Parametric-3 EQ block BEFORE the amp or engage the High-Pass Filter in the cab block to trim excessive low-end and prevent the loose, farty bass response typical of small Tweed circuits.",
+    "Avoid pushing the Input Gain on the US DLX 58 capture block; rely on the overdrive pedals in front of the amp for natural breakup.",
+    "Place the Spring reverb AFTER the FNDR TWDLX IN Edge BAL CAB block for authentic 1950s vintage American blues room and tank ambiance.",
+    "If utilizing a native cab block instead of the capture cab, blend a Ribbon microphone lower than a Dynamic microphone to maintain clarity and prevent muddiness with the ES-339 humbuckers."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 BEFORE the US DLX 58 capture with low drive and elevated output to push the front end naturally rather than boosting the capture's internal input gain.",
+    "Place the Parametric-3 EQ block immediately before or after the US DLX 58 to roll off boxy low-end frequencies and prevent small-combo bass flub, especially when using the Gibson ES-339 humbuckers.",
+    "Pair the 112 US DLX Tweed WGS-Q 10s cab with a ribbon microphone positioned slightly off-axis to emulate the vintage RCA 77-DX warmth and smooth out high-frequency transients.",
+    "Place the Spring reverb block AFTER the cab block with subtle mix and low dwell to recreate a vintage studio room and spring tank ambiance."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "US Twin '70 C1-4 (Factory Neural Capture)",
+    "212 US Twin '65 (Cab Block)"
+  ],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ immediately after the input to mimic the ES-355 'Lucille' Varitone switch by dialing in a narrow mid notch alongside a subtle low-mid bump, and include a High-Pass Filter to prevent a boomy neck pickup response.",
+    "Place the Legendary 87 (ST) compressor gently ahead of the amplifier with a slow attack and low ratio to replicate the natural sustain and vocal-like bloom of a loud Twin Reverb in a room.",
+    "Do not use any overdrive pedals; instead, push the amplifier volume and input gain natively to achieve natural edge-of-breakup compression.",
+    "Pair the 212 US TWN C12Q 00s cabinet with a Dynamic 57 or a combination of Dynamic 421 and Ribbon 160 microphones pushed slightly toward the cap edge to tame piercing upper-mid frequencies while keeping the fundamental note thick.",
+    "Place the Spring reverb after the amplifier and cabinet with a subtle mix and reduced dwell time, pulling back the tone parameter to avoid an overly metallic splash on high-register bends."
+  ]
+}

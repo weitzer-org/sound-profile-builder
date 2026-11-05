@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Position the Rage Booster and Green 808 overdrive before the amplifier block to boost mid frequencies and push the front-end tube dynamic response.",
+    "Place the Facial Fuzz early in the signal chain before any buffer blocks to allow guitar volume cleanup.",
+    "Use a Ribbon mic off-axis combined with the SM57 on the 4x12 Greenback cab to smooth out high-end harshness."
+  ]
+}

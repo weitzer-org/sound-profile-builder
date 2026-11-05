@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "MXR Custom Shop Joe Bonamassa FET Driver",
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block with low gain to serve as a clean midrange push for lead cuts",
+    "Position delay and reverb blocks post-amplifier to achieve signature wet 3D lead ambience without muddying saturation",
+    "Apply high-pass filtering around 80Hz and trim lower-mid frequencies to control D-style low-end boominess",
+    "Pair dynamic and ribbon microphone profiles off-axis on the cabinet to smooth high-frequency pick attack"
+  ]
+}

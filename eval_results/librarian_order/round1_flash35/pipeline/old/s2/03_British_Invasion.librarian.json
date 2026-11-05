@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Neumann U67"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amplifier block to push upper-mids and achieve vintage British treble chime.",
+    "Lower the input gain on the UK C30 TopBoost block to maintain edge-of-breakup clean headroom.",
+    "Apply a high-cut filter between 6.5 kHz and 7.5 kHz on the cabinet block to smooth out upper harmonic harmonics and prevent top-end brittleness."
+  ]
+}

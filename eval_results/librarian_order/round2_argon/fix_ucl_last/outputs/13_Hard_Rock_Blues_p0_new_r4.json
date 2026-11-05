@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Iba Green",
+    "Green 808",
+    "Crying Clyde Wah",
+    "EP3 pre (V-12 EQ-mid)",
+    "Circular Delay",
+    "Legendary 87 (ST)",
+    "Studio Plate 70 (ST)",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very beginning of the signal chain before any buffers or overdrives so the fuzz reacts organically to guitar volume knob changes.",
+    "Place Iba Green or Green 808 before the Brit Plexi 100 Patch amp block with drive dialed low and level pushed to tighten the vintage low-end for humbucker and single-coil transitions.",
+    "You may optionally use the EP3 pre (V-12 EQ-mid) user capture before the amp to authentically replicate the Maestro Echoplex EP-3 preamp coloration, while using Circular Delay post-amp for the actual tape echo repeats.",
+    "In the 412 Brit 60A GB75Hz 89 cab block, pair a dynamic SM57 mic with a ribbon 121 mic off-axis to smooth out high-end transients, and engage high and low cuts to tame FRFR fizziness and boominess.",
+    "Place Legendary 87 (ST) post-cab to simulate the natural tape and tube compression of 1970s and 80s studio consoles, followed by Studio Plate 70 (ST) for room glue."
+  ]
+}

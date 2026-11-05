@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Chorus 229T",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place Iba Green before the amplifier block to act as a focused midrange boost.",
+    "Position the Shure SM57 off-axis on the 212 UK C30 '65 cabinet to smooth out treble transients from the AC30 circuit.",
+    "Place Circular Delay and Chorus 229T after the amplifier block to maintain clean, un-distorted time-based repeats."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block with low drive and elevated output level to act as a focused mid-range gain push.",
+    "Place the Spring Reverb natively after the cabinet block to provide essential room ambiance for direct-to-FOH signals.",
+    "Position a dynamic Shure SM57 microphone slightly off-axis on the 4x10 speaker cone to balance punchy upper mids and smooth out high-end transients."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost, Green 808, and Keeley Mod BD-2 3 in front of the Two Rock SSS EQ1 (No Cab) amp capture to generate all lead sustain and midrange push from the pedals while keeping the amp capture clean.",
+    "Stack the Green 808 into the Keeley Mod BD-2 3 (or use the Exotic Z Boost as a clean volume lift) to smooth out the midrange spike and prevent a boxy tone.",
+    "Watch output levels when stacking drives into the high-headroom amp capture to prevent unnatural digital clipping on transient attacks.",
+    "Pair the 212 Too Rock G65 cabinet with a dynamic and ribbon microphone combination (such as SM57 and Ribbon 121) to balance bite and warm low-end.",
+    "Place the Circular Delay (set for a short analog slapback) and Spring reverb after the cabinet block for lush room and vintage spatial depth."
+  ]
+}

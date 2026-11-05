@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Keeley Katana Clean Boost"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive block BEFORE the amp capture with low gain and boosted volume to push the front-end clean tone.",
+    "Position the Keeley Mod BD-2 drive pedal in front of the amp block for lead gain stacking.",
+    "Place a baseline Studio Plate Reverb block at the end of the signal chain to provide ambient space for direct-to-FOH direct routing.",
+    "Use a low-cut filter around 80Hz on the 2x12 cab block to clean up low-mid frequency build-up."
+  ]
+}

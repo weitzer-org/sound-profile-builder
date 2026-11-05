@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the amplifier block to boost upper-mid clarity and push the front end into natural saturation",
+    "Position the Green 808 before the amp as a clean volume and mid-range boost to tighten low-end flub during solo passages",
+    "Place the Facial Fuzz at the absolute front of the signal chain before any buffers to preserve impedance dynamics and roll-off cleanup",
+    "Position the Shure SM57 microphone slightly off-axis on the 412 Brit 60A GB75Hz '89 cabinet to smooth out high-end transients"
+  ]
+}

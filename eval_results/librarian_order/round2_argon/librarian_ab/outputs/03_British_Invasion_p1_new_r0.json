@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster or Brit Blues before the UK C30 TopBoost to push the amp into authentic 60s British edge-of-breakup chime.",
+    "Place the Otso Bender Mk1 first in the signal chain before any buffers or other drives for proper vintage fuzz impedance interaction.",
+    "Use a Condenser U67 or a blend of a Ribbon and Dynamic mic on the 212 UK C30 65 cab block, and engage the cab High Cut filter to tame any ice-picky top-end harshness from the Telecaster.",
+    "Place the Circular Delay and Spring reverb after the cab block to create a subtle vintage slapback echo and natural room ambiance."
+  ]
+}

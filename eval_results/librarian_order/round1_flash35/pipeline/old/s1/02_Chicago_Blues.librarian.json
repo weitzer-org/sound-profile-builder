@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Chief BD2 overdrive before the amp block set with low gain and high output level to push the Tweed combo into sweet grit without oversaturating.",
+    "Use an RCA 44 Ribbon mic model positioned off-axis on the 1x12 cabinet block to smooth out high-end transients and capture classic 1950s Chicago studio warmth.",
+    "Place a Spring Reverb block post-amp with a short decay time to recreate authentic 1950s Chess Records amp tank and room ambience.",
+    "Keep low frequencies tightly controlled on the Tweed amp capture to prevent low-end flub and boominess when pushing gain."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Rage Booster before the amplifier block to boost mid-range sustain and tighten low-end response for lead solo lifts.",
+    "Place the Facial Fuzz at the very front of the signal chain to preserve impedance interaction with guitar volume controls.",
+    "Position the dynamic Shure SM57 microphone model on-axis against the 4x12 speaker cone for classic British upper-mid attack."
+  ]
+}

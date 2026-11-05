@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Jewel",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Jewel compressor early in the signal chain to mimic vintage tape saturation and smooth out input dynamics.",
+    "Place the Green 808 BEFORE the US DLX 58 amp capture as a low-gain mid push, or rely primarily on the capture block's Input Gain to avoid harsh clipping.",
+    "Pair the US DLX 58 factory capture with the 112 US DLX Tweed WGS-Q 10s cabinet block and select a Ribbon microphone to emulate the warm vintage RCA ribbon response.",
+    "Apply a generous Low Cut in the cabinet block or reduce the Bass inside the US DLX 58 capture block to prevent the tweed circuit from getting flubby in the low end.",
+    "Place the Spring reverb block at the end of the chain with a short decay and rolled-off high end to emulate a vintage Chess Records echo chamber without introducing metallic clang."
+  ]
+}

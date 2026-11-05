@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Love Bender Mk3",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster (Treble Booster) in front of the UK C30 TopBoost amplifier to drive edge-of-breakup chime without muddying the low end.",
+    "Position the Love Bender Mk3 fuzz early in the signal chain before any buffers or boost pedals to preserve dynamic input impedance response.",
+    "Apply high-pass filtering around 70-80 Hz and low-pass filtering around 6 kHz on the cabinet block to tame upper-mid peak harshness typical of Top Boost circuits."
+  ]
+}

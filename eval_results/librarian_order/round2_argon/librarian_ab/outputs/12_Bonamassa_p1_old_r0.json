@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Crying Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "ODS Joe Lead is a full-rig User Capture of a Dumble Overdrive Special 50W combo amp previously owned by Joe Bonamassa; if pairing with the 212 Zila Open CL80 19 cab block, ensure you avoid double-cab filtering or use the cab block's aggressive low-cut filter to tame the thick Dumble lower-midrange.",
+    "Place the Crying Wah first in the signal chain, followed by the Myth Drive and Green 808 BEFORE the amp capture.",
+    "Use Green 808 to represent both the Ibanez TS808 and the Way Huge Overrated Special (which is a modified 808 circuit with extra midrange control); keep drive low and output level moderate to push the amp capture's midrange without causing harsh digital input clipping.",
+    "In the 212 Zila Open CL80 19 cab block, blend a Dynamic 57 and a Ribbon 121 microphone and apply a firm low-cut filter to prevent neck humbuckers on the Gibson ES-339 from sounding muddy.",
+    "Place Circular Delay and Studio Plate 70 (ST) in series AFTER the amp and cab blocks to create Bonamassa's wide stage ambiance within a single-amp signal path."
+  ]
+}

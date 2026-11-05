@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Watt D103 Normal",
+    "412 Watt S4123"
+  ],
+  "suggested_blocks": [
+    "Fuzz Pi",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Fuzz Pi block before the amplifier and trim harsh top-end transients with post-fuzz EQ or boost shaping",
+    "Apply high-pass and low-pass filtering on the 412 Watt S4123 cabinet block to tame sub-boom and high-frequency fizz",
+    "Position the Studio Plate 70 (ST) reverb at the end of the signal chain with a low-cut filter to maintain note definition"
+  ]
+}

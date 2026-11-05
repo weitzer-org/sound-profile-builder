@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)",
+    "US Tweed Bassman 59",
+    "US HP Tweed Twin"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the signal chain using parallel blending to elongate slide sustain without squashing initial pick and finger transients.",
+    "Place the Green 808 or Myth Drive BEFORE the US DLX 58 amp block configured as a clean mid-focused boost with low drive and high output level to tighten the low-end response from the Gibson ES-339 humbuckers and prevent Tweed bass flub.",
+    "Pair the US DLX 58 factory capture with the 112 US DLX Tweed WGS-Q 10s cab block using a dynamic 57 and Ribbon 121 microphone blend, applying high-pass filtering to keep the cranked Tweed bottom end tight and articulate.",
+    "Place the Circular Delay and Spring or Studio Plate 70 (ST) reverb AFTER the cabinet block to provide subtle vintage studio ambiance and glue the singing slide sustain together.",
+    "Keep the input gate threshold very low or disabled so the natural fading decay of glass or brass slide notes is never prematurely choked."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Legendary 87 (ST)",
+    "Chief SD1",
+    "Graphic-9",
+    "Parametric-3",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 or Legendary 87 (ST) compressor at the very beginning of the signal chain to keep rhythmic arpeggios locked in and consistent.",
+    "Place a Graphic-9 or Parametric-3 EQ block immediately BEFORE the amplifier to boost upper-mids and overall level, simulating the classic Korg SDD-3000 preamp boost and pick chime.",
+    "Place the Chief SD1 BEFORE the amplifier for moments requiring additional mid-focused overdrive.",
+    "Dial the UK C30 TopBoost right at the edge of breakup, and use the high-cut filter inside the 212 UK C30 65 cab block to emulate the traditional AC30 Cut control and prevent digital fizz.",
+    "Blend a dynamic 57-style mic and a condenser mic on the 212 UK C30 65 cab block to capture both midrange bite and high-end chime.",
+    "Place the Circular Delay AFTER the amplifier and cab blocks rather than in front of the amp so the heavy dotted-eighth rhythmic repeats remain clean, distinct, and do not mush together.",
+    "Engage the modulation inside the delay block to replicate the signature 80s chorus-like warble of the Korg SDD-3000 and Deluxe Memory Man.",
+    "Place the Studio Plate 70 (ST) reverb at the very end of the chain to provide baseline direct-to-FOH spatial ambiance."
+  ]
+}

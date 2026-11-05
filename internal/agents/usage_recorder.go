@@ -28,9 +28,13 @@ type UsageRecord struct {
 	RefID     string `json:"refId,omitempty"`
 	Model     string `json:"model"`
 
-	InputTokens    int32 `json:"inputTokens"`
-	OutputTokens   int32 `json:"outputTokens"`
-	ThinkingTokens int32 `json:"thinkingTokens,omitempty"`
+	// InputTokens is the FULL prompt size, cached tokens included (Gemini's
+	// PromptTokenCount semantics). CachedInputTokens is the subset of it served
+	// from Gemini's prompt cache; it is billed at the cheaper cached rate.
+	InputTokens       int32 `json:"inputTokens"`
+	CachedInputTokens int32 `json:"cachedInputTokens,omitempty"`
+	OutputTokens      int32 `json:"outputTokens"`
+	ThinkingTokens    int32 `json:"thinkingTokens,omitempty"`
 
 	LatencyMS int64   `json:"latencyMs"`
 	CostUSD   float64 `json:"costUsd"`
@@ -56,8 +60,10 @@ type UsageRecord struct {
 }
 
 // geminiPrice is USD per 1,000,000 tokens. Thinking tokens bill at the output rate (Google lists
-// output as "response and reasoning").
-type geminiPrice struct{ input, output float64 }
+// output as "response and reasoning"). cachedInput is the rate for prompt tokens served from
+// Gemini's implicit prompt cache. Where the real cached rate is NOT verified it is set EQUAL to
+// input (no discount), so an unknown rate never understates cost.
+type geminiPrice struct{ input, cachedInput, output float64 }
 
 // pricePeriod is a price in effect until (exclusive) Until; a zero Until means open-ended.
 type pricePeriod struct {
@@ -84,26 +90,36 @@ func day(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0,
 // them in sync when prices change (that repo is separate and was not updated in this change).
 var geminiPriceSchedule = map[string][]pricePeriod{
 	"gemini-4-argon": {
-		{Until: day(2026, time.December, 1), geminiPrice: geminiPrice{2.00, 10.00}}, // introductory
-		{geminiPrice: geminiPrice{4.00, 20.00}},
+		{Until: day(2026, time.December, 1), geminiPrice: geminiPrice{2.00, 0.10, 10.00}}, // introductory
+		{geminiPrice: geminiPrice{4.00, 0.20, 20.00}},
 	},
 	"gemini-3.8-flash": {
-		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 3.75}}, // introductory
-		{geminiPrice: geminiPrice{1.50, 7.50}},
+		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 0.075, 3.75}}, // introductory
+		{geminiPrice: geminiPrice{1.50, 0.15, 7.50}},
 	},
 	"gemini-3.6-flash": {
-		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 3.75}}, // introductory
-		{geminiPrice: geminiPrice{1.50, 7.50}},
+		{Until: day(2027, time.January, 1), geminiPrice: geminiPrice{0.75, 0.075, 3.75}}, // introductory
+		{geminiPrice: geminiPrice{1.50, 0.15, 7.50}},
 	},
-	"gemini-3.5-flash":       {{geminiPrice: geminiPrice{1.50, 9.00}}},
-	"gemini-3.5-flash-lite":  {{geminiPrice: geminiPrice{0.30, 2.50}}},
-	"gemini-3.1-pro-preview": {{geminiPrice: geminiPrice{2.00, 12.00}}},
+	"gemini-3.5-flash":       {{geminiPrice: geminiPrice{1.50, 1.50, 9.00}}},
+	"gemini-3.5-flash-lite":  {{geminiPrice: geminiPrice{0.30, 0.30, 2.50}}},
+	"gemini-3.1-pro-preview": {{geminiPrice: geminiPrice{2.00, 0.20, 12.00}}},
 	// Not on the 2026-11-05 page; kept for historical usage records only (no longer in any
 	// fallback chain). VERIFY before relying on them; 3-flash-preview's figure was a placeholder.
-	"gemini-3-flash-preview": {{geminiPrice: geminiPrice{1.50, 9.00}}},
-	"gemini-2.5-pro":         {{geminiPrice: geminiPrice{1.25, 10.00}}},
+	"gemini-3-flash-preview": {{geminiPrice: geminiPrice{1.50, 1.50, 9.00}}},
+	"gemini-2.5-pro":         {{geminiPrice: geminiPrice{1.25, 1.25, 10.00}}},
 }
 
+// CACHED-INPUT RATES (fetched 2026-11-05, rendered in a headless browser): the same Google Cloud
+// pricing page's "Price (/1M tokens) Cached input" column, global endpoint: gemini-4-argon $0.10
+// (through 2026-11-30) then $0.20; gemini-3.8-flash and gemini-3.6-flash $0.075 (through
+// 2026-12-31) then $0.15; gemini-3.1-pro-preview $0.20 (<=200K prompts). Two caveats, both
+// UNVERIFIED: (1) that page is Google Cloud's; the Gemini Developer API page this app is billed
+// under (ai.google.dev) is blocked from these sessions, so identical rates there are assumed, as
+// for the input/output rates above; (2) the page does not say whether the column also covers
+// IMPLICIT (automatic prefix) caching, which is what this app relies on, or only explicit caches.
+// Models without a listed cached rate keep cachedInput == input, so cost is never understated.
+//
 // Deliberately unpriced: gemini-pro-latest (an alias; served as gemini-3.1-pro-preview, Phase 0.3)
 // and anything unrecognized. Their calls record CostUnknown=true rather than a guessed figure.
 //
@@ -127,18 +143,29 @@ func priceAt(model string, t time.Time) (geminiPrice, bool) {
 // computeCostUSD prices one call at the rate in effect now. It returns 0 for an unknown/openllm
 // model rather than throwing -- a signal to add the model to the schedule, not "this call was
 // free" (see isPriceKnown / UsageRecord.CostUnknown). Thinking tokens bill at the output rate.
-func computeCostUSD(model string, inputTokens, outputTokens, thinkingTokens int32) float64 {
-	return computeCostUSDAt(model, nowFunc(), inputTokens, outputTokens, thinkingTokens)
+//
+// inputTokens is the full prompt size INCLUDING cachedTokens (Gemini's PromptTokenCount semantics);
+// cachedTokens is clamped to [0, inputTokens] and billed at the cached rate, the rest at the input rate.
+func computeCostUSD(model string, inputTokens, cachedTokens, outputTokens, thinkingTokens int32) float64 {
+	return computeCostUSDAt(model, nowFunc(), inputTokens, cachedTokens, outputTokens, thinkingTokens)
 }
 
-func computeCostUSDAt(model string, at time.Time, inputTokens, outputTokens, thinkingTokens int32) float64 {
+func computeCostUSDAt(model string, at time.Time, inputTokens, cachedTokens, outputTokens, thinkingTokens int32) float64 {
 	price, ok := priceAt(model, at)
 	if !ok {
 		return 0
 	}
 	const perM = 1_000_000.0
+	if cachedTokens < 0 {
+		cachedTokens = 0
+	}
+	if cachedTokens > inputTokens {
+		cachedTokens = inputTokens
+	}
 	billedOutput := float64(outputTokens) + float64(thinkingTokens)
-	return float64(inputTokens)*price.input/perM + billedOutput*price.output/perM
+	return float64(inputTokens-cachedTokens)*price.input/perM +
+		float64(cachedTokens)*price.cachedInput/perM +
+		billedOutput*price.output/perM
 }
 
 // isPriceKnown reports whether model has a price schedule.
@@ -213,8 +240,9 @@ func recordAttemptUsage(ctx context.Context, o *Orchestrator, agentRole, model s
 	if resp != nil && resp.UsageMetadata != nil {
 		rec.InputTokens = resp.UsageMetadata.PromptTokenCount
 		rec.OutputTokens = resp.UsageMetadata.CandidatesTokenCount
+		rec.CachedInputTokens = resp.UsageMetadata.CachedContentTokenCount
 		rec.ThinkingTokens = resp.UsageMetadata.ThoughtsTokenCount
-		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.OutputTokens, rec.ThinkingTokens)
+		rec.CostUSD = computeCostUSD(model, rec.InputTokens, rec.CachedInputTokens, rec.OutputTokens, rec.ThinkingTokens)
 	}
 	rec.ServedModel = responseServedModel(resp)
 	rec.FinishReason = responseFinishReason(resp)

@@ -503,6 +503,78 @@ func TestFlagLeftoverValueRanges(t *testing.T) {
 	}
 }
 
+// TestStaticCatalog_DeterministicAcrossCalls guards Gemini implicit prompt
+// caching for the Librarian: the static catalog must be byte-identical on every
+// call or the shared prefix never matches. GetCategorizedAmplifiers used to
+// range over a map, so archetype (and in-bucket) order changed per call.
+func TestStaticCatalog_DeterministicAcrossCalls(t *testing.T) {
+	combos := []struct {
+		name    string
+		factory bool
+		filter  bool
+		plugins map[string]bool
+	}{
+		{"factory, no plugin filter", true, false, nil},
+		{"factory, filter, no plugins", true, true, map[string]bool{}},
+		{"no factory, filter, no plugins", false, true, map[string]bool{}},
+		{"factory, filter, Plini", true, true, map[string]bool{"Plini": true}},
+	}
+	for _, c := range combos {
+		t.Run(c.name, func(t *testing.T) {
+			wantAmps := GetCategorizedAmplifiers(c.factory, c.filter, c.plugins)
+			wantDict := filterEmbeddedCorosMap(embeddedCorosMap, c.factory, c.filter, c.plugins)
+			wantUser := GetUserCapturesJSON()
+			for i := 0; i < 20; i++ {
+				if got := GetCategorizedAmplifiers(c.factory, c.filter, c.plugins); got != wantAmps {
+					t.Fatalf("GetCategorizedAmplifiers output differed on call %d", i)
+				}
+				if got := filterEmbeddedCorosMap(embeddedCorosMap, c.factory, c.filter, c.plugins); got != wantDict {
+					t.Fatalf("filterEmbeddedCorosMap output differed on call %d", i)
+				}
+				if got := GetUserCapturesJSON(); got != wantUser {
+					t.Fatalf("GetUserCapturesJSON output differed on call %d", i)
+				}
+			}
+		})
+	}
+}
+
+// TestBuildLibrarianContext_StaticCatalogIsSharedPrefix guards Gemini implicit
+// prefix caching: two runs with the same filter inputs but different per-run
+// text must share a byte-identical prefix that covers the whole static catalog.
+func TestBuildLibrarianContext_StaticCatalogIsSharedPrefix(t *testing.T) {
+	catalog := func() string {
+		return buildLibrarianStaticCatalog(
+			filterEmbeddedCorosMap(embeddedCorosMap, true, true, map[string]bool{}),
+			GetCategorizedAmplifiers(true, true, map[string]bool{}),
+			GetUserCapturesJSON(),
+		)
+	}
+	a := buildLibrarianContext(catalog(), "tone A", "scrape A", map[string]interface{}{"x": 1})
+	b := buildLibrarianContext(catalog(), "tone B, different", "scrape B", map[string]interface{}{"x": 2})
+
+	static := catalog()
+	if !strings.HasPrefix(a, static) || !strings.HasPrefix(b, static) {
+		t.Fatal("both contexts must start with the full static catalog")
+	}
+	for _, label := range []string{"Dictionary: ", "\nAmplifier Archetype Menu:\n", "\nUser Capture Library: "} {
+		if !strings.Contains(static, label) {
+			t.Errorf("static catalog missing section label %q", label)
+		}
+	}
+	for _, label := range []string{"Tone History: ", "Scraper: ", "Constraints: "} {
+		if strings.Contains(static, label) {
+			t.Errorf("per-run label %q leaked into the static catalog", label)
+		}
+		if i := strings.Index(a, label); i < len(static) {
+			t.Errorf("per-run section %q at offset %d appears before the static catalog ends (%d)", label, i, len(static))
+		}
+	}
+	if len(static) < 50_000 {
+		t.Errorf("static catalog suspiciously small: %d chars", len(static))
+	}
+}
+
 // Plugin-gated device names are valid on an exact (case-insensitive) match but are never
 // fuzzy-snap targets: "Spring Reverb" must not become the paid "Plini Reverb".
 func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {

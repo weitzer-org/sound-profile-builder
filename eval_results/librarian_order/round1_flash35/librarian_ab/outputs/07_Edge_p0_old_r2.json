@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Exotic",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Exotic boost before the amp block to cleanly push the front end and add top-end chime.",
+    "Back off the amplifier input gain and apply high-pass/low-pass filtering around 4kHz-5kHz to smooth out Vox top-end sizzle.",
+    "Enable Tempo Sync on the delay block to align dotted-eighth note divisions with the global tempo."
+  ]
+}

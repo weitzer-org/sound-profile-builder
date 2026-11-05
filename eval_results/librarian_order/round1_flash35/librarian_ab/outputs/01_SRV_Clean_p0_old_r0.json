@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief DC2W"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp set with low drive and high level output to tighten the low end and push the front-end clean headroom.",
+    "Place a subtle modulation block like the Chief DC2W after the amp block to enhance 3D spatial dimension.",
+    "Position the Shure SM57 microphone off-axis on the 212 Too Rock EV cabinet to smooth high-frequency transients while capturing warm mid-range punch."
+  ]
+}

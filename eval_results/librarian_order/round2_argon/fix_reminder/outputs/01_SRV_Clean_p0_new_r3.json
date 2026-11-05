@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb"
+  ],
+  "suggested_blocks": [
+    "1981 TS808 1",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Use the '1964 Fender Super Reverb' full_rig user capture as the single core amplifier and speaker platform; since it is a full rig capture, a separate cabinet block is not strictly required, though if pairing an amp-only block, use '410 US Basslad P10Q 16' or '212 Too Rock EV Vintage 79' with a Dynamic 57 and Condenser 47 FET mic blend.",
+    "Place the '1981 TS808 1' drive capture (or native 'Green 808') BEFORE the amp capture, reducing its input gain slightly and pushing its output level to slam the front end of the Super Reverb for Texas blues sustain and midrange punch.",
+    "Place the 'Spring' reverb block AFTER the amp/rig capture with a short decay and modest mix to provide authentic vintage Fender room ambiance without washing out the percussive attack."
+  ]
+}

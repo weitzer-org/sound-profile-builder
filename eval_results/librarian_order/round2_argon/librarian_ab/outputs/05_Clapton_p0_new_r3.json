@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Brit 1962 Jumped",
+    "Marshall Super Lead 100"
+  ],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "Facial Fuzz",
+    "Rage Booster",
+    "Graphic-9",
+    "Parametric-8",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Crying Clyde Wah and Facial Fuzz at the very beginning of the signal chain before any buffers or EQ blocks.",
+    "Place the Graphic-9 or Parametric-8 block early in the pre-amp chain with a steep high-cut filter and a mid-frequency bump to simulate the classic rolled-off humbucker 'Woman Tone' capacitor response.",
+    "Place the Rage Booster right before the Brit TM45 Patch amplifier block to tighten the low end and prevent muddiness when the highs are rolled back.",
+    "Configure the 412 Brit 60B GB 71 cabinet block using a blend of a Dynamic 57 and a condenser or ribbon mic (such as a Condenser 67 or Ribbon 160) with an aggressive high-cut filter to tame harsh upper-mid fizz.",
+    "Place the Studio Plate 70 (ST) reverb at the end of the chain to provide essential direct-to-FOH studio room ambiance."
+  ]
+}

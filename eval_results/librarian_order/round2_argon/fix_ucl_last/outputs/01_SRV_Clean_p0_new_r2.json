@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer"
+  ],
+  "mandatory_blocks": [
+    "Fender Vibroverb 64 Custom SRV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The 'Fender Vibroverb 64 Custom SRV' user capture is a full_rig capture (includes the 1x15 combo cabinet), so do not place a separate cab block in the signal chain unless opting for the native 'US SPR Vibrato' model paired with '410 US Basslad PR10'.",
+    "Place the 'Green 808' (or the user capture '1981 TS808 1') BEFORE the amp capture as a clean volume and midrange push to slam the front end of the Vibroverb.",
+    "Place the 'Spring' reverb block AFTER the amp/full-rig capture for authentic pre-1970 Texas blues room ambiance.",
+    "Watch input and output clipping meters when pushing the high-headroom Fender capture with the Tube Screamer; compensate by lowering the amp capture's output volume to preserve clean glassiness."
+  ]
+}

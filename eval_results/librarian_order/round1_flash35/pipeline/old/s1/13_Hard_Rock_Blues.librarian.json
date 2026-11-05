@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Rage Booster",
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Position the Facial Fuzz and Rage Booster at the very front of the signal chain to preserve dynamic cleanup and vintage impedance interaction.",
+    "Set the Green 808 with low gain and high level to push upper-mids into the amp input without adding low-end mud.",
+    "Pair a Dynamic 57 on-axis with a Ribbon 121 off-axis on the cabinet to smooth out vintage high-end fizz."
+  ]
+}

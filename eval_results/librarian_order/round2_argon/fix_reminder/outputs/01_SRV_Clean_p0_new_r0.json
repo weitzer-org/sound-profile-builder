@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Vibroverb"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb"
+  ],
+  "suggested_blocks": [
+    "OG TS808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "The '1964 Fender Super Reverb' block is a Full Rig user capture that already bakes in the 4x10 speaker cabinet and microphone response; do not place a separate cab block after it unless you intend to override the capture's native speaker.",
+    "Place the 'OG TS808' drive capture (or native 'Green 808' block) BEFORE the amp capture, lowering the drive block's input gain and boosting its output level to slam the front end of the Super Reverb for Texas blues sustain.",
+    "Place the native 'Spring' reverb block AFTER the amp capture with a modest mix and short decay to provide vintage American blues room ambiance."
+  ]
+}

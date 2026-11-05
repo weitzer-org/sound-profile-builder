@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [
+    "1964 Fender Super Reverb",
+    "1964 Fender Vibroverb",
+    "4x10 Fender Super Reverb cabinet with CTS Alnico / Electro-Voice speakers"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp block with low drive and high output level to push the high-headroom Steel String Singer capture into natural SRV-style snap and compression.",
+    "Pair the Two Rock SSS EQ1 (No Cab) amp capture with the 212 Too Rock EV Vintage 79 cabinet block to deliver the requested Electro-Voice EVM12L speaker response.",
+    "Blend a Dynamic 57 on-axis and a Dynamic 421 or Ribbon 160 off-axis on the cabinet block, applying a high-cut filter to tame upper-register harshness.",
+    "Place the Spring reverb block after the cab with conservative mix and medium decay to emulate vintage Fender onboard tank splash."
+  ]
+}

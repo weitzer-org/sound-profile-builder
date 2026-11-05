@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Spring Reverb block post-cab for classic Blackface amp ambiance.",
+    "Elevate the midrange controls on the amplifier block to avoid the traditional Blackface mid-scoop, creating a fuller, more vocal clean lead sound.",
+    "If using high-output humbuckers (such as an ES-339), lower the input gain or guitar volume slightly to maintain maximum clean headroom without unwanted preamp clipping."
+  ]
+}

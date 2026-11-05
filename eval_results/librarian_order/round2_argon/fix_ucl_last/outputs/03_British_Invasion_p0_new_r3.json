@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster and Otso Bender Mk1 BEFORE the UK C30 TopBoost amplifier block to tighten the low end and drive the front end into 60s British invasion chime and fuzz.",
+    "Use the 212 UK C30 65 cabinet block (or pair the 112 UK C15 Blue if strict Alnico Blue voicing is preferred) with a condenser mic like the Condenser 67 or a Ribbon 160 / Dyn 57 blend to capture midrange bark and top-end sparkle.",
+    "Place the Circular Delay (emulating the WEM Copicat tape echo) and Spring reverb AFTER the amplifier and cabinet blocks for authentic vintage ambiance.",
+    "Keep the Input Gate threshold low so it does not choke the natural chime and sustain tail of the AC30 on edge-of-breakup dynamics."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-8 EQ immediately at the start of the signal chain to shape the guitar's midrange like a vintage Varitone circuit and roll off excessive low-end.",
+    "Place the Legendary 87 (ST) compressor BEFORE the amplifier with a slow attack to enhance vocal sustain and bloom without squashing the pick attack.",
+    "Do not use any overdrive pedals; achieve edge-of-breakup saturation and compression purely by pushing the US TWN Vibrato amplifier volume natively.",
+    "In the 212 US TWN C12Q 00s cab block, pair a Dynamic 57 or Dynamic 421 with a Ribbon 160 mic pushed slightly toward the cap edge to tame piercing upper-mid frequencies.",
+    "Place the Spring reverb after the amplifier and cab with a conservative mix and darkened tone to provide classic American blues tank ambiance without metallic drip."
+  ]
+}

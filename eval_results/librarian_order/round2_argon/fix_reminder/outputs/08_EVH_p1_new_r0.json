@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz 69"
+  ],
+  "suggested_blocks": [
+    "EP3 pre (V-12 EQ-mid)",
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger BEFORE the amplifier input so their sweeps compress naturally into the preamp.",
+    "Use the Graphic-9 EQ block and EP3 pre (V-12 EQ-mid) capture BEFORE the amplifier as a mid-focused preamp push to drive the Plexi into hot-rodded Brown Sound saturation.",
+    "Use two Dynamic 57 microphones on the 412 Brit TV GB75Hz 69 cabinet, blending on-axis and off-axis placements with a high-cut filter to tame top-end fizz.",
+    "Place the Circular Delay and Studio Plate 70 (ST) reverb AFTER the cabinet, keeping the reverb panned or low in the mix to preserve percussive attack."
+  ]
+}

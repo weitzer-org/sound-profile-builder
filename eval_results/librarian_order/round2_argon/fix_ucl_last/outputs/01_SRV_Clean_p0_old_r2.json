@@ -1,0 +1,22 @@
+{
+  "dropped_gear": [
+    "Dumble Steel String Singer",
+    "1964 Fender Vibroverb",
+    "1x15 JBL D130F"
+  ],
+  "mandatory_blocks": [
+    "1964 Fender Super Reverb",
+    "410 US Basslad P10Q 16"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "1981 TS808 1",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Note that the '1964 Fender Super Reverb' user capture is a full-rig capture (amp + cab baked in); if used alone, bypass the separate cab block, or pair a native 'US SPR Vibrato' amp block with the '410 US Basslad P10Q 16' cab block.",
+    "Place the 'Green 808' (or '1981 TS808 1' capture) BEFORE the amplifier block with low drive and high output level to slam the front end for authentic Texas blues sustain and midrange punch.",
+    "When configuring the 4x10 cabinet block, blend a Dynamic 57 on-axis with a Condenser 47 (or Ribbon 121) slightly off-axis and apply a gentle high-cut to smooth out top-end harshness.",
+    "Place the 'Spring' reverb block AFTER the amp and cab blocks with a modest mix and short decay for classic vintage American blues room ambiance."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay",
+    "Exotic"
+  ],
+  "tactical_hints": [
+    "Back off the input gain and apply a low-pass filter around 4kHz-5kHz on the UK C30 TopBoost to tame top-end harshness.",
+    "Place the Exotic boost in front of the UK C30 TopBoost to add top-end chime and push the amp cleanly into breakup.",
+    "Enable Tempo Sync on the delay block and set note division to dotted-eighth (1/8D) locked to global tempo."
+  ]
+}

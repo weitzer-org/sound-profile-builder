@@ -1,0 +1,26 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "1981 TS808 1",
+    "Klon Centaur 1",
+    "Circular Delay",
+    "Nordic Concert Hall (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "ODS Joe Lead is a full_rig capture of Joe Bonamassa's Dumble Overdrive Special 50W combo; if used, bypass the cab block, or pair the native Dumbbell ODS amp block with the 212 Too Rock EV Vintage 79 or 212 Zila Open CL80 19 cab.",
+    "Place Green 808 or Myth Drive BEFORE the amplifier with low drive and a pushed output level to emulate the TS808, Klon Centaur, and Way Huge Overrated Special mid-boosted lead push.",
+    "Watch the input level when stacking an overdrive into a Dumble-style block to avoid unnatural digital fizz and maintain smooth tube compression.",
+    "On the cab block, blend a Dynamic 57 and a Ribbon 121 or Ribbon 160 mic, and roll off the high cut and low cut to achieve a vocal, horn-like lead tone without bridge pickup harshness.",
+    "Slightly push the mids on the amp EQ or a post-amp Parametric-3 block to retain classic British midrange bark in a single-amp configuration.",
+    "Place Circular Delay and Nordic Concert Hall (ST) in series AFTER the amp and cab blocks for spatial depth."
+  ]
+}

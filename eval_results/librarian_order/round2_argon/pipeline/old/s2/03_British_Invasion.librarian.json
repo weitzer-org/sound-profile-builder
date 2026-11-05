@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Brit TM45 Patch"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Myth Drive",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster BEFORE the UK C30 TopBoost to push the upper-midrange and treble into authentic 60s British harmonic saturation.",
+    "Alternatively, use the Myth Drive with minimal gain in front of the amp as a clean midrange push.",
+    "In the 212 UK C30 65 cab block, pair a Condenser 67 or Ribbon 121 with a Dynamic 57, and apply a high-cut filter to tame top-end digital fizz and retain smooth Alnico chime.",
+    "Place a subtle Spring reverb AFTER the cab block to provide baseline room ambiance for direct-to-FOH routing."
+  ]
+}

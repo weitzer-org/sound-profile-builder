@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Bright Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Iba Green",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain before the drives to add sustain for slide work.",
+    "Place Iba Green or Myth Drive BEFORE the US Tweed Basslad Bright Patch amp to tighten the woofy low end and push the midrange.",
+    "On the 410 US Basslad PR10 cab block, blend a Dynamic 57 with a Ribbon 160 mic and roll off high frequencies to smooth out harsh upper-mid slide transients.",
+    "Place the Spring reverb after the cab block to provide classic vintage Fender-style ambiance for direct-to-FOH playing."
+  ]
+}

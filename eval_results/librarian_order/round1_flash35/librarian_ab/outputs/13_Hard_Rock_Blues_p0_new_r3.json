@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster"
+  ],
+  "tactical_hints": [
+    "Place the Facial Fuzz, Green 808, and Rage Booster drive blocks BEFORE the amplifier block to boost mid-range sustain and push the front-end saturation.",
+    "Use a dynamic Shure SM57 microphone placement off-axis on the 4x12 cabinet to smooth out high-frequency transients when pushing high gain.",
+    "Keep boost gain moderate on overdrive pedals to avoid low-end mud and unwanted input clipping into the Plexi engine."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-8",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Do not use an overdrive pedal to simulate grit; achieve classic B.B. King edge-of-breakup compression natively by pushing the US TWN Vibrato amplifier volume.",
+    "Place the Parametric-8 EQ block BEFORE the amplifier to mimic the Gibson Lucille Varitone circuit by cutting low-mids and accentuating upper-mid nasal bite.",
+    "Pair the 212 US TWN C12Q 00s cabinet with a Dynamic 57 and Ribbon 121 microphone blend, applying a high-cut filter in the cab block to tame piercing upper-register frequencies and rolling back bass to prevent low-end flub.",
+    "Place the Spring reverb block at the end of the chain with a conservative mix and short decay so staccato picking dynamics and wide finger vibrato remain clear and articulate."
+  ]
+}

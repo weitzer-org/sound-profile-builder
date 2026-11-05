@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Love Bender Mk3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster before the UK C30 TopBoost amp block to drive edge-of-breakup chime while keeping the low end tight.",
+    "Position the Love Bender Mk3 fuzz early in the signal chain ahead of the treble boost for vintage British saturation.",
+    "To counteract overly bright AC30 top-end, back off the amp Cut control or use a post-cab EQ notch around 3-4 kHz."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60B GB 71"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 block BEFORE the Brit Plexi 100 Patch amp with an inverted-V mid-boost to push the front end and simulate the variac-starved, spongy compression.",
+    "Place the MX Phase 95 and MX Flanger BEFORE the amp input so the modulation sweep compresses naturally into the preamp rather than sounding overly aggressive in the loop.",
+    "Configure the 412 Brit 60B GB 71 cabinet with dual dynamic microphones (SM57 style) and apply a high-cut filter to tame any harsh top-end fizz from the cranked Plexi.",
+    "Place the Circular Delay after the amp and cab to replicate the vintage Maestro Echoplex tape echo slap, and consider using the user's 'EP3 pre (V-12 EQ-mid)' capture in front of the amp if extra EP-3 preamp coloration is desired.",
+    "Route the Studio Plate 70 (ST) at the end of the chain with a low mix or panned to one side to recreate the classic Sunset Sound studio echo chamber without washing out the percussive attack."
+  ]
+}

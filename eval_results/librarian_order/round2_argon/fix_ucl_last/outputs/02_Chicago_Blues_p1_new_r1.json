@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Chief BD2",
+    "Spring",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place Parametric-3 or engage a high-pass filter before the US DLX 58 capture to tame the inherent loose, farty low-end of a 1950s Tweed Deluxe before it hits the gain stage.",
+    "Place Green 808 and Chief BD2 BEFORE the US DLX 58 amp block; rely on these overdrives for authentic 1950s Chess Records grit rather than pushing the capture's input gain into artificial fizz.",
+    "Pair the 112 US DLX Tweed WGS-Q 10s cab with a ribbon mic (like a Royer 121) blended lower than a dynamic mic (like an SM57) to emulate the RCA 77-DX / Electro-Voice pairing without getting overly dark.",
+    "Place the Spring reverb block at the end of the chain after the cabinet with pre-delay rolled off and tone darkened for vintage 1950s room and tank ambiance."
+  ]
+}

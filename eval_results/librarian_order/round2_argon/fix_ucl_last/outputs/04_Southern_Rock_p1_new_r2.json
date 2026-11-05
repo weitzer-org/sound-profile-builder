@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Use the US DLX 58 factory capture (Fender Deluxe 5E2 1958) paired with the 112 US DLX Tweed WGS-Q 10s cab block to achieve the cranked 50s Tweed Deluxe singing slide sustain.",
+    "Blend a Dynamic 57 mic with a Ribbon 121 mic on the cab block, and engage the cab's high-pass filter to tighten the naturally woofy Tweed low-end when using the Gibson ES-339 humbuckers.",
+    "Place the Legendary 87 (ST) compressor at the very start of the chain using parallel mix blending to extend slide sustain without squashing natural pick attack.",
+    "Place the Green 808 or Iba Green capture in front of the US DLX 58 amp block with low gain and high level to push the midrange and tighten the low frequencies.",
+    "Place the Circular Delay (set for vintage tape slapback) and Spring or Studio Plate 70 (ST) reverb after the cab block to provide classic studio room and plate ambiance."
+  ]
+}

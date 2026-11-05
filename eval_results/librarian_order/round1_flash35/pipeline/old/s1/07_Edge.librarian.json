@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Boss FA-1 FET Amplifier"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Chorus 229T",
+    "Circular Delay",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place rhythmic delays post-amp or on a parallel split lane to maintain dry transient clarity and prevent repeats from compressing into mush before the amp saturation",
+    "High-pass filter the delay repeats around 100-120 Hz to avoid low-end mud build-up during dense rhythmic passages",
+    "Keep the AC30 gain set at the edge of breakup so pick attack remains crisp and dynamic"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Chief CS3",
+    "Chief SD1",
+    "Parametric-3",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Chief CS3 at the very front of the chain to smooth out dynamics and add sustain to the rhythmic picking.",
+    "Place the Chief SD1 after the compressor and before the delay and amp for harmonic grit.",
+    "Use the Parametric-3 before the amp with a slight high-shelf boost to emulate the iconic Korg SDD-3000 preamp chime.",
+    "Place the Circular Delay BEFORE the UK C30 TopBoost amplifier block so the modulated dotted-eighth repeats hit the front of the preamp and gently compress with the amp's edge-of-breakup saturation, engaging the delay's internal low-cut filter to prevent rhythmic mud.",
+    "Inside the 212 UK C30 65 cabinet block, pair a Dynamic 57 with a Ribbon 160 microphone and pull down the cab's high-cut filter to tame any top-end harshness."
+  ]
+}

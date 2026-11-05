@@ -6,6 +6,14 @@
 // not by convention.
 package evalfixtures
 
+import _ "embed"
+
+//go:embed librarian_checklist.json
+var librarianChecklistJSON []byte
+
+// LibrarianChecklistJSON returns the owner-approved, judge-free quality checklist for the golden queries.
+func LibrarianChecklistJSON() []byte { return librarianChecklistJSON }
+
 // GoldenQueryOrder returns the canonical, stable ordering of the golden-set query names, used
 // wherever a tool needs to iterate deterministically (report tables, sequential live runs).
 // Returns a fresh slice on every call -- a package-level var here would let one caller's

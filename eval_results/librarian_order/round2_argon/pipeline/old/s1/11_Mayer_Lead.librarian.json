@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Keeley Mod BD-2 3",
+    "Chief BD2",
+    "Green 808",
+    "Brit Blues",
+    "Myth Drive",
+    "John Mayer klon",
+    "Circular Delay",
+    "Spring",
+    "Parametric-8"
+  ],
+  "tactical_hints": [
+    "Use Dumbbell ODS as the single amplifier foundation, selecting a clean or edge-of-breakup capture without Preamp Boost (PAB) engaged to preserve the hollow, mid-scooped voice.",
+    "Pair the amp with the 212 Too Rock G65 cabinet block and blend a Dynamic 57 on-axis with a Ribbon 121 or Dynamic 88 slightly off-axis for smooth, woody high-end roll-off.",
+    "Place Exotic Z Boost or Myth Drive (or the John Mayer klon capture) at the front of the drive chain as a clean volume and headroom push.",
+    "Stack Brit Blues into Green 808 or Keeley Mod BD-2 3 (or native Chief BD2) before the amp, using low drive and high output level to push the amp into singing sustain.",
+    "Insert Parametric-8 pre-drive or post-amp with a gentle midrange cut to carve out the signature scooped clean voice before engaging midrange-heavy overdrives.",
+    "Place Circular Delay and Spring reverb after the cab block to provide classic slapback analog delay ambiance and vintage American spring reverb depth."
+  ]
+}

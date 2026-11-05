@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [
+    "Shure 55 Unidyne"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Green 808",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel Compressor before the drive blocks with a high threshold to emulate vintage tube sag.",
+    "Keep drive pedal gain low and use the level boost to push the US DLX 58 amp block naturally into edge-of-breakup.",
+    "Place the Spring Reverb post-cab with a short decay to capture classic 1950s combo tank ambience."
+  ]
+}

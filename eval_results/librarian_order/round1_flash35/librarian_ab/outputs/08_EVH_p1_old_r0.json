@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 phaser block BEFORE the amplifier input for authentic vintage brown sound modulation.",
+    "Utilize the Graphic-9 EQ block post-amplifier to boost woody mid-range frequencies around 800 Hz and 1.6 kHz without adding front-end gain mud.",
+    "Set the Circular Delay with short repeats to simulate Echoplex EP-3 vintage tape echo behavior.",
+    "Position dynamic mics slightly off-axis on the 412 Brit TV cabinet to smooth out power-tube gain transients."
+  ]
+}

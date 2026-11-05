@@ -1,0 +1,31 @@
+{
+  "dropped_gear": [
+    "Marshall JTM 45"
+  ],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65"
+  ],
+  "suggested_blocks": [
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Rage Booster or Otso Bender Mk1 BEFORE the UK C30 TopBoost amplifier block to push the front end into authentic 1960s British edge-of-breakup and fuzz saturation.",
+    "Use a Condenser 67 or a blend of Ribbon 160 and Dynamic 57 microphones on the 212 UK C30 65 cabinet, applying a high-cut filter in the cab block to tame top-end harshness from single-coil pickups.",
+    "Set the Circular Delay after the cabinet for a low-mix, single-repeat vintage slapback echo with high-cut filtering to thicken the room sound.",
+    "Place the Spring reverb at the end of the signal chain to provide vintage pre-1970s room ambiance for direct-to-FOH routing."
+  ],
+  "verified_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 65",
+    "Rage Booster",
+    "Otso Bender Mk1",
+    "Brit Blues",
+    "Circular Delay",
+    "Spring"
+  ]
+}

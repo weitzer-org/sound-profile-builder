@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit 60A GB75Hz '89"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Rage Booster",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block to act as a focused mid-range boost",
+    "Tighten pedal low-cut filters before boosting amp input to prevent low-end mud and harsh digital clipping",
+    "Use a dynamic mic on-axis paired with a ribbon mic off-axis to smooth transients on the 4x12 cab",
+    "Maintain the Studio Plate reverb at the end of the signal chain for baseline ambient depth in direct-to-FOH routing"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [
+    "Dumble Overdrive Special"
+  ],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Exotic Z Boost",
+    "Brit Blues",
+    "Green 808",
+    "Keeley Mod BD-2 3",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Exotic Z Boost at the very front of the chain as a clean push to replicate the Keeley Katana.",
+    "Stack the Brit Blues (always-on low-gain thickener) into the Green 808 or Keeley Mod BD-2 3 before the amplifier to inject vocal midrange without muddying the amp's low end.",
+    "Keep the Two Rock SSS EQ1 (No Cab) capture clean and generate lead sustain from the stacked drive blocks, watching the output level of the second drive to prevent input clipping.",
+    "Pair the 212 Too Rock G65 cabinet with a Dynamic 57 and a Ribbon 121 off-axis to smooth out single-coil transients.",
+    "Place the Circular Delay after the cab set to an analog bucket-brigade slapback style, followed by the Spring reverb for vintage spatial depth."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB '71"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Brit Blues",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 or Brit Blues overdrive BEFORE the amplifier block to boost mid-range frequencies and gain sustain.",
+    "Position a Ribbon mic off-axis on the 4x12 cabinet block to smooth transients and prevent digital harshness.",
+    "Engage a High-Pass Filter (HPF) around 80-100Hz on the cab block to preserve low-end clarity when neck humbucker tone controls are rolled down."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [
+    "Way Huge Overrated Special"
+  ],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 drive block before the amplifier with low gain and elevated volume to act as a focused mid boost for leads.",
+    "Pair a Shure SM57 mic on-axis with a ribbon mic off-axis on the cab block to balance punch with smooth high-end roll-off.",
+    "Keep the amplifier bass parameter trimmed low to prevent low-end flub and sustain articulate note definition during fast runs."
+  ]
+}

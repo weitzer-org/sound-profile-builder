@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit 2203 87",
+    "412 Brit 60A GB75Hz 89"
+  ],
+  "suggested_blocks": [
+    "Graphic-9",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Graphic-9 EQ block BEFORE the Brit 2203 87 amp capture and push the upper-mid frequencies while cutting low-end mud to emulate the Boss GE-7 mid-boost into a hot-rodded JCM800.",
+    "In the 412 Brit 60A GB75Hz 89 cab block, pair a Dynamic 57 with a Dynamic 421 mic and engage a low-cut filter to keep the neck humbucker from getting muddy.",
+    "Place the Circular Delay block AFTER the amp and cab for a clean studio-style lead delay so that the pick attack is not blurred."
+  ]
+}

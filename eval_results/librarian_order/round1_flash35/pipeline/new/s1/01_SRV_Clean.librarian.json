@@ -1,0 +1,15 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "112 US DLX Black C12K 00s"
+  ],
+  "suggested_blocks": [
+    "Green 808"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp model with low drive and high level output to boost front-end saturation while preserving single-coil clarity.",
+    "Engage a native Spring Reverb block after the cab to emulate authentic vintage 1960s Texas blues room decay.",
+    "Position a dynamic mic off-axis on the cabinet block to round off harsh high-frequency transients."
+  ]
+}

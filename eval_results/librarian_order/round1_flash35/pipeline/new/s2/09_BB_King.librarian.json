@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US TWN Vibrato",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Parametric EQ before the amplifier block to cut frequencies below 100 Hz to prevent low-end boominess with humbuckers and add a subtle mid push.",
+    "Position the Spring Reverb after the cabinet block to provide subtle vintage blues ambiance without overwhelming dynamic response.",
+    "Mic the cabinet off-axis with a Shure SM57 to smooth out harsh high-frequency transients above 4 kHz.",
+    "Maintain clean high-headroom operation on the US TWN Vibrato block by driving saturation natively through amp volume rather than overdrive pedals."
+  ]
+}

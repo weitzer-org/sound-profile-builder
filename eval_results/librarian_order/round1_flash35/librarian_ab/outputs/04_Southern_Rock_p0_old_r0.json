@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US Tweed Basslad Normal Patch",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Facial Fuzz",
+    "Green 808",
+    "Jewel",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Position the Facial Fuzz at the start of the chain before buffered pedals to maintain dynamic cleanup and impedance interaction.",
+    "Use the Green 808 with low gain and boosted volume upfront to tighten low-end flub and push mid-range clarity for slide leads.",
+    "Place the Jewel compressor before drive blocks to smooth out harsh pick/slide attack transients while extending sustain.",
+    "Set the Circular Delay for a short slapback effect to introduce vintage ambient depth without confusing slide intonation."
+  ]
+}

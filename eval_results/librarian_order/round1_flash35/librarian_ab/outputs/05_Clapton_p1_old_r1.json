@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Brit Blues",
+    "Green 808",
+    "Vintage Digital"
+  ],
+  "tactical_hints": [
+    "Place the Brit Blues or Green 808 before the amp block to push the front end for sustain and mid-range saturation.",
+    "Use a condenser or ribbon mic off-axis on the cabinet block to smooth out high-frequency transients and retain a warm, vintage British tone.",
+    "Apply a high-pass filter (HPF) around 80-100Hz in the cab block or parametric EQ to clear low-end mud when using neck humbuckers with rolled-off tone controls."
+  ]
+}

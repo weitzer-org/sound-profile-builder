@@ -1,0 +1,25 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)"
+  ],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Use 'Fender 57 Deluxe - T8 I4 M12' as the primary cranked 5E3 Tweed Deluxe capture; if it includes a baked-in cab, bypass '112 US DLX Tweed WGS-Q 10s', otherwise pair it with the 1x12 Tweed cab using a Dynamic 57 and Ribbon 121 mic blend.",
+    "Place 'Legendary 87 (ST)' at the very beginning of the signal chain with parallel mix to gently elongate slide sustain without squashing pick attack.",
+    "Place 'Green 808' (or 'Myth Drive') in front of the amp block with low gain and high output level to tighten the neck humbucker low-end and push midrange slide sustain.",
+    "Insert 'Parametric-3' before the amp capture (or cut Bass on the capture block) to roll off flubby sub-lows below 120Hz before hitting the cranked Tweed saturation.",
+    "Place 'Circular Delay' and 'Studio Plate 70 (ST)' after the amp/cab section for subtle vintage studio slapback and dark plate ambiance to glue the dry slide notes together.",
+    "Keep the Input Gate threshold very low so the natural fading decay of the slide is not prematurely choked."
+  ]
+}

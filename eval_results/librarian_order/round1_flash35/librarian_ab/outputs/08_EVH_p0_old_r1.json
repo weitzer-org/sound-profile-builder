@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Graphic-9",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place MX Phase 95 and MX Flanger BEFORE the amp block to replicate modulation distorting through the cranked front-end input",
+    "Position the Graphic-9 EQ before the amp to push mids and simulate variac-induced power section response, or post-amp for fine frequency sculpting",
+    "Set Circular Delay to short delay times with low feedback to capture Echoplex EP-3 slapback thickness",
+    "Route Studio Plate 70 (ST) post-cab for Sunset Sound studio plate spatial ambiance"
+  ]
+}

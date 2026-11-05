@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel Compressor early in the signal chain before distortion to mimic vintage tube power amp sag and touch dynamics",
+    "Place the Myth Drive before the amplifier block with low gain and boosted output to push the Tweed Deluxe circuit naturally into edge-of-breakup",
+    "Position the Spring Reverb post-cabinet with a short decay to capture authentic vintage combo tank room ambience",
+    "Apply high-cut speaker EQ filtering on the cabinet block to match the smooth top-end roll-off of classic vintage 12-inch Alnico speakers"
+  ]
+}

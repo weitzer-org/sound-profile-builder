@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Too Rock EV Vintage 79"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the Dumbbell ODS as a front-end boost with low drive and elevated level to tighten low-end flub from humbuckers.",
+    "Use the Iba Green capture as a hot-rodded 808 substitute for the Way Huge Overrated Special to push the midrange.",
+    "Watch the Input Gain going into the Dumbbell ODS capture to prevent unnatural digital fizz when stacking or boosting.",
+    "Pair a Dynamic 57 and a Ribbon 160 mic on the 212 Too Rock EV Vintage 79 cab to capture the un-clipped low end and vocal midrange projection.",
+    "Place the Circular Delay and Studio Plate 70 (ST) after the cabinet block for clean spatial depth."
+  ]
+}

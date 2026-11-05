@@ -1,0 +1,20 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit Plexi 100 Patch",
+    "412 Brit TV GB75Hz '69"
+  ],
+  "suggested_blocks": [
+    "MX Phase 95",
+    "MX Flanger",
+    "Circular Delay",
+    "Graphic-9",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the MX Phase 95 and MX Flanger before the amplifier block to achieve classic pre-gain modulation saturation",
+    "Use the Graphic-9 EQ block as a clean volume and mid-frequency push before the amplifier to simulate the Boss GE-10 solo lift",
+    "Position the Circular Delay and Studio Plate 70 (ST) after the cabinet block in stereo for wet post-amp ambiance",
+    "Use a dynamic Shure SM57 microphone placed off-axis on the 4x12 Greenback cabinet to smooth high-end crunch transients"
+  ]
+}

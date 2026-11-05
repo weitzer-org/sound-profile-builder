@@ -1,0 +1,23 @@
+{
+  "dropped_gear": [
+    "US Prince",
+    "110 US PRN C10R"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Parametric-3",
+    "Green 808",
+    "Myth Drive",
+    "Circular Delay",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Parametric-3 EQ block BEFORE the US DLX 58 amp capture to roll off excessive low-end flub from the Gibson ES-339 humbuckers and prevent the tweed circuit from farting out when digging in.",
+    "Place the Green 808 or Myth Drive BEFORE the amp, keeping drive low and level pushed primarily as a clean boost to goose the natural input dynamics of the US DLX 58 capture rather than relying on pedal clipping.",
+    "Pair the US DLX 58 with the 112 US DLX Tweed WGS-Q 10s cab block using a vintage ribbon microphone model placed slightly off-axis to emulate the warm, smooth high-end response of an RCA 77-DX.",
+    "Place the Circular Delay and Spring reverb AFTER the cabinet block; configure the delay for a barely audible vintage slapback with heavy high-cut filtering and the Spring reverb for subtle vintage Chess Records room/spring ambiance."
+  ]
+}

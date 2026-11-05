@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "UK C30 TopBoost",
+    "212 UK C30 '65"
+  ],
+  "suggested_blocks": [
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place the Circular Delay block post-amplifier to accurately emulate the Korg SDD-3000 and EHX Memory Man spatial delays.",
+    "Set a High-Cut/Low-Pass filter on the 212 UK C30 '65 cabinet block around 4kHz-5kHz to smooth out high-end Vox sizzle.",
+    "Keep input gain low on the UK C30 TopBoost while pushing master volume natively to retain clean edge-of-breakup headroom."
+  ]
+}

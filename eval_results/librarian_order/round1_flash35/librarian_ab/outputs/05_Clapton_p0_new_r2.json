@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Brit TM45 Patch",
+    "412 Brit 60B GB 90s"
+  ],
+  "suggested_blocks": [
+    "Crying Clyde Wah",
+    "MK3 Silicon Fuzz",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Place Crying Clyde Wah at the very front of the signal chain before drive blocks for classic sweep response.",
+    "Place MK3 Silicon Fuzz before the amplifier to achieve classic cranked vintage fuzz saturation.",
+    "Apply a high-pass filter around 80Hz-100Hz on the cab block to prevent low-end mud when rolling off guitar tone controls."
+  ]
+}

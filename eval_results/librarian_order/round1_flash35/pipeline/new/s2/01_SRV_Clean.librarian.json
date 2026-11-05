@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender Vibroverb 64 Custom SRV",
+    "212 US TWN C12Q 00s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp with low drive and high level to boost mid-range focus and push tube saturation.",
+    "Place the Spring Reverb block after the cab block for classic vintage Fender splash and room ambiance.",
+    "Pair dynamic SM57 microphoning slightly off-axis on the cab speaker cone to smooth high-end fizz on single-coil bridge pickups."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "dropped_gear": [
+    "Fender '57 Tweed Champ (5F1)"
+  ],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Myth Drive",
+    "Legendary 87 (ST)",
+    "Circular Delay",
+    "Spring",
+    "Studio Plate 70 (ST)",
+    "Parametric-3"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain with parallel mix blended back to elongate slide note decay without squashing attack.",
+    "Place Green 808 (or Iba Green / Myth Drive) BEFORE the US DLX 58 amp block with low drive and high output level to tighten the neck humbucker low-end and push the Tweed circuit into singing sustain.",
+    "Because cranked 5E-era Tweed captures can get woofy in the bass when pushed by humbuckers, place a Parametric-3 EQ before the amp to roll off sub-bass mud or cut the Bass parameter directly on the US DLX 58 block.",
+    "Pair the US DLX 58 with the 112 US DLX Tweed WGS-Q 10s cabinet block using a Dynamic 57 and Ribbon 121 microphone blend, applying high-pass and low-pass filtering to keep the slide midrange focused.",
+    "Place Circular Delay and Spring (or Studio Plate 70 (ST)) AFTER the cabinet block for vintage slapback echo and classic room/plate studio ambiance.",
+    "Keep the input noise gate threshold very low or off so the natural fading decay of glass or brass slide notes is not prematurely choked."
+  ]
+}

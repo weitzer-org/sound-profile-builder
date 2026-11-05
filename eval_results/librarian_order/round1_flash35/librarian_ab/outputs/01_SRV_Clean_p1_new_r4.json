@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US SPR Vibrato",
+    "410 US Basslad PR10"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amplifier block with drive kept low and output level set high to boost mids without adding excessive boxy distortion.",
+    "Lower the input gain slightly or pad the input block to ensure the Fender-style amp maintains high clean headroom before breaking up.",
+    "Use a vintage Spring Reverb block situated after the cabinet for authentic 1960s American clean ambience."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Opto Comp (S/C)",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 overdrive before the amp block with low drive and boosted volume for a warm midrange push into edge-of-breakup.",
+    "Use an RCA 77-DX ribbon microphone placement off-axis on the 1x12 cab to smooth upper-mid transients and emphasize low-end body.",
+    "Position the Spring Reverb block after the cabinet block with subtle mix to capture vintage 50s Chess Records studio ambiance."
+  ]
+}

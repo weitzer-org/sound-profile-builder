@@ -1,0 +1,19 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Two Rock SSS EQ1 (No Cab)",
+    "212 Too Rock G65"
+  ],
+  "suggested_blocks": [
+    "Keeley Mod BD-2 3",
+    "OG TS808",
+    "Exotic",
+    "John Mayer Spring Reverb"
+  ],
+  "tactical_hints": [
+    "Place the Keeley Mod BD-2 3 before the OG TS808 to allow the Tube Screamer to shape the overdriven texture of the Blues Driver.",
+    "Use the Exotic block at the end of the drive section as a transparent volume lift to simulate the Keeley Katana boost for solo sections.",
+    "Position the SM57 mic off-axis on the 212 Too Rock G65 to smooth out the high-mid response of the Celestion G12-65 speakers.",
+    "Engage the John Mayer Spring Reverb to replicate the essential ambient depth and drip characteristic of the Two-Rock Custom Reverb circuit."
+  ]
+}

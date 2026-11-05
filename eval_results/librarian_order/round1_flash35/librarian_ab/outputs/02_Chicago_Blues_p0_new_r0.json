@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Fender 57 Deluxe - T8 I4 M12",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Jewel",
+    "Myth Drive",
+    "Range Rverb"
+  ],
+  "tactical_hints": [
+    "Place the Jewel Compressor first in chain before drive blocks to simulate vintage tube power amp sag",
+    "Use the Myth Drive with low gain and elevated output level to transparently boost the amp into breakup",
+    "Place Range Rverb post-cabinet for classic vintage spring tank room ambiance",
+    "Set cabinet high-cut around 7.5 kHz and low-cut at 60 Hz to match vintage 12-inch Alnico speaker roll-off"
+  ]
+}

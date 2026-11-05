@@ -1,0 +1,16 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "Dumbbell ODS",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Circular Delay"
+  ],
+  "tactical_hints": [
+    "Place the Green 808 before the amp with low gain and high level to focus the mid-range and tighten pick attack",
+    "Use a ribbon microphone off-axis on the cab block to smooth high-end transients and control upper-mid harshness",
+    "Position the Circular Delay after the cabinet block to maintain a clean 3D stereo ambience without muddying amp saturation"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "ODS Joe Lead",
+    "212 Too Rock EV Vintage 79",
+    "212 Zila Open CL80 19"
+  ],
+  "suggested_blocks": [
+    "Green 808",
+    "Iba Green",
+    "Myth Drive",
+    "Crying Wah",
+    "Circular Delay",
+    "Studio Plate 70 (ST)"
+  ],
+  "tactical_hints": [
+    "Note that 'ODS Joe Lead' is a full-rig capture of Joe Bonamassa's actual 50W Dumble Overdrive Special lead channel; if using it as a standalone full rig, bypass the cab block, or pair a native 'Dumbbell ODS' amp block with '212 Too Rock EV Vintage 79' (EVM12L) or '212 Zila Open CL80 19' (Classic Lead 80).",
+    "Place 'Green 808' or 'Iba Green' BEFORE the amp with low drive and high output level to emulate the Way Huge Overrated Special / TS-9 mid-forward push and naturally tighten the low end from the ES-339 humbuckers.",
+    "Optionally stack 'Myth Drive' in front of the amp as a transparent clean boost to retain low-mid articulation without over-saturating the Dumble input stage.",
+    "Place 'Crying Wah' at the very beginning of the signal chain before any overdrive blocks.",
+    "Place 'Circular Delay' and 'Studio Plate 70 (ST)' AFTER the amp and cab blocks to create stereo width and studio ambiance while keeping the initial pick attack clean.",
+    "If using a native cab block, blend a dynamic SM57 with a ribbon microphone (like a 160 or 121) and roll off harsh upper frequencies to keep the Dumble midrange smooth and vocal."
+  ]
+}

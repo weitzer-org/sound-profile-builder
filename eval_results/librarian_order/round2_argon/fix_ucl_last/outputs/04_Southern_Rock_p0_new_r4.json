@@ -1,0 +1,18 @@
+{
+  "dropped_gear": [],
+  "mandatory_blocks": [
+    "US DLX 58",
+    "112 US DLX Tweed WGS-Q 10s"
+  ],
+  "suggested_blocks": [
+    "Legendary 87 (ST)",
+    "Green 808",
+    "Spring"
+  ],
+  "tactical_hints": [
+    "Place the Legendary 87 (ST) compressor first in the chain with a slow-to-medium attack and blended dry mix to preserve initial slide and pick transients while extending sustain.",
+    "Place the Green 808 overdrive before the US DLX 58 amp block to tighten up the low-end from the Gibson ES-339 humbuckers and prevent bloated bass in the Tweed circuit.",
+    "Use a Dynamic 57 microphone on the 112 US DLX Tweed WGS-Q 10s cabinet to replicate the classic Shure SM57 vocal mid-range projection.",
+    "Place the Spring reverb after the cab block to provide classic vintage American ambiance."
+  ]
+}
