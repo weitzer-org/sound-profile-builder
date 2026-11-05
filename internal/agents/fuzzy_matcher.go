@@ -3,6 +3,7 @@ package agents
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"regexp"
 	"sort"
@@ -11,6 +12,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -30,14 +32,41 @@ type snapCandidate struct {
 
 var snapPool []snapCandidate
 
-// exactOnlyBlocks holds block names that every coros_map.json entry producing them gates
-// behind a paid plugin (required_plugin), keyed by lowercase name. They are valid on an
-// exact (case-insensitive) match but are kept out of validBlocksRunes, the fuzzy-snap
-// candidate pool: a plugin device's name is a distinctive brand name, so a near miss like
-// "Spring Reverb" is a generic block, not a misspelled "Plini Reverb". The pool is not
-// filtered by which plugins the user owns, so snapping into these names would also
-// introduce plugin devices the user can't run.
+// exactOnlyBlocks holds block names that are valid on an exact (case-insensitive) match
+// but are kept out of the fuzzy-snap candidate pool, keyed by lowercase name:
+//
+//   - Plugin devices: names that every coros_map.json entry producing them gates behind a
+//     paid plugin (required_plugin), and every device-catalog model with a plugin_id. A
+//     plugin device's name is a distinctive brand name, so a near miss like "Spring
+//     Reverb" is a generic block, not a misspelled "Plini Reverb". The pool is not
+//     filtered by which plugins the user owns, so snapping into these names would also
+//     introduce plugin devices the user can't run.
+//   - Device-catalog models outside the gear categories (delays, reverbs, utilities, ...)
+//     that coros_map.json doesn't already name. Short generic names there make bad snap
+//     targets: "Double RVB" written on an amp block would snap to the "Doubler" utility.
 var exactOnlyBlocks = make(map[string]string)
+
+// pluginBlocks maps every plugin-device block name to the plugin it needs (by
+// catalog.PluginNames spelling), so BuildEffectiveValidBlocksFor can drop the ones the
+// user doesn't own. An empty value means a catalog plugin_id the plugin table doesn't
+// know: never treated as owned.
+var pluginBlocks = make(map[string]string)
+
+// catalogGearCategories are the device-catalog categories whose models join the
+// fuzzy-snap pool: the same amp/cab/drive families gearBlockTypes checks. Every other
+// catalog category is exact-match only (see exactOnlyBlocks).
+var catalogGearCategories = map[string]bool{
+	"Guitar Amplifier": true, "Bass Amplifier": true,
+	"Cabsim Guitar (M)": true, "Cabsim Guitar (ST)": true,
+	"Cabsim Bass (M)": true, "Cabsim Bass (ST)": true,
+	"Guitar Overdrive": true, "Bass Overdrive": true,
+}
+
+// catalogCaptureCategory is the catalog's "Neural Capture" category. Its models are the
+// generic capture block slots, not real gear; Neural Captures themselves come only from
+// coros_map.json and user_captures.json.
+const catalogCaptureCategory = "Neural Capture"
+
 var parseBlocksOnce sync.Once
 var validCategories = map[string]bool{
 	"amplifier:": true, "cab:": true, "cabinet:": true,
@@ -247,14 +276,18 @@ func IsUserCaptureName(name string) bool {
 	return userCaptureNameSet[name]
 }
 
-// GetValidNativeBlocks parses the embedded coros_map.json and user_captures.json,
-// returning a map of [blockName]isCapture. User captures are always treated as
-// captures since they are, by definition, real Cortex Cloud captures.
+// GetValidNativeBlocks parses the embedded coros_map.json, user_captures.json and the
+// device catalog (internal/catalog), returning a map of [blockName]isCapture. User
+// captures are always treated as captures since they are, by definition, real Cortex
+// Cloud captures. Every catalog model name, and every mono/stereo family name ("412 Brit
+// 60B V30 95" for its (M) and (ST) models), is a native block; the catalog never
+// overrides a name coros_map.json or user_captures.json already set.
 func GetValidNativeBlocks() map[string]bool {
 	parseBlocksOnce.Do(func() {
 		var corosData map[string]map[string]interface{}
 		if err := json.Unmarshal(embeddedCorosMap, &corosData); err == nil {
 			ungated := make(map[string]bool)
+			gatedBy := make(map[string]string)
 			for _, props := range corosData {
 				if equiv, ok := props["coros_equivalent"].(string); ok && equiv != "" {
 					isCap, _ := props["is_capture"].(bool)
@@ -262,6 +295,8 @@ func GetValidNativeBlocks() map[string]bool {
 					validBlocksRunes[equiv] = []rune(strings.ToLower(equiv))
 					if plugin, _ := props["required_plugin"].(string); plugin == "" {
 						ungated[equiv] = true
+					} else {
+						gatedBy[equiv] = plugin
 					}
 				}
 			}
@@ -269,6 +304,7 @@ func GetValidNativeBlocks() map[string]bool {
 				if !ungated[equiv] {
 					delete(validBlocksRunes, equiv)
 					exactOnlyBlocks[strings.ToLower(equiv)] = equiv
+					pluginBlocks[equiv] = gatedBy[equiv]
 				}
 			}
 		}
@@ -279,6 +315,7 @@ func GetValidNativeBlocks() map[string]bool {
 			validNativeBlocks[c.Name] = true
 			validBlocksRunes[c.Name] = []rune(strings.ToLower(c.Name))
 		}
+		addCatalogBlocks()
 		snapPool = make([]snapCandidate, 0, len(validBlocksRunes))
 		for name, r := range validBlocksRunes {
 			snapPool = append(snapPool, snapCandidate{name: name, runes: r})
@@ -286,6 +323,46 @@ func GetValidNativeBlocks() map[string]bool {
 		sort.Slice(snapPool, func(i, j int) bool { return snapPool[i].name < snapPool[j].name })
 	})
 	return validNativeBlocks
+}
+
+// addCatalogBlocks adds the device catalog's model and family names to the valid-block
+// set. Called once, from GetValidNativeBlocks, after the coros_map.json and user-capture
+// passes. A catalog that fails to load is logged and skipped: the pipeline then runs on
+// coros_map.json and user_captures.json alone, as it did before the catalog existed.
+func addCatalogBlocks() {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		log.Printf("device catalog unavailable, valid blocks come from coros_map.json and user_captures.json only: %v", err)
+		return
+	}
+	for i := range cat.Models {
+		m := &cat.Models[i]
+		if m.Category == catalogCaptureCategory {
+			continue
+		}
+		plugin, gated := m.RequiredPlugin()
+		for _, name := range []string{m.Name, catalog.FamilyName(m.Name)} {
+			if gated {
+				// A plugin device is a native block (never a capture), exact-match only
+				// and plugin-gated, even if a coros_map.json entry named it without
+				// required_plugin.
+				validNativeBlocks[name] = false
+				delete(validBlocksRunes, name)
+				exactOnlyBlocks[strings.ToLower(name)] = name
+				pluginBlocks[name] = plugin
+				continue
+			}
+			if _, exists := validNativeBlocks[name]; exists {
+				continue
+			}
+			validNativeBlocks[name] = false
+			if catalogGearCategories[m.Category] {
+				validBlocksRunes[name] = []rune(strings.ToLower(name))
+			} else {
+				exactOnlyBlocks[strings.ToLower(name)] = name
+			}
+		}
+	}
 }
 
 // BuildEffectiveValidBlocks filters GetValidNativeBlocks() by which capture sources are
@@ -297,17 +374,44 @@ func GetValidNativeBlocks() map[string]bool {
 // also strip every real user capture out of the valid set, causing a correctly-chosen
 // user capture to be flagged "Unverified" purely because it shares the isCapture flag
 // with the factory captures being excluded.
+//
+// It applies no plugin filtering: every plugin device counts as valid. Eval tooling uses
+// it as ground truth for "is this a real block name"; the production pipeline uses
+// BuildEffectiveValidBlocksFor with the run's PluginGate.
 func BuildEffectiveValidBlocks(allowFactoryCaptures, allowUserCaptures bool) map[string]bool {
+	return BuildEffectiveValidBlocksFor(ValidBlockFilter{
+		AllowFactoryCaptures: allowFactoryCaptures,
+		AllowUserCaptures:    allowUserCaptures,
+	})
+}
+
+// ValidBlockFilter selects which entries of GetValidNativeBlocks() a run may use.
+type ValidBlockFilter struct {
+	AllowFactoryCaptures bool
+	AllowUserCaptures    bool
+	// Plugins drops plugin devices the user doesn't own, so the Architect naming one
+	// (e.g. "Tim Henson Lead" without that plugin) is flagged unverified instead of
+	// passing as a real block. An inactive gate keeps every plugin device.
+	Plugins PluginGate
+}
+
+// BuildEffectiveValidBlocksFor is BuildEffectiveValidBlocks with plugin gating. With an
+// active gate, a plugin device whose plugin isn't owned, or whose plugin_id the plugin
+// table doesn't know, is left out.
+func BuildEffectiveValidBlocksFor(f ValidBlockFilter) map[string]bool {
 	all := GetValidNativeBlocks()
 	effective := make(map[string]bool, len(all))
 	for name, isCap := range all {
 		if IsUserCaptureName(name) {
-			if allowUserCaptures {
+			if f.AllowUserCaptures {
 				effective[name] = isCap
 			}
 			continue
 		}
-		if isCap && !allowFactoryCaptures {
+		if isCap && !f.AllowFactoryCaptures {
+			continue
+		}
+		if plugin, gated := pluginBlocks[name]; gated && f.Plugins.Active && (plugin == "" || !f.Plugins.Owned[plugin]) {
 			continue
 		}
 		effective[name] = isCap
