@@ -4,7 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -533,13 +532,14 @@ func TestPluginGate(t *testing.T) {
 		t.Errorf("allow_paid_plugins=false must own nothing, got %+v", none)
 	}
 
-	// A plugin_id missing from the plugin table is refused even by an inactive gate.
-	unknown := &catalog.Model{Name: "Future Device", PluginID: "999"}
-	if inactive.allowsModel(unknown) || g.allowsModel(unknown) {
-		t.Errorf("a model with an unknown plugin_id must never be allowed")
+	// A catalog addition whose plugin_id is missing from the plugin table (gated, no
+	// plugin name) is refused even by an inactive gate.
+	unknown := catalogAddition{Family: "Future Device", Type: "amp", Gated: true}
+	if unknown.allowedBy(inactive) || unknown.allowedBy(g) {
+		t.Errorf("a model with an unknown plugin_id must never be offered")
 	}
-	if !g.allowsModel(&catalog.Model{Name: "Brit 2203"}) {
-		t.Errorf("a non-plugin model must always be allowed")
+	if !(catalogAddition{Family: "Brit 2203", Type: "amp"}).allowedBy(g) {
+		t.Errorf("a non-plugin model must always be offered")
 	}
 }
 

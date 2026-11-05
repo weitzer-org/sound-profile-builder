@@ -72,17 +72,3 @@ func (g PluginGate) ownsAny(plugins []string) bool {
 	}
 	return false
 }
-
-// allowsModel applies the gate to a catalog model. A plugin model whose plugin_id isn't
-// in the plugin table is refused even when the gate is inactive: nothing says which
-// licence it needs, so it is never offered.
-func (g PluginGate) allowsModel(m *catalog.Model) bool {
-	name, gated := m.RequiredPlugin()
-	if !gated {
-		return true
-	}
-	if name == "" {
-		return false
-	}
-	return g.Allows(name)
-}
