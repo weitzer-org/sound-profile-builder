@@ -589,11 +589,9 @@ func TestTransientReadErrorsAreNotTerminal(t *testing.T) {
 	if v, err := r.bridge.Store.JobState(ctx, id, nil, t0); err == nil {
 		t.Fatalf("result with a failing read: state %s, want an error", v.State)
 	}
-	// Wait rides out the hiccup.
-	go func() {
-		time.Sleep(30 * time.Millisecond)
-		r.client.SetFailRead(false)
-	}()
+	// Wait rides out the hiccup: the first poll's reads fail, later ones work.
+	r.client.SetFailRead(false)
+	r.client.FailNextReads(1)
 	v, err := r.bridge.Wait(ctx, id, 2*time.Second)
 	if err != nil || v.State != devicejobs.StatusSucceeded {
 		t.Fatalf("Wait across a transient failure: %+v %v", v, err)

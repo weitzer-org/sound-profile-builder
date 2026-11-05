@@ -48,6 +48,13 @@ const deviceInstructions = " Device tools act on the user's physical Quad Cortex
 // characters) are dropped, backticks become apostrophes, whitespace runs
 // collapse to one space, and the result is cut to n runes. Markdown output additionally goes through cell().
 func sanitizeDeviceText(s string, n int) string {
+	// Bound the work first: the result is at most n runes, so a long input is
+	// cut (by bytes; a split rune decodes to U+FFFD, which is dropped below)
+	// before it is copied. 16 bytes per kept rune leaves room for stripped
+	// characters and collapsed whitespace in any realistic name.
+	if limit := 16 * n; len(s) > limit {
+		s = s[:limit]
+	}
 	s = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) && !unicode.IsSpace(r) || unicode.Is(unicode.Cf, r) || r == unicode.ReplacementChar {
 			return -1

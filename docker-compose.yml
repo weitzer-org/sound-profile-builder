@@ -57,7 +57,7 @@ services:
       done;
       mc mb --ignore-existing local/$${S3_BUCKET};
       echo 'Bucket ready: '$${S3_BUCKET};
-      if [ -n "$${DEVICE_JOBS_BUCKET}" ]; then mc mb --ignore-existing local/$${DEVICE_JOBS_BUCKET}; fi;
+      if [ x$${DEVICE_JOBS_BUCKET} != x ]; then mc mb --ignore-existing local/$${DEVICE_JOBS_BUCKET}; fi;
       exit 0;
       "
 

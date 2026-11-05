@@ -477,3 +477,18 @@ func TestDeviceTools_NoSecretsInLogs(t *testing.T) {
 		}
 	}
 }
+
+func TestSanitizeDeviceTextBoundsWork(t *testing.T) {
+	long := strings.Repeat("ab ", 1<<20) // 3 MiB
+	if got := sanitizeDeviceText(long, 10); got != "ab ab ab a…" {
+		t.Fatalf("got %q", got)
+	}
+	// A cut through a multi-byte rune never leaks an invalid sequence.
+	if got := sanitizeDeviceText(strings.Repeat("é", 100), 2); got != "éé…" {
+		t.Fatalf("got %q", got)
+	}
+	allocs := testing.AllocsPerRun(5, func() { _ = sanitizeDeviceText(long, 200) })
+	if allocs > 50 {
+		t.Fatalf("%v allocations for a 3 MiB input", allocs)
+	}
+}

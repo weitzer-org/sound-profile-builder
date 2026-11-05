@@ -21,11 +21,20 @@ import (
 // prefix, so code that probes existence by listing an exact key fails here
 // exactly as it would in production.
 type MemClient struct {
-	mu       sync.Mutex
-	objs     map[string]map[string][]byte
-	failList bool
-	failRead bool
-	limited  int
+	mu        sync.Mutex
+	objs      map[string]map[string][]byte
+	failList  bool
+	failRead  bool
+	failNextN int
+	limited   int
+}
+
+// FailNextReads makes the next n ReadFile/ReadFileLimited calls fail, then
+// succeeds again: a deterministic transient storage error.
+func (c *MemClient) FailNextReads(n int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.failNextN = n
 }
 
 // SetFailRead makes every later ReadFile/ReadFileLimited call fail, as a
@@ -50,6 +59,10 @@ func (c *MemClient) ReadFile(_ context.Context, bucket, object string) ([]byte, 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.failRead {
+		return nil, fmt.Errorf("read failed (transient)")
+	}
+	if c.failNextN > 0 {
+		c.failNextN--
 		return nil, fmt.Errorf("read failed (transient)")
 	}
 	d, ok := c.objs[bucket][object]
