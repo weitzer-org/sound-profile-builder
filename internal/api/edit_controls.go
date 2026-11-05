@@ -70,7 +70,8 @@ func blockControlsHTML(t editTarget, block storage.EffectBlock) string {
 	}
 	for i, c := range ctl.Controls {
 		if j, ok := paramFor[i]; ok {
-			sb.WriteString(deviceControlHTML(t, c, block.Parameters[j].Name, block.Parameters[j].Value, false))
+			p := block.Parameters[j]
+			sb.WriteString(deviceControlHTML(t, c, p.Name, agents.ValueWithUnit(p.Value, p.Unit), false))
 		} else {
 			sb.WriteString(deviceControlHTML(t, c, c.Name, c.DefaultValue(), true))
 		}

@@ -163,6 +163,20 @@ func (c DeviceControl) DefaultValue() string {
 	return c.FormatValue(*c.Default)
 }
 
+// ValueWithUnit is a parameter's value with its separately stored unit put back
+// ("0.25" + "s" -> "0.25 s"), so it parses in the right units. Only a bare number gets
+// the unit; text ("OFF") or a value that already carries a unit is returned as is.
+func ValueWithUnit(value, unit string) string {
+	unit = strings.TrimSpace(unit)
+	if unit == "" {
+		return value
+	}
+	if m := valuePattern.FindStringSubmatch(value); m != nil && m[2] == "" {
+		return strings.TrimSpace(value) + " " + unit
+	}
+	return value
+}
+
 // SplitDefaults splits a block's parameters for the read-only views. shown are the
 // parameters to list: everything except those set to the device default in both scenes.
 // atDefault names, in the device's order, the controls left at their default: the block's
@@ -183,7 +197,8 @@ func SplitDefaults(b storage.EffectBlock) (shown []storage.BlockParameter, atDef
 	set := make([]bool, len(d.Controls)) // listed with a non-default value: shown, so not "at default"
 	for _, p := range b.Parameters {
 		i := d.Index(p.Name)
-		if i >= 0 && d.Controls[i].IsDefault(p.Value) && (p.ValueB == "" || d.Controls[i].IsDefault(p.ValueB)) {
+		if i >= 0 && d.Controls[i].IsDefault(ValueWithUnit(p.Value, p.Unit)) &&
+			(p.ValueB == "" || d.Controls[i].IsDefault(ValueWithUnit(p.ValueB, p.Unit))) {
 			isDefault[i] = true
 			continue
 		}

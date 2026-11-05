@@ -71,3 +71,31 @@ func TestSplitDefaults(t *testing.T) {
 		t.Errorf("a capture keeps every parameter: %v %v", shown, atDefault)
 	}
 }
+
+// A parameter at the device default whose unit is stored separately counts as at default.
+func TestSplitDefaultsSeparateUnit(t *testing.T) {
+	d, ok := DeviceControlsFor("Analog Delay")
+	if !ok {
+		t.Fatal("Analog Delay not found")
+	}
+	for _, c := range d.Controls {
+		if c.Units == "" || c.Default == nil || len(c.Steps) > 0 {
+			continue
+		}
+		b := storage.EffectBlock{Model: "Analog Delay", Parameters: []storage.BlockParameter{
+			{Name: c.Name, Value: formatNum(*c.Default), Unit: c.Units}}}
+		if shown, atDefault := SplitDefaults(b); len(shown) != 0 || !slices.Contains(atDefault, c.Name) {
+			t.Errorf("%s = %s %s (the default) should be at default; shown %v, atDefault %v", c.Name, formatNum(*c.Default), c.Units, shown, atDefault)
+		}
+		return
+	}
+	t.Fatal("no Analog Delay control with units and a default")
+}
+
+func TestValueWithUnit(t *testing.T) {
+	for _, c := range [][3]string{{"0.25", "s", "0.25 s"}, {"250 ms", "s", "250 ms"}, {"OFF", "dB", "OFF"}, {"", "dB", ""}, {"5", "", "5"}} {
+		if got := ValueWithUnit(c[0], c[1]); got != c[2] {
+			t.Errorf("ValueWithUnit(%q, %q) = %q, want %q", c[0], c[1], got, c[2])
+		}
+	}
+}

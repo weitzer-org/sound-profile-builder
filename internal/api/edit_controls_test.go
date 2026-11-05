@@ -181,3 +181,29 @@ func TestApplyParamEdit(t *testing.T) {
 		t.Error("unknown parameter reported as updated")
 	}
 }
+
+// A parameter that keeps its unit in Unit: the posted value's unit decides what's stored.
+func TestStoredValueUnit(t *testing.T) {
+	for _, c := range []struct{ value, unit, wantV, wantU string }{
+		{"-6 DB", "dB", "-6", "dB"},
+		{"-65.0dB", "dB", "-65.0", "dB"},
+		{"300 ms", "s", "300 ms", ""}, // a slider over a ms control, on a value stored in s
+		{"4", "dB", "4", "dB"},
+		{"OFF", "dB", "OFF", "dB"},
+		{"5", "", "5", ""},
+	} {
+		if v, u := storedValueUnit(c.value, c.unit); v != c.wantV || u != c.wantU {
+			t.Errorf("storedValueUnit(%q, %q) = %q, %q; want %q, %q", c.value, c.unit, v, u, c.wantV, c.wantU)
+		}
+	}
+}
+
+// A device control whose preset value keeps its unit in Unit is shown in the right units.
+func TestDeviceControlUsesSeparateUnit(t *testing.T) {
+	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1", tabID: "strat"}
+	out := blockControlsHTML(tgt, storage.EffectBlock{ID: "b1", Model: "Analog Delay",
+		Parameters: []storage.BlockParameter{{Name: "DELAY TIME", Type: "slider", Value: "0.38", Unit: "s"}}})
+	if !strings.Contains(out, `value="380" data-unit=" ms"`) {
+		t.Errorf("DELAY TIME 0.38 s should be a slider at 380 ms:\n%s", out)
+	}
+}

@@ -525,8 +525,6 @@ func isBareSliderNumber(value string) bool {
 	return err == nil && !math.IsNaN(f) && !math.IsInf(f, 0)
 }
 
-// withoutControl drops from a kept_defaults list the entries naming the same device
-// control as paramName (names compare the way the catalog check compares them).
 // applyParamEdit sets a block's parameter to an edited value and reports whether the block
 // has that parameter. A device control the preset leaves at its default (the Edit view
 // shows every control of a catalog model) is added as a parameter, and an edited control
@@ -537,17 +535,8 @@ func applyParamEdit(b *storage.EffectBlock, paramName, newValue string) bool {
 		if param.Name != paramName {
 			continue
 		}
-		v := newValue
-		if param.Unit != "" {
-			// The rendered field displays "Value Unit" (genericParamHTML's text box); strip
-			// that suffix back off before storing so Unit doesn't get baked into Value and
-			// duplicated ("-65.0 dB" -> "-65.0 dB dB") on the next render. Match
-			// case-insensitively and with or without the separating space, since a user
-			// editing the field by hand won't necessarily preserve either exactly.
-			if strings.HasSuffix(strings.ToLower(v), strings.ToLower(param.Unit)) {
-				v = strings.TrimSpace(v[:len(v)-len(param.Unit)])
-			}
-		}
+		v, unit := storedValueUnit(newValue, param.Unit)
+		b.Parameters[j].Unit = unit
 		b.Parameters[j].Value = v
 		updated = true
 		break
@@ -571,6 +560,34 @@ func applyParamEdit(b *storage.EffectBlock, paramName, newValue string) bool {
 	return updated
 }
 
+// numberWithUnit splits a written value into its number and trailing unit ("-65.0 dB",
+// "300ms"); ok is false for text ("OFF", "1/4").
+var numberWithUnit = regexp.MustCompile(`^\s*([+-]?\d+(?:\.\d+)?)\s*([A-Za-z%]*)\s*$`)
+
+// storedValueUnit is how an edited value is stored on a parameter whose unit is kept
+// separately in Unit. The editor shows such a parameter as "Value Unit", and a device
+// slider posts its own unit, so the posted value usually carries a unit:
+//   - the parameter's own unit (any case, with or without the space) is stripped back off,
+//     so it isn't baked into Value and duplicated ("-65.0 dB dB") on the next render;
+//   - a different unit ("300 ms" on a parameter stored as seconds) is kept in Value and
+//     Unit is cleared, rather than stored as 300 seconds (or, by suffix-matching, "300 m");
+//   - a bare number or text keeps the parameter's unit.
+func storedValueUnit(value, unit string) (string, string) {
+	if unit == "" {
+		return value, ""
+	}
+	m := numberWithUnit.FindStringSubmatch(value)
+	switch {
+	case m == nil || m[2] == "":
+		return value, unit
+	case strings.EqualFold(m[2], strings.TrimSpace(unit)):
+		return m[1], unit
+	}
+	return strings.TrimSpace(value), ""
+}
+
+// withoutControl drops from a kept_defaults list the entries naming the same device
+// control as paramName (names compare the way the catalog check compares them).
 func withoutControl(kept []string, model, paramName string) []string {
 	if len(kept) == 0 {
 		return kept
