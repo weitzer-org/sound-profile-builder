@@ -77,3 +77,34 @@ func TestCorosMapPluginEntriesUsePluginModels(t *testing.T) {
 		t.Errorf("coros_map.json entry %q: required_plugin set, but the block is not a plugin model in the device catalog", b)
 	}
 }
+
+// TestPluginTableAgreesWithCorosMap: catalog.PluginName (keyed by the device's plugin_id)
+// and coros_map.json's hand-written required_plugin must name the same plugin for the
+// same model, or one of the two gating paths would check ownership of the wrong plugin.
+func TestPluginTableAgreesWithCorosMap(t *testing.T) {
+	cat, err := catalog.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bad []string
+	for gear, rec := range CorosMapRecords() {
+		plugin, _ := rec["required_plugin"].(string)
+		equiv, _ := rec["coros_equivalent"].(string)
+		if plugin == "" || equiv == "" {
+			continue
+		}
+		models := cat.Family(catalog.FamilyName(equiv))
+		if m, ok := cat.Lookup(equiv); ok {
+			models = []*catalog.Model{m}
+		}
+		for _, m := range models {
+			if name, _ := m.RequiredPlugin(); name != plugin {
+				bad = append(bad, gear+": required_plugin "+plugin+", catalog plugin_id "+m.PluginID+" is "+name)
+			}
+		}
+	}
+	sort.Strings(bad)
+	for _, b := range bad {
+		t.Error(b)
+	}
+}

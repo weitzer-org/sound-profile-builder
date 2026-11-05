@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -505,5 +506,39 @@ func TestSnapToClosestBlock_TiesAreDeterministic(t *testing.T) {
 		if got := SnapToClosestBlock("Klon Centaur", valid); got != "Klon Centaur 1" {
 			t.Fatalf("call %d: SnapToClosestBlock(%q) = %q, want %q", i, "Klon Centaur", got, "Klon Centaur 1")
 		}
+	}
+}
+
+func TestPluginGate(t *testing.T) {
+	inactive := PluginGateFromConstraints(map[string]interface{}{})
+	if inactive.Active || !inactive.Allows("Plini") {
+		t.Errorf("no allow_paid_plugins constraint: want an inactive gate that allows everything, got %+v", inactive)
+	}
+
+	g := PluginGateFromConstraints(map[string]interface{}{
+		"allow_paid_plugins": true,
+		"available_plugins":  []string{"cory wong", "John Mayer"},
+	})
+	for plugin, want := range map[string]bool{"": true, "Cory Wong": true, "John Mayer": true, "Plini": false, "Tim Henson": false} {
+		if got := g.Allows(plugin); got != want {
+			t.Errorf("Allows(%q) = %v, want %v (owned: %v)", plugin, got, want, g.Owned)
+		}
+	}
+
+	none := PluginGateFromConstraints(map[string]interface{}{
+		"allow_paid_plugins": false,
+		"available_plugins":  []string{"Cory Wong"},
+	})
+	if !none.Active || none.Allows("Cory Wong") {
+		t.Errorf("allow_paid_plugins=false must own nothing, got %+v", none)
+	}
+
+	// A plugin_id missing from the plugin table is refused even by an inactive gate.
+	unknown := &catalog.Model{Name: "Future Device", PluginID: "999"}
+	if inactive.allowsModel(unknown) || g.allowsModel(unknown) {
+		t.Errorf("a model with an unknown plugin_id must never be allowed")
+	}
+	if !g.allowsModel(&catalog.Model{Name: "Brit 2203"}) {
+		t.Errorf("a non-plugin model must always be allowed")
 	}
 }

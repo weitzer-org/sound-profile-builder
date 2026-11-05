@@ -17,13 +17,9 @@ func TestLibrarianContextSize(t *testing.T) {
 	if err != nil {
 		t.Skipf("config.json not loadable: %v", err)
 	}
-	owned := map[string]bool{}
-	for _, p := range cfg.AvailablePlugins {
-		owned[p] = true
-	}
-	dict, menu := librarianInputs(cfg.AllowFactoryCaptures, true, owned)
+	dict, menu := librarianInputs(cfg.AllowFactoryCaptures, NewPluginGate(cfg.AllowPaidPlugins, cfg.AvailablePlugins))
 	prompt, _ := os.ReadFile("prompts/4_coros_librarian_v2.md")
-	t.Logf("plugins owned: %v; factory captures allowed: %v", cfg.AvailablePlugins, cfg.AllowFactoryCaptures)
+	t.Logf("paid plugins allowed: %v, owned: %v; factory captures allowed: %v", cfg.AllowPaidPlugins, cfg.AvailablePlugins, cfg.AllowFactoryCaptures)
 	for _, part := range []struct {
 		name string
 		n    int
