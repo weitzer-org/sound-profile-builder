@@ -304,9 +304,12 @@ class Proxy:
                 raise Refused("params must be an object of {param_index: display_value}.")
             for pidx, disp in params.items():
                 check_param(self.catalog, args.get("device_hash"), pidx, disp)
-            args = dict(cell, device_hash=_as_int(args["device_hash"], "device_hash"),
-                        params={str(_as_int(k, "param_index")): float(v)
-                                for k, v in params.items()} or None)
+            vetted = {str(_as_int(k, "param_index")): float(v) for k, v in params.items()}
+            args = dict(cell, device_hash=_as_int(args["device_hash"], "device_hash"))
+            if vetted:
+                # Omit params when empty: qc-mcp's schema takes a dict or no key at all,
+                # and rejects an explicit null.
+                args["params"] = vetted
         elif name == "set_parameter":
             if not args.get("device_hash"):
                 raise Refused("set_parameter needs device_hash so the value is converted "

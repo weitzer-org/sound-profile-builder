@@ -348,6 +348,13 @@ class ProxyBehaviour(unittest.TestCase):
         self.h.call("add_block", row=0, column=1, device_hash=1)
         self.assertIsNone(self.h.proxy._client_meta)
 
+    def test_add_block_without_params_omits_the_key(self):
+        self.h = Harness(self.tmp.name)
+        for extra in ({}, {"params": {}}, {"params": None}):
+            self.h.call("add_block", row=0, column=1, device_hash=1, **extra)
+            self.assertEqual(self.h.calls()[-1]["args"],
+                             {"row": 0, "column": 1, "device_hash": 1}, extra)
+
     def test_save_refused_for_other_slot(self):
         self.h = Harness(self.tmp.name)
         self.assertIn("only target", text(self.h.call("save_preset_as", name="T",
