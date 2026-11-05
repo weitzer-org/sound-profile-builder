@@ -250,7 +250,7 @@ func TestRenderPresetMarkdownDefaultsList(t *testing.T) {
 		KeptDefaults: []string{"TRAILS"},
 	}}}}
 	out := RenderPresetMarkdown(&storage.Preset{Name: "P"}, sp)
-	if !strings.Contains(out, "**At device default:**\n\n- Analog Delay: FEEDBACK, TRAILS") {
+	if !strings.Contains(out, "**At device default:**\n\n- Analog Delay: FEEDBACK, HIGH PASS, LOW PASS, SYNC, SYNC NOTE, DELAY TIME, MOD RATE, MOD DEPTH, DRIVE, TRAILS, PING PONG, WIDTH") {
 		t.Errorf("missing defaults list:\n%s", out)
 	}
 	if strings.Contains(out, "FEEDBACK 25") || !strings.Contains(out, "MIX 30 %") {

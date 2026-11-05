@@ -99,8 +99,9 @@ func TestInjectRenderedHTML_ErrorsOnMalformedStructuredPayload(t *testing.T) {
 	}
 }
 
-// Controls left at the device default -- kept_defaults, or listed with the default value
-// in both scenes -- are named once in a muted line instead of listed as rows; a Scene B
+// Device controls left at the default -- kept_defaults, listed with the default value in
+// both scenes, or never mentioned -- are named once in a muted line instead of listed as
+// rows; a Scene B
 // value that differs from Scene A is marked.
 func TestRenderPresetHTML_DefaultsLineAndSceneDiff(t *testing.T) {
 	blocks := []storage.EffectBlock{{
@@ -113,7 +114,7 @@ func TestRenderPresetHTML_DefaultsLineAndSceneDiff(t *testing.T) {
 	}}
 	out := renderPresetHTML(blocks)
 	for _, want := range []string{
-		"<div class='defaults-note'>At device default: FEEDBACK, TRAILS, WIDTH</div>",
+		"<div class='defaults-note'>At device default: FEEDBACK, HIGH PASS, LOW PASS, SYNC, SYNC NOTE, DELAY TIME, MOD RATE, MOD DEPTH, DRIVE, TRAILS, PING PONG, WIDTH</div>",
 		"<span class='param'>MIX: 30 %</span>",
 		"<span class='param diff'>MIX: 40 %</span>",
 	} {

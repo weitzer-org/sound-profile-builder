@@ -177,10 +177,13 @@ func ValueWithUnit(value, unit string) string {
 	return value
 }
 
-// SplitDefaults splits a block's parameters for the read-only views. shown are the
-// parameters to list: everything except those set to the device default in both scenes.
-// atDefault names, in the device's order, the controls left at their default: the block's
-// kept_defaults plus parameters equal to the default in both scenes. For a block whose
+// SplitDefaults splits a block's parameters for the read-only views, so that every device
+// control of a catalog block appears exactly once: as a listed parameter, or by name in the
+// "at device default" list. shown are the parameters to list: everything except those set to
+// the device default in both scenes. atDefault names, in the device's order, every device
+// control the block doesn't set to another value: its kept_defaults, parameters equal to the
+// default in both scenes, and controls the preset never mentions (the device leaves those at
+// their default too; the parameter check notes them as not considered). For a block whose
 // model has no catalog controls (a capture, an unknown name), every parameter is shown and
 // atDefault is nil.
 func SplitDefaults(b storage.EffectBlock) (shown []storage.BlockParameter, atDefault []string) {
@@ -188,18 +191,11 @@ func SplitDefaults(b storage.EffectBlock) (shown []storage.BlockParameter, atDef
 	if !ok {
 		return b.Parameters, nil
 	}
-	isDefault := make([]bool, len(d.Controls))
-	for _, name := range b.KeptDefaults {
-		if i := d.Index(name); i >= 0 {
-			isDefault[i] = true
-		}
-	}
 	set := make([]bool, len(d.Controls)) // listed with a non-default value: shown, so not "at default"
 	for _, p := range b.Parameters {
 		i := d.Index(p.Name)
 		if i >= 0 && d.Controls[i].IsDefault(ValueWithUnit(p.Value, p.Unit)) &&
 			(p.ValueB == "" || d.Controls[i].IsDefault(ValueWithUnit(p.ValueB, p.Unit))) {
-			isDefault[i] = true
 			continue
 		}
 		if i >= 0 {
@@ -208,7 +204,7 @@ func SplitDefaults(b storage.EffectBlock) (shown []storage.BlockParameter, atDef
 		shown = append(shown, p)
 	}
 	for i, c := range d.Controls {
-		if isDefault[i] && !set[i] {
+		if !set[i] {
 			atDefault = append(atDefault, c.Name)
 		}
 	}

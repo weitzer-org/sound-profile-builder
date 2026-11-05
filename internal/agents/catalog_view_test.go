@@ -63,8 +63,11 @@ func TestSplitDefaults(t *testing.T) {
 	if want := []string{"MIX", "DELAY TIME", "TRAILS", "Bypass"}; !slices.Equal(names, want) {
 		t.Errorf("shown = %q, want %q", names, want)
 	}
-	if want := []string{"FEEDBACK", "PING PONG", "WIDTH"}; !slices.Equal(atDefault, want) {
-		t.Errorf("atDefault = %q, want %q (device order, no TRAILS, no unknown names)", atDefault, want)
+	// Every device control the block doesn't set to another value, in device order: FEEDBACK
+	// (at its default), the kept and the never-mentioned ones; not TRAILS (set), not the
+	// unknown kept name.
+	if want := []string{"FEEDBACK", "HIGH PASS", "LOW PASS", "SYNC", "SYNC NOTE", "MOD RATE", "MOD DEPTH", "DRIVE", "PING PONG", "WIDTH"}; !slices.Equal(atDefault, want) {
+		t.Errorf("atDefault = %q, want %q", atDefault, want)
 	}
 	capture := storage.EffectBlock{Model: "US DLX 58 (Factory Capture)", Parameters: []storage.BlockParameter{{Name: "Gain", Value: "+1 dB"}}}
 	if shown, atDefault := SplitDefaults(capture); len(shown) != 1 || atDefault != nil {
@@ -96,6 +99,39 @@ func TestValueWithUnit(t *testing.T) {
 	for _, c := range [][3]string{{"0.25", "s", "0.25 s"}, {"250 ms", "s", "250 ms"}, {"OFF", "dB", "OFF"}, {"", "dB", ""}, {"5", "", "5"}} {
 		if got := ValueWithUnit(c[0], c[1]); got != c[2] {
 			t.Errorf("ValueWithUnit(%q, %q) = %q, want %q", c[0], c[1], got, c[2])
+		}
+	}
+}
+
+// Every device control of a catalog block appears exactly once in the read-only views: as a
+// listed parameter or by name in the at-default list, whatever the preset sets or keeps.
+func TestSplitDefaultsCoversEveryControl(t *testing.T) {
+	for _, b := range []storage.EffectBlock{
+		{Model: "Analog Delay"}, // nothing set or kept
+		{Model: "Analog Delay", Parameters: []storage.BlockParameter{{Name: "Mix", Value: "30 %"}, {Name: "Time", Value: "380 ms"}}},
+		{Model: "Spring", Parameters: []storage.BlockParameter{{Name: "Decay", Value: "2 s"}, {Name: "MIX", Value: "20 %"}}},
+		{Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{{Name: "Mic 1", Value: "Dyn 57"}, {Name: "MIC 1 LEVEL", Value: "-3 dB"}}, KeptDefaults: []string{"MIC 2 PAN"}},
+	} {
+		d, ok := DeviceControlsFor(b.Model)
+		if !ok {
+			t.Fatalf("%s: not a catalog model", b.Model)
+		}
+		seen := make([]int, len(d.Controls))
+		shown, atDefault := SplitDefaults(b)
+		for _, p := range shown {
+			if i := d.Index(p.Name); i >= 0 {
+				seen[i]++
+			}
+		}
+		for _, name := range atDefault {
+			if i := d.Index(name); i >= 0 {
+				seen[i]++
+			}
+		}
+		for i, n := range seen {
+			if n != 1 {
+				t.Errorf("%s: control %s appears %d times, want 1", b.Model, d.Controls[i].Name, n)
+			}
 		}
 	}
 }
