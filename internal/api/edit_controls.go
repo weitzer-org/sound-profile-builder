@@ -141,7 +141,9 @@ func unitSuffixJS(units string) string {
 	return html.EscapeString(strings.NewReplacer(`\`, ``, `'`, ``).Replace(" " + units))
 }
 
-func formatFloat(x float64) string { return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.4f", x), "0"), ".") }
+func formatFloat(x float64) string {
+	return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.4f", x), "0"), ".")
+}
 
 func selectHTML(t editTarget, name, label, value string, options []string) string {
 	var opts strings.Builder
