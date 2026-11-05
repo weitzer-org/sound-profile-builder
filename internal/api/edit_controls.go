@@ -60,7 +60,7 @@ func blockControlsHTML(t editTarget, block storage.EffectBlock) string {
 		paramFor[i] = j
 	}
 	for _, param := range extra {
-		if strings.EqualFold(strings.TrimSpace(param.Name), "Bypass") {
+		if leadingParam(param.Name) {
 			sb.WriteString(genericParamHTML(t, param))
 		}
 	}
@@ -72,11 +72,21 @@ func blockControlsHTML(t editTarget, block storage.EffectBlock) string {
 		}
 	}
 	for _, param := range extra {
-		if !strings.EqualFold(strings.TrimSpace(param.Name), "Bypass") {
+		if !leadingParam(param.Name) {
 			sb.WriteString(genericParamHTML(t, param))
 		}
 	}
 	return sb.String()
+}
+
+// leadingParam reports the parameters shown before a block's device controls: Bypass,
+// and a cab's Mic 1/Mic 2 microphone choice, which its per-mic controls depend on.
+func leadingParam(name string) bool {
+	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", "")) {
+	case "bypass", "mic1", "mic2":
+		return true
+	}
+	return false
 }
 
 const (

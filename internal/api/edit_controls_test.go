@@ -55,6 +55,13 @@ func TestBlockControlsHTMLForCatalogModel(t *testing.T) {
 		t.Errorf("Opto Comp RATIO should be a 2..20 slider at 12")
 	}
 
+	// A cab's microphone choice comes before its per-mic controls.
+	cab := blockControlsHTML(tgt, storage.EffectBlock{ID: "b1", Model: "412 Brit 60B V30 95 (M)", Parameters: []storage.BlockParameter{
+		{Name: "MIC 1 POSITION", Type: "slider", Value: "2"}, {Name: "Mic 1", Type: "dropdown", Value: "Dyn 57"}}})
+	if strings.Index(cab, ">Mic 1<") > strings.Index(cab, "MIC 1 LEVEL") {
+		t.Error("Mic 1 should come before the per-mic controls")
+	}
+
 	// A model outside the catalog keeps the generic controls; a toggle is a dropdown too.
 	generic := blockControlsHTML(tgt, storage.EffectBlock{ID: "b1", Model: "Made Up Pedal", Parameters: []storage.BlockParameter{
 		{Name: "Bypass", Type: "toggle", Value: "On"}, {Name: "Drive", Type: "slider", Value: "4"}}})
