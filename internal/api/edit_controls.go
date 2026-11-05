@@ -34,30 +34,13 @@ func (t editTarget) hxVals(paramName, unit string) string {
 	return html.EscapeString(string(b))
 }
 
-// valueID is the id of the element showing a slider's live value. It's built only from
-// [a-z0-9-], because it is also interpolated into the slider's oninput script: HTML
-// escaping doesn't protect a JS string inside an attribute (the browser decodes &#39; back
-// to ' before the script runs), and parameter names and block ids are LLM-written. The
-// block id keeps two blocks' same-named controls (a delay's and a reverb's MIX) apart.
-func (t editTarget) valueID(paramName string) string {
-	return "val-" + idSlug(t.tabID) + "-" + idSlug(t.blockID) + "-" + idSlug(paramName)
-}
-
-// idSlug keeps lower-case ASCII letters and digits and turns everything else into '-'.
-func idSlug(s string) string {
-	var b strings.Builder
-	for _, r := range strings.ToLower(s) {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			b.WriteRune(r)
-		} else {
-			b.WriteByte('-')
-		}
-	}
-	if b.Len() == 0 {
-		return "x"
-	}
-	return b.String()
-}
+// sliderLiveScript updates the live value shown above a slider (the last element of the
+// label row just before it) as it moves. It is one constant for every slider: nothing
+// preset-specific is ever interpolated into it, because parameter names and block ids are
+// LLM-written and HTML escaping doesn't protect a JS string inside an event attribute (the
+// browser decodes &#39; back to ' before the script runs). The unit comes from the input's
+// data-unit attribute, which is HTML-escaped data and is assigned as text.
+const sliderLiveScript = `this.previousElementSibling.lastElementChild.innerText = this.value + (this.dataset.unit || '')`
 
 // blockControlsHTML renders the controls for one block.
 func blockControlsHTML(t editTarget, block storage.EffectBlock) string {
@@ -137,13 +120,8 @@ func deviceControlHTML(t editTarget, c agents.DeviceControl, name, value string,
 		if x, ok := c.ParseValue(value); ok {
 			lo, hi := *c.Min, *c.Max
 			x = math.Max(lo, math.Min(hi, x))
-			return fmt.Sprintf(`
-							<div class="param-group" style="%[1]s">
-								<div style="%[2]s"><span>%[3]s</span><span id="%[4]s">%[5]s</span></div>
-								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals="%[6]s" min="%[7]s" max="%[8]s" step="%[9]s" value="%[10]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('%[4]s').innerText = this.value + '%[11]s'">
-							</div>`,
-				paramGroupStyle, labelRowStyle, label, html.EscapeString(t.valueID(name)), html.EscapeString(c.FormatValue(x)),
-				t.hxVals(name, c.Units), formatFloat(lo), formatFloat(hi), formatFloat(sliderStep(c)), formatFloat(x), unitSuffixJS(c.Units))
+			return sliderHTML(label, c.FormatValue(x), t.hxVals(name, c.Units),
+				formatFloat(lo), formatFloat(hi), formatFloat(sliderStep(c)), formatFloat(x), unitSuffix(c.Units))
 		}
 	}
 	return textInputHTML(t, name, label, value)
@@ -163,13 +141,25 @@ func sliderStep(c agents.DeviceControl) float64 {
 	return 1
 }
 
-// unitSuffixJS is the unit shown after a slider's live value, safe inside a JS string in
-// an HTML attribute. Catalog units are short words or "%".
-func unitSuffixJS(units string) string {
+// unitSuffix is the unit shown after a slider's live value (" dB"), or "".
+func unitSuffix(units string) string {
 	if units == "" {
 		return ""
 	}
-	return html.EscapeString(strings.NewReplacer(`\`, ``, `'`, ``).Replace(" " + units))
+	return " " + units
+}
+
+// sliderHTML renders a range slider with its label row and live value. label is HTML
+// (it may carry the "default" tag) and hxVals is already escaped; every other argument
+// is plain text and escaped here.
+func sliderHTML(label, display, hxVals, min, max, step, value, unit string) string {
+	return fmt.Sprintf(`
+							<div class="param-group" style="%[1]s">
+								<div style="%[2]s"><span>%[3]s</span><span>%[4]s</span></div>
+								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals="%[5]s" min="%[6]s" max="%[7]s" step="%[8]s" value="%[9]s" data-unit="%[10]s" style="width: 100%%; cursor: pointer;" oninput="%[11]s">
+							</div>`, paramGroupStyle, labelRowStyle, label, html.EscapeString(display), hxVals,
+		html.EscapeString(min), html.EscapeString(max), html.EscapeString(step), html.EscapeString(value),
+		html.EscapeString(unit), html.EscapeString(sliderLiveScript))
 }
 
 func formatFloat(x float64) string {
@@ -215,12 +205,8 @@ func genericParamHTML(t editTarget, param storage.BlockParameter) string {
 		// 0-10 value (Gain/Tone/Volume). A param carrying a real-world unit -- in Unit, or
 		// (as the live pipeline usually writes it) inside Value, e.g. "+3.0 dB" -- can't
 		// be shown on that range, so it gets a text box instead.
-		id := html.EscapeString(t.valueID(param.Name))
-		return fmt.Sprintf(`
-							<div class="param-group" style="%[1]s">
-								<div style="%[2]s"><span>%[3]s</span><span id="%[4]s">%[5]s</span></div>
-								<input type="range" name="value" hx-post="/api/preset/update_parameter" hx-trigger="change" hx-vals="%[6]s" min="0" max="10" step="0.1" value="%[5]s" style="width: 100%%; cursor: pointer;" oninput="document.getElementById('%[4]s').innerText = this.value">
-							</div>`, paramGroupStyle, labelRowStyle, label, id, html.EscapeString(strings.TrimSpace(param.Value)), t.hxVals(param.Name, ""))
+		v := strings.TrimSpace(param.Value)
+		return sliderHTML(label, v, t.hxVals(param.Name, ""), "0", "10", "0.1", v, "")
 	}
 	if param.Type == "toggle" {
 		// A dropdown, not a checkbox: an unticked checkbox posts no value at all, which

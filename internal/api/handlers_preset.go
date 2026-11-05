@@ -527,6 +527,50 @@ func isBareSliderNumber(value string) bool {
 
 // withoutControl drops from a kept_defaults list the entries naming the same device
 // control as paramName (names compare the way the catalog check compares them).
+// applyParamEdit sets a block's parameter to an edited value and reports whether the block
+// has that parameter. A device control the preset leaves at its default (the Edit view
+// shows every control of a catalog model) is added as a parameter, and an edited control
+// leaves the block's kept_defaults.
+func applyParamEdit(b *storage.EffectBlock, paramName, newValue string) bool {
+	updated := false
+	for j, param := range b.Parameters {
+		if param.Name != paramName {
+			continue
+		}
+		v := newValue
+		if param.Unit != "" {
+			// The rendered field displays "Value Unit" (genericParamHTML's text box); strip
+			// that suffix back off before storing so Unit doesn't get baked into Value and
+			// duplicated ("-65.0 dB" -> "-65.0 dB dB") on the next render. Match
+			// case-insensitively and with or without the separating space, since a user
+			// editing the field by hand won't necessarily preserve either exactly.
+			if strings.HasSuffix(strings.ToLower(v), strings.ToLower(param.Unit)) {
+				v = strings.TrimSpace(v[:len(v)-len(param.Unit)])
+			}
+		}
+		b.Parameters[j].Value = v
+		updated = true
+		break
+	}
+	if !updated {
+		if ctl, ok := agents.DeviceControlsFor(b.Model); ok {
+			if k := ctl.Index(paramName); k >= 0 {
+				c := ctl.Controls[k]
+				typ := "slider"
+				if len(c.Steps) > 0 {
+					typ = "dropdown"
+				}
+				b.Parameters = append(b.Parameters, storage.BlockParameter{Name: c.Name, Type: typ, Value: newValue})
+				updated = true
+			}
+		}
+	}
+	if updated {
+		b.KeptDefaults = withoutControl(b.KeptDefaults, b.Model, paramName)
+	}
+	return updated
+}
+
 func withoutControl(kept []string, model, paramName string) []string {
 	if len(kept) == 0 {
 		return kept
@@ -1030,53 +1074,10 @@ func (s *Server) handleUpdateParameter() http.HandlerFunc {
 			newValue += " " + unit
 		}
 		updated := false
-		if blocks, ok := structured.Guitars[guitar]; ok {
-			for i, block := range blocks {
-				if block.ID != blockID {
-					continue
-				}
-				b := &structured.Guitars[guitar][i]
-				for j, param := range block.Parameters {
-					if param.Name == paramName {
-						v := newValue
-						if param.Unit != "" {
-							// The rendered field displays "Value Unit"
-							// (see the text-input branch in
-							// renderTweakingWorkspaceHTML); strip that
-							// suffix back off before storing so Unit
-							// doesn't get baked into Value and duplicated
-							// ("-65.0 dB" -> "-65.0 dB dB") on the next
-							// render. Match case-insensitively and with or
-							// without the separating space, since a user
-							// editing the field by hand won't necessarily
-							// preserve either exactly.
-							if strings.HasSuffix(strings.ToLower(v), strings.ToLower(param.Unit)) {
-								v = strings.TrimSpace(v[:len(v)-len(param.Unit)])
-							}
-						}
-						b.Parameters[j].Value = v
-						updated = true
-						break
-					}
-				}
-				if !updated {
-					// A device control the preset leaves at its default (the Edit view
-					// shows every control of a catalog model): editing it records it.
-					if ctl, ok := agents.DeviceControlsFor(b.Model); ok {
-						if k := ctl.Index(paramName); k >= 0 {
-							c := ctl.Controls[k]
-							typ := "slider"
-							if len(c.Steps) > 0 {
-								typ = "dropdown"
-							}
-							b.Parameters = append(b.Parameters, storage.BlockParameter{Name: c.Name, Type: typ, Value: newValue})
-							updated = true
-						}
-					}
-				}
-				if updated {
-					b.KeptDefaults = withoutControl(b.KeptDefaults, b.Model, paramName)
-				}
+		blocks := structured.Guitars[guitar]
+		for i := range blocks {
+			if blocks[i].ID == blockID {
+				updated = applyParamEdit(&blocks[i], paramName, newValue)
 				break
 			}
 		}

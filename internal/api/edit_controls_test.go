@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"html"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -135,14 +136,15 @@ func TestUpdateParameterRecordsDefaultControl(t *testing.T) {
 	}
 }
 
-// Parameter names and block ids are LLM-written and end up in each slider's oninput
-// script (via the live-value element's id). HTML escaping isn't enough there: the browser
-// decodes &#39; back to ' before running the script. The id must be plain [a-z0-9-].
-func TestSliderScriptIDIsInjectionSafe(t *testing.T) {
+// Parameter names and block ids are LLM-written. HTML escaping doesn't protect a JS string
+// inside an event attribute (the browser decodes &#39; back to ' before running it), so
+// every slider's oninput script must be the one constant script, with no preset data in it.
+func TestSliderScriptHasNoPresetData(t *testing.T) {
 	tgt := editTarget{presetID: "p1", guitar: "Strat", blockID: "b1');alert(2);//", tabID: "strat"}
 	for _, block := range []storage.EffectBlock{
 		{ID: tgt.blockID, Model: "Made Up Pedal", Parameters: []storage.BlockParameter{{Name: "x');alert(1);//", Type: "slider", Value: "5"}}},
 		{ID: tgt.blockID, Model: "Green 808", Parameters: []storage.BlockParameter{{Name: "OVERDRIVE", Type: "slider", Value: "5"}}},
+		{ID: tgt.blockID, Model: "Analog Delay", Parameters: []storage.BlockParameter{{Name: "MIX", Type: "slider", Value: "30 %"}}},
 	} {
 		out := blockControlsHTML(tgt, block)
 		scripts := regexp.MustCompile(`oninput="([^"]*)"`).FindAllStringSubmatch(out, -1)
@@ -150,9 +152,32 @@ func TestSliderScriptIDIsInjectionSafe(t *testing.T) {
 			t.Fatalf("no slider rendered for %s", block.Model)
 		}
 		for _, m := range scripts {
-			if !regexp.MustCompile(`^document\.getElementById\('[a-z0-9-]+'\)\.innerText = this\.value( \+ '[^']*')?$`).MatchString(m[1]) {
-				t.Errorf("unsafe slider script for %s: %s", block.Model, m[1])
+			if html.UnescapeString(m[1]) != sliderLiveScript {
+				t.Errorf("slider script for %s isn't the constant script: %s", block.Model, m[1])
 			}
 		}
+	}
+}
+
+func TestApplyParamEdit(t *testing.T) {
+	b := storage.EffectBlock{Model: "Analog Delay", KeptDefaults: []string{"TRAILS", "WIDTH"},
+		Parameters: []storage.BlockParameter{{Name: "Level", Type: "slider", Value: "-3", Unit: "dB"}}}
+	// A unit typed back into a parameter that stores it separately is stripped.
+	if !applyParamEdit(&b, "Level", "-6 DB") || b.Parameters[0].Value != "-6" {
+		t.Errorf("Level = %q, want -6", b.Parameters[0].Value)
+	}
+	// A control at its device default becomes a parameter and leaves kept_defaults.
+	if !applyParamEdit(&b, "width", "75 %") {
+		t.Fatal("WIDTH edit not applied")
+	}
+	if last := b.Parameters[len(b.Parameters)-1]; last.Name != "WIDTH" || last.Value != "75 %" {
+		t.Errorf("added parameter = %+v, want WIDTH 75 %%", last)
+	}
+	if len(b.KeptDefaults) != 1 || b.KeptDefaults[0] != "TRAILS" {
+		t.Errorf("kept_defaults = %v, want [TRAILS]", b.KeptDefaults)
+	}
+	// A name that's neither a parameter nor a device control is not found.
+	if applyParamEdit(&b, "Made Up", "1") {
+		t.Error("unknown parameter reported as updated")
 	}
 }

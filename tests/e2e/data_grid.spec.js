@@ -102,6 +102,8 @@ test.describe('data grid, desktop', () => {
       el.dispatchEvent(new Event('change', { bubbles: true }));
     });
     await saved;
+    // The live value above the slider follows it, with the control's unit.
+    await expect(width.locator('xpath=preceding-sibling::div[1]/span[last()]')).toHaveText('75 %');
     await ws(page).locator('.effect-block:has-text("Analog Delay")').first().screenshot({ path: path.join(shots, '04a-edit-default-control.png') });
     await showView(page);
     const delayAfter = rowFor(page, 'Analog Delay');

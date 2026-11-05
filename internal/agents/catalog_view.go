@@ -37,9 +37,11 @@ type DeviceBlockControls struct {
 }
 
 // DeviceControlsFor returns the device controls of a block model, or false when the name
-// isn't a catalog model or family name, or names a capture (captures have no catalog
-// controls; a coros_map.json or user capture always wins over a catalog name). Capture and
-// unverified annotations on the name are ignored.
+// isn't a catalog model or family name, names a capture (captures have no catalog
+// controls; a coros_map.json or user capture always wins over a catalog name), or carries
+// the unverified annotation (FlagUnverifiedStructuredBlocks found it isn't a block this
+// preset can use, so no device controls are claimed for it, matching the parameter check).
+// A capture annotation on the name is ignored.
 func DeviceControlsFor(model string) (*DeviceBlockControls, bool) {
 	name := stripCaptureAnnotation(model)
 	if strings.HasSuffix(model, unverifiedSuffix) {
