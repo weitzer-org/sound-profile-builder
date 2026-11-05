@@ -207,6 +207,20 @@ The output is one guitar's chain as exact device operations:
 
 The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 
+**As built in P4** (`deploy/qc-agent/`; decisions taken while implementing, recorded here):
+- **A push builds only into the empty slot that is open on the unit.** The agent never recalls a preset or clears a
+  grid: it requires the target slot to be selected on the unit with a blank live grid, which is exactly the save path
+  G3 verified. A different open slot is refused (`unsupported_arg`, "select slot X on the unit first").
+- **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
+  qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
+  to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
+- **Per-scene bypass** always goes through the G6-verified path (assign to scenes, then each scene's flag), even
+  when all eight agree. Scene labels are not written in v1 (they were v2 in section 3.3).
+- **Wire guard:** besides a method allowlist, the backend decodes every outgoing message and passes only session
+  plumbing, READs, the armed plan's Grid/Scene updates and one armed File CREATE.
+- **No boto3:** a standard-library SigV4 client, so the lockfile holds only `protobuf` (7.36.0, the pins from
+  qc-mcp's own lock).
+
 **Running it on Windows**
 
 - **Install:** clone this repo, then `py -3.12 -m venv`, then `pip install --require-hashes -r deploy/qc-agent/requirements.lock.txt`.

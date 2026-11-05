@@ -69,7 +69,8 @@ class DeviceBackend(ABC):
 
     @abstractmethod
     def list_my_presets(self) -> dict[int, str]:
-        """A FRESH directory listing of My Presets: {position: name}; '' means empty."""
+        """A FRESH directory listing of My Presets: {position: name} for all 256 positions; exactly ''
+        means empty. Raises DeviceError if the table isn't complete."""
 
     @abstractmethod
     def setlist_position(self) -> dict | None:

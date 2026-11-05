@@ -414,10 +414,15 @@ class QcMcpBackend(DeviceBackend):
 
     def list_my_presets(self):
         cat = self._call("list_directory")
-        for folder in cat.get("presets", []):
-            if folder.get("key") == SETLIST_KEY and not folder.get("is_factory"):
-                return {int(f["index"]): f.get("name") or "" for f in folder.get("files", [])}
-        raise DeviceError("My Presets is missing from the unit's directory listing")
+        folders = [f for f in cat.get("presets", []) if f.get("key") == SETLIST_KEY and not f.get("is_factory")]
+        if len(folders) != 1:
+            raise DeviceError("My Presets is missing from the unit's directory listing")
+        files = folders[0].get("files", [])
+        # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256). A shorter or longer
+        # table would make a missing slot look empty, so it is refused rather than guessed at.
+        if len(files) != 256:
+            raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
+        return {int(f["index"]): f.get("name") or "" for f in files}
 
     def setlist_position(self):
         return self._call("get_setlist_position")

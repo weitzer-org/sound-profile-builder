@@ -71,6 +71,13 @@ class _Gone(Exception):
     pass
 
 
+def _occupied(listing, pos) -> bool:
+    """Only an exactly blank name is an empty slot. A missing position or a name that is just
+    spaces counts as occupied: the agent refuses rather than risk overwriting a preset."""
+    name = listing.get(pos)
+    return not isinstance(name, str) or name != ""
+
+
 def _connect_checked(ctx):
     """Open the unit and check firmware and device type. Returns an Outcome on refusal."""
     dev = ctx.device
@@ -129,7 +136,7 @@ def _slot_table(ctx, listing):
     for pos in range(slots.SLOT_COUNT):
         raw = listing.get(pos, "")
         name = text.clean(raw, NAME_LIMIT)
-        occupied = bool((raw or "").strip())
+        occupied = _occupied(listing, pos)
         out.append({"slot": slots.label(pos), "state": "occupied" if occupied else "empty",
                     "name": (name or "?") if occupied else None,
                     "owned": occupied and ctx.owned.owned(pos, raw)})
@@ -313,7 +320,7 @@ def push_preset(ctx, job) -> Outcome:
     try:
         listing = dev.list_my_presets()
         _check_alive(ctx)
-        if (listing.get(pos) or "").strip():
+        if _occupied(listing, pos):
             return refused("slot_not_empty", f"Slot {slot} is not empty on the unit "
                            f"(it holds {text.clean(listing.get(pos), NAME_LIMIT)!r}). The bridge never "
                            "overwrites a preset; pick an empty slot.", firmware=fw)
@@ -373,7 +380,7 @@ def push_preset(ctx, job) -> Outcome:
         listing = dev.list_my_presets()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        if (listing.get(pos) or "").strip() or cur.get("position") != pos or cur.get("folder_key") != SETLIST_KEY:
+        if _occupied(listing, pos) or cur.get("position") != pos or cur.get("folder_key") != SETLIST_KEY:
             return refused("slot_not_empty", f"Slot {slot} changed while the preset was being built. "
                            "Nothing was saved.", firmware=fw, push=result_push)
         dev.save_to_slot(pos, name)

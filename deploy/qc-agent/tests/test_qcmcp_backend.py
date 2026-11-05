@@ -73,6 +73,23 @@ class Session(Base):
         self.assertEqual(pr["chains"][0]["blocks"], [])
         self.assertEqual(len(pr["bypass"]), 4)
 
+    def test_short_listing_is_refused(self):
+        self.dev.connect()
+        orig = self.hid._handle
+
+        def short(name, m):
+            if name == "File" and m.action == P.ACTION["READ"]:
+                f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)
+                f.folder.key, f.folder.name = fake_hid.SETLIST, "My Presets"
+                for _ in range(100):
+                    f.folder.files.add().name = ""
+                return self.hid._reply("File", f)
+            return orig(name, m)
+        self.hid._handle = short
+        from qc_agent.device import DeviceError
+        with self.assertRaises(DeviceError):
+            self.dev.list_my_presets()
+
     def test_dead_reader_thread_means_gone(self):
         self.dev.connect()
         self.hid._thread.running = False

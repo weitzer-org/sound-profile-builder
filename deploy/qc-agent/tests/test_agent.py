@@ -223,6 +223,12 @@ class Push(Base):
         self.assertIn("My favourite tone", r["message"])
         self.assert_no_writes()
 
+    def test_space_named_preset_counts_as_occupied(self):
+        self.dev.slots = {152: "   "}
+        r = self.push()
+        self.assertEqual(r["reason_code"], "slot_not_empty")
+        self.assert_no_writes()
+
     def test_owned_slot_is_not_overwritten_in_v1(self):
         self.push()
         self.dev.calls.clear()
@@ -334,6 +340,13 @@ class Queue(Base):
         self.store.objects["jobs/pending/../x.json"] = b"{}"
         self.poll()
         self.assertIn("jobs/pending/../x.json", self.store.objects)
+
+    def test_malformed_keys_cannot_starve_real_jobs(self):
+        for i in range(agent_mod.MAX_SCAN + 10):
+            self.store.objects[f"jobs/pending/-{i:03d}.json"] = b"{}"  # sort before every UUID key
+        jid, key = self.queue("list_slots")
+        self.poll()
+        self.assertEqual(self.result(jid)["status"], "succeeded")
 
     def test_replay_from_ledger(self):
         jid, key = self.queue("list_slots")

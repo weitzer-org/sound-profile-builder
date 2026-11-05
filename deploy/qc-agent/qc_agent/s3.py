@@ -124,7 +124,9 @@ class S3Store:
                 pass
             return e.code, code
         except OSError as e:
-            raise S3Error(op, None, type(e).__name__) from None
+            # The reason ("connection refused", a TLS error) helps the owner; it never holds credentials.
+            reason = getattr(e, "reason", None)
+            raise S3Error(op, None, f"{type(e).__name__} {reason}"[:160] if reason else type(e).__name__) from None
 
     # ---- operations ----
 

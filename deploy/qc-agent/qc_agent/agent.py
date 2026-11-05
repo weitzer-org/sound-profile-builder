@@ -25,7 +25,9 @@ HEARTBEAT_S = 60
 POLL_FAST_S = 5            # for FAST_WINDOW_S after start or after a job (contract 14: not cost-constrained)
 POLL_SLOW_S = 15
 FAST_WINDOW_S = 5 * 60
-MAX_SCAN = 50              # pending objects looked at per poll; a spam flood can't stall the loop for long
+MAX_SCAN = 50              # well-formed pending objects read per poll; a spam flood can't stall the loop for long
+MAX_LIST = 1000            # keys listed per poll (one ListObjectsV2 page): malformed keys, which are skipped
+                           # but not deleted (contract step 1), can't crowd real jobs out of the scan
 
 DELETE_OUTCOMES = frozenset({"too_large", "bad_envelope", "unknown_kid", "bad_signature",
                              "bad_payload", "misrouted", "replay"})
@@ -219,19 +221,22 @@ class Agent:
     def scan(self):
         """Steps 1-9 for up to MAX_SCAN pending objects. Returns verified jobs, oldest first."""
         try:
-            items, more = self.store.list_prefix(contract.PENDING_PREFIX, MAX_SCAN)
+            items, more = self.store.list_prefix(contract.PENDING_PREFIX, MAX_LIST)
         except S3Error as e:
             log.warning("could not list pending jobs: %s", e)
             return []
         if more:
-            log.warning("more than %d objects under jobs/pending/; looking at the first %d", MAX_SCAN, MAX_SCAN)
-        ready = []
+            log.warning("more than %d objects under jobs/pending/; looking at the first %d", MAX_LIST, MAX_LIST)
+        ready, read = [], 0
         for key, size in items:
             if not contract.PENDING_RE.fullmatch(key):                                   # 1
-                if key not in self._logged_bad_keys:
+                if key not in self._logged_bad_keys and len(self._logged_bad_keys) < MAX_LIST:
                     self._logged_bad_keys.add(key)
                     log.warning("ignoring an object with a malformed key under jobs/pending/")
                 continue
+            if read >= MAX_SCAN:
+                break
+            read += 1
             if size > contract.MAX_JOB_BYTES:                                             # 2 (from the listing)
                 log.warning("deleting oversized pending object %s (%d bytes)", key[13:21], size)
                 self._delete(key)

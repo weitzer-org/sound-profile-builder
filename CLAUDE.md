@@ -147,6 +147,12 @@ this app's MCP connector. Read these before any device work:
 - `docs/design/qc-device-bridge-plan.md` — the design and phased plan (Phase 0 hardware gates, P1–P6), the MCP
   tool inventory, which model does what, and the kickoff prompt for each implementation chat (section 11).
 - `tools/qc-mcp-trial/` — the allowlist proxy and Windows walkthrough used to trial qc-mcp on the owner's unit.
+- `deploy/qc-agent/` — the home agent (P4, Python). Its README has the Windows install, daily use and hardware
+  acceptance steps. qc-mcp's transport is vendored under `vendor/qc_mcp/` at `f634ecd`, byte for byte and SHA-256
+  pinned (test plus a runtime check): never edit those files; re-vendor in its own PR (`vendor/PROVENANCE.md`). The
+  agent validates pushes against `internal/catalog/qc_catalog.json` (hash-matched with the export), so a catalog
+  change means the PC's clone must be pulled before pushes work again. Run its tests with
+  `cd deploy/qc-agent && python -m unittest discover -s tests` (needs `protobuf` from `requirements.lock.txt`).
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing
   a vector, tag, field or check step is a contract change for both sides.
