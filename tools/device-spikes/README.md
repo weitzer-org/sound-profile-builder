@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 68 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 71 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -152,6 +152,12 @@ Select the G3 test preset on the unit, then:
 ```
 
 It makes Myth Drive GAIN and the Spring bypass scene-varying, switches Scene A, B, A, records how the device reports them, and asks 9 yes/no questions about the screen. **Photo mode:** `--hold 20` asks nothing and waits 20 seconds at each of the 3 scene stops (`PHOTO n/3`). Afterwards, select another preset **without saving**.
+
+**Fewest photos (2), one command each**, with the test layout open on the unit (built with `g3_build_and_save.py --apply` if it isn't saved, plus `--unsaved` on every G6 command):
+1. `g6_scenes.py --slot 3A --firmware 4.1.0 --unsaved --setup` writes the per-scene Myth Drive GAIN (A=0.2, B=0.8) and the Spring bypass (A on, B bypassed) and leaves the unit on Scene A. Open the Myth Drive and photograph it: expect GAIN 2.0, Spring active.
+2. `... --unsaved --goto B` switches to Scene B. Photograph again: expect GAIN 8.0, Spring dimmed in the chain row. `--goto A` switches back.
+
+Afterwards, select another preset **without saving**.
 
 ## If something goes wrong
 
