@@ -209,9 +209,13 @@ func main() {
 	defer rf.Close()
 	var mu sync.Mutex
 	runs := append([]evalscore.LibrarianRun{}, prior...)
+	// spent counts only calls this tool made for this -out dir, never seeded old-order runs
+	// (their cost was paid by the earlier run), so -max-usd limits new spend.
 	spent := 0.0
 	for _, r := range prior {
-		spent += r.CostUSD
+		if *seedOld == "" || r.Order != "old" {
+			spent += r.CostUSD
+		}
 	}
 	aborted := false
 	ch := make(chan job)
