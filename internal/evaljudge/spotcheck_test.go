@@ -28,8 +28,8 @@ func TestIndex_ExactFuzzyAndCommonWords(t *testing.T) {
 	if !ok || len(m.Records) == 0 || m.Records[0].Source != "coros_map.json" || m.Records[0].Data["coros_equivalent"] != "Circular Delay" {
 		t.Errorf("Circular Delay: %+v", m)
 	}
-	if len(m.Records) != 6 || m.MoreRecords != 0 {
-		t.Errorf("Circular Delay has exactly 6 coros_map entries today: %+v", m)
+	if len(m.Records) != 5 || m.MoreRecords != 0 {
+		t.Errorf("Circular Delay has exactly 5 coros_map entries today: %+v", m)
 	}
 	var many []Record
 	for i := 0; i < 9; i++ {

@@ -90,6 +90,16 @@ set it will cause the next run to needlessly re-research that entry.
   citation-backed second opinion before treating it as settled, same bar as
   `coros_map.json`.
 
+- **`internal/catalog/qc_catalog.json`** — the Quad Cortex's own device catalog: every block
+  model the unit offers, its "Based on ..." real-gear label, and its exact parameters (names,
+  ranges, defaults, units, switch positions). Derived from the unit's `ModelRepo.xml` (which
+  the device sends over USB) by `cmd/import_catalog`; never edit it by hand, re-run the
+  importer after a CorOS update (`-diff` shows what changed). Keep the raw XML out of the
+  repo. It's the ground truth for block *names*: `TestCorosMapNamesExistInCatalog` fails if
+  a non-capture `coros_map.json` entry's `coros_equivalent` isn't a real model (or mono/stereo
+  family) name. Neural Captures aren't in it. Bounds the device gives symbolically (e.g.
+  `MAX_CABSIM_DB`) are left unknown, not guessed.
+
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
 `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` (`auto` for R2).
