@@ -57,10 +57,8 @@ var (
 	catalogAdditionsList []catalogAddition
 )
 
-// catalogGearAdditions returns every gear-category catalog family that coros_map.json
-// doesn't cover, sorted by family name. A family counts as covered when coros_map.json
-// names the family or any of its models, whatever that entry's capture or plugin flags:
-// an entry filtered out for this run must not come back through the catalog.
+// catalogGearAdditions returns the embedded catalog's gear additions (see
+// buildCatalogAdditions), computed once per process.
 func catalogGearAdditions() []catalogAddition {
 	catalogAdditionsOnce.Do(func() {
 		cat, err := catalog.Embedded()
@@ -68,45 +66,55 @@ func catalogGearAdditions() []catalogAddition {
 			log.Printf("device catalog unavailable, the Librarian sees coros_map.json only: %v", err)
 			return
 		}
-		covered := make(map[string]bool)
-		for _, rec := range CorosMapRecords() {
-			if equiv, _ := rec["coros_equivalent"].(string); equiv != "" {
-				covered[equiv] = true
-				covered[catalog.FamilyName(equiv)] = true
-			}
-		}
-		byFamily := make(map[string]*catalogAddition)
-		var order []string
-		for i := range cat.Models {
-			m := &cat.Models[i]
-			typ, ok := catalogDictionaryType[m.Category]
-			if !ok {
-				continue
-			}
-			fam := catalog.FamilyName(m.Name)
-			if covered[fam] || covered[m.Name] {
-				continue
-			}
-			a, seen := byFamily[fam]
-			if !seen {
-				plugin, gated := m.RequiredPlugin()
-				a = &catalogAddition{
-					Family: fam, Type: typ, Bass: catalogBassCategories[m.Category],
-					Plugin: plugin, Gated: gated,
-				}
-				byFamily[fam] = a
-				order = append(order, fam)
-			}
-			if a.BasedOn == "" {
-				a.BasedOn = m.BasedOn
-			}
-		}
-		sort.Strings(order)
-		for _, fam := range order {
-			catalogAdditionsList = append(catalogAdditionsList, *byFamily[fam])
-		}
+		catalogAdditionsList = buildCatalogAdditions(cat, CorosMapRecords())
 	})
 	return catalogAdditionsList
+}
+
+// buildCatalogAdditions returns every gear-category family in cat that the coros_map.json
+// records don't cover, sorted by family name. A family counts as covered when a record
+// names the family or any of its models, whatever that record's capture or plugin flags:
+// an entry filtered out for this run must not come back through the catalog.
+func buildCatalogAdditions(cat *catalog.Catalog, corosRecords map[string]map[string]any) []catalogAddition {
+	covered := make(map[string]bool)
+	for _, rec := range corosRecords {
+		if equiv, _ := rec["coros_equivalent"].(string); equiv != "" {
+			covered[equiv] = true
+			covered[catalog.FamilyName(equiv)] = true
+		}
+	}
+	byFamily := make(map[string]*catalogAddition)
+	var order []string
+	for i := range cat.Models {
+		m := &cat.Models[i]
+		typ, ok := catalogDictionaryType[m.Category]
+		if !ok {
+			continue
+		}
+		fam := catalog.FamilyName(m.Name)
+		if covered[fam] || covered[m.Name] {
+			continue
+		}
+		a, seen := byFamily[fam]
+		if !seen {
+			plugin, gated := m.RequiredPlugin()
+			a = &catalogAddition{
+				Family: fam, Type: typ, Bass: catalogBassCategories[m.Category],
+				Plugin: plugin, Gated: gated,
+			}
+			byFamily[fam] = a
+			order = append(order, fam)
+		}
+		if a.BasedOn == "" {
+			a.BasedOn = m.BasedOn
+		}
+	}
+	sort.Strings(order)
+	out := make([]catalogAddition, 0, len(order))
+	for _, fam := range order {
+		out = append(out, *byFamily[fam])
+	}
+	return out
 }
 
 // allowedBy reports whether the run's plugin gate lets the Librarian see this addition.

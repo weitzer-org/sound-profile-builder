@@ -2,8 +2,11 @@ package agents
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 )
 
 // menuBucketOf returns the bucket heading a name is listed under in an amp menu, or "".
@@ -65,8 +68,14 @@ func TestLibrarianDictionary_CatalogAdditions(t *testing.T) {
 	if !ok {
 		t.Fatal(`"PV-505 Lead" (catalog amp with no coros_map.json entry) missing from the Dictionary`)
 	}
-	if pv["coros_equivalent"] != "PV-505 Lead" || pv["type"] != "amp" || !strings.HasPrefix(pv["based_on"].(string), "Based on ") {
-		t.Errorf(`"PV-505 Lead" entry = %v, want coros_equivalent itself, type amp, and the device's based_on`, pv)
+	if got := pv["coros_equivalent"]; got != "PV-505 Lead" {
+		t.Errorf(`"PV-505 Lead" coros_equivalent = %v, want itself`, got)
+	}
+	if got := pv["type"]; got != "amp" {
+		t.Errorf(`"PV-505 Lead" type = %v, want "amp"`, got)
+	}
+	if basedOn, _ := pv["based_on"].(string); !strings.HasPrefix(basedOn, "Based on ") {
+		t.Errorf(`"PV-505 Lead" based_on = %v, want the device's "Based on ..." text`, pv["based_on"])
 	}
 
 	if _, ok := m["Tim Henson Lead"]; ok {
@@ -105,5 +114,37 @@ func TestGetCategorizedAmplifiers_Catalog(t *testing.T) {
 	}
 	if again := GetCategorizedAmplifiers(true, true, map[string]bool{"Cory Wong": true, "John Mayer": true}); again != menu {
 		t.Error("the amp menu differs between two identical calls")
+	}
+}
+
+// buildCatalogAdditions against a small fixture catalog: coverage by exact or family
+// name, one entry per mono/stereo family, non-gear categories ignored, plugin metadata
+// (known and unknown plugin_id) carried through, sorted output.
+func TestBuildCatalogAdditions_Fixture(t *testing.T) {
+	cat := catalog.New([]catalog.Model{
+		{Name: "Brit 2203", Category: "Guitar Amplifier", BasedOn: "Based on Marshall JCM800"},
+		{Name: "Zed Amp", Category: "Guitar Amplifier", BasedOn: "Based on Something"},
+		{Name: "412 Test Cab (M)", Category: "Cabsim Guitar (M)"},
+		{Name: "412 Test Cab (ST)", Category: "Cabsim Guitar (ST)", BasedOn: "Based on A Cab"},
+		{Name: "412 Covered (M)", Category: "Cabsim Guitar (M)"},
+		{Name: "Bass Thing", Category: "Bass Amplifier"},
+		{Name: "Plini Clean", Category: "Guitar Amplifier", PluginID: "3"},
+		{Name: "Future Amp", Category: "Guitar Amplifier", PluginID: "999"},
+		{Name: "Room", Category: "Reverb"},
+	}, catalog.Source{}, "")
+	records := map[string]map[string]any{
+		"Marshall JCM800": {"coros_equivalent": "Brit 2203"},
+		"Covered Cab":     {"coros_equivalent": "412 Covered", "is_capture": true},
+	}
+	got := buildCatalogAdditions(cat, records)
+	want := []catalogAddition{
+		{Family: "412 Test Cab", Type: "cab", BasedOn: "Based on A Cab"},
+		{Family: "Bass Thing", Type: "amp", Bass: true},
+		{Family: "Future Amp", Type: "amp", Gated: true},
+		{Family: "Plini Clean", Type: "amp", Plugin: "Plini", Gated: true},
+		{Family: "Zed Amp", Type: "amp", BasedOn: "Based on Something"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("buildCatalogAdditions =\n%+v\nwant\n%+v", got, want)
 	}
 }
