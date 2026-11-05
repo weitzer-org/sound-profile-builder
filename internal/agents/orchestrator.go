@@ -20,7 +20,60 @@ type ContextKey string
 
 const (
 	MockModeKey ContextKey = "mock_mode"
+	// promptVersionsKey carries the run's agent prompt versions (config.json's
+	// agent_prompts) to RefineChat, whose signature has no agentConfig parameter.
+	promptVersionsKey ContextKey = "prompt_versions"
 )
+
+// WithPromptVersions returns ctx carrying the run's agent prompt versions, keyed like
+// config.json's agent_prompts. RefineChat reads "12_architect" from it.
+func WithPromptVersions(ctx context.Context, versions map[string]string) context.Context {
+	return context.WithValue(ctx, promptVersionsKey, versions)
+}
+
+// refineArchitectVersion is the Architect prompt version RefineChat uses: the run's
+// configured version when the caller passed one (WithPromptVersions; presetsvc passes
+// config.json's agent_prompts), else refineArchitectPromptVersion.
+func refineArchitectVersion(ctx context.Context) string {
+	if v := PromptVersionsFrom(ctx)["12_architect"]; v != "" && v != "off" {
+		return v
+	}
+	return refineArchitectPromptVersion
+}
+
+// PromptVersionsFrom returns the prompt versions WithPromptVersions put on ctx, or nil.
+func PromptVersionsFrom(ctx context.Context) map[string]string {
+	versions, _ := ctx.Value(promptVersionsKey).(map[string]string)
+	return versions
+}
+
+// catalogPromptMarker is the section heading a catalog-aware Architect prompt carries.
+const catalogPromptMarker = "# Device Block Parameters"
+
+// promptUsesCatalogParams reports whether an Architect system prompt is written for the
+// device-catalog features: the injected parameter and effect-name sections, and the
+// kept_defaults field in its response schema. It keys on the prompt's own text rather than
+// its version number, so a prompt without the section (v5 and older) gets
+// exactly the context and schema it was written for.
+func promptUsesCatalogParams(systemPrompt string) bool {
+	return strings.Contains(systemPrompt, catalogPromptMarker)
+}
+
+// catalogArchitectSections renders the device-catalog sections appended to the Architect's
+// context for catalog-aware prompts (v6): the chosen blocks' real parameters, the parameters
+// of every delay and reverb it may add or swap in, and the real effect names for Rule 3 swaps.
+func catalogArchitectSections(blockNames []string, validBlocks map[string]bool, paramGate, effectsGate PluginGate) string {
+	params := CatalogParamContext(blockNames, validBlocks, paramGate)
+	if params == "" {
+		params = "(none of the chosen blocks are in the device catalog)"
+	}
+	s := "\n\nDevice Block Parameters (from the Quad Cortex's own catalog -- exact parameter names, ranges, defaults and switch positions for the blocks chosen so far; see \"Device Block Parameters\" in your instructions):\n" + params
+	if effects := CatalogEffectParamContext(blockNames, validBlocks, effectsGate); effects != "" {
+		s += "\n\nDevice Effect Parameters (same format: every delay and reverb model on the device, for a delay or reverb you add or swap in):\n" + effects
+	}
+	return s + "\n\nDevice Effect Blocks (every real effect block name on the device, by category; a swapped-in effect must be one of these):\n" +
+		CatalogEffectNames(effectsGate)
+}
 
 //go:embed coros_map.json
 var embeddedCorosMap []byte
@@ -738,6 +791,11 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 		finalResult = "Architect skipped by configuration."
 	} else {
 		sysPrompt12, _ := o.loadPromptForAgent("12_architect", version12)
+		if promptUsesCatalogParams(sysPrompt12) {
+			sections := catalogArchitectSections(LibrarianBlockNames(librarianResult), GetValidNativeBlocks(), pluginGate, pluginGate)
+			architectPrompt += sections
+			log.Printf("[Architect] device catalog sections: %d bytes", len(sections))
+		}
 		finalResult, err12 = o.RunAgentSplit(ctx, "Architect & Evaluator", sysPrompt12, architectPrompt)
 		if err12 != nil {
 			return "", o.Usage, fmt.Errorf("Architect failure: %v", err12)
@@ -995,7 +1053,7 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 	// systemPrompt and userPrompt are now sent as a real system instruction + user turn
 	// (via GenerateContentConfig.SystemInstruction) instead of being concatenated into one
 	// user-role text blob, which is what the old SDK's single genai.Text(prompt) call forced.
-	genConfig := o.buildGenerationConfig(agentRole, key)
+	genConfig := o.buildGenerationConfig(agentRole, key, systemPrompt)
 	if systemPrompt != "" {
 		genConfig.SystemInstruction = &genai.Content{Parts: []*genai.Part{genai.NewPartFromText(systemPrompt)}}
 	}
@@ -1143,11 +1201,13 @@ func (o *Orchestrator) runAgentSplit(ctx context.Context, agentRole string, syst
 // typed ResponseSchema.
 // GenerationConfigFor is the exported form of buildGenerationConfig, for eval probes that must
 // send exactly what production sends (temperature, tools, caps, schema) through a raw client.
-func (o *Orchestrator) GenerationConfigFor(agentRole, key string) *genai.GenerateContentConfig {
-	return o.buildGenerationConfig(agentRole, key)
+// systemPrompt is the agent's system prompt: a catalog-aware Architect prompt gets the
+// schema that requires kept_defaults.
+func (o *Orchestrator) GenerationConfigFor(agentRole, key, systemPrompt string) *genai.GenerateContentConfig {
+	return o.buildGenerationConfig(agentRole, key, systemPrompt)
 }
 
-func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.GenerateContentConfig {
+func (o *Orchestrator) buildGenerationConfig(agentRole, key, systemPrompt string) *genai.GenerateContentConfig {
 	cfg := &genai.GenerateContentConfig{
 		Temperature:     agentTemperature(key),
 		Tools:           agentSearchTool(key),
@@ -1158,10 +1218,11 @@ func (o *Orchestrator) buildGenerationConfig(agentRole, key string) *genai.Gener
 	}
 	if key == "12_architect" {
 		cfg.ResponseMIMEType = "application/json"
+		keptDefaults := promptUsesCatalogParams(systemPrompt)
 		if agentRole == "Refinement Architect" {
-			cfg.ResponseJsonSchema = architectRefineJSONSchema()
+			cfg.ResponseJsonSchema = architectRefineJSONSchema(keptDefaults)
 		} else {
-			cfg.ResponseJsonSchema = architectGenerationJSONSchema()
+			cfg.ResponseJsonSchema = architectGenerationJSONSchema(keptDefaults)
 		}
 		return cfg
 	}
@@ -1208,9 +1269,11 @@ func (o *Orchestrator) Close() {
 }
 
 // RefineChat bypasses the 12-agent pipeline and submits the user's feedback to the Architect utilizing conversational history
-// refineArchitectPromptVersion is the Architect prompt the Refinement Architect uses. Keep it in
-// step with config.json's agent_prompts["12_architect"].
-const refineArchitectPromptVersion = "v5"
+// refineArchitectPromptVersion is the Architect prompt the Refinement Architect uses when the
+// caller passes no prompt versions (eval tools, tests). presetsvc passes config.json's
+// agent_prompts, so production refines with the configured version. Keep this in step with
+// config.json's agent_prompts["12_architect"].
+const refineArchitectPromptVersion = "v6"
 
 func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
@@ -1224,9 +1287,8 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	}
 	log.Printf("Starting ADK Refinement Chat for feedback: %s\n", userMessage)
 
-	// v5 (not config.json's agent_prompts, which RefineChat does not receive): same rule set as
-	// generation, including the dial-format rules (10, 14) that stop dB offsets on modeled amps.
-	sysPrompt, _ := o.loadPromptForAgent("12_architect", refineArchitectPromptVersion)
+	architectVersion := refineArchitectVersion(ctx)
+	sysPrompt, _ := o.loadPromptForAgent("12_architect", architectVersion)
 
 	// RunPipeline scans Librarian/Navigator's raw output for capture names; RefineChat has
 	// no equivalent raw text (it never re-runs those agents), but p.Payload's structured
@@ -1264,6 +1326,16 @@ Selected Capture Details (for Rule 9 formatting -- real descriptive color for wh
 EXISTING STRUCTURED PAYLOAD:
 %s
 `, GetQCBlockSchemaJSON(), captureContext, p.Payload)
+
+	if promptUsesCatalogParams(sysPrompt) {
+		// RefineChat isn't told which plugins the user owns (TODO.md). The payload's own
+		// models get their parameters, plugin models included (the zero PluginGate is
+		// inactive; only a plugin_id missing from the plugin table is skipped, which
+		// TestPluginNamesCoverCatalog keeps from happening). They're already chosen, and an
+		// unowned plugin device is flagged after the run. The swap list offers no plugin
+		// effects, so a refinement isn't steered toward one the user may not own.
+		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), PluginGate{}, NewPluginGate(false, nil))
+	}
 
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
 	for _, msg := range p.ChatHistory {

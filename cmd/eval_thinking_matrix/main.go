@@ -169,7 +169,7 @@ func main() {
 	fmt.Fprintf(reportFile, "Queries: %s | Reps per cell: %d\n\n", strings.Join(queryNames, ", "), *reps)
 	fmt.Fprintf(reportFile, "Scored with RunMechanicalQualityChecks (deterministic, judge-free -- see package doc comment). Lower TotalDefects is better; 0 is clean.\n\n")
 	fmt.Fprintf(reportFile, "Written incrementally -- if this run is interrupted, every row up to the last one present already reflects a completed cell.\n\n")
-	fmt.Fprintf(reportFile, "| Model | Budget | Query | Reps OK | Avg Latency(s) | Avg In | Avg Out | Avg Thinking | Avg Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | Fallback/Parse Issues |\n")
+	fmt.Fprintf(reportFile, "| Model | Budget | Query | Reps OK | Avg Latency(s) | Avg In | Avg Out | Avg Thinking | Avg Defects | Unverified | CaptureFmt | Cabinet | Ranges | Critic | Device | Fallback/Parse Issues |\n")
 	fmt.Fprintf(reportFile, "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	reportFile.Sync()
 
@@ -250,7 +250,7 @@ func main() {
 func renderCellRow(cfg thinkingConfig, qName string, outcomes []runOutcome) string {
 	var okCount int
 	var sumLatency, sumIn, sumOut, sumThinking, sumDefects float64
-	var sumUnverified, sumCaptureFmt, sumCabinet, sumRanges, sumCritic float64
+	var sumUnverified, sumCaptureFmt, sumCabinet, sumRanges, sumCritic, sumDevice float64
 	var issues []string
 	for _, r := range outcomes {
 		if r.Error != "" {
@@ -272,6 +272,7 @@ func renderCellRow(cfg thinkingConfig, qName string, outcomes []runOutcome) stri
 		sumCabinet += float64(r.Report.IncompleteCabinetBlocks)
 		sumRanges += float64(r.Report.LeftoverValueRanges)
 		sumCritic += float64(r.Report.CriticIssues)
+		sumDevice += float64(r.Report.Catalog.Defects())
 		if r.ServedByOther != "" {
 			issues = append(issues, "fallback->"+r.ServedByOther)
 		}
@@ -281,14 +282,14 @@ func renderCellRow(cfg thinkingConfig, qName string, outcomes []runOutcome) stri
 		issueCol = strings.Join(issues, "; ")
 	}
 	if okCount == 0 {
-		return fmt.Sprintf("| %s | %s | %s | 0/%d | - | - | - | - | - | - | - | - | - | - | %s |\n",
+		return fmt.Sprintf("| %s | %s | %s | 0/%d | - | - | - | - | - | - | - | - | - | - | - | %s |\n",
 			cfg.ModelLabel, cfg.BudgetLabel, qName, len(outcomes), issueCol)
 	}
 	n := float64(okCount)
-	return fmt.Sprintf("| %s | %s | %s | %d/%d | %.1f | %.0f | %.0f | %.0f | %.2f | %.1f | %.1f | %.1f | %.1f | %.1f | %s |\n",
+	return fmt.Sprintf("| %s | %s | %s | %d/%d | %.1f | %.0f | %.0f | %.0f | %.2f | %.1f | %.1f | %.1f | %.1f | %.1f | %.1f | %s |\n",
 		cfg.ModelLabel, cfg.BudgetLabel, qName, okCount, len(outcomes),
 		sumLatency/n, sumIn/n, sumOut/n, sumThinking/n, sumDefects/n,
-		sumUnverified/n, sumCaptureFmt/n, sumCabinet/n, sumRanges/n, sumCritic/n, issueCol)
+		sumUnverified/n, sumCaptureFmt/n, sumCabinet/n, sumRanges/n, sumCritic/n, sumDevice/n, issueCol)
 }
 
 func toSet(csv string) map[string]bool {

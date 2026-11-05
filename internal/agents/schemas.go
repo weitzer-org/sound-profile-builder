@@ -349,8 +349,23 @@ func AgentResponseSchema(key string) *genai.Schema {
 
 // effectBlockJSONSchema is the raw-JSON-Schema fragment for one EffectBlock, matching
 // storage.EffectBlock/BlockParameter exactly (id/type/model/parameters, each parameter
-// carrying name/type/value). Used inside both Architect response shapes below.
-func effectBlockJSONSchema() map[string]any {
+// carrying name/type/value). Used inside both Architect response shapes below. With
+// keptDefaults (catalog-aware prompts only, see promptUsesCatalogParams) the block also
+// carries a required kept_defaults list; older prompts get exactly the schema they had.
+func effectBlockJSONSchema(keptDefaults bool) map[string]any {
+	s := effectBlockBaseJSONSchema()
+	if keptDefaults {
+		s["properties"].(map[string]any)["kept_defaults"] = map[string]any{
+			"type":        "array",
+			"items":       map[string]any{"type": "string"},
+			"description": "Every control listed for this block under Device Block Parameters that you deliberately leave at its device default, by its exact listed name. Each listed control must appear either in parameters (you change it in at least one scene) or here. Empty for a block with no listing (e.g. a Neural Capture).",
+		}
+		s["required"] = append(s["required"].([]string), "kept_defaults")
+	}
+	return s
+}
+
+func effectBlockBaseJSONSchema() map[string]any {
 	return map[string]any{
 		"type": "object",
 		"properties": map[string]any{
@@ -385,13 +400,13 @@ func effectBlockJSONSchema() map[string]any {
 // EffectBlocks. additionalProperties is what makes the dynamic keying possible; the typed
 // genai.Schema (OpenAPI subset) used for the other 11 agents has no equivalent field, which
 // is why the Architect uses ResponseJsonSchema instead of ResponseSchema.
-func guitarsMapJSONSchema() map[string]any {
+func guitarsMapJSONSchema(keptDefaults bool) map[string]any {
 	return map[string]any{
 		"type": "object",
 		"properties": map[string]any{
 			"guitars": map[string]any{
 				"type":                 "object",
-				"additionalProperties": map[string]any{"type": "array", "items": effectBlockJSONSchema()},
+				"additionalProperties": map[string]any{"type": "array", "items": effectBlockJSONSchema(keptDefaults)},
 			},
 		},
 		"required": []string{"guitars"},
@@ -404,12 +419,12 @@ func guitarsMapJSONSchema() map[string]any {
 // the two to silently disagree (confirmed empirically: the model's own HTML repeatedly
 // listed blocks its structured_payload dropped). final_html_payload is now rendered in Go
 // from the validated structured_payload after the fact, so by construction it can't drift.
-func architectGenerationJSONSchema() map[string]any {
+func architectGenerationJSONSchema(keptDefaults bool) map[string]any {
 	return map[string]any{
 		"type": "object",
 		"properties": map[string]any{
 			"builder_statement":  map[string]any{"type": "string"},
-			"structured_payload": guitarsMapJSONSchema(),
+			"structured_payload": guitarsMapJSONSchema(keptDefaults),
 			"agent_impact":       map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": "Exactly 11 entries, one per preceding agent."},
 		},
 		"required": []string{"builder_statement", "structured_payload", "agent_impact"},
@@ -420,7 +435,7 @@ func architectGenerationJSONSchema() map[string]any {
 // architectGenerationJSONSchema -- final_html_payload is rendered in Go, not generated.
 // structured_payload is intentionally not required: the prompt instructs the Architect to
 // leave it empty when dsp_matrix_updated is false (a pure Q&A turn with no preset change).
-func architectRefineJSONSchema() map[string]any {
+func architectRefineJSONSchema(keptDefaults bool) map[string]any {
 	return map[string]any{
 		"type": "object",
 		"properties": map[string]any{
@@ -432,7 +447,7 @@ func architectRefineJSONSchema() map[string]any {
 				"properties": map[string]any{
 					"guitars": map[string]any{
 						"type":                 "object",
-						"additionalProperties": map[string]any{"type": "array", "items": effectBlockJSONSchema()},
+						"additionalProperties": map[string]any{"type": "array", "items": effectBlockJSONSchema(keptDefaults)},
 					},
 				},
 			},

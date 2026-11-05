@@ -109,7 +109,13 @@ func TestRunMechanicalQualityChecks_CountsEachDefectType(t *testing.T) {
 	if report.TotalBlocks != 3 {
 		t.Errorf("expected TotalBlocks=3, got %d", report.TotalBlocks)
 	}
-	if got, want := report.TotalDefects(), 1+1+1+2+1; got != want {
+	// The device's "Brit Plexi 100 Patch" (jumpered channels) has GAIN 1 and GAIN 2, no
+	// GAIN, so the catalog check also reports the name -- a separate problem from its dB
+	// formatting, which is the capture-formatting check's finding.
+	if report.Catalog.UnknownNames != 1 || report.Catalog.Defects() != 1 || report.Catalog.CheckedBlocks != 1 {
+		t.Errorf("expected 1 catalog unknown-name defect on 1 checked block, got %+v", report.Catalog)
+	}
+	if got, want := report.TotalDefects(), 1+1+1+2+1+1; got != want {
 		t.Errorf("expected TotalDefects()=%d, got %d", want, got)
 	}
 }

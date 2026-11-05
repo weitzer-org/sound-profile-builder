@@ -34,6 +34,10 @@ type Catalog struct {
 
 	byName   map[string]*Model
 	byFamily map[string][]*Model
+	// allByName keeps every model with a given name. A handful of names appear twice in
+	// the device's catalog (e.g. two "Graphic-9" equalizers with different parameter sets);
+	// byName keeps only the last one for Lookup's single-result API.
+	allByName map[string][]*Model
 }
 
 // Source records where a catalog snapshot came from, so a stale one is recognizable.
@@ -102,9 +106,11 @@ func FamilyName(name string) string {
 func (c *Catalog) index() {
 	c.byName = make(map[string]*Model, len(c.Models))
 	c.byFamily = make(map[string][]*Model)
+	c.allByName = make(map[string][]*Model, len(c.Models))
 	for i := range c.Models {
 		m := &c.Models[i]
 		c.byName[m.Name] = m
+		c.allByName[m.Name] = append(c.allByName[m.Name], m)
 		fam := FamilyName(m.Name)
 		c.byFamily[fam] = append(c.byFamily[fam], m)
 	}
@@ -120,6 +126,17 @@ func (c *Catalog) Lookup(name string) (*Model, bool) {
 // its (M) and (ST) models. A model with no suffix is a family of one.
 func (c *Catalog) Family(family string) []*Model {
 	return c.byFamily[family]
+}
+
+// Resolve returns every model a block name can refer to: all models with exactly this
+// name (some names appear more than once, with different parameters), or failing that every
+// member of the mono/stereo family it names. Nil when the name isn't on the device. The
+// result is shared; callers must not modify it.
+func (c *Catalog) Resolve(name string) []*Model {
+	if ms := c.allByName[name]; len(ms) > 0 {
+		return ms
+	}
+	return c.byFamily[name]
 }
 
 // IsKnownName reports whether name is either an exact model name or a mono/stereo family

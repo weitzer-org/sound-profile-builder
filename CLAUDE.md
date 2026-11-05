@@ -111,6 +111,33 @@ set it will cause the next run to needlessly re-research that entry.
   - Plugin gating uses the catalog's `plugin_id` through `internal/catalog/plugins.go`'s table
     (short names as in `config.json`'s `available_plugins`). A new `plugin_id` after a CorOS update
     fails `TestPluginNamesCoverCatalog`; until it's added, that plugin's devices are never offered.
+  - **Architect parameters** (`internal/agents/catalog_params.go`). For a catalog-aware Architect prompt
+    (`12_architect_v6`, see below), the Architect's context gets the chosen blocks' real parameters (names,
+    ranges, defaults, switch positions; from the Librarian's picks in generate, the preset's blocks in refine)
+    and the real effect names for Rule 3 swaps; v6 is production (config.json). v5 and older get none of it, so
+    they stay a like-for-like baseline. `qc_block_schema.json` is still injected for blocks the catalog doesn't cover.
+  - **Parameter check.** `FlagCatalogParamMismatches` runs on every generate/refine (last, after
+    `FlagUnverifiedStructuredBlocks`) and in `RunMechanicalQualityChecks`. It notes in Rationale, never
+    Value: unknown parameter names, values out of a known range, bad switch positions, contradicting
+    units, and `confirmed_range` on an unknown range. `Bypass` is always allowed; on cabs `Mic 1`/`Mic 2`
+    (the mic model) are allowed and `Blend` is counted separately (the device sets each mic's LEVEL).
+    Names compare ignoring case, spaces and inter-letter hyphens, plus a few aliases (Time, Low/High Cut).
+    It also counts (and notes) `UnrecognizedBlocks`: a non-capture block named neither a device block
+    nor a library entry and not already flagged unverified, i.e. an invented effect name such as
+    "Plate Reverb" (the unverified check only covers gear categories). The input block's gate, the
+    output block and the global EQ are real but aren't grid blocks, so they're exempt.
+  - **Deliberate defaults.** A catalog-aware Architect lists only the controls it changes in
+    `parameters` and names the ones it deliberately leaves at the device default in the block's
+    `kept_defaults` (`storage.EffectBlock.KeptDefaults`; required in its response schema only).
+    In a preset that uses the list, `UnconsideredParams` counts and notes any control every model
+    behind the block name has but the block neither sets nor keeps. Older output has no list and
+    isn't checked for this, so it scores 0 by construction.
+  - **Which prompts get the catalog features** is decided by the prompt's own text (it contains
+    `# Device Block Parameters`, `promptUsesCatalogParams`), not its version number, so a prompt
+    without that section gets exactly the context and schema it was written for.
+  - **Don't guess display scales.** The check skips pans (L/R labels), unitless 0..1 floats and symbolic
+    bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
+    as the catalog gives them, which matches how presets already write them (not verified on a device).
 
 ## Storage backend selection
 `STORAGE_BACKEND=s3` (default `gcs`). For `s3`, set `S3_ENDPOINT`, `S3_BUCKET`,
