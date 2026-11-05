@@ -1,0 +1,781 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core vintage blues-rock foundation around a Fender Tweed Bassman 5F6-A paired with a 4x10 Jensen P10R Alnico cabinet, pushed by an Ibanez TS808 Tube Screamer and MXR Dyna Comp.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the asymmetric tube saturation profile, mid-pushed EQ centered around 1200 Hz, conservative -58 dB input gate target for long slide decays, and vintage spring reverb texture.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted community warnings regarding Tweed bass flub with humbuckers, prompting the inclusion of a pre-amp low-cut EQ, a low-gain/high-level drive boost, and a 6.5 kHz cab high-cut with a Dynamic 57 + Ribbon 121 mic pairing.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Verified and locked the mandatory US Tweed Basslad Bright Patch amp and 410 US Basslad PR10 cab, while supplying verified options for compression, overdrive, and pre-amp Parametric-3 EQ.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed no conflicting custom cloud capture dependencies were required beyond the verified catalog items.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated distinct pickup compensation profiles, trimming the Gibson ES-339 Humbuckers by -3.0 dB with lower bass (3.5) and volume offsets, while boosting the Fender Telecaster Single Coil by +3.0 dB with richer bass (5.0), pushed mids (7.5), and tamed treble (4.0).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 410 US Basslad PR10 dual-mic setup using a Dynamic 57 at the cap edge (1.5 in) and a Ribbon 121 at the mid cone (3.0 in) with a 45/55 blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the global frequency boundaries from 95 Hz to 7500 Hz and established a -1.5 dB lane output trim for clean studio and live headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Specialist):\u003c/strong\u003e Specified the spatial dimension targets of a 125 ms slapback delay and a 1.2-second vintage spring reverb at a 20% wet mix.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Programmed Scene A (Rhythm) for raw, dynamic Tweed breakup with compression and overdrive bypassed, and Scene B (Lead/Slide) with engaged compression, Tube Screamer mid-push, tighter pre-amp low-cut, hotter amp channels, and a darker cab high-cut for singing slide sustain.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Structured the multi-lane signal flow placing compression, overdrive, and pre-amp EQ on Lane 1 feeding into the amplifier, cabinet, and time-based effects on Lane 3."
+  ],
+  "builder_statement": "This preset delivers an authentic, touch-sensitive 1950s Tweed Bassman blues-rock and slide rig. It pairs the jumped-channel US Tweed Basslad Bright Patch amplifier and 4x10 Alnico cabinet with a studio-grade compressor, a pre-amp parametric filter to keep the low end tight, a vintage Tube Screamer boost for vocal midrange sustain, and classic slapback delay and spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "RELEASE"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "INPUT",
+              "type": "slider",
+              "value": "-12 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "ATTACK",
+              "type": "slider",
+              "value": "0.6 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MAKEUP",
+              "type": "slider",
+              "value": "3 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "60 %"
+            }
+          ],
+          "rationale": "Placed first in the chain with a slow attack and parallel 60% mix so slide notes bloom and sustain in Scene B without squashing initial pick attack; input is driven slightly harder (-12 dB) to compensate for lower-output single coils.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "2 FREQ",
+            "2 Q",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "1 GAIN",
+              "type": "slider",
+              "value": "-6.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "95 Hz",
+              "value_b": "115 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 Q",
+              "type": "slider",
+              "value": "0.707"
+            },
+            {
+              "basis": "estimate",
+              "name": "1 TYPE",
+              "type": "dropdown",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 TYPE",
+              "type": "dropdown",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "3.0 dB"
+            }
+          ],
+          "rationale": "Positioned before the amplifier to apply a gentle low-cut at 95 Hz (115 Hz in Scene B) and apply the Acoustician's +3.0 dB input gain boost for Telecaster single coils to hit the Tweed saturation sweet spot.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "2.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TONE",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "8.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B with low overdrive (2.0), slightly warm tone (4.5) to tame Telecaster bridge bite, and high level (8.5) to push the jumped Tweed preamp into thick, singing sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME NORMAL",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME BRIGHT",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Emulates the jumped 5F6-A Tweed Bassman with the Acoustician's single-coil compensation applied: higher normal/bright volumes (6.5), fuller Bass (5.0), pushed Mid (7.5), and rolled-back Treble (4.0) to prevent bridge pickup ice-pick.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 GRID MODE",
+            "MIC 2 GRID MODE",
+            "OUTPUT VOLUME"
+          ],
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "-1.7 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 PAN",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 BALANCE",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 PAN",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 BALANCE",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6200 Hz",
+              "value_b": "5500 Hz"
+            }
+          ],
+          "rationale": "Pairs a Dyn 57 at the cap edge with a dominant Ribbon 121 at the mid cone (45/55 blend) and a tighter 6200 Hz LPF (5500 Hz in Scene B) to smooth out single-coil top end and eliminate glass slide noise.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "HIGH PASS",
+            "LOW PASS",
+            "PING PONG",
+            "SYNC NOTE",
+            "MOD RATE",
+            "MOD DEPTH",
+            "WIDTH",
+            "DRIVE",
+            "TRAILS"
+          ],
+          "model": "Slapback Delay",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "22 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "20 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "125 ms"
+            }
+          ],
+          "rationale": "Provides a classic 125 ms slapback echo with Sync turned Off so the fixed 125 ms delay time thicken notes naturally without cluttering rhythm work.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [
+            "TONE",
+            "TRAILS"
+          ],
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "1.2 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Adds authentic vintage spring reverb with a 1.2-second decay and a 20% rhythm mix (pushed to 25% for leads) to give the dry Tweed cabinet lively room dimension.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "ATTACK",
+            "RELEASE"
+          ],
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "INPUT",
+              "type": "slider",
+              "value": "-18 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "RATIO",
+              "type": "dropdown",
+              "value": "4"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MAKEUP",
+              "type": "slider",
+              "value": "2 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "55 %"
+            }
+          ],
+          "rationale": "Placed first in the chain and engaged in Scene B with a slow 0.8 ms default attack and 55% parallel mix so slide notes bloom endlessly while preserving the ES-339's woody pick attack.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [
+            "2 FREQ",
+            "2 Q",
+            "2 BYPASS",
+            "3 GAIN",
+            "3 FREQ",
+            "3 Q",
+            "3 TYPE",
+            "3 BYPASS"
+          ],
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "estimate",
+              "name": "1 GAIN",
+              "type": "slider",
+              "value": "-9.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 FREQ",
+              "type": "slider",
+              "value": "110 Hz",
+              "value_b": "140 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 Q",
+              "type": "slider",
+              "value": "0.707"
+            },
+            {
+              "basis": "estimate",
+              "name": "1 TYPE",
+              "type": "dropdown",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1 BYPASS",
+              "type": "toggle",
+              "value": "0"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 GAIN",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "2 TYPE",
+              "type": "dropdown",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-3.0 dB"
+            }
+          ],
+          "rationale": "Placed before the amplifier to cut low-end mud at 110 Hz in Scene A and 140 Hz in Scene B, while applying the Acoustician's -3.0 dB output trim so the semi-hollow humbuckers do not cause Tweed bass flub.",
+          "type": "Equalizer"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TONE",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "8.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B with low overdrive (1.5), slightly brighter tone (6.0), and high level (8.5) to tighten the ES-339's warm low-mids and push the Tweed circuit into vocal slide sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "US Tweed Basslad Bright Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME NORMAL",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "VOLUME BRIGHT",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "BASS",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "MID",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "TREBLE",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "PRESENCE",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OUTPUT",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            }
+          ],
+          "rationale": "Captures the jumped-channel 5F6-A Tweed Bassman response, applying the Acoustician's -1.0 volume step reduction and restrained Bass (3.5) for humbuckers in Scene A before pushing the channels and mids in Scene B for lead saturation.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "MIC 1 GRID MODE",
+            "MIC 2 GRID MODE",
+            "OUTPUT VOLUME"
+          ],
+          "model": "410 US Basslad PR10",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "-1.7 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 PAN",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 BALANCE",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 PAN",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "6.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 BALANCE",
+              "type": "slider",
+              "value": "0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HPF",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6500 Hz",
+              "value_b": "5800 Hz"
+            }
+          ],
+          "rationale": "Combines a Dyn 57 at the cap edge (-1.7 dB) and a Ribbon 121 at the mid cone (0.0 dB) for a 45/55 blend across the 4x10 Jensen P10R speakers, rolling off highs at 6500 Hz in Scene A and 5800 Hz in Scene B to eliminate slide scratch.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [
+            "HIGH PASS",
+            "LOW PASS",
+            "PING PONG",
+            "SYNC NOTE",
+            "MOD RATE",
+            "MOD DEPTH",
+            "WIDTH",
+            "DRIVE",
+            "TRAILS"
+          ],
+          "model": "Slapback Delay",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "22 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "15 %",
+              "value_b": "20 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "125 ms"
+            }
+          ],
+          "rationale": "Delivers the Mix Specialist's 125 ms slapback echo with Sync turned Off, adding subtle depth in Scene A (18%) and a slightly wider halo in Scene B (22%).",
+          "type": "Delay"
+        },
+        {
+          "id": "block-7",
+          "kept_defaults": [
+            "TONE",
+            "TRAILS"
+          ],
+          "model": "John Mayer Spring Reverb",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "DECAY",
+              "type": "slider",
+              "value": "1.2 s"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Provides vintage spring tank ambiance with a 1.2-second decay and 20% mix (25% in Scene B) to complement the dry 5F6-A Tweed circuit.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

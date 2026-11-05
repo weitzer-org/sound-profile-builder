@@ -1,0 +1,620 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Anchored the rig around a cranked '57 Fender Tweed Deluxe (5E3) pushed by a Tube Screamer, optical/studio compression, and bucket-brigade style delay into an Alnico 1x12 speaker.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the mid-pushed (1.1 kHz) vocal profile with rectifier sag, vintage spring reverb, and targeted band-limiting between 100 Hz and 6.5 kHz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the need to tighten sub-100 Hz flub before cranked Tweed captures using a low-gain 808/Klon boost, trim capture input gain for humbuckers, and avoid aggressive noise gating that chokes slide decay.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Locked in the full-rig 'Fender 57 Deluxe - T8 I4 M12' Neural Capture as the mandatory amplifier core alongside Jewel, Green 808, and Circular Delay, while permitting a native Spring reverb swap over the mismatched high-gain Range Rverb capture.",
+    "\u003cstrong\u003eAgent 5 (Gear Navigator):\u003c/strong\u003e Searched for dropped vintage Tweed items and located 'Fender Twin 57' - breakup', though single-amp mode kept the signal chain focused solely on the mandatory 5E3 Deluxe capture.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated distinct pickup compensation, attenuating the Gibson ES-339 humbuckers to prevent low-end flub while boosting the Fender Telecaster single coils to drive the Tweed capture into natural rectifier sag.",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Formulated a 65/35 blend of a Cap-Edge Dynamic 57 (0 dB) and Cone-Center Ribbon 121 (-4.4 dB) on a 1x12 cab block, kept bypassed in Scene A because the mandatory 5E3 capture is a full-rig snapshot.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Established the Global EQ high-pass at 85 Hz and low-pass at 7.5 kHz to frame the mix without sacrificing top-end slide harmonic air.",
+    "\u003cstrong\u003eAgent 9 (Mix Specialist):\u003c/strong\u003e Specified a 375 ms delay time, 1.8 s reverb decay, and a 25% wet mix ceiling to sit behind singing lead lines without washing out articulation.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Structured Scene A as a touch-sensitive rhythm foundation (drives and delay bypassed, 18% reverb) and Scene B as a sustained slide/lead voice engaging Jewel, Green 808, Circular Delay, and a pushed amp capture.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Organized the linear signal flow from compression and overdrive into the Tweed Deluxe capture followed by post-amp delay and reverb while preserving DSP headroom."
+  ],
+  "builder_statement": "This preset captures the woody, harmonically rich bloom and singing sustain of a cranked 1957 Fender Tweed Deluxe (5E3) built around the full-rig 'Fender 57 Deluxe - T8 I4 M12' Neural Capture. In Scene A (Rhythm), the compressor, overdrive, and delay are bypassed so you can control breakup purely with pick attack, while Scene B (Lead) engages the Jewel optical compressor, Green 808 mid-focus boost, and modulated Circular Delay to tighten the low end and launch effortless, vocal slide and lead sustain.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "HIGH CUT",
+            "MIX"
+          ],
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "COMP",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "EQ",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Placed first in the chain for Scene B with slightly higher COMP andVOLUME and a warmer EQ setting to fatten the Telecaster single coils and sustain slide notes.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "8.0"
+            }
+          ],
+          "rationale": "Engaged in Scene B with slightly more OVERDRIVE and LEVEL and a smoother TONE setting to push the lower-output single coils into thick midrange bloom without bridge-pickup harshness.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "-1.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "+0.5 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of the cranked '57 Tweed Deluxe (5E3); Gain and Mid are boosted while Treble is pulled back by 1.0 dB so the Telecaster single coils trigger rich rectifier sag with zero ice-pick.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "112 US Deluxe 57",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "HPF",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6000 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Configured with a warmer Ribbon 121 balance (-2.5 dB) and 6000 Hz LPF for single-coil smoothing, kept bypassed by default because the 5E3 capture already includes the speaker.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "TAP PRESET",
+            "SYNC NOTE",
+            "DIFFUSION",
+            "MOD RATE",
+            "TRAILS"
+          ],
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "24 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "28 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "4000 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MOD DEPTH",
+              "type": "slider",
+              "value": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VINTAGE MODE",
+              "type": "toggle",
+              "value": "ON"
+            }
+          ],
+          "rationale": "Engaged in Scene B with VINTAGE MODE and a slightly darker 4000 Hz LOW PASS filter to thicken single-coil lead notes with analog-style modulated repeats.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Native vintage Spring reverb with a slightly warmer Tone setting (4.5) to complement the Telecaster's natural snap across both Rhythm and Lead scenes.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "kept_defaults": [
+            "HIGH CUT",
+            "MIX"
+          ],
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "COMP",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "EQ",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VOLUME",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Placed first in the chain and engaged in Scene B to extend slide and lead note decay smoothly, with EQ slightly above center to keep the semi-hollow humbuckers articulate.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "kept_defaults": [],
+          "model": "Green 808",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "OVERDRIVE",
+              "type": "slider",
+              "value": "2.0"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "TONE",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LEVEL",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Engaged in Scene B with low OVERDRIVE and pushed LEVEL in front of the Tweed capture to roll off sub-100 Hz humbucker flub and push the 1.1 kHz vocal midrange.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "kept_defaults": [],
+          "model": "Fender 57 Deluxe - T8 I4 M12",
+          "parameters": [
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "-1.5 dB",
+              "value_b": "0.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Bass",
+              "type": "slider",
+              "value": "-2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Mid",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+2.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Treble",
+              "type": "slider",
+              "value": "+0.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Volume",
+              "type": "slider",
+              "value": "-1.0 dB",
+              "value_b": "+0.5 dB"
+            }
+          ],
+          "rationale": "Full-rig Neural Capture of a jumped and cranked '57 Tweed Deluxe (5E3); Gain and Bass are trimmed for the ES-339 humbuckers so the power section stays woody and singing rather than flubbing out.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "kept_defaults": [],
+          "model": "112 US Deluxe 57",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dyn 57"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 POSITION",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 1 DISTANCE",
+              "type": "slider",
+              "value": "1.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 1 LEVEL",
+              "type": "slider",
+              "value": "0.0 dB"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 POSITION",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "estimate",
+              "name": "MIC 2 DISTANCE",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "MIC 2 LEVEL",
+              "type": "slider",
+              "value": "-4.4 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "HPF",
+              "type": "slider",
+              "value": "100 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "LPF",
+              "type": "slider",
+              "value": "6500 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "OUTPUT VOLUME",
+              "type": "slider",
+              "value": "0.0 dB"
+            }
+          ],
+          "rationale": "Pre-configured with the Transducer Tech's 65/35 Dynamic 57 and Ribbon 121 blend and 100 Hz HPF, but kept bypassed because 'Fender 57 Deluxe - T8 I4 M12' is already a full-rig capture with baked-in Alnico speaker response.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "kept_defaults": [
+            "TAP PRESET",
+            "SYNC NOTE",
+            "DIFFUSION",
+            "MOD RATE",
+            "TRAILS"
+          ],
+          "model": "Circular Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MIX",
+              "type": "slider",
+              "value": "22 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "SYNC",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "DELAY TIME",
+              "type": "slider",
+              "value": "375 ms"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "FEEDBACK",
+              "type": "slider",
+              "value": "25 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "HIGH PASS",
+              "type": "slider",
+              "value": "120 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "LOW PASS",
+              "type": "slider",
+              "value": "4500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "MOD DEPTH",
+              "type": "slider",
+              "value": "20 %"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "VINTAGE MODE",
+              "type": "toggle",
+              "value": "ON"
+            }
+          ],
+          "rationale": "Provides warm, bucket-brigade-inspired modulated repeats in Scene B with VINTAGE MODE enabled and filtered repeats so echoes sit neatly underneath sustained lead notes.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-6",
+          "kept_defaults": [],
+          "model": "Spring",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Pre-Delay",
+              "type": "slider",
+              "value": "15 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18 %",
+              "value_b": "25 %"
+            }
+          ],
+          "rationale": "Swapped in from the native reverb catalog in place of Range Rverb (which is a high-gain amp capture) to deliver authentic 1.8 s vintage spring ambiance that opens up from 18% in Scene A to 25% in Scene B.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

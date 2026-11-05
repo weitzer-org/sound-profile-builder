@@ -93,8 +93,9 @@ func renderPresetHTML(blocks []storage.EffectBlock) string {
 			title = block.Type + ": " + block.Model
 		}
 
+		shown, atDefault := SplitDefaults(block)
 		var sceneA, sceneB []string
-		for _, p := range block.Parameters {
+		for _, p := range shown {
 			valA := p.Value
 			valB := p.ValueB
 			if valB == "" {
@@ -104,8 +105,12 @@ func renderPresetHTML(blocks []storage.EffectBlock) string {
 				valA += " " + p.Unit
 				valB += " " + p.Unit
 			}
-			sceneA = append(sceneA, html.EscapeString(p.Name+": "+valA))
-			sceneB = append(sceneB, html.EscapeString(p.Name+": "+valB))
+			classA, classB := paramClass(p.Name, valA), paramClass(p.Name, valB)
+			if valB != valA {
+				classB += " diff" // Scene B differs from Scene A
+			}
+			sceneA = append(sceneA, "<span class='"+classA+"'>"+html.EscapeString(p.Name+": "+valA)+"</span>")
+			sceneB = append(sceneB, "<span class='"+classB+"'>"+html.EscapeString(p.Name+": "+valB)+"</span>")
 		}
 
 		sb.WriteString(`<tr><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>`)
@@ -114,6 +119,13 @@ func renderPresetHTML(blocks []storage.EffectBlock) string {
 			sb.WriteString(`<br/><div style='font-size: 0.85em; color: #94a3b8; white-space: normal; max-width: 300px; line-height: 1.4; margin-top: 4px;'><em>Rationale: `)
 			sb.WriteString(html.EscapeString(block.Rationale))
 			sb.WriteString(`</em></div>`)
+		}
+		if len(atDefault) > 0 {
+			// The controls deliberately left at the device default (kept_defaults, plus any
+			// listed with their default value), named once instead of listed as rows.
+			sb.WriteString(`<br/><div class='defaults-note'>At device default: `)
+			sb.WriteString(html.EscapeString(strings.Join(atDefault, ", ")))
+			sb.WriteString(`</div>`)
 		}
 		sb.WriteString(`</td><td style='padding: 12px; border-bottom: 1px solid #3f3f46;'>`)
 		sb.WriteString(strings.Join(sceneA, "<br/>"))
@@ -124,6 +136,12 @@ func renderPresetHTML(blocks []storage.EffectBlock) string {
 
 	sb.WriteString(`</tbody></table>`)
 	return sb.String()
+}
+
+// RenderAllGuitarsHTML is renderAllGuitarsHTML for the web layer, which renders a saved
+// preset's read-only table from its structured data when it's viewed.
+func RenderAllGuitarsHTML(guitars map[string][]storage.EffectBlock) map[string]string {
+	return renderAllGuitarsHTML(guitars)
 }
 
 // renderAllGuitarsHTML builds final_html_payload (guitar name -> table HTML) for every
@@ -139,4 +157,17 @@ func renderAllGuitarsHTML(guitars map[string][]storage.EffectBlock) map[string]s
 		out[name] = renderPresetHTML(guitars[name])
 	}
 	return out
+}
+
+// longParamText is the length of "NAME: value" above which a parameter line may wrap.
+const longParamText = 32
+
+// paramClass is the class of one "NAME: value" line in the read-only table: "param" keeps a
+// short line on one line (so "OUTPUT VOLUME: 0 dB" never splits into "0" / "dB"), and
+// "param long" lets a long text value wrap instead of forcing the scene columns wide.
+func paramClass(name, value string) string {
+	if len(name)+len(": ")+len(value) > longParamText {
+		return "param long"
+	}
+	return "param"
 }

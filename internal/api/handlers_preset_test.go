@@ -84,7 +84,7 @@ func TestRenderTweakingWorkspaceHTML(t *testing.T) {
 	if !strings.Contains(html, "Amplifier") || !strings.Contains(html, "Plexi") || !strings.Contains(html, "Gain: 7.0") {
 		t.Errorf("Expected generated table to contain block details")
 	}
-	if !strings.Contains(html, "SCENE A (RHYTHM)") || !strings.Contains(html, "SCENE B (LEAD)") {
+	if up := strings.ToUpper(html); !strings.Contains(up, "SCENE A (RHYTHM)") || !strings.Contains(up, "SCENE B (LEAD)") {
 		t.Errorf("Expected generated table to contain scene columns")
 	}
 }

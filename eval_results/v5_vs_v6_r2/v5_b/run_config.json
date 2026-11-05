@@ -1,0 +1,26 @@
+{
+  "agent_prompts": {
+    "10_control_mapper": "v2",
+    "12_architect": "v5",
+    "2_sonic_profiler": "v4",
+    "4_coros_librarian": "v2",
+    "6_acoustician": "v4"
+  },
+  "argon_no_search": false,
+  "constraints": {
+    "allow_cloud_captures": true,
+    "allow_factory_captures": true,
+    "favor_captures": true,
+    "guitars": [
+      "Gibson ES-339 Humbuckers",
+      "Fender Telecaster Single Coil"
+    ],
+    "single_amp_mode": true
+  },
+  "eval_no_fallback": true,
+  "queries": "08_EVH,09_BB_King,10_Slash,11_Mayer_Lead,12_Bonamassa,13_Hard_Rock_Blues",
+  "reps": 2,
+  "scenarios": "PROD",
+  "started_at": "2026-11-05T18:02:30Z",
+  "thinking_level": ""
+}

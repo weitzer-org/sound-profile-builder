@@ -1,0 +1,608 @@
+{
+  "agent_impact": [
+    "\u003cstrong\u003eAgent 1 (Tone Historian):\u003c/strong\u003e Established the core 1960s British Invasion architecture centered around a Vox AC30 Top Boost, Dallas Rangemaster Treble Booster, 2x12 Celestion Alnico Blue speakers, and Neumann U67 studio microphone.",
+    "\u003cstrong\u003eAgent 2 (Sonic Profiler):\u003c/strong\u003e Defined the cathode-biased EL84 saturation profile, set the noise gate target to -65 dB, specified a vintage spring reverb character, and targeted frequency cuts at 90 Hz and 7500 Hz.",
+    "\u003cstrong\u003eAgent 3 (Community Scraper):\u003c/strong\u003e Highlighted the effectiveness of using the Legendary 87 compressor at the start of the chain for 1960s Abbey Road/Olympic console compression and warned about taming high-end digital fizz around 7.5 kHz.",
+    "\u003cstrong\u003eAgent 4 (Librarian):\u003c/strong\u003e Dropped the secondary Marshall JTM 45 to enforce single-amp mode and locked in the mandatory native algorithmic UK C30 TopBoost and 212 UK C30 65 blocks alongside the Legendary 87 (ST), Rage Booster, and Parametric-8.",
+    "\u003cstrong\u003eAgent 5 (Navigator):\u003c/strong\u003e Confirmed that the dropped Marshall JTM 45 was not needed and verified the block selections against available Quad Cortex resources.",
+    "\u003cstrong\u003eAgent 6 (Acoustician):\u003c/strong\u003e Calculated pickup-specific compensation for the Gibson ES-339 Humbuckers (-3.0 dB input trim, lowered volume, Bass 3.5, Treble 6.5) versus the Fender Telecaster Single Coil (+2.0 dB input boost, raised volume, Bass 5.5, Treble 4.5).",
+    "\u003cstrong\u003eAgent 7 (Transducer Tech):\u003c/strong\u003e Configured the 212 UK C30 65 cabinet with a Dynamic 57 at the Cap Edge (X: 3.5, Y: 1.5) and a Condenser 67 at the Cone Mid (X: 6.0, Y: 3.0) with a 55% blend ratio.",
+    "\u003cstrong\u003eAgent 8 (FOH Engineer):\u003c/strong\u003e Set the post-cabinet filter boundaries at 95 Hz high-pass and 7500 Hz low-pass and established a -2.5 dB baseline output trim for headroom.",
+    "\u003cstrong\u003eAgent 9 (Mix Engineer):\u003c/strong\u003e Provided wet-effects spatial targets of 800 ms delay time, 1.8 s reverb decay, and a 25% mix blend to sit naturally behind the dry chime.",
+    "\u003cstrong\u003eAgent 10 (Control Mapper):\u003c/strong\u003e Mapped Scene A (Rhythm) for edge-of-breakup chime with Rage Booster bypassed and Scene B (Lead) engaging the Rage Booster (Level 7.5, Tone 6.5) with an amp Gain push to 6.5 and a +2.5 dB solo volume boost.",
+    "\u003cstrong\u003eAgent 11 (DSP Architect):\u003c/strong\u003e Routed the pre-effects and UK C30 TopBoost on Lane 1 feeding into Lane 3 for the 212 UK C30 65 cabinet, Parametric-8 EQ, and time-based spatial effects."
+  ],
+  "builder_statement": "This preset recreates the quintessential 1960s British Invasion chime and mid-pushed overdrive by pairing the native UK C30 TopBoost and 212 UK C30 65 Alnico Blue cabinet with a front-of-chain Legendary 87 studio compressor and a classic Rage Booster treble boost. Scene A delivers glassy, studio-compressed rhythm tones on the edge of breakup, while Scene B kicks in the Rage Booster and pushes the EL84 power section into singing, harmonic lead saturation supported by vintage tape delay and spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "+2.0 dB"
+            }
+          ],
+          "rationale": "Applies the -65 dB noise gate target to control single-coil hum while boosting input gain by +2.0 dB so the lower-output Telecaster pickups hit the cathode-biased EL84 sweet spot.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-16.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "2.5"
+            }
+          ],
+          "rationale": "Placed at the very start of the signal chain with a gentle 4:1 ratio to mimic vintage 1960s Abbey Road/Olympic studio console compression and enhance top-end sparkle.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Emulates the Dallas Rangemaster Treble Booster in front of the AC30; bypassed in Scene A for pure jangle and engaged in Scene B with slightly warmer Tone (6.0) to thicken the Telecaster bridge pickup for leads.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Algorithmic Vox AC30 Top Boost model with Volume raised to 6.5 (applying the Acoustician's +0.5 step offset), Bass lifted to 5.5 to fill out single coils, and Treble pulled back to 4.5 to tame Telecaster ice-pick bite.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Condenser 67 - Cone Mid (X: 6.0, Y: 3.0)"
+            },
+            {
+              "basis": "estimate",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "90 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "Pairs 2x12 Celestion Alnico Blue speakers with a Dynamic 57 and Condenser 67 (U67) blend nudged to 60% toward the warm Condenser 67 to give the Telecaster single coils extra woody body.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Band 1 Freq (Low Cut)",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 8 Freq (High Cut)",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 4 Freq",
+              "type": "slider",
+              "value": "250 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 4 Gain",
+              "type": "slider",
+              "value": "+1.5 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Applies the FOH 95 Hz to 7500 Hz passband to eliminate top-end digital fizz while adding +1.5 dB at 250 Hz for Telecaster warmth and a +2.5 dB solo boost in Scene B.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Tape Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "800 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "22%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Provides vintage 800 ms studio tape echoes at a 25% mix when engaged in Scene B to give lead lines expansive depth.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "20%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.0"
+            }
+          ],
+          "rationale": "Delivers authentic 1960s vintage spring reverb ambience with a 1.8 s decay time as specified by the Sonic Profiler and Mix Engineer.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Input Gate",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-65.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "50 ms"
+            },
+            {
+              "basis": "estimate",
+              "name": "Input Gain",
+              "type": "slider",
+              "value": "-3.0 dB"
+            }
+          ],
+          "rationale": "Applies the -65 dB noise gate target and trims Input Gain by -3.0 dB so the warm semi-hollow ES-339 humbuckers do not overload the low-headroom EL84 input stage into early mush.",
+          "type": "Noise Gate"
+        },
+        {
+          "id": "block-2",
+          "model": "Legendary 87 (ST)",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Ratio",
+              "type": "dropdown",
+              "value": "4:1"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Threshold",
+              "type": "slider",
+              "value": "-18.0 dB"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Release",
+              "type": "slider",
+              "value": "3.0"
+            },
+            {
+              "basis": "estimate",
+              "name": "Gain",
+              "type": "slider",
+              "value": "2.0"
+            }
+          ],
+          "rationale": "Placed at the start of the chain with a slightly slower attack (5.0) to preserve semi-hollow pick transient clarity while imparting 1960s studio console compression and top-end sheen.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-3",
+          "model": "Rage Booster",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Level",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Emulates the Dallas Rangemaster in front of the AC30; bypassed in Scene A and engaged in Scene B with a brighter Tone setting (6.5) to tighten the ES-339's low-mids and push the EL84 tubes into focused lead sustain.",
+          "type": "Drive"
+        },
+        {
+          "id": "block-4",
+          "model": "UK C30 TopBoost",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "6.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Volume",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "7.5",
+              "value_b": "8.0"
+            }
+          ],
+          "rationale": "Algorithmic Vox AC30 Top Boost model with Volume lowered to 5.0 (applying the Acoustician's -1.0 step offset), Bass cut to 3.5 to prevent semi-hollow boominess, and Treble boosted to 6.5 to preserve authentic British chime.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-5",
+          "model": "212 UK C30 65",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Cap Edge (X: 3.5, Y: 1.5)"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Condenser 67 - Cone Mid (X: 6.0, Y: 3.0)"
+            },
+            {
+              "basis": "estimate",
+              "name": "Blend",
+              "type": "slider",
+              "value": "55%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7500 Hz"
+            }
+          ],
+          "rationale": "Pairs 2x12 Celestion Alnico Blue speakers with the exact Transducer Tech Dynamic 57 and Condenser 67 (U67) mic coordinates at a 55% blend ratio for balanced bite and midrange clarity.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-6",
+          "model": "Parametric-8",
+          "parameters": [
+            {
+              "basis": "confirmed_range",
+              "name": "Band 1 Freq (Low Cut)",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 8 Freq (High Cut)",
+              "type": "slider",
+              "value": "7500 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 4 Freq",
+              "type": "slider",
+              "value": "220 Hz"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Band 4 Gain",
+              "type": "slider",
+              "value": "-2.0 dB"
+            },
+            {
+              "basis": "estimate",
+              "name": "Output Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+2.5 dB"
+            }
+          ],
+          "rationale": "Enforces the 95 Hz to 7500 Hz FOH passband to smooth out digital fizz while dipping 220 Hz by -2.0 dB to clear semi-hollow low-mid congestion and adding +2.5 dB for Scene B leads.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-7",
+          "model": "Tape Delay",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Time",
+              "type": "slider",
+              "value": "800 ms"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Feedback",
+              "type": "slider",
+              "value": "20%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "25%"
+            }
+          ],
+          "rationale": "Engages in Scene B with an 800 ms delay time and 25% mix to add classic studio dimension to lead passages without muddying the semi-hollow midrange.",
+          "type": "Delay"
+        },
+        {
+          "id": "block-8",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Decay",
+              "type": "slider",
+              "value": "1.8 s"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "6.0"
+            }
+          ],
+          "rationale": "Provides vintage 1.8 s spring reverb with a slightly brighter Tone setting (6.0) to keep the ES-339's spatial tail articulate.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1458 @@
+[
+  {
+    "arm": "v5",
+    "query": "01_SRV_Clean",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/01_SRV_Clean.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 4,
+        "OutOfRange": 2,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "02_Chicago_Blues",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/02_Chicago_Blues.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 14,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 6,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "03_British_Invasion",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/03_British_Invasion.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 10,
+        "OutOfRange": 4,
+        "BadSwitchValues": 2,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "04_Southern_Rock",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/04_Southern_Rock.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 28,
+        "OutOfRange": 4,
+        "BadSwitchValues": 2,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "05_Clapton",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/05_Clapton.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 28,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "06_Gilmour",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/06_Gilmour.html",
+    "blocks": 18,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 18,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 18,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "07_Edge",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep1/07_Edge.html",
+    "blocks": 18,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 18,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 12,
+        "OutOfRange": 2,
+        "BadSwitchValues": 2,
+        "UnitMismatches": 2,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "01_SRV_Clean",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/01_SRV_Clean.html",
+    "blocks": 10,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 10,
+      "UnverifiedBlocks": 2,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 8,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 6,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "02_Chicago_Blues",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/02_Chicago_Blues.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 2,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 14,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 6,
+        "UncheckedBlocks": 10
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "03_British_Invasion",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/03_British_Invasion.html",
+    "blocks": 18,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 18,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 30,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 4,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 18,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "04_Southern_Rock",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/04_Southern_Rock.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 10,
+        "OutOfRange": 2,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "05_Clapton",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/05_Clapton.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 24,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "06_Gilmour",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/06_Gilmour.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 18,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "07_Edge",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_a/PROD/rep2/07_Edge.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 14,
+        "OutOfRange": 4,
+        "BadSwitchValues": 2,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "08_EVH",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/08_EVH.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 26,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "10_Slash",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/10_Slash.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 12,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "09_BB_King",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/09_BB_King.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 2,
+      "Catalog": {
+        "UnknownNames": 14,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "11_Mayer_Lead",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/11_Mayer_Lead.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 12,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "12_Bonamassa",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/12_Bonamassa.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 12,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 4,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "08_EVH",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/08_EVH.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 22,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "09_BB_King",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/09_BB_King.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 18,
+        "OutOfRange": 4,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "10_Slash",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/10_Slash.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 12,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "11_Mayer_Lead",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/11_Mayer_Lead.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 4,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 2,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 8
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "12_Bonamassa",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/12_Bonamassa.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 6,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "13_Hard_Rock_Blues",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep2/13_Hard_Rock_Blues.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 10,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v5",
+    "query": "13_Hard_Rock_Blues",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v5_b/PROD/rep1/13_Hard_Rock_Blues.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 1,
+      "Catalog": {
+        "UnknownNames": 16,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 2,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "01_SRV_Clean",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/01_SRV_Clean.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "02_Chicago_Blues",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/02_Chicago_Blues.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "03_British_Invasion",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/03_British_Invasion.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "04_Southern_Rock",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/04_Southern_Rock.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "05_Clapton",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/05_Clapton.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 2,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "06_Gilmour",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/06_Gilmour.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "07_Edge",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep1/07_Edge.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 2,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "01_SRV_Clean",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/01_SRV_Clean.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 2,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 2,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "02_Chicago_Blues",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/02_Chicago_Blues.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "03_British_Invasion",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/03_British_Invasion.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "04_Southern_Rock",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/04_Southern_Rock.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "05_Clapton",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/05_Clapton.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "06_Gilmour",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/06_Gilmour.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "07_Edge",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_a/PROD/rep2/07_Edge.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 12,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "08_EVH",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/08_EVH.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "09_BB_King",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/09_BB_King.html",
+    "blocks": 10,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 10,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "10_Slash",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/10_Slash.html",
+    "blocks": 10,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 10,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 8,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "10_Slash",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/10_Slash.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "11_Mayer_Lead",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/11_Mayer_Lead.html",
+    "blocks": 12,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 12,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 6,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "12_Bonamassa",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/12_Bonamassa.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "13_Hard_Rock_Blues",
+    "rep": 1,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep1/13_Hard_Rock_Blues.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "08_EVH",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/08_EVH.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "09_BB_King",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/09_BB_King.html",
+    "blocks": 10,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 10,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 0
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "11_Mayer_Lead",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/11_Mayer_Lead.html",
+    "blocks": 14,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 14,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 4
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "12_Bonamassa",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/12_Bonamassa.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 10,
+        "UncheckedBlocks": 6
+      }
+    }
+  },
+  {
+    "arm": "v6",
+    "query": "13_Hard_Rock_Blues",
+    "rep": 2,
+    "path": "eval_results/v5_vs_v6_r2/v6_b/PROD/rep2/13_Hard_Rock_Blues.html",
+    "blocks": 16,
+    "report": {
+      "ParseError": "",
+      "TotalBlocks": 16,
+      "UnverifiedBlocks": 0,
+      "CaptureFormattingMismatches": 0,
+      "IncompleteCabinetBlocks": 0,
+      "LeftoverValueRanges": 0,
+      "CriticIssues": 0,
+      "Catalog": {
+        "UnknownNames": 0,
+        "OutOfRange": 0,
+        "BadSwitchValues": 0,
+        "UnitMismatches": 0,
+        "BasisOverclaims": 0,
+        "CabConvention": 0,
+        "UnrecognizedBlocks": 0,
+        "UnconsideredParams": 0,
+        "CheckedBlocks": 14,
+        "UncheckedBlocks": 2
+      }
+    }
+  }
+]

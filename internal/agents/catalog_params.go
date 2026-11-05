@@ -619,14 +619,6 @@ func tokenIndices(haystack, needle string) []int {
 	return out
 }
 
-// tokenIndex is the first of tokenIndices, or -1.
-func tokenIndex(haystack, needle string) int {
-	if hits := tokenIndices(haystack, needle); len(hits) > 0 {
-		return hits[0]
-	}
-	return -1
-}
-
 // ---------------------------------------------------------------------------------------
 // Validation
 
