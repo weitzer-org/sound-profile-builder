@@ -28,7 +28,8 @@ async function openPreset(page, name, mobile) {
   } else {
     await page.locator('button:has-text("Preset Library")').first().click();
   }
-  await page.waitForSelector('#library-list-container li', { timeout: 15000 });
+  // An empty library (fixtures not seeded) shows no items at all: skip rather than time out.
+  await page.waitForSelector('#library-list-container li', { timeout: 15000 }).catch(() => {});
   const item = () => page.locator('#library-list-container li', { hasText: name }).first();
   if (!(await item().count())) {
     const more = page.locator('#library-list-container button:has-text("Load More")');

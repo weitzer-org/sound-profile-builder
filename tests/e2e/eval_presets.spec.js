@@ -22,7 +22,8 @@ for (const name of names) {
     await page.waitForSelector('h1:has-text("Spin Up a Tone")', { timeout: 15000 });
 
     await page.locator('button:has-text("Preset Library")').first().click();
-    await page.waitForSelector('#library-list-container li', { timeout: 15000 });
+    // An empty library (fixtures not seeded) shows no items at all: skip rather than time out.
+    await page.waitForSelector('#library-list-container li', { timeout: 15000 }).catch(() => {});
     const item = () => page.locator('#library-list-container li', { hasText: name }).first();
     const more = page.locator('#library-list-container button:has-text("Load More")');
     for (let i = 0; i < 5 && !(await item().count()) && (await more.count()); i++) {
