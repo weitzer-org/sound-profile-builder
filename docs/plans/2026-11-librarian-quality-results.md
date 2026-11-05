@@ -61,3 +61,51 @@ Judge spend: $5.83.
 1. Why do new-order presets use `Range Rverb` more in the full pipeline (0.206 vs 0.029) when the Librarian alone does not (0.18 vs 0.17)? Could be chance (p=0.07).
 2. Fix the catalog (`Range Rverb` mapped to both an amp and spring reverbs) and re-measure; this removes the confound.
 3. Verify the cached-input rate for `gemini-3.5-flash` before quoting any dollar saving.
+
+---
+
+# Re-evaluation after merging main (2026-11-05, second run)
+
+What changed since the first run: main merged in (production routing is now gemini-4-argon for
+almost every agent, gemini-3.8-flash for Sonic Profiler; new prompt versions; catalog renames);
+`Generic Spring Reverb` re-mapped from `Range Rverb` (the Orange amp capture's name) to the native
+`Spring` block; runs used `EVAL_NO_FALLBACK=true`. Same design: 13 queries x 3 samples, shared
+frozen Phase 1, same approved checklist.
+
+## Full pipeline, paired (39 pairs; 39/39 succeeded in both conditions)
+| metric | new | old | verdict / note |
+|---|---|---|---|
+| preset: all hard rules + single amp | 0.923 | 0.923 | INCONCLUSIVE (identical means; 39 pairs give a wide CI) |
+| preset: hard-rule pass fraction | 0.966 | 0.979 | NOT_WORSE |
+| librarian: all hard rules + single amp | 0.923 | 0.897 | INCONCLUSIVE (new slightly ahead) |
+| mechanical defects per run | 0.54 | 0.26 | INCONCLUSIVE: 34 vs 35 runs had zero; one new run with 8 drives the mean; sign test 4 vs 5 |
+| `Range Rverb` uses per preset | 0 | 0 | catalog fix removed it (was 0.21 vs 0.03) |
+| cached input share | 38% | 0.2% | |
+
+Cost re-priced from the recorded token counts at the Google Cloud cached-input rates (Argon $0.10/M
+cached vs $2.00 input during the promo; see usage_recorder.go for the source and its two caveats):
+new order $0.169 vs $0.223 per pipeline excluding Phase 1 (24% saved); Librarian $0.013 vs $0.067
+per call (81% saved). Old order: no saving.
+
+## Blind judge (swapped positions)
+| | new wins | old wins | equal | inconsistent |
+|---|---|---|---|---|
+| new vs old (39 pairs) | 10 | 9 | 1 | 19 (49%) |
+| calibration, same condition (13 pairs) | 4 | 4 | 0 | 5 (38%) |
+
+The old-order lean from the first run (12 vs 4) is gone once `Range Rverb` is gone, consistent with
+that lean having been the catalog bug. Raw position-A share fell from 75% to 60%.
+
+## Librarian-only A/B (260 calls)
+Raw: new 85.3% vs old 92.2% of runs pass every hard rule (INCONCLUSIVE). The entire gap is one
+unit, 04_Southern_Rock Phase 1 sample 0/1: the new order picked `US DLX 58` (with the Deluxe
+"Tweed" cab) in 9 of 10 runs; the old order picked the `Fender 57 Deluxe` user capture. The
+checklist's AMERICAN_TWEED pattern matches "Fender 57" but not "DLX 58". coros_map.json maps
+`US DLX 58` from BOTH "Fender Deluxe 5E2 1958" (tweed) and "Fender Deluxe Reverb 64/65"
+(blackface) -- an unresolved catalog contradiction (captures are not in the device catalog). If
+`US DLX 58` is the 1958 tweed capture, both orders score 92.2%. Other failures are identical in
+both orders (01 SRV picks a non-Fender amp in one Phase 1 sample; 10 Slash picks `Brit 2555 Lead`,
+a Silver Jubilee capture typed `fx`, so it also fails the single-amp check).
+
+## Spend (estimates)
+Pipelines $18.04, judge $14.20, Librarian-only $17.11, shakedown $0.49: about $50.
