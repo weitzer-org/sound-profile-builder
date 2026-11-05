@@ -65,7 +65,7 @@ type indexedParam struct {
 // On a model without clones, replaces holds an old parameter name (a rename note) and
 // is ignored.
 func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexedParam, error) {
-	if m.Clones == "" {
+	if strings.TrimSpace(m.Clones) == "" {
 		out := make([]indexedParam, len(m.Params))
 		for i, xp := range m.Params {
 			out[i] = indexedParam{i, xp}
@@ -75,7 +75,7 @@ func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexed
 	if depth > 8 {
 		return nil, fmt.Errorf("model %q: clones chain too deep", m.Name)
 	}
-	base, ok := byID[m.Clones]
+	base, ok := byID[strings.TrimSpace(m.Clones)]
 	if !ok {
 		return nil, fmt.Errorf("model %q clones unknown id %q", m.Name, m.Clones)
 	}
@@ -96,7 +96,8 @@ func effectiveParams(m xmlModel, byID map[string]xmlModel, depth int) ([]indexed
 		}
 		out[n] = indexedParam{n, xp}
 	}
-	sort.SliceStable(out, func(i, j int) bool { return out[i].index < out[j].index })
+	// Already in index order: out[i].index == i holds for the base list, in-place
+	// replacements keep it, and additions are appended at index len(out).
 	return out, nil
 }
 
