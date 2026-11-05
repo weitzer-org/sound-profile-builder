@@ -1,0 +1,416 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Anchored the rig around a classic Fender Twin Reverb combo platform with a 2x12 speaker configuration and Shure SM57 microphone pairing for authentic blues clean headroom.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the clean tube preamp saturation target, mid-pushed EQ contour, vintage spring reverb ambiance, and cabinet filtering boundaries (90Hz low cut, 7000Hz high cut).",
+    "<strong>Agent 3 (Community Scraper):</strong> Highlighted the necessity of early optical compression (Jewel) to sustain finger vibrato, post-cab graphic EQ peaking at 800Hz–1.6kHz for vocal neck-pickup bite, and warned against over-gaining the Twin.",
+    "<strong>Agent 4 (Librarian):</strong> Mapped the core hardware to the mandatory native blocks ('US Twin Vibrato' and '212 US TWN C12Q 00s') and suggested 'Jewel', 'Graphic-9', and 'Range Rverb' with strict positional hints.",
+    "<strong>Agent 5 (Cloud Navigator):</strong> Enforced the user constraint disabling cloud captures, ensuring the signal chain relies entirely on native models and factory resources.",
+    "<strong>Agent 6 (Acoustician):</strong> Calculated pickup divergence offsets, pulling back preamp drive and bass (4.5) for the hot semi-hollow Gibson ES-339 Humbuckers while boosting preamp gain, elevating mids (7.0), and softening treble (4.5) for the Fender Telecaster Single Coils.",
+    "<strong>Agent 7 (Transducer Tech):</strong> Established the dual-mic cabinet capture using a Dynamic 57 off-center at 1.0 inch blended at 70% with a Ribbon 121 on the outer cone at 2.5 inches to prevent ice-pick highs.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Set protective global frequency rails (80Hz to 10kHz) and attenuated the final output level by -2.5 dB to prevent digital clipping when stacking EQ mid boosts.",
+    "<strong>Agent 9 (Mix Specialist):</strong> Specified the spatial decay target of 2.5 seconds and balanced wet/dry mix ratios to sit cleanly behind vocal-style blues phrasing.",
+    "<strong>Agent 10 (Control Mapper):</strong> Programmed Scene A (Rhythm) and Scene B (Lead) parameter states, elevating compressor sustain, amp gain, mid-band EQ push (+3.5 dB / +4.0 dB), and reverb tail for singing solo work.",
+    "<strong>Agent 11 (DSP Architect):</strong> Distributed the signal chain across two lanes—placing the Jewel compressor, US Twin Vibrato, and 2x12 cabinet on Lane 1, feeding the post-cab Graphic-9 EQ and Spring Reverb on Lane 2."
+  ],
+  "builder_statement": "This preset captures a vocal, high-headroom blues tone centered around the US Twin Vibrato and its matching 2x12 C12Q cabinet. An early Jewel optical compressor smooths out picking transients and sustains single-note vibrato without clipping the preamp, while a post-cab Graphic-9 EQ sculpts the signature 800Hz–1.6kHz midrange bark before feeding a warm vintage spring reverb.",
+  "structured_payload": {
+    "guitars": {
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Sustain",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "5.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.5",
+              "value_b": "6.5"
+            }
+          ],
+          "rationale": "Positioned first in the chain to smooth out sharp single-coil picking transients and add sustain, with a slightly higher output gain to help push the Twin preamp into its sweet spot.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "3.8",
+              "value_b": "4.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "4.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "7.0",
+              "value_b": "8.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.8",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bright Switch",
+              "type": "toggle",
+              "value": "Off"
+            }
+          ],
+          "rationale": "Translates the Acoustician's +3.0 dB input gain offset into an elevated 3.8/4.8 Gain dial setting to compensate for lower-output single coils, alongside boosted Mids (7.0) and softened Treble (4.5) with Bright Switch Off to eliminate Telecaster ice-pick harshness.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "60%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "85 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "6800 Hz"
+            }
+          ],
+          "rationale": "Pairs an off-center SM57 with a warm Ribbon 121 blended slightly more toward the ribbon (60% Blend) and a 6800 Hz high cut to thicken the single-coil top end.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "125Hz Slider",
+              "type": "slider",
+              "value": "+1.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+2.5 dB",
+              "value_b": "+4.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Placed post-cab on Lane 2 to sculpt the vocal 800Hz and 1.6kHz midrange bark, adding a subtle +1.0 dB bump at 125Hz to give the Telecaster extra body.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.5 s",
+              "value_b": "3.2 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "18%",
+              "value_b": "28%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.5"
+            }
+          ],
+          "rationale": "Swapped the mismatched 'Range Rverb' capture (which is a High-Gain Modern amp capture) for a native algorithmic Spring Reverb block at the end of the chain to authentically recreate the Blackface Twin's internal spring tank.",
+          "type": "Reverb"
+        }
+      ],
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Jewel",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Sustain",
+              "type": "slider",
+              "value": "3.5",
+              "value_b": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Attack",
+              "type": "slider",
+              "value": "5.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "5.0",
+              "value_b": "6.0"
+            }
+          ],
+          "rationale": "Placed first in the chain with light optical compression and a slightly slower attack to let the semi-hollow humbucker bloom naturally while extending finger-vibrato sustain.",
+          "type": "Compressor"
+        },
+        {
+          "id": "block-2",
+          "model": "US Twin Vibrato",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "2.8",
+              "value_b": "3.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5",
+              "value_b": "4.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "5.2",
+              "value_b": "5.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bright Switch",
+              "type": "toggle",
+              "value": "On"
+            }
+          ],
+          "rationale": "Applies the Acoustician's -3.0 dB input gain offset by lowering the Gain dial to 2.8/3.8 and taming Bass to 4.5 to prevent semi-hollow humbucker mud while maintaining pristine B.B. King clean headroom.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-3",
+          "model": "212 US TWN C12Q 00s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "Dynamic 57 - Off-Center Cap Edge, 1.0 in Distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "Ribbon 121 - Outer Cone, 2.5 in Distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "70%"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "95 Hz"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "7200 Hz"
+            }
+          ],
+          "rationale": "Uses the Transducer Tech's 70% blend toward the off-center SM57 with a slightly higher 95 Hz low cut to keep the ES-339's resonant low end tight and articulate.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-4",
+          "model": "Graphic-9",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "125Hz Slider",
+              "type": "slider",
+              "value": "-1.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "800Hz Slider",
+              "type": "slider",
+              "value": "+1.5 dB",
+              "value_b": "+3.5 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "1.6kHz Slider",
+              "type": "slider",
+              "value": "+2.0 dB",
+              "value_b": "+4.0 dB"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "Level",
+              "type": "slider",
+              "value": "0.0 dB",
+              "value_b": "+1.5 dB"
+            }
+          ],
+          "rationale": "Positioned post-cab to trim 125Hz semi-hollow boominess while boosting 800Hz and 1.6kHz for singing, vocal neck-humbucker projection in both rhythm and lead scenes.",
+          "type": "EQ"
+        },
+        {
+          "id": "block-5",
+          "model": "Spring Reverb",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Decay",
+              "type": "slider",
+              "value": "2.5 s",
+              "value_b": "3.2 s"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mix",
+              "type": "slider",
+              "value": "15%",
+              "value_b": "25%"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Tone",
+              "type": "slider",
+              "value": "5.5"
+            }
+          ],
+          "rationale": "Swapped the suggested 'Range Rverb' block (anOrange Rockerverb high-gain amp capture) for a true algorithmic Spring Reverb to deliver authentic vintage spring tank ambiance at the end of the chain.",
+          "type": "Reverb"
+        }
+      ]
+    }
+  }
+}
