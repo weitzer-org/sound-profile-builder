@@ -177,6 +177,11 @@ See `.env.example`.
   Gibson ES-339 + Telecaster pair), `single_amp_mode`, `allow_cloud_captures` (request wins; nil = `config.json`).
   Unlike the `allow_*` flags, config is the default, not a ceiling. `guitars` is untrusted text that lands in
   LLM prompts: keep it behind `validGuitars`.
+- **Device tools** (`internal/mcpserver/devicetools.go` over `internal/devicejobs`) are registered only when
+  `DEVICE_JOBS_BUCKET` and `DEVICE_JOB_KEY` are set (a bad value logs and leaves them off; the jobs bucket must differ
+  from the main one). Without them the server has exactly the 9 tools the existing tests pin. Everything read back
+  from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path refuses until P2's
+  exporter replaces `devicejobs.UnavailableExporter` in `cmd/server/main.go`.
 - `qc://style/preset-display` (`internal/mcpserver/style/preset-display.md`, <=40 lines) is the chat presentation
   guide; the server `instructions` summarise it. If you change `RenderPresetMarkdown`'s columns, update the guide
   and `testdata/preset.golden.md` (`go test ./internal/mcpserver -run Golden -update`).

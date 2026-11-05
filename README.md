@@ -101,6 +101,12 @@ claude mcp add --transport http qc2 https://<app>.fly.dev/mcp --header "Authoriz
 - `get_run_prompts`: read the prompts sent to each agent, in slices.
 - `get_agent_output`: read one agent's output, in slices.
 
+**Quad Cortex device tools (optional, off by default).** Set `DEVICE_JOBS_BUCKET` (a bucket separate from `S3_BUCKET`) and `DEVICE_JOB_KEY` (`openssl rand -hex 32`) to add five tools that reach the owner's unit through a home bridge on their PC. QC-2 never talks to the device: it writes HMAC-signed jobs to the jobs bucket and reads the bridge's signed results. Contract: [docs/design/device-job-contract.md](docs/design/device-job-contract.md).
+- `device_status`: is the bridge running (heartbeat under 2 minutes old), firmware, the slots it may write.
+- `send_preset_to_device`: dry run by default (the exact plan plus a `confirm_token`); a second call with `dry_run=false` and the token queues the push. Refused while the bridge is offline. Until the device export (plan P2) lands, every push is refused with "not available yet".
+- `list_device_slots`, `read_device_preset`: queue a read for the bridge and wait for the answer.
+- `get_device_job`: a job's state and result.
+
 **Resources:**
 - `qc://runs/{run_id}/log`: the run log.
 - `qc://runs/{run_id}/prompts/{prompt_key}`: one agent's system and input prompts.

@@ -12,6 +12,8 @@
 #     S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com \
 #     S3_BUCKET=<your-r2-bucket> \
 #     MCP_TOKEN=$(openssl rand -hex 32)
+# Optional, Quad Cortex device bridge (docs/design/device-job-contract.md section 14):
+#   fly secrets set DEVICE_JOBS_BUCKET=<separate-r2-bucket> DEVICE_JOB_KEY=$(openssl rand -hex 32)
 # Claude connector (MCP) setup: see docs/mcp/ and the README's MCP section.
 
 app = "sound-profile-builder"
