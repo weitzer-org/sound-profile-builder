@@ -32,7 +32,10 @@ const readme = "Derived from the Quad Cortex's own device catalog (ModelRepo.xml
 	"included), which is how the device addresses it; names repeat within a model (e.g. one " +
 	"POSITION/DISTANCE/LEVEL/PAN set per mic on dual-mic cabs), so use index to tell them apart. " +
 	"min/max are omitted and min_symbol/max_symbol set when the device uses a named bound " +
-	"(e.g. MAX_CABSIM_DB) whose numeric value lives in firmware -- treat that range as unknown."
+	"(e.g. MAX_CABSIM_DB) whose numeric value lives in firmware; internal/catalog/firmware_constants.go " +
+	"resolves them (with the evidence for each), or refuses when one is unmeasured. skew is the display-to-wire " +
+	"taper exponent (LIN_SKEW=1.0, LOG_SKEW=0.3; absent = linear). param_count is the model's full parameter " +
+	"count with clones resolved and hidden params included; the device's own array has one more trailing slot."
 
 func main() {
 	in := flag.String("in", "", "path to ModelRepo.xml (required)")

@@ -98,7 +98,14 @@ set it will cause the next run to needlessly re-research that entry.
   repo. It's the ground truth for block *names*: `TestCorosMapNamesExistInCatalog` fails if
   a non-capture `coros_map.json` entry's `coros_equivalent` isn't a real model (or mono/stereo
   family) name. Neural Captures aren't in it. Bounds the device gives symbolically (e.g.
-  `MAX_CABSIM_DB`) are left unknown, not guessed.
+  `MAX_CABSIM_DB`) stay symbolic in the JSON (`min_symbol`/`max_symbol`, so the range checks below still
+  skip them). `internal/catalog/firmware_constants.go` resolves them with per-entry evidence (only the cab
+  bounds are confirmed on CorOS 4.1.0; the rest are pyquadcortex 4.0.1 data, MIT) and lists the unmeasured
+  ones (`MIN/MAX_INPUT_TRIM`); `Param.ToWire`/`ToDisplay` (`convert.go`) use it and *refuse* (never clamp)
+  out-of-range, NaN, non-float and unmeasured. The catalog also carries each param's `skew` (taper exponent;
+  none = linear) and each model's `param_count` (full list, hidden included; the device's array is one longer,
+  an unexplained trailing slot, and `Model.ValidParamIndex` rejects any index >= `param_count`). Only one
+  clone family (the dual-mic cab) is checked against the device, not all 196.
   It also feeds the pipeline directly:
   - Every catalog model and family name is a valid block (`GetValidNativeBlocks`). Only amp/cab/drive
     names are fuzzy-snap targets; other categories and every plugin model are exact-match only.
