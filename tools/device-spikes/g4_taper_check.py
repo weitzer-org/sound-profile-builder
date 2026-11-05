@@ -44,7 +44,7 @@ def parse_reading(s: str) -> float | None:
     s = s.strip().lower().replace(",", ".")
     if not s or s in ("s", "skip"):
         return None
-    m = re.match(r"^(-?\d+(?:\.\d+)?)\s*(k)?", s)
+    m = re.match(r"^(-?(?:\d+\.\d+|\d+|\.\d+))\s*(k)?\s*(?:hz|db)?$", s)
     if not m:
         return None
     v = float(m.group(1))

@@ -696,6 +696,18 @@ class G4G6Tests(FakeDeviceCase):
         self.assertEqual(code, sc.EXIT_REFUSED, out)
 
 
+class ParseReadingTests(unittest.TestCase):
+    def test_accepts_plain_numbers_units_and_k(self):
+        import g4_taper_check as g4
+        for text, want in (("217", 217), ("217 Hz", 217), ("1.2k Hz", 1200), ("-21.8 dB", -21.8), (".5", 0.5), (" 6.0 ", 6.0), ("-0.0", 0.0)):
+            self.assertEqual(g4.parse_reading(text), want, text)
+
+    def test_rejects_trailing_junk_and_blanks(self):
+        import g4_taper_check as g4
+        for text in ("10.5xyz", "abc", "", "s", "skip", "1..2", "--5"):
+            self.assertIsNone(g4.parse_reading(text), text)
+
+
 class G1PrintTests(unittest.TestCase):
     def test_extra_slot_is_annotated_even_when_the_xml_list_is_empty(self):
         import g1_dump_params as g1
