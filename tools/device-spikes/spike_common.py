@@ -329,6 +329,27 @@ def load_xml_models(xml_path: Path) -> dict[int, dict]:
     return out
 
 
+def effective_param_count(xml_models: dict[int, dict], model_id: int, _depth: int = 0) -> int | None:
+    """Full parameter count of a model per ModelRepo.xml, hidden ones INCLUDED.
+
+    A clone inherits its base's list; a param with ``replaces`` overrides in place, one without
+    is appended (same reading as internal/catalog/modelrepo.go effectiveParams). Counting hidden
+    params matters: our catalog drops them from its list, so max(index)+1 undercounts.
+    """
+    m = xml_models.get(model_id)
+    if m is None or _depth > 8:
+        return None
+    if not (m.get("clones") or "").strip():
+        return len(m["params"])
+    try:
+        base = effective_param_count(xml_models, int(m["clones"]), _depth + 1)
+    except ValueError:
+        return None
+    if base is None:
+        return None
+    return base + sum(1 for p in m["params"] if not (p.get("replaces") or "").strip())
+
+
 def _is_num(s: str | None) -> bool:
     try:
         float(s)  # type: ignore[arg-type]

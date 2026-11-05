@@ -35,7 +35,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 55 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 56 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 

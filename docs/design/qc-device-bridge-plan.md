@@ -287,16 +287,42 @@ The spikes are in [`tools/device-spikes/`](../../tools/device-spikes/README.md) 
 | Gate | Spike | Status | Result |
 |---|---|---|---|
 | G0 | `g0_verify_slot.py` | **PASS** (owner's unit, 2026-11-05) | Slot 2A (position 8) in My Presets holds "bb king test 2", so the hand-run save did land (read from a fresh `list_directory`, exactly one preset with that name). Unit reports firmware `4.1.0`, `device_type` QC. My Presets has 247 of 256 slots empty (first: 2B, 2C, 2D...). The unit had a different preset open at the time (`/media/p4/Presets/Fender Amps`, position 27), so G1 needs 2A selected by hand first. |
-| G1 | `g1_dump_params.py` | script ready; **not yet run on the unit** | — |
+| G1 | `g1_dump_params.py` | **ANSWERED for the dual-mic cab family; not for all 196 clones** (owner's unit, CorOS 4.1.0, 2026-11-05) | On "bb king test 2" (5 blocks) the device's per-block parameter count N equals the full `ModelRepo.xml` list with `clones=` resolved and hidden params included (EFF), plus one trailing slot, for **every** block: Jewel 6 (EFF 5), Green 808 4 (3), US Prince 5 (4), Spring (M) 6 (5), and the cloned cab "110 US PRN C10R (M)" (12045, clones 12000) **22 (EFF 21)**. qc-mcp's unexpanded reading of that cab is 2 parameters. Our catalog's expansion agrees with the device's layout: per-mic IR-name strings sit at positions 1 and 9 (the two `replaces` indexes), HPF/LPF at 16/17, and the base's two hidden `IR NAME` strings are present as empty strings at 19 and 20. Details in 7.2. |
 | G2 (a)(b)(c) | `g2_session.py --check a/b/c` | script ready; **not yet run on the unit** | — |
 | G3 | `g3_build_and_save.py` | script ready; **not yet run on the unit** | — |
 | G4 | `g4_taper_check.py` | script ready; **not yet run on the unit** | — |
 | G5 | — | not a device gate; settled in the P3 chat | — |
 | G6 | `g6_scenes.py` | script ready; **not yet run on the unit** | — |
 
-**How G1 will be read.** Per qc-mcp (`transport.py` `bypass_param_index`), a full-preset read returns N parameter slots per block, and the bypass control sits at index N and never appears in a read. So the device's N for each block is compared with two lengths: X, the block's own `<Parameter>` list in `ModelRepo.xml` (what qc-mcp indexes by), and O, our catalog's `clones=`-expanded list. For the cloned dual-mic cab the XML lists 2 parameters and our catalog 19 (checked against the pinned XML and `qc_catalog.json`; not against a device). A count match is necessary, not sufficient: the per-position names are also compared against the unit's screen.
+**How G1 was read.** The device's N for each block (length of its params array in a full-preset read) was compared with X, the block's own `<Parameter>` list in `ModelRepo.xml` (what qc-mcp indexes by), O, our catalog's `clones=`-expanded list as listed, and EFF, the XML list with `clones=` resolved and hidden params included. (The first version of the script compared N with O only; O undercounts because our catalog drops hidden params from its list, and the device adds a trailing slot. The script's verdict now uses N = EFF + 1. Fixed in the same PR.) A count match is necessary, not sufficient: names are matched by value shape here and still need the screen (G4).
 
 **Observation from preparing G1 (from the XML, not a device).** In `ModelRepo.xml` at `f634ecd`, Spring (M) (id 8006) has no `clones=`; its 5 parameters are its own. So in "bb king test 2" the **cab** is the cloned block that decides G1, and the Spring reverb is a control (X and O agree for it).
+
+### 7.2 G1 findings (owner's unit, CorOS 4.1.0)
+
+**Measured** (console output pasted by the owner; preset "bb king test 2", unsaved edits: none):
+
+| Block | hash | N (device) | EFF (XML, hidden included) | X (XML own list) | O (our catalog, listed) |
+|---|---|---|---|---|---|
+| Jewel | 5011 | 6 | 5 | 5 | 5 |
+| Green 808 | 5 | 4 | 3 | 3 | 3 |
+| US Prince | 1120 | 5 | 4 | 4 | 4 |
+| 110 US PRN C10R (M), clones 12000 | 12045 | 22 | 21 | 2 | 19 |
+| Spring (M) | 8006 | 6 | 5 | 5 | 5 |
+
+- **N = EFF + 1 for all five blocks.** There is one extra slot after the XML's list on every block, with value 0.0 across all eight scene values.
+- **The cab's layout matches our expansion.** Positions 1 and 9 hold the two per-mic IR-name strings (`ME_110 US PRN C10R_Dynamic 57`, `..._Ribbon 160`), exactly the base's `replaces="1"` and `"9"` slots. Positions 19 and 20 hold empty strings, the base's two hidden `IR NAME` params, which our catalog drops from its list but whose indexes it keeps. Position 21 is the extra slot. HPF (16) is 0.0 and LPF (17) is 1.0, the min and max ends of the base's defaults (20 Hz, 20 kHz).
+- **qc-mcp's unexpanded reading is wrong for cabs:** it lists 2 parameters where the device has 22.
+- **Every param reports 8 values** (scenes A-H), even non-scene ones (replicated). Scene-assigned params differ by scene (Green 808 LEVEL 0.50 / 0.65; US Prince VOLUME 0.35 / 0.42 / 0.30 ...). P5's read-back import has to take this shape into account.
+
+**Inference, not measured (labelled):** the stored wire values 0.5 (US Prince OUTPUT; cab LEVEL, both mics) and 0.5595 (cab OUTPUT VOLUME) equal the taper formula's output for **0 dB** to four digits, with skews 3.8018 / 4.9594844 / 4.93 and ranges -60..+12, -40..+6 (the symbolic CABSIM bound) and -96..+12: `((0-min)/(max-min))^skew` = 0.5000 / 0.5000 / 0.5595. A linear map would give 0.8333 and 0.8696. This assumes those params sit at the XML default of 0 dB in this preset; the screen was not read. It supports the P1 constants but G4's screen readings are the real test.
+
+**Not established:**
+- Only **one** cloned model was checked (a cab cloning 12000). The other clone families (e.g. shimmer reverbs whose appended params follow the base) are unverified, so "all 196" is not settled.
+- Parameter **names** per position are not confirmed against the unit's screen, only the value shapes above.
+- What the extra trailing slot is. qc-mcp documents the bypass control at index N (one past the whole read), which would make this slot something else. **Unknown.** Until it is understood, the device export and the agent must treat any index >= EFF as invalid and never write it.
+
+**Consequence for P1:** the catalog's clone expansion stands for the dual-mic cab; no importer change is needed from this result. P1 should add a test that EFF (hidden included) equals the device's N minus one for the models that have been read back, and the agent's allowlist should reject param indexes >= EFF.
 
 **If G1 shows our catalog's clone expansion is wrong,** fix the importer **first**. That also affects PR #120's Architect parameter context and the preset views. **If G2 (c) fails** (the unit going away isn't detected), keep only the idle-timeout exit. **If G3 shows a write misbehaving,** that operation stays out of v1 until it's understood. That includes per-scene parameters (also G6).
 

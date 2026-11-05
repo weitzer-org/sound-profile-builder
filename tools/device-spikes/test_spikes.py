@@ -335,31 +335,36 @@ class G0Tests(FakeDeviceCase):
 
 
 class G1Tests(FakeDeviceCase):
-    def preset_with(self, cab_params, spring_params=5):
+    def preset_with(self, cab_params, spring_params=None):
+        # Real unit (2026-11-05): every block's N is the XML's full list + 1 trailing slot.
         bp = self.blank_preset("bb king test 2")
-        self.put_block(bp, 0, 1, 1001)
-        self.put_block(bp, 0, 2, 12001, n_params=cab_params)
-        self.put_block(bp, 0, 3, 8006, n_params=spring_params)
+        self.put_block(bp, 0, 1, 1001, n_params=7 + 1)
+        self.put_block(bp, 0, 2, 12045 if 12045 in self.xml else 12001, n_params=cab_params)
+        self.put_block(bp, 0, 3, 8006, n_params=spring_params or 5 + 1)
         return bp
 
+    def test_effective_count_includes_hidden_params(self):
+        self.assertEqual(sc.effective_param_count(self.xml, 12000), 21)   # base: 19 and 20 are hidden IR NAMEs
+        self.assertEqual(sc.effective_param_count(self.xml, 12001), 21)   # two replaces, nothing appended
+        self.assertEqual(sc.effective_param_count(self.xml, 8006), 5)
+        self.assertIsNone(sc.effective_param_count(self.xml, 999999))
+
     def test_expansion_supported(self):
-        qc = self.fake(bp=self.preset_with(19))
+        qc = self.fake(bp=self.preset_with(22))   # the real unit's cab: 21 + 1
         code, out, data = self.run_script("g1_dump_params", [], qc)
         self.assertEqual(code, sc.EXIT_OK, out)
         self.assertEqual(data["verdict"], "COUNTS_SUPPORT_OUR_EXPANSION")
-        cab = [b for b in data["blocks"] if b["hash"] == 12001][0]
-        self.assertEqual((cab["n_device_params"], cab["n_x"], cab["n_o"]), (19, 2, 19))
-        self.assertIn("binary_preset_hex", data)
+        cab = [b for b in data["blocks"] if b["xml_clones"]][0]
+        self.assertEqual((cab["n_device_params"], cab["n_eff"], cab["n_x"], cab["n_o"]), (22, 21, 2, 19))
+        self.assertEqual(cab["verdict"], "EFF_PLUS_ONE")
         self.assertEqual(bytes.fromhex(data["binary_preset_hex"]), qc.bp.SerializeToString())
 
     def test_unexpanded_supported(self):
-        qc = self.fake(bp=self.preset_with(2))
-        _, _, data = self.run_script("g1_dump_params", [], qc)
+        _, _, data = self.run_script("g1_dump_params", [], self.fake(bp=self.preset_with(3)))   # X=2, +1
         self.assertEqual(data["verdict"], "COUNTS_SUPPORT_UNEXPANDED")
 
     def test_neither(self):
-        qc = self.fake(bp=self.preset_with(11))
-        _, _, data = self.run_script("g1_dump_params", [], qc)
+        _, _, data = self.run_script("g1_dump_params", [], self.fake(bp=self.preset_with(11)))
         self.assertEqual(data["verdict"], "COUNTS_DO_NOT_DECIDE")
 
     def test_refuses_wrong_open_slot(self):

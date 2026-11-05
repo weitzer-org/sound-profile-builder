@@ -9,13 +9,14 @@ then lines each block up against two catalogs:
   O = our internal/catalog/qc_catalog.json, which expands ``clones=`` (base params first,
       ``replaces=`` overriding in place, new ones appended). A cab goes from 2 to 19 params.
 
-The decisive number per block is N, the length of the device's params array.
-qc-mcp documents that a read returns N param slots and the bypass control sits at index N,
-never in the read (transport.py bypass_param_index). So:
+The decisive number per block is N, the length of the device's params array, compared with:
 
-  N == len(O)            -> our clone expansion matches the device's count.
-  N == len(X) != len(O)  -> the device uses the unexpanded list; our catalog's indexes are wrong.
-  neither                -> something else (hidden params, a different layout); read the table.
+  EFF = the model's full parameter count per ModelRepo.xml with clones= resolved and hidden params
+        INCLUDED (our catalog drops hidden params from its list, so its max index undercounts).
+
+First hardware result (2026-11-05, see plan section 7.1): every block, cloned or not, had N = EFF + 1,
+i.e. one extra trailing slot after the XML's list. So the verdict below is N == EFF + 1, not N == EFF.
+The unexpanded XML reading X would give 2 (+1) for a cab, nowhere near the device's 22.
 
 Count alone does not prove the NAMES line up, so a per-position table is printed too. The values
 are the device's raw normalised floats; compare them with what the unit's screen shows for that
@@ -49,12 +50,13 @@ def block_report(ridx, cidx, m, xml_models, our_models, qc_cat) -> dict:
         "values": sc.param_values_all(p),
     } for pos, p in enumerate(m.params)]
     n = len(dev)
+    eff = sc.effective_param_count(xml_models, h) if x else None
 
     x_params = x["params"] if x else []
     o_by_idx = {p["index"]: p for p in (o["params"] if o else [])}
     o_len = (max(o_by_idx) + 1) if o_by_idx else 0
     rows = []
-    for pos in range(max(n, len(x_params), o_len)):
+    for pos in range(max(n, len(x_params), o_len, eff or 0)):
         xp = x_params[pos] if pos < len(x_params) else None
         op = o_by_idx.get(pos)
         d = dev[pos] if pos < n else None
@@ -66,14 +68,20 @@ def block_report(ridx, cidx, m, xml_models, our_models, qc_cat) -> dict:
                   ({"name": "(hidden or absent in our catalog)"} if (pos < o_len) else None)),
             "names_agree": bool(xp and op and (xp.get("name") or "").lower() == (op.get("name") or "").lower()),
         })
-    verdict = ("O_COUNT_MATCHES" if n == o_len and n != len(x_params) else
-               "X_COUNT_MATCHES" if n == len(x_params) and n != o_len else
-               "BOTH_COUNT_MATCH" if n == o_len == len(x_params) else
-               "NEITHER_COUNT_MATCHES")
+    if eff is None:
+        verdict = "UNKNOWN_MODEL"
+    elif n == eff + 1:
+        verdict = "EFF_PLUS_ONE"
+    elif n == eff:
+        verdict = "EFF_EXACT"
+    elif x and (x.get("clones") or "").strip() and n in (len(x_params), len(x_params) + 1):
+        verdict = "UNEXPANDED_COUNT"
+    else:
+        verdict = "OTHER"
     return {
         "grid": {"row_idx": ridx, "array_idx": cidx, "column_field": m.column},
         "hash": h, "name": (o or {}).get("name") or info.get("name"), "category": (x or {}).get("category") or info.get("category"),
-        "xml_clones": (x or {}).get("clones"), "n_device_params": n, "n_x": len(x_params), "n_o": o_len,
+        "xml_clones": (x or {}).get("clones"), "n_device_params": n, "n_x": len(x_params), "n_o": o_len, "n_eff": eff,
         "n_o_listed": len(o_by_idx), "verdict": verdict, "rows": rows,
     }
 
@@ -83,9 +91,10 @@ def print_block(b: dict, verbose: bool) -> None:
     sc.say("")
     sc.say(f"--- chain {g['row_idx']} / array slot {g['array_idx']}: {b['name']!r} (hash {b['hash']}, {b['category']})"
            + (f", clones={b['xml_clones']}" if b["xml_clones"] else ""))
-    sc.say(f"    N (device params) = {b['n_device_params']}   X (xml own) = {b['n_x']}   O (ours) = {b['n_o']}   -> {b['verdict']}")
-    if not verbose and b["verdict"] == "BOTH_COUNT_MATCH" and all(r["names_agree"] or r["x"] is None for r in b["rows"]):
-        sc.say("    (counts and names agree under both schemes; per-position table omitted, use --all)")
+    sc.say(f"    N (device) = {b['n_device_params']}   EFF (xml, clones resolved, hidden included) = {b['n_eff']}   "
+           f"X (xml own list) = {b['n_x']}   O (ours, listed) = {b['n_o']}   -> {b['verdict']}")
+    if not verbose and b["verdict"] == "EFF_PLUS_ONE" and not b["xml_clones"]:
+        sc.say("    (N = EFF + 1 and no clone involved; per-position table omitted, use --all)")
         return
     sc.say(f"    {'pos':>3}  {'device value(s)':<26} {'X name':<22} {'O name':<22} {'O range':<18} agree")
     for r in b["rows"]:
@@ -98,6 +107,8 @@ def print_block(b: dict, verbose: bool) -> None:
             lo = o.get("min") if o.get("min") is not None else o.get("min_symbol")
             hi = o.get("max") if o.get("max") is not None else o.get("max_symbol")
             orng = f"{lo}..{hi}"
+        if r["pos"] == (b["n_eff"] or -1) and d:
+            dv += "  <extra slot beyond the XML list>"
         sc.say(f"    {r['pos']:>3}  {dv:<26} {(x or {}).get('name') or '':<22} {(o or {}).get('name') or '':<22} {orng:<18} "
                f"{'yes' if r['names_agree'] else ('-' if not (x and o) else 'NO')}")
 
@@ -165,23 +176,22 @@ def main() -> int:
         result["blocks"] = blocks
         sc.say(f"\n{len(blocks)} block(s) placed. Per-block comparison:")
         for b in blocks:
-            print_block(b, args.all or b["verdict"] != "BOTH_COUNT_MATCH")
+            print_block(b, args.all or b["xml_clones"] or b["verdict"] != "EFF_PLUS_ONE")
 
         sc.banner("G1 summary")
-        sc.say(f"{'block':<32} {'hash':>6} {'N':>3} {'X':>3} {'O':>3}  verdict")
+        sc.say(f"{'block':<32} {'hash':>6} {'N':>3} {'EFF':>3} {'X':>3} {'O':>3}  verdict")
         for b in blocks:
-            sc.say(f"{(b['name'] or '?')[:32]:<32} {b['hash']:>6} {b['n_device_params']:>3} {b['n_x']:>3} {b['n_o']:>3}  {b['verdict']}")
+            sc.say(f"{(b['name'] or '?')[:32]:<32} {b['hash']:>6} {b['n_device_params']:>3} {str(b['n_eff']):>3} {b['n_x']:>3} {b['n_o']:>3}  {b['verdict']}")
         clones = [b for b in blocks if b["xml_clones"]]
         result["clone_blocks"] = [b["name"] for b in clones]
         if not clones:
             sc.say("\nNo placed block uses clones=, so this preset cannot decide G1. Pick a preset with a cab.")
             result["verdict"] = "INCONCLUSIVE_NO_CLONES"
             return sc.EXIT_CHECK_FAILED
-        o_ok = all(b["n_device_params"] == b["n_o"] for b in clones)
-        x_ok = all(b["n_device_params"] == b["n_x"] for b in clones)
-        result["verdict"] = ("COUNTS_SUPPORT_OUR_EXPANSION" if o_ok and not x_ok else
-                             "COUNTS_SUPPORT_UNEXPANDED" if x_ok and not o_ok else
-                             "COUNTS_DO_NOT_DECIDE")
+        eff_ok = all(b["verdict"] in ("EFF_PLUS_ONE", "EFF_EXACT") for b in clones)
+        unexp = all(b["verdict"] == "UNEXPANDED_COUNT" for b in clones)
+        result["verdict"] = ("COUNTS_SUPPORT_OUR_EXPANSION" if eff_ok else
+                             "COUNTS_SUPPORT_UNEXPANDED" if unexp else "COUNTS_DO_NOT_DECIDE")
         sc.say(f"\nCloned blocks: {[b['name'] for b in clones]}")
         sc.say(f"Count-level result: {result['verdict']}")
         sc.say("(Counts are necessary, not sufficient: the name table above must also agree with the unit's screen.)")
