@@ -429,25 +429,25 @@ func TestFlagIncompleteCabinetBlocks(t *testing.T) {
 	FlagIncompleteCabinetBlocks(sp)
 
 	blocks := sp.Guitars["Guitar 1"]
-	if strings.Contains(blocks[0].Rationale, "⚠️") {
+	if strings.Contains(blocks[0].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected complete Cabinet block to get no warning, got %q", blocks[0].Rationale)
 	}
-	if !strings.Contains(blocks[1].Rationale, "⚠️") {
+	if !strings.Contains(blocks[1].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing all mic-placement params to be flagged, got %q", blocks[1].Rationale)
 	}
-	if !strings.Contains(blocks[2].Rationale, "⚠️") {
+	if !strings.Contains(blocks[2].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected Cabinet block missing just Blend to still be flagged, got %q", blocks[2].Rationale)
 	}
-	if strings.Contains(blocks[3].Rationale, "⚠️") {
+	if strings.Contains(blocks[3].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected non-Cabinet block to never be checked, got %q", blocks[3].Rationale)
 	}
-	if strings.Contains(blocks[4].Rationale, "⚠️") {
+	if strings.Contains(blocks[4].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected the per-mic-level convention to count as complete, got %q", blocks[4].Rationale)
 	}
-	if !strings.Contains(blocks[5].Rationale, "⚠️") {
+	if !strings.Contains(blocks[5].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected a cab with only MIC 1 LEVEL to be flagged, got %q", blocks[5].Rationale)
 	}
-	if !strings.Contains(blocks[6].Rationale, "⚠️") {
+	if !strings.Contains(blocks[6].Rationale, cabinetIncompleteNote) {
 		t.Errorf("expected a cab with MIC n LEVEL/POSITION but no Mic 1/Mic 2 choice to be flagged, got %q", blocks[6].Rationale)
 	}
 }

@@ -124,9 +124,12 @@ var interLetterHyphen = regexp.MustCompile(`([A-Z])-([A-Z])`)
 func paramNameKey(name string) string {
 	s := strings.ToUpper(strings.TrimSpace(name))
 	s = interLetterHyphen.ReplaceAllString(s, "$1$2")
-	s = strings.NewReplacer(" ", "", "_", "", "\t", "").Replace(s)
-	return s
+	return paramKeyStripper.Replace(s)
 }
+
+// paramKeyStripper drops the separators paramNameKey ignores. Built once: a Replacer
+// compiles its lookup table at construction.
+var paramKeyStripper = strings.NewReplacer(" ", "", "_", "", "\t", "")
 
 // slotPrefix is how a repeated per-slot parameter is labelled: "MIC 1 LEVEL" on cabs,
 // "IR 1 LEVEL" on dual IR loaders.
