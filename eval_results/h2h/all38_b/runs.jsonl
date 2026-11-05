@@ -1,0 +1,3 @@
+{"scenario":"ALL38","query":"08_EVH","rep":1,"success":true,"output_file":"eval_results/h2h/all38_b/ALL38/rep1/08_EVH.html","latency_sec":180.854200429,"integrity_ok":true,"calls_file":"eval_results/h2h/all38_b/ALL38/rep1/08_EVH.calls.json"}
+{"scenario":"ALL38","query":"09_BB_King","rep":1,"success":true,"output_file":"eval_results/h2h/all38_b/ALL38/rep1/09_BB_King.html","latency_sec":122.199624871,"integrity_ok":true,"calls_file":"eval_results/h2h/all38_b/ALL38/rep1/09_BB_King.calls.json"}
+{"scenario":"ALL38","query":"10_Slash","rep":1,"success":true,"output_file":"eval_results/h2h/all38_b/ALL38/rep1/10_Slash.html","latency_sec":139.497702662,"integrity_ok":true,"calls_file":"eval_results/h2h/all38_b/ALL38/rep1/10_Slash.calls.json"}

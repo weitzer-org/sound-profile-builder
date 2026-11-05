@@ -79,19 +79,12 @@ func agentMaxOutputTokens(key string) int32 {
 	return caps[key] // 0 (unset) leaves the API default in place for anything unrecognized
 }
 
-// agentThinkingBudget caps thinking tokens for agents whose MaxOutputTokens cap was being
-// consumed by thinking alone. MaxOutputTokens counts thinking (Phase 0.5e), and gemini-3.8-flash
-// on the Architect twice spent 15,359 of its 16,000 tokens thinking and returned 627 tokens of
-// truncated JSON (Phase 2 S2). 8,192 leaves ~7,800 tokens for a ~4-5k-token answer. Argon reports 0
-// thinking tokens at default settings; 3.1 Pro thinks ~4.6k on this agent (under the cap).
-func agentThinkingBudget(key string) *int32 {
-	switch key {
-	case "12_architect":
-		b := int32(8192)
-		return &b
-	}
-	return nil
-}
+// No per-agent thinking budget: one was tried for 12_architect (8192) to stop gemini-3.8-flash's
+// thinking consuming the 16,000-token cap, and VERIFIED NOT TO WORK (2026-11-05,
+// eval_results/phase1/architect_budget/flash38): 1 of 15 calls still spent 15,361 tokens thinking
+// and truncated (09_BB_King, the same 15,359-15,361 signature as the Phase 2 failures), although a
+// 512 budget did reduce thinking to 0. Production routes the Architect to gemini-4-argon, which
+// does not think at default settings, so this only matters on the 3.8 Flash fallback path.
 
 // agentSearchTool returns the Google Search grounding tool for agents whose prompts are
 // written as if they already have live search access. Tier 0 wired this for the two

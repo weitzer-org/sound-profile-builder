@@ -1,0 +1,386 @@
+{
+  "agent_impact": [
+    "<strong>Agent 1 (Tone Historian):</strong> Identified the target classic blues-rock platform based on a cranked Marshall JTM45/100 into a 4x12 Celestion Greenback cab with a Clyde McCoy wah, establishing the vintage power-tube overdrive sonic foundation.",
+    "<strong>Agent 2 (Sonic Profiler):</strong> Defined the saturation envelope as cranked power-tube overdrive with a dark, rolled-off 'Woman Tone' profile, establishing low-cut at 80 Hz and high-cut ceiling at 5.5 kHz with a vintage room reverb space.",
+    "<strong>Agent 3 (Community Scraper):</strong> Warned against fizzy high-end transients typical of cranked Plexi/JTM models without steep filtering, advocating a post-cab parametric low-pass filter around 4.5 kHz to 5.5 kHz and low-end mud prevention.",
+    "<strong>Agent 4 (Gear Librarian):</strong> Selected the native algorithmic 'Brit TM45 Patch' amp model and '412 Brit 60B GB 90s' cab block, paired with 'Crying Clyde Wah', 'Brit Blues', and 'Parametric-3' EQ blocks while enforcing proper signal order.",
+    "<strong>Agent 5 (Cloud Navigator):</strong> Enforced the local hardware constraints by ignoring cloud captures and strictly routing native Quad Cortex DSP blocks and factory assets.",
+    "<strong>Agent 6 (Acoustician):</strong> Compensated for Gibson ES-339 humbucker output with a -3.0 dB input gain adjustment, trimmed bass to 3.5, and re-voiced EQ and drive settings for the Fender Telecaster to prevent single-coil shrillness.",
+    "<strong>Agent 7 (Transducer Technician):</strong> Configured the 4x12 cab with an SM57 dynamic at the cap edge (1.0 inch) blended at 55% with an off-axis Royer R-121 ribbon at the cone edge (2.0 inches) for optimal low-mid body and smooth highs.",
+    "<strong>Agent 8 (FOH Engineer):</strong> Implemented structural high/low bandpass filtering (80 Hz to 6.5 kHz) and set output lane headroom to -3.0 dB to prevent digital clipping under dual-scene boosts.",
+    "<strong>Agent 9 (Mix Engineer):</strong> Integrated vintage room reverb space (1.8s decay, 20% mix) and calibrated a 375 ms analog-style slapback delay to enhance lead sustain in Scene B.",
+    "<strong>Agent 10 (Control Mapper):</strong> Created seamless dual-scene switching: Scene A provides rhythm power-amp crunch with Brit Blues bypassed, while Scene B kicks in Brit Blues boost, pushes amp master/drive, and lowers low-pass filter to 4.5 kHz for soaring lead tone.",
+    "<strong>Agent 11 (DSP Architect):</strong> Mapped the complete 2-lane topology placing wah and drives in series ahead of the Brit TM45 amplifier block on Lane 1, routing Lane 2 into the 4x12 cab, parametric cut, and time-based ambient blocks."
+  ],
+  "builder_statement": "Designed around a cranked Marshall JTM45/100 and a 1960B 4x12 Greenback cabinet, this preset delivers authentic vintage British power-amp saturation. Featuring an upfront Clyde McCoy wah, a transparent Brit Blues boost for solo push, and dedicated post-cab parametric high-cut filtering, it captures creamy, vocal blues-rock sustain while remaining perfectly calibrated across humbucker and single-coil instruments.",
+  "structured_payload": {
+    "guitars": {
+      "Gibson ES-339 Humbuckers": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "5.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "6.5"
+            }
+          ],
+          "rationale": "Emulates the iconic Clyde McCoy vocal wah front-loaded into the preamp stage.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "4.0"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.5"
+            }
+          ],
+          "rationale": "Acts as an authentic low-gain Bluesbreaker boost engaged in Scene B to push the cranked amp into fluid lead sustain.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit TM45 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "8.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.0",
+              "value_b": "7.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "4.0",
+              "value_b": "3.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.0",
+              "value_b": "9.0"
+            }
+          ],
+          "rationale": "Algorithmic JTM45 model delivering natural power-tube sag and touch sensitivity, dialled dark to prevent shrillness with ES-339 humbuckers.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit 60B GB 90s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "57 Dynamic - Cap Edge, 1.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "121 Ribbon - Cone Edge, 45-degree off-axis, 2.0 inch distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "55"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5500"
+            }
+          ],
+          "rationale": "Vintage Greenback loaded 4x12 cabinet delivering warm woody midrange and subdued top-end resonance.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Pass",
+              "type": "slider",
+              "value": "80"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Pass",
+              "type": "slider",
+              "value": "5500",
+              "value_b": "4500"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.0",
+              "value_b": "1.5"
+            }
+          ],
+          "rationale": "Recreates the iconic rolled-off 'Woman Tone' profile with a steep low-pass filter tapering out harsh upper harmonics.",
+          "type": "EQ"
+        }
+      ],
+      "Fender Telecaster Single Coil": [
+        {
+          "id": "block-1",
+          "model": "Crying Clyde Wah",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Frequency",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Q",
+              "type": "slider",
+              "value": "5.8"
+            }
+          ],
+          "rationale": "Slightly warmer sweep frequency to prevent thinness on single-coil bridge pickups.",
+          "type": "Wah"
+        },
+        {
+          "id": "block-2",
+          "model": "Brit Blues",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "On",
+              "value_b": "Off"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Drive",
+              "type": "slider",
+              "value": "4.2"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Tone",
+              "type": "slider",
+              "value": "3.5"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Level",
+              "type": "slider",
+              "value": "7.8"
+            }
+          ],
+          "rationale": "Compensates for lower-output Telecaster single coils with higher drive and rolled-off tone knob.",
+          "type": "Overdrive"
+        },
+        {
+          "id": "block-3",
+          "model": "Brit TM45 Patch",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Gain",
+              "type": "slider",
+              "value": "6.8",
+              "value_b": "9.0"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Bass",
+              "type": "slider",
+              "value": "4.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mid",
+              "type": "slider",
+              "value": "6.5",
+              "value_b": "7.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Treble",
+              "type": "slider",
+              "value": "3.2",
+              "value_b": "2.8"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Presence",
+              "type": "slider",
+              "value": "3.0",
+              "value_b": "2.5"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Master Volume",
+              "type": "slider",
+              "value": "8.5",
+              "value_b": "9.2"
+            }
+          ],
+          "rationale": "Compensated EQ with boosted bass, lower presence, and reduced treble to give Telecaster single coils authoritative body and warmth.",
+          "type": "Amplifier"
+        },
+        {
+          "id": "block-4",
+          "model": "412 Brit 60B GB 90s",
+          "parameters": [
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 1",
+              "type": "dropdown",
+              "value": "57 Dynamic - Cap Edge, 1.0 inch distance"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Mic 2",
+              "type": "dropdown",
+              "value": "121 Ribbon - Cone Edge, 45-degree off-axis, 2.0 inch distance"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Blend",
+              "type": "slider",
+              "value": "45"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Low Cut",
+              "type": "slider",
+              "value": "80"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "High Cut",
+              "type": "slider",
+              "value": "5000"
+            }
+          ],
+          "rationale": "Cab blend shifted toward the Royer 121 ribbon mic to tame single-coil bite and enrich lower midrange fullness.",
+          "type": "Cabinet"
+        },
+        {
+          "id": "block-5",
+          "model": "Parametric-3",
+          "parameters": [
+            {
+              "basis": "engineering_convention",
+              "name": "Bypass",
+              "type": "toggle",
+              "value": "Off"
+            },
+            {
+              "basis": "confirmed_range",
+              "name": "High Pass",
+              "type": "slider",
+              "value": "80"
+            },
+            {
+              "basis": "real_gear_analog",
+              "name": "Low Pass",
+              "type": "slider",
+              "value": "5000",
+              "value_b": "4200"
+            },
+            {
+              "basis": "engineering_convention",
+              "name": "Gain",
+              "type": "slider",
+              "value": "0.5",
+              "value_b": "2.0"
+            }
+          ],
+          "rationale": "Stricter low-pass cut applied at 5.0 kHz / 4.2 kHz to keep the Telecaster bridge pickup within creamy vocal overdrive territory.",
+          "type": "EQ"
+        }
+      ]
+    }
+  }
+}
