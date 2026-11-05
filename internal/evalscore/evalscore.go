@@ -38,9 +38,10 @@ type ambiguous struct {
 }
 
 type checklistFile struct {
-	Patterns       map[string]string     `json:"patterns"`
-	Queries        map[string]queryEntry `json:"queries"`
-	AmbiguousNames map[string]ambiguous  `json:"ambiguous_names"`
+	Patterns        map[string]string     `json:"patterns"`
+	Queries         map[string]queryEntry `json:"queries"`
+	AmbiguousNames  map[string]ambiguous  `json:"ambiguous_names"`
+	AmpNamePrefixes map[string]string     `json:"amp_name_prefixes"`
 }
 
 // UserCapture is the minimal view of a user capture the scorer needs to classify a name.
