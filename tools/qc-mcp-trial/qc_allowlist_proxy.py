@@ -189,6 +189,10 @@ class Proxy:
         self._internal: dict[str, queue.Queue] = {}
         self._list_ids: set = set()
         self._lock = threading.Lock()
+        # Newer MCP clients (protocol 2026-07-28) put an envelope in params._meta on every
+        # request, and the server rejects requests without it. The proxy's own safety
+        # checks must carry the client's envelope too. It is None for older clients.
+        self._client_meta: dict | None = None
         # Binary pipes, encoded by hand: text-mode pipes on Windows use the local code
         # page and turn "\n" into "\r\n", which would corrupt MCP's UTF-8 JSON lines.
         self.child = subprocess.Popen(child_cmd, stdin=subprocess.PIPE,
@@ -235,8 +239,11 @@ class Proxy:
         q: queue.Queue = queue.Queue(maxsize=1)
         with self._lock:
             self._internal[rid] = q
+        params: dict = {"name": name, "arguments": arguments}
+        if self._client_meta is not None:
+            params["_meta"] = dict(self._client_meta)
         self._to_child({"jsonrpc": "2.0", "id": rid, "method": "tools/call",
-                        "params": {"name": name, "arguments": arguments}})
+                        "params": params})
         try:
             msg = q.get(timeout=INTERNAL_TIMEOUT_S)
         except queue.Empty:
@@ -345,6 +352,11 @@ class Proxy:
                         "error": {"code": -32600, "message": "batches are not supported"}})
             return
         method = msg.get("method")
+        meta = (msg.get("params") or {}).get("_meta") if isinstance(msg.get("params"), dict) else None
+        if isinstance(meta, dict) and any(k.startswith("io.modelcontextprotocol/") for k in meta):
+            # Keep the protocol envelope only. progressToken belongs to one request.
+            self._client_meta = {k: v for k, v in meta.items()
+                                 if k.startswith("io.modelcontextprotocol/")}
         if method == "tools/list" and "id" in msg:
             with self._lock:
                 self._list_ids.add(msg["id"])

@@ -64,6 +64,12 @@ FAKE_CHILD = textwrap.dedent(r'''
             with open(log_path, "a") as fh:
                 fh.write(json.dumps({"name": name, "args": args, "id": rid}) + "\n")
             st = json.load(open(state_path))
+            if st.get("require_meta") and "io.modelcontextprotocol/protocolVersion" not in (
+                    msg["params"].get("_meta") or {}):
+                print(json.dumps({"jsonrpc": "2.0", "id": rid, "error": {
+                    "code": -32602, "message": "params._meta must be an object carrying "
+                    "the required envelope keys"}}), flush=True)
+                continue
             if name == "device_info":
                 reply(rid, {"firmware": st["firmware"]})
             elif name == "current_preset_position":
@@ -112,12 +118,13 @@ class Harness:
         self.request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
                                     "clientInfo": {"name": "t", "version": "0"}})
 
-    def set_state(self, firmware="4.1.0", position=None, source="device", empty=(SLOT,)):
+    def set_state(self, firmware="4.1.0", position=None, source="device", empty=(SLOT,),
+                  require_meta=False):
         pos = position if position is not None else {
             "folder_key": SETLIST, "position": SLOT, "is_factory": False}
         with open(self.state_path, "w") as fh:
             json.dump({"firmware": firmware, "position": pos, "source": source,
-                       "empty": list(empty)}, fh)
+                       "empty": list(empty), "require_meta": require_meta}, fh)
 
     def request(self, method, params=None):
         self._id += 1
@@ -126,8 +133,11 @@ class Harness:
         self._w.flush()
         return self.out.wait_for(self._id)
 
-    def call(self, _tool, **args):
-        return self.request("tools/call", {"name": _tool, "arguments": args})
+    def call(self, _tool, _meta=None, **args):
+        params = {"name": _tool, "arguments": args}
+        if _meta is not None:
+            params["_meta"] = _meta
+        return self.request("tools/call", params)
 
     def calls(self):
         if not os.path.exists(self.log_path):
@@ -319,6 +329,24 @@ class ProxyBehaviour(unittest.TestCase):
         r = self.h.call("find_devices", query="Myth")
         self.assertEqual(text(r), "Based on Klon\u00ae Centaur\u00ae")
         self.assertTrue(all(line.isascii() for line in self.h.out.raw_lines))
+
+    def test_modern_client_envelope_is_copied_to_safety_checks(self):
+        self.h = Harness(self.tmp.name, require_meta=True)
+        env = {"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+               "io.modelcontextprotocol/clientCapabilities": {}, "progressToken": "abc"}
+        r = self.h.call("add_block", _meta=env, row=0, column=1, device_hash=1)
+        self.assertFalse(r["result"]["isError"], r)
+        calls = self.h.calls()
+        self.assertEqual([c["name"] for c in calls],
+                         ["device_info", "current_preset_position", "add_block"])
+        # progressToken stays with the request it belonged to, and is not copied
+        self.assertTrue(self.h.proxy._client_meta)
+        self.assertNotIn("progressToken", self.h.proxy._client_meta)
+
+    def test_without_envelope_nothing_is_added(self):
+        self.h = Harness(self.tmp.name)
+        self.h.call("add_block", row=0, column=1, device_hash=1)
+        self.assertIsNone(self.h.proxy._client_meta)
 
     def test_save_refused_for_other_slot(self):
         self.h = Harness(self.tmp.name)
