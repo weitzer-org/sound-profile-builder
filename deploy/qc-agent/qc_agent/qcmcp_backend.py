@@ -615,15 +615,19 @@ def _make_list_directory_raw(mods):
             cls = P.message_class("File")
             m = cls(action=P.ACTION["READ"], request_id=self.next_request_id())
             self.send("File", m)
-            deadline = time.monotonic() + timeout_ms / 1000.0
+            t0 = time.monotonic()
+            deadline = t0 + timeout_ms / 1000.0
             last = time.monotonic()
             folders, nfiles = [], 0
+            timing = _ListingTiming(t0)
             while time.monotonic() < deadline:
                 self._collect(0.15)
                 got = False
                 keep = []
                 for item in self._pending:
                     cmd, obj, _raw, _pb = item
+                    if cmd == want and obj is not None:
+                        timing.saw(obj, _pb)
                     if cmd == want and obj is not None and obj.HasField("folder"):
                         folders.append(obj)
                         nfiles += len(obj.folder.files)
@@ -639,12 +643,50 @@ def _make_list_directory_raw(mods):
                 if got:
                     last = time.monotonic()
                 elif folders and (time.monotonic() - last) * 1000 > quiet_ms:
+                    timing.log("complete", len(folders), nfiles)
                     return folders  # the stream went quiet: complete
             # Upstream returns whatever arrived by the deadline; a listing cut off mid-stream could hide a
             # preset or a second capture with the same name, so it is refused here.
+            timing.log("did not finish", len(folders), nfiles)
             raise DeviceError("the unit's directory listing did not finish in time")
 
     return list_directory_raw
+
+
+class _ListingTiming:
+    """Where a directory listing's time goes (issue #164), as one log line of numbers (no device text):
+    time to the first folder message, the stream from first to last folder, the quiet tail the loop waits
+    after the last one, the longest gap between two folder messages (how short a quiet window could be;
+    resolution is the 0.15 s collect slice), the payload size, and the `user_content_estimate` count if the
+    unit sent one (qc-mcp's DIRECTORY.md saw it open the user-only stream; whether the full READ sends it is
+    unknown)."""
+
+    def __init__(self, t0):
+        self.t0 = t0
+        self.first = self.last = None
+        self.nbytes = 0
+        self.max_gap = 0.0
+        self.estimate = None
+
+    def saw(self, obj, pb):
+        now = time.monotonic()
+        if obj.HasField("folder"):
+            self.first = self.first if self.first is not None else now
+            if self.last is not None:
+                self.max_gap = max(self.max_gap, now - self.last)
+            self.last = now
+            self.nbytes += len(pb)
+        elif obj.HasField("user_content_estimate"):
+            self.estimate = int(obj.user_content_estimate)
+
+    def log(self, how, nfolders, nfiles):
+        end = time.monotonic()
+        first = self.first if self.first is not None else end
+        last = self.last if self.last is not None else first
+        log.info("listing %s in %.2f s: first folder after %.2f s, stream %.2f s (longest gap %.2f s), "
+                 "quiet tail %.2f s; %d folders, %d files, %d KB; user_content_estimate %s",
+                 how, end - self.t0, first - self.t0, last - first, self.max_gap, end - last, nfolders, nfiles, self.nbytes // 1024,
+                 "none" if self.estimate is None else self.estimate)
 
 
 def directory_snapshot(file_msgs):
@@ -828,6 +870,7 @@ class QcMcpBackend(DeviceBackend):
 
     def connect(self):
         P = self._mods["protocol"]
+        t0 = time.monotonic()
         try:
             qc = self._QC(share=False, bridge=False)  # exclusive direct mode only
         except RuntimeError as e:
@@ -852,6 +895,7 @@ class QcMcpBackend(DeviceBackend):
         self.firmware = qc.firmware
         self.device_type = qc.device_type
         self._start_watchdog()
+        log.info("connected in %.2f s (open, handshake, firmware read)", time.monotonic() - t0)
 
     def disconnect(self):
         self._stop_watchdog()

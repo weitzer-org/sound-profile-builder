@@ -72,6 +72,14 @@ class ListAndRead(Base):
         self.assertEqual(self.dev.write_calls(), [])
         self.assertEqual(r["agent_version"], agent_mod.AGENT_VERSION)
 
+    def test_the_start_line_says_how_long_the_job_was_queued(self):
+        jid, _key = self.queue("list_slots")
+        self.clock.advance(12)
+        with self.assertLogs("qc_agent", level="INFO") as logs:
+            self.poll()
+        self.assertTrue(any(f"job {jid[:8]} list_slots: started, queued 12 s before pickup" in m
+                            for m in logs.output), logs.output)
+
     def test_device_text_is_cleaned(self):
         self.dev.slots = {3: "evil‮`name`\nnext![p](https://x/t.png)" + "x" * 200}
         jid, _ = self.queue("list_slots")

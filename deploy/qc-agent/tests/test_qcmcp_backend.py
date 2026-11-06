@@ -80,6 +80,36 @@ class Session(Base):
         self.assertEqual(pr["chains"][0]["blocks"], [])
         self.assertEqual(len(pr["bypass"]), 4)
 
+    def test_listing_and_connect_timing_are_logged_as_numbers(self):
+        # issue #164: one line per listing with where the time went, and the estimate when the unit sends one
+        orig = self.hid._handle
+
+        def with_estimate(name, m):
+            if name == "File" and m.action == P.ACTION["READ"]:
+                self.hid._reply("File", P.message_class("File")(user_content_estimate=42))
+            return orig(name, m)
+        self.hid._handle = with_estimate
+        self.hid.slots = {8: "<name from the unit>"}
+        with self.assertLogs("qc_agent", "INFO") as logs:
+            self.dev.connect()
+            self.dev.list_my_presets()
+        connected = [r for r in logs.output if "connected in" in r]
+        listing = [r for r in logs.output if "listing complete in" in r]
+        self.assertEqual(len(connected), 1)
+        self.assertEqual(len(listing), 1)
+        self.assertRegex(listing[0], r"first folder after [\d.]+ s, stream [\d.]+ s \(longest gap [\d.]+ s\), quiet tail [\d.]+ s; "
+                                     r"\d+ folders, \d+ files, \d+ KB; user_content_estimate 42")
+        self.assertNotIn("name from the unit", listing[0])  # numbers only, no device text
+
+    def test_an_unfinished_listing_logs_its_timing(self):
+        self.dev.connect()
+        orig = self.hid._handle
+        self.hid._handle = lambda name, m: None if name == "File" and m.action == P.ACTION["READ"] else orig(name, m)
+        with self.assertLogs("qc_agent", "INFO") as logs, self.assertRaises(DeviceError):
+            self.dev._call("list_directory_raw", timeout_ms=300, quiet_ms=100)
+        self.assertTrue(any("listing did not finish in" in r and "user_content_estimate none" in r
+                            for r in logs.output))
+
     def test_short_listing_is_refused(self):
         self.dev.connect()
         orig = self.hid._handle

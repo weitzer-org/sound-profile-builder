@@ -298,7 +298,11 @@ class Agent:
         self.state, self.current_job = "busy", jid
         self.last_activity = started
         self.kick_heartbeat()
-        log.info("job %s %s: started", jid[:8], kind)
+        try:  # issue #164: how long the job sat in the bucket (server clock vs this PC's: approximate)
+            waited = f", queued {(started - contract.parse_time(job['created_at'])).total_seconds():.0f} s before pickup"
+        except Exception:  # noqa: BLE001  a log detail must never stop a job
+            waited = ""
+        log.info("job %s %s: started%s", jid[:8], kind, waited)
         try:
             outcome = jobs.run(self.ctx, job)
         except Exception:  # noqa: BLE001  never leave a taken job without a result
