@@ -300,8 +300,8 @@ func panStats(raw string) PanStats {
 			written := map[int]bool{}
 			for _, bp := range b.Parameters {
 				i := ctl.Index(bp.Name)
-				if i < 0 || !ctl.Controls[i].Pan {
-					continue
+				if i < 0 || !ctl.Controls[i].Pan || written[i] {
+					continue // not a pan, or repeated: each pan is counted once
 				}
 				written[i] = true
 				c := ctl.Controls[i]
@@ -323,6 +323,7 @@ func panStats(raw string) PanStats {
 			for _, name := range b.KeptDefaults {
 				if i := ctl.Index(name); i >= 0 && ctl.Controls[i].Pan && !written[i] {
 					ps.Kept++
+					written[i] = true
 				}
 			}
 		}

@@ -50,3 +50,18 @@ func TestPanStats(t *testing.T) {
 		t.Error("unparseable output should give zero stats")
 	}
 }
+
+// A pan the model repeats, in parameters or in kept_defaults, is still counted once.
+func TestPanStatsCountsEachPanOnce(t *testing.T) {
+	raw := `{"structured_payload":{"guitars":{"G":[{"type":"Cabinet","model":"212 UK C30 65",
+	  "parameters":[
+	    {"name":"Mic 1 Pan","value":"0"},
+	    {"name":"MIC 1 PAN","value":"0"}],
+	  "kept_defaults":["MIC 2 PAN","Mic 2 Pan","MIC 2 PAN"]}]}}}`
+	got := panStats(raw)
+	got.Written = nil
+	want := PanStats{Kept: 1, AtMin: 1}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("panStats = %+v, want %+v", got, want)
+	}
+}
