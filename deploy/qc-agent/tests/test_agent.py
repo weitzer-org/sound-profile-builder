@@ -553,14 +553,10 @@ class Push(Base):
         self.assertIsNotNone(rec.exc_info)  # the bug is visible in the log, with its traceback
 
     def test_selection_change_just_before_the_save_is_refused(self):
-        reads = {"n": 0}
-
         def switch(name):
-            if name == "read_current_preset":
-                reads["n"] += 1
-                # 1: blank check, 2: layout, 3-7: per-block re-check, 8: read-back, 9: after the stomps, 10: before save
-                if reads["n"] == 10:
-                    self.dev.open_position = 0
+            # the grid re-read that follows the pre-save listing (the second), whatever ran before it
+            if name == "read_current_preset" and self.dev._listings >= 2:
+                self.dev.open_position = 0
         self.dev.on_call = switch
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))

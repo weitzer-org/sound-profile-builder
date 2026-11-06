@@ -13,7 +13,8 @@ Three layers keep the transport to the operations the plan allows (section 5):
    its one string write is held to the armed capture by the wire guard. assign_stomp stays on
    the NEVER list too; the only way past it is QcMcpBackend.assign_stomp, which opens it for one
    call while the wire guard holds that exact assignment in a push's stomp step (stomp doc
-   section 6.1, entry point 1). unassign_stomp is never reachable.
+   section 6.1, entry point 1): Guarded.window yields a single-use callable for that one call and
+   keeps no state of its own. unassign_stomp is never reachable.
 3. WireGuard sits between the transport and the HID device and decodes every
    outgoing message before it is written. Only these pass:
      * session plumbing the handshake sends (KeepAlive, ResetCommsBuffers,
@@ -142,8 +143,8 @@ NEVER = frozenset({
     "set_scene_label", "set_scene_color", "set_preset_meta", "set_scene",
     "latest_broadcast", "read_message", "list_model_presets", "list_recents_favorites",
 })
-# On the NEVER list, but opened for one call at a time by QcMcpBackend.assign_stomp during a push's
-# stomp step only (Guarded.window); the wire guard then holds that call to one armed assignment.
+# On the NEVER list, but QcMcpBackend.assign_stomp gets a single-use callable for one call during a push's
+# stomp step (Guarded.window); the wire guard then holds that call to one armed assignment.
 PUSH_STEP_ONLY = frozenset({"assign_stomp"})
 GRANT = frozenset({
     "open", "close", "get_current_preset", "get_setlist_position", "list_directory_raw",
@@ -160,28 +161,29 @@ class Guarded:
             raise GuardError(f"grant includes never-allowed methods: {sorted(bad)}")
         object.__setattr__(self, "_qc", qc)
         object.__setattr__(self, "_grant", frozenset(grant))
-        # (name, thread id) of the PUSH_STEP_ONLY method open for the call in progress, or None. Immutable,
-        # replaced only by window(), so nothing can add a name to it in place.
-        object.__setattr__(self, "_open", None)
 
     @contextlib.contextmanager
     def window(self, name):
-        """Open one PUSH_STEP_ONLY method for the duration of the `with` block, for the calling thread only.
-        Never nested, never anything outside PUSH_STEP_ONLY; it closes again even if the call raises."""
+        """Yield a single-use capability: a callable for one PUSH_STEP_ONLY method, valid only inside the
+        `with` block (it refuses once the block exits, also after an exception). Guarded itself keeps no
+        state for it, so the method stays never-allowed through Guarded's attributes, on every thread, even
+        while a window is open; only the code holding the yielded callable can make the call."""
         if name not in PUSH_STEP_ONLY:
             raise GuardError(f"{name} can't be opened")
-        if self._open is not None:
-            raise GuardError("a window is already open")
-        object.__setattr__(self, "_open", (name, threading.get_ident()))
+        method = getattr(self._qc, name)
+        live = [True]
+
+        def call(*args, **kwargs):
+            if not live[0]:
+                raise GuardError(f"the {name} window is closed")
+            return method(*args, **kwargs)
         try:
-            yield
+            yield call
         finally:
-            object.__setattr__(self, "_open", None)
+            live[0] = False
 
     def __getattr__(self, name):
         if name in NEVER:
-            if name in PUSH_STEP_ONLY and self._open == (name, threading.get_ident()):
-                return getattr(self._qc, name)
             raise GuardError(f"{name} is never allowed")
         if name in self._grant or name in ATTRS:
             return getattr(self._qc, name)
@@ -896,8 +898,12 @@ class QcMcpBackend(DeviceBackend):
     def _call(self, name, *args, **kwargs):
         if self._qc is None:
             raise DeviceError("not connected")
+        return self._invoke(lambda: getattr(self._qc, name)(*args, **kwargs))
+
+    def _invoke(self, thunk):
+        """Run one transport call, mapping its errors the same way for every call."""
         try:
-            return getattr(self._qc, name)(*args, **kwargs)
+            return thunk()
         except (DeviceError, GuardError):
             raise
         except self._mods["transport"].QCError as e:
@@ -994,9 +1000,9 @@ class QcMcpBackend(DeviceBackend):
             raise DeviceError(f"column {col}: footswitch {index} is not an armed stomp")
         if self._qc is None:
             raise DeviceError("not connected")
-        with self._qc.window("assign_stomp"):
-            self._call("assign_stomp", row, col, index, kind="primary", momentary=None,
-                       settle_s=self.STOMP_SETTLE_S)
+        with self._qc.window("assign_stomp") as assign:
+            self._invoke(lambda: assign(row, col, index, kind="primary", momentary=None,
+                                        settle_s=self.STOMP_SETTLE_S))
 
     def save_to_slot(self, position, name):
         if getattr(self, "_save_target", None) != (position, name):

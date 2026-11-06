@@ -341,22 +341,24 @@ class StompWindow(unittest.TestCase):
                 with g.window(name):
                     pass
 
-    def test_the_window_closes_and_does_not_nest(self):
-        g = Guarded(mock.Mock())
-        with g.window("assign_stomp"):
-            g.assign_stomp
-            with self.assertRaisesRegex(GuardError, "already open"):
-                with g.window("assign_stomp"):
-                    pass
+    def test_the_window_yields_one_single_use_method(self):
+        qc = mock.Mock()
+        g = Guarded(qc)
+        with g.window("assign_stomp") as assign:
+            assign(0, 0, 2)
+            with self.assertRaisesRegex(GuardError, "never allowed"):
+                g.assign_stomp                      # Guarded itself never opens: only the yielded callable works
             with self.assertRaisesRegex(GuardError, "never allowed"):
                 g.unassign_stomp
-        with self.assertRaisesRegex(GuardError, "never allowed"):
-            g.assign_stomp
+        qc.assign_stomp.assert_called_once_with(0, 0, 2)
+        with self.assertRaisesRegex(GuardError, "window is closed"):
+            assign(0, 0, 2)                         # a kept reference is dead once the block exits
         with self.assertRaises(RuntimeError):
-            with g.window("assign_stomp"):
+            with g.window("assign_stomp") as again:
                 raise RuntimeError("boom")
-        with self.assertRaisesRegex(GuardError, "never allowed"):
-            g.assign_stomp
+        with self.assertRaisesRegex(GuardError, "window is closed"):
+            again(0, 0, 2)                          # closed after an exception too
+        self.assertEqual(qc.assign_stomp.call_count, 1)
 
     def test_the_window_is_for_the_opening_thread_only(self):
         import threading
