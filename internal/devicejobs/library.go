@@ -27,10 +27,10 @@ const LibraryFormat = "qc-device-library/1"
 // fails the whole job rather than truncate a list that is too long, because a cut list
 // would make a capture on the unit look missing.
 const (
-	MaxLibraryCaptures = 1500
+	MaxLibraryCaptures = 5000
 	MaxLibraryName     = 64 // the agent's capture-name bound (export_validator._CAPTURE_NAME_RE)
 	MaxLibraryFolder   = 40
-	MaxLibraryBytes    = 512 << 10
+	MaxLibraryBytes    = 2 << 20
 )
 
 // Capture kinds in a library entry: the folder the file sits in is a factory folder or not.
@@ -57,9 +57,9 @@ type LibraryPayload struct {
 type LibraryCapture struct {
 	Name string `json:"name"`
 	Key  string `json:"key"` // 64 lowercase hex characters
-	// Version is 1 or 2 when the bridge could tell (a factory capture's from its folder
-	// name, a user capture's only when ProductData.version separates the factory V1 and V2
-	// folders on that listing), else null.
+	// Version is 1 or 2 when the bridge could tell (a factory capture's from the nearest
+	// "Factory Captures V1/V2" folder at or above its own, a user capture's from its
+	// ProductData.version "1"/"2" taken literally), else null.
 	Version *int   `json:"version"`
 	Kind    string `json:"kind"`
 	Folder  string `json:"folder"`

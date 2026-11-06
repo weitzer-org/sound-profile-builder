@@ -65,7 +65,7 @@ import types
 from pathlib import Path
 
 from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
-from .captures import CaptureEntry, DirectorySnapshot
+from .captures import CaptureEntry, DirectorySnapshot, factory_version_of
 from .device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 from .export_validator import CAPTURE_BLOCK_IDS
 from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
@@ -675,15 +675,55 @@ def directory_snapshot(file_msgs):
     my = {i: f.name or "" for i, f in enumerate(files)}
     deps = {i: frozenset(d.hash.lower() for d in (*f.factory_dependencies, *f.product_dependencies))
             for i, f in enumerate(files) if f.name}
-    entries, folders = [], []
+    entries, folders, census = [], [], []
     for key, fo in caps.items():
         folders.append((fo.name, bool(fo.is_factory), len(fo.files)))
         cloud, fav = _inherited(key, caps)
+        chain, end = _chain(key, caps)
+        fver = factory_version_of([c.name for c in chain])
         for f in fo.files:
             entries.append(CaptureEntry(name=f.name, key=f.key, folder_key=key, folder_name=fo.name,
                                         is_factory=bool(fo.is_factory), is_cloud=cloud,
-                                        is_favorites=fav, version_field=f.version))
-    return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders)
+                                        is_favorites=fav, version_field=f.version, factory_version=fver))
+        census.append(_census_row(fo, chain, end, cloud, fav, fver))
+    return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders,
+                             folder_census=census)
+
+
+def _chain(key, folders, depth=16):
+    """The folder and the folders above it (parent_key), nearest first, and how the walk ended: "top" (no
+    parent), "parent not listed" (a parent_key that no capture folder in the listing has), "loop" or "too deep"."""
+    out, seen, k = [], set(), key
+    for _ in range(depth):
+        fo = folders.get(k)
+        if fo is None:
+            return out, "parent not listed"
+        if k in seen:
+            return out, "loop"
+        seen.add(k)
+        out.append(fo)
+        k = fo.parent_key
+        if not k:
+            return out, "top"
+    return out, "too deep"
+
+
+def _census_row(fo, chain, end, cloud, fav, fver):
+    """What the agent log's census says about one capture folder. Device text: cleaned and bounded. The
+    ProductData fields beyond `version` (coros_version, device, extraMetadata) are logged, not used: which
+    of them, if any, marks a factory capture's V1/V2 is unknown (P6, 2026-11-06)."""
+    from . import text
+
+    def vals(attr, n=16):
+        return sorted({text.clean(str(getattr(f, attr, "") or ""), n) for f in fo.files})[:5]
+
+    above = [text.clean(c.name, 24) for c in reversed(chain[1:])]
+    if end != "top":
+        above.insert(0, f"<{end}>")
+    return {"name": text.clean(fo.name, 40), "path": " > ".join(above) or "-", "factory": bool(fo.is_factory),
+            "cloud": cloud, "favorites": fav, "files": len(fo.files), "version": vals("version"),
+            "coros_version": vals("coros_version"), "device": vals("device"),
+            "extra_metadata": sum(1 for f in fo.files if getattr(f, "extraMetadata", b"")), "v": fver}
 
 
 def _inherited(key, folders, depth=16):
@@ -795,7 +835,6 @@ class QcMcpBackend(DeviceBackend):
         guard = WireGuard(qc.io, P)
         qc.io = guard
         self._raw, self._guard, self._errs = qc, guard, []
-        self._census_logged = False
         self._qc = Guarded(qc)
         try:
             self._qc.open(handshake=True)
@@ -915,9 +954,7 @@ class QcMcpBackend(DeviceBackend):
 
     def read_directory(self):
         snap = directory_snapshot(self._call("list_directory_raw"))
-        if not getattr(self, "_census_logged", False):  # once per session: a push lists several times
-            _log_census(snap)
-            self._census_logged = True
+        _log_census(snap)  # once per bridge process
         return snap
 
     def setlist_position(self):
@@ -1015,17 +1052,34 @@ class QcMcpBackend(DeviceBackend):
             self._guard._save = None
 
 
+_CENSUS_LOGGED = False  # once per bridge process: every job reconnects, and the census is long
+MAX_CENSUS_LINES = 400
+
+
 def _log_census(snap):
-    """What capture placement depends on, for P6 to read from the agent log. Folder names come
-    from the unit: cleaned and bounded."""
-    from . import text
-    by_folder = {}
+    """What capture placement depends on, for P6 to read from the agent log: every capture folder with the
+    folders above it, its flags, file count, the ProductData fields that might carry V1/V2, and the version a
+    push would use. Folder names come from the unit: cleaned and bounded."""
+    global _CENSUS_LOGGED
+    if _CENSUS_LOGGED:
+        return
+    _CENSUS_LOGGED = True
+    rows = sorted(snap.folder_census, key=lambda r: (r["path"], r["name"]))
+    for r in rows[:MAX_CENSUS_LINES]:
+        log.info("capture folder %r in %s: factory=%s cloud=%s favorites=%s files=%d version %s coros_version %s "
+                 "device %s extra_metadata %d -> %s", r["name"], r["path"], r["factory"], r["cloud"], r["favorites"],
+                 r["files"], r["version"], r["coros_version"], r["device"], r["extra_metadata"],
+                 f"V{r['v']}" if r["v"] else "no V1/V2 folder")
+    if len(rows) > MAX_CENSUS_LINES:
+        log.info("capture census: %d more folders not shown", len(rows) - MAX_CENSUS_LINES)
+    from .captures import version_of
+    count = {}
     for e in snap.captures:
-        by_folder.setdefault((e.folder_name, e.is_factory, e.is_cloud, e.is_favorites), set()).add(e.version_field)
-    for (name, fac, cloud, fav), versions in sorted(by_folder.items(), key=lambda kv: kv[0][0])[:40]:
-        shown = sorted(text.clean(v, 16) for v in versions)[:5]
-        log.info("capture folder %r: factory=%s cloud=%s favorites=%s version values %s", text.clean(name, 40),
-                 fac, cloud, fav, shown)
+        k = ("factory" if e.is_factory else "user", version_of(e))
+        count[k] = count.get(k, 0) + 1
+    log.info("capture census: %d folders, %d files; factory V1 %d, V2 %d, unknown %d; user V1 %d, V2 %d, unknown %d",
+             len(rows), len(snap.captures), *(count.get((kind, v), 0) for kind in ("factory", "user")
+                                               for v in (1, 2, None)))
     log.info("My Presets: %d saved presets list dependencies", sum(1 for d in snap.preset_deps.values() if d))
 
 

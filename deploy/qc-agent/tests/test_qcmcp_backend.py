@@ -14,7 +14,7 @@ from unittest import mock
 from pathlib import Path
 
 from helpers import Clock, catalog, config, export, job
-from qc_agent import jobs, qcmcp_backend
+from qc_agent import captures, jobs, qcmcp_backend
 from qc_agent.device import DeviceError, UnitAbsent
 from qc_agent.export_validator import validate
 from qc_agent.ledger import OwnedSlots
@@ -564,14 +564,53 @@ class CapturesOverTheWire(Base):
 
 
 class DirectoryListing(Base):
-    def folder(self, typ, key, name, parent="", cloud=False, fav=False, plugin=False, files=()):
+    def folder(self, typ, key, name, parent="", cloud=False, fav=False, plugin=False, files=(), factory=False,
+               version="1"):
         f = P.message_class("File")(action=P.ACTION["UPDATE"], type=typ)
         f.folder.key, f.folder.name, f.folder.parent_key = key, name, parent
         f.folder.is_cloud, f.folder.is_favorites, f.folder.is_plugin = cloud, fav, plugin
+        f.folder.is_factory = factory
         for n, k in files:
             fi = f.folder.files.add()
-            fi.name, fi.key, fi.version = n, k, "1"
+            fi.name, fi.key, fi.version = n, k, version
         return f
+
+    def test_factory_version_from_the_folder_tree(self):
+        # shaped like the owner's unit (P6): per-device factory folders, empty version field; whether V1/V2
+        # parents exist there is unverified, so each case below is a guess at the tree, not a reading of it
+        msgs = [self.my_presets(),
+                self.folder(2, "v1", "Factory Captures V1", factory=True),
+                self.folder(2, "v2", "Factory Captures V2", factory=True),
+                self.folder(2, "b", "Brit 2210", parent="v2", factory=True, version="", files=[("Brit A", "a1" * 32)]),
+                self.folder(2, "amp", "Amp", parent="v1", factory=True),
+                self.folder(2, "c", "CA 3Axe", parent="amp", factory=True, version="", files=[("CA B", "a2" * 32)]),
+                self.folder(2, "lost", "Aggi 700", parent="gone", factory=True, version="",
+                            files=[("Aggi C", "a3" * 32)]),
+                self.folder(2, "top", "ABA MPre1", factory=True, version="", files=[("ABA D", "a4" * 32)]),
+                self.folder(2, "u", "", files=[("Mine", "a5" * 32)], version="2")]
+        snap = qcmcp_backend.directory_snapshot(msgs)
+        got = {e.name: captures.version_of(e) for e in snap.captures}
+        self.assertEqual(got, {"Brit A": 2, "CA B": 1, "Aggi C": None, "ABA D": None, "Mine": 2})
+        rows = {r["name"]: r for r in snap.folder_census}
+        self.assertEqual(rows["CA 3Axe"]["path"], "Factory Captures V1 > Amp")
+        self.assertEqual(rows["Aggi 700"]["path"], "<parent not listed>")
+        self.assertEqual(rows["ABA MPre1"]["path"], "-")
+        self.assertEqual((rows["Brit 2210"]["v"], rows["Brit 2210"]["files"], rows["Brit 2210"]["version"]), (2, 1, [""]))
+
+    def test_census_logs_once_per_process(self):
+        msgs = [self.my_presets(),
+                self.folder(2, "b", "Brit 2210", factory=True, version="", files=[("Brit A", "a1" * 32)]),
+                self.folder(2, "u", "", files=[("Mine", "a5" * 32)], version="2")]
+        snap = qcmcp_backend.directory_snapshot(msgs)
+        with mock.patch.object(qcmcp_backend, "_CENSUS_LOGGED", False):
+            with self.assertLogs(qcmcp_backend.log, "INFO") as cm:
+                qcmcp_backend._log_census(snap)
+                qcmcp_backend._log_census(snap)
+        out = "\n".join(cm.output)
+        self.assertEqual(out.count("capture census: 2 folders"), 1)
+        self.assertIn("capture folder 'Brit 2210' in -: factory=True", out)
+        self.assertIn("-> no V1/V2 folder", out)
+        self.assertIn("factory V1 0, V2 0, unknown 1; user V1 0, V2 1, unknown 0", out)
 
     def my_presets(self):
         f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)

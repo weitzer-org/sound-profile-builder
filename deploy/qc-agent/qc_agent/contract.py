@@ -273,7 +273,8 @@ def check_pending_job(keys, object_key, agent_bucket, now, data, seen):
 # ---- agent-side additions (not in the reference) ----
 
 TAG_OWNED_SLOTS = "qc2-device-owned-slots/v1"
-MAX_RESULT_BYTES = 512 * 1024
+MAX_RESULT_BYTES = 2 * 1024 * 1024  # 2 MiB: a sync of up to 5000 captures (internal/devicejobs.MaxResultBytes)
+MAX_READBACK_BYTES = 512 * 1024    # internal/devicejobs.MaxReadbackBytes: Go refuses a larger read-back payload
 MAX_HEARTBEAT_BYTES = 8 * 1024
 DONE_PREFIX = "jobs/done/"
 PENDING_PREFIX = "jobs/pending/"

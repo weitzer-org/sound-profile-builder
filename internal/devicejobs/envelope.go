@@ -30,7 +30,7 @@ const EnvelopeVersion = 1
 // Size caps on whole stored objects (contract §3).
 const (
 	MaxJobBytes       = 512 << 10
-	MaxResultBytes    = 512 << 10
+	MaxResultBytes    = 2 << 20 // a sync_device_library result carries up to MaxLibraryCaptures entries
 	MaxHeartbeatBytes = 8 << 10
 )
 

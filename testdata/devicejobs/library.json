@@ -1,13 +1,13 @@
 {
- "_readme": "Shared by the Go tests (internal/devicejobs, ParseLibraryPayload) and the agent's tests (deploy/qc-agent/tests/test_library.py, captures.library_payload). 'snapshots' are fake directory listings in the agent's positional form; the agent must produce expect_payload from each, and Go must parse every expect_payload. 'invalid' payloads must be refused by Go, with an error containing the given text. Changing either is a contract change (docs/design/device-job-contract.md section 9.2).",
+ "_readme": "Shared by the Go tests (internal/devicejobs, ParseLibraryPayload) and the agent's tests (deploy/qc-agent/tests/test_library.py, captures.library_payload). 'snapshots' are fake directory listings in the agent's positional form (factory_version: what the agent's backend derives from the folder tree, qcmcp_backend._chain); the agent must produce expect_payload from each, and Go must parse every expect_payload. 'invalid' payloads must be refused by Go, with an error containing the given text. Changing either is a contract change (docs/design/device-job-contract.md section 9.2).",
  "snapshots": [
   {
    "name": "factory V1/V2, a user capture, a cloud item, a favorites view, hostile and over-long names",
    "folders": [["Factory Captures V1", true, 2], ["Factory Captures V2", true, 1], ["My Captures", false, 4]],
    "entries": [
-    {"name": "CA John's", "key": "A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1"},
-    {"name": "Brit 2203 87", "key": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1"},
-    {"name": "CA John's 2", "key": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "2"},
+    {"name": "CA John's", "key": "A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1", "factory_version": 1},
+    {"name": "Brit 2203 87", "key": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1", "factory_version": 1},
+    {"name": "CA John's 2", "key": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "2", "factory_version": 2},
     {"name": "66 AC30 JMP OD", "key": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
     {"name": "From The Cloud", "key": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5", "folder": "My Captures", "factory": false, "cloud": true, "favorites": false, "version_field": "1"},
     {"name": "Starred Copy", "key": "f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6", "folder": "My Captures", "factory": false, "cloud": false, "favorites": true, "version_field": "1"},
@@ -30,11 +30,11 @@
    }
   },
   {
-   "name": "a user capture's version is null when the factory folders do not calibrate it; folder names are ASCII and bounded",
+   "name": "a user capture's version is null unless its version field is exactly \"1\" or \"2\"; folder names are ASCII and bounded",
    "folders": [["Factory Captures V1", true, 1], ["Factory Captures V2", true, 1], ["Café ✓ Downloads of a very long folder name indeed", false, 1]],
    "entries": [
-    {"name": "Fac One", "key": "1111111111111111111111111111111111111111111111111111111111111111", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "7"},
-    {"name": "Fac Two", "key": "2222222222222222222222222222222222222222222222222222222222222222", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "7"},
+    {"name": "Fac One", "key": "1111111111111111111111111111111111111111111111111111111111111111", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "7", "factory_version": 1},
+    {"name": "Fac Two", "key": "2222222222222222222222222222222222222222222222222222222222222222", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "7", "factory_version": 2},
     {"name": "Mine", "key": "3333333333333333333333333333333333333333333333333333333333333333", "folder": "Café ✓ Downloads of a very long folder name indeed", "factory": false, "cloud": false, "favorites": false, "version_field": "7"}
    ],
    "expect_payload": {
@@ -42,6 +42,27 @@
      {"name": "Fac One", "key": "1111111111111111111111111111111111111111111111111111111111111111", "version": 1, "kind": "factory", "folder": "Factory Captures V1", "cloud": false},
      {"name": "Fac Two", "key": "2222222222222222222222222222222222222222222222222222222222222222", "version": 2, "kind": "factory", "folder": "Factory Captures V2", "cloud": false},
      {"name": "Mine", "key": "3333333333333333333333333333333333333333333333333333333333333333", "version": null, "kind": "user", "folder": "Caf? ? Downloads of a very long folder n", "cloud": false}
+    ],
+    "skipped": 0
+   }
+  },
+  {
+   "name": "the owner's unit (CorOS 4.1.0, P6): factory captures in per-device folders with an empty version field take V1/V2 from a folder above, or null when there is none; user \"2\" is V2, other values null; downloaded captures in a folder named '' keep their entries",
+   "folders": [["Brit 2210", true, 1], ["CA 3Axe", true, 1], ["", false, 3]],
+   "entries": [
+    {"name": "Brit 2210 Clean", "key": "6161616161616161616161616161616161616161616161616161616161616161", "folder": "Brit 2210", "factory": true, "cloud": false, "favorites": false, "version_field": "", "factory_version": 2},
+    {"name": "CA 3Axe Lead", "key": "6262626262626262626262626262626262626262626262626262626262626262", "folder": "CA 3Axe", "factory": true, "cloud": false, "favorites": false, "version_field": "", "factory_version": null},
+    {"name": "My Klon", "key": "6363636363636363636363636363636363636363636363636363636363636363", "folder": "", "factory": false, "cloud": false, "favorites": false, "version_field": "2"},
+    {"name": "Odd Field", "key": "6464646464646464646464646464646464646464646464646464646464646464", "folder": "", "factory": false, "cloud": false, "favorites": false, "version_field": "v2"},
+    {"name": "No Field", "key": "6565656565656565656565656565656565656565656565656565656565656565", "folder": "", "factory": false, "cloud": false, "favorites": false, "version_field": ""}
+   ],
+   "expect_payload": {
+    "captures": [
+     {"name": "Brit 2210 Clean", "key": "6161616161616161616161616161616161616161616161616161616161616161", "version": 2, "kind": "factory", "folder": "Brit 2210", "cloud": false},
+     {"name": "CA 3Axe Lead", "key": "6262626262626262626262626262626262626262626262626262626262626262", "version": null, "kind": "factory", "folder": "CA 3Axe", "cloud": false},
+     {"name": "My Klon", "key": "6363636363636363636363636363636363636363636363636363636363636363", "version": 2, "kind": "user", "folder": "(unnamed folder)", "cloud": false},
+     {"name": "Odd Field", "key": "6464646464646464646464646464646464646464646464646464646464646464", "version": null, "kind": "user", "folder": "(unnamed folder)", "cloud": false},
+     {"name": "No Field", "key": "6565656565656565656565656565656565656565656565656565656565656565", "version": null, "kind": "user", "folder": "(unnamed folder)", "cloud": false}
     ],
     "skipped": 0
    }
