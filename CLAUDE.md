@@ -142,8 +142,17 @@ set it will cause the next run to needlessly re-research that entry.
   - **Which prompts get the catalog features** is decided by the prompt's own text (it contains
     `# Device Block Parameters`, `promptUsesCatalogParams`), not its version number, so a prompt
     without that section gets exactly the context and schema it was written for.
-  - **Don't guess display scales.** The check skips pans (L/R labels), unitless 0..1 floats and symbolic
-    bounds: how the device displays those is unverified. 0..10 dials and dB/Hz/ms/s/% ranges are checked
+  - **Don't guess display scales.** The check skips unitless 0..1 floats and symbolic bounds: how the device
+    displays those is unverified.
+  - **Pans** (catalog-aware prompts only). The Architect is shown each pan's catalog range, default and which end is
+    L and which R (`MIC 1 PAN 0=L..10=R d5`; `BALANCE -1=L..1=R d0`), taken only from the catalog and only when every
+    model behind the block name agrees (else the old `L..R`). What the unit's screen shows is **unverified**. On such
+    output (the preset uses `kept_defaults`) the check notes a plain number outside that range; older output isn't
+    checked, and a pan is still never `confirmed_range`. The export and read-back take a plain number on the catalog
+    range, labelled `scale:catalog-range` († in the dry run); a unit, an out-of-range number or a word other than Center
+    is refused. 0 is hard left on a 0..10 pan: center is the default.
+  - **Cab families.** A family name (no `(M)`/`(ST)`) merges the mono and stereo cab, and the export places the mono one.
+    Controls only one side has (PAN / BALANCE) are marked `[mono cab only]` / `[stereo cab only]` in the Architect's context. 0..10 dials and dB/Hz/ms/s/% ranges are checked
     as the catalog gives them, which matches how presets already write them (not verified on a device).
 
 ## Quad Cortex device bridge (in progress)

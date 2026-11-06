@@ -441,7 +441,6 @@ func TestUnconverted(t *testing.T) {
 		noBlock bool
 	}{
 		{"unknown model id", 999999, nil, "", "unknown model id", true},
-		{"non-default pan", 3008, map[int][]any{17: {0.9}}, "PAN", "pan display scale", false},
 		{"switch off a whole position", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
 		{"combo box has no mapping", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
 		{"NaN stored as null", 1, map[int][]any{0: {nil}}, "GAIN", "not a finite number", false},
@@ -510,6 +509,13 @@ func TestP2bRulesInTheImport(t *testing.T) {
 			}
 		}
 		if bp.Value != "0.4" || !strings.Contains(bp.Evidence, "scale:catalog-range") {
+			t.Errorf("%+v", bp)
+		}
+	})
+	t.Run("non-center pan on its catalog range", func(t *testing.T) {
+		res := importOf(t, e, rbJSON(t, 3008, map[int][]any{17: {0.9}}, nil))
+		bp := get(res, "MIC 1 PAN")
+		if bp.Value != "9" || !strings.Contains(bp.Evidence, "scale:catalog-range") {
 			t.Errorf("%+v", bp)
 		}
 	})

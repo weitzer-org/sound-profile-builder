@@ -376,7 +376,9 @@ func TestRefusals(t *testing.T) {
 		{"wrong unit", preset(block("Spring", prm("Mix", "30 ms", ""))), "", "the control is in %"},
 		{"out of range", preset(block("Myth Drive", prm("Gain", "11", ""))), "", "cannot convert"},
 		{"out of range in B", preset(block("Myth Drive", prm("Gain", "5", "12"))), "", "cannot convert"},
-		{"pan", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "L20", ""))), "", "pan display scale"},
+		{"pan", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "L20", ""))), "", "pan: only Center or a plain number"},
+		{"pan with a unit", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "30%", ""))), "", "pan: only Center or a plain number"},
+		{"pan out of the catalog range", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "-40", ""))), "", "cannot convert"},
 		{"unitless 0..1 with a unit", preset(block("Crying Clyde Wah", prm("Wah", "40%", ""))), "", "only a plain number on its 0..1 scale"},
 		{"unitless 0..1 on another scale", preset(block("Crying Clyde Wah", prm("Wah", "40", ""))), "", "cannot convert"},
 		{"combo box off default", preset(block("Tremolo", prm("Waveform", "Square", ""))), "", "comboBox positions have no known wire mapping"},
@@ -779,5 +781,41 @@ func TestUnitless01(t *testing.T) {
 	}
 	if !ex.Summary[0].Params[0].Unconfirmed {
 		t.Errorf("not marked unconfirmed in the plan")
+	}
+}
+
+// TestPanCatalogScale: a plain number on a pan's catalog range (here 0..10, L=0, R=10,
+// center 5) is taken, labelled scale:catalog-range and so marked unconfirmed; Center is the
+// default and writes nothing; a pan written 0 is hard left, not center.
+func TestPanCatalogScale(t *testing.T) {
+	ex, p := export(t, testExporter(t), preset(block("110 US PRN C10R", prm("Mic 1 Pan", "3.5", "0"), prm("Mic 2 Pan", "Center", ""))), "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved %+v", ex.Unresolved)
+	}
+	var found bool
+	for _, pr := range p.Rows[0].Blocks[0].Params {
+		if pr.Label != "MIC 1 PAN" {
+			continue
+		}
+		found = true
+		if pr.Display[0] != 3.5 || pr.Display[1] != 0 || !pr.SceneMode || strings.Join(pr.Evidence, ",") != "taper:device-xml,scale:catalog-range" && !strings.Contains(strings.Join(pr.Evidence, ","), "scale:catalog-range") {
+			t.Errorf("pan param %+v", pr)
+		}
+		if pr.Wire[0] != 0.35 || pr.Wire[1] != 0 || pr.Confirmed() {
+			t.Errorf("pan wire %v confirmed=%v", pr.Wire, pr.Confirmed())
+		}
+	}
+	if !found {
+		t.Fatalf("no MIC 1 PAN param in %+v", p.Rows[0].Blocks[0].Params)
+	}
+	for _, pr := range p.Rows[0].Blocks[0].Params {
+		if pr.Label == "MIC 2 PAN" {
+			t.Errorf("a centred pan is the default and must not be written: %+v", pr)
+		}
+	}
+	for _, s := range ex.Summary[0].Params {
+		if s.Name == "MIC 1 PAN" && !s.Unconfirmed {
+			t.Errorf("pan not marked unconfirmed in the plan")
+		}
 	}
 }
