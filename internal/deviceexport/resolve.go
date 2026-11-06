@@ -618,9 +618,9 @@ func screenPan(cp catalog.Param, wire float64) string {
 		*cp.Min != 0 || *cp.Max != 10 || (cp.Skew != nil && *cp.Skew != 0 && *cp.Skew != 1) {
 		return ""
 	}
-	pos := (wire - 0.5) * 100
+	pos := math.Round((wire - 0.5) * 100) // the branch and the printed number come from the same rounded value
 	switch {
-	case math.Abs(pos) < 0.5:
+	case pos == 0:
 		return "≈ C " + ScreenPanNote + ", inferred"
 	case pos < 0:
 		return fmt.Sprintf("≈ %.0f L %s, inferred", -pos, ScreenPanNote)

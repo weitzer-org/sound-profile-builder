@@ -909,4 +909,13 @@ func TestPanShowsTheInferredScreenReading(t *testing.T) {
 	if got := screenPan(cp, 0.75); got != "" {
 		t.Errorf("balance got a screen reading %q", got)
 	}
+	// a half-step off centre rounds to a whole position, never to "0 R"
+	pan := catalog.Param{Name: "MIC 1 PAN", MinLabel: "L", MaxLabel: "R"}
+	z, ten := 0.0, 10.0
+	pan.Min, pan.Max = &z, &ten
+	for w, want := range map[float64]string{0.504: "≈ C on the unit, inferred", 0.506: "≈ 1 R on the unit, inferred", 0.494: "≈ 1 L on the unit, inferred", 0.7: "≈ 20 R on the unit, inferred"} {
+		if got := screenPan(pan, w); got != want {
+			t.Errorf("wire %g: %q, want %q", w, got, want)
+		}
+	}
 }
