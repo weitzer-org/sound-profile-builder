@@ -121,19 +121,36 @@ def _same_name(listing, pos, name):
     return None
 
 
-def _open_desc(cur) -> str:
+def _folder_label(snap, key) -> str:
+    """A collection's display name for messages (device text, cleaned)."""
+    if snap is not None and key in snap.preset_folders:
+        return snap.preset_folders[key][0]
+    if key == SETLIST_KEY:
+        return SETLIST_NAME
+    return text.clean(str(key).rstrip("/").rsplit("/", 1)[-1], 40) or "unnamed"
+
+
+def _folder_view(snap, key):
+    """The listing seen through one collection, or None if it isn't a complete 256-slot table there."""
+    if not key:
+        return None
+    view = snap.for_folder(key)
+    if view is None and key == SETLIST_KEY:
+        return snap  # a snapshot without per-folder tables (My Presets is its main table)
+    return view
+
+
+def _open_desc(cur, snap=None) -> str:
     """What the unit says is open, for a refusal message (the folder key is device text)."""
     p = cur.get("position")
-    if cur.get("folder_key") == SETLIST_KEY and not cur.get("is_factory") and isinstance(p, int) \
-            and 0 <= p < slots.SLOT_COUNT:
-        return f"My Presets slot {slots.label(p)}"
     if cur.get("is_factory"):
         return "a factory preset"
     if not cur.get("folder_key"):
         return "no preset (no position)"
-    folder = text.clean(str(cur.get("folder_key")).rstrip("/").rsplit("/", 1)[-1], 40)
-    where = f"slot {slots.label(p)} in " if isinstance(p, int) and 0 <= p < slots.SLOT_COUNT else ""
-    return f"a preset ({where}the folder {folder!r}, not My Presets)"
+    folder = _folder_label(snap, cur.get("folder_key"))
+    if isinstance(p, int) and 0 <= p < slots.SLOT_COUNT:
+        return f"slot {slots.label(p)} in {folder!r}"
+    return f"a preset in {folder!r}"
 
 
 def _occupied(listing, pos) -> bool:
@@ -537,6 +554,8 @@ class _Push:
         a = job["args"]
         self.args, self.slot, self.name = a, a["slot"], a["name"]
         self.pos = slots.position(self.slot)
+        self.folder_key = None   # the collection open on the unit; chosen once by check_slot, then pinned
+        self.folder_name = SETLIST_NAME
         self.result = {"slot": self.slot, "name": self.name, "mismatches": 0, "cpu_load": None, "diff": []}
         self.plan = None
         self.fw = None
@@ -584,8 +603,8 @@ class _Push:
         """The save was issued after a clean read-back but never confirmed: a failure (G3: the listing
         can lag, so it may still land). The slot was recorded in the owned ledger when the save was
         issued and stays there, so a late save is still recognised as the bridge's own."""
-        msg = (f"Save to {self.slot} was issued after a clean read-back, {how}. It may still land: check "
-               f"{self.slot} on the unit before pushing there again." + captures.summary(self.resolved)
+        msg = (f"Save to {self.slot} in {self.folder_name!r} was issued after a clean read-back, {how}. "
+               f"It may still land: check {self.slot} on the unit before pushing there again." + captures.summary(self.resolved)
                + self.deps_note)
         return failed(code, msg, firmware=self.fw, push=self.result, extra={"saved": True}, **kw)
 
@@ -604,35 +623,50 @@ class _Push:
             return refused("validation", "The export failed the bridge's own checks: " + text.clean(str(e), 400))
         return None
 
-    def check_slot(self, listing, cur):
-        """Rules 3 and 4 against a listing and the open position (run before writing and again before saving)."""
+    def check_slot(self, snap, cur):
+        """Rules 3 and 4 against a listing and the open position (run before writing and again before saving).
+        The collection is whichever one is open on the unit: it must be a regular (non-factory) 256-slot
+        collection, the target slot must be the open one and empty in THAT collection's own listing, and once
+        a push has chosen its collection it never changes."""
         slot, pos = self.slot, self.pos
-        if _occupied(listing, pos):
-            return refused("slot_not_empty", f"Slot {slot} is not empty on the unit "
-                           f"(it holds {text.clean(listing.get(pos), NAME_LIMIT)!r}). The bridge never "
-                           "overwrites a preset; pick an empty slot.", firmware=self.fw)
-        dup = _same_name(listing, pos, self.name)
-        if dup is not None:
-            return refused("validation", f"Slot {slots.label(dup)} already has a preset named {self.name!r}. Pick a "
-                           "different name: if the unit stores presets by name, a save could replace it.",
-                           firmware=self.fw)
-        if cur.get("folder_key") != SETLIST_KEY or cur.get("position") != pos or cur.get("is_factory"):
-            seen = _open_desc(cur)
+        key = cur.get("folder_key")
+        view = None if (not key or cur.get("is_factory")) else _folder_view(snap, key)
+        if view is not None:
+            folder = _folder_label(snap, key)
+            if _occupied(view.my_presets, pos):
+                return refused("slot_not_empty", f"Slot {slot} in {folder!r} is not empty on the unit "
+                               f"(it holds {text.clean(view.my_presets.get(pos), NAME_LIMIT)!r}). The bridge never "
+                               "overwrites a preset; pick an empty slot.", firmware=self.fw)
+            dup = _same_name(view.my_presets, pos, self.name)
+            if dup is not None:
+                return refused("validation", f"Slot {slots.label(dup)} in {folder!r} already has a preset named "
+                               f"{self.name!r}. Pick a different name: if the unit stores presets by name, a save "
+                               "could replace it.", firmware=self.fw)
+        if (not key or cur.get("position") != pos or cur.get("is_factory")
+                or (self.folder_key is not None and key != self.folder_key)):
+            seen = _open_desc(cur, snap)
             log.warning("push refused, open slot mismatch: wanted %s (position %s); unit reported folder=%r "
                         "position=%r is_factory=%r", slot, pos, text.clean(str(cur.get("folder_key")), 80),
                         cur.get("position"), cur.get("is_factory"))
-            return refused("unsupported_arg", f"Select slot {slot} (empty) on the Quad Cortex first, then send "
-                           f"again. The bridge only builds into the empty slot that is open on the unit, so it "
-                           f"never changes what you have loaded. The unit reports {seen} as open. If {slot} is "
-                           "already selected on the unit's screen, the bridge is misreading the open slot: "
-                           "send the agent.log line starting 'push refused'.", firmware=self.fw)
+            return refused("unsupported_arg", f"Select slot {slot} (empty) in the collection you want on the Quad "
+                           "Cortex first, then send again. The bridge only builds into the empty slot that is "
+                           f"open on the unit, so it never changes what you have loaded. The unit reports {seen} "
+                           f"as open. If {slot} is already selected on the unit's screen, the bridge is "
+                           "misreading the open slot: send the agent.log line starting 'push refused'.",
+                           firmware=self.fw)
+        if view is None:
+            return refused("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
+                           "listed as a complete 256-slot preset collection, so the bridge can't tell whether "
+                           f"{slot} is empty there. Open a regular collection (for example My Presets) and send "
+                           "again.", firmware=self.fw)
+        self.folder_key, self.folder_name = key, _folder_label(snap, key)
         return None
 
     def check_unit(self):
         """Rules 3-5: fresh listing, the slot open with a blank grid, not expired; captures resolved."""
         snap = self.dev.read_directory()
         _check_alive(self.ctx)
-        out = self.check_slot(snap.my_presets, self.dev.setlist_position() or {})
+        out = self.check_slot(snap, self.dev.setlist_position() or {})
         if out:
             return out
         if any(b.capture for b in self.plan.blocks):
@@ -665,8 +699,8 @@ class _Push:
 
     def still_open(self) -> bool:
         cur = self.dev.setlist_position() or {}
-        return (cur.get("folder_key") == SETLIST_KEY and cur.get("position") == self.pos
-                and not cur.get("is_factory"))
+        return (bool(self.folder_key) and cur.get("folder_key") == self.folder_key
+                and cur.get("position") == self.pos and not cur.get("is_factory"))
 
     def op(self, fn, *args):
         """One device write. Before it, the target slot must still be the one open on the unit (writes
@@ -703,7 +737,7 @@ class _Push:
     def build(self):
         """The writes, into the live edit buffer of the empty, open slot (module docstring, rule 6)."""
         dev, plan = self.dev, self.plan
-        dev.begin_push(self.pos, self.name, plan)
+        dev.begin_push(self.pos, self.name, plan, folder_key=self.folder_key)
         self.op(dev.set_routing, plan.row, plan.in_port, plan.out_port)
         for b in plan.blocks:                                          # phase 1: place
             out = self.place(b)
@@ -810,7 +844,7 @@ class _Push:
         snap = dev.read_directory()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        out = self.check_slot(snap.my_presets, cur)
+        out = self.check_slot(snap, cur)
         if out:
             out.message = f"The unit changed while the preset was being built; nothing was saved. {out.message}"
             out.push = self.result
@@ -846,9 +880,10 @@ class _Push:
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
             snap = dev.read_directory()
-            if snap.my_presets.get(pos) == name:
+            view = _folder_view(snap, self.folder_key)
+            if view is not None and view.my_presets.get(pos) == name:
                 listed = True
-                self.deps_note = captures.deps_report(snap, pos, self.resolved)
+                self.deps_note = captures.deps_report(view, pos, self.resolved)
                 break
         if not listed:
             log.warning("save to %s not seen after %d listings", slot, SAVE_LIST_POLLS)
@@ -861,7 +896,7 @@ class _Push:
                 "see the bridge log." if self.defaults_differ else "")
         stomps = (f" {len(self.plan.stomps)} footswitch(es) assigned and read back; check them on the unit."
                   if self.plan.stomps else "")
-        return self.done(f"Saved {name!r} to {slot}; read-back matched.{stomps}{labels}{note}")
+        return self.done(f"Saved {name!r} to {slot} in {self.folder_name!r}; read-back matched.{stomps}{labels}{note}")
 
 
 def push_preset(ctx, job) -> Outcome:

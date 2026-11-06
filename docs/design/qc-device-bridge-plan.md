@@ -262,6 +262,13 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 - **A push builds only into the empty slot that is open on the unit.** The agent never recalls a preset or clears a
   grid: it requires the target slot to be selected on the unit with a blank live grid, which is exactly the save path
   G3 verified. A different open slot is refused (`unsupported_arg`, "select slot X on the unit first").
+- **The collection is whichever regular one is open (2026-11-06).** A push is not tied to "My Presets": it builds into the
+  empty slot of the non-factory preset collection open on the unit (e.g. the owner's "Sounds profiles"). The collection must
+  show in the listing as a full 256-slot table, the slot must be empty in *that* collection's own listing, and the
+  collection is pinned for the whole push (build guard, pre-save re-check, save, post-save verify). Found on hardware: slot
+  4A was open in "Sounds profiles", position matched, the folder did not, and the old My Presets-only check refused.
+  `list_device_slots` and `read_device_preset` still read My Presets only. **Unverified on the unit:** that `write_preset_file`
+  into a collection other than My Presets saves there (README step 9).
 - **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
   qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
   to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
