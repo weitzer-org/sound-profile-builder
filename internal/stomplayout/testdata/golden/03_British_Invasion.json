@@ -1,0 +1,158 @@
+{
+  "layout": "A=comp B=boost C=drive D=drive2 E=delay F=mod G=reverb",
+  "blocks": [
+    {
+      "row": 0,
+      "col": 0,
+      "model_id": 5011
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "model_id": 21
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "model_id": 9
+    },
+    {
+      "row": 0,
+      "col": 3,
+      "model_id": 14001,
+      "modeler_type": "Amplifier",
+      "capture_name": "66 AC30 JMP OD"
+    },
+    {
+      "row": 0,
+      "col": 4,
+      "model_id": 12024
+    },
+    {
+      "row": 0,
+      "col": 5,
+      "model_id": 6015
+    },
+    {
+      "row": 0,
+      "col": 6,
+      "model_id": 8029
+    }
+  ],
+  "current": [],
+  "plan": {
+    "assign": [
+      {
+        "row": 0,
+        "col": 0,
+        "switch": "A"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "switch": "B"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "switch": "G"
+      }
+    ],
+    "remove": [],
+    "skipped": [
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "reason": "capture is not a switchable effect (modeler)"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 12024,
+        "model": "212 UK C30 65 (M)",
+        "reason": "no role for category Cabsim Guitar (M)"
+      }
+    ],
+    "warnings": [],
+    "roles": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 5011,
+        "model": "Jewel",
+        "category": "Compressor",
+        "role": "comp",
+        "source": "catalog",
+        "switch": "A"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 21,
+        "model": "Rage Booster",
+        "category": "Guitar Overdrive",
+        "role": "boost",
+        "source": "catalog",
+        "switch": "B"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 9,
+        "model": "Brit Blues",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "source": "modeler"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 12024,
+        "model": "212 UK C30 65 (M)",
+        "category": "Cabsim Guitar (M)",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "model_id": 6015,
+        "model": "Circular Delay",
+        "category": "Delay",
+        "role": "delay",
+        "source": "catalog",
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "model_id": 8029,
+        "model": "Studio Plate 70 (ST)",
+        "category": "Reverb",
+        "role": "reverb",
+        "source": "catalog",
+        "switch": "G"
+      }
+    ]
+  }
+}

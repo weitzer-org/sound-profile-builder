@@ -1,0 +1,138 @@
+{
+  "layout": "A=comp B=boost C=drive D=drive2 E=delay F=mod G=reverb",
+  "blocks": [
+    {
+      "row": 0,
+      "col": 0,
+      "model_id": 9014
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "model_id": 5
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "model_id": 14001,
+      "modeler_type": "Amplifier",
+      "capture_name": "1964 Fender Super Reverb"
+    },
+    {
+      "row": 0,
+      "col": 3,
+      "model_id": 21002
+    },
+    {
+      "row": 0,
+      "col": 4,
+      "model_id": 6008
+    },
+    {
+      "row": 0,
+      "col": 5,
+      "model_id": 8033
+    }
+  ],
+  "current": [],
+  "plan": {
+    "assign": [
+      {
+        "row": 0,
+        "col": 1,
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "switch": "G"
+      }
+    ],
+    "remove": [],
+    "skipped": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 9014,
+        "model": "Crying Clyde Wah",
+        "reason": "no role for category Wah"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "reason": "capture is not a switchable effect (modeler)"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 21002,
+        "model": "410 US Basslad P10Q 16 (M)",
+        "reason": "no role for category Cabsim Bass (M)"
+      }
+    ],
+    "warnings": [],
+    "roles": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 9014,
+        "model": "Crying Clyde Wah",
+        "category": "Wah",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 5,
+        "model": "Green 808",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "source": "modeler"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 21002,
+        "model": "410 US Basslad P10Q 16 (M)",
+        "category": "Cabsim Bass (M)",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 6008,
+        "model": "Slapback Delay (ST)",
+        "category": "Delay",
+        "role": "delay",
+        "source": "catalog",
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "model_id": 8033,
+        "model": "John Mayer Spring Reverb (M)",
+        "category": "Reverb",
+        "role": "reverb",
+        "source": "catalog",
+        "switch": "G"
+      }
+    ]
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "layout": "A=comp B=boost C=drive D=drive2 E=delay F=mod G=reverb",
+  "blocks": [
+    {
+      "row": 0,
+      "col": 0,
+      "model_id": 5011
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "model_id": 21
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "model_id": 1
+    },
+    {
+      "row": 0,
+      "col": 3,
+      "model_id": 9
+    },
+    {
+      "row": 0,
+      "col": 4,
+      "model_id": 2
+    },
+    {
+      "row": 0,
+      "col": 5,
+      "model_id": 1001
+    },
+    {
+      "row": 0,
+      "col": 6,
+      "model_id": 12045
+    },
+    {
+      "row": 0,
+      "col": 7,
+      "model_id": 6015
+    },
+    {
+      "row": 0,
+      "col": 8,
+      "model_id": 6001
+    },
+    {
+      "row": 0,
+      "col": 9,
+      "model_id": 7000
+    },
+    {
+      "row": 0,
+      "col": 10,
+      "model_id": 8000
+    }
+  ],
+  "current": [
+    {
+      "row": 0,
+      "col": 0,
+      "switch": "A"
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "switch": "B",
+      "momentary": true
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "switch": "F"
+    },
+    {
+      "row": 0,
+      "col": 5,
+      "switch": "C"
+    },
+    {
+      "row": 0,
+      "col": 7,
+      "switch": "H"
+    },
+    {
+      "row": 0,
+      "col": 10,
+      "switch": "G"
+    }
+  ],
+  "plan": {
+    "assign": [
+      {
+        "row": 0,
+        "col": 2,
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "switch": "D"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "switch": "D"
+      },
+      {
+        "row": 0,
+        "col": 8,
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 9,
+        "switch": "F"
+      }
+    ],
+    "remove": [
+      {
+        "row": 0,
+        "col": 2,
+        "switch": "F"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "switch": "C"
+      }
+    ],
+    "skipped": [
+      {
+        "row": 0,
+        "col": 5,
+        "model_id": 1001,
+        "model": "Brit 2203",
+        "reason": "no role for category Guitar Amplifier"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "model_id": 12045,
+        "model": "110 US PRN C10R (M)",
+        "reason": "no role for category Cabsim Guitar (M)"
+      },
+      {
+        "row": 0,
+        "col": 7,
+        "model_id": 6015,
+        "model": "Circular Delay",
+        "reason": "already on H (delay); H is never touched"
+      }
+    ],
+    "warnings": [
+      "switch B at (0,1) is momentary; this tool only writes latching assignments and leaves it as is"
+    ],
+    "roles": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 5011,
+        "model": "Jewel",
+        "category": "Compressor",
+        "role": "comp",
+        "source": "catalog",
+        "switch": "A"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 21,
+        "model": "Rage Booster",
+        "category": "Guitar Overdrive",
+        "role": "boost",
+        "source": "catalog",
+        "switch": "B"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 1,
+        "model": "Myth Drive",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 9,
+        "model": "Brit Blues",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "D"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 2,
+        "model": "Obsessive Drive",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "D"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "model_id": 1001,
+        "model": "Brit 2203",
+        "category": "Guitar Amplifier",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "model_id": 12045,
+        "model": "110 US PRN C10R (M)",
+        "category": "Cabsim Guitar (M)",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 7,
+        "model_id": 6015,
+        "model": "Circular Delay",
+        "category": "Delay",
+        "role": "delay",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 8,
+        "model_id": 6001,
+        "model": "Analog Delay (M)",
+        "category": "Delay",
+        "role": "delay",
+        "source": "catalog",
+        "switch": "E"
+      },
+      {
+        "row": 0,
+        "col": 9,
+        "model_id": 7000,
+        "model": "Vintage Chorus",
+        "category": "Modulation",
+        "role": "mod",
+        "source": "catalog",
+        "switch": "F"
+      },
+      {
+        "row": 0,
+        "col": 10,
+        "model_id": 8000,
+        "model": "Room",
+        "category": "Reverb",
+        "role": "reverb",
+        "source": "catalog",
+        "switch": "G"
+      }
+    ]
+  }
+}
