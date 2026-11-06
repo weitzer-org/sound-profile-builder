@@ -83,7 +83,7 @@ class Store(unittest.TestCase):
 
     def test_list_rejects_dtd(self):
         st, _ = store([(200, b'<?xml version="1.0"?><!DOCTYPE x [<!ENTITY a "b">]><x/>')])
-        with self.assertRaises(s3.StoreError):
+        with self.assertRaisesRegex(s3.StoreError, "unexpected DTD"):
             st.list_prefix("", 3)
 
     def test_bounded_get(self):
@@ -118,7 +118,7 @@ class Store(unittest.TestCase):
         def cut(req, timeout=None):
             raise http.client.IncompleteRead(b"partial")
         st = s3.S3Store("https://acct.r2.cloudflarestorage.com", "jobs-bucket", AK, SK, opener=cut)
-        with self.assertRaises(s3.StoreError):
+        with self.assertRaisesRegex(s3.StoreError, "IncompleteRead"):
             st.get_bounded("k", 10)
 
     def test_redirects_are_not_followed(self):

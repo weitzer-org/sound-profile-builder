@@ -103,7 +103,7 @@ class Session(Base):
 
     def test_no_device_maps_to_unit_absent(self):
         with mock.patch.object(T, "open_hid", side_effect=RuntimeError("no HID device 0x152a:0x880a found")):
-            with self.assertRaises(UnitAbsent):
+            with self.assertRaisesRegex(UnitAbsent, "no HID device"):
                 self.dev.connect()
 
 
@@ -153,7 +153,7 @@ class StrictPosition(Base):
     def test_a_late_reply_after_a_timeout_is_not_used_later(self):
         self.dev.connect()
         self.hid.position_replies = False
-        with self.assertRaises(DeviceError):
+        with self.assertRaisesRegex(DeviceError, "carrying request_id"):
             self.dev._call("get_setlist_position", timeout_ms=200)
         self.stale(rid=self.dev._raw._req_id)  # the timed-out READ's answer finally arrives
         self.hid.position_replies = True
@@ -367,19 +367,22 @@ class MethodAllowlist(unittest.TestCase):
         for name in ("save_preset", "recall", "clear_grid", "send", "request", "delete_block", "set_mode",
                      "write_global_eq", "set_io_port", "load_settings_preset", "delete_model_preset",
                      "set_scene_label", "set_preset_meta"):
-            with self.subTest(name), self.assertRaises(GuardError):
+            with self.subTest(name), self.assertRaisesRegex(GuardError, "is never allowed"):
                 getattr(g, name)
 
     def test_grant_cannot_include_never(self):
-        with self.assertRaises(GuardError):
+        with self.assertRaisesRegex(GuardError, "grant includes never-allowed methods"):
             Guarded(object(), grant={"open", "save_preset"})
 
     def test_unlisted_methods_raise(self):
-        with self.assertRaises(GuardError):
-            Guarded(object()).load_model_preset
+        # Real vendored methods on neither list (load_model_preset, used here before, is on the
+        # never-list, so this test never reached the "not granted" branch).
+        for name in ("read_state", "read_global_eq", "assign_param_to_scenes", "detect_version"):
+            with self.subTest(name), self.assertRaisesRegex(GuardError, "is not granted"):
+                getattr(Guarded(object()), name)
 
     def test_read_only(self):
-        with self.assertRaises(GuardError):
+        with self.assertRaisesRegex(GuardError, "read-only"):
             Guarded(object()).x = 1
 
 
@@ -392,9 +395,8 @@ class VendoredLoad(unittest.TestCase):
             p.write_bytes(p.read_bytes() + b"\n# local change\n")
             # The pin check refuses before sys.modules is touched; sandbox it anyway.
             with mock.patch.object(qcmcp_backend, "_loaded", None), mock.patch.dict(sys.modules):
-                with self.assertRaises(DeviceError) as cm:
+                with self.assertRaisesRegex(DeviceError, "differs from the reviewed f634ecd copy"):
                     qcmcp_backend.load_vendored(copy_dir)
-                self.assertIn("differs from the reviewed f634ecd copy", str(cm.exception))
 
     def test_injected_modules_must_be_the_verified_ones(self):
         mods = qcmcp_backend.load_vendored()
