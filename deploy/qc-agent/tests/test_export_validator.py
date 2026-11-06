@@ -144,12 +144,29 @@ class Refusals(unittest.TestCase):
         self.refused(mutate(lambda p: p["rows"][0].update(blocks=[])), "1-8 blocks")
         self.refused(mutate(lambda p: block(p, 1).update(col=5)), "columns must run")
 
+    def test_plugin_models_need_the_block_to_name_their_plugin(self):
+        # F3: the John Mayer Studio Verb Hall (8034) from the owner's first push is accepted when the export names
+        # John Mayer; a different name, no name, or a plugin id this agent doesn't know is refused
+        plan = validate(mutate(lambda p: swap(p, 4, 8034, plugin="John Mayer")), catalog(), "4.1.0")
+        self.assertEqual(plan.blocks[4].model_id, 8034)
+        self.refused(mutate(lambda p: swap(p, 4, 8034)), "is a John Mayer plugin model")
+        self.refused(mutate(lambda p: swap(p, 4, 8034, plugin="Plini")), "is a John Mayer plugin model")
+        cat = catalog()
+        saved = cat.models[8034].get("plugin_id")
+        try:
+            cat.models[8034]["plugin_id"] = "999"
+            with self.assertRaisesRegex(ExportRefused, "plugin id '999'"):
+                validate(mutate(lambda p: swap(p, 4, 8034, plugin="John Mayer")), cat, "4.1.0")
+        finally:
+            cat.models[8034]["plugin_id"] = saved
+
     def test_models(self):
         self.refused(mutate(lambda p: block(p, 0).update(model_id=20000)), "NC_Recorder")
         self.refused(mutate(lambda p: block(p, 0).update(model_id=99999)), "not in this PC's device catalog")
         self.refused(mutate(lambda p: block(p, 0).update(model="Klon")), "in the catalog, not")
         self.refused(mutate(lambda p: block(p, 0).update(category="Reverb")), "category is")
-        self.refused(mutate(lambda p: swap(p, 0, 30)), "plugin")  # Plini Drive
+        self.refused(mutate(lambda p: swap(p, 0, 30)), "names 'None'")  # Plini Drive without the block's plugin
+        self.refused(mutate(lambda p: swap(p, 0, 30, plugin="Cory Wong")), "is a Plini plugin model")
         self.refused(mutate(lambda p: block(p, 0).update(plugin="Cory Wong")), "names a plugin")
         for mid in (13004, 14000, 29001, 10004, 11000, 27000):  # FX loop, capture, IR, splitter, mixer, looper
             name = catalog().models[mid]["name"]

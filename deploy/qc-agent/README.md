@@ -255,6 +255,12 @@ them; this guide uses **24H**).
     unit shows) and delete the preset. A push that fails with "footswitch assignments differ" saved nothing; send me
     the `read-back after the footswitches` lines from `agent.log`.
 
+19. **Plugin models (P6 follow-up F3; normal use).** Pull `main` on the PC first. Dry-run a preset with a plugin model you own
+    (for example the John Mayer Studio Verb Hall) into an empty slot, confirm, and expect `succeeded` with `mismatches 0`.
+    Then check on the unit that the block is the plugin model (not blank or a different model) and its values match the
+    dry run. If the push fails with `readback_mismatch` ("expected model 8034, found ..."), the unit did not take the plugin
+    block: paste the `read-back:` lines from `agent.log`; nothing was saved. Plugin cabs are still refused.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.

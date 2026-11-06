@@ -52,6 +52,8 @@ import math
 import re
 from dataclasses import dataclass, field
 
+from . import text
+
 FORMAT = "qc2-device-export/1"
 SUPPORTED_FORMATS = frozenset({FORMAT})
 MAX_BLOCKS = 8
@@ -65,6 +67,11 @@ STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assign
 # H (7) has no entry, so it can never be planned.
 STOMP_INDEX = {s: i for i, s in enumerate(STOMP_SWITCHES)}
 VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
+# catalog plugin_id -> the plugin's short name, kept in step with internal/catalog/plugins.go (a test compares them).
+# A plugin model is placed only when its block names exactly this plugin: an id missing here is refused.
+PLUGIN_NAMES = {"1": "Nameless", "3": "Plini", "4": "Parallax", "5": "Nolly", "9": "Cory Wong", "10": "Gojira",
+                "11": "SLO-100", "12": "Tim Henson", "13": "Petrucci", "15": "Rabea", "20": "Misha Mansoor",
+                "21": "John Mayer"}
 CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
 CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
 CAPTURE_SOURCES = frozenset({"factory", "user"})
@@ -423,10 +430,22 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     if b["model"] != cm["name"]:
         raise ExportRefused(f"{where}: model {mid} is {cm['name']!r} in the catalog, not {b['model']!r}")
     where = f"block {bi} ({cm['name']})"
-    if cm.get("plugin_id") is not None:
-        raise ExportRefused(f"{where}: plugin models are not pushed in v1")
-    if "plugin" in b:
-        raise ExportRefused(f"{where}: the export names a plugin the catalog does not")
+    pid = cm.get("plugin_id")
+    if pid is None:
+        if "plugin" in b:
+            raise ExportRefused(f"{where}: the export names a plugin the catalog does not")
+    else:
+        # F3: QC-2 exports a plugin model only for a plugin the owner has (config.json available_plugins) and
+        # names it in the block. The agent holds no ownership list: it checks that the block names the plugin
+        # this PC's catalog says the model belongs to, and refuses an id it doesn't know. Whether the unit
+        # accepts a plugin it lacks is UNVERIFIED; the grid read-back (model ids per column) fails the push
+        # if the block doesn't land, and nothing is saved then.
+        want = PLUGIN_NAMES.get(str(pid))
+        if want is None:
+            raise ExportRefused(f"{where}: plugin id {pid!r} is not one this agent knows")
+        if b.get("plugin") != want:
+            raise ExportRefused(f"{where}: this is a {want} plugin model, but the export names "
+                                f"{text.clean(str(b.get('plugin')), 40)!r}")
     if cm["category"] not in ALLOWED_CATEGORIES:
         raise ExportRefused(f"{where}: category {cm['category']!r} is not pushed in v1")
     if b["category"] != cm["category"]:

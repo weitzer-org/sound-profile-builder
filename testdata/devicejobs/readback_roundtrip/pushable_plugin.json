@@ -1,0 +1,1298 @@
+{
+ "device_preset": {
+  "bypass": [
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ]
+  ],
+  "chains": [
+   {
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 1,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.20000000298023224,
+         0.800000011920929,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 1,
+      "model_id": 32,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 2,
+      "model_id": 7038,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.30000001192092896,
+         0.10000000149011612,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "in_port": 1,
+    "out_port": 19,
+    "row": 0
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 1
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 2
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 3
+   }
+  ],
+  "name": "Round trip"
+ },
+ "expect_payload": {
+  "bypass": [
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ]
+  ],
+  "chains": [
+   {
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 1,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.20000000298023224,
+         0.800000011920929,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224,
+         0.20000000298023224
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 1,
+      "model_id": 32,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645,
+         0.4000000059604645
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 2,
+      "model_id": 7038,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.30000001192092896,
+         0.10000000149011612,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896,
+         0.30000001192092896
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "in_port": 1,
+    "out_port": 19,
+    "row": 0
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 1
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 2
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 3
+   }
+  ],
+  "setlist": {
+   "folder": "My Presets",
+   "position": 8
+  }
+ },
+ "name": "pushable_plugin",
+ "position": {
+  "folder": "My Presets",
+  "position": 8
+ }
+}
