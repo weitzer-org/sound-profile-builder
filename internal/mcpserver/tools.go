@@ -259,7 +259,8 @@ func getPreset(svc *presetsvc.Service, exp devicejobs.Exporter) mcp.ToolHandlerF
 			if err != nil {
 				return nil, getOutput{}, toolError(getToolName, fmt.Errorf("marshaling preset: %w", err))
 			}
-			text = dataNotice + "\n\n```json\n" + string(raw) + "\n```"
+			text = dataNotice + fmt.Sprintf("\n\nPreset `%s` named %q (updated %s)\n\n", p.ID, cell(p.Name), p.UpdatedAt) +
+				"```json\n" + string(raw) + "\n```"
 		} else {
 			text = dataNotice + "\n\n" + RenderPresetMarkdown(p, sp)
 		}

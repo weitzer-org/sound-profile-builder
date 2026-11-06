@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -108,7 +110,30 @@ type PresetStore struct {
 	bucket string
 	prefix string
 	cache  []*Preset
-	mu     sync.RWMutex
+	// mu guards cache only; it is never held across a storage call except by the one-time
+	// load in List. idLocks serialises a preset's own storage write/delete and its cache
+	// update, so operations on different presets (almost always) run in parallel and
+	// readers (List) aren't stalled behind a slow write. A fixed set of stripes keyed by
+	// a hash of the id keeps memory constant however many presets come and go; two ids
+	// sharing a stripe only serialise, and no code path holds two stripes at once.
+	mu      sync.RWMutex
+	idLocks [idLockStripes]sync.Mutex
+}
+
+const idLockStripes = 256
+
+// lockStripe is the stripe an id maps to.
+func lockStripe(id string) int {
+	h := fnv.New32a()
+	h.Write([]byte(id))
+	return int(h.Sum32() % idLockStripes)
+}
+
+// lockID takes the per-preset lock and returns its release func.
+func (s *PresetStore) lockID(id string) func() {
+	m := &s.idLocks[lockStripe(id)]
+	m.Lock()
+	return m.Unlock
 }
 
 // NewPresetStore creates a new generic preset store
@@ -139,14 +164,18 @@ func (s *PresetStore) Save(ctx context.Context, p *Preset) error {
 	}
 
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, p.ID)
+
+	// Held across the write and the cache update, so a concurrent Delete or DeleteIf of this
+	// preset (the draft cleanup) can't land between them and leave storage and cache
+	// disagreeing. Other presets are unaffected.
+	defer s.lockID(p.ID)()
+
 	if err := s.client.WriteFile(ctx, s.bucket, objectName, data); err != nil {
 		return err
 	}
 
-	// Update cache
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	if s.cache != nil {
 		found := false
 		for i, cached := range s.cache {
@@ -196,7 +225,20 @@ func (s *PresetStore) Get(ctx context.Context, id string) (*Preset, error) {
 	return &p, nil
 }
 
-// List retrieves all presets currently saved
+// listLoadTimeout bounds the one-time load of the whole bucket into the cache.
+const listLoadTimeout = 60 * time.Second
+
+// listReadWorkers is how many preset objects the initial load reads at once.
+const listReadWorkers = 8
+
+// List retrieves all presets currently saved.
+//
+// The first call loads every preset into an in-memory cache. That load is never cut short
+// by the caller's context: a request deadline used to abort the remaining reads, which were
+// skipped, and the shortened list was then cached until restart (a saved preset could be
+// missing from every list while get-by-id still worked). It runs on its own timeout, and
+// if any object can't be read nothing is cached and the error is returned, so the next
+// call tries again.
 func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 	s.mu.RLock()
 	if s.cache != nil {
@@ -213,23 +255,61 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 		return append([]*Preset(nil), s.cache...), nil
 	}
 
-	files, err := s.client.ListFiles(ctx, s.bucket, s.prefix)
+	loadCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), listLoadTimeout)
+	defer cancel()
+
+	files, err := s.client.ListFiles(loadCtx, s.bucket, s.prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	var presets []*Preset
+	var names []string
 	for _, f := range files {
 		if strings.HasSuffix(f, ".json") {
-			data, err := s.client.ReadFile(ctx, s.bucket, f)
+			names = append(names, f)
+		}
+	}
+
+	loaded := make([]*Preset, len(names))
+	errs := make([]error, len(names))
+	sem := make(chan struct{}, listReadWorkers)
+	var wg sync.WaitGroup
+	for i, f := range names {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(i int, f string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			data, err := s.client.ReadFile(loadCtx, s.bucket, f)
 			if err != nil {
-				continue
+				errs[i] = fmt.Errorf("reading %s: %w", f, err)
+				return
 			}
 			var p Preset
-			if err := json.Unmarshal(data, &p); err == nil {
-				presets = append(presets, &p)
+			if err := json.Unmarshal(data, &p); err != nil {
+				// A corrupt object is skipped (and logged) rather than hiding every preset.
+				log.Printf("preset store: skipping unreadable %s: %v", f, err)
+				return
 			}
+			loaded[i] = &p
+		}(i, f)
+	}
+	wg.Wait()
+
+	for _, e := range errs {
+		if e != nil {
+			return nil, e // not cached: the next List retries the whole load
 		}
+	}
+
+	var presets []*Preset
+	for _, p := range loaded {
+		if p != nil {
+			presets = append(presets, p)
+		}
+	}
+	if presets == nil {
+		presets = []*Preset{} // loaded, just empty (a nil cache means "not loaded")
 	}
 
 	s.cache = presets
@@ -238,14 +318,47 @@ func (s *PresetStore) List(ctx context.Context) ([]*Preset, error) {
 
 // Delete removes a preset from storage
 func (s *PresetStore) Delete(ctx context.Context, id string) error {
+	_, err := s.DeleteIf(ctx, id, nil)
+	return err
+}
+
+// DeleteIf deletes a preset only if keep-or-delete says so about its current stored
+// state: when check is non-nil it is given the preset as stored right now, and the delete
+// happens only if it returns true. The read, the check and the delete run under the same
+// per-preset lock as Save, so a rename can't slip in between (the draft cleanup used to delete a
+// draft by id after a user had just named it). A preset that is already gone is not an
+// error. It reports whether it deleted.
+func (s *PresetStore) DeleteIf(ctx context.Context, id string, check func(*Preset) bool) (bool, error) {
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, id)
+
+	defer s.lockID(id)()
+
+	if check != nil {
+		data, err := s.client.ReadFile(ctx, s.bucket, objectName)
+		if err != nil {
+			// The backends have no not-found sentinel, so ask the listing: gone is fine,
+			// but a transient read failure must surface so the caller can retry.
+			exists, lerr := s.Exists(ctx, id)
+			if lerr != nil {
+				return false, lerr
+			}
+			if !exists {
+				return false, nil
+			}
+			return false, fmt.Errorf("reading preset %s for delete check: %w", id, err)
+		}
+		var p Preset
+		if err := json.Unmarshal(data, &p); err != nil || !check(&p) {
+			return false, nil
+		}
+	}
+
 	if err := s.client.DeleteFile(ctx, s.bucket, objectName); err != nil {
-		return err
+		return false, err
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	if s.cache != nil {
 		for i, p := range s.cache {
 			if p.ID == id {
@@ -255,5 +368,5 @@ func (s *PresetStore) Delete(ctx context.Context, id string) error {
 		}
 	}
 
-	return nil
+	return true, nil
 }
