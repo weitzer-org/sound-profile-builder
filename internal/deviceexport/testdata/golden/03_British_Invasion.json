@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "25ba3bee3fb3f089bdcf37c483267796a8125be6b297f83b61579be25f66cbea",
+ "plan_sha256": "8606a98d065b9e6e852974104ef46d6accdf54911c48fcc153416466217bae84",
  "summary": [
   {
    "row": 0,
@@ -766,6 +766,33 @@
       "at_default": []
      }
     ]
+   }
+  ],
+  "stomps": [
+   {
+    "row": 0,
+    "col": 0,
+    "switch": "A"
+   },
+   {
+    "row": 0,
+    "col": 1,
+    "switch": "B"
+   },
+   {
+    "row": 0,
+    "col": 2,
+    "switch": "C"
+   },
+   {
+    "row": 0,
+    "col": 5,
+    "switch": "E"
+   },
+   {
+    "row": 0,
+    "col": 6,
+    "switch": "G"
    }
   ],
   "unresolved": [

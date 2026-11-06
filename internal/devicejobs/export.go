@@ -33,6 +33,35 @@ type Export struct {
 	// Unresolved lists everything the exporter could not map exactly. A push
 	// needs none.
 	Unresolved []Unresolved
+	// Stomps is the exporter's footswitch layout for the dry run (design doc
+	// qc-stomp-layout.md S2). Optional and display-only: the assignments that are
+	// pushed are the payload's own "stomps" array, which the plan hash covers.
+	Stomps *PlanStomps
+}
+
+// PlanStomps is the readable stomp layout: where each block goes, and what was left
+// alone and why. All switch behaviour is UNVERIFIED until gate G7.
+type PlanStomps struct {
+	Assigned []PlanStomp   `json:"assigned"`
+	Skipped  []PlanSkipped `json:"skipped"`
+	Warnings []string      `json:"warnings"`
+}
+
+// PlanStomp is one block with its switch.
+type PlanStomp struct {
+	Row    int    `json:"row"`
+	Col    int    `json:"col"`
+	Model  string `json:"model"`
+	Role   string `json:"role"`
+	Switch string `json:"switch"`
+}
+
+// PlanSkipped is a placed block that gets no switch.
+type PlanSkipped struct {
+	Row    int    `json:"row"`
+	Col    int    `json:"col"`
+	Model  string `json:"model"`
+	Reason string `json:"reason"`
 }
 
 // PlanBlock is one block of the readable plan.
