@@ -258,6 +258,17 @@ them; this guide uses **24H**).
     unit shows) and delete the preset. A push that fails with "footswitch assignments differ" saved nothing; send me
     the `read-back after the footswitches` lines from `agent.log`.
 
+17. **Scene layouts (two guitars in one slot, or one guitar on other scenes; normal use).** Pull `main` on the PC first
+    (the agent's validator changed). Dry-run a push with `second_guitar` and the four scene letters (for example
+    ES-339 on A/B and Telecaster on E/F). The plan's table has one column per used scene; scenes nobody takes are
+    named under it and carry the first guitar's rhythm values. Select the empty slot on the unit, confirm, and expect
+    `succeeded`, `mismatches 0`. Then step through the scenes on the unit **by eye**: A and B show the first guitar's
+    rhythm and lead values, E and F the second guitar's, and a scene you did not assign (C, D, G, H) matches Scene A.
+    A bypass that differs between the guitars (a block on for one, off for the other) must follow the scene, but its
+    footswitch toggles it in every scene. Power-cycle and check again. **Unverified on the unit until you run it.**
+    A push the agent refuses with "scenes with the same source must carry the same values" means the PC is on an
+    older clone: pull `main`.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.
