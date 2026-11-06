@@ -142,6 +142,24 @@ class PushStomps(test_agent.Base):
         self.assert_not_saved(r, code="device_error")
         self.assertEqual([c for c in self.dev.calls if c[0] == "assign_stomp"], PLANNED[:1])
 
+    def test_the_unit_going_away_during_the_stomps_stops_them(self):
+        def hook(name):
+            if name == "assign_stomp":
+                self.dev.gone_after = self.dev._alive_calls  # the watchdog's verdict turns "gone" now
+        self.dev.on_call = hook
+        r = self.push()
+        self.assert_not_saved(r, code="unit_absent")
+        self.assertEqual([c for c in self.dev.calls if c[0] == "assign_stomp"], PLANNED[:1])
+
+    def test_a_failed_assignment_stops_the_push(self):
+        def boom(row, col, index):
+            self.dev._rec("assign_stomp", row, col, index)
+            raise DeviceError("the transport raised")
+        self.dev.assign_stomp = boom
+        r = self.push()
+        self.assert_not_saved(r, code="device_error")
+        self.assertEqual([c for c in self.dev.calls if c[0] == "assign_stomp"], PLANNED[:1])
+
     def test_stomps_that_change_before_the_save_fail(self):
         def hook(fake, n):
             if any(c[0] == "assign_stomp" for c in fake.calls):
