@@ -115,16 +115,18 @@ func structured(path string) (storage.StructuredPreset, bool) {
 			SP json.RawMessage `json:"structured_payload"`
 		}
 		if json.Unmarshal([]byte(c.Output), &out) != nil || len(out.SP) == 0 {
-			return storage.StructuredPreset{}, false
+			continue // a malformed Architect output; a later one may be valid
 		}
 		var sp storage.StructuredPreset
 		if json.Unmarshal(out.SP, &sp) != nil {
 			var s string // some outputs carry it as a JSON string
 			if json.Unmarshal(out.SP, &s) != nil || json.Unmarshal([]byte(s), &sp) != nil {
-				return storage.StructuredPreset{}, false
+				continue
 			}
 		}
-		return sp, len(sp.Guitars) > 0
+		if len(sp.Guitars) > 0 {
+			return sp, true
+		}
 	}
 	return storage.StructuredPreset{}, false
 }

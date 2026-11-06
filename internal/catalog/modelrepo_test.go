@@ -281,3 +281,24 @@ func parseFixtureWith(t *testing.T, categories string) *Catalog {
 	}
 	return New(models, Source{CorOSVersion: "test"}, "")
 }
+
+// TestStringDefaultStaysString: a string parameter's default is kept as a string even when
+// it looks numeric, and a float's default is never a string.
+func TestStringDefaultStaysString(t *testing.T) {
+	c := parseFixtureWith(t, `<Category id="1" name="Cabsim Guitar (M)">
+  <Model id="1" name="A" tm="">
+    <Parameter defaultValue="57" name="ir selector" type="string" max="999" min="0"/>
+    <Parameter defaultValue="ME_A_Dynamic 57" name="ir selector" type="string" max="999" min="0"/>
+    <Parameter defaultValue="5" max="10" min="0" name="GAIN" type="float"/>
+  </Model></Category>`)
+	ps := c.Models[0].Params
+	if ps[0].DefaultString != "57" || ps[0].Default != nil {
+		t.Errorf("numeric-looking string default: %+v", ps[0])
+	}
+	if ps[1].DefaultString != "ME_A_Dynamic 57" || ps[1].Default != nil {
+		t.Errorf("string default: %+v", ps[1])
+	}
+	if ps[2].DefaultString != "" || ps[2].Default == nil || *ps[2].Default != 5 {
+		t.Errorf("float default: %+v", ps[2])
+	}
+}

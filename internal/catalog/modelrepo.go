@@ -227,10 +227,12 @@ func convertParam(index int, xp xmlParam) (Param, error) {
 	}
 	p.Min, p.MinSymbol = numberOrSymbol(xp.Min)
 	p.Max, p.MaxSymbol = numberOrSymbol(xp.Max)
-	if v, err := strconv.ParseFloat(strings.TrimSpace(xp.Default), 64); err == nil {
-		p.Default = &v
-	} else if xp.Type == "string" {
+	// The declared type decides: a string parameter's default stays a string even if it
+	// looks numeric (an IR name such as "57").
+	if xp.Type == "string" {
 		p.DefaultString = strings.TrimSpace(xp.Default)
+	} else if v, err := strconv.ParseFloat(strings.TrimSpace(xp.Default), 64); err == nil {
+		p.Default = &v
 	}
 	if n, err := strconv.Atoi(strings.TrimSpace(xp.Steps)); err == nil {
 		p.Steps = n
