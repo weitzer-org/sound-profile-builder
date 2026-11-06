@@ -1,0 +1,277 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "f714defa213c46acb9d3a46942013765e921643e7c6713b778945c96a13c9b80",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "Myth Drive",
+   "model_id": 1,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "2",
+     "b": "8"
+    },
+    {
+     "name": "LEVEL",
+     "a": "6"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "model": "Cory Wong The Tuber",
+   "model_id": 32,
+   "params": [
+    {
+     "name": "DRIVE",
+     "a": "4"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 2,
+   "model": "Cory Wong The 80s",
+   "model_id": 7038,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "30 %",
+     "b": "10 %"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  }
+ ],
+ "unresolved": [],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
+  },
+  "guitar": "Gibson ES-339 Humbuckers",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 1,
+      "model": "Myth Drive",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "scene_mode": true,
+        "display": [
+         2,
+         8,
+         2,
+         2,
+         2,
+         2,
+         2,
+         2
+        ],
+        "wire": [
+         0.2,
+         0.8,
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "LEVEL",
+        "scene_mode": false,
+        "display": [
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 1,
+      "model_id": 32,
+      "model": "Cory Wong The Tuber",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "plugin": "Cory Wong",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "DRIVE",
+        "scene_mode": false,
+        "display": [
+         4,
+         4,
+         4,
+         4,
+         4,
+         4,
+         4,
+         4
+        ],
+        "wire": [
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 2,
+      "model_id": 7038,
+      "model": "Cory Wong The 80s",
+      "category": "Modulation",
+      "index_evidence": "plain",
+      "plugin": "Cory Wong",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         30,
+         10,
+         30,
+         30,
+         30,
+         30,
+         30,
+         30
+        ],
+        "wire": [
+         0.3,
+         0.1,
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": []
+     }
+    ]
+   }
+  ],
+  "stomps": [
+   {
+    "row": 0,
+    "col": 0,
+    "switch": "C"
+   },
+   {
+    "row": 0,
+    "col": 1,
+    "switch": "D"
+   },
+   {
+    "row": 0,
+    "col": 2,
+    "switch": "F"
+   }
+  ],
+  "unresolved": [],
+  "warnings": []
+ }
+}

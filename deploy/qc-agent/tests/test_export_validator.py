@@ -144,12 +144,29 @@ class Refusals(unittest.TestCase):
         self.refused(mutate(lambda p: p["rows"][0].update(blocks=[])), "1-8 blocks")
         self.refused(mutate(lambda p: block(p, 1).update(col=5)), "columns must run")
 
+    def test_plugin_models_need_the_block_to_name_their_plugin(self):
+        # F3: the John Mayer Studio Verb Hall (8034) from the owner's first push is accepted when the export names
+        # John Mayer; a different name, no name, or a plugin id this agent doesn't know is refused
+        plan = validate(mutate(lambda p: swap(p, 4, 8034, plugin="John Mayer")), catalog(), "4.1.0")
+        self.assertEqual(plan.blocks[4].model_id, 8034)
+        self.refused(mutate(lambda p: swap(p, 4, 8034)), "is a John Mayer plugin model")
+        self.refused(mutate(lambda p: swap(p, 4, 8034, plugin="Plini")), "is a John Mayer plugin model")
+        cat = catalog()
+        saved = cat.models[8034].get("plugin_id")
+        try:
+            cat.models[8034]["plugin_id"] = "999"
+            with self.assertRaisesRegex(ExportRefused, "plugin id '999'"):
+                validate(mutate(lambda p: swap(p, 4, 8034, plugin="John Mayer")), cat, "4.1.0")
+        finally:
+            cat.models[8034]["plugin_id"] = saved
+
     def test_models(self):
         self.refused(mutate(lambda p: block(p, 0).update(model_id=20000)), "NC_Recorder")
         self.refused(mutate(lambda p: block(p, 0).update(model_id=99999)), "not in this PC's device catalog")
         self.refused(mutate(lambda p: block(p, 0).update(model="Klon")), "in the catalog, not")
         self.refused(mutate(lambda p: block(p, 0).update(category="Reverb")), "category is")
-        self.refused(mutate(lambda p: swap(p, 0, 30)), "plugin")  # Plini Drive
+        self.refused(mutate(lambda p: swap(p, 0, 30)), "names 'None'")  # Plini Drive without the block's plugin
+        self.refused(mutate(lambda p: swap(p, 0, 30, plugin="Cory Wong")), "is a Plini plugin model")
         self.refused(mutate(lambda p: block(p, 0).update(plugin="Cory Wong")), "names a plugin")
         for mid in (13004, 14000, 29001, 10004, 11000, 27000):  # FX loop, capture, IR, splitter, mixer, looper
             name = catalog().models[mid]["name"]
@@ -235,10 +252,11 @@ class Refusals(unittest.TestCase):
         with self.assertRaisesRegex(ExportRefused, "unconfirmed or missing bound"):
             validate(mutate(lambda p: swap(p, 0, 4000, params=[g])), cat, "4.1.0")
 
-    def test_fader_linear_guess(self):
-        # Faders (owner decision 2026-11-06, plan 4.1): converted like a float on the catalog range, and
-        # labelled a guess. Plugin Graphic-9 65Hz is -12..12 dB, CA John's 2C Ch1 80 Hz is 0..10; neither has a skew.
-        guess = ["encoding:fader-linear-guess"]
+    def test_fader_linear_p6(self):
+        # Faders (owner decision 2026-11-06, plan 4.1): converted like a float on the catalog range; confirmed on
+        # the unit at two models in P6 and labelled "-p6" for all of them. Plugin Graphic-9 65Hz is -12..12 dB,
+        # CA John's 2C Ch1 80 Hz is 0..10; neither has a skew.
+        guess = ["encoding:fader-linear-p6"]
         db = {"index": 1, "label": "65Hz", "scene_mode": False, "display": eight(6), "wire": eight(0.75),
               "units": "dB", "evidence": guess}
         dial = {"index": 10, "label": "80 Hz", "scene_mode": False, "display": eight(7.5), "wire": eight(0.75),
@@ -251,6 +269,13 @@ class Refusals(unittest.TestCase):
 
         accept(4006, db)
         accept(1139, dial)
+        # the pre-P6 label is still accepted (a payload from a server that was not updated), but both together are not
+        legacy = ["encoding:fader-linear-guess"]
+        accept(4006, db | {"evidence": legacy})
+        accept(1139, dial | {"evidence": legacy})
+        refuse(4006, db | {"evidence": guess + legacy}, "needs exactly one")
+        refuse(4005, {"index": 0, "label": "HPF", "scene_mode": False, "display": eight(20), "wire": eight(0),
+                      "units": "Hz", "evidence": ["taper:device-xml"] + legacy}, "doesn't match a float")
         # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map
         for d, w in ((-12, 0), (12, 1), (0, 0.5), (-6, 0.25)):
             with self.subTest(model=4006, d=d, w=w):

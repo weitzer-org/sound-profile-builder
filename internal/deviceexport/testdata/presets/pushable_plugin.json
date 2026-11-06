@@ -1,0 +1,16 @@
+{
+ "guitars": {
+  "Gibson ES-339 Humbuckers": [
+   {"id": "b1", "type": "Overdrive", "model": "Myth Drive", "parameters": [
+     {"name": "Gain", "type": "slider", "value": "2", "value_b": "8", "basis": "engineering_convention"},
+     {"name": "Level", "type": "slider", "value": "6", "basis": "estimate"}],
+    "kept_defaults": []},
+   {"id": "b2", "type": "Overdrive", "model": "Cory Wong The Tuber", "parameters": [
+     {"name": "Drive", "type": "slider", "value": "4", "basis": "estimate"}],
+    "kept_defaults": ["TONE", "LEVEL"]},
+   {"id": "b3", "type": "Modulation", "model": "Cory Wong The 80s", "parameters": [
+     {"name": "Mix", "type": "slider", "value": "30%", "value_b": "10%", "basis": "estimate"}],
+    "kept_defaults": ["RATE", "WIDTH", "SYNC", "SYNC NOTE"]}
+  ]
+ }
+}

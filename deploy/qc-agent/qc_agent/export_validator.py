@@ -31,7 +31,7 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * each parameter's `evidence` (plan 4.1) names only known sources, and the wire values are the
   ones the catalog gives for those sources: the taper ((d-min)/(max-min))^skew for a float,
   (d-min)/(max-min) for a switch position ("encoding:qc-mcp-linear"), and the float taper for a
-  fader ("encoding:fader-linear-guess", an unverified guess), so a conversion QC-2 got wrong
+  fader ("encoding:fader-linear-p6", confirmed on the unit; the older "-guess" label is still accepted), so a conversion QC-2 got wrong
   is refused here too;
 * eight boolean bypass flags per block; `unresolved` is empty; `warnings` (settings the push
   leaves out on purpose, e.g. a non-default cab mic) is a list of short items and changes nothing;
@@ -55,6 +55,8 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass, field
+
+from . import text
 
 FORMAT = "qc2-device-export/1"
 SUPPORTED_FORMATS = frozenset({FORMAT})
@@ -93,6 +95,11 @@ STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assign
 # H (7) has no entry, so it can never be planned.
 STOMP_INDEX = {s: i for i, s in enumerate(STOMP_SWITCHES)}
 VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
+# catalog plugin_id -> the plugin's short name, kept in step with internal/catalog/plugins.go (a test compares them).
+# A plugin model is placed only when its block names exactly this plugin: an id missing here is refused.
+PLUGIN_NAMES = {"1": "Nameless", "3": "Plini", "4": "Parallax", "5": "Nolly", "9": "Cory Wong", "10": "Gojira",
+                "11": "SLO-100", "12": "Tim Henson", "13": "Petrucci", "15": "Rabea", "20": "Misha Mansoor",
+                "21": "John Mayer"}
 CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
 CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
 CAPTURE_SOURCES = frozenset({"factory", "user"})
@@ -115,10 +122,16 @@ PYQUADCORTEX_BOUNDS = {
 # The evidence labels the exporter writes (internal/deviceexport, plan 4.1).
 EVIDENCE = frozenset({"taper:g4", "taper:device-xml", "taper:pyquadcortex",
                       "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear",
-                      "scale:catalog-range", "encoding:fader-linear-guess"})
-# A fader is converted like a float on its catalog range, as a labelled GUESS (owner decision,
-# 2026-11-06; plan 4.1): only a fader may carry FADER_EVIDENCE, and a fader must.
-FADER_EVIDENCE = "encoding:fader-linear-guess"
+                      "scale:catalog-range", "encoding:fader-linear-p6", "encoding:fader-linear-guess"})
+# A fader is converted like a float on its catalog range. Confirmed on the owner's unit at two models (P6,
+# 2026-11-06: Graphic-9 4005 65 Hz +6 dB showed 6.0 dB; CA John's 2C Ch1 1139 80 Hz 8 showed 8.0) and applied
+# to all 48 faders by the owner's decision, so the exporter writes "encoding:fader-linear-p6" (the dry run
+# no longer marks it with a dagger). The earlier label "encoding:fader-linear-guess" is still accepted, so a
+# payload from a server that has not been updated validates the same way. Only a fader may carry one of the
+# two, and a fader must carry exactly one.
+FADER_EVIDENCE = "encoding:fader-linear-p6"
+FADER_EVIDENCE_LEGACY = "encoding:fader-linear-guess"
+FADER_LABELS = frozenset({FADER_EVIDENCE, FADER_EVIDENCE_LEGACY})
 LINEAR_SWITCH_TYPES = frozenset({"switch", "rotarySwitch", "toggleButton"})
 WIRE_TOLERANCE = 1e-9
 ROW, IN_PORT, OUT_PORT = 0, 1, 19  # qc-mcp clear_grid default routing; read back exactly in G3
@@ -327,9 +340,10 @@ def _check_param_evidence(pw, cp, ev):
     switch = cp["type"] in LINEAR_SWITCH_TYPES
     if switch != ("encoding:qc-mcp-linear" in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter")
-    if (cp["type"] == "fader") != (FADER_EVIDENCE in ev):
+    expected_labels = 1 if cp["type"] == "fader" else 0
+    if len(FADER_LABELS.intersection(ev)) != expected_labels:
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter "
-                            f"({FADER_EVIDENCE} belongs on faders only, and every fader needs it)")
+                            "(a fader evidence label belongs on faders only, and every fader needs exactly one)")
     symbolic = cp.get("min_symbol") is not None or cp.get("max_symbol") is not None
     if not switch and symbolic != any(e.startswith("bounds:") for e in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match the catalog's bounds")
@@ -451,10 +465,22 @@ def _check_block(bi, b, nblocks, catalog, sources) -> PlannedBlock:
     if b["model"] != cm["name"]:
         raise ExportRefused(f"{where}: model {mid} is {cm['name']!r} in the catalog, not {b['model']!r}")
     where = f"block {bi} ({cm['name']})"
-    if cm.get("plugin_id") is not None:
-        raise ExportRefused(f"{where}: plugin models are not pushed in v1")
-    if "plugin" in b:
-        raise ExportRefused(f"{where}: the export names a plugin the catalog does not")
+    pid = cm.get("plugin_id")
+    if pid is None:
+        if "plugin" in b:
+            raise ExportRefused(f"{where}: the export names a plugin the catalog does not")
+    else:
+        # F3: QC-2 exports a plugin model only for a plugin the owner has (config.json available_plugins) and
+        # names it in the block. The agent holds no ownership list: it checks that the block names the plugin
+        # this PC's catalog says the model belongs to, and refuses an id it doesn't know. Whether the unit
+        # accepts a plugin it lacks is UNVERIFIED; the grid read-back (model ids per column) fails the push
+        # if the block doesn't land, and nothing is saved then.
+        want = PLUGIN_NAMES.get(str(pid))
+        if want is None:
+            raise ExportRefused(f"{where}: plugin id {pid!r} is not one this agent knows")
+        if b.get("plugin") != want:
+            raise ExportRefused(f"{where}: this is a {want} plugin model, but the export names "
+                                f"{text.clean(str(b.get('plugin')), 40)!r}")
     if cm["category"] not in ALLOWED_CATEGORIES:
         raise ExportRefused(f"{where}: category {cm['category']!r} is not pushed in v1")
     if b["category"] != cm["category"]:

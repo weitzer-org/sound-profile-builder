@@ -108,19 +108,19 @@ func TestFaderConversion(t *testing.T) {
 					t.Errorf("scene %d: display %g wire %g, want %g / %g", s, pr.Display[s], pr.Wire[s], c.disp[i], c.wire[i])
 				}
 			}
-			hasGuess := false
+			hasLabel := false
 			for _, ev := range pr.Evidence {
-				hasGuess = hasGuess || ev == FaderEvidence
+				hasLabel = hasLabel || ev == FaderEvidence
 				if strings.HasPrefix(ev, "taper:") {
 					t.Errorf("a fader with no skew must not claim a taper label: %v", pr.Evidence)
 				}
 			}
-			if !hasGuess || pr.Confirmed() {
-				t.Errorf("evidence %v confirmed=%v: want %s and unconfirmed", pr.Evidence, pr.Confirmed(), FaderEvidence)
+			if !hasLabel || !pr.Confirmed() {
+				t.Errorf("evidence %v confirmed=%v: want %s and confirmed", pr.Evidence, pr.Confirmed(), FaderEvidence)
 			}
 			for _, s := range ex.Summary[0].Params {
-				if !s.Unconfirmed {
-					t.Errorf("plan row %+v not marked unconfirmed (dagger)", s)
+				if s.Unconfirmed {
+					t.Errorf("plan row %+v marked unconfirmed (dagger) although the fader rule is confirmed", s)
 				}
 			}
 		})

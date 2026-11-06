@@ -19,6 +19,15 @@ FW_CONSTANTS = (REPO / "internal" / "catalog" / "firmware_constants.go").read_te
 
 
 class Goldens(unittest.TestCase):
+    def test_plugin_table_matches_go(self):
+        go = (REPO / "internal" / "catalog" / "plugins.go").read_text()
+        table = dict(re.findall(r'^\s*"(\d+)":\s*"([^"]+)",', go, re.M))
+        self.assertEqual(table, V.PLUGIN_NAMES)
+
+    def test_every_plugin_id_in_the_catalog_is_known(self):
+        ids = {str(m["plugin_id"]) for m in catalog().models.values() if m.get("plugin_id") is not None}
+        self.assertLessEqual(ids, set(V.PLUGIN_NAMES))
+
     def test_goldens_exist(self):
         self.assertIn("pushable_g3", GOLDENS)
         self.assertGreaterEqual(len(GOLDENS), 4, glob.glob(str(GO_GOLDENS / "*")))
