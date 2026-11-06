@@ -359,7 +359,7 @@ func TestRefusals(t *testing.T) {
 		{"FX loop", preset(block("FX Loop 1")), "", "FX Loop blocks are not pushed"},
 		{"splitter", preset(block("Splitter AB")), "", "Splitter blocks are not pushed"},
 		{"side-chain", preset(block("Adaptive Gate (S/C)")), "", "side-chain"},
-		{"ambiguous duplicate", preset(block("Green 808")), "", "ambiguous: 2 device models"},
+		{"shared name, different controls", preset(block("Graphic-9")), "", "ambiguous: 2 device models share this name with different controls"},
 		{"unverified clone base", preset(block("Cory Wong The Wash")), "", "not verified on the device"},
 		{"stereo cab clone", preset(block("110 US PRN C10R (ST)")), "", "not verified on the device"},
 		{"global EQ", preset(block("Global EQ")), "", "never writes global settings"},
@@ -377,7 +377,8 @@ func TestRefusals(t *testing.T) {
 		{"out of range", preset(block("Myth Drive", prm("Gain", "11", ""))), "", "cannot convert"},
 		{"out of range in B", preset(block("Myth Drive", prm("Gain", "5", "12"))), "", "cannot convert"},
 		{"pan", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "L20", ""))), "", "pan display scale"},
-		{"unitless 0..1", preset(block("Crying Clyde Wah", prm("Wah", "0.4", ""))), "", "unitless 0..1"},
+		{"unitless 0..1 with a unit", preset(block("Crying Clyde Wah", prm("Wah", "40%", ""))), "", "only a plain number on its 0..1 scale"},
+		{"unitless 0..1 on another scale", preset(block("Crying Clyde Wah", prm("Wah", "40", ""))), "", "cannot convert"},
 		{"combo box off default", preset(block("Tremolo", prm("Waveform", "Square", ""))), "", "comboBox positions have no known wire mapping"},
 		{"fader", preset(block("Plugin Graphic-9", prm("65Hz", "3 dB", ""))), "", "type \"fader\" has no measured wire mapping"},
 		{"switch bad name", preset(block("Spring", prm("Trails", "Maybe", ""))), "", "isn't a position"},
@@ -753,5 +754,30 @@ func TestNonDefaultMicIsAWarning(t *testing.T) {
 	b := p.Rows[0].Blocks[0]
 	if len(b.AtDefault) != 0 || len(b.Params) != 1 || b.Params[0].Label != "MIC 1 LEVEL" {
 		t.Fatalf("block: %+v", b)
+	}
+}
+
+// TestSharedNameSameControls: models that share a name and have identical controls resolve
+// to the lowest id (owner decision); G1 read a hand-placed Green 808 back as id 5.
+func TestSharedNameSameControls(t *testing.T) {
+	ex, p := export(t, testExporter(t), preset(block("Green 808", prm("Overdrive", "6", ""))), "g")
+	if len(ex.Unresolved) != 0 || p.Rows[0].Blocks[0].ModelID != 5 || p.Rows[0].Blocks[0].Model != "Green 808" {
+		t.Fatalf("unresolved %+v, block %+v", ex.Unresolved, p.Rows[0].Blocks)
+	}
+}
+
+// TestUnitless01: a plain number on a unitless 0..1 control is taken on that scale and
+// labelled, so the dry run marks it unconfirmed.
+func TestUnitless01(t *testing.T) {
+	ex, p := export(t, testExporter(t), preset(block("Crying Clyde Wah", prm("Wah", "0.4", "0.75"))), "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved %+v", ex.Unresolved)
+	}
+	pr := p.Rows[0].Blocks[0].Params[0]
+	if pr.Wire[0] != 0.4 || pr.Wire[1] != 0.75 || strings.Join(pr.Evidence, ",") != "taper:g4,scale:catalog-range" {
+		t.Fatalf("param %+v", pr)
+	}
+	if !ex.Summary[0].Params[0].Unconfirmed {
+		t.Errorf("not marked unconfirmed in the plan")
 	}
 }
