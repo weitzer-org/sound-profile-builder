@@ -239,9 +239,39 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 | `firmware` | string ≤ 32, or `null` if the unit wasn't reached |
 | `push` | `null`, or for `push_preset`: `{"slot", "name", "mismatches": int, "cpu_load": number\|null, "diff": [≤512 × {"row", "col", "param_index", "expected": number, "readback": number\|null, "ok": bool}]}` |
 | `slots` | `null`, or for `list_slots`: `{"setlist": "My Presets", "slots": [≤256 × {"slot", "state": "empty"\|"occupied", "name": string≤64\|null, "owned": bool}]}` |
-| `readback` | `null`, or for `read_preset`: `{"format": "qc-device-readback/1", "slot": string\|null, "name": string\|null, "payload": object}`. The payload is opaque until P5 defines it. |
+| `readback` | `null`, or for `read_preset`: `{"format": "qc-device-readback/1", "slot": string\|null, "name": string\|null, "payload": object}`. `payload` is the object defined in section 9.1. |
 
 **Why results are signed.** The agent already holds the key, so signing costs one function call. It turns "a leaked agent bucket token can forge results, heartbeats and LLM-visible text" into "it can only delete or spam objects". QC-2 shows a result that fails verification as state `unverified` and withholds all of its text.
+
+## 9.1. The `read_preset` payload: `qc-device-readback/1` (P5)
+
+**Contract change (P5).** Until now `readback.payload` was opaque. This section pins what the merged agent already sends (`qc_agent.jobs.readback_payload`), and QC-2 now parses it strictly. The only agent change is the text limit of a string value (below).
+
+```json
+{"setlist": {"folder": "My Presets", "position": 8},
+ "chains": [{"row": 0, "in_port": 1, "out_port": 19,
+             "blocks": [{"col": 0, "model_id": 1,
+                         "params": [{"index": 0, "scene_mode": true,
+                                     "values": [0.2, 0.8, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]}]}]}],
+ "bypass": [[[false, true, false, false, false, false, false, false], "… 8 columns …"], "… 4 rows …"]}
+```
+
+| Field | Type and constraint |
+|---|---|
+| `setlist` | `{"folder": "My Presets"\|"other", "position": int\|null}`. `position` is the 0-based slot index and is non-null only in My Presets. |
+| `chains` | at most 4 objects, `row` 0-3, unique. Every grid row the unit reports, empty ones included (ports 0). |
+| `chains[].in_port`, `out_port` | int or `null`. Row 0 of a preset built by the bridge reads 1 and 19. |
+| `chains[].blocks` | at most 8, `col` 0-7, unique, ascending. A cell with no model hash is not sent. |
+| `blocks[].model_id` | int 0..2^31-1: the device's model hash, as in the catalog's `id`. |
+| `blocks[].params` | at most 256, `index` unique. **Every slot the device returned**: the model's whole parameter list (hidden and string parameters included) plus one trailing slot, so `param_count + 1` entries (plan 7.2). `index` is the position in that list. |
+| `params[].values` | **exactly 8** entries, scenes A-H (G1, G6: a parameter that is not scene-assigned repeats one value). Each is a finite JSON number (the wire value, 0..1 for a float parameter), a string, a boolean or `null`. A non-finite number (the unit can store NaN) is sent as `null`. |
+| `params[].scene_mode` | boolean: the unit has this parameter scene-assigned. |
+| `bypass` | `null` when the unit sent none, else exactly `bypass[row][col][scene]`, 4 rows x 8 columns x 8 scenes (G6: position is the array index; `true` = bypassed). |
+
+- **Text.** Every string (preset `name`, string values) is untrusted device text (section 11). The agent applies the section 11 clean-up and cuts a **string value at 192 characters** (`VALUE_STRING_LIMIT`; Go: `MaxReadbackStringRn`) and the preset `name` at 64. The old 64 would have cut a Neural Capture's `file_name`, which is the capture's 64-hex key followed by its name (plan 4.2), down to the key alone.
+- **Strict parse (QC-2).** `devicejobs.ParseReadbackPayload` rejects unknown fields, trailing data, wrong types, counts or indexes outside the geometry above, and a text value over 192 runes. A rejected payload is reported to the user as "not imported" with the reason; nothing is stored. A new field therefore needs a new format version, not a silent addition.
+- **What QC-2 does with it** is not part of the contract: `internal/deviceexport/readback.go` (the inverse of the export) turns it into a draft preset. It never writes to the unit.
+- **Shared fixtures** keep the two sides in step. `testdata/devicejobs/readback.json` holds hand-written edge cases (hostile text, non-finite numbers, a ninth value, a capture `file_name`) and 15 invalid payloads with the error each must produce. `testdata/devicejobs/readback_roundtrip/*.json` are written by the Go tests (`go test ./internal/deviceexport -run RoundTripFixtures -update`): the simulated unit state in the agent's positional form and the payload the agent must produce from it. `deploy/qc-agent/tests/test_readback.py` feeds each `device_preset` to `readback_payload` and compares with `expect_payload`; the Go tests parse every `expect_payload` and every invalid payload.
 
 ## 10. Heartbeat
 

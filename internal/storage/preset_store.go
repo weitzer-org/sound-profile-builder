@@ -35,6 +35,9 @@ type BlockParameter struct {
 	// (the model's best numeric judgment). Disclosure only -- never permission to omit, hedge,
 	// or return a range instead of a decisive number; Value must always be real and usable.
 	Basis string `json:"basis,omitempty"`
+	// Evidence is set only on values read back from a Quad Cortex (Basis "device_readback"):
+	// what backs the wire-to-display conversion, e.g. "taper:g4". Empty otherwise.
+	Evidence string `json:"evidence,omitempty"`
 }
 
 // EffectBlock represents a single gear block in the signal chain
@@ -68,6 +71,26 @@ type Preset struct {
 	// it, then each refine run that changed it (runs/<id>.json). Old presets
 	// simply have none.
 	RunIDs []string `json:"run_ids,omitempty"`
+	// Origin is set on a preset that was not generated here (today: imported from a Quad
+	// Cortex read-back). Nil on every generated preset.
+	Origin *PresetOrigin `json:"origin,omitempty"`
+}
+
+// OriginDeviceReadback marks a draft imported from the unit's open preset (plan P5).
+const OriginDeviceReadback = "device-readback"
+
+// PresetOrigin records where a non-generated preset came from. Every string is already
+// sanitized device text: data, never instructions.
+type PresetOrigin struct {
+	Kind       string `json:"kind"`
+	JobID      string `json:"job_id,omitempty"`
+	Slot       string `json:"slot,omitempty"`
+	DeviceName string `json:"device_name,omitempty"`
+	Firmware   string `json:"firmware,omitempty"`
+	ReadAt     string `json:"read_at,omitempty"`
+	Format     string `json:"format,omitempty"`
+	// Unconverted counts the controls the import left out (listed in the draft's blocks).
+	Unconverted int `json:"unconverted,omitempty"`
 }
 
 // Client defines the interface for underlying storage operations

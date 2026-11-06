@@ -14,6 +14,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/deviceexport"
+	"github.com/weitzer-org/sound-builder/internal/devicejobs"
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 )
 
@@ -26,13 +27,41 @@ func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 	if cfg := s.appConfig; cfg != nil {
 		owned = deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
-	return deviceexport.NewEmbedded(deviceexport.Options{IsCapture: isCaptureName, OwnedPlugins: owned, StompCaptures: agents.StompCaptureLookup()})
+	return deviceexport.NewEmbedded(deviceexport.Options{
+		IsCapture: isCaptureName, OwnedPlugins: owned, StompCaptures: agents.StompCaptureLookup(),
+		LookupCapture: lookupCapture, Sanitize: devicejobs.SanitizeText,
+	})
 }
 
 // isCaptureName reports names coros_map.json or user_captures.json mark as captures.
 func isCaptureName(name string) bool {
 	isCap, ok := agents.GetValidNativeBlocks()[name]
 	return ok && isCap
+}
+
+// lookupCapture finds a capture name read from the unit in coros_map.json or
+// user_captures.json: an exact name, ignoring case and surrounding space. A name in both
+// libraries is the user's own (a downloaded copy of a factory capture still exists on the unit).
+func lookupCapture(deviceName string) (name, source string, ok bool) {
+	want := strings.ToLower(strings.TrimSpace(deviceName))
+	if want == "" {
+		return "", "", false
+	}
+	// Map order is random, so the choice must not depend on it: a user entry wins, then the
+	// lexicographically first factory spelling.
+	for n, isCap := range agents.GetValidNativeBlocks() {
+		if !isCap || strings.ToLower(n) != want {
+			continue
+		}
+		if agents.IsUserCaptureName(n) {
+			if source != "user" || n < name {
+				name, source, ok = n, "user", true
+			}
+		} else if source != "user" && (!ok || n < name) {
+			name, source, ok = n, "factory", true
+		}
+	}
+	return name, source, ok
 }
 
 // handleDeviceExport serves GET /api/preset/device_export?id=<preset>&guitar=<name>: one

@@ -37,6 +37,10 @@ SAVE_LIST_POLLS = 6        # G3: a listing 3 s after the save still showed the s
 SAVE_LIST_INTERVAL_S = 6.0
 MAX_DIFF = 512
 NAME_LIMIT = 64
+# A read-back text value (contract section 9.1). A Neural Capture block's file_name is a 64-hex key plus the
+# capture's name, so NAME_LIMIT would cut the name off entirely. internal/devicejobs.MaxReadbackStringRn is the
+# same number; testdata/devicejobs/readback.json pins both sides.
+VALUE_STRING_LIMIT = 192
 
 
 @dataclass
@@ -181,7 +185,7 @@ def _plain_value(v):
     if isinstance(v, float):
         return v if math.isfinite(v) else None
     if isinstance(v, str):
-        return text.clean(v, NAME_LIMIT)
+        return text.clean(v, VALUE_STRING_LIMIT)
     return None
 
 
