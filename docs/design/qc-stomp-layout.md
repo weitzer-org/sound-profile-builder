@@ -103,13 +103,13 @@ The catalog can't say whether a capture is an amp or a pedal: every capture is t
 5. **H is never touched.** The tool doesn't assign anything to H and doesn't remove anything from it. A block the owner already put on H stays there, even if its role has its own switch: re-assigning it would move it off H.
 6. **The layout replaces A–G.** On a preset that already has assignments, the tool removes any A–G assignment the layout doesn't call for and adds the ones it does. The dry run lists each removal by name. (An assignment that already matches is left alone, so re-running on a laid-out preset changes nothing.)
 7. **Latching only.** The tool never sends the `momentary` flag and never writes **secondary** (Dual Footswitch) assignments. If a layout switch reads back as momentary, the dry run warns instead of changing it.
-8. **The result is a plan, not device calls.** The layout function returns `[{row, column, switch}]` to add and to remove, plus what was skipped and why. The plan is shown before anything is written.
+8. **The result is a plan, not device calls.** The layout function returns `[{row, col, switch}]` to add and to remove, plus what was skipped and why. The plan is shown before anything is written.
 
 ## 6. Where it runs
 
 ### 6.1 One Go package, two entry points
 
-`internal/stomplayout`: a pure function from a list of blocks `{row, column, model_id}` and the current assignments, to a plan. It reads the catalog and `stomp_layout.json`. It has no storage, device or LLM dependency. The rules exist only here; the home agent never re-implements them. The agent only checks and executes an explicit list of assignments.
+`internal/stomplayout`: a pure function from a list of blocks `{row, col, model_id}` and the current assignments, to a plan. It reads the catalog and `stomp_layout.json`. It has no storage, device or LLM dependency. The rules exist only here; the home agent never re-implements them. The agent only checks and executes an explicit list of assignments.
 
 **Entry point 1: pushing a QC-2 preset** (`send_preset_to_device`).
 - The device export (bridge plan §4, P2) gains a `stomps` array: `[{"row": 0, "col": 2, "switch": "C"}]`.
@@ -125,6 +125,8 @@ The catalog can't say whether a capture is an amp or a pedal: every capture is t
   4. **The agent never saves in this job.** No `write_preset_file` and no save of any kind.
 
 ### 6.2 Contract change
+
+Field names follow the existing export format and the result `diff` (bridge plan §4, contract §9): `row` and `col`, never `column`.
 
 `apply_stomps` is a new job `kind`. The v1 agent's strict parser rejects unknown kinds, so this is a contract change for both sides (`internal/devicejobs` and the Python agent), with new vectors in `testdata/devicejobs/vectors.json`. Proposed args:
 
