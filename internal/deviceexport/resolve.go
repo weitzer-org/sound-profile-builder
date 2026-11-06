@@ -739,7 +739,34 @@ func (b *builder) param(lp catalog.LabelledParam, sp sceneParam) (Param, bool, s
 			p.SceneMode = true
 		}
 	}
+	for s := 0; s < Scenes; s++ {
+		p.screen[s] = screenPan(cp, p.Wire[s])
+	}
 	return p, false, ""
+}
+
+// ScreenPanNote marks the unit's inferred on-screen reading of a pan in the readable plan.
+const ScreenPanNote = "on the unit"
+
+// screenPan is the unit's on-screen reading of a pan written on the catalog's 0..10 range, or "".
+//
+// INFERRED, not established (owner's first push, 2026-11-06, plan 7.3): MIC 1 PAN written as 7 (wire 0.70)
+// showed "20 R" and the default (wire 0.5) showed "C". Two points: the screen reads 50 L .. C .. 50 R, linear in
+// wire, i.e. (wire - 0.5) * 100; the ends were not seen. Only a "PAN" control on the 0..10 range with no skew
+// is covered; BALANCE (stereo cabs, -1..1) was not seen and gets nothing.
+func screenPan(cp catalog.Param, wire float64) string {
+	if !isPan(cp) || !strings.Contains(strings.ToUpper(cp.Name), "PAN") || cp.Min == nil || cp.Max == nil ||
+		*cp.Min != 0 || *cp.Max != 10 || (cp.Skew != nil && *cp.Skew != 0 && *cp.Skew != 1) {
+		return ""
+	}
+	pos := math.Round((wire - 0.5) * 100) // the branch and the printed number come from the same rounded value
+	switch {
+	case pos == 0:
+		return "≈ C " + ScreenPanNote + ", inferred"
+	case pos < 0:
+		return fmt.Sprintf("≈ %.0f L %s, inferred", -pos, ScreenPanNote)
+	}
+	return fmt.Sprintf("≈ %.0f R %s, inferred", pos, ScreenPanNote)
 }
 
 // FaderEvidence labels a fader converted like a float on its catalog range (owner decision,

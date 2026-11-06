@@ -305,3 +305,30 @@ func TestDryRun_FolderTextIsACodeSpan(t *testing.T) {
 		t.Fatalf("folder is not in a code span:\n%s", b.String())
 	}
 }
+
+// F9: a dry run into a slot the bridge last listed as occupied warns, says when, and still issues the token.
+func TestDryRun_WarnsWhenTheLastListingShowedTheSlotOccupied(t *testing.T) {
+	r := newLibRig(t)
+	r.online(t)
+	r.runAgent(t)
+	seedCapturePreset(t, r, "p-slot")
+	dry := func(slot string) (string, devicePushOutput) {
+		res := itCall(t, r.cs, devicePushToolName, map[string]any{"preset_id": "p-slot", "guitar": devGuitar, "slot": slot, "name": "Slot test"})
+		return okText(t, res), itStructured[devicePushOutput](t, res)
+	}
+	// no listing yet: no warning
+	if text, out := dry("20B"); out.SlotListingNote != "" || strings.Contains(text, "last listed") {
+		t.Fatalf("warned without a listing:\n%s", text)
+	}
+	okText(t, itCall(t, r.cs, deviceSlotsToolName, map[string]any{"wait_seconds": 5})) // fake: 20A empty, 20B and 1A occupied
+	text, out := dry("20B")
+	if !strings.Contains(out.SlotListingNote, "20B was occupied in My Presets when the bridge last listed") || !strings.Contains(text, "⚠️ slot 20B was occupied in My Presets") {
+		t.Fatalf("no warning for an occupied slot:\n%s", text)
+	}
+	if !out.CanPush || out.ConfirmToken == "" {
+		t.Fatalf("the warning must not block the token: %+v", out)
+	}
+	if text, out := dry("20A"); out.SlotListingNote != "" || strings.Contains(text, "last listed") {
+		t.Fatalf("warned for an empty slot:\n%s", text)
+	}
+}
