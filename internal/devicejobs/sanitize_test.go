@@ -35,8 +35,12 @@ func TestParseReadbackPayloadAcceptsMinimal(t *testing.T) {
 		t.Fatalf("p=%+v err=%v", p, err)
 	}
 	for _, bad := range []string{``, `null`, `[]`, `{"setlist":{"folder":"other","position":null},"chains":[],"bypass":null} x`} {
-		if _, err := ParseReadbackPayload([]byte(bad)); err == nil {
-			t.Errorf("%q was accepted", bad)
+		if _, err := ParseReadbackPayload([]byte(bad)); err == nil || !strings.Contains(err.Error(), "readback payload") {
+			t.Errorf("ParseReadbackPayload(%q) err = %v, want an error containing 'readback payload'", bad, err)
 		}
+	}
+	big := `{"setlist":{"folder":"other","position":null},"chains":[],"bypass":null,"x":"` + strings.Repeat("a", MaxReadbackBytes) + `"}`
+	if _, err := ParseReadbackPayload([]byte(big)); err == nil || !strings.Contains(err.Error(), "larger than") {
+		t.Errorf("an oversized payload gave %v", err)
 	}
 }

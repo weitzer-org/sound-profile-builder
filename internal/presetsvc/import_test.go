@@ -2,6 +2,7 @@ package presetsvc
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -56,10 +57,11 @@ func TestImportDraft(t *testing.T) {
 	}
 
 	// Refused inputs.
-	if _, _, err := h.svc.ImportDraft(ctx, "", importFixture(), origin, ""); err == nil {
-		t.Error("an empty id was accepted")
+	const want = "needs an id and at least one guitar"
+	if _, _, err := h.svc.ImportDraft(ctx, "", importFixture(), origin, ""); err == nil || !strings.Contains(err.Error(), want) {
+		t.Errorf("an empty id: err = %v, want %q", err, want)
 	}
-	if _, _, err := h.svc.ImportDraft(ctx, "device-j2", storage.StructuredPreset{}, origin, ""); err == nil {
-		t.Error("an empty preset was accepted")
+	if _, _, err := h.svc.ImportDraft(ctx, "device-j2", storage.StructuredPreset{}, origin, ""); err == nil || !strings.Contains(err.Error(), want) {
+		t.Errorf("an empty preset: err = %v, want %q", err, want)
 	}
 }

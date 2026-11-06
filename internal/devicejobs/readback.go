@@ -34,6 +34,12 @@ const (
 	MaxReadbackStringRn = 192 // runes: a capture's 64-hex key, a separator and its name
 )
 
+// MaxReadbackBytes bounds the payload before it is decoded: the result envelope is already
+// read through MaxResultBytes, and the agent caps its own output below this, so a larger
+// payload is not from this agent. It keeps the decoder's allocation proportional (defence in
+// depth for a public parser).
+const MaxReadbackBytes = 512 << 10
+
 // ReadbackPayload is the payload object.
 type ReadbackPayload struct {
 	Setlist ReadbackSetlist `json:"setlist"`
@@ -105,6 +111,9 @@ func (p ReadbackParam) Text(s int) (string, bool) {
 func ParseReadbackPayload(raw json.RawMessage) (*ReadbackPayload, error) {
 	if len(raw) == 0 {
 		return nil, errors.New("readback payload is empty")
+	}
+	if len(raw) > MaxReadbackBytes {
+		return nil, fmt.Errorf("readback payload is larger than %d bytes", MaxReadbackBytes)
 	}
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.DisallowUnknownFields()
