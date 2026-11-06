@@ -64,10 +64,20 @@ class Clock:
         self.t += dt.timedelta(seconds=seconds)
 
 
-def export(**edits):
-    data = json.loads((FIXTURES / "export_g3.json").read_text())
-    data["payload"]["catalog"]["sha256"] = catalog().sha256
-    return data
+GO_GOLDENS = REPO / "internal" / "deviceexport" / "testdata" / "golden"
+
+
+def go_golden(name):
+    """A job's `export` object ({"format", "payload"}) from a Go golden, byte for byte."""
+    g = json.loads((GO_GOLDENS / f"{name}.json").read_text())
+    return {"format": g["format"], "payload": g["payload"]}
+
+
+def export():
+    """The export the tests push: the Go exporter's own golden for the one preset v1 can push
+    (internal/deviceexport pushable_g3, the shape of gate G3's test layout). A fresh copy each
+    call, so tests may mutate it."""
+    return copy.deepcopy(go_golden("pushable_g3"))
 
 
 def job(kind="list_slots", args=None, job_id=None, created=T0, ttl_s=900, bucket=BUCKET, key_hex=KEY_HEX):

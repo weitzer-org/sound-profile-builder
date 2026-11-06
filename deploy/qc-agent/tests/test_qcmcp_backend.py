@@ -269,7 +269,7 @@ class Guard(Base):
         self.refused(self.qc.set_routing, 0, in_portid=2, out_portid=19)
         self.refused(self.qc.set_split_points, 0, 2, 4)
         self.refused(self.qc.set_param_typed, 0, 0, 1, [[None, None, "x"]])
-        self.qc.set_param(0, 0, 1, 0.3)                           # the plan's own write passes
+        self.qc.set_param(0, 0, 1, 0.55)                          # the plan's own write passes
 
     def raw_grid(self, build, extra=b""):
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
@@ -319,8 +319,8 @@ class Guard(Base):
 
     def test_values_and_flags_must_be_the_plans(self):
         self.dev.begin_push(152, "x", self.plan)
-        self.refused(self.qc.set_param, 0, 0, 1, 0.31)  # TREBLE is 0.3 in the plan
-        self.qc.set_param(0, 0, 1, 0.3)
+        self.refused(self.qc.set_param, 0, 0, 1, 0.56)  # TREBLE is 0.55 in the plan
+        self.qc.set_param(0, 0, 1, 0.55)
         self.dev._guard._push["flags"][4] = {False}     # a plan where the Spring is never bypassed
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
         b = g.preset.bypass.add()

@@ -159,7 +159,7 @@ class Push(Base):
         p = r["push"]
         self.assertEqual((p["slot"], p["name"], p["mismatches"], p["listed"]), ("20A", "Texas Blues", 0, True))
         self.assertEqual([d for d in p["diff"] if not d["ok"]], [])
-        self.assertIn("Scene labels are not written", r["message"])
+        self.assertNotIn("Scene labels", r["message"])  # the P2 export carries none
         names = [c[0] for c in self.dev.calls]
         # order: checks before any write; save last
         for n in ("list_my_presets", "setlist_position", "set_routing", "save_to_slot"):
@@ -219,7 +219,7 @@ class Push(Base):
 
     def test_invalid_export_refused_before_connecting(self):
         e = export()
-        e["payload"]["rows"][0]["blocks"][0]["params"][0]["wire"] = 1.5
+        e["payload"]["rows"][0]["blocks"][0]["params"][0]["wire"][0] = 1.5
         args = {"slot": "20A", "name": "X", "source": {"preset_id": "p", "guitar": "g"}, "export": e}
         r = self.push(args=args)
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
