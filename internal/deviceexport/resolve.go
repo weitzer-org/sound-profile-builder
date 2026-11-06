@@ -1,10 +1,9 @@
 package deviceexport
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"math"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -146,13 +145,8 @@ func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 // parameter list (indexes, names, types, ranges, defaults, steps), so any of them is the
 // same block on the device.
 func sameLayout(ms []*catalog.Model) bool {
-	first, err := json.Marshal(ms[0].Params)
-	if err != nil {
-		return false
-	}
 	for _, m := range ms[1:] {
-		next, err := json.Marshal(m.Params)
-		if err != nil || !bytes.Equal(first, next) || m.ParamCount != ms[0].ParamCount ||
+		if !reflect.DeepEqual(ms[0].Params, m.Params) || m.ParamCount != ms[0].ParamCount ||
 			m.Category != ms[0].Category || m.Clones != ms[0].Clones || m.PluginID != ms[0].PluginID {
 			return false
 		}
