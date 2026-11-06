@@ -236,16 +236,17 @@ type Param struct {
 	// "taper:g4" (read on the owner's unit), "taper:device-xml" (the device's own skew,
 	// formula confirmed at other exponents), "taper:pyquadcortex", "bounds:g4",
 	// "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear" (switch positions),
-	// "encoding:fader-linear-guess" (a fader converted like a float: UNVERIFIED, FaderEvidence).
+	// "encoding:fader-linear-p6" (a fader converted like a float: read on the owner's unit at two models, applied
+	// to all faders by owner decision, FaderEvidence; "encoding:fader-linear-guess" before P6).
 	Evidence []string `json:"evidence"`
 
 	names [2]string // Scene A/B position names of a switch, for the readable plan
 }
 
-// Confirmed reports whether every part of the mapping was read on the owner's unit.
+// Confirmed reports whether every part of the mapping was read on the owner's unit (a ":g4" or "-p6" label).
 func (p Param) Confirmed() bool {
 	for _, e := range p.Evidence {
-		if !strings.HasSuffix(e, ":g4") {
+		if !strings.HasSuffix(e, ":g4") && !strings.HasSuffix(e, "-p6") {
 			return false
 		}
 	}

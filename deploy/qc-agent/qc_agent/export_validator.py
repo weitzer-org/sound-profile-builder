@@ -27,7 +27,7 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * each parameter's `evidence` (plan 4.1) names only known sources, and the wire values are the
   ones the catalog gives for those sources: the taper ((d-min)/(max-min))^skew for a float,
   (d-min)/(max-min) for a switch position ("encoding:qc-mcp-linear"), and the float taper for a
-  fader ("encoding:fader-linear-guess", an unverified guess), so a conversion QC-2 got wrong
+  fader ("encoding:fader-linear-p6", confirmed on the unit; the older "-guess" label is still accepted), so a conversion QC-2 got wrong
   is refused here too;
 * eight boolean bypass flags per block; `unresolved` is empty; `warnings` (settings the push
   leaves out on purpose, e.g. a non-default cab mic) is a list of short items and changes nothing;
@@ -87,10 +87,16 @@ PYQUADCORTEX_BOUNDS = {
 # The evidence labels the exporter writes (internal/deviceexport, plan 4.1).
 EVIDENCE = frozenset({"taper:g4", "taper:device-xml", "taper:pyquadcortex",
                       "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear",
-                      "scale:catalog-range", "encoding:fader-linear-guess"})
-# A fader is converted like a float on its catalog range, as a labelled GUESS (owner decision,
-# 2026-11-06; plan 4.1): only a fader may carry FADER_EVIDENCE, and a fader must.
-FADER_EVIDENCE = "encoding:fader-linear-guess"
+                      "scale:catalog-range", "encoding:fader-linear-p6", "encoding:fader-linear-guess"})
+# A fader is converted like a float on its catalog range. Confirmed on the owner's unit at two models (P6,
+# 2026-11-06: Graphic-9 4005 65 Hz +6 dB showed 6.0 dB; CA John's 2C Ch1 1139 80 Hz 8 showed 8.0) and applied
+# to all 48 faders by the owner's decision, so the exporter writes "encoding:fader-linear-p6" (the dry run
+# no longer marks it with a dagger). The earlier label "encoding:fader-linear-guess" is still accepted, so a
+# payload from a server that has not been updated validates the same way. Only a fader may carry one of the
+# two, and a fader must carry exactly one.
+FADER_EVIDENCE = "encoding:fader-linear-p6"
+FADER_EVIDENCE_LEGACY = "encoding:fader-linear-guess"
+FADER_LABELS = frozenset({FADER_EVIDENCE, FADER_EVIDENCE_LEGACY})
 LINEAR_SWITCH_TYPES = frozenset({"switch", "rotarySwitch", "toggleButton"})
 WIRE_TOLERANCE = 1e-9
 ROW, IN_PORT, OUT_PORT = 0, 1, 19  # qc-mcp clear_grid default routing; read back exactly in G3
@@ -299,9 +305,9 @@ def _check_param_evidence(pw, cp, ev):
     switch = cp["type"] in LINEAR_SWITCH_TYPES
     if switch != ("encoding:qc-mcp-linear" in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter")
-    if (cp["type"] == "fader") != (FADER_EVIDENCE in ev):
+    if (cp["type"] == "fader") != (len(FADER_LABELS & set(ev)) == 1) or len(FADER_LABELS & set(ev)) > 1:
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter "
-                            f"({FADER_EVIDENCE} belongs on faders only, and every fader needs it)")
+                            f"({FADER_EVIDENCE} belongs on faders only, and every fader needs exactly one such label)")
     symbolic = cp.get("min_symbol") is not None or cp.get("max_symbol") is not None
     if not switch and symbolic != any(e.startswith("bounds:") for e in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match the catalog's bounds")
