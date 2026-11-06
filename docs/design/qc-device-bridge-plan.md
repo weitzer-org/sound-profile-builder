@@ -1,6 +1,6 @@
 # Device bridge: push and read QC-2 Modeler presets on a real Quad Cortex, from the phone
 
-*Design and implementation plan, 2026-11-05. Status: proposed, not started.*
+*Design and implementation plan, 2026-11-05. Status (2026-11-06): Phase 0 gates G0, G1 (dual-mic cab family), G3, G4 (four points) and G6 (scenes A/B) passed, G2 (c) passed for power-off; P1, P2, P2b, P2c, P3, P4, P4c and P5 are merged; P4b, P6 and the open items in 8.1 remain.*
 *Inputs: `docs/research/qc-usb-tools-audit.md` (the security/device-safety review), `tools/qc-mcp-trial/` (the allowlist proxy, exercised against the owner's unit), and a successful hand-run qc-mcp session on the owner's Quad Cortex (CorOS 4.1.0, Windows, direct mode). In that session qc-mcp built a five-block preset and reported a save. The save was **not independently confirmed**.*
 
 **Verify-or-label.** Every premise about an external system in this plan is either cited or marked **UNVERIFIED**. Phase 0 exists to settle the UNVERIFIED premises the rest depends on.
@@ -262,9 +262,17 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 - **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
   qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
   to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
-- **Per-scene bypass:** a block bypassed in any scene goes through the G6-verified path (assign to scenes, then each
-  scene's flag, all eight written), even when all eight agree. A block active in every scene gets no bypass write:
-  it relies on a new block starting active, which the read-back checks (all eight flags must read back false). Scene labels are not written in v1 (they were v2 in section 3.3).
+- **Per-scene bypass:** every block goes through the G6-verified path (assign to scenes, then each scene's flag, all
+  eight written), even when all eight agree, through its bypass control at `param_count + 1`. (Before the G1-G6
+  follow-up PR, a block active in every scene got no bypass write.) Scene labels are not written in v1 (they were v2
+  in section 3.3).
+- **G1-G6 follow-up (branch `claude/qc-agent-g1-g6-mw3f1k`, replacing PR #142):** place every block, then one read
+  that checks each block's model id and `param_count + 1` params before any value is written (capture blocks too,
+  with the catalog's `param_count` for 14000/14001); no param index at or past `param_count` in the validator or
+  through the wire guard; the open slot re-read before every write; liveness from an off-thread watchdog that never
+  calls into the transport (a verdict older than 5 s counts as gone); a save the listing never shows is `failed`,
+  and the slot stays in the owned ledger; unwritten controls compared with the catalog default and logged, never
+  failed; results limited to contract section 9 fields.
 - **Wire guard:** besides a method allowlist, the backend decodes every outgoing message and passes only session
   plumbing, READs, the armed plan's Grid/Scene updates and one armed File CREATE.
 - **No boto3:** a standard-library SigV4 client, so the lockfile holds only `protobuf` (7.36.0, the pins from
@@ -452,6 +460,10 @@ Kept open by the owner (2026-11-06). Strike each one through with its date and P
 4. **Architect pan scale** (pipeline side, the open half of P2b's row). Every pan in the v6 evals is written `0`, which is hard left on the device's 0..10 scale, where center was meant. The export refuses pans other than Center until the Architect is shown the pan's catalog scale (section 7.1, P2c status).
 5. **P4b library sync** (Chat 7 in section 11). It uploads the unit's capture list, so the dry run resolves captures before a push. It also collects the cab mic strings seen on the unit, so a non-default mic can be written exactly instead of becoming a warning.
 6. **Visual e2e baseline.** The visual snapshot test fails on `main` in the cloud sandbox. Re-record it in the `mcr.microsoft.com/playwright:v1.58.2` container (CLAUDE.md, Tests) and review the new images before committing them.
+7. **G1-G6 push rules on the agent** (the PR replacing #142, branch `claude/qc-agent-g1-g6-mw3f1k`): built and
+   tested offline only. On the unit it still needs README hardware step 13: the bypass control at `param_count + 1`
+   on blocks other than the Spring (capture blocks included), a footswitch's effect on a scene-assigned bypass, the
+   defaults log, and the watchdog during a blocking HID call. Strike this through when step 13 has been run.
 
 ## 9. Which model does what
 

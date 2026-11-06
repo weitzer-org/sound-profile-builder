@@ -32,9 +32,10 @@ import re
 from dataclasses import dataclass, field, replace
 
 from . import text
+from .export_validator import CAPTURE_FILE_NAME_INDEX
 
 FACTORY_FOLDERS = {"Factory Captures V1": 1, "Factory Captures V2": 2}
-FILE_NAME_PARAM = 5  # a capture block's file_name index (qc-mcp transport.CAPTURE_FILE_NAME_PARAM)
+FILE_NAME_PARAM = CAPTURE_FILE_NAME_INDEX  # a capture block's file_name index (qc-mcp transport.CAPTURE_FILE_NAME_PARAM)
 _KEY_RE = re.compile(r"[0-9a-fA-F]{64}")
 MAX_NEAR = 3
 

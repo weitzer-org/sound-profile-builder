@@ -58,6 +58,9 @@ class Catalog:
                     idx = p["index"]
                     if not isinstance(idx, int) or isinstance(idx, bool) or idx in params:
                         raise ValueError(f"model {mid}: bad or duplicate param index {idx!r}")
+                    # every check reads these two directly; a param without them is a malformed catalog
+                    if not isinstance(p.get("name"), str) or not isinstance(p.get("type"), str):
+                        raise ValueError(f"model {mid} param {idx}: missing name or type")
                     params[idx] = p
                 models[mid] = {**m, "params_by_index": params}
         except (ValueError, KeyError, TypeError, UnicodeDecodeError) as e:

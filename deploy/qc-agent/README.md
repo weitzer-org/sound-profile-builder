@@ -23,7 +23,8 @@ For a push, before anything is written:
    `qc_agent/export_validator.py` against the agent's own catalog copy (`internal/catalog/qc_catalog.json` in this
    clone, hash-matched with the export): known models in allowed categories, no plugin/IR/FX-loop/splitter
    models, capture blocks only with the capture block's own controls (plan 4.2), NC_Recorder denied, only listed
-   parameter indexes with numeric ranges (the cab bounds confirmed on the unit, or pyquadcortex's labelled values),
+   parameter indexes, each below its model's `param_count` (G1: the unit's last slot is never written; capture
+   blocks use the catalog's `param_count` for 14000/14001, which must agree), with numeric ranges (the cab bounds confirmed on the unit, or pyquadcortex's labelled values),
    values in range, each wire value equal to the catalog's mapping of its display value (taper or switch position,
    with the `evidence` label to match), one row (in 1, out 19), at most 8 blocks, zero unresolved items. The export's
    `warnings` (settings QC-2 left out on purpose, e.g. a non-default cab mic) are carried and change nothing. The preset name may use letters, digits, spaces
@@ -40,10 +41,21 @@ For a push, before anything is written:
    calibrated against the factory folders on every listing. Anything else refuses the push before any write;
 6. the job hasn't expired (re-checked just before the first write).
 
-Then it builds the chain on the live grid, reads it back and diffs it, and saves only if the diff is clean and a
-second fresh listing still shows the slot empty (and still resolves every capture to the same file). A capture is
-placed with qc-mcp's `set_capture` (a V1 14000 or V2 14001 block, then its `file_name` = key + name) before its
-controls are written, and its `file_name` is checked in the read-back. The save is `write_preset_file` (File CREATE),
+Then it builds the chain on the live grid in three phases: it places every block; reads the grid **once** and
+checks that each column holds the planned model and reports exactly `param_count + 1` parameters (G1), stopping
+before any value is written if not; then, block by block, re-reads that column (the same check, so a block swapped
+on the unit mid-build stops the push; the wire guard allows a block's bypass control only after such a read) and
+writes the values (all eight scenes when A and B differ, G6) and **all eight bypass flags on every block**, through
+the block's bypass control at `param_count + 1`. Before **every**
+write it re-reads which slot is open (a write lands in whatever preset is open) and checks the liveness verdict.
+It reads the grid back and diffs it; controls it didn't write are compared with the catalog default and only
+**logged** (`default differs: ...` in `agent.log`), never failed. It saves only if the diff is clean, a second
+fresh listing still shows the slot empty (and still resolves every capture to the same file), the grid re-read
+after that listing is still the verified one, and the slot is still open. A save the listing doesn't show within
+six polls (about 2 minutes) is reported **failed** ("may still land: check the slot"), and the slot stays in the
+owned-slot ledger. A capture is placed with qc-mcp's `set_capture` (a V1 14000 or V2 14001 block, then its
+`file_name` = key + name) before its controls are written, goes through the same `param_count` check, and its
+`file_name` is checked in the read-back. The save is `write_preset_file` (File CREATE),
 never `save_preset`. It adds no dependency entries; the result says whether the unit's listing names the capture
 as a dependency of the saved preset.
 
@@ -52,7 +64,14 @@ Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SH
 `send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, IRs, typed writes, splits, scene labels);
 and a **wire guard** that decodes every outgoing message and lets through only session plumbing, reads, and, while a
 push is armed, exactly the plan's grid writes (including each capture's `file_name`, once, as the exact resolved
-string) and one File CREATE to the armed slot and name. Nothing ever sends ProductForward or a capture command.
+string; never a write at or past the model's `param_count`; scene assignment only for the plan's scene-varying
+params and each block's bypass control) and one File CREATE to the armed slot and name. Nothing ever sends
+ProductForward or a capture command.
+
+Liveness (G2 c): a watchdog thread samples the transport's reader thread and write-error counter once a second
+while the unit is open, without calling into the transport. The unit counts as gone when the reader thread is dead,
+when the write-error count rose on two consecutive samples, or when the watchdog's last verdict is older than 5 s.
+Results carry only the contract's section 9 fields.
 
 Local state in `%LOCALAPPDATA%\qc-agent\`: `agent.env` (config), `executed_jobs.jsonl` (the job ledger, never
 pruned), `owned_slots.jsonl` (saves the bridge made), `logs\agent.log` (rotated; no keys, tokens or signatures),
@@ -143,7 +162,8 @@ them; this guide uses **24H**).
     would then need another freshness check.
 11. **First real push (after P2).** Select empty **24H** on the unit, dry-run and confirm on the phone. Expect
     `succeeded`, `mismatches 0`, the name in 24H on the unit, then power-cycle and check it's still there (G3 never
-    tested persistence across a power cycle).
+    tested persistence across a power cycle). A `failed` result saying the save "may still land" means the listing
+    never showed it within about 2 minutes: check 24H on the unit and tell me what it shows.
 
 12. **Captures (P4c; normal use, no extra session).**
     - Before the first capture push, run `list_device_slots` once and send me the `capture folder ...` and
@@ -157,6 +177,20 @@ them; this guide uses **24H**).
       name shows on the block and it sounds right, and GAIN..VOLUME match the dry run in scenes A and B. Note the
       dependency sentence.
     - Power-cycle and re-select each slot: the capture still loads (no "missing capture"), values kept.
+
+13. **The G1-G6 rules on the unit (this bridge's own push path; normal use).** On the first pushes:
+    - none fails with "The placed blocks don't match the bridge's catalog" (that would mean a block's parameter count
+      on the unit differs from `param_count + 1`; send the log line);
+    - every block in the push, not only one that varies by scene, reads back its eight bypass flags as planned. G6
+      checked the bypass control at `param_count + 1` on the Spring only; this is the first check on amps, drives,
+      cabs, EQs and capture blocks;
+    - with a block bypassed in Scene B, press that block's footswitch in Scene A and switch to B: tell me whether the
+      footswitch changed only Scene A (whether a footswitch acts per scene once bypass is scene-assigned is unknown);
+    - send the `default differs` and `default not compared` lines from `agent.log` (they show whether every control of
+      a newly placed block starts at its catalog default; never a failure);
+    - unplug the USB cable in the middle of a push once: the job should fail with `unit_absent` within a few seconds
+      and the bridge should exit (the watchdog runs beside a blocking call only if ctypes releases the GIL during the
+      HID call, which ctypes documents but nobody has run on Windows here).
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before

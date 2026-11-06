@@ -49,6 +49,10 @@ class Valid(unittest.TestCase):
         self.assertIsNone(plan.blocks[0].params[1].scene_wires)
         self.assertEqual(plan.blocks[4].bypass_scenes, [False, True] + [False] * 6)
         self.assertEqual(plan.scene_labels, [])
+        # G1: each block carries the catalog's param_count. G3 read N = 4, 8, 22, 6, 6 for this very layout
+        # on the owner's unit (plan 7.1), i.e. param_count + 1; the bypass control is one past that read.
+        self.assertEqual([b.param_count + 1 for b in plan.blocks], [4, 8, 22, 6, 6])
+        self.assertEqual([b.bypass_index for b in plan.blocks], [4, 8, 22, 6, 6])
 
     def test_dual_mic_label_and_symbolic_bound(self):
         # "MIC 2 LEVEL" is catalog index 10 "LEVEL" (the second LEVEL); its range is MIN/MAX_CABSIM_DB,
@@ -169,7 +173,13 @@ class Refusals(unittest.TestCase):
 
         ok = prm(4, "MIC 1 DISTANCE", eight(1), eight(0.1))
         validate(cab(ok), catalog(), "4.1.0")  # the control case: this shape is accepted
-        self.refused(cab(prm(99, "X", eight(0), eight(0))), "not a listed parameter")
+        # G1: param_count 21 for this cab (19 listed + two hidden IR NAME strings); the device's slot 21 is
+        # the trailing one and 22 the bypass control, so nothing at or past 21 is ever a value write
+        self.refused(cab(prm(99, "X", eight(0), eight(0))), "at or past param_count 21")
+        self.refused(cab(prm(21, "X", eight(0), eight(0))), "at or past param_count 21")
+        self.refused(cab(prm(22, "X", eight(0), eight(0))), "at or past param_count 21")
+        self.refused(cab(prm(-1, "X", eight(0), eight(0))), "at or past param_count 21")
+        self.refused(cab(prm(19, "X", eight(0), eight(0))), "not a listed parameter")  # hidden IR NAME
         self.refused(cab(prm(1, "ir selector", eight(0), eight(0))), "not a user-facing control")
         self.refused(cab(prm(0, "bypass", eight(0), eight(0))), "not a user-facing control")
         self.refused(cab(prm(4, "DISTANCE", eight(1), eight(0.1))), "in the catalog, not")  # per-mic label
@@ -311,8 +321,9 @@ class Additions(unittest.TestCase):
             return mutate(f)
         plan = validate(cap(), catalog(), "4.1.0")
         b = plan.blocks[0]
-        self.assertEqual((b.model_id, b.model, b.capture.name, b.capture.source, b.capture.key, b.max_param_index),
-                         (0, "CA John's", "CA John's", "factory", None, 4))
+        # param_count from the catalog (14000 and 14001 both 6: GAIN..VOLUME plus file_name), not guessed
+        self.assertEqual((b.model_id, b.model, b.capture.name, b.capture.source, b.capture.key, b.param_count,
+                          b.bypass_index), (0, "CA John's", "CA John's", "factory", None, 6, 7))
         self.assertEqual(b.params[0].scene_wires[:2], [26 / 48, 27 / 48])
         self.refused(cap(model_id=14000), "must have model_id 0")
         self.refused(cap(plugin="Nolly"), "can't name a plugin")
@@ -350,9 +361,44 @@ class Additions(unittest.TestCase):
         self.refused(cap(bypass=[False, False, True] + [False] * 5), "scenes C-H")
         # only the capture block's own controls: index 5 (file_name) and anything unlisted are refused
         self.refused(cap(params=[gain | {"index": 5, "label": "file_name"}]), "not a listed parameter")
+        self.refused(cap(params=[gain | {"index": 6, "label": "x"}]), "at or past param_count 6")
         self.refused(cap(params=[gain | {"label": "VOLUME"}]), "in the catalog, not")
         # a bare capture block id without `capture` is not a placeable model
         self.refused(mutate(lambda p: swap(p, 0, 14000)), "not pushed in v1")
+
+    def capture_export(self):
+        return mutate(lambda p: (swap(p, 0, 14000, capture={"name": "CA John's", "source": "factory",
+                                                           "resolved_on_unit": False},
+                                      category="Neural Capture", index_evidence="capture-block"),
+                                 block(p, 0).update(model_id=0, model="CA John's")))
+
+    def test_capture_param_counts_must_match(self):
+        cat = copy.deepcopy(catalog())
+        cat.models[14001]["param_count"] = 7
+        with self.assertRaisesRegex(ExportRefused, "different param_count"):
+            validate(self.capture_export(), cat, "4.1.0")
+
+    def test_capture_param_count_must_hold_file_name(self):
+        cat = copy.deepcopy(catalog())
+        for mid in (14000, 14001):
+            cat.models[mid]["param_count"] = 5
+        with self.assertRaisesRegex(ExportRefused, "no room for file_name"):
+            validate(self.capture_export(), cat, "4.1.0")
+
+    def test_missing_or_short_param_count_is_refused(self):
+        for bad in (None, 0, True, "21", 18):
+            with self.subTest(bad):
+                cat = copy.deepcopy(catalog())
+                if bad is None:
+                    cat.models[12045].pop("param_count")
+                else:
+                    cat.models[12045]["param_count"] = bad
+                with self.assertRaisesRegex(ExportRefused, "param_count"):
+                    validate(export(), cat, "4.1.0")
+
+    def test_capture_file_name_index_is_shared(self):
+        from qc_agent import captures, export_validator
+        self.assertEqual(captures.FILE_NAME_PARAM, export_validator.CAPTURE_FILE_NAME_INDEX)
 
     def test_capture_layouts_must_match(self):
         cat = copy.deepcopy(catalog())

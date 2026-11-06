@@ -14,12 +14,27 @@ that bind every device write, in the order they run for a push:
      only save path Phase 0 verified (G3): the agent never recalls a preset or
      clears a grid, so it can't disturb what the owner has open;
   5. the job has not expired (re-checked immediately before the first write);
-  6. build, read back and diff; save only if the diff is clean, after a second fresh
-     listing still shows the slot empty and the same slot still open.
+  6. build in three phases: place every block (a capture block with its capture loaded), then
+     ONE read that checks each column's model id and that it reports exactly param_count + 1
+     parameters (G1, plan 7.2), so a block whose index layout isn't the catalog's stops the job
+     before any value is written; then, block by block, a re-read of that column (the same check,
+     which also confirms its bypass control to the wire guard) and the block's parameters (all eight scene values with
+     set_param_scenes when A and B differ, else one set_param; G6) and all eight bypass flags of
+     every block, through its bypass control at param_count + 1;
+  7. read back and diff every written value and every bypass flag; controls the push didn't write
+     are compared with the catalog default and logged, never failed;
+  8. save only if the diff is clean: a second fresh listing still shows the slot empty, then the
+     grid is re-read (the listing takes ~15 s) and the same slot is still open; File CREATE; then
+     poll the listing (G3: it lags). A save the listing never shows is reported as FAILED, and the
+     slot stays in the owned ledger in case it lands late.
+Before every write the open position is read again and the watchdog's verdict checked: writes address
+row/column/index, not a preset, so after the owner selects another preset they would land in it.
 Capture blocks (plan 4.2) are resolved against the unit's own capture list from the
 rule-3 listing (qc_agent.captures): a capture that is missing, ambiguous, cloud-only
 or of unknown version refuses the job before any write. The second listing must
-resolve every capture to the same key and version, or nothing is saved.
+resolve every capture to the same key and version, or nothing is saved. A capture block
+goes through the same layout check (param_count of 14000/14001 from the catalog) and index rules.
+The result carries only contract section 9 fields.
 """
 from __future__ import annotations
 
@@ -31,14 +46,15 @@ from dataclasses import dataclass, field
 
 from . import captures, contract, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, DeviceError, UnitAbsent, UnitBusy
-from .export_validator import CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name, validate
+from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
+                               control_labels, default_wire, is_internal_param, validate)
 
 log = logging.getLogger("qc_agent")
 
 TOL = 1e-4                 # G3 read-back tolerance
 PACE_S = 0.15              # between writes; G3 used the same pacing
 SAVE_LIST_POLLS = 6        # G3: a listing 3 s after the save still showed the slot blank
-SAVE_LIST_INTERVAL_S = 6.0
+SAVE_LIST_INTERVAL_S = 6.0  # plus the listing itself (~12-15 s each): the window is about 2 minutes
 MAX_DIFF = 512
 CAPTURE_SETTLE_S = 1.0     # after loading a capture, before its params (unverified timing; the read-back checks)
 NAME_LIMIT = 64
@@ -78,6 +94,10 @@ class JobContext:
 
 class _Gone(Exception):
     pass
+
+
+class _SwitchedAway(Exception):
+    """The target slot is no longer the one open on the unit (checked before every write)."""
 
 
 def _same_name(listing, pos, name):
@@ -256,7 +276,10 @@ def _expired(ctx, job) -> bool:
 
 
 def _diff_param(row, col, p, vals, diff) -> int:
-    """Compare one written parameter's read-back values; append diff entries; return the mismatch count."""
+    """Compare one written parameter's read-back values; append diff entries; return the mismatch count.
+
+    Entries carry only contract section 9's fields. A scene-varying param gets eight, scenes A-H in
+    order; a non-varying one, written once and replicated by the unit (G1/G6), gets one."""
     mismatches = 0
     expected = p.scene_wires or [p.wire]
     for s in (range(8) if p.scene_wires else [0]):
@@ -268,11 +291,8 @@ def _diff_param(row, col, p, vals, diff) -> int:
             ok = isinstance(v, float) and abs(v - expected[s]) <= TOL
         mismatches += not ok
         if len(diff) < MAX_DIFF:
-            e = {"row": row, "col": col, "param_index": p.index, "expected": expected[s],
-                 "readback": v if isinstance(v, float) and math.isfinite(v) else None, "ok": ok}
-            if p.scene_wires:
-                e["scene"] = "ABCDEFGH"[s]
-            diff.append(e)
+            diff.append({"row": row, "col": col, "param_index": p.index, "expected": expected[s],
+                         "readback": v if isinstance(v, float) and math.isfinite(v) else None, "ok": ok})
     return mismatches
 
 
@@ -324,6 +344,83 @@ def _diff(plan, preset):
     return mismatches, diff, problems
 
 
+def _row(plan, preset):
+    return next((c for c in (preset or {}).get("chains", []) if c.get("row") == plan.row), None)
+
+
+def _check_layout(plan, preset, blocks=None):
+    """After placing every block, before writing any value: each column holds the planned model
+    (for a capture block, the V1/V2 block the listing resolved) and reports exactly param_count + 1
+    parameters (G1: the full list, hidden ones included, plus one trailing slot). Any other count
+    means the catalog's indexes don't describe this block on this unit, so no value may be written
+    to it, nor its bypass control (param_count + 1) addressed. Returns a problem string or None."""
+    chain = _row(plan, preset)
+    if chain is None:
+        return "row 0 is missing from the unit's read"
+    by_col = {b["col"]: b for b in chain.get("blocks", [])}
+    for b in plan.blocks if blocks is None else blocks:
+        got = by_col.get(b.col)
+        if got is None or got.get("model_id") != b.model_id:
+            return (f"column {b.col} holds model {None if got is None else got.get('model_id')}, "
+                    f"not {b.model} ({b.model_id})")
+        n = len(got.get("params") or [])
+        if n != b.param_count + 1:
+            return (f"column {b.col} ({b.model}) reads {n} parameters; the catalog expects "
+                    f"{b.param_count + 1} ({b.param_count} plus the trailing slot)")
+    return None
+
+
+def _fmt_vals(vals):
+    out = []
+    for v in list(vals)[:8]:
+        if isinstance(v, float):
+            out.append(f"{v:.6g}" if math.isfinite(v) else "nan")
+        elif isinstance(v, (bool, int)):
+            out.append(str(v))
+        else:
+            out.append(text.clean(repr(v), 24))
+    return "[" + ", ".join(out) + "]"
+
+
+def _log_defaults(plan, preset, catalog) -> int:
+    """Every user control the push didn't write should read back at its catalog default (a block
+    placed into a blank slot starts at its defaults; G4 saw it for two params, no more). Logs each one
+    that differs and returns how many did. NEVER fails the job: it gathers evidence for P6. A control
+    whose default the agent can't map to a wire value (switch positions without a range, symbolic
+    bounds it doesn't resolve) is logged raw as not compared. A capture block is checked against its
+    resolved V1/V2 model; its file_name is a string and is checked by the read-back diff instead."""
+    chain = _row(plan, preset) or {}
+    by_col = {b["col"]: b for b in chain.get("blocks", [])}
+    differ = 0
+    for b in plan.blocks:
+        got, model = by_col.get(b.col), catalog.models.get(b.model_id)
+        if got is None or model is None:
+            continue
+        read = {p["index"]: p.get("values") or [] for p in got.get("params", [])}
+        written = {p.index for p in b.params}
+        labels = control_labels(model)
+        tagged = set(b.at_default)
+        for cp in sorted(model["params"], key=lambda q: q["index"]):
+            i = cp["index"]
+            if i in written or is_internal_param(cp):
+                continue
+            vals = read.get(i, [])
+            label = labels.get(i, cp["name"])
+            name = (f"col {b.col} {text.clean(b.model, 40)} {label} [{i}]"
+                    + (" (at_default in the export)" if label in tagged else ""))
+            dw = default_wire(cp)
+            if dw is None:
+                log.info("default not compared (no wire mapping for its default): %s default %s, read %s",
+                         name, cp.get("default"), _fmt_vals(vals))
+                continue
+            if len(vals) == 8 and all(isinstance(v, float) and abs(v - dw) <= TOL for v in vals):
+                continue
+            differ += 1
+            log.warning("default differs: %s default %s -> wire %.6g, read %s",
+                        name, cp.get("default"), dw, _fmt_vals(vals))
+    return differ
+
+
 class _Push:
     """One push, as the steps the module docstring lists. Each step returns an Outcome to stop
     with, or None to go on; run() owns the order and the error handling."""
@@ -339,6 +436,7 @@ class _Push:
         self.saved = False
         self.resolved = {}   # col -> captures.ResolvedCapture
         self.deps_note = ""
+        self.defaults_differ = 0
 
     def run(self) -> Outcome:
         out = self.check_job()                              # rule 1 (no device contact)
@@ -354,24 +452,35 @@ class _Push:
                 if outcome is not None:  # a step stops the push by returning its Outcome
                     return outcome
             return self.save()
+        except _SwitchedAway:
+            return failed("device_error", f"Another preset was selected on the unit during the build, so the "
+                          f"bridge stopped. Nothing was saved; re-select {self.slot} or another preset to discard "
+                          "the partial edits.", firmware=self.fw, push=self.result)
         except (_Gone, UnitAbsent):
             if self.saved:
-                return self.done(f"Save to {self.slot} issued after a clean read-back, then the Quad Cortex went "
-                                 f"away before the save could be confirmed. Check {self.slot} on the unit.",
-                                 unit_gone=True)
+                return self.unconfirmed("unit_absent", "then the Quad Cortex went away before the save could be "
+                                        "confirmed", unit_gone=True)
             return failed("unit_absent", "The Quad Cortex went away during the push. If anything was written it "
                           "was not saved.", firmware=self.fw, push=self.result, unit_gone=True)
         except DeviceError as e:
             log.warning("push failed: %s", text.clean(str(e), 200))
             if self.saved:
-                return self.done(f"Save to {self.slot} issued after a clean read-back, but confirming it failed. "
-                                 f"Check {self.slot} on the unit.")
+                return self.unconfirmed("device_error", "but confirming it failed")
             return failed("device_error", "A device operation failed. Nothing was saved; re-select the slot on the "
                           "unit to discard any partial grid.", firmware=self.fw, push=self.result)
 
     def done(self, msg, **kw):
         msg = msg + captures.summary(self.resolved) + self.deps_note
-        return Outcome("succeeded", "", msg, firmware=self.fw, push=self.result, **kw)
+        return Outcome("succeeded", "", msg, firmware=self.fw, push=self.result, extra={"saved": True}, **kw)
+
+    def unconfirmed(self, code, how, **kw):
+        """The save was issued after a clean read-back but never confirmed: a failure (G3: the listing
+        can lag, so it may still land). The slot was recorded in the owned ledger when the save was
+        issued and stays there, so a late save is still recognised as the bridge's own."""
+        msg = (f"Save to {self.slot} was issued after a clean read-back, {how}. It may still land: check "
+               f"{self.slot} on the unit before pushing there again." + captures.summary(self.resolved)
+               + self.deps_note)
+        return failed(code, msg, firmware=self.fw, push=self.result, extra={"saved": True}, **kw)
 
     def check_job(self):
         a, cfg = self.args, self.ctx.config
@@ -446,40 +555,87 @@ class _Push:
         return (cur.get("folder_key") == SETLIST_KEY and cur.get("position") == self.pos
                 and not cur.get("is_factory"))
 
+    def op(self, fn, *args):
+        """One device write. Before it, the target slot must still be the one open on the unit (writes
+        address row/column/index, not a preset: after the owner selects another preset they would land
+        in that preset's edit buffer), and the watchdog's verdict is checked before and after (G2: a
+        call can block for seconds while the unit goes away, and a write that reaches nothing raises
+        nothing). A single set_param_scenes / set_block_bypass runs to its end once started (about 17
+        messages); the next write's check stops the build."""
+        _check_alive(self.ctx)
+        if not self.still_open():
+            raise _SwitchedAway()
+        r = fn(*args)
+        _check_alive(self.ctx)
+        self.ctx.sleep(PACE_S)
+        return r
+
+    def place(self, b):
+        """Phase 1 for one block: the block, or for a capture block the V1/V2 block with its capture
+        loaded (file_name first: a capture loaded after its controls could reset them)."""
+        dev, plan = self.dev, self.plan
+        if b.capture is not None:
+            if not self.op(dev.place_capture, plan.row, b.col, b.model_id, b.capture.key, b.capture.name):
+                return failed("device_error", f"The unit did not confirm placing capture "
+                              f"{text.clean(b.capture.name, 64)!r} (a V{b.capture.version} capture block) in "
+                              f"column {b.col}. Nothing was saved; re-select the slot on the unit to discard "
+                              "the partial grid.", firmware=self.fw, push=self.result)
+            self.ctx.sleep(CAPTURE_SETTLE_S)
+        elif not self.op(dev.add_block, plan.row, b.col, b.model_id):
+            return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
+                          "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
+                          firmware=self.fw, push=self.result)
+        return None
+
     def build(self):
-        """The writes, into the live edit buffer of the empty, open slot."""
-        dev, plan, ctx = self.dev, self.plan, self.ctx
+        """The writes, into the live edit buffer of the empty, open slot (module docstring, rule 6)."""
+        dev, plan = self.dev, self.plan
         dev.begin_push(self.pos, self.name, plan)
-        dev.set_routing(plan.row, plan.in_port, plan.out_port)
-        ctx.sleep(PACE_S)
-        for b in plan.blocks:
-            _check_alive(ctx)
-            if not self.still_open():
-                return failed("device_error", f"Another preset was selected on the unit during the build, so the "
-                              f"bridge stopped. Nothing was saved; re-select {self.slot} or another preset to "
-                              "discard the partial edits.", firmware=self.fw, push=self.result)
-            if b.capture is not None:
-                # file_name first, then the controls: a capture loaded after them could reset them.
-                if not dev.place_capture(plan.row, b.col, b.model_id, b.capture.key, b.capture.name):
-                    return failed("device_error", f"The unit did not confirm placing capture "
-                                  f"{text.clean(b.capture.name, 64)!r} (a V{b.capture.version} capture block) in "
-                                  f"column {b.col}. Nothing was saved; re-select the slot on the unit to discard "
-                                  "the partial grid.", firmware=self.fw, push=self.result)
-                ctx.sleep(CAPTURE_SETTLE_S)
-            elif not dev.add_block(plan.row, b.col, b.model_id):
-                return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
-                              "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
-                              firmware=self.fw, push=self.result)
-            ctx.sleep(PACE_S)
+        self.op(dev.set_routing, plan.row, plan.in_port, plan.out_port)
+        for b in plan.blocks:                                          # phase 1: place
+            out = self.place(b)
+            if out:
+                return out
+        layout = dev.read_current_preset()                             # phase 2: layout (G1)
+        _check_alive(self.ctx)
+        if layout is None:
+            return failed("device_error", "The unit did not return the grid after placing the blocks. Nothing "
+                          "was saved; re-select the slot on the unit to discard the partial grid.",
+                          firmware=self.fw, push=self.result)
+        problem = _check_layout(plan, layout)
+        if problem:
+            log.error("layout check: %s", problem)
+            return failed("device_error", f"The placed blocks don't match the bridge's catalog: "
+                          f"{text.clean(problem, 200)}. No parameter was written and nothing was saved; "
+                          "re-select the slot on the unit to discard the partial grid.",
+                          firmware=self.fw, push=self.result)
+        for b in plan.blocks:                                          # phase 3: values and bypass
+            out = self.recheck(b)
+            if out:
+                return out
             for p in b.params:
-                if p.scene_wires:
-                    dev.set_param_scenes(plan.row, b.col, p.index, p.scene_wires)
-                else:
-                    dev.set_param(plan.row, b.col, p.index, p.wire)
-                ctx.sleep(PACE_S)
-            if any(b.bypass_scenes):  # a new block starts active; write flags only when some scene bypasses it
-                dev.set_block_bypass(plan.row, b.col, b.bypass_scenes)
-            _check_alive(ctx)
+                if p.scene_wires:  # G6: unwritten scenes keep their old value, so all eight are written
+                    self.op(dev.set_param_scenes, plan.row, b.col, p.index, list(p.scene_wires))
+                else:              # G6: one plain write reads back replicated to all eight scenes
+                    self.op(dev.set_param, plan.row, b.col, p.index, p.wire)
+            # all eight flags on every block (owner decision): a new block starting active is not assumed
+            self.op(dev.set_block_bypass, plan.row, b.col, list(b.bypass_scenes), b.bypass_index)
+        return None
+
+    def recheck(self, b):
+        """Before one block's writes: read the grid again and check this column still holds the planned
+        model with param_count + 1 params (the owner could swap a block on the unit during the build,
+        and writes address column and index, not a model). The same read confirms the block's bypass
+        control to the wire guard, which allows it only from a read like this one."""
+        grid = self.dev.read_current_preset()
+        _check_alive(self.ctx)
+        problem = "the unit did not return the grid" if grid is None else _check_layout(self.plan, grid, [b])
+        if problem:
+            log.error("layout re-check before column %d: %s", b.col, problem)
+            return failed("device_error", f"The grid changed on the unit during the build ({text.clean(problem, 160)})."
+                          " Nothing was saved; re-select the slot on the unit to discard the partial grid.",
+                          firmware=self.fw, push=self.result)
+        self.dev.confirm_layout(b.col, b.param_count + 1)
         return None
 
     def verify(self):
@@ -492,6 +648,10 @@ class _Push:
                           "the unit to discard the edits.", firmware=self.fw, push=self.result)
         mismatches, diff, problems = _diff(self.plan, back)
         self.result.update(mismatches=mismatches, diff=diff)
+        try:  # evidence for P6 only: whatever goes wrong here must not change the push
+            self.defaults_differ = _log_defaults(self.plan, back, self.ctx.catalog)
+        except Exception:  # noqa: BLE001
+            log.exception("the defaults log failed; the push goes on")
         if mismatches:
             for pr in problems[:10]:
                 log.warning("read-back: %s", pr)
@@ -531,27 +691,31 @@ class _Push:
                           "Nothing was saved.", firmware=self.fw, push=self.result)
         dev.save_to_slot(pos, name)
         self.saved = True
-        self.result["listed"] = False
-        try:
+        try:  # before the polls: a save that lands late is still the bridge's own slot
             ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
-        except OSError as e:  # the save happened; a local ledger problem mustn't turn it into a failure
-            log.error("could not record the owned slot %s: %s", slot, e)
+        except Exception as e:  # noqa: BLE001  the save was issued; a local ledger problem mustn't change the outcome
+            # broad on purpose: anything escaping here would turn an issued save into "internal error" and lose
+            # the saved flag; the traceback goes to the log so a bug is still visible
+            log.error("could not record the owned slot %s: %s", slot, text.clean(str(e), 200), exc_info=True)
+        listed = False
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
             snap = dev.read_directory()
             if snap.my_presets.get(pos) == name:
-                self.result["listed"] = True
+                listed = True
                 self.deps_note = captures.deps_report(snap, pos, self.resolved)
                 break
-        if self.resolved and not self.result["listed"]:
-            self.deps_note = captures.deps_report(captures.DirectorySnapshot(my_presets={}), pos, self.resolved)
+        if not listed:
+            log.warning("save to %s not seen after %d listings", slot, SAVE_LIST_POLLS)
+            if self.resolved:
+                self.deps_note = captures.deps_report(captures.DirectorySnapshot(my_presets={}), pos, self.resolved)
+            return self.unconfirmed("device_error", f"but the unit's listing didn't show {name!r} after "
+                                    f"{SAVE_LIST_POLLS} checks (about 2 minutes)")
         labels = " Scene labels are not written in v1." if self.plan.scene_labels else ""
-        if self.result["listed"]:
-            return self.done(f"Saved {name!r} to {slot}; read-back matched.{labels}")
-        return self.done(f"Save to {slot} issued and the read-back matched, but the unit's listing didn't show "
-                         f"{name!r} within {int(SAVE_LIST_POLLS * SAVE_LIST_INTERVAL_S)} s (the unit can lag for "
-                         f"minutes). Check {slot} on the unit.{labels}")
+        note = (f" {self.defaults_differ} control(s) the preset leaves at default read back differently; "
+                "see the bridge log." if self.defaults_differ else "")
+        return self.done(f"Saved {name!r} to {slot}; read-back matched.{labels}{note}")
 
 
 def push_preset(ctx, job) -> Outcome:

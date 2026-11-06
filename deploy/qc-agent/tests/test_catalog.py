@@ -50,6 +50,9 @@ class Load(unittest.TestCase):
             "bool id": raw([{**M1, "id": True}]),
             "duplicate param": raw([{**M1, "params": M1["params"] * 2}]),
             "missing params": raw([{k: v for k, v in M1.items() if k != "params"}]),
+            "param without name": raw([{**M1, "params": [{k: v for k, v in M1["params"][0].items() if k != "name"}]}]),
+            "param without type": raw([{**M1, "params": [{k: v for k, v in M1["params"][0].items() if k != "type"}]}]),
+            "param name not text": raw([{**M1, "params": [{**M1["params"][0], "name": 7}]}]),
         }
         for name, data in cases.items():
             with self.subTest(name), self.assertRaisesRegex(CatalogError, "malformed"):

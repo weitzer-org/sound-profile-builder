@@ -168,7 +168,9 @@ class Agent:
         data = self._seal(contract.TAG_RESULT, payload)
         if len(data) > contract.MAX_RESULT_BYTES:
             log.error("result for %s too large; replacing it with a failure", job_id[:8])
-            outcome = jobs.failed("device_error", "The result was too large to return.", firmware=outcome.firmware)
+            # keep `extra`: a push that issued a save still records its slot in the bucket copy
+            outcome = jobs.failed("device_error", "The result was too large to return.", firmware=outcome.firmware,
+                                  extra=outcome.extra)
             data = self._seal(contract.TAG_RESULT, self.result_payload(job_id, kind, outcome, started, finished))
         self.ledger.finish(job_id, contract.format_time(finished), data)  # step 12: ledger before upload
         self.last_job = {"job_id": job_id, "status": outcome.status, "finished_at": contract.format_time(finished)}
@@ -309,7 +311,7 @@ class Agent:
             log.info("  %s", outcome.message)
         self.state, self.current_job = "idle", None
         self.last_activity = self.now()
-        if kind == "push_preset" and outcome.push and "listed" in outcome.push:
+        if kind == "push_preset" and (outcome.extra or {}).get("saved"):  # a save was issued, confirmed or not
             self.write_owned_slots()
         if outcome.unit_gone:
             self.unit_present = False

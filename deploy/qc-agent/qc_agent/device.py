@@ -65,7 +65,8 @@ class DeviceBackend(ABC):
 
     @abstractmethod
     def alive(self) -> bool:
-        """False once the unit's liveness signals say it is gone (G2 c)."""
+        """False once the unit's liveness signals say it is gone (G2 c). Never blocks: the real
+        backend samples on its own watchdog thread and this only reads the verdict."""
 
     @abstractmethod
     def read_directory(self):
@@ -115,7 +116,14 @@ class DeviceBackend(ABC):
     def set_param_scenes(self, row: int, col: int, index: int, wires: list[float]) -> None: ...
 
     @abstractmethod
-    def set_block_bypass(self, row: int, col: int, scenes: list[bool]) -> None: ...
+    def confirm_layout(self, col: int, n: int) -> None:
+        """The unit just read `n` params for the planned block in `col`. Allows that block's bypass
+        control only when n is its param_count + 1; raises DeviceError otherwise."""
+
+    @abstractmethod
+    def set_block_bypass(self, row: int, col: int, scenes: list[bool], bypass_index: int) -> None:
+        """All eight scene flags (True = bypassed), through the block's bypass control at bypass_index
+        (param_count + 1, checked against the unit's own read of the block before any value is written)."""
 
     @abstractmethod
     def save_to_slot(self, position: int, name: str) -> None:

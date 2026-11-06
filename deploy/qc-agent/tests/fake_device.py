@@ -57,6 +57,7 @@ class FakeDevice(DeviceBackend):
         self.preset_deps: dict[int, frozenset] = {}
         self.on_listing = None                          # hook(fake, n) before the n-th listing (1-based)
         self.corrupt_file_name = False                  # the read-back's file_name differs
+        self.param_count_skew: dict[int, int] = {}      # col -> slots the unit reports beyond param_count + 1
         self._listings = 0
         self._alive_calls = 0
 
@@ -125,13 +126,20 @@ class FakeDevice(DeviceBackend):
         self._rec("setlist_position")
         return {"folder_key": self.open_folder, "position": self.open_position, "is_factory": False}
 
+    def _n_params(self, col):
+        # Fixed per model, like the unit (G1: N = param_count + 1), not derived from what was written.
+        from helpers import catalog
+        m = catalog().models.get(self.grid[col]["model_id"])
+        n = m["param_count"] + 1 if m else max(list(self.grid[col]["params"]) + [0]) + 2
+        return n + self.param_count_skew.get(col, 0)
+
     def read_current_preset(self):
         self._need()
         self._rec("read_current_preset")
         blocks = []
         for col in sorted(self.grid):
             b = self.grid[col]
-            n = max(list(b["params"]) + [0]) + 2
+            n = self._n_params(col)
             params = [{"index": i, "values": list(b["params"].get(i, [0.0] * 8)), "scene_mode": False}
                       for i in range(n)]
             if self.corrupt_readback and params:
@@ -188,9 +196,14 @@ class FakeDevice(DeviceBackend):
         self._rec("set_param_scenes", row, col, index, list(wires))
         self.grid[col]["params"][index] = list(wires)
 
-    def set_block_bypass(self, row, col, scenes):
+    def confirm_layout(self, col, n):
+        self._rec("confirm_layout", col, n)
+
+    def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
-        self._rec("set_block_bypass", row, col, list(scenes))
+        self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
+        if bypass_index != self._n_params(col):  # qc-mcp: the bypass control is one past the block's read
+            raise DeviceError(f"fake unit: column {col}'s bypass control is {self._n_params(col)}, not {bypass_index}")
         self.grid[col]["bypass"] = list(scenes)
 
     def save_to_slot(self, position, name):

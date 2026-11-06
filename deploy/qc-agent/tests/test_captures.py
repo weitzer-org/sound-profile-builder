@@ -109,8 +109,8 @@ class Resolve(unittest.TestCase):
 
     def test_resolve_and_with_resolution(self):
         from qc_agent.export_validator import CAPTURE_BLOCK_IDS, PlannedBlock, PlannedCapture
-        plan = NS(blocks=[PlannedBlock(0, 1, "Myth Drive", [], [False] * 8),
-                          PlannedBlock(1, 0, "CA John's 2", [], [False] * 8, 4, PlannedCapture("CA John's 2", "factory"))])
+        plan = NS(blocks=[PlannedBlock(0, 1, "Myth Drive", [], [False] * 8, 3),
+                          PlannedBlock(1, 0, "CA John's 2", [], [False] * 8, 6, PlannedCapture("CA John's 2", "factory"))])
         res = C.resolve(plan.blocks, snap())
         self.assertEqual(list(res), [1])
         from dataclasses import dataclass
@@ -120,8 +120,8 @@ class Resolve(unittest.TestCase):
             blocks: list
         out = C.with_resolution(Plan(plan.blocks), res, CAPTURE_BLOCK_IDS)
         b = out.blocks[1]
-        self.assertEqual((b.model_id, b.capture.key, b.capture.version, b.capture.file_name),
-                         (14001, KEY_V2, 2, KEY_V2 + "CA John's 2"))
+        self.assertEqual((b.model_id, b.capture.key, b.capture.version, b.capture.file_name, b.param_count),
+                         (14001, KEY_V2, 2, KEY_V2 + "CA John's 2", 6))  # V2 keeps the shared param_count
         self.assertIs(out.blocks[0], plan.blocks[0])
 
 
