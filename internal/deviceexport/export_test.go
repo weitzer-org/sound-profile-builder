@@ -607,6 +607,14 @@ func TestOwnedPluginAllowed(t *testing.T) {
 	if name == "" {
 		t.Skip("no Cory Wong compressor in the catalog")
 	}
+	// The home bridge refuses plugin models, so the dry run says so even for an owned plugin
+	// (plan 7.3 F3); with the bridge side enabled the block goes through.
+	owned, _ := export(t, e, preset(block(name)), "g")
+	if len(owned.Unresolved) != 1 || !strings.Contains(owned.Unresolved[0].Reason, "home bridge refuses plugin models") {
+		t.Fatalf("%s owned, bridge refuses plugins: %+v", name, owned.Unresolved)
+	}
+	BridgePushesPlugins = true
+	defer func() { BridgePushesPlugins = false }()
 	_, p := export(t, e, preset(block(name)), "g")
 	if len(p.Unresolved) != 0 || p.Rows[0].Blocks[0].Plugin != "Cory Wong" {
 		t.Fatalf("%s: %+v", name, p)

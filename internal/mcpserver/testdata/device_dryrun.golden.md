@@ -11,4 +11,4 @@ Export: qc2-device-export/1, sha256 `57335f92b89ae4e2611393914fea5727c174d5cd30f
 
 Scenes C-H get Scene A's values and state; all eight scenes are written explicitly.
 
-To push: show this plan to the user and, only if they approve, call send_preset_to_device again with the same preset_id, guitar, slot and name, dry_run=false and confirm_token `c1.1793880600.da78cf6a9055406b362611d11b06eaef` (valid until 2026-11-05T12:10:00Z). The bridge writes only into an empty slot and never changes global settings.
+To push: show this plan to the user and, only if they approve, call send_preset_to_device again with the same preset_id, guitar, scene and second_guitar fields, slot and name, dry_run=false and confirm_token `c1.1793880600.da78cf6a9055406b362611d11b06eaef` (valid until 2026-11-05T12:10:00Z). The bridge writes only into an empty slot and never changes global settings.
