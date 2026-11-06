@@ -269,6 +269,14 @@ them; this guide uses **24H**).
     A push the agent refuses with "scenes with the same source must carry the same values" means the PC is on an
     older clone: pull `main`.
 
+18. **Save confirmation (P6 follow-up F1/F6; normal use).** Pull `main` on the PC first. A push now ends `succeeded`
+    ("Saved ...; read-back matched") instead of failed with "It may still land". If the unit sends a short My Presets
+    table after the save, `agent.log` shows `My Presets listed N entries, not 256: index=... name=...` (at most five
+    entries) and `post-save listing k/6 did not count`; that listing is skipped and never counted as "listed". If the
+    push still ends "may still land", paste those lines. A push that stops with "The grid changed after it was
+    verified" now says which cause (re-read timed out / values or bypass flags differ / footswitch assignments differ),
+    and `agent.log` has `pre-save re-read: ...` lines with the first differences.
+
 19. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
     From the phone run `sync_device_library`, then paste from `agent.log` every line starting `capture skip census`
     and `capture skip sample` (per folder: how many files are kept and how many are left out for each reason:
