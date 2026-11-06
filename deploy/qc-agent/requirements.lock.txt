@@ -1,0 +1,23 @@
+# Hash-pinned runtime dependencies of the QC bridge home agent (deploy/qc-agent).
+#
+# The agent needs exactly one third-party package: protobuf, which the vendored
+# qc-mcp transport uses to encode device messages. Talking to R2 is done with the
+# standard library (qc_agent/s3.py), so there is no boto3/botocore here.
+#
+# Version and hashes are copied verbatim from qc-mcp's own lockfile at the vendored
+# commit (tools/qc-mcp-trial/qc-mcp-f634ecd.requirements.txt, generated from qc-mcp's
+# uv.lock at f634ecd3dcf426090b90bc4cc176e4b500494b9e). That is the protobuf the
+# owner's trial venv ran against the unit in the Phase 0 spikes.
+#
+# Install (Windows):
+#   py -3.12 -m venv %LOCALAPPDATA%\qc-agent\venv
+#   %LOCALAPPDATA%\qc-agent\venv\Scripts\python.exe -m pip install --require-hashes --only-binary :all: -r deploy\qc-agent\requirements.lock.txt
+protobuf==7.36.0 \
+    --hash=sha256:1781cc1de61249b750848029bca452c0a8b7e990080316b9bbc2518b2117b488 \
+    --hash=sha256:3297e60abdff301e5f74393d87f6cc59dacab5f024a89548a6e8de1d26576b16 \
+    --hash=sha256:53374d53fc29a67f7dbbf0ade47d7526a0f0137bf0f9c90e48d8a60790ef748c \
+    --hash=sha256:70f5ec8eb0da81a44360c0dc0beac99a0d78071d21956a7076bae8bd2051841b \
+    --hash=sha256:7326fd717bdc419162a735938d89d4032332bcc3408804012b24ff3a37086071 \
+    --hash=sha256:9103532dffd80c6fab7e50c65a31007680a06eb57537d437bb1b35812c138a37 \
+    --hash=sha256:bf94a5917c71058262de683669bc0a797a7669d3de71f0b36d058e3194f47b44 \
+    --hash=sha256:e8e09cb0d794c6687926fa558a8a6e72aa10edb997d5ca61da0765f12a3e00ea
