@@ -142,6 +142,14 @@ class PendingQueue(Base):
     with a new tuple), so every unconsumed message doubled per matched request. With one broadcast
     per Scene read, twelve requests grew _pending to 6,153 entries; a per-scene write makes ~9."""
 
+    def test_reply_to_a_request_without_id_is_consumed(self):
+        self.dev.connect()
+        msg = P.message_class("Scene")(action=P.ACTION["READ"])  # no request_id: the upstream fallback branch
+        for _ in range(3):
+            self.dev._raw.request("Scene", msg)
+            self.assertFalse([1 for c, *_ in self.dev._raw._pending if c == P.NAME_TO_CMD["Scene"]],
+                             "the matched reply must not stay queued for the next request")
+
     def test_pending_grows_linearly_not_exponentially(self):
         orig = self.hid._handle
 

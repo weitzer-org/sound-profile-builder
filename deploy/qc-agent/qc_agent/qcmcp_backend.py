@@ -404,6 +404,7 @@ def _make_request(mods):
                             self._pending = keep + self._pending[i + 1:]
                             return cmd, obj, raw
                         if not exp_rid and obj is not None and len(pb) > 2:
+                            self._pending = keep + self._pending[i + 1:]  # consumed here too
                             return cmd, obj, raw
                         best = best or (cmd, obj, raw)
                     else:

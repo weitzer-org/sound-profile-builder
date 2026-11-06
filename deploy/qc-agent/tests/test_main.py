@@ -9,6 +9,7 @@ from unittest import mock
 from helpers import KEY_HEX
 from qc_agent import __main__ as cli
 from qc_agent.lock import InstanceLock
+from qc_agent.vendor_pins import COMMIT
 
 ENV = f"""QC_AGENT_R2_ENDPOINT=https://abc.r2.cloudflarestorage.com
 QC_AGENT_R2_BUCKET=sound-profile-builder-device-jobs
@@ -50,7 +51,7 @@ class Main(unittest.TestCase):
         code, out = run(["check", "--home", str(self.home)])
         self.assertEqual(code, 1)
         self.assertIn("config: FAILED", out)
-        self.assertIn("vendored qc-mcp f634ecd: OK", out)
+        self.assertIn(f"vendored qc-mcp {COMMIT[:7]}: OK", out)
 
     def test_check_passes_without_echoing_secrets(self):
         (self.home / "agent.env").write_text(ENV)
