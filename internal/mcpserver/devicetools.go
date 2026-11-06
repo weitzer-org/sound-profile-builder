@@ -730,7 +730,7 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
 		}
 	}
-	renderStomps(t, stomps)
+	renderStomps(t, stomps, blocks)
 	if len(unresolved) > 0 {
 		t.WriteString("\n**Unresolved, so this cannot be pushed:**\n")
 		for _, u := range unresolved {
@@ -744,12 +744,18 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 }
 
 // renderStomps shows the footswitch layout next to the blocks. Every string goes through
-// cell(). Switch behaviour is UNVERIFIED on the unit until gate G7.
-func renderStomps(t *strings.Builder, s *devicejobs.PlanStomps) {
+// cell(). Switch behaviour is UNVERIFIED on the unit until gate G7, except one owner
+// observation (2026-11-06, qc-stomp-layout.md G7 question g): a block's stomp footswitch
+// toggles it in every scene, so a block on a switch whose Scene A and B bypass differ gets
+// a warning that a press overrides both.
+func renderStomps(t *strings.Builder, s *devicejobs.PlanStomps, blocks []devicejobs.PlanBlock) {
 	if s == nil {
 		return
 	}
 	t.WriteString("\n**Footswitch layout** (stomp mode; UNVERIFIED on the unit until gate G7; saved with the preset, H is never used):\n")
+	if len(s.Assigned) > 0 {
+		t.WriteString("A footswitch turns its block on or off in every scene, not just the current one (seen on the unit).\n")
+	}
 	if len(s.Assigned) == 0 {
 		t.WriteString("- No block gets a switch.\n")
 	}
@@ -764,6 +770,21 @@ func renderStomps(t *strings.Builder, s *devicejobs.PlanStomps) {
 	}
 	for _, w := range s.Warnings {
 		fmt.Fprintf(t, "⚠️ %s\n", cell(dtext(w)))
+	}
+	type pos struct{ row, col int }
+	varies := make(map[pos]devicejobs.PlanBlock, len(blocks))
+	for _, b := range blocks {
+		if b.BypassA != b.BypassB {
+			varies[pos{b.Row, b.Col}] = b
+		}
+	}
+	for _, a := range s.Assigned {
+		if b, ok := varies[pos{a.Row, a.Col}]; ok {
+			fmt.Fprintf(t, "⚠️ %s is %s in Scene A and %s in Scene B, but its footswitch %s switches it in every scene: "+
+				"pressing it changes both scenes, so the per-scene difference won't hold once you use it.\n",
+				cell(dtext(a.Model)), strings.ToLower(activeBypassed(b.BypassA)), strings.ToLower(activeBypassed(b.BypassB)),
+				cell(dtext(a.Switch)))
+		}
 	}
 }
 

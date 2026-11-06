@@ -54,3 +54,58 @@ func TestSendPreset_DryRunWithoutStomps(t *testing.T) {
 		t.Errorf("layout section without a layout:\n%s", got)
 	}
 }
+
+// A block's stomp footswitch toggles it in every scene (owner, on the unit, 2026-11-06). A block on a
+// switch whose Scene A and B bypass differ gets a warning that a press changes both; one whose state
+// is the same in both scenes, or that has no switch, gets none.
+func TestSendPreset_DryRunWarnsWhenAFootswitchOverridesSceneBypass(t *testing.T) {
+	r := newDeviceRig(t, nil)
+	seedPreset(t, r.h, "p-dev", "Dev Preset")
+	r.online(t)
+	ex := devicejobstest.FixtureExport()
+	ex.Summary[0].BypassB = true // the Jewel: active in A, bypassed in B
+	ex.Summary[1].BypassB = true // the amp varies too, but has no switch
+	ex.Stomps = &devicejobs.PlanStomps{
+		Assigned: []devicejobs.PlanStomp{{Row: 0, Col: 0, Model: "Jewel", Role: "comp", Switch: "A"}},
+		Skipped:  []devicejobs.PlanSkipped{{Row: 0, Col: 1, Model: "US Double Nrm", Reason: "no role for category Guitar Amplifier"}},
+	}
+	r.exp.Exp = ex
+
+	got := okText(t, itCall(t, r.cs, devicePushToolName, pushArgs(nil)))
+	for _, want := range []string{
+		"A footswitch turns its block on or off in every scene",
+		"⚠️ Jewel is active in Scene A and bypassed in Scene B, but its footswitch A switches it in every scene",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("dry run lacks %q:\n%s", want, got)
+		}
+	}
+	if strings.Count(got, "switches it in every scene") != 1 {
+		t.Errorf("only the switched block whose bypass varies gets the warning:\n%s", got)
+	}
+}
+
+// No warning when the switched block has the same state in both scenes, and no scene line
+// when nothing gets a switch.
+func TestSendPreset_DryRunNoSceneWarningWithoutVariedSwitchedBlock(t *testing.T) {
+	r := newDeviceRig(t, nil)
+	seedPreset(t, r.h, "p-dev", "Dev Preset")
+	r.online(t)
+	ex := devicejobstest.FixtureExport()
+	ex.Stomps = &devicejobs.PlanStomps{
+		Assigned: []devicejobs.PlanStomp{{Row: 0, Col: 0, Model: "Jewel", Role: "comp", Switch: "A"}},
+	}
+	r.exp.Exp = ex
+	got := okText(t, itCall(t, r.cs, devicePushToolName, pushArgs(nil)))
+	if strings.Contains(got, "switches it in every scene") {
+		t.Errorf("warning for a block whose bypass doesn't vary:\n%s", got)
+	}
+
+	ex2 := devicejobstest.FixtureExport()
+	ex2.Stomps = &devicejobs.PlanStomps{}
+	r.exp.Exp = ex2
+	got = okText(t, itCall(t, r.cs, devicePushToolName, pushArgs(nil)))
+	if strings.Contains(got, "in every scene") {
+		t.Errorf("scene line without any switch:\n%s", got)
+	}
+}
