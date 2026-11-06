@@ -1,6 +1,6 @@
 # Stomp layout: consistent footswitch assignments on the Quad Cortex
 
-*Design, 2026-11-06. Status: proposed, not started.*
+*Design, 2026-11-06. Status: S1 and S2 built and merged (no device involved); S3 (gate G7) is next and needs the owner at the unit. See section 8.*
 *Builds on `docs/design/qc-device-bridge-plan.md` (the bridge, its phases and gates) and `docs/design/device-job-contract.md` (jobs between QC-2 and the home agent).*
 
 **Verify-or-label.** Each premise about the device says where it comes from: **owner** (the owner's statement about their unit), **qc-mcp** (read in qc-mcp's source at the pinned commit `f634ecd`, not run on the unit), or **UNVERIFIED**. Gate G7 (section 7) settles the ones the design depends on.
@@ -159,15 +159,15 @@ Run on a scratch preset in an **empty** slot (as G3 did), with a spike that is g
 
 ## 8. Phasing
 
-| Step | Scope | Device? | Depends on |
-|---|---|---|---|
-| S1 | `internal/stomplayout` + `stomp_layout.json` + tests (classification, every rule in §5, golden plans for the eval presets and for synthetic grids with existing assignments) | no | P1 (done) |
-| S2 | `stomps` in the device export, shown in the `send_preset_to_device` dry run | no | P2, S1 |
-| S3 | G7 spike | **yes** (owner runs) | P0-a harness |
-| S4 | `apply_stomps` job kind: contract, vectors, Go side, `apply_stomp_layout` MCP tool | no (fake agent) | P3, S1, S3 |
-| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S3, S4 |
+| Step | Scope | Device? | Depends on | Status (2026-11-06) |
+|---|---|---|---|---|
+| S1 | `internal/stomplayout` + `stomp_layout.json` + tests (classification, every rule in §5, golden plans for the eval presets and for synthetic grids with existing assignments) | no | P1 (done) | **Done**, PR #138 |
+| S2 | `stomps` in the device export, shown in the `send_preset_to_device` dry run | no | P2, S1 | **Done**, PR #139 |
+| S3 | G7 spike | **yes** (owner runs) | P0-a harness | Not started |
+| S4 | `apply_stomps` job kind: contract, vectors, Go side, `apply_stomp_layout` MCP tool | no (fake agent) | P3, S1, S3 | Not started; waits on S3 |
+| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S3, S4 | Partly: the agent's export validator checks and carries `stomps` but writes none (no assignment until G7 has run); the S4 half waits |
 
-S1 can start now. It touches no device, no auth and no storage.
+S1 and S2 touch no device, no auth and no storage. Everything the code does with switch indexes and assignment behaviour stays UNVERIFIED until S3 has run; S4 must not start before it.
 
 ## 9. Decided
 
