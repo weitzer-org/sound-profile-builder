@@ -1,40 +1,39 @@
 #!/usr/bin/env python3
-"""Gate G7, questions (f) and (c) only (docs/design/qc-stomp-layout.md section 7).
+"""Gate G7, question (f) only (docs/design/qc-stomp-layout.md section 7).
 
-  (c) Does assigning an already-assigned block to a second footswitch MOVE it (old switch cleared; qc-mcp's
-      claim, server.py:2048) or ADD a second switch?
-  (f) Is a stomp-assignment change a live, unsaved edit that leaving the preset DISCARDS? PASS if, after the
-      owner goes to another preset and back, the assignments equal the baseline. FAIL if the change survived
-      (the unit auto-saved it, or kept it). Entry point 2 (apply_stomp_layout) stays off unless (f) PASSES.
+  (f) Does a footswitch-assignment change sent over USB stay an UNSAVED EDIT that recalling another preset
+      discards, or does it reach the stored preset? PASS if, after recalling another preset and then the
+      original, the assignments equal the baseline. FAIL if the change survived. On FAIL entry point 2
+      (apply_stomp_layout) stays off.
 
-The other G7 questions ((a), (b), (d), (e), (g), (h)) are answered by eye during the owner's normal pushes
-(deploy/qc-agent/README.md steps 16 and 11) and are not repeated here.
+Nothing else in G7 is tested here: (c) does not matter because the planner removes before it assigns
+(internal/stomplayout/plan.go, rule 6), and (a), (b), (d), (e), (g), (h) are covered by normal pushes
+(deploy/qc-agent/README.md steps 16 and 11) or do not affect the design.
 
-What it does to the unit, in order (only with --apply; without it the script checks every precondition,
-prints the plan and writes nothing):
+What it does to the unit (only with --apply; without it the script checks every precondition, prints the
+plan and writes nothing):
 
   1. reads the stomp assignments of the open preset (baseline);
-  2. (c) re-assigns ONE already-assigned block to a different free switch (A-G, never H) and reads back;
-  3. asks you whether the unit shows the preset as edited/unsaved (it also reads the device's PresetDirty flag);
-  4. (f) asks YOU to select another preset (--other-slot) on the unit, then to select the original slot again,
-     and reads back;
-  5. prints the verdicts with the raw read-backs and writes them to the results file.
+  2. moves ONE assigned block to a free switch among A-G (never H): unassign, then assign; reads back and
+     confirms the change took (new switch present, old one gone);
+  3. recalls the preset in --other-slot, then recalls the original slot, confirming each from the unit's own
+     pointer, and reads back;
+  4. prints the verdict and the raw read-backs and writes them to the results file.
 
 Preconditions, all checked before anything is written:
-  * the home agent (QC bridge window) is not running and the unit opens exclusively;
+  * the bridge (home agent) is not running and the unit opens exclusively;
   * the firmware equals --firmware;
   * the open preset is one this system created: its slot is in the agent's owned-slot ledger
-    (owned_slots.jsonl, READ ONLY here) and the unit still shows the name the agent saved there. Or, with an
-    explicit --slot plus --i-confirm-bridge-created, the open slot must equal --slot;
-  * the preset has no unsaved edits, and at least two blocks with footswitch assignments, one of which can
-    be moved to a free switch in A-G.
+    (owned_slots.jsonl, READ ONLY here) and the unit still shows the name the agent saved there;
+  * the preset has no unsaved edits and at least one plain footswitch assignment that can move to a free A-G switch;
+  * --other-slot is a different, occupied My Presets slot.
 
-Grants: assign_stomp, unassign_stomp and reads (get_current_preset, get_setlist_position, read_state,
-list_directory). No save, no write_preset_file, no delete, no recall: YOU switch presets on the unit. Stomps
-are on spike_common.NEVER for every other spike; only the exact GRANT_G7 set may use them.
+Grants: assign_stomp, unassign_stomp, recall (SetlistPosition UPDATE: changing preset) and reads. No save
+(``save_preset`` = RecallPreset SAVE), no write_preset_file, no delete. Stomps and recall are on
+spike_common.NEVER for every other spike; only the exact GRANT_G7 set may use them.
 
-Nothing is ever saved. If the change survives (f FAIL), the script offers to put the assignments back by hand
-(a second live edit) and tells you what the baseline was.
+Nothing is ever saved. If the change survives (FAIL), the script offers to put the assignment back (a second
+live edit) and prints the baseline.
 """
 from __future__ import annotations
 
@@ -49,7 +48,7 @@ import spike_common as sc
 SWITCHES = "ABCDEFGH"
 FREE_RANGE = range(0, 7)  # A-G; H (7) is never a target and a block on H is never a candidate
 SETTLE_POLLS, SETTLE_S = 4, 1.0
-NAV_ATTEMPTS, NAV_POLL_S, NAV_WAIT_S = 3, 1.0, 10.0
+RECALL_WAIT_S, RECALL_SETTLE_S = 15.0, 2.0
 ENTRY_POINT_2_OFF = ("Entry point 2 (apply_stomp_layout / the apply_stomps job) stays OFF "
                      "(docs/design/qc-stomp-layout.md section 7).")
 
@@ -92,27 +91,15 @@ def read_owned_slots(home: Path):
         raise sc.SpikeRefused(f"the owned-slot ledger is unreadable ({e}). It is never rewritten by this script.") from None
 
 
-def check_open_preset_is_ours(args, position: int, name: str, home: Path) -> dict:
-    """The open preset must be one this system created. Returns what was checked, for the results file."""
-    if args.i_confirm_bridge_created:
-        if parse_or_none(args.slot) != position:
-            raise sc.SpikeRefused(f"the unit has {sc.slot_label(position)} open, not --slot {args.slot}. "
-                                  "Select that slot on the unit first.")
-        return {"ledger": "skipped (--slot + --i-confirm-bridge-created)", "slot": sc.slot_label(position)}
+def check_open_preset_is_ours(position: int, name: str, home: Path) -> dict:
+    """The open preset must be one this system created (ledger, read only). Returns what was checked."""
     path, owned = read_owned_slots(home)
-    if args.slot and parse_or_none(args.slot) != position:
-        raise sc.SpikeRefused(f"the unit has {sc.slot_label(position)} open, not --slot {args.slot}.")
     if not owned.owned(position, name):
         known = ", ".join(f"{e.get('slot')} ({e.get('name')!r})" for e in owned.current()) or "none"
         raise sc.SpikeRefused(
             f"the open preset {name!r} in {sc.slot_label(position)} is not in the home agent's owned-slot ledger "
-            f"({path}; slots it knows: {known}). Open a preset the bridge pushed. If the bridge did push this one "
-            f"from another PC, pass --slot {sc.slot_label(position)} --i-confirm-bridge-created.")
+            f"({path}; slots it knows: {known}). Open a preset the bridge pushed and retry.")
     return {"ledger": str(path), "slot": sc.slot_label(position)}
-
-
-def parse_or_none(label):
-    return sc.parse_slot(label) if label else None
 
 
 # --------------------------------------------------------------------------- stomp snapshots and verdicts (pure)
@@ -165,9 +152,8 @@ def pick_move(snap: dict, placed) -> Move:
     by_block: dict[tuple[int, int], list[dict]] = {}
     for a in snap["assignments"]:
         by_block.setdefault((a["row"], a["col"]), []).append(a)
-    if len(by_block) < 2:
-        raise sc.SpikeRefused(f"the preset has {len(by_block)} block(s) with footswitch assignments; this spike needs at "
-                              f"least two ({show(snap)}).")
+    if not by_block:
+        raise sc.SpikeRefused("the preset has no footswitch assignments; open one pushed with stomps (README step 16).")
     stray = sorted(b for b in by_block if b not in placed)
     if stray:
         raise sc.SpikeRefused(f"assignment(s) point at cell(s) {stray} that hold no block in the read-back, so the row/column "
@@ -184,20 +170,10 @@ def pick_move(snap: dict, placed) -> Move:
                           f"or a momentary switch ({show(snap)}). Open a preset with a plain latching assignment on A-G.")
 
 
-def verdict_c(before: dict, after: dict, mv: Move) -> dict:
-    """(c): moved / added / not_applied / cleared, and whether anything else changed."""
-    def of_block(s):
-        return {a["index"] for a in s["assignments"] if (a["row"], a["col"]) == (mv.row, mv.col)}
-
-    def others(s):
-        return [a for a in s["assignments"] if (a["row"], a["col"]) != (mv.row, mv.col)]
-    b, a = of_block(before), of_block(after)
-    has_new, has_old = mv.new in a, mv.old in a
-    word = ("moved" if has_new and not has_old else "added" if has_new and has_old
-            else "not_applied" if has_old else "cleared")
-    return {"verdict": word, "block_switches_before": sorted(b), "block_switches_after": sorted(a),
-            "other_blocks_unchanged": others(before) == others(after),
-            "momentary_unchanged": before["momentary"] == after["momentary"]}
+def change_took(snap: dict, mv: Move) -> bool:
+    """The block is on the new switch and no longer on the old one, and nothing else changed shape."""
+    mine = {a["index"] for a in snap["assignments"] if (a["row"], a["col"]) == (mv.row, mv.col)}
+    return mine == {mv.new}
 
 
 def verdict_f(baseline: dict, changed: dict, back: dict | None) -> str:
@@ -253,37 +229,27 @@ def ask(prompt: str) -> str:
     return input(prompt).strip().lower()
 
 
-def wait_for_slot(qc, position: int, label: str) -> bool:
-    """The owner selects ``label`` on the unit by hand; confirm from the unit's own pointer."""
-    for attempt in range(NAV_ATTEMPTS):
-        input(f"  Select {label} on the unit, then press Enter > ")
-        deadline = time.monotonic() + NAV_WAIT_S
-        cur = None
-        while True:
-            cur = qc.get_setlist_position() or {}
-            if cur.get("position") == position and not cur.get("is_factory"):
-                return True
-            if time.monotonic() >= deadline:
-                break
-            time.sleep(NAV_POLL_S)
-        sc.say(f"  The unit has {cur} open, not {label}. ({attempt + 1}/{NAV_ATTEMPTS})")
-    return False
+def recall_and_confirm(qc, folder_key: str, position: int, label: str) -> dict:
+    """Recall a My Presets slot (SetlistPosition UPDATE) and wait for the unit's own pointer to say it is open."""
+    qc.recall(folder_key=folder_key, position=position, is_factory=False)
+    deadline = time.monotonic() + RECALL_WAIT_S
+    cur = None
+    while True:
+        cur = qc.get_setlist_position() or {}
+        if cur.get("position") == position and cur.get("folder_key") == folder_key and not cur.get("is_factory"):
+            time.sleep(RECALL_SETTLE_S)  # let the preset finish loading before it is read
+            return {"label": label, "confirmed": True, "pointer": cur}
+        if time.monotonic() >= deadline:
+            return {"label": label, "confirmed": False, "pointer": cur}
+        time.sleep(0.5)
 
 
 def restore(qc, mv: Move, baseline: dict) -> dict:
-    """Put the block back (a live edit, no save): assign it to the old switch, remove the new one if it stayed."""
-    out = {"steps": []}
+    """Put the block back (a live edit, no save): unassign the new switch, assign the old one."""
+    qc.unassign_stomp(mv.row, mv.col, mv.new)
     qc.assign_stomp(mv.row, mv.col, mv.old)
-    out["steps"].append(f"assign {mv.describe()} reversed")
     _bp, snap = read_snapshot(qc, until=lambda s: key(s) == key(baseline))
-    if key(snap) != key(baseline) and any((a["row"], a["col"], a["index"]) == (mv.row, mv.col, mv.new)
-                                          for a in snap["assignments"]):
-        qc.unassign_stomp(mv.row, mv.col, mv.new)
-        out["steps"].append(f"unassign {sw(mv.new)}")
-        _bp, snap = read_snapshot(qc, until=lambda s: key(s) == key(baseline))
-    out["after"] = snap
-    out["equals_baseline"] = key(snap) == key(baseline)
-    return out
+    return {"after": snap, "equals_baseline": key(snap) == key(baseline)}
 
 
 # --------------------------------------------------------------------------- main
@@ -292,23 +258,18 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sc.add_common_args(ap, writes=True)
     ap.add_argument("--other-slot", required=True,
-                    help="a DIFFERENT preset (any, you only visit it) you will select on the unit by hand for (f)")
-    ap.add_argument("--slot", help="the slot that must be open; required with --i-confirm-bridge-created")
-    ap.add_argument("--i-confirm-bridge-created", action="store_true",
-                    help="skip the ledger: you say the bridge created the open preset (needs --slot, which must be the open slot)")
+                    help="a DIFFERENT, occupied My Presets slot the script will recall and then leave (any preset; it is only loaded)")
     ap.add_argument("--folder-key", default=sc.SETLIST)
     ap.add_argument("--agent-home", help="the agent's data folder (default: %%LOCALAPPDATA%%\\qc-agent); holds owned_slots.jsonl")
-    ap.add_argument("--apply", action="store_true", help="really write the one assignment. Without it: checks and plan only")
+    ap.add_argument("--apply", action="store_true", help="really move one assignment and recall. Without it: checks and plan only")
     args = ap.parse_args()
-    if args.i_confirm_bridge_created and not args.slot:
-        raise sc.SpikeRefused("--i-confirm-bridge-created needs --slot (the slot you say the bridge created).")
 
     home = agent_home(args.agent_home)
     mcp = sc.load_qc_mcp(args.qc_mcp, allow_unpinned=args.allow_unpinned)
-    sc.banner("G7 (c) and (f): footswitch assignments  (live edits only, never saves)")
+    sc.banner("G7 (f): is a stomp change discarded by recalling another preset?  (live edits, never saves)")
     qc = open_unit(mcp, home)
     result = sc.base_result("G7", mcp, args)
-    result["gate_questions"] = ["c", "f"]
+    result["gate_questions"] = ["f"]
     try:
         sc.check_firmware(qc, args.firmware, required=True)
         result["firmware"] = qc.firmware
@@ -320,12 +281,15 @@ def main() -> int:
         pos = cur["position"]
         if other == pos:
             raise sc.SpikeRefused("--other-slot is the slot that is open now; name a different one.")
+        folder = sc.find_folder(qc.list_directory(), args.folder_key)
+        if folder is None or sc.slot_is_empty(folder, other):
+            raise sc.SpikeRefused(f"{args.other_slot} is empty or not in the listing; name an occupied My Presets slot.")
+        result["other_slot_name"] = sc.slot_entry(folder, other).get("name")
         bp0, baseline = read_snapshot(qc)
-        result["open_slot"] = sc.slot_label(pos)
         name0 = bp0.name  # a string, so a later read can never alias it
-        result["preset_name"] = name0
-        result["ownership"] = check_open_preset_is_ours(args, pos, name0, home)
-        sc.say(f"Open preset: {name0!r} in {sc.slot_label(pos)}  (ownership: {result['ownership']['ledger']})")
+        result["open_slot"], result["preset_name"] = sc.slot_label(pos), name0
+        result["ownership"] = check_open_preset_is_ours(pos, name0, home)
+        sc.say(f"Open preset: {name0!r} in {sc.slot_label(pos)}  (ledger: {result['ownership']['ledger']})")
         dirty0 = preset_dirty(qc)
         result["preset_dirty_before"] = dirty0
         sc.say(f"Unsaved edits before (PresetDirty): {dirty0}")
@@ -336,73 +300,74 @@ def main() -> int:
         sc.say(f"1. Baseline assignments: {show(baseline)}")
         mv = pick_move(baseline, placed_cells(bp0))
         result["planned_move"] = mv.describe()
-        sc.say(f"   Plan for (c): {mv.describe()}   (then you visit {sc.slot_label(other)} and come back for (f))")
+        sc.say(f"   Plan: unassign then assign {mv.describe()}; recall {sc.slot_label(other)} ({result['other_slot_name']!r}), "
+               f"then recall {sc.slot_label(pos)}.")
         if not args.apply:
             sc.say("\nPreflight only: every precondition holds and nothing was written. Re-run with --apply to do it.")
             result["verdict"] = "PREFLIGHT_OK"
             return sc.EXIT_OK
 
-        # ---- (c)
-        sc.say(f"\n2. (c) Assigning {mv.describe()} ...")
+        # ---- the change
+        sc.say(f"\n2. Moving {mv.describe()} (unassign, then assign) ...")
+        qc.unassign_stomp(mv.row, mv.col, mv.old)
         qc.assign_stomp(mv.row, mv.col, mv.new)
-        bp1, changed = read_snapshot(qc, until=lambda s: any((a["row"], a["col"], a["index"]) == (mv.row, mv.col, mv.new)
-                                                              for a in s["assignments"]))
-        c = verdict_c(baseline, changed, mv)
-        result["changed"], result["c"] = changed, c
+        _bp1, changed = read_snapshot(qc, until=lambda s: change_took(s, mv))
+        took = change_took(changed, mv)
+        result["changed"], result["change_took"] = changed, took
+        result["preset_dirty_after_change"] = preset_dirty(qc)
         sc.say(f"   read-back: {show(changed)}")
-        sc.say(f"   (c) verdict: {c['verdict'].upper()}  (switches on that block: {[sw(i) for i in c['block_switches_before']]}"
-               f" -> {[sw(i) for i in c['block_switches_after']]}; other blocks unchanged: {c['other_blocks_unchanged']})")
-        if c["verdict"] in ("not_applied", "cleared"):
-            result["f"] = {"verdict": "NOT_RUN", "reason": f"(c) was {c['verdict']}, so there was no change to discard"}
-            sc.say(f"   The unit did not take the assignment ({c['verdict']}); (f) has nothing to test. {ENTRY_POINT_2_OFF}")
+        sc.say(f"   change took: {took}   (device PresetDirty now: {result['preset_dirty_after_change']})")
+        if not took:
+            result["verdict"] = "NOT_RUN"
+            sc.say("   The unit did not show the move, so there is no change to discard and (f) is not answered. "
+                   + ENTRY_POINT_2_OFF)
+            if key(changed) != key(baseline):
+                sc.say(f"   The preset is not as it was. Baseline: {show(baseline)}")
+                if ask("   Put the block back now (a live edit; still no save)? (y/n) > ") == "y":
+                    result["restore"] = restore(qc, mv, baseline)
+                    sc.say(f"   restore: equals baseline = {result['restore']['equals_baseline']}")
             return sc.EXIT_CHECK_FAILED
 
-        # ---- screen question
-        d1 = preset_dirty(qc)
-        result["preset_dirty_after_change"] = d1
-        sc.say(f"\n3. Device PresetDirty after the change: {d1}")
-        result["screen_shows_edited"] = ask("   Look at the unit: does the preset show as edited/unsaved? (y/n) > ")
-
         # ---- (f)
-        sc.say(f"\n4. (f) Now leave the preset BY HAND, without saving. If the unit asks whether to save, answer NO / discard.")
-        result["f_navigation"] = {"other_reached": wait_for_slot(qc, other, sc.slot_label(other))}
-        back = None
-        if result["f_navigation"]["other_reached"]:
-            result["f_navigation"]["unit_asked_to_save"] = ask("   Did the unit ask whether to save when you left? (y/n) > ")
-            result["f_navigation"]["original_reached"] = wait_for_slot(qc, pos, sc.slot_label(pos))
-            if result["f_navigation"]["original_reached"]:
+        sc.say(f"\n3. Recalling {sc.slot_label(other)}, then {sc.slot_label(pos)} ...")
+        r1 = recall_and_confirm(qc, args.folder_key, other, sc.slot_label(other))
+        result["recall_other"] = r1
+        sc.say(f"   other preset open: {r1['confirmed']}")
+        back, r2 = None, None
+        if r1["confirmed"]:
+            r2 = recall_and_confirm(qc, args.folder_key, pos, sc.slot_label(pos))
+            result["recall_original"] = r2
+            sc.say(f"   original preset open again: {r2['confirmed']}")
+            if r2["confirmed"]:
                 bp2, back = read_snapshot(qc)
-                result["f_navigation"]["name_after"] = bp2.name
+                result["name_after"] = bp2.name
                 if bp2.name != name0:
                     sc.say(f"   Warning: the preset now open is named {bp2.name!r}, not {name0!r}.")
                     back = None
                 result["back"] = back
                 result["preset_dirty_after_return"] = preset_dirty(qc)
         f = verdict_f(baseline, changed, back)
-        result["f"] = {"verdict": f}
+        result["verdict"] = result["f"] = f
 
         # ---- summary
-        sc.banner("G7 summary")
+        sc.banner("G7 (f) summary")
         sc.say(f"Baseline            : {show(baseline)}")
         sc.say(f"After the change    : {show(changed)}")
-        sc.say(f"After leaving+return: {show(back) if back else '(not read)'}")
-        sc.say(f"(c) re-assigning an assigned block to another switch: {c['verdict'].upper()}"
-               + ("  (qc-mcp's claim holds)" if c["verdict"] == "moved" else
-                  "  (qc-mcp's claim is WRONG here: the block now has two switches; section 5 rule 6 and the push path must allow for that)"
-                  if c["verdict"] == "added" else ""))
-        sc.say(f"(f) leaving the preset discards an assignment change: {f}")
+        sc.say(f"After recall+return : {show(back) if back else '(not read)'}")
+        sc.say(f"(f) a stomp change is discarded by recalling another preset: {f}")
         if f == "PASS":
-            sc.say("    The change was discarded and nothing was auto-saved. (f) is answered; entry point 2 may be built.")
+            sc.say("    The assignments are back to the baseline: the change was an unsaved edit and nothing was auto-saved. "
+                   "(f) is answered; entry point 2 may be built.")
         elif f == "FAIL":
-            sc.say("    The change SURVIVED leaving the preset: the unit kept or auto-saved it. " + ENTRY_POINT_2_OFF)
+            sc.say("    The change SURVIVED the recall: the unit kept or auto-saved it. " + ENTRY_POINT_2_OFF)
             sc.say(f"    Original assignments to restore: {show(baseline)}")
             if ask("    Put the block back now (a live edit; still no save)? (y/n) > ") == "y":
                 result["restore"] = restore(qc, mv, baseline)
                 sc.say(f"    restore: equals baseline = {result['restore']['equals_baseline']}; now {show(result['restore']['after'])}")
         else:
-            sc.say(f"    (f) is NOT answered (the read-back matches neither state, or navigation failed). {ENTRY_POINT_2_OFF}")
-        result["verdict"] = f
-        sc.say("\nNothing was saved by this script. Select any other preset WITHOUT saving if the unit still shows edits.")
+            sc.say(f"    (f) is NOT answered (a recall did not complete, a different preset came back, or the read-back matches "
+                   f"neither state). {ENTRY_POINT_2_OFF}")
+        sc.say("\nNothing was saved by this script.")
         return sc.EXIT_OK if f == "PASS" else sc.EXIT_CHECK_FAILED
     finally:
         result["close"] = sc.close_with_timeout(qc)

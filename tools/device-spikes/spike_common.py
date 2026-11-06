@@ -11,8 +11,8 @@ What it adds on top of the transport:
 * ``Guarded`` wraps the QuadCortex object and exposes ONLY the methods a given spike needs.
   Everything else raises ``GuardError``, and a hard-coded NEVER list cannot be allowed by
   mistake (``save_preset`` = RecallPreset SAVE, the documented hang; ``recall``; ``clear_grid``;
-  raw ``send``/``request``; global I/O, EQ, volume and mode writes; deletes; stomps, except for the
-  exact GRANT_G7 set).
+  raw ``send``/``request``; global I/O, EQ, volume and mode writes; deletes; stomps and recall, except
+  for the exact GRANT_G7 set).
 * Slot and directory helpers, taper prediction maths, and JSON result writing.
 
 Standard library only (qc-mcp itself needs protobuf; the owner's venv has it).
@@ -147,18 +147,19 @@ GRANT_READ = READ_METHODS
 GRANT_G3 = READ_METHODS | {"set_routing", "add_block", "set_param", "set_param_scenes", "write_preset_file"}
 GRANT_G4 = READ_METHODS | {"set_param"}
 GRANT_G6 = READ_METHODS | {"set_param", "set_param_scenes", "set_scene", "set_block_bypass"}
-# G7 (stomp doc section 7, questions (c) and (f)): footswitch assignment only. No value, scene, save, recall or
-# delete method is in it, and the owner switches presets by hand on the unit.
-GRANT_G7 = READ_METHODS | {"assign_stomp", "unassign_stomp"}
-# The ONLY hole in NEVER. A grant may contain these two names only if it is exactly GRANT_G7 (see Guarded), so
+# G7 (stomp doc section 7, question (f)): footswitch assignment plus ``recall`` (a SetlistPosition UPDATE, i.e.
+# changing preset; NOT RecallPreset SAVE, which is ``save_preset`` and stays on NEVER). No value, scene, save,
+# write_preset_file or delete method is in it.
+GRANT_G7 = READ_METHODS | {"assign_stomp", "unassign_stomp", "recall"}
+# The ONLY hole in NEVER. A grant may contain these names only if it is exactly GRANT_G7 (see Guarded), so
 # adding one of them to any other grant, or adding anything to GRANT_G7, brings the refusal back.
-G7_STOMP_EXCEPTION = frozenset({"assign_stomp", "unassign_stomp"})
+G7_STOMP_EXCEPTION = frozenset({"assign_stomp", "unassign_stomp", "recall"})
 
 
 class Guarded:
     def __init__(self, qc, grant: frozenset[str]):
         grant = frozenset(grant)
-        # The stomp methods stay on NEVER for every spike but G7: only the exact G7 grant gets them.
+        # The stomp methods and recall stay on NEVER for every spike but G7: only the exact G7 grant gets them.
         exempt = G7_STOMP_EXCEPTION if grant == GRANT_G7 else frozenset()
         bad = (grant & NEVER) - exempt
         if bad:
