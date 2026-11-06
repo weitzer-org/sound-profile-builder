@@ -15,7 +15,7 @@ from pathlib import Path
 
 from helpers import Clock, catalog, config, export, job
 from qc_agent import jobs, qcmcp_backend
-from qc_agent.device import DeviceError, UnitAbsent
+from qc_agent.device import DeviceError, UnitAbsent, UnitBusy
 from qc_agent.export_validator import validate
 from qc_agent.ledger import OwnedSlots
 from qc_agent.qcmcp_backend import GuardError, Guarded, QcMcpBackend, WireRefused
@@ -93,18 +93,97 @@ class Session(Base):
         with self.assertRaisesRegex(DeviceError, "not 256"):
             self.dev.list_my_presets()
 
+    def quiet_watchdog(self):
+        # Sample by hand: the watchdog thread would otherwise sample on its own schedule.
+        p = mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 3600)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def samples(self, errors):
+        self.quiet_watchdog()
+        self.dev.connect()                       # connect takes the first sample (write_errors 0)
+        verdicts = []
+        for n in errors:
+            self.dev._raw.write_errors = n
+            self.dev._watchdog_sample()
+            verdicts.append(self.dev.alive())
+        return verdicts
+
     def test_dead_reader_thread_means_gone(self):
+        self.quiet_watchdog()
         self.dev.connect()
+        self.assertTrue(self.dev.alive())
         self.hid._thread.running = False
+        self.assertTrue(self.dev.alive(), "alive() only reads the last verdict")
+        self.dev._watchdog_sample()
         self.assertFalse(self.dev.alive())
 
-    def test_rising_write_errors_mean_gone(self):
+    def test_one_rise_is_not_gone(self):
+        self.assertEqual(self.samples([1]), [True])                 # 0, 1
+
+    def test_write_errors_rising_on_two_consecutive_samples_mean_gone(self):
+        self.assertEqual(self.samples([1, 2]), [True, False])       # 0, 1, 2: two rises in a row
+
+    def test_a_single_rise_or_a_flat_sample_is_not_gone(self):
+        self.assertEqual(self.samples([1, 1, 2, 2, 3]), [True] * 5)  # 0,1,1,2,2,3: never two in a row
+
+    def test_gone_is_sticky_for_the_session(self):
+        self.assertEqual(self.samples([1, 2, 2, 2]), [True, False, False, False])
+
+    def test_watchdog_thread_notices_without_the_job_thread(self):
+        p = mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 0.02)
+        p.start()
+        self.addCleanup(p.stop)
         self.dev.connect()
-        for n in (1, 2):
-            self.dev._raw.write_errors = n
-            self.assertTrue(self.dev.alive())
-        self.dev._raw.write_errors = 3
+        self.assertTrue(self.dev.alive())
+        self.hid._thread.running = False   # the unit is switched off: nothing raises (G2)
+        import time
+        deadline = time.monotonic() + 3
+        while self.dev.alive() and time.monotonic() < deadline:
+            time.sleep(0.01)
         self.assertFalse(self.dev.alive())
+
+    def test_alive_never_blocks_on_the_transport(self):
+        self.dev.connect()
+        import threading
+        import time
+        held, release = threading.Event(), threading.Event()
+
+        def hog():  # a transport call stuck waiting on a vanishing unit holds this lock (G2)
+            with self.dev._raw._io_lock:
+                held.set()
+                release.wait(5)
+        t = threading.Thread(target=hog, daemon=True)
+        t.start()
+        held.wait(2)
+        start = time.monotonic()
+        self.dev.alive()
+        self.dev._watchdog_sample()
+        self.assertLess(time.monotonic() - start, 0.1)
+        release.set()
+        t.join(2)
+
+    def test_a_stale_verdict_counts_as_gone(self):
+        self.quiet_watchdog()
+        self.dev.connect()
+        self.dev._last_sample -= QcMcpBackend.WATCH_STALE_S + 1   # the watchdog stopped sampling
+        self.assertFalse(self.dev.alive())
+
+    def test_disconnect_stops_the_watchdog(self):
+        self.dev.connect()
+        t = self.dev._watch_thread
+        self.dev.disconnect()
+        self.assertFalse(t.is_alive())
+        self.assertFalse(self.dev.alive())
+
+    def test_cortex_control_holding_the_unit_maps_to_unit_busy(self):
+        # winhid.open's own text on ERROR_ACCESS_DENIED / ERROR_SHARING_VIOLATION (winhid.py, f634ecd)
+        msg = ("the Quad Cortex is already open exclusively - quit Cortex Control (or anything else "
+               "holding it) and reconnect [CreateFile error 5]")
+        with mock.patch.object(self.hid, "open", side_effect=RuntimeError(msg)):
+            with self.assertRaises(UnitBusy):
+                self.dev.connect()
+        self.assertIsNone(self.dev._watch_thread)
 
     def test_no_device_maps_to_unit_absent(self):
         with mock.patch.object(T, "open_hid", side_effect=RuntimeError("no HID device 0x152a:0x880a found")):
@@ -120,7 +199,7 @@ class PushOverTheWire(Base):
         j = json.loads(contract.open_envelope(config().keys, contract.TAG_JOB, data))
         out = jobs.run(self.ctx(), j)
         self.assertEqual((out.status, out.reason_code), ("succeeded", ""), out.message)
-        self.assertTrue(out.push["listed"])
+        self.assertTrue(out.extra["saved"])
         self.assertEqual(out.push["mismatches"], 0)
         self.assertEqual(self.hid.slots[152], "Texas Blues")
         sent = self.names()
@@ -140,6 +219,27 @@ class PushOverTheWire(Base):
             self.assertAlmostEqual(got, want, places=6)  # float32 on the wire
         self.assertEqual(self.hid.grid[4]["bypass"], [False, True] + [False] * 6)
         self.assertEqual(self.hid.routing[0], (1, 19))
+        # every block's bypass was assigned to scenes through index param_count + 1, and no value write
+        # reached index param_count (the device's trailing slot) or beyond
+        counts = {1: 3, 1001: 7, 12045: 21, 4003: 5, 8006: 5}
+        cols = {c: b["hash"] for c, b in self.hid.grid.items()}
+        assigns, writes = {}, []
+        for n, o in self.hid.received:
+            if n != "Grid":
+                continue
+            for ch in o.preset.chains:
+                for m in ch.models:
+                    for p in m.params:
+                        if p.scene_mode and not p.param_values:
+                            assigns.setdefault(m.column, set()).add(p.index)
+                        elif p.param_values:
+                            writes.append((m.column, p.index))
+        for c, mid in cols.items():
+            self.assertIn(counts[mid] + 1, assigns[c], c)
+            self.assertTrue(all(i <= counts[mid] + 1 for i in assigns[c]))
+        self.assertTrue(writes)
+        self.assertTrue(all(i < counts[cols[c]] for c, i in writes), writes)
+        self.assertTrue(all(b["bypass_scene"] for b in self.hid.grid.values()))
 
 
 class StrictPosition(Base):
@@ -269,7 +369,14 @@ class Guard(Base):
         self.refused(self.qc.set_routing, 0, in_portid=2, out_portid=19)
         self.refused(self.qc.set_split_points, 0, 2, 4)
         self.refused(self.qc.set_param_typed, 0, 0, 1, [[None, None, "x"]])
-        self.qc.set_param(0, 0, 1, 0.3)                           # the plan's own write passes
+        self.qc.set_param(0, 0, 1, 0.55)                          # the plan's own write passes
+
+    def test_the_trailing_slot_is_refused_even_if_armed(self):
+        self.dev.begin_push(152, "x", self.plan)
+        push = self.dev._guard._push
+        push["params"].add((0, 3))          # Myth Drive: param_count 3, so index 3 is the trailing slot
+        push["values"][(0, 3)] = {0.5}
+        self.refused(self.qc.set_param, 0, 0, 3, 0.5)
 
     def raw_grid(self, build, extra=b""):
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
@@ -298,29 +405,34 @@ class Guard(Base):
             for r in P.message_to_reports(full):
                 self.dev._guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
 
-    def test_scene_assign_on_bypass_column_only_past_the_params(self):
-        self.dev.begin_push(152, "x", self.plan)  # the Spring (column 4) has scene-varying bypass
+    def test_scene_assign_only_for_varying_params_and_each_bypass_index(self):
+        self.dev.begin_push(152, "x", self.plan)
 
-        def assign(idx):
+        def assign(col, idx):
             def build(g):
                 m = g.preset.chains.add().models.add()
-                m.column = 4
+                m.column = col
                 p = m.params.add()
                 p.index, p.scene_mode = idx, True
             return build
-        self.raw_grid(assign(1))       # DAMPING: a real parameter, not the bypass control
-        self.raw_grid(assign(6))       # nothing armed yet: the unit's own count hasn't been read
-        self.dev._guard.allow_bypass_index(4, 6)   # what set_block_bypass arms from the unit's read
-        self.raw_grid(assign(5))
-        self.raw_grid(assign(7))
-        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
-        assign(6)(g)
-        self.qc.send("Grid", g)
+        self.raw_grid(assign(4, 1))    # Spring DAMPING: not written, not varying
+        self.raw_grid(assign(4, 5))    # param_count: the trailing slot
+        self.raw_grid(assign(4, 7))    # past the bypass control
+        self.raw_grid(assign(0, 1))    # Myth Drive TREBLE: written but not varying
+        for col, idx in ((4, 6), (4, 0), (0, 4), (0, 0), (2, 22), (1, 8)):  # bypass controls; varying MIX/GAIN
+            g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+            assign(col, idx)(g)
+            self.qc.send("Grid", g)
+
+    def test_backend_bypass_index_must_be_the_armed_one(self):
+        self.dev.begin_push(152, "x", self.plan)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 4, [False] * 8, 5)
 
     def test_values_and_flags_must_be_the_plans(self):
         self.dev.begin_push(152, "x", self.plan)
-        self.refused(self.qc.set_param, 0, 0, 1, 0.31)  # TREBLE is 0.3 in the plan
-        self.qc.set_param(0, 0, 1, 0.3)
+        self.refused(self.qc.set_param, 0, 0, 1, 0.56)  # TREBLE is 0.55 in the plan
+        self.qc.set_param(0, 0, 1, 0.55)
         self.dev._guard._push["flags"][4] = {False}     # a plan where the Spring is never bypassed
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
         b = g.preset.bypass.add()

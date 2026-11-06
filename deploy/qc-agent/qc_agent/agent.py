@@ -309,7 +309,7 @@ class Agent:
             log.info("  %s", outcome.message)
         self.state, self.current_job = "idle", None
         self.last_activity = self.now()
-        if kind == "push_preset" and outcome.push and "listed" in outcome.push:
+        if kind == "push_preset" and outcome.extra.get("saved"):  # a save was issued, confirmed or not
             self.write_owned_slots()
         if outcome.unit_gone:
             self.unit_present = False

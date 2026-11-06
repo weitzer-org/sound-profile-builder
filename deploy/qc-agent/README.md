@@ -11,7 +11,7 @@ or UI: its only inputs are signed jobs. Design: `docs/design/qc-device-bridge-pl
 |---|---|
 | `list_slots` | Complete. Fresh directory listing of My Presets, 256 slots, empty/occupied/owned. |
 | `read_preset` | Complete for the **open** preset. A named slot is refused (`unsupported_arg`): recalling changes what's playing. |
-| `push_preset` | Implemented and tested offline against fixtures, but **refused end to end until P2** builds the device export: QC-2's `send_preset_to_device` still uses `devicejobs.UnavailableExporter`. |
+| `push_preset` | Implemented and tested offline against P2's real exports (`internal/deviceexport/testdata/golden/`). Never run on the unit yet: that's the hardware acceptance below (plan P6). |
 
 ## Safety rules (what the agent enforces, in order)
 
@@ -21,10 +21,14 @@ the unit's firmware must equal `QC_AGENT_EXPECTED_FIRMWARE` exactly and the unit
 For a push, before anything is written:
 1. the export format is one the agent implements (`qc2-device-export/1`), and the export passes
    `qc_agent/export_validator.py` against the agent's own catalog copy (`internal/catalog/qc_catalog.json` in this
-   clone, hash-matched with the export): known models in allowed categories, no plugin/capture/IR/FX-loop/splitter
-   models, NC_Recorder denied, only listed parameter indexes with numeric ranges, values in range, wire values 0..1,
-   one row (in 1, out 19), at most 8 blocks, zero unresolved items. The preset name may use letters, digits, spaces
-   and `_ ( ) + , ! ' & # . -` only (it becomes a file name on the unit);
+   clone, hash-matched with the export). In short: zero unresolved items; one row (in 1, out 19), at most 8 blocks
+   in columns 0..n-1; every model in the catalog, not internal (20000-20002), in P2's category allowlist (no
+   capture/IR/FX-loop/splitter/mixer/looper), not side-chain; a plugin model only with its plugin name (QC-2 sends
+   them only for plugins you own); a cloned model only if its base is 12000 (the one G1 verified); every parameter
+   index below the model's `param_count` (the device's trailing slot is never written), a float user control whose
+   label is the one the dry run showed you for that index; eight finite wire values in 0..1, each the taper of its
+   display value under a taper the unit confirmed (G4); eight bypass flags; scenes C-H equal to A. The preset name
+   may use letters, digits, spaces and `_ ( ) + , ! ' & # . -` only (it becomes a file name on the unit);
 2. the slot is inside `QC_AGENT_ALLOWED_SLOTS`;
 3. a **fresh** directory listing (all 256 slots, or it's refused) shows the slot **empty** (an exactly blank name),
    and no other slot already has a preset with the same name. The bridge never overwrites a preset, including its own
@@ -33,14 +37,33 @@ For a push, before anything is written:
    verified (G3). The agent never recalls a preset or clears a grid, so it can't disturb what you have loaded;
 5. the job hasn't expired (re-checked just before the first write).
 
-Then it builds the chain on the live grid, reads it back and diffs it, and saves only if the diff is clean and a
-second fresh listing still shows the slot empty. The save is `write_preset_file` (File CREATE), never `save_preset`.
+Then it builds the chain on the live grid in three phases:
+1. place every block;
+2. read once and check each block is the planned model and reports `param_count + 1` parameters (G1). If not, it
+   stops before writing any value;
+3. write each block's parameters, then all eight bypass flags through index `param_count + 1`. A parameter whose
+   scenes differ gets all eight values (`set_param_scenes`; G6: an unwritten scene keeps its old value, it doesn't
+   copy A); one whose scenes agree gets one `set_param` (G6 read that back in all eight).
+
+It then reads the grid back and compares every written value in all eight scenes and every bypass flag. Controls the
+preset leaves at default aren't written; any that reads back away from its catalog default is logged as a warning
+(and counted in the success message), never failed. Switches and pans are logged raw because their wire mapping is
+unmeasured. It saves only if the diff is clean: the grid re-read, then a fresh listing and the open position
+immediately before the save. The save is `write_preset_file` (File CREATE), never `save_preset`. The listing can lag
+(G3), so it re-lists up to 6 times, 6 s apart (about 2 minutes, as each listing takes 12-15 s). If the name never
+shows, the job is reported **failed** and the slot stays recorded as the bridge's, in case the save lands late.
+
+While a job has the unit open, a watchdog thread samples the transport once a second: the unit counts as gone when
+its reader thread has died or the write-error count rose on two consecutive samples (G2: nothing raises when the unit
+is switched off, and a read can still succeed from buffered data). The job checks that verdict around every write.
 
 Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SHA-256 pin check of everything in
 `vendor/`, with each module compiled from the bytes just hashed (the folder is never on `sys.path`); a method allowlist with a never-list (`save_preset`, `recall`, `clear_grid`, deletes, raw
 `send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, captures/IRs, splits, scene labels);
 and a **wire guard** that decodes every outgoing message and lets through only session plumbing, reads, and, while a
-push is armed, exactly the plan's grid writes and one File CREATE to the armed slot and name.
+push is armed, exactly the plan's grid writes (the plan's indexes and values, never an index at or past
+`param_count`, scene assignment only for scene-varying params and each block's bypass control) and one File CREATE
+to the armed slot and name.
 
 Local state in `%LOCALAPPDATA%\qc-agent\`: `agent.env` (config), `executed_jobs.jsonl` (the job ledger, never
 pruned), `owned_slots.jsonl` (saves the bridge made), `logs\agent.log` (rotated; no keys, tokens or signatures),
@@ -88,7 +111,7 @@ $Q = "$HOME\qc-trial\qc2"; $A = "$env:LOCALAPPDATA\qc-agent"; $PY = "$A\venv\Scr
 1. Switch on the Quad Cortex, connect USB, **close Cortex Control** (it holds the unit exclusively).
 2. Double-click **Start QC bridge**. The window says `Bridge running: waiting for jobs`, then shows each job.
 3. Use the phone. `device_status` should say the bridge is online within a minute.
-4. For a push (after P2): **select the empty target slot on the unit first**, then confirm the push on the phone.
+4. For a push: **select the empty target slot on the unit first**, then confirm the push on the phone.
 5. The bridge exits by itself after `QC_AGENT_IDLE_MINUTES` without a job, or when the unit is switched off or
    unplugged. Closing the window stops it too.
 
@@ -109,7 +132,8 @@ them; this guide uses **24H**).
 4. **Read the open preset.** Select any preset on the unit, then phone: `read_device_preset`. Check the block count
    matches the screen. Then try a slot name (`read_device_preset` with a slot): expect `refused / unsupported_arg`.
 5. **Cortex Control holding the unit (G2 b).** Leave the bridge running, open Cortex Control and let it connect, then
-   `list_device_slots`. Expect `failed / unit_busy` with "close it and retry", and the bridge still running. Close
+   `list_device_slots`. Expect `failed / unit_busy` with "Cortex Control has the unit, close it and retry", and the
+   bridge still running. Close
    Cortex Control and repeat: it should succeed. (You said Cortex Control isn't installed; if so, skip this and tell
    me, and it stays untested.)
 6. **Wrong firmware is refused.** Close the bridge. Edit `agent.env`, set `QC_AGENT_EXPECTED_FIRMWARE=4.1.9`, start the
@@ -119,8 +143,8 @@ them; this guide uses **24H**).
    shut down. Repeat with the power switch. (The idle-time detection uses Windows device enumeration and has never
    run on hardware: tell me how long each took.)
 8. **Idle exit.** Set `QC_AGENT_IDLE_MINUTES=2`, start, wait: it should stop after 2 minutes. Put `30` back.
-9. **Push refusals (works before P2).** These need a push job, which QC-2 can't build until P2. Once P2 is merged:
-   - occupied slot: `slot_not_empty`, nothing written;
+9. **Push refusals.** Each must change nothing on the unit:
+   - occupied slot: `slot_not_empty`;
    - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first");
    - an empty slot outside `QC_AGENT_ALLOWED_SLOTS` (narrow it to `24H` to test): `slot_not_allowed`.
 10. **Before the first real push: are position replies correlated?** The push reads which slot is open several
@@ -129,9 +153,28 @@ them; this guide uses **24H**).
     ("no reply to SetlistPosition carrying request_id ...") before writing anything. So check once, with the Phase 0
     spike tools, that SetlistPosition and Scene replies carry the request's id, and tell me if they don't: pushes
     would then need another freshness check.
-11. **First real push (after P2).** Select empty **24H** on the unit, dry-run and confirm on the phone. Expect
-    `succeeded`, `mismatches 0`, the name in 24H on the unit, then power-cycle and check it's still there (G3 never
-    tested persistence across a power cycle).
+11. **First real push.** Use a preset whose dry run has zero unresolved items: the G3-shaped one (Myth Drive, Brit
+    2203, the 110 US PRN C10R cab, Low-High Cut, Spring) is the known-good case. Select empty **24H** on the unit,
+    dry-run and confirm on the phone. Expect `succeeded`, `mismatches 0`, the name in 24H on the unit. Then:
+    - on the unit, Scene A and B: GAIN and MIX follow the dry run's A and B values; the Spring is bypassed in B only;
+    - scenes C-H: same as A (spot-check two);
+    - power-cycle the unit and check 24H is still there with those values (G3 never tested persistence);
+    - read `agent.log` for `default differs` warnings and `default not compared` lines, and send them to me: they
+      are the first evidence that every control of a placed block starts at its default (G4 saw two).
+12. **Bypass index on a block other than a reverb.** The bridge writes all eight bypass flags on every block
+    through index `param_count + 1`. On the unit that was exercised only on the Spring (G6). Refine a preset so the
+    **amp** is bypassed in Scene B only, push it into another empty slot, and check on the unit: amp active in A,
+    bypassed in B, active in C. If the amp's bypass is the same in every scene, stop and tell me.
+13. **Footswitch bypass with scene-assigned bypass.** Every block's bypass is now assigned to scenes. In Scene A,
+    toggle a block's bypass from its footswitch (stomp mode), switch to B and back, and tell me whether the
+    toggle stuck per scene or reverted. This only decides how the result reads; it isn't a safety issue.
+14. **Watchdog during a push.** Start a push, and while the window shows it building, switch the unit off. Expect
+    `failed / unit_absent` within a few seconds, nothing saved, and the bridge exiting. Note how long it took.
+15. **Plugin block (only if you own a plugin and want to test it).** Push a preset with a block from a plugin you
+    own. Expect either `succeeded` or `failed / device_error` naming the plugin, and nothing saved in the failure
+    case. Placing plugin blocks has never been tested on the unit.
+16. **Save lag.** Note in the window how many listings the save needed before it showed (`save to ... not seen` means
+    all six missed; check the slot on the unit and tell me).
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before

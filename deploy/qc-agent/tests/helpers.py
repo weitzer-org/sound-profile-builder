@@ -1,4 +1,4 @@
-"""Shared test helpers: paths, keys, a fixed clock, signed jobs and the fixture export."""
+"""Shared test helpers: paths, keys, a fixed clock, signed jobs and P2's golden exports."""
 from __future__ import annotations
 
 import copy
@@ -18,7 +18,6 @@ from qc_agent.catalog import Catalog  # noqa: E402
 from qc_agent.config import from_mapping  # noqa: E402
 
 VECTORS = REPO / "testdata" / "devicejobs" / "vectors.json"
-FIXTURES = AGENT_DIR / "tests" / "fixtures"
 KEY_HEX = bytes(range(32)).hex()          # the vectors' current key (kid 72eb33c6)
 NEXT_HEX = bytes(range(32, 64)).hex()
 BUCKET = "sound-profile-builder-device-jobs"
@@ -64,10 +63,20 @@ class Clock:
         self.t += dt.timedelta(seconds=seconds)
 
 
-def export(**edits):
-    data = json.loads((FIXTURES / "export_g3.json").read_text())
-    data["payload"]["catalog"]["sha256"] = catalog().sha256
-    return data
+GOLDEN = REPO / "internal" / "deviceexport" / "testdata" / "golden"
+
+
+def golden(name="pushable_g3"):
+    """One of P2's golden exports (internal/deviceexport, regenerated with `go test
+    ./internal/deviceexport -run Golden -update`), read as written: a P2 change that the agent
+    doesn't accept fails these tests."""
+    return json.loads((GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def export(name="pushable_g3"):
+    """The job's args.export for a golden: {"format", "payload"}, exactly what QC-2 queues."""
+    g = golden(name)
+    return {"format": g["format"], "payload": g["payload"]}
 
 
 def job(kind="list_slots", args=None, job_id=None, created=T0, ttl_s=900, bucket=BUCKET, key_hex=KEY_HEX):

@@ -9,7 +9,17 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 """
 from __future__ import annotations
 
+from qc_agent.catalog import Catalog, default_wire
 from qc_agent.device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+
+_CATALOG = None
+
+
+def _catalog():
+    global _CATALOG
+    if _CATALOG is None:
+        _CATALOG = Catalog.load()
+    return _CATALOG
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass",
                          "save_to_slot"})
@@ -35,6 +45,14 @@ class FakeDevice(DeviceBackend):
         self.on_call = None                             # hook(name) run on every call
         self.listing_lag = 0                            # listings that still show the slot empty after a save
         self._alive_calls = 0
+        # Parameter layout: like the unit (G1), a block reads param_count + 1 params, unwritten ones at the
+        # catalog default (G4, two params seen). Knobs to simulate a unit that disagrees:
+        self.n_override: dict[int, int] = {}            # col -> params the read reports
+        self.default_overrides: dict[tuple, float] = {}  # (col, index) -> start value instead of the default
+        self.refuse_models: set[int] = set()            # add_block returns False (no echo) for these
+        self.raise_on_models: set[int] = set()          # add_block raises DeviceError for these
+        self.drop_scene: tuple | None = None            # (col, index, scene): set_param_scenes loses that scene
+        self.bypass_override: dict[int, list] = {}      # col -> bypass flags the read reports
 
     def _rec(self, name, *args):
         self.calls.append((name, *args))
@@ -97,19 +115,27 @@ class FakeDevice(DeviceBackend):
         blocks = []
         for col in sorted(self.grid):
             b = self.grid[col]
-            n = max(list(b["params"]) + [0]) + 2
-            params = [{"index": i, "values": list(b["params"].get(i, [0.0] * 8)), "scene_mode": False}
-                      for i in range(n)]
+            model = _catalog().models.get(b["model_id"])
+            n = self.n_override.get(col, (model["param_count"] if model else 0) + 1)
+            params = [{"index": i, "values": list(b["params"].get(i, [self._start(col, model, i)] * 8)),
+                       "scene_mode": False} for i in range(n)]
             if self.corrupt_readback and params:
                 params[0]["values"] = [0.999] * 8
             blocks.append({"col": col, "model_id": b["model_id"], "params": params})
         bypass = [[[False] * 8 for _ in range(8)] for _ in range(4)]
         for col, b in self.grid.items():
-            bypass[0][col] = list(b["bypass"])
+            bypass[0][col] = list(self.bypass_override.get(col, b["bypass"]))
         return {"name": "", "chains": [{"row": 0, "in_port": self.routing[0], "out_port": self.routing[1],
                                         "blocks": blocks}] + [{"row": r, "in_port": 0, "out_port": 0, "blocks": []}
                                                               for r in (1, 2, 3)],
                 "bypass": bypass}
+
+    def _start(self, col, model, i):
+        if (col, i) in self.default_overrides:
+            return self.default_overrides[(col, i)]
+        cp = model["params_by_index"].get(i) if model else None
+        w = default_wire(cp) if cp else None
+        return 0.0 if w is None else w
 
     def begin_push(self, position, name, plan):
         self._rec("begin_push", position, name)
@@ -125,7 +151,9 @@ class FakeDevice(DeviceBackend):
     def add_block(self, row, col, model_id):
         self._need()
         self._rec("add_block", row, col, model_id)
-        if col in self.no_echo_cols:
+        if model_id in self.raise_on_models:
+            raise DeviceError("the unit rejected the block")
+        if col in self.no_echo_cols or model_id in self.refuse_models:
             return False
         self.grid[col] = {"model_id": model_id, "params": {}, "bypass": [False] * 8}
         return True
@@ -138,11 +166,14 @@ class FakeDevice(DeviceBackend):
     def set_param_scenes(self, row, col, index, wires):
         self._need()
         self._rec("set_param_scenes", row, col, index, list(wires))
-        self.grid[col]["params"][index] = list(wires)
+        vals = list(wires)
+        if self.drop_scene and self.drop_scene[:2] == (col, index):
+            vals[self.drop_scene[2]] = 0.123  # the value landed on another scene (G6: _await_scene can time out)
+        self.grid[col]["params"][index] = vals
 
-    def set_block_bypass(self, row, col, scenes):
+    def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
-        self._rec("set_block_bypass", row, col, list(scenes))
+        self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
         self.grid[col]["bypass"] = list(scenes)
 
     def save_to_slot(self, position, name):

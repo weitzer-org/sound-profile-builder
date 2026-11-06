@@ -79,10 +79,20 @@ class FakeHID:
             self._rx.extend((r[0], r) for r in reports)
 
     def _n_params(self, col):
-        # Fixed per model, like the unit (G1: N = the full list + 1); not derived from what was written.
+        # Fixed per model, like the unit (G1: N = param_count + 1, hidden params and the trailing slot
+        # included); not derived from what was written.
         from helpers import catalog
         m = catalog().models.get(self.grid[col]["hash"])
-        return (max(m["params_by_index"]) if m else 0) + 2
+        return (m["param_count"] if m else 0) + 1
+
+    def _start_value(self, col, i):
+        # A placed block starts at its catalog defaults (seen for two params in G4; assumed here).
+        from helpers import catalog
+        from qc_agent.catalog import default_wire
+        m = catalog().models.get(self.grid[col]["hash"])
+        cp = m["params_by_index"].get(i) if m else None
+        w = default_wire(cp) if cp else None
+        return 0.0 if w is None else w
 
     def _handle(self, name, m):
         A = P.ACTION
@@ -143,7 +153,7 @@ class FakeHID:
                             b["scene"].add(p.index)
                         continue
                     v = p.param_values[0].float_value
-                    vals = b["params"].setdefault(p.index, [0.0] * 8)
+                    vals = b["params"].setdefault(p.index, [self._start_value(col, p.index)] * 8)
                     if p.index in b["scene"]:
                         vals[self.scene] = v
                     else:
@@ -171,7 +181,7 @@ class FakeHID:
                         for i in range(self._n_params(col)):
                             p = m.params.add()
                             p.scene_mode = i in b["scene"]
-                            for v in b["params"].get(i, [0.0] * 8):
+                            for v in b["params"].get(i, [self._start_value(col, i)] * 8):
                                 p.param_values.add().float_value = v
             else:
                 ch.models.add()  # an empty slot keeps the chain non-empty

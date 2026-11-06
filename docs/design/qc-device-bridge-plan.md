@@ -230,10 +230,32 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
   G3 verified. A different open slot is refused (`unsupported_arg`, "select slot X on the unit first").
 - **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
   qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
-  to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
-- **Per-scene bypass:** a block bypassed in any scene goes through the G6-verified path (assign to scenes, then each
-  scene's flag, all eight written), even when all eight agree. A block active in every scene gets no bypass write:
-  it relies on a new block starting active, which the read-back checks (all eight flags must read back false). Scene labels are not written in v1 (they were v2 in section 3.3).
+  to LF) or whose `coros`/`origin` differ from the file's header.
+- **Reads P2's payload strictly** (follow-up PR to #134, which predated P2): exact key sets, every rule of section 4
+  that the agent can check independently, and two cross-checks that tie the dry run the owner approved to the bytes
+  written. Each param's `label` must be the one `catalog.LabelParams` gives its index (ported to Python), and each
+  `wire` must be the taper of its `display`, recomputed only for the confirmed skews and bounds (anything else is
+  refused, as in P2). A test parses `firmware_constants.go`, `labels.go` and `resolve.go` and fails if the Python
+  copies of `ConfirmedSkews`, the confirmed bounds, `VerifiedCloneBases`, the internal ids, the category allowlist or
+  the internal-param rules drift.
+- **Build order:** place every block, then one read checking each block's model id and that it reports
+  `param_count + 1` parameters (G1), then the values. A count mismatch stops the job before any value is written.
+- **Scenes and bypass (G6):** a param whose scenes differ is written with `set_param_scenes` (all eight values); one
+  whose scenes agree with one `set_param`. **Every** block gets all eight bypass flags (owner decision), through
+  index `param_count + 1` passed explicitly (never qc-mcp's per-block lookup). That index was exercised on the unit
+  only for the Spring (G6): P6 checks it on an amp, and whether a footswitch bypass then acts per scene.
+- **Defaults:** controls in `at_default`, and every other control the push doesn't write, are compared after the build
+  with the catalog default where the wire mapping is confirmed, and logged as a warning when they differ (never a
+  failure); the rest are logged raw. This is the read-back check section 4 asked for.
+- **Liveness (G2):** a watchdog thread samples the reader thread and `write_errors` once a second while the unit is
+  open and never calls into the transport; the job checks its verdict around every write. Gone = reader thread dead,
+  or `write_errors` rose on two consecutive samples; a verdict older than 5 s also counts as gone.
+- **Save (G3):** the grid re-read, then a fresh listing and the open position immediately before File CREATE; then up
+  to 6 re-lists 6 s apart. A save never seen is reported `failed` (owner decision), and the slot stays in the owned
+  ledger in case it lands late.
+- **Plugin models** are placed when they arrive in a signed job; if the unit won't place one, the job fails
+  (`device_error`, naming the plugin) and nothing is saved. Scene labels are not written in v1 (they were v2 in
+  section 3.3).
 - **Wire guard:** besides a method allowlist, the backend decodes every outgoing message and passes only session
   plumbing, READs, the armed plan's Grid/Scene updates and one armed File CREATE.
 - **No boto3:** a standard-library SigV4 client, so the lockfile holds only `protobuf` (7.36.0, the pins from

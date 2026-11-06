@@ -135,6 +135,7 @@ class ListAndRead(Base):
         self.poll()
         r = self.result(jid)
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "unit_busy"))
+        self.assertEqual(r["message"], "Cortex Control has the unit, close it and retry")
         self.assertIsNone(r["firmware"])
         self.assertFalse(self.agent.stop.is_set(), "a busy unit is still attached; keep running")
 
@@ -153,25 +154,66 @@ class Push(Base):
         self.poll()
         return self.result(jid)
 
+    # The exact calls a push of P2's pushable_g3 golden makes (slot 20A = position 152), in order:
+    # the unit checks, routing, phase 1 (place every block), phase 2 (one read: model ids and
+    # param_count + 1 per block), phase 3 (values: all eight scenes when they vary, else one write;
+    # all eight bypass flags through index param_count + 1), the read-back, the save checks
+    # (grid re-read, then a fresh listing and the open position immediately before File CREATE),
+    # then the listing poll. alive() is checked around every write but isn't recorded.
+    G3_CALLS = [
+        ("connect",), ("list_my_presets",), ("setlist_position",), ("read_current_preset",),
+        ("begin_push", 152, "Texas Blues"), ("set_routing", 0, 1, 19),
+        ("setlist_position",), ("add_block", 0, 0, 1),
+        ("setlist_position",), ("add_block", 0, 1, 1001),
+        ("setlist_position",), ("add_block", 0, 2, 12045),
+        ("setlist_position",), ("add_block", 0, 3, 4003),
+        ("setlist_position",), ("add_block", 0, 4, 8006),
+        ("read_current_preset",),
+        ("setlist_position",),
+        ("set_param_scenes", 0, 0, 0, [0.2, 0.8, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]),
+        ("set_param", 0, 0, 1, 0.55),
+        ("set_param", 0, 0, 2, 0.6),
+        ("set_block_bypass", 0, 0, [False, False, False, False, False, False, False, False], 4),
+        ("setlist_position",),
+        ("set_param_scenes", 0, 1, 0, [0.45, 0.6, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45]),
+        ("set_param", 0, 1, 6, 0.24999854297459012),
+        ("set_block_bypass", 0, 1, [False, False, False, False, False, False, False, False], 8),
+        ("setlist_position",),
+        ("set_param", 0, 2, 10, 0.010066601212044444),
+        ("set_param", 0, 2, 16, 0.5358867312681466),
+        ("set_param", 0, 2, 17, 0.7507718761305262),
+        ("set_block_bypass", 0, 2, [False, False, False, False, False, False, False, False], 22),
+        ("setlist_position",),
+        ("set_param", 0, 3, 1, 0.25012737345710895),
+        ("set_block_bypass", 0, 3, [False, False, False, False, False, False, False, False], 6),
+        ("setlist_position",),
+        ("set_param_scenes", 0, 4, 0, [0.35, 0.2, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35]),
+        ("set_block_bypass", 0, 4, [False, True, False, False, False, False, False, False], 6),
+        ("read_current_preset",),
+        ("read_current_preset",), ("list_my_presets",), ("setlist_position",),
+        ("save_to_slot", 152, "Texas Blues"),
+        ("list_my_presets",),
+        ("end_push",), ("disconnect",),
+    ]
+
+    def test_push_of_the_p2_golden_makes_exactly_these_calls(self):
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        self.assertEqual(self.dev.calls, self.G3_CALLS)
+        self.assertEqual(r["message"], "Saved 'Texas Blues' to 20A; read-back matched.")
+        p = r["push"]
+        self.assertEqual((p["slot"], p["name"], p["mismatches"], p["cpu_load"]), ("20A", "Texas Blues", 0, None))
+        self.assertEqual(set(p), {"slot", "name", "mismatches", "cpu_load", "diff"})  # contract section 9 only
+        # one entry per scene for the three scene-varying params, one for each of the other seven
+        self.assertEqual(len(p["diff"]), 3 * 8 + 7)
+        self.assertTrue(all(d["ok"] for d in p["diff"]))
+        self.assertEqual(set(p["diff"][0]), {"row", "col", "param_index", "expected", "readback", "ok"})
+        self.assertEqual([d["expected"] for d in p["diff"][:8]], [0.2, 0.8, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2])
+
     def test_push_succeeds(self):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
-        p = r["push"]
-        self.assertEqual((p["slot"], p["name"], p["mismatches"], p["listed"]), ("20A", "Texas Blues", 0, True))
-        self.assertEqual([d for d in p["diff"] if not d["ok"]], [])
-        self.assertIn("Scene labels are not written", r["message"])
-        names = [c[0] for c in self.dev.calls]
-        # order: checks before any write; save last
-        for n in ("list_my_presets", "setlist_position", "set_routing", "save_to_slot"):
-            self.assertIn(n, names)
-        self.assertLess(names.index("list_my_presets"), names.index("set_routing"))
-        self.assertLess(names.index("setlist_position"), names.index("set_routing"))
-        self.assertEqual(names.count("save_to_slot"), 1)
         self.assertEqual(self.dev.slots[152], "Texas Blues")
-        # scene-varying GAIN wrote all eight scenes; Spring bypass per scene (G6)
-        self.assertIn(("set_param_scenes", 0, 0, 0, [0.2, 0.8] + [0.2] * 6), self.dev.calls)
-        self.assertIn(("set_block_bypass", 0, 4, [False, True] + [False] * 6), self.dev.calls)
-        self.assertNotIn("set_block_bypass", [c[0] for c in self.dev.calls if c[0] == "set_block_bypass" and c[2] != 4])
         # owned-slot ledger
         self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
         jid2, _ = self.queue("list_slots")
@@ -181,6 +223,16 @@ class Push(Base):
         o = json.loads(contract.open_envelope(self.cfg.keys, contract.TAG_OWNED_SLOTS,
                                               self.store.objects[contract.OWNED_SLOTS_KEY]))
         self.assertEqual([(e["slot"], e["name"]) for e in o["slots"]], [("20A", "Texas Blues")])
+
+    def test_no_write_reaches_the_trailing_slot(self):
+        self.push()
+        counts = {1: 3, 1001: 7, 12045: 21, 4003: 5, 8006: 5}
+        cols = {c[2]: c[3] for c in self.dev.calls if c[0] == "add_block"}
+        for c in self.dev.calls:
+            if c[0] in ("set_param", "set_param_scenes"):
+                self.assertLess(c[3], counts[cols[c[2]]], c)
+            if c[0] == "set_block_bypass":
+                self.assertEqual(c[4], counts[cols[c[2]]] + 1, c)
 
     def test_owned_slots_copy_is_never_read(self):
         self.store.objects[contract.OWNED_SLOTS_KEY] = b"forged"
@@ -219,7 +271,7 @@ class Push(Base):
 
     def test_invalid_export_refused_before_connecting(self):
         e = export()
-        e["payload"]["rows"][0]["blocks"][0]["params"][0]["wire"] = 1.5
+        e["payload"]["rows"][0]["blocks"][0]["params"][1]["wire"] = [1.5] * 8
         args = {"slot": "20A", "name": "X", "source": {"preset_id": "p", "guitar": "g"}, "export": e}
         r = self.push(args=args)
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
@@ -359,12 +411,24 @@ class Push(Base):
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
         self.assertTrue(self.agent.stop.is_set())
 
-    def test_save_not_yet_listed(self):
+    def test_save_not_listed_after_six_polls_fails_but_keeps_the_slot_owned(self):
         self.dev.listing_lag = 99
         r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("didn't show 'Texas Blues' after 6 checks", r["message"])
+        self.assertIn("It may still land: check 20A", r["message"])
+        names = [c[0] for c in self.dev.calls]
+        after = names[names.index("save_to_slot") + 1:]
+        self.assertEqual(after.count("list_my_presets"), 6)
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))  # a late save is still ours
+        self.assertIn(contract.OWNED_SLOTS_KEY, self.store.objects)
+
+    def test_save_seen_on_a_later_poll_succeeds(self):
+        self.dev.listing_lag = 3  # G3: a listing right after the save can still show the slot blank
+        r = self.push()
         self.assertEqual(r["status"], "succeeded")
-        self.assertFalse(r["push"]["listed"])
-        self.assertIn("Check 20A on the unit", r["message"])
+        names = [c[0] for c in self.dev.calls]
+        self.assertEqual(names[names.index("save_to_slot") + 1:].count("list_my_presets"), 4)
 
     def test_switching_presets_mid_build_stops(self):
         def switch(name):
@@ -379,9 +443,13 @@ class Push(Base):
 
     def test_grid_edited_after_verification_is_not_saved(self):
 
+        reads = {"n": 0}
+
         def edit_on_unit(name):
-            if name == "list_my_presets" and any(c[0] == "set_routing" for c in self.dev.calls):
-                self.dev.grid[0]["params"][1] = [0.9] * 8  # the owner turns TREBLE during the save checks
+            if name == "read_current_preset":
+                reads["n"] += 1
+                if reads["n"] == 4:  # 1 blank, 2 layout, 3 read-back, 4 the re-read before the save
+                    self.dev.grid[0]["params"][1] = [0.9] * 8  # the owner turns TREBLE after verification
         self.dev.on_call = edit_on_unit
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
@@ -402,13 +470,108 @@ class Push(Base):
         def switch(name):
             if name == "read_current_preset":
                 reads["n"] += 1
-                if reads["n"] == 3:  # 1: blank check, 2: read-back, 3: the re-read just before the save
+                if reads["n"] == 4:  # 1 blank, 2 layout, 3 read-back, 4 the re-read before the save
                     self.dev.open_position = 0
         self.dev.on_call = switch
         r = self.push()
-        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
-        self.assertIn("just before the save", r["message"])
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"))
+        self.assertIn("nothing was saved", r["message"])
+        self.assertIn("Select slot 20A", r["message"])
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_wrong_parameter_count_stops_before_any_value_is_written(self):
+        self.dev.n_override = {2: 20}  # the cab reads 20 params, not param_count + 1 = 22
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("column 2 (110 US PRN C10R (M)) reads 20 parameters; the catalog expects 22", r["message"])
+        self.assertIn("No parameter was written", r["message"])
+        names = [c[0] for c in self.dev.calls]
+        for n in ("set_param", "set_param_scenes", "set_block_bypass", "save_to_slot"):
+            self.assertNotIn(n, names)
+        self.assertEqual(names.count("add_block"), 5)
+
+    def test_trailing_slot_count_matters(self):
+        self.dev.n_override = {0: 3}  # Myth Drive reads param_count, without the trailing slot
+        r = self.push()
+        self.assertIn("reads 3 parameters; the catalog expects 4", r["message"])
+        self.assertNotIn("set_param", [c[0] for c in self.dev.calls])
+
+    def _plugin_export(self):
+        m = next(m for m in catalog().models.values()
+                 if m.get("plugin_id") is not None and m["category"] == "Guitar Overdrive" and not m.get("clones"))
+        e = export()
+        e["payload"]["rows"][0]["blocks"][0].update(model_id=m["id"], model=m["name"], category=m["category"],
+                                                    plugin="Plini", params=[], at_default=[])
+        return m, {"slot": "20A", "name": "Texas Blues", "source": {"preset_id": "p", "guitar": "g"}, "export": e}
+
+    def test_plugin_block_the_unit_refuses_fails_cleanly(self):
+        m, args = self._plugin_export()
+        for knob in ("refuse_models", "raise_on_models"):
+            with self.subTest(knob):
+                self.setUp()
+                getattr(self.dev, knob).add(m["id"])
+                r = self.push(args=args)
+                self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+                self.assertIn(f"did not accept {m['name']} (it needs the Plini plugin", r["message"])
+                self.assertIn("Nothing was saved", r["message"])
+                names = [c[0] for c in self.dev.calls]
+                self.assertEqual(names.count("add_block"), 1)
+                self.assertNotIn("save_to_slot", names)
+                self.assertEqual(names[-2:], ["end_push", "disconnect"])
+                self.assertFalse(self.agent.stop.is_set())
+
+    def test_plugin_block_the_unit_accepts_is_pushed(self):
+        m, args = self._plugin_export()
+        r = self.push(args=args)
+        self.assertEqual(r["status"], "succeeded", r["message"])
+        self.assertIn(("add_block", 0, 0, m["id"]), self.dev.calls)
+        self.assertIn(("set_block_bypass", 0, 0, [False] * 8, m["param_count"] + 1), self.dev.calls)
+
+    def test_defaults_that_read_back_differently_are_logged_not_failed(self):
+        self.dev.default_overrides = {(1, 4): 0.9}  # Brit 2203 MASTER (at_default; default 3 -> wire 0.3)
+        with self.assertLogs("qc_agent", "INFO") as logs:
+            r = self.push()
+        self.assertEqual(r["status"], "succeeded", r["message"])
+        self.assertEqual(r["push"]["mismatches"], 0)
+        self.assertIn("1 control(s) the preset leaves at default read back differently", r["message"])
+        warn = [x for x in logs.output if x.startswith("WARNING") and "default differs" in x]
+        self.assertEqual(len(warn), 1, logs.output)
+        self.assertIn("col 1 Brit 2203 MASTER [4] (at_default) default 3 -> wire 0.3, read [0.9,", warn[0])
+        # switches and pans have no measured wire mapping: logged raw, not compared
+        self.assertTrue(any("not compared" in x and "TRAILS" in x for x in logs.output))
+        self.assertTrue(any("not compared" in x and "MIC 1" not in x and "PAN [3]" in x for x in logs.output))
+
+    def test_all_defaults_as_expected_logs_no_warning(self):
+        with self.assertLogs("qc_agent", "INFO") as logs:
+            r = self.push()
+        self.assertEqual(r["message"], "Saved 'Texas Blues' to 20A; read-back matched.")
+        self.assertFalse([x for x in logs.output if "default differs" in x])
+
+    def test_a_scene_value_that_landed_elsewhere_blocks_the_save(self):
+        self.dev.drop_scene = (4, 0, 2)  # Spring MIX, scene C
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        bad = [d for d in r["push"]["diff"] if not d["ok"]]
+        self.assertEqual([(d["col"], d["param_index"], d["expected"], d["readback"]) for d in bad],
+                         [(4, 0, 0.35, 0.123)])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_bypass_flags_must_read_back_in_every_scene(self):
+        self.dev.bypass_override = {1: [False] * 7 + [True]}  # the amp reads bypassed in scene H
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_unit_gone_after_the_save_is_a_failure_that_keeps_the_slot(self):
+        def vanish(name):
+            if name == "save_to_slot":
+                self.dev.gone_after = self.dev._alive_calls
+        self.dev.on_call = vanish
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "unit_absent"))
+        self.assertIn("went away before the save could be confirmed", r["message"])
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
+        self.assertTrue(self.agent.stop.is_set())
 
     def test_disconnect_always_called(self):
         self.dev.no_echo_cols = {0}

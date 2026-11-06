@@ -17,9 +17,12 @@ Three layers keep the transport to the operations the plan allows (section 5):
      * READs of state (preset, directory, setlist position, scene, and the
        handshake's subscription reads);
      * while a push is armed: Grid UPDATEs on row 0 that place exactly the plan's
-       models in the plan's columns, set the plan's parameter indexes to float
-       values in 0..1, set routing in 1 -> out 19, or set bypass flags; and
-       Scene UPDATEs (the transport switches scenes to write per-scene values);
+       models in the plan's columns, set the plan's parameter indexes (always below
+       the model's param_count, so never the device's trailing slot) to exactly the
+       plan's float values, assign to scenes only the plan's scene-varying params and
+       each block's bypass control (index param_count + 1), set routing in 1 -> out
+       19, or set the plan's bypass flags; and Scene UPDATEs (the transport switches
+       scenes to write per-scene values);
      * while a save is armed: one File CREATE of My Presets at the armed position
        with the armed name and nothing else (no payload).
    Messages with unknown fields, compressed payloads, or empty model entries (the shape
@@ -32,7 +35,10 @@ The vendored files are not modified. One upstream bug is worked around in a subc
 could double per request (_make_request). The same subclass reads the open slot strictly by
 request_id (_make_setlist_position). Liveness (G2 c) reads two private attributes
 of the vendored Windows transport (its reader thread, its write-error counter), as
-the Phase 0 spikes did; nothing is written to them.
+the Phase 0 spikes did; nothing is written to them. A watchdog thread samples them
+once a second while a session is open (G2: calls can block for seconds as the unit
+goes away, so the job thread can't be the one that notices); alive() only reads the
+verdict and never blocks.
 """
 from __future__ import annotations
 
@@ -170,7 +176,7 @@ class WireGuard:
         self._lock = threading.Lock()
         self._chunks: list[tuple] = []
         self._buf = bytearray()
-        self._push = None   # {"cols": {col: model_id}, "params": {(col, idx)}, "bypass_cols": set}
+        self._push = None   # the armed plan, see arm_push
         self._save = None   # (folder_key, position, name)
         self.refused: list[str] = []
 
@@ -190,20 +196,18 @@ class WireGuard:
     # -- arming --
 
     def arm_push(self, plan):
-        self._push = {"cols": {b.col: b.model_id for b in plan.blocks},
-                      "params": {(b.col, p.index) for b in plan.blocks for p in b.params},
-                      "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
-                      "bypass_cols": {b.col for b in plan.blocks if any(b.bypass_scenes)},
-                      "max_index": {b.col: b.max_param_index for b in plan.blocks},
+        blocks = plan.blocks
+        self._push = {"cols": {b.col: b.model_id for b in blocks},
+                      "params": {(b.col, p.index) for b in blocks for p in b.params},
+                      "scene_params": {(b.col, p.index) for b in blocks for p in b.params if p.varies},
+                      "param_count": {b.col: b.param_count for b in blocks},
+                      # every block gets all eight bypass flags (G6), through its own bypass control
+                      "bypass_cols": {b.col for b in blocks},
+                      "bypass_index": {b.col: b.bypass_index for b in blocks},
                       # the exact values each write may carry (float32 on the wire, so compared within 1e-6)
-                      "values": {(b.col, p.index): {p.wire, *(p.scene_wires or ())}
-                                 for b in plan.blocks for p in b.params},
-                      "flags": {b.col: set(b.bypass_scenes) for b in plan.blocks},
-                      "bypass_index": {},  # col -> the unit's own bypass index, set by allow_bypass_index
+                      "values": {(b.col, p.index): set(p.wires) for b in blocks for p in b.params},
+                      "flags": {b.col: set(b.bypass) for b in blocks},
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
-
-    def allow_bypass_index(self, col, index):
-        self._push["bypass_index"][col] = index
 
     def arm_save(self, folder_key, position, name):
         self._save = (folder_key, position, name)
@@ -326,14 +330,16 @@ class WireGuard:
         push = self._push
         qf = _names(p)
         if qf == {"scene_mode"} or qf == {"index", "scene_mode"}:
-            # "Assign to Scenes": only for the plan's scene-varying params, or a scene-varying block's bypass.
+            # "Assign to Scenes": only for the plan's scene-varying params, or a block's bypass control.
             if (col, p.index) in push["scene_params"]:
                 return
-            if col in push["bypass_cols"] and p.index == push["bypass_index"].get(col):
-                return  # the bypass control: one past the unit's own read of this block (allow_bypass_index)
+            if col in push["bypass_cols"] and p.index == push["bypass_index"][col]:
+                return  # the bypass control: param_count + 1, checked against the unit's read (layout check)
             raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
         if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
             raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
+        if not 0 <= p.index < push["param_count"][col]:
+            raise WireRefused(f"Grid: column {col} index {p.index} is at or past param_count (the trailing slot)")
         if len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "float_value":
             raise WireRefused("Grid: parameter writes must be one float")
         v = p.param_values[0].float_value
@@ -502,6 +508,10 @@ class QcMcpBackend(DeviceBackend):
         self._raw = None
         self._guard = None
         self._errs = []
+        self._gone = threading.Event()
+        self._watch_stop = None
+        self._watch_thread = None
+        self._last_sample = 0.0
 
     # -- presence without opening (Cortex Control keeps working) --
 
@@ -542,8 +552,10 @@ class QcMcpBackend(DeviceBackend):
             raise DeviceError(f"{type(e).__name__}: {e}") from None
         self.firmware = qc.firmware
         self.device_type = qc.device_type
+        self._start_watchdog()
 
     def disconnect(self):
+        self._stop_watchdog()
         qc, self._qc, self._raw = self._raw, None, None
         if qc is None:
             return
@@ -553,17 +565,63 @@ class QcMcpBackend(DeviceBackend):
         if t.is_alive():
             log.warning("closing the unit took more than 10 s; continuing")
 
-    def alive(self):
+    # -- liveness (G2 c) --
+
+    WATCH_INTERVAL_S = 1.0
+    WATCH_STALE_S = 5.0   # the watchdog's own timeout: a verdict older than this counts as gone
+
+    def _watchdog_sample(self):
+        """One liveness sample from attributes only (it never calls into the transport, so it can't
+        block on the transport's lock or the device). Gone when the reader thread is dead, or when
+        the write-error count rose on two consecutive samples. Sets the verdict; returns it."""
         qc = self._raw
-        if qc is None:
+        gone = qc is None
+        if not gone:
+            inner = getattr(qc.io, "inner", None)
+            thread = getattr(inner, "_thread", None)
+            if thread is not None and not thread.is_alive():
+                gone = True
+            else:
+                self._errs = (self._errs + [qc.write_errors])[-3:]
+                e = self._errs
+                gone = len(e) == 3 and e[0] < e[1] < e[2]
+        if gone:
+            if not self._gone.is_set():
+                log.warning("the Quad Cortex looks gone (reader thread dead or write errors rising)")
+            self._gone.set()
+        self._last_sample = time.monotonic()
+        return not gone
+
+    def _start_watchdog(self):
+        self._gone.clear()
+        self._errs = []
+        stop = threading.Event()
+        self._watch_stop = stop
+        self._watchdog_sample()
+
+        def loop():
+            while not stop.wait(self.WATCH_INTERVAL_S):
+                try:
+                    self._watchdog_sample()
+                except Exception:  # noqa: BLE001  a broken sample must not look like a live unit
+                    log.exception("liveness sample failed")
+                    self._gone.set()
+
+        self._watch_thread = threading.Thread(target=loop, name="qc-watchdog", daemon=True)
+        self._watch_thread.start()
+
+    def _stop_watchdog(self):
+        if self._watch_stop is not None:
+            self._watch_stop.set()
+        t, self._watch_thread, self._watch_stop = self._watch_thread, None, None
+        if t is not None and t is not threading.current_thread():
+            t.join(2.0)
+
+    def alive(self):
+        """The watchdog's verdict. Never blocks. A successful read is never taken as proof of life."""
+        if self._raw is None or self._gone.is_set():
             return False
-        inner = getattr(qc.io, "inner", None)
-        thread = getattr(inner, "_thread", None)
-        if thread is not None and not thread.is_alive():
-            return False
-        self._errs = (self._errs + [qc.write_errors])[-3:]
-        e = self._errs
-        return not (len(e) == 3 and e[0] < e[1] < e[2])  # rising on consecutive samples (G2 c)
+        return time.monotonic() - self._last_sample <= self.WATCH_STALE_S
 
     def _call(self, name, *args, **kwargs):
         if self._qc is None:
@@ -623,21 +681,16 @@ class QcMcpBackend(DeviceBackend):
     def set_param_scenes(self, row, col, index, wires):
         self._call("set_param_scenes", row, col, index, list(wires))
 
-    def set_block_bypass(self, row, col, scenes):
-        # Always the per-scene path G6 verified (assign to scenes, then each scene's flag
-        # explicitly), even when all eight agree: unwritten scenes keep their old value.
-        # The bypass control's index is one past the block's own read (qc-mcp bypass_param_index); read it
-        # here and arm exactly that index, rather than letting the guard accept any index past the catalog.
-        preset = self.read_current_preset()
-        chain = next((c for c in (preset or {}).get("chains", []) if c["row"] == row), None)
-        block = next((b for b in (chain or {}).get("blocks", []) if b["col"] == col), None)
-        if block is None:
-            raise DeviceError(f"no block at row {row} column {col} to bypass")
-        n = len(block["params"])
-        if n <= self._guard._push["max_index"].get(col, 0):
-            raise DeviceError(f"column {col} reads {n} parameters, fewer than the catalog lists")
-        self._guard.allow_bypass_index(col, n)
-        self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=n)
+    def set_block_bypass(self, row, col, scenes, bypass_index):
+        # Always the per-scene path G6 verified (assign to scenes, then each scene's flag explicitly),
+        # on every block: unwritten scenes keep their old value. The index is the block's bypass
+        # control, param_count + 1; the job's layout check confirmed the unit reads param_count + 1
+        # parameters for this block before any value was written, and the guard armed exactly it.
+        if self._guard is None or self._guard._push is None:
+            raise DeviceError("not armed")
+        if bypass_index != self._guard._push["bypass_index"].get(col):
+            raise DeviceError(f"column {col}: bypass index {bypass_index} is not the armed one")
+        self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=bypass_index)
 
     def save_to_slot(self, position, name):
         if getattr(self, "_save_target", None) != (position, name):
