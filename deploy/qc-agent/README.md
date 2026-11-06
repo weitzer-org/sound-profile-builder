@@ -21,8 +21,8 @@ the unit's firmware must equal `QC_AGENT_EXPECTED_FIRMWARE` exactly and the unit
 For a push, before anything is written:
 1. the export format is one the agent implements (`qc2-device-export/1`), and the export passes
    `qc_agent/export_validator.py` against the agent's own catalog copy (`internal/catalog/qc_catalog.json` in this
-   clone, hash-matched with the export): known models in allowed categories, no plugin/capture/IR/FX-loop/splitter
-   models (capture blocks are refused until capture placement is built, plan 4.2), NC_Recorder denied, only listed
+   clone, hash-matched with the export): known models in allowed categories, no plugin/IR/FX-loop/splitter
+   models, capture blocks only with the capture block's own controls (plan 4.2), NC_Recorder denied, only listed
    parameter indexes with numeric ranges (the cab bounds confirmed on the unit, or pyquadcortex's labelled values),
    values in range, each wire value equal to the catalog's mapping of its display value (taper or switch position,
    with the `evidence` label to match), one row (in 1, out 19), at most 8 blocks, zero unresolved items. The export's
@@ -34,16 +34,25 @@ For a push, before anything is written:
    (editing existing presets is deferred: plan section 10, item 7);
 4. that empty slot is the one **open on the unit** and its live grid is blank. This is the only save path Phase 0
    verified (G3). The agent never recalls a preset or clears a grid, so it can't disturb what you have loaded;
-5. the job hasn't expired (re-checked just before the first write).
+5. every capture the preset uses is found on the unit, in the same fresh listing: by exact name, as the same kind
+   (factory or user), as a file on the unit (never a cloud-only item; the bridge never downloads captures), one key
+   only, and a known version: V1 or V2 from the factory folder, and for a user capture from the version field,
+   calibrated against the factory folders on every listing. Anything else refuses the push before any write;
+6. the job hasn't expired (re-checked just before the first write).
 
 Then it builds the chain on the live grid, reads it back and diffs it, and saves only if the diff is clean and a
-second fresh listing still shows the slot empty. The save is `write_preset_file` (File CREATE), never `save_preset`.
+second fresh listing still shows the slot empty (and still resolves every capture to the same file). A capture is
+placed with qc-mcp's `set_capture` (a V1 14000 or V2 14001 block, then its `file_name` = key + name) before its
+controls are written, and its `file_name` is checked in the read-back. The save is `write_preset_file` (File CREATE),
+never `save_preset`. It adds no dependency entries; the result says whether the unit's listing names the capture
+as a dependency of the saved preset.
 
 Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SHA-256 pin check of everything in
 `vendor/`, with each module compiled from the bytes just hashed (the folder is never on `sys.path`); a method allowlist with a never-list (`save_preset`, `recall`, `clear_grid`, deletes, raw
-`send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, captures/IRs, splits, scene labels);
+`send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, IRs, typed writes, splits, scene labels);
 and a **wire guard** that decodes every outgoing message and lets through only session plumbing, reads, and, while a
-push is armed, exactly the plan's grid writes and one File CREATE to the armed slot and name.
+push is armed, exactly the plan's grid writes (including each capture's `file_name`, once, as the exact resolved
+string) and one File CREATE to the armed slot and name. Nothing ever sends ProductForward or a capture command.
 
 Local state in `%LOCALAPPDATA%\qc-agent\`: `agent.env` (config), `executed_jobs.jsonl` (the job ledger, never
 pruned), `owned_slots.jsonl` (saves the bridge made), `logs\agent.log` (rotated; no keys, tokens or signatures),
@@ -135,6 +144,19 @@ them; this guide uses **24H**).
 11. **First real push (after P2).** Select empty **24H** on the unit, dry-run and confirm on the phone. Expect
     `succeeded`, `mismatches 0`, the name in 24H on the unit, then power-cycle and check it's still there (G3 never
     tested persistence across a power cycle).
+
+12. **Captures (P4c; normal use, no extra session).**
+    - Before the first capture push, run `list_device_slots` once and send me the `capture folder ...` and
+      `My Presets: ... dependencies` lines from `agent.log`. They show the real folder names, whether the version
+      field calibrates, and whether saved presets carry dependency lists. If the factory folders aren't named
+      `Factory Captures V1`/`V2`, every factory capture is refused (the message lists the real names) until a
+      one-line fix.
+    - Push one preset with a **factory V1** capture, one with a **factory V2** capture and one with a capture you
+      **downloaded** (already on the unit); include a pedal capture if you can. For each: `succeeded`,
+      `mismatches 0`, the message's V1/V2 matches the block on the unit ("Capture" vs "Capture 2"), the capture
+      name shows on the block and it sounds right, and GAIN..VOLUME match the dry run in scenes A and B. Note the
+      dependency sentence.
+    - Power-cycle and re-select each slot: the capture still loads (no "missing capture"), values kept.
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before

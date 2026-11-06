@@ -121,7 +121,7 @@ class ListAndRead(Base):
         self.poll()
         r = self.result(jid)
         self.assertEqual((r["status"], r["reason_code"], r["firmware"]), ("refused", "firmware_mismatch", "4.2.0"))
-        self.assertNotIn(("list_my_presets",), self.dev.calls)
+        self.assertNotIn(("read_directory",), self.dev.calls)
 
     def test_mini_is_refused(self):
         self.dev.dtype = "ATMA"
@@ -162,9 +162,9 @@ class Push(Base):
         self.assertNotIn("Scene labels", r["message"])  # the P2 export carries none
         names = [c[0] for c in self.dev.calls]
         # order: checks before any write; save last
-        for n in ("list_my_presets", "setlist_position", "set_routing", "save_to_slot"):
+        for n in ("read_directory", "setlist_position", "set_routing", "save_to_slot"):
             self.assertIn(n, names)
-        self.assertLess(names.index("list_my_presets"), names.index("set_routing"))
+        self.assertLess(names.index("read_directory"), names.index("set_routing"))
         self.assertLess(names.index("setlist_position"), names.index("set_routing"))
         self.assertEqual(names.count("save_to_slot"), 1)
         self.assertEqual(self.dev.slots[152], "Texas Blues")
@@ -380,7 +380,7 @@ class Push(Base):
     def test_grid_edited_after_verification_is_not_saved(self):
 
         def edit_on_unit(name):
-            if name == "list_my_presets" and any(c[0] == "set_routing" for c in self.dev.calls):
+            if name == "read_directory" and any(c[0] == "set_routing" for c in self.dev.calls):
                 self.dev.grid[0]["params"][1] = [0.9] * 8  # the owner turns TREBLE during the save checks
         self.dev.on_call = edit_on_unit
         r = self.push()
@@ -729,3 +729,105 @@ class HeartbeatAndExit(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Captures(Base):
+    """A push whose export holds a capture block (Go golden 03_British_Invasion: a user capture,
+    '66 AC30 JMP OD', in column 3), against the fake unit's capture library (fake_device)."""
+
+    def push(self, golden="03_British_Invasion", **kw):
+        from helpers import go_golden
+        args = {"slot": "20A", "name": "British Invasion", "source": {"preset_id": "p-9", "guitar": "ES-339"},
+                "export": go_golden(golden)}
+        jid, _key = self.queue("push_preset", args=args)
+        self.poll()
+        return self.result(jid)
+
+    def test_capture_push(self):
+        from fake_device import KEY_USER
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        self.assertEqual(r["push"]["mismatches"], 0)
+        calls = self.dev.calls
+        place = [c for c in calls if c[0] == "place_capture"]
+        self.assertEqual(place, [("place_capture", 0, 3, 14000, KEY_USER, "66 AC30 JMP OD")])
+        self.assertNotIn(("add_block", 0, 3, 14000), calls)            # never placed twice
+        names = [c[0] for c in calls]
+        i = calls.index(place[0])
+        col3_params = [k for k, c in enumerate(calls) if c[0].startswith("set_param") and c[2] == 3]
+        self.assertTrue(col3_params and all(k > i for k in col3_params))  # file_name before the controls
+        self.assertIn("Captures: col 3 '66 AC30 JMP OD' V1 (user).", r["message"])
+        self.assertIn("names every placed capture as a dependency", r["message"])
+        self.assertEqual(names.count("save_to_slot"), 1)
+
+    def refused_before_writing(self, r, needle):
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"), r["message"])
+        self.assertIn(needle, r["message"])
+        self.assertEqual(self.dev.write_calls(), [])
+        self.assertNotIn("begin_push", [c[0] for c in self.dev.calls])
+
+    def test_missing_capture(self):
+        self.dev.captures = [c for c in self.dev.captures if c.name != "66 AC30 JMP OD"]
+        self.refused_before_writing(self.push(), "isn't on the unit")
+
+    def test_ambiguous_capture(self):
+        from fake_device import capture
+        self.dev.captures.append(capture("66 AC30 JMP OD", "f6" * 32, "Downloads", version="1"))
+        self.refused_before_writing(self.push(), "won't guess")
+
+    def test_cloud_only_capture(self):
+        from fake_device import capture
+        self.dev.captures = [c for c in self.dev.captures if c.name != "66 AC30 JMP OD"]
+        self.dev.captures.append(capture("66 AC30 JMP OD", "f6" * 32, "Cloud", cloud=True))
+        self.refused_before_writing(self.push(), "Cortex Cloud")
+
+    def test_unknown_version(self):
+        from fake_device import capture
+        self.dev.captures = [c for c in self.dev.captures if c.name != "66 AC30 JMP OD"]
+        self.dev.captures.append(capture("66 AC30 JMP OD", "f6" * 32, version="9"))
+        self.refused_before_writing(self.push(), "V1 or V2")
+
+    def test_no_capture_folders(self):
+        self.dev.captures = []
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertEqual(self.dev.write_calls(), [])
+
+    def test_no_echo_is_not_saved(self):
+        self.dev.no_echo_cols = {3}
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("did not confirm placing capture", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_file_name_read_back_wrong_is_not_saved(self):
+        self.dev.corrupt_file_name = True
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+        self.assertTrue(all(isinstance(d["expected"], float) for d in r["push"]["diff"]))  # Go's DiffItem
+
+    def test_library_changed_before_save(self):
+        def change(fake, n):
+            if n == 2:  # the save's listing: the capture now has a different key
+                fake.captures = [c for c in fake.captures if c.name != "66 AC30 JMP OD"]
+                from fake_device import capture
+                fake.captures.append(capture("66 AC30 JMP OD", "f6" * 32, version="1"))
+        self.dev.on_listing = change
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("capture library changed", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_dependencies_not_listed(self):
+        self.dev.deps_on_save = False
+        self.dev.preset_deps = {7: frozenset({"ee" * 32})}  # another preset has dependency lists
+        r = self.push()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertIn("Observation: the unit's listing doesn't name '66 AC30 JMP OD'", r["message"])
+
+    def test_no_dependency_lists_at_all(self):
+        self.dev.deps_on_save = False
+        r = self.push()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertIn("shows no dependency lists", r["message"])

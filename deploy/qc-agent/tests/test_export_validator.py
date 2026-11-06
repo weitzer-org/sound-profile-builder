@@ -293,8 +293,73 @@ class Additions(unittest.TestCase):
         self.refused(mutate(lambda p: p.update(warnings=[{"block": "x", "reason": 5}])), "short strings")
         self.refused(mutate(lambda p: p.pop("warnings")), "payload has keys")
 
-    def test_capture_blocks_are_refused(self):
-        def cap(p):
-            swap(p, 0, 14000, capture={"name": "CA John's", "source": "factory", "resolved_on_unit": False})
-            block(p, 0)["model_id"] = 0
-        self.refused(mutate(cap), "can't place captures yet")
+    def test_capture_blocks(self):
+        gain = {"index": 0, "label": "GAIN", "scene_mode": True, "display": [2, 3] + [2] * 6,
+                "wire": [26 / 48, 27 / 48] + [26 / 48] * 6, "units": "dB", "evidence": ["taper:g4"]}
+
+        def cap(**over):
+            def f(p):
+                swap(p, 0, 14000, capture={"name": "CA John's", "source": "factory", "resolved_on_unit": False},
+                     category="Neural Capture", index_evidence="capture-block", params=[gain])
+                block(p, 0)["model_id"] = 0
+                block(p, 0)["model"] = "CA John's"
+                for k, v in over.items():
+                    if k == "capture":
+                        block(p, 0)["capture"].update(v)
+                    else:
+                        block(p, 0)[k] = v
+            return mutate(f)
+        plan = validate(cap(), catalog(), "4.1.0")
+        b = plan.blocks[0]
+        self.assertEqual((b.model_id, b.model, b.capture.name, b.capture.source, b.capture.key, b.max_param_index),
+                         (0, "CA John's", "CA John's", "factory", None, 4))
+        self.assertEqual(b.params[0].scene_wires[:2], [26 / 48, 27 / 48])
+        self.refused(cap(model_id=14000), "must have model_id 0")
+        self.refused(cap(plugin="Nolly"), "can't name a plugin")
+        self.refused(cap(category="Guitar Amplifier"), "category must be 'Neural Capture'")
+        self.refused(cap(index_evidence="plain"), "index_evidence must be 'capture-block'")
+        self.refused(cap(capture={"source": "cloud"}), "must be 'factory' or 'user'")
+        self.refused(cap(capture={"source": ["user"]}), "must be 'factory' or 'user'")
+        self.refused(cap(capture={"resolved_on_unit": True}), "must be false")
+        self.refused(cap(capture={"name": " CA John's"}), "printable ASCII")
+        self.refused(cap(capture={"name": "x" * 65}), "printable ASCII")
+        self.refused(cap(capture={"name": "CA\nJohn's"}), "printable ASCII")
+        self.refused(cap(model="CA Johns"), "model must equal capture.name")
+        self.refused(cap(capture={"key": "ab"}), "has keys")
+        # `unresolved` and `warnings` are payload keys, checked once for every block kind before the
+        # rows: a block (capture or not) can't carry them, and a capture export with unresolved items
+        # is refused like any other
+        self.refused(cap(unresolved=[{"block": "x", "reason": "y"}]), "block 0 has keys")
+        self.refused(cap(warnings=[{"block": "x", "reason": "y"}]), "block 0 has keys")
+        e = cap()
+        e["payload"]["unresolved"] = [{"block": "#1 CA John's", "reason": "not on the unit"}]
+        self.refused(e, "1 unresolved item(s); a push needs zero")
+        # every key the capture path reads is required by _check_block's exact-key check first, so a
+        # missing one is refused there (ExportRefused), never a KeyError
+        for k in ("model_id", "model", "category", "index_evidence", "bypass", "params", "at_default"):
+            e = cap()
+            block(e["payload"], 0).pop(k)
+            self.refused(e, "block 0 has keys")
+        for k in ("name", "source", "resolved_on_unit"):
+            e = cap()
+            block(e["payload"], 0)["capture"].pop(k)
+            self.refused(e, "block 0.capture has keys")
+        # the capture path's bypass gets the same length/type/C-H checks as any block
+        self.refused(cap(bypass=[False, False]), "exactly 8 values")
+        self.refused(cap(bypass=[False] * 9), "exactly 8 values")
+        self.refused(cap(bypass=[False, False, True] + [False] * 5), "scenes C-H")
+        # only the capture block's own controls: index 5 (file_name) and anything unlisted are refused
+        self.refused(cap(params=[gain | {"index": 5, "label": "file_name"}]), "not a listed parameter")
+        self.refused(cap(params=[gain | {"label": "VOLUME"}]), "in the catalog, not")
+        # a bare capture block id without `capture` is not a placeable model
+        self.refused(mutate(lambda p: swap(p, 0, 14000)), "not pushed in v1")
+
+    def test_capture_layouts_must_match(self):
+        cat = copy.deepcopy(catalog())
+        cat.models[14001]["params"][0]["max"] = 30
+        e = mutate(lambda p: (swap(p, 0, 14000, capture={"name": "CA John's", "source": "factory",
+                                                        "resolved_on_unit": False},
+                                   category="Neural Capture", index_evidence="capture-block"),
+                              block(p, 0).update(model_id=0, model="CA John's")))
+        with self.assertRaisesRegex(ExportRefused, "don't list the same controls"):
+            validate(e, cat, "4.1.0")

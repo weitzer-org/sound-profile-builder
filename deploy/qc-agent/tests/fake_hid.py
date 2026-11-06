@@ -44,6 +44,10 @@ class FakeHID:
         self._thread = _Reader()  # stands in for winhid's reader thread (QcMcpBackend.alive reads it)
         self.opened = self.closed = False
         self.echo_ids = True          # False: replies carry no request_id (unverified on the unit, step 10)
+        from fake_device import default_captures
+        self.captures = default_captures()  # type-2 folders in the directory stream
+        self.deps_on_save = True             # a saved preset lists its captures' keys as dependencies
+        self.preset_deps: dict[int, list[str]] = {}
         self.position_replies = True  # False: SetlistPosition READs go unanswered (a slow or busy unit)
 
     # -- the HID API the transport uses --
@@ -82,6 +86,8 @@ class FakeHID:
         # Fixed per model, like the unit (G1: N = the full list + 1); not derived from what was written.
         from helpers import catalog
         m = catalog().models.get(self.grid[col]["hash"])
+        if m and m.get("param_count"):
+            return m["param_count"] + 1
         return (max(m["params_by_index"]) if m else 0) + 2
 
     def _handle(self, name, m):
@@ -108,11 +114,27 @@ class FakeHID:
             f = P.message_class("File")(action=A["UPDATE"], type=0)
             f.folder.key, f.folder.name = SETLIST, "My Presets"
             for pos in range(256):
-                f.folder.files.add().name = self.slots.get(pos, "")
+                fi = f.folder.files.add()
+                fi.name = self.slots.get(pos, "")
+                for h in self.preset_deps.get(pos, []):
+                    fi.factory_dependencies.add().hash = h
             self._reply("File", f)
+            folders = {}
+            for e in self.captures:
+                folders.setdefault((e.folder_key, e.folder_name, e.is_factory, e.is_cloud, e.is_favorites), []).append(e)
+            for (key, fname, fac, cloud, fav), entries in folders.items():
+                c = P.message_class("File")(action=A["UPDATE"], type=2)
+                c.folder.key, c.folder.name = key, fname
+                c.folder.is_factory, c.folder.is_cloud, c.folder.is_favorites = fac, cloud, fav
+                for e in entries:
+                    fi = c.folder.files.add()
+                    fi.name, fi.key, fi.version = e.name, e.key, e.version_field
+                self._reply("File", c)
         elif name == "File" and m.action == A["CREATE"]:
             fi = m.folder.files[0]
             self.slots[fi.index] = fi.name
+            self.preset_deps[fi.index] = ([b["strings"][5][:64] for b in self.grid.values() if 5 in b.get("strings", {})]
+                                          if self.deps_on_save else [])
         elif name == "Grid" and m.action == A["UPDATE"]:
             self._grid(m)
 
@@ -136,6 +158,9 @@ class FakeHID:
                 if b is None:
                     continue  # a write to an empty column: the device would ignore it
                 for p in mm.params:
+                    if p.param_values and p.param_values[0].WhichOneof("value") == "string_value":
+                        b.setdefault("strings", {})[p.index] = p.param_values[0].string_value
+                        continue
                     if p.scene_mode and not p.param_values:
                         if p.index >= self._n_params(col):
                             b["bypass_scene"] = True
@@ -171,6 +196,9 @@ class FakeHID:
                         for i in range(self._n_params(col)):
                             p = m.params.add()
                             p.scene_mode = i in b["scene"]
+                            if i in b.get("strings", {}):
+                                p.param_values.add().string_value = b["strings"][i]
+                                continue
                             for v in b["params"].get(i, [0.0] * 8):
                                 p.param_values.add().float_value = v
             else:
