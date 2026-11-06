@@ -108,13 +108,12 @@ func TestPresetStore_Errors(t *testing.T) {
 		t.Errorf("Expected Get unmarshal error")
 	}
 
-	// List bad files
+	// List with an unreadable object: the error surfaces (and is not cached) instead of
+	// silently returning a shortened list. A corrupt-JSON object alone is skipped; that
+	// case is covered by the mock listing both, so the read error is what is reported.
 	presets, err := store.List(ctx)
-	if err != nil {
-		t.Errorf("Expected List to ignore individual file errors: %v", err)
-	}
-	if len(presets) != 0 {
-		t.Errorf("Expected 0 valid presets")
+	if err == nil {
+		t.Errorf("Expected List to report a failed read, got %d presets", len(presets))
 	}
 
 	// List failure

@@ -62,7 +62,9 @@ func CleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storag
 		// next cleanup.
 		go func(ids []string) {
 			for _, id := range ids {
-				store.Delete(context.Background(), id)
+				// Re-checked under the store's lock: the snapshot above may be stale, and a
+				// draft the user has named since must survive.
+				store.DeleteIf(context.Background(), id, func(p *storage.Preset) bool { return p.Name == DraftName })
 			}
 		}(stale)
 	}
