@@ -780,10 +780,27 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	}
 }
 
+// hasScreenPan reports whether any value in the plan carries the inferred on-screen pan reading.
+func hasScreenPan(blocks []devicejobs.PlanBlock) bool {
+	for _, bl := range blocks {
+		for _, pr := range bl.Params {
+			if strings.Contains(pr.A, "≈") || strings.Contains(pr.B, "≈") {
+				return true
+			}
+			for _, v := range pr.Scenes {
+				if strings.Contains(v, "≈") {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // renderExportTable renders an export's readable plan and its unresolved items. Every
 // string from the preset or export goes through cell().
 func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps *devicejobs.PlanStomps, unresolved, warnings []devicejobs.Unresolved, layout *devicejobs.PlanLayout) {
-	unconfirmed, micsWritten := false, false
+	unconfirmed, micsWritten, screenPans := false, false, hasScreenPan(blocks)
 	if len(blocks) > 0 && layout != nil {
 		unconfirmed, micsWritten = renderLayoutTable(t, blocks, layout)
 	} else if len(blocks) > 0 {
@@ -840,6 +857,9 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 	if len(blocks) > 0 {
 		if unconfirmed {
 			t.WriteString("† Converted from the device's own data or a third-party measurement, not yet checked on this unit: compare the unit's screen after the push.\n")
+		}
+		if screenPans {
+			t.WriteString("≈ = what the unit's screen is expected to show for a pan: INFERRED from two readings on your unit (7 on the 0..10 range showed 20 R, the default showed C; the ends were not seen). The number before it is what is written.\n")
 		}
 		if micsWritten {
 			t.WriteString("A cab mic is written as the exact string seen on your unit for that cab. Whether the unit accepts a mic written this way is UNVERIFIED until the bridge's README library-sync step has been run on it: compare the cab's mic on the unit after the push.\n")
