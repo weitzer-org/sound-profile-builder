@@ -759,9 +759,6 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 	return counts
 }
 
-// captureCabControlPattern: the IR cab controls (in paramNameKey form) a Neural Capture lacks.
-var captureCabControlPattern = regexp.MustCompile(`^(MIC[12][A-Z]*|HPF|LPF|HPFFREQ|LPFFREQ|HIGHCUT|LOWCUT|OUTPUTVOLUME|OUTPUTLEVEL|BLEND)$`)
-
 // flagCaptureCabControls notes IR cab controls (mics, position, distance, filters) written on a
 // capture standing in a cab slot: a capture has only Gain/Bass/Mid/Treble/Volume, so the device
 // push drops them. Counted as UnknownNames; Value/ValueB are untouched.
@@ -771,7 +768,7 @@ func flagCaptureCabControls(b *storage.EffectBlock, counts *CatalogParamCounts) 
 	}
 	var bad []string
 	for _, p := range b.Parameters {
-		if captureCabControlPattern.MatchString(paramNameKey(p.Name)) {
+		if catalog.IsCabIRControl(paramNameKey(p.Name)) {
 			bad = append(bad, p.Name)
 		}
 	}

@@ -411,7 +411,7 @@ func (b *builder) block(ref string, blks []*storage.EffectBlock, col int) (*Bloc
 				out.AtDefault = append(out.AtDefault, label)
 			}
 			continue
-		case captureCab && isCabIRControl(key):
+		case captureCab && catalog.IsCabIRControl(key):
 			b.warn(ref, bp.Name, fmt.Sprintf("%s is an IR cab control; the capture %q is a Neural Capture with none, so it is left out (a pre-built rig capture needs no cab settings)", bp.Name, out.Model))
 			continue
 		case cab && key == "BLEND":
@@ -454,13 +454,6 @@ func isCabBlockType(t string) bool {
 	t = strings.ToLower(strings.TrimSpace(t))
 	return t == "cab" || t == "cabinet"
 }
-
-// cabIRControlPattern matches (in ParamNameKey form) the controls an IR cab has and a Neural
-// Capture doesn't: the mic choice, per-mic position/distance/level/pan, the cab's filters and its
-// output trim.
-var cabIRControlPattern = regexp.MustCompile(`^(MIC[12]([A-Z]*)|HPF|LPF|HPFFREQ|LPFFREQ|HIGHCUT|LOWCUT|OUTPUTVOLUME|OUTPUTLEVEL|BLEND)$`)
-
-func isCabIRControl(key string) bool { return cabIRControlPattern.MatchString(key) }
 
 // unionBlock is the block the model is resolved from: the first guitar's block, carrying every
 // parameter and kept default that any guitar of the layout names, so a name shared by models
