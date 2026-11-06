@@ -102,6 +102,57 @@ func (l *DeviceLibrary) storeSync(ctx context.Context, v *devicejobs.JobView) *d
 		V1: c.V1, V2: c.V2, UnknownVersion: c.UnknownVersion, CloudOnly: c.Cloud, Skipped: lib.Skipped}
 }
 
+// storeSlots keeps which slots the most recent succeeded list_slots job showed occupied, so a dry run can warn
+// (F9). Best effort: a failure is logged and changes nothing the user sees. A late older answer never replaces
+// a newer listing.
+func (l *DeviceLibrary) storeSlots(ctx context.Context, v *devicejobs.JobView) {
+	r := v.Result
+	if l == nil || r == nil || r.Kind != devicejobs.KindListSlots || r.Status != devicejobs.StatusSucceeded || r.Slots == nil {
+		return
+	}
+	at, err := devicejobs.ParseTime(r.FinishedAt)
+	if err != nil || at.After(l.now().Add(devicejobs.MaxCreatedAhead)) {
+		return
+	}
+	cur, err := l.Store.Slots(ctx)
+	if err != nil {
+		log.Printf("device slots: reading the stored listing: %v", err)
+		cur = nil // a malformed record is replaced
+	}
+	if cur != nil {
+		if cur.JobID == v.JobID {
+			return // this job's listing is already stored
+		}
+		if old, err := devicejobs.ParseTime(cur.ListedAt); err == nil && old.After(at) {
+			return
+		}
+	}
+	if err := l.Store.SaveSlots(ctx, devicelib.NewSlotListing(r.Slots, v.JobID, r.FinishedAt)); err != nil {
+		log.Printf("device slots: storing the listing: %v", err)
+	}
+}
+
+// slotOccupiedNote is the dry run's warning when the last stored listing showed the slot occupied, or "".
+// It never blocks the confirm token: the listing can be stale, and the bridge decides.
+func (l *DeviceLibrary) slotOccupiedNote(ctx context.Context, slot string) string {
+	if l == nil {
+		return ""
+	}
+	cur, err := l.Store.Slots(ctx)
+	if err != nil {
+		log.Printf("device slots: reading the stored listing: %v", err)
+		return ""
+	}
+	if cur == nil || !cur.IsOccupied(slot) {
+		return ""
+	}
+	// list_device_slots reads My Presets only, but a push builds into whichever preset collection is open on the
+	// unit (#176), so this is a hint about My Presets, not a verdict on the collection the user will open.
+	return fmt.Sprintf("slot %s was occupied in My Presets when the bridge last listed the slots (%s). If you will open that slot in My Presets, the bridge refuses to write into an occupied slot (slot_not_empty); "+
+		"if you will open it in another collection of yours this does not apply (the listing covers My Presets only). The listing may be out of date, and the bridge checks the open collection again when it pushes",
+		slot, cur.ListedAt)
+}
+
 // recordMics records the cab mic strings of a finished read_preset job. The user asked for
 // the read, so this is the only source of the mic list.
 func (l *DeviceLibrary) recordMics(ctx context.Context, v *devicejobs.JobView) *deviceMicsOut {
