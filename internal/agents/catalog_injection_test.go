@@ -338,6 +338,10 @@ func TestRefineChatPluginGate(t *testing.T) {
 	if got := prompt(NewPluginGate(false, nil)); !strings.Contains(got, "NO PAID PLUGINS") {
 		t.Error("plugins off: prompt is missing the NO PAID PLUGINS line")
 	}
+	// Allowed but none listed: RunPipeline adds no line, so refine must not add a MUST NOT.
+	if got := prompt(NewPluginGate(true, nil)); strings.Contains(got, "PAID PLUGINS") || strings.Contains(got, "AVAILABLE PLUGINS") {
+		t.Error("plugins allowed but none listed: refine must add no ownership line, as RunPipeline does")
+	}
 	if got := prompt(PluginGate{}); strings.Contains(got, "PAID PLUGINS") || strings.Contains(got, "AVAILABLE PLUGINS") {
 		t.Error("inactive gate must add no ownership line")
 	}

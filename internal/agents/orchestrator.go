@@ -161,7 +161,7 @@ func refinePluginFlag(g PluginGate) string {
 		}
 	}
 	sort.Strings(owned)
-	return pluginOwnershipFlag(true, len(owned) > 0, owned)
+	return pluginOwnershipFlag(true, g.AllowPaid, owned)
 }
 
 // librarianInputs returns the two gear menus injected into the CorOS Librarian's (Agent 4)
