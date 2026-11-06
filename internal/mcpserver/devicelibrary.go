@@ -146,8 +146,10 @@ func (l *DeviceLibrary) slotOccupiedNote(ctx context.Context, slot string) strin
 	if cur == nil || !cur.IsOccupied(slot) {
 		return ""
 	}
-	return fmt.Sprintf("slot %s was occupied when the bridge last listed the slots (%s). The bridge refuses to write into an occupied slot (slot_not_empty); "+
-		"that listing may be out of date, and the bridge checks the unit again when it pushes. Pick an empty slot (list_device_slots) or free this one on the unit first",
+	// list_device_slots reads My Presets only, but a push builds into whichever preset collection is open on the
+	// unit (#176), so this is a hint about My Presets, not a verdict on the collection the user will open.
+	return fmt.Sprintf("slot %s was occupied in My Presets when the bridge last listed the slots (%s). If you will open that slot in My Presets, the bridge refuses to write into an occupied slot (slot_not_empty); "+
+		"if you will open it in another collection of yours this does not apply (the listing covers My Presets only). The listing may be out of date, and the bridge checks the open collection again when it pushes",
 		slot, cur.ListedAt)
 }
 

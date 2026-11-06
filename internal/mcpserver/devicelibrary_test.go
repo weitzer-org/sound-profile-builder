@@ -322,7 +322,7 @@ func TestDryRun_WarnsWhenTheLastListingShowedTheSlotOccupied(t *testing.T) {
 	}
 	okText(t, itCall(t, r.cs, deviceSlotsToolName, map[string]any{"wait_seconds": 5})) // fake: 20A empty, 20B and 1A occupied
 	text, out := dry("20B")
-	if !strings.Contains(out.SlotListingNote, "20B was occupied when the bridge last listed") || !strings.Contains(text, "⚠️ slot 20B was occupied") {
+	if !strings.Contains(out.SlotListingNote, "20B was occupied in My Presets when the bridge last listed") || !strings.Contains(text, "⚠️ slot 20B was occupied in My Presets") {
 		t.Fatalf("no warning for an occupied slot:\n%s", text)
 	}
 	if !out.CanPush || out.ConfirmToken == "" {
