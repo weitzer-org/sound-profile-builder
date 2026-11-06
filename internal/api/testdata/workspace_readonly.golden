@@ -65,7 +65,7 @@
 					</div>
 				</div>
 				<div id="live-matrix-container">
-					<div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+					<div class="device-export-links" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-sub);"><span>Quad Cortex:</span><a class="device-export-link" href="/api/preset/device_export?id=test-preset&amp;guitar=Les+Paul" download style="padding: 0.25rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; color: var(--accent); text-decoration: none;">Download device JSON (Les Paul)</a></div><div class="tabs-header" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
 				<button class="tab-btn active" onclick="switchTab(this, 'tab-les-paul')" style="white-space: nowrap; padding: 0.5rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-sub); cursor: pointer;">Les Paul</button>
 			</div><div class="tabs-content">
 				<div id="tab-les-paul" class="tab-pane" style="display: block;">
