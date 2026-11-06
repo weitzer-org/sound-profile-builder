@@ -410,13 +410,17 @@ func renderDeviceBlocks(blocks []*deviceBlock) string {
 }
 
 // effectParamCategories are the effect categories whose every model's controls are given to
-// the Architect, chosen or not, so a delay or reverb it adds or swaps in (Rule 3) has its real
-// controls listed too. In the 2026-11-05 v5-vs-v6 eval, 79% of v6's leftover device notes were
-// a reverb or delay it added without having been shown its controls (a Spring, a Slapback
-// Delay); the chosen blocks' own controls are listed already. Kept to these two categories
-// because each one costs tokens on every run (~8 KB for delays, ~4.5 KB for reverbs with the
-// shipped plugin config).
-var effectParamCategories = []string{"Delay", "Reverb"}
+// the Architect, chosen or not, so an effect it adds or swaps in (Rule 3) has its real controls
+// listed too. In the 2026-11-05 v5-vs-v6 eval, 79% of v6's leftover device notes were a reverb
+// or delay it added without having been shown its controls (a Spring, a Slapback Delay), which
+// is why those two came first. Compressor and Utility (gates, among others) were added after
+// the 2026-11-06 pan-scale eval: a swapped-in "Cory Wong The 4th Position Compressor" got
+// generic Threshold/Attack/Release names (the device has COMPRESSION, BLEND, TONE, VOLUME) in 2
+// of 7 runs, and an "Adaptive Gate" got "Threshold" (it has NOISE REDUCTION). Kept to these
+// categories because each one costs tokens on every run (with the shipped plugin config:
+// ~13 KB for delays and reverbs, ~2.9 KB for compressors, ~2.6 KB for Utility). Modulation
+// (~7.9 KB), Pitch (~5 KB) and the rest are not listed.
+var effectParamCategories = []string{"Delay", "Reverb", "Compressor", "Utility"}
 
 // CatalogEffectParamContext renders the controls of every model, one line per family, in the
 // effectParamCategories, for the plugins the gate allows. Models CatalogParamContext already
