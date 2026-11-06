@@ -123,6 +123,34 @@ func TestFaderConversion(t *testing.T) {
 	}
 }
 
+// TestFaderEvidenceSkew: a fader with no skew of its own gets only the guess label; one that
+// declares a skew keeps its taper label next to it (no catalog fader has one today, so this
+// is built by hand), and an unmeasured bound is still refused.
+func TestFaderEvidenceSkew(t *testing.T) {
+	f := func(x float64) *float64 { return &x }
+	base := catalog.Param{Name: "F", Type: "fader", Min: f(0), Max: f(10)}
+	if ev, why := paramEvidence(base); why != "" || strings.Join(ev, ",") != FaderEvidence {
+		t.Errorf("no skew: %v, %q; want just %s", ev, why, FaderEvidence)
+	}
+	skewed := base
+	skewed.Skew = f(2)
+	ev, why := paramEvidence(skewed)
+	if why != "" || strings.Join(ev, ",") != FaderEvidence+",taper:device-xml" {
+		t.Errorf("skew 2: %v, %q; want %s,taper:device-xml", ev, why, FaderEvidence)
+	}
+	unmeasured := base
+	unmeasured.MinSymbol = "MIN_INPUT_TRIM"
+	if _, why := paramEvidence(unmeasured); !strings.Contains(why, "MIN_INPUT_TRIM") {
+		t.Errorf("an unmeasured bound must still be refused, got %q", why)
+	}
+	// a float keeps its taper label as before
+	fl := base
+	fl.Type = "float"
+	if ev, _ := paramEvidence(fl); strings.Join(ev, ",") != "taper:g4" {
+		t.Errorf("float: %v", ev)
+	}
+}
+
 // TestFaderAtDefaultNotWritten: a fader at its catalog default in both scenes is not written,
 // like any control, and carries no evidence.
 func TestFaderAtDefaultNotWritten(t *testing.T) {

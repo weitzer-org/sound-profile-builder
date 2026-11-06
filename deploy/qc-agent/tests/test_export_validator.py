@@ -281,8 +281,10 @@ class Refusals(unittest.TestCase):
                   "evidence": guess}
         self.refused(mutate(lambda p: block(p, 4).update(params=[trails])), "doesn't match a switch")
         # the defaults log can compute a fader's default wire now (it is the float rule)
-        self.assertEqual(V.default_wire(next(q for q in catalog().models[1139]["params"] if q["name"] == "80 Hz")), 0.5)
-        self.assertEqual(V.default_wire(next(q for q in catalog().models[4006]["params"] if q["name"] == "65Hz")), 0.5)
+        for mid, name in ((1139, "80 Hz"), (4006, "65Hz")):
+            found = next((q for q in catalog().models[mid]["params"] if q["name"] == name), None)
+            self.assertIsNotNone(found, f"{name} is missing from model {mid}")
+            self.assertEqual(V.default_wire(found), 0.5)
 
     def test_discrete_position_is_whole(self):
         trails = {"index": 4, "label": "TRAILS", "scene_mode": False, "display": eight(0.5), "wire": eight(0.5),
