@@ -56,11 +56,11 @@ SCENES = 8
 SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
 MAX_STOMPS = 32
 STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assigned
-VERIFIED_CLONE_BASES = frozenset({12000})
+VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
 CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
 CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
 CAPTURE_SOURCES = frozenset({"factory", "user"})
-_CAPTURE_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")  # catalog.VerifiedCloneBases: the one base G1 checked
+_CAPTURE_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")  # printable ASCII; leading/trailing space refused separately
 # Symbolic parameter bounds confirmed on the owner's unit (CorOS 4.1.0, plan 7.1 G4), the same
 # two internal/catalog/firmware_constants.go marks EvidenceConfirmed410. Every other symbolic
 # bound (pyquadcortex-only EQ/mixer/FX-loop/tempo values, the unmeasured input trim) stays
