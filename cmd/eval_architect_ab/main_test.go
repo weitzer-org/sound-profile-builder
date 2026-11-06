@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -24,5 +25,46 @@ func TestReportColumnsMatchHeader(t *testing.T) {
 	}
 	if !strings.Contains(header, "DevUnrecognized") || !strings.Contains(row, " 3.00 |") {
 		t.Fatalf("UnrecognizedBlocks column missing:\n%s", out)
+	}
+}
+
+func TestPanStats(t *testing.T) {
+	raw := `{"structured_payload":{"guitars":{"G":[{"type":"Cabinet","model":"212 UK C30 65",
+	  "parameters":[
+	    {"name":"Mic 1 Pan","value":"0"},
+	    {"name":"Mic 2 Pan","value":"5"},
+	    {"name":"Mic 1 Position","value":"3"}],
+	  "kept_defaults":["MIC 1 BALANCE","MIC 2 BALANCE"]},
+	 {"type":"Cabinet","model":"212 UK C30 65",
+	  "parameters":[
+	    {"name":"Mic 1 Pan","value":"Center"},
+	    {"name":"Mic 2 Pan","value":"30"},
+	    {"name":"Mic 1 Balance","value":"0.5"}]}]}}}`
+	got := panStats(raw)
+	want := PanStats{Default: 1, Kept: 2, AtMin: 1, Other: 1, OutOfRange: 1, Text: 1}
+	if len(got.Written) == 0 || got.Written[0] != "212 UK C30 65: Mic 1 Pan = 0 (0..10, 5)" {
+		t.Errorf("Written = %q, want the catalog range and default after the value", got.Written)
+	}
+	got.Written = nil
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("panStats = %+v, want %+v", got, want)
+	}
+	if !reflect.DeepEqual(panStats("not json"), PanStats{}) {
+		t.Error("unparseable output should give zero stats")
+	}
+}
+
+// A pan the model repeats, in parameters or in kept_defaults, is still counted once.
+func TestPanStatsCountsEachPanOnce(t *testing.T) {
+	raw := `{"structured_payload":{"guitars":{"G":[{"type":"Cabinet","model":"212 UK C30 65",
+	  "parameters":[
+	    {"name":"Mic 1 Pan","value":"0"},
+	    {"name":"MIC 1 PAN","value":"0"}],
+	  "kept_defaults":["MIC 2 PAN","Mic 2 Pan","MIC 2 PAN"]}]}}}`
+	got := panStats(raw)
+	got.Written = nil
+	want := PanStats{Kept: 1, AtMin: 1}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("panStats = %+v, want %+v", got, want)
 	}
 }

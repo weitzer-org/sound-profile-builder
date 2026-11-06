@@ -5,6 +5,7 @@
 //
 //	go run ./cmd/eval_architect_ab                      # dry run: prints the plan only
 //	go run ./cmd/eval_architect_ab -dry-run=false -reps=1
+//	go run ./cmd/eval_architect_ab -a "" -dry-run=false   # arm B alone, half the calls
 //
 // The arms are interleaved per query and rep (A, B, A, B, ...), so drift in the API over the
 // run hits both alike. Upstream agents run fresh in every run, so the two arms don't see
@@ -20,7 +21,8 @@
 // for output that uses kept_defaults, so it is 0 for pre-v6 output by construction, not by merit.
 //
 // Output (under -out/<timestamp>/): runs.jsonl (one line per run, written as it finishes),
-// <query>_<arm>_rep<n>.json (the raw Architect output) and report.md.
+// <query>_<arm>_rep<n>.json (the raw Architect output) and report.md. report.md ends with a
+// pan table: what each run wrote for the pan controls (center / kept / range minimum / other).
 package main
 
 import (
@@ -32,12 +34,14 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/evalfixtures"
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 type runLine struct {
@@ -51,11 +55,16 @@ type runLine struct {
 	ThinkingTokens int32                          `json:"thinking_tokens"`
 	ModelsUsed     map[string]int                 `json:"models_used,omitempty"`
 	Report         agents.MechanicalQualityReport `json:"report"`
+	// Raw is the Architect's output, saved next to runs.jsonl as <query>_<arm>_rep<n>.json
+	// (not repeated in runs.jsonl).
+	Raw string `json:"-"`
+	// Pans is what the run wrote for each pan control (see panStats).
+	Pans PanStats `json:"pans"`
 }
 
 func main() {
 	dryRun := flag.Bool("dry-run", true, "print the plan and exit without calling Gemini; pass -dry-run=false to spend real money")
-	armA := flag.String("a", "v5", "Architect prompt version for arm A")
+	armA := flag.String("a", "v5", `Architect prompt version for arm A; "" skips arm A and runs arm B alone`)
 	armB := flag.String("b", "v6", "Architect prompt version for arm B")
 	reps := flag.Int("reps", 1, "repetitions per (query, arm)")
 	queriesFlag := flag.String("queries", "all", "comma-separated golden-set query names, or all")
@@ -81,6 +90,9 @@ func main() {
 		}
 	}
 	arms := []string{*armA, *armB}
+	if *armA == "" { // -a "" runs arm B only (half the cost)
+		arms = []string{*armB}
+	}
 	total := len(queries) * len(arms) * *reps
 	log.Printf("Plan: %d queries x %d arms (%s) x %d reps = %d full-pipeline runs (~12-13 agent calls each)",
 		len(queries), len(arms), strings.Join(arms, " vs "), *reps, total)
@@ -142,6 +154,12 @@ func main() {
 				} else {
 					log.Printf("  defects=%d (device %d) checked blocks=%d", line.Report.TotalDefects(), line.Report.Catalog.Defects(), line.Report.Catalog.CheckedBlocks)
 				}
+				if line.Raw != "" {
+					name := fmt.Sprintf("%s_%s_rep%d.json", q, arm, rep)
+					if err := os.WriteFile(filepath.Join(dir, name), []byte(line.Raw), 0o644); err != nil {
+						log.Printf("  could not save %s: %v", name, err)
+					}
+				}
 				b, _ := json.Marshal(line)
 				jsonl.Write(append(b, '\n'))
 				jsonl.Sync()
@@ -181,7 +199,9 @@ func runOnce(ctx context.Context, apiKey string, cfg *config.AppConfig, arm, que
 	}
 	line.InputTokens, line.OutputTokens, line.ThinkingTokens = usage.InputTokens, usage.OutputTokens, usage.ThinkingTokens
 	line.ModelsUsed = usage.ModelsUsed
-	line.Report = agents.RunMechanicalQualityChecks(orch.LastArchitectJSON(), validBlocks)
+	line.Raw = orch.LastArchitectJSON()
+	line.Report = agents.RunMechanicalQualityChecks(line.Raw, validBlocks)
+	line.Pans = panStats(line.Raw)
 	return line
 }
 
@@ -229,6 +249,7 @@ func renderReport(lines []runLine, arms []string) string {
 		}
 		sb.WriteString("\n")
 	}
+	sb.WriteString(renderPanTable(lines, arms))
 	var failed []string
 	for _, l := range lines {
 		if l.Error != "" || l.Report.ParseError != "" {
@@ -238,6 +259,101 @@ func renderReport(lines []runLine, arms []string) string {
 	sort.Strings(failed)
 	if len(failed) > 0 {
 		sb.WriteString("\nFailed or unparsed runs (excluded from the averages):\n\n- " + strings.Join(failed, "\n- ") + "\n")
+	}
+	return sb.String()
+}
+
+// PanStats counts what one run wrote for the pan controls (L..R labelled ends) of the blocks
+// the device catalog covers. The pan's scale is the catalog's; how the unit displays it is
+// unverified. A pan is counted once, under the first line that applies:
+//
+//	Default   written, and equal to the catalog default (center)
+//	Kept      named in the block's kept_defaults and not written
+//	AtMin     written as the range minimum when that is not the default: the old failure, a
+//	          0 meant as center that is hard left on a 0..10 pan
+//	Other     written as another number on the range
+//	OutOfRange / Text   written outside the range, or as text (Center, "L30" ...)
+type PanStats struct {
+	Default, Kept, AtMin, Other, OutOfRange, Text int
+	// Written lists each written pan as "model: name = value (catalog range, default)".
+	Written []string `json:"written,omitempty"`
+}
+
+func (p PanStats) total() int {
+	return p.Default + p.Kept + p.AtMin + p.Other + p.OutOfRange + p.Text
+}
+
+func panStats(raw string) PanStats {
+	var ps PanStats
+	var env struct {
+		SP storage.StructuredPreset `json:"structured_payload"`
+	}
+	if json.Unmarshal([]byte(agents.StripJSONFences(raw)), &env) != nil {
+		return ps
+	}
+	for _, blocks := range env.SP.Guitars {
+		for _, b := range blocks {
+			ctl, ok := agents.DeviceControlsFor(b.Model)
+			if !ok {
+				continue
+			}
+			written := map[int]bool{}
+			for _, bp := range b.Parameters {
+				i := ctl.Index(bp.Name)
+				if i < 0 || !ctl.Controls[i].Pan || written[i] {
+					continue // not a pan, or repeated: each pan is counted once
+				}
+				written[i] = true
+				c := ctl.Controls[i]
+				info := ""
+				if c.Min != nil && c.Max != nil && c.Default != nil {
+					info = fmt.Sprintf(" (%g..%g, %g)", *c.Min, *c.Max, *c.Default)
+				}
+				ps.Written = append(ps.Written, fmt.Sprintf("%s: %s = %s%s", b.Model, bp.Name, bp.Value, info))
+				x, err := strconv.ParseFloat(strings.TrimSpace(bp.Value), 64)
+				switch {
+				case err != nil || c.Min == nil || c.Max == nil || c.Default == nil:
+					ps.Text++
+				case x < *c.Min || x > *c.Max:
+					ps.OutOfRange++
+				case x == *c.Default:
+					ps.Default++
+				case x == *c.Min:
+					ps.AtMin++
+				default:
+					ps.Other++
+				}
+			}
+			for _, name := range b.KeptDefaults {
+				if i := ctl.Index(name); i >= 0 && ctl.Controls[i].Pan && !written[i] {
+					ps.Kept++
+					written[i] = true
+				}
+			}
+		}
+	}
+	return ps
+}
+
+// renderPanTable sums PanStats per arm.
+func renderPanTable(lines []runLine, arms []string) string {
+	var sb strings.Builder
+	sb.WriteString("\nPan controls on catalog-covered blocks (each pan counted once; the unit's display of a pan is unverified):\n\n")
+	sb.WriteString("| Pan arm | Pans | Default (center) | Kept at default | Written at range min | Other number | Out of range | Text |\n|---|---|---|---|---|---|---|---|\n")
+	for _, arm := range arms {
+		var t PanStats
+		for _, l := range lines {
+			if l.Arm != arm || l.Error != "" || l.Report.ParseError != "" {
+				continue
+			}
+			t.Default += l.Pans.Default
+			t.Kept += l.Pans.Kept
+			t.AtMin += l.Pans.AtMin
+			t.Other += l.Pans.Other
+			t.OutOfRange += l.Pans.OutOfRange
+			t.Text += l.Pans.Text
+		}
+		fmt.Fprintf(&sb, "| %s | %d | %d | %d | %d | %d | %d | %d |\n", arm, t.total(), t.Default, t.Kept, t.AtMin, t.Other, t.OutOfRange, t.Text)
 	}
 	return sb.String()
 }
