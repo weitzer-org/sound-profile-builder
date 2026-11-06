@@ -882,3 +882,31 @@ func TestAmbiguousNameNoModelFits(t *testing.T) {
 		t.Fatalf("want refusal, got %+v / %+v", b, ex.Unresolved)
 	}
 }
+
+// F5: a 0..10 pan shows the unit's on-screen reading beside the number in the readable plan, labelled
+// inferred (7 showed "20 R" on the owner's unit). It is never part of the payload, so the plan hash and the
+// agent's validator are unaffected.
+func TestPanShowsTheInferredScreenReading(t *testing.T) {
+	e := testExporter(t)
+	ex, p := export(t, e, preset(block("110 US PRN C10R", prm("Mic 1 Pan", "7", "0"))), "g")
+	var a, b string
+	for _, s := range ex.Summary[0].Params {
+		if s.Name == "MIC 1 PAN" {
+			a, b = s.A, s.B
+		}
+	}
+	if a != "7 (≈ 20 R on the unit, inferred)" || b != "0 (≈ 50 L on the unit, inferred)" {
+		t.Errorf("shown %q / %q", a, b)
+	}
+	if strings.Contains(string(ex.Payload), "on the unit") || strings.Contains(string(ex.Payload), "≈") {
+		t.Error("the screen reading leaked into the payload")
+	}
+	_ = p
+	// the default is not written, so nothing is shown for it; a stereo cab's BALANCE is not covered
+	cp := catalog.Param{Name: "BALANCE", MinLabel: "L", MaxLabel: "R"}
+	lo, hi := -1.0, 1.0
+	cp.Min, cp.Max = &lo, &hi
+	if got := screenPan(cp, 0.75); got != "" {
+		t.Errorf("balance got a screen reading %q", got)
+	}
+}

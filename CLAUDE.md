@@ -151,7 +151,7 @@ set it will cause the next run to needlessly re-research that entry.
     output (the preset uses `kept_defaults`) the check notes a plain number outside that range; older output isn't
     checked, and a pan is still never `confirmed_range`. The export and read-back take a plain number on the catalog
     range, labelled `scale:catalog-range` († in the dry run); a unit, an out-of-range number or a word other than Center
-    is refused. 0 is hard left on a 0..10 pan: center is the default.
+    is refused. 0 is hard left on a 0..10 pan: center is the default. The dry run and `get_preset(format=device)` also show the screen's reading of a 0..10 PAN beside the number (`7 (≈ 20 R on the unit, inferred)`, `deviceexport.screenPan`): inferred from two readings on the owner's unit (7 showed 20 R, the default C; the ends unseen), display only, never in the payload; BALANCE gets none.
   - **Cab families.** A family name (no `(M)`/`(ST)`) merges the mono and stereo cab, and the export places the mono one.
     Controls only one side has (PAN / BALANCE) are marked `[mono cab only]` / `[stereo cab only]` in the Architect's context.
 
