@@ -11,7 +11,9 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
-func st(row, col int, sw string) stomplayout.Stomp { return stomplayout.Stomp{Row: row, Col: col, Switch: sw} }
+func st(row, col int, sw string) stomplayout.Stomp {
+	return stomplayout.Stomp{Row: row, Col: col, Switch: sw}
+}
 
 // These tests exercise the planner's output as the exporter wraps it. Every switch index
 // and assignment behaviour is UNVERIFIED on the unit until gate G7; nothing here touches a
@@ -70,7 +72,7 @@ func TestStompsInExport(t *testing.T) {
 				}
 			}
 			if ex.Stomps == nil || len(ex.Stomps.Assigned) != len(c.want) || len(ex.Stomps.Skipped) != c.skipped {
-				t.Errorf("dry-run view %+v: want %d assigned, %d skipped", ex.Stomps, len(c.want), c.skipped)
+				t.Fatalf("dry-run view %+v: want %d assigned, %d skipped", ex.Stomps, len(c.want), c.skipped)
 			}
 			for i, a := range ex.Stomps.Assigned {
 				if a.Switch != c.want[i].Switch || a.Col != c.want[i].Col {

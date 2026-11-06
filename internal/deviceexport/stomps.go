@@ -2,10 +2,14 @@ package deviceexport
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
 	"github.com/weitzer-org/sound-builder/internal/stomplayout"
 )
+
+// embeddedLayout parses the embedded stomp_layout.json once; Build only reads it.
+var embeddedLayout = sync.OnceValues(stomplayout.Embedded)
 
 type stompResult struct {
 	assign []stomplayout.Stomp
@@ -19,7 +23,7 @@ type stompResult struct {
 func (e *Exporter) planStomps(rows []Row) (stompResult, error) {
 	res := stompResult{assign: []stomplayout.Stomp{}, view: &devicejobs.PlanStomps{
 		Assigned: []devicejobs.PlanStomp{}, Skipped: []devicejobs.PlanSkipped{}, Warnings: []string{}}}
-	layout, err := stomplayout.Embedded()
+	layout, err := embeddedLayout()
 	if err != nil {
 		return res, fmt.Errorf("stomp layout: %w", err)
 	}
