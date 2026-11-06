@@ -302,6 +302,7 @@ class Push(Base):
         self.dev.open_folder = "/opt/neuraldsp/factory"
         r = self.push()
         self.assertEqual(r["reason_code"], "unsupported_arg")
+        self.assertIn("the folder 'factory', not My Presets", r["message"])
         self.assert_no_writes()
 
     def test_live_grid_must_be_blank(self):

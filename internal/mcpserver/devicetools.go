@@ -690,7 +690,7 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	if o.CanPush {
 		// The agent refuses a push unless this slot is the one open on the unit (it never changes
 		// what is loaded). Say so up front: otherwise it only surfaces after the user approved.
-		fmt.Fprintf(t, "\n⚠️ Before confirming: open slot **%s** on the Quad Cortex (select that empty slot on the unit). "+
+		fmt.Fprintf(t, "\n⚠️ Before confirming: on the Quad Cortex, open the **My Presets** folder and select slot **%s** (the empty slot). Another folder or setlist with the same slot number does not count. "+
 			"The bridge only builds into the empty slot that is currently open, and refuses otherwise (`unsupported_arg`); "+
 			"it can't select a slot itself.\n", p.Slot)
 		fmt.Fprintf(t, "\nTo push: show this plan to the user and, only if they approve, call send_preset_to_device again with the same "+

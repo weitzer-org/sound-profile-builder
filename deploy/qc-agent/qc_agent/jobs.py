@@ -131,7 +131,9 @@ def _open_desc(cur) -> str:
         return "a factory preset"
     if not cur.get("folder_key"):
         return "no preset (no position)"
-    return "a preset outside My Presets"
+    folder = text.clean(str(cur.get("folder_key")).rstrip("/").rsplit("/", 1)[-1], 40)
+    where = f"slot {slots.label(p)} in " if isinstance(p, int) and 0 <= p < slots.SLOT_COUNT else ""
+    return f"a preset ({where}the folder {folder!r}, not My Presets)"
 
 
 def _occupied(listing, pos) -> bool:
