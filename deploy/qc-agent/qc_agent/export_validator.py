@@ -340,7 +340,11 @@ def default_wire(cp) -> float | None:
         return None
 
 
-def _check_evidence(where, cm, ev):
+def _name_is_shared(catalog, cm) -> bool:
+    return sum(1 for m in catalog.models.values() if m.get("name") == cm["name"]) > 1
+
+
+def _check_evidence(where, cm, ev, catalog):
     if not isinstance(ev, str):
         raise ExportRefused(f"{where}.index_evidence must be a string")
     base = cm.get("clones")
@@ -351,6 +355,11 @@ def _check_evidence(where, cm, ev):
     else:
         raise ExportRefused(f"{where}: this model clones {base}, whose parameter layout was never checked "
                             f"against the device (only {sorted(VERIFIED_CLONE_BASES)} was)")
+    # The exporter appends this when a name shared by models with different controls was resolved
+    # by the block's own parameters (internal/deviceexport PickedByControls). Only meaningful for a
+    # name more than one catalog model carries.
+    if ev == want + "+picked-by-controls" and _name_is_shared(catalog, cm):
+        return
     if ev != want:
         raise ExportRefused(f"{where}: index_evidence is {ev!r}, the catalog says {want!r}")
 
@@ -403,7 +412,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}: category {cm['category']!r} is not pushed in v1")
     if b["category"] != cm["category"]:
         raise ExportRefused(f"{where}: category is {cm['category']!r} in the catalog, not {b['category']!r}")
-    _check_evidence(where, cm, b["index_evidence"])
+    _check_evidence(where, cm, b["index_evidence"], catalog)
     pc = _param_count(cm, where)
     ad = _at_default(b, where)
 

@@ -819,3 +819,62 @@ func TestPanCatalogScale(t *testing.T) {
 		}
 	}
 }
+
+// ---- same name, different controls: the block's own controls pick the model ----
+
+func firstBlock(t *testing.T, e *Exporter, bs ...storage.EffectBlock) (*devicejobs.Export, *Block) {
+	t.Helper()
+	ex, p := export(t, e, preset(bs...), "g")
+	if len(p.Rows) == 0 || len(p.Rows[0].Blocks) == 0 {
+		return ex, nil
+	}
+	return ex, &p.Rows[0].Blocks[0]
+}
+
+func TestAmbiguousNamePickedByControls(t *testing.T) {
+	e := testExporter(t)
+	cases := []struct {
+		name   string
+		blk    storage.EffectBlock
+		wantID int
+	}{
+		{"Graphic-9 with LPF is 4005", block("Graphic-9", prm("LPF", "10000 Hz", "")), 4005},
+		{"Graphic-9 kept LPF is 4005", func() storage.EffectBlock {
+			b := block("Graphic-9", prm("1kHz", "2 dB", ""))
+			b.KeptDefaults = []string{"LPF"}
+			return b
+		}(), 4005},
+		// 4005 has every control 4002 has (plus LPF), so a block using only the shared ones fits both.
+		{"Graphic-9 without LPF fits both", block("Graphic-9", prm("1kHz", "2 dB", "")), 0},
+		{"Phaser with DEPTH is 7031", block("Phaser", prm("DEPTH", "50%", "")), 7031},
+		{"Phaser with SYNC only fits both", block("Phaser", prm("SYNC", "Off", "")), 0},
+		{"Envelope Filter with FREQ DEPTH is 24006", block("Envelope Filter", prm("FREQ DEPTH", "50%", "")), 24006},
+		{"Envelope Filter with FREQ ENV AMT is 24003", block("Envelope Filter", prm("FREQ ENV AMT", "50%", "")), 24003},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ex, b := firstBlock(t, e, c.blk)
+			if c.wantID == 0 {
+				if b != nil || len(ex.Unresolved) == 0 || !strings.Contains(ex.Unresolved[0].Reason, "ambiguous") || !strings.Contains(ex.Unresolved[0].Reason, "fit 2") {
+					t.Fatalf("want ambiguous (both fit), got block %+v unresolved %+v", b, ex.Unresolved)
+				}
+				return
+			}
+			if b == nil {
+				t.Fatalf("not placed: %+v", ex.Unresolved)
+			}
+			if b.ModelID != c.wantID || !strings.HasSuffix(b.IndexEvidence, PickedByControls) {
+				t.Errorf("model %d evidence %q, want %d with %q", b.ModelID, b.IndexEvidence, c.wantID, PickedByControls)
+			}
+		})
+	}
+}
+
+func TestAmbiguousNameNoModelFits(t *testing.T) {
+	e := testExporter(t)
+	// FREQ ENV AMT is 24003's and FREQ DEPTH is 24006's: no model has both.
+	ex, b := firstBlock(t, e, block("Envelope Filter", prm("FREQ ENV AMT", "50%", ""), prm("FREQ DEPTH", "50%", "")))
+	if b != nil || len(ex.Unresolved) == 0 || !strings.Contains(ex.Unresolved[0].Reason, "none has every control") {
+		t.Fatalf("want refusal, got %+v / %+v", b, ex.Unresolved)
+	}
+}
