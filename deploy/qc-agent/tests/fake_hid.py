@@ -43,6 +43,8 @@ class FakeHID:
         self.grid: dict[int, dict] = {}   # col -> {"hash", "params": {idx: [8]}, "scene": set(idx), "bypass": [8], "bypass_scene": bool}
         self._thread = _Reader()  # stands in for winhid's reader thread (QcMcpBackend.alive reads it)
         self.opened = self.closed = False
+        self.echo_ids = True          # False: replies carry no request_id (unverified on the unit, step 10)
+        self.position_replies = True  # False: SetlistPosition READs go unanswered (a slow or busy unit)
 
     # -- the HID API the transport uses --
 
@@ -89,8 +91,10 @@ class FakeHID:
             v.device_type = v.DESCRIPTOR.fields_by_name["device_type"].enum_type.values_by_name["QC"].number
             self._reply("Version", v)
         elif name == "SetlistPosition" and m.action == A["READ"]:
-            self._reply(name, P.message_class(name)(action=A["UPDATE"], request_id=m.request_id,
-                                                    folder_key=SETLIST, position=self.open_position))
+            if self.position_replies:
+                self._reply(name, P.message_class(name)(action=A["UPDATE"],
+                                                        request_id=m.request_id if self.echo_ids else 0,
+                                                        folder_key=SETLIST, position=self.open_position))
         elif name == "Scene" and m.action == A["READ"]:
             self._reply(name, P.message_class(name)(action=A["UPDATE"], request_id=m.request_id,
                                                     selected_scene=self.scene))

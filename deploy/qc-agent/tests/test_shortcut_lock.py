@@ -83,11 +83,26 @@ class Lnk(unittest.TestCase):
 
     def test_no_scheduler_service_or_powershell(self):
         # The agent never shells out (so no schtasks/PowerShell/sc.exe), and never writes autostart entries.
+        # Imports and calls are checked on the syntax tree (catches `import os, subprocess` and aliases);
+        # the plain-text checks stay as a backstop for anything spelled dynamically.
+        import ast
+        banned_modules = {"subprocess", "winreg", "_winapi", "multiprocessing"}
+        banned_calls = {"system", "popen", "startfile", "spawnl", "spawnv", "execv", "execl",
+                        "ShellExecuteW", "ShellExecuteA", "ShellExecute", "__import__", "import_module"}
         for p in (AGENT_DIR / "qc_agent").glob("*.py"):
             src = p.read_text(encoding="utf-8")
             with self.subTest(p.name):
-                self.assertNotRegex(src, r"^\s*(import|from)\s+subprocess", "no subprocess")
-                self.assertNotRegex(src, r"os\.system|os\.popen|startfile|ShellExecute")
+                for node in ast.walk(ast.parse(src)):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            self.assertNotIn(alias.name.split(".")[0], banned_modules, alias.name)
+                    elif isinstance(node, ast.ImportFrom) and node.module:
+                        self.assertNotIn(node.module.split(".")[0], banned_modules, node.module)
+                    elif isinstance(node, ast.Call):
+                        f = node.func
+                        name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
+                        self.assertNotIn(name, banned_calls, f"line {node.lineno}")
+                self.assertNotRegex(src, r"\bsubprocess\b|os\.system|os\.popen|startfile|ShellExecute")
                 self.assertNotIn("CurrentVersion\\Run", src)
                 self.assertNotIn("Start Menu\\Programs\\Startup", src)
 

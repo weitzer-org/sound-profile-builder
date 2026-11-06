@@ -8,6 +8,7 @@ import hashlib
 import re
 import unittest
 
+from pathlib import Path
 from helpers import AGENT_DIR
 from qc_agent.vendor_pins import COMMIT, PINS, VENDOR_DIR, mismatches
 
@@ -47,12 +48,19 @@ class VendorPins(unittest.TestCase):
         import sys
         from unittest import mock
         from qc_agent import qcmcp_backend
-        with mock.patch.object(qcmcp_backend, "_loaded", None), mock.patch.dict(sys.modules):
-            for name in [n for n in sys.modules if n == "qc_mcp" or n.startswith("qc_mcp.")]:
-                del sys.modules[name]
-            mods = qcmcp_backend.load_vendored()  # a real first load, whatever ran before
-            self.assertIn("transport", mods)
-        self.assertFalse((VENDOR_DIR / "qc_mcp" / "__pycache__").exists())
+        import shutil
+        import tempfile
+        # A private copy, so a __pycache__ some other tool left in the checkout can't fail this test
+        # and the assertion only sees what load_vendored itself wrote.
+        with tempfile.TemporaryDirectory() as d:
+            vendor = Path(d) / "vendor"
+            shutil.copytree(VENDOR_DIR, vendor, ignore=shutil.ignore_patterns("__pycache__"))
+            with mock.patch.object(qcmcp_backend, "_loaded", None), mock.patch.dict(sys.modules):
+                for name in [n for n in sys.modules if n == "qc_mcp" or n.startswith("qc_mcp.")]:
+                    del sys.modules[name]
+                mods = qcmcp_backend.load_vendored(vendor)  # a real first load, whatever ran before
+                self.assertIn("transport", mods)
+            self.assertEqual([p for p in vendor.rglob("*") if p.suffix == ".pyc" or p.name == "__pycache__"], [])
 
     def test_provenance_lists_every_pin(self):
         text = (VENDOR_DIR / "PROVENANCE.md").read_text(encoding="utf-8")

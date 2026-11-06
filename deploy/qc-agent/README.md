@@ -123,10 +123,12 @@ them; this guide uses **24H**).
    - occupied slot: `slot_not_empty`, nothing written;
    - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first");
    - an empty slot outside `QC_AGENT_ALLOWED_SLOTS` (narrow it to `24H` to test): `slot_not_allowed`.
-10. **Before the first real push: are position replies correlated?** The push relies on reading which slot is open,
-    several times. qc-mcp's `request()` falls back to an uncorrelated reply when the unit doesn't echo `request_id`,
-    so check once (with the Phase 0 spike tools) that SetlistPosition and Scene replies carry the request's id. If
-    they don't, tell me before pushing: a stale position reply could then let a push build into another blank preset.
+10. **Before the first real push: are position replies correlated?** The push reads which slot is open several
+    times, and the bridge accepts only the SetlistPosition reply that carries its own `request_id` (no fallback to
+    an uncorrelated or late reply). If the unit doesn't echo the id, every push fails closed with `device_error`
+    ("no reply to SetlistPosition carrying request_id ...") before writing anything. So check once, with the Phase 0
+    spike tools, that SetlistPosition and Scene replies carry the request's id, and tell me if they don't: pushes
+    would then need another freshness check.
 11. **First real push (after P2).** Select empty **24H** on the unit, dry-run and confirm on the phone. Expect
     `succeeded`, `mismatches 0`, the name in 24H on the unit, then power-cycle and check it's still there (G3 never
     tested persistence across a power cycle).

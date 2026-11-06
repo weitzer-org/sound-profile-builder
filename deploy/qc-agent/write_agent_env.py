@@ -35,6 +35,7 @@ DEFAULT_FIRMWARE = "4.1.0"
 DEFAULT_IDLE_MINUTES = "30"
 
 KEY_RE = re.compile(r"[0-9a-fA-F]{64}")
+FIRMWARE_RE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")  # what qc_agent/config.py accepts (test_config pins them equal)
 SLOT = r"(?:[1-9]|[12][0-9]|3[0-2])[A-H]"
 SLOTS_RE = re.compile(rf"{SLOT}(?:-{SLOT})?(?:,{SLOT}(?:-{SLOT})?)*")
 BUCKET_RE = re.compile(r"[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]")
@@ -147,7 +148,7 @@ def main():
     slots = ask("Slots the bridge may create presets in (1A-32H = all; or e.g. 20A-25H,30A)", DEFAULT_SLOTS,
                 check=lambda v: bool(SLOTS_RE.fullmatch(v.upper())), error="use ranges like 20A-25H").upper()
     firmware = ask("Expected Quad Cortex firmware", DEFAULT_FIRMWARE,
-                   check=lambda v: bool(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v)),
+                   check=lambda v: bool(FIRMWARE_RE.fullmatch(v)),
                    error="use the exact three-part version the unit reports, e.g. 4.1.0")
     idle = ask("Idle minutes before the bridge exits", DEFAULT_IDLE_MINUTES,
                check=lambda v: v.isdigit() and 1 <= int(v) <= 240, error="a number of minutes, 1-240")

@@ -137,6 +137,47 @@ class PushOverTheWire(Base):
         self.assertEqual(self.hid.routing[0], (1, 19))
 
 
+class StrictPosition(Base):
+    """The push decides "is the target slot still the open one" from SetlistPosition reads, so only
+    the reply to that very READ may count: never a late reply to an earlier one."""
+
+    def stale(self, rid, position=7):
+        self.hid._reply("SetlistPosition", P.message_class("SetlistPosition")(
+            action=P.ACTION["UPDATE"], request_id=rid, folder_key=fake_hid.SETLIST, position=position))
+
+    def test_a_reply_to_another_request_is_ignored(self):
+        self.dev.connect()
+        self.stale(rid=9999)
+        self.assertEqual(self.dev.setlist_position()["position"], self.hid.open_position)
+
+    def test_a_late_reply_after_a_timeout_is_not_used_later(self):
+        self.dev.connect()
+        self.hid.position_replies = False
+        with self.assertRaises(DeviceError):
+            self.dev._call("get_setlist_position", timeout_ms=200)
+        self.stale(rid=self.dev._raw._req_id)  # the timed-out READ's answer finally arrives
+        self.hid.position_replies = True
+        self.assertEqual(self.dev.setlist_position()["position"], self.hid.open_position)
+
+    def test_a_unit_that_doesnt_echo_ids_fails_closed(self):
+        self.hid.echo_ids = False
+        self.dev.connect()
+        with self.assertRaisesRegex(DeviceError, "carrying request_id"):
+            self.dev._call("get_setlist_position", timeout_ms=200)
+
+    def test_push_refuses_without_a_correlated_position(self):
+        self.hid.echo_ids = False
+        import json
+        from qc_agent import contract
+        _jid, _key, data = job("push_preset")
+        out = jobs.run(self.ctx(), json.loads(contract.open_envelope(config().keys, contract.TAG_JOB, data)))
+        self.assertNotEqual(out.status, "succeeded")
+        A = P.ACTION
+        self.assertFalse([1 for n, o in self.hid.received if n in ("Grid", "File") and o.action != A["READ"]],
+                         "nothing may be written when the open slot can't be read reliably")
+        self.assertEqual(self.hid.grid, {})
+
+
 class PendingQueue(Base):
     """Upstream request() never removed the matched reply (`t is not (cmd, obj, raw, pb)` compares
     with a new tuple), so every unconsumed message doubled per matched request. With one broadcast

@@ -379,15 +379,27 @@ def _make_request(mods):
     push could exhaust memory (tests/test_qcmcp_backend.py reproduces it with the simulated
     unit). This copy removes the matched entry by identity of the pending tuple itself. The
     vendored file stays byte-identical; the fix belongs upstream, then a re-vendoring PR.
+
+    Two narrowings of upstream's fallback (it returns the first reply of the right command when
+    no reply carries the request's id):
+    - A reply carrying a *different* non-zero id answers some earlier request (say, one that timed
+      out), so it is dropped and never used as the fallback. Only a reply with no id (a unit that
+      doesn't echo ids) can be.
+    - `strict=True` has no fallback at all: only the reply carrying this request's id is accepted,
+      and a timeout raises. The push's slot checks read the position this way (see
+      _make_setlist_position).
     """
     P, QCError = mods["protocol"], mods["transport"].QCError
 
-    def request(self, command, proto_message=None, proto_bytes=None, expect=None, timeout_ms=2000):
+    def request(self, command, proto_message=None, proto_bytes=None, expect=None, timeout_ms=2000,
+                strict=False):
         with self._io_lock:  # upstream's @_serialized
             want = command if isinstance(command, int) else P.NAME_TO_CMD[command]
             if expect is not None:
                 want = expect if isinstance(expect, int) else P.NAME_TO_CMD[expect]
             exp_rid = int(getattr(proto_message, "request_id", 0) or 0) if proto_message is not None else 0
+            if strict and not exp_rid:
+                raise QCError(f"{command}: a strict request needs a request_id")
             self.send(command, proto_message, proto_bytes)
             deadline = time.time() + timeout_ms / 1000.0
             best = None
@@ -406,15 +418,38 @@ def _make_request(mods):
                         if not exp_rid and obj is not None and len(pb) > 2:
                             self._pending = keep + self._pending[i + 1:]  # consumed here too
                             return cmd, obj, raw
-                        best = best or (cmd, obj, raw)
+                        if not strict and rid == 0:
+                            best = best or (cmd, obj, raw)  # no id at all: the unit may not echo ids
+                        # dropped otherwise: another request's reply, or one we can't attribute
                     else:
                         keep.append(item)
                 self._pending = keep
             if best:
                 return best
+            if strict:
+                raise QCError(f"no reply to {command} carrying request_id {exp_rid} within {timeout_ms}ms")
             raise QCError(f"no response to {command} within {timeout_ms}ms")
 
     return request
+
+
+def _make_setlist_position(mods):
+    """get_setlist_position, reading strictly: only the reply to this READ counts.
+
+    Upstream's goes through read_state -> request(), whose fallback could hand back a late reply
+    to an earlier position READ. The push decides "is the target slot still the open one" from
+    this value several times, so a stale answer could let it build into a different blank preset.
+    If the unit doesn't echo request_id at all, every read fails here and pushes fail closed
+    (README hardware step 10 checks this before the first real push).
+    """
+    P = mods["protocol"]
+
+    def get_setlist_position(self, timeout_ms=2500):
+        msg = P.message_class("SetlistPosition")(action=P.ACTION["READ"], request_id=self.next_request_id())
+        _c, obj, _r = self.request("SetlistPosition", msg, timeout_ms=timeout_ms, strict=True)
+        return {"folder_key": obj.folder_key, "position": obj.position, "is_factory": obj.is_factory}
+
+    return get_setlist_position
 
 
 # ---------------------------------------------------------------- the backend
@@ -475,6 +510,7 @@ class QcMcpBackend(DeviceBackend):
         guard = WireGuard(qc.io, P)
         qc.io = guard
         qc.request = types.MethodType(_make_request(self._mods), qc)  # see _make_request
+        qc.get_setlist_position = types.MethodType(_make_setlist_position(self._mods), qc)
         self._raw, self._guard, self._errs = qc, guard, []
         self._qc = Guarded(qc)
         try:

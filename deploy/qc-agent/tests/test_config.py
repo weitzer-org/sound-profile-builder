@@ -22,6 +22,17 @@ class Names(unittest.TestCase):
             with self.subTest(name):
                 self.assertIn(name + "=", src)
 
+    def test_setup_script_accepts_the_same_firmware_strings(self):
+        # write_agent_env.py is standalone (stdlib only), so it keeps its own copy of the pattern.
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("write_agent_env", AGENT_DIR / "write_agent_env.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)  # module level only defines things; main() is behind __main__
+        self.assertEqual(mod.FIRMWARE_RE.pattern, cfg._FIRMWARE_RE.pattern)
+        for v in ("4.1.0", "4.10.12", "4.1", "4.1.0b", " 4.1.0", "v4.1.0"):
+            with self.subTest(v):
+                self.assertEqual(bool(mod.FIRMWARE_RE.fullmatch(v)), bool(cfg._FIRMWARE_RE.fullmatch(v)))
+
     def test_file_written_by_the_setup_script_loads(self):
         # The exact lines write_agent_env.py writes, including its comments.
         lines = [
