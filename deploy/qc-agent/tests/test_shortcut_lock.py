@@ -39,7 +39,7 @@ class Lnk(unittest.TestCase):
         self.assertEqual(shortcut.parse_lnk(shortcut.build_lnk(exe, "x", WD))["target"], exe)
 
     def test_relative_target_refused(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "must be an absolute path"):
             shortcut.build_lnk("python.exe", "x", WD)
 
     def test_install_and_uninstall(self):
@@ -60,7 +60,7 @@ class Lnk(unittest.TestCase):
             with self.subTest(args=args, wd=wd), tempfile.TemporaryDirectory() as d:
                 p = Path(d) / shortcut.SHORTCUT_NAME
                 p.write_bytes(shortcut.build_lnk(EXE, args, wd))
-                with self.assertRaises(RuntimeError):
+                with self.assertRaisesRegex(RuntimeError, "wasn't written by install-shortcut"):
                     shortcut.uninstall(desktop=Path(d))
                 self.assertTrue(p.exists())
 
@@ -68,7 +68,7 @@ class Lnk(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / shortcut.SHORTCUT_NAME
             p.write_bytes(b"not ours")
-            with self.assertRaises(RuntimeError):
+            with self.assertRaisesRegex(RuntimeError, "already exists and isn't the QC bridge's"):
                 shortcut.install(python_exe=EXE, desktop=Path(d))
             self.assertEqual(p.read_bytes(), b"not ours")
             p.unlink()
@@ -78,7 +78,7 @@ class Lnk(unittest.TestCase):
     def test_utf16_length_is_what_counts(self):
         emoji_path = "C:\\" + "\U0001F3B8" * 129 + "\\p.exe"  # < 260 characters, > 260 UTF-16 units
         self.assertLess(len(emoji_path), 260)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "too long for a shortcut"):
             shortcut.build_lnk(emoji_path, "x", WD)
 
     def test_no_scheduler_service_or_powershell(self):
