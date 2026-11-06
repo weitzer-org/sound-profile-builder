@@ -433,6 +433,26 @@ Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-co
 - P1 touches `internal/catalog`, which several in-flight PRs also touch. Land it with a rebase, not a merge-race.
 - A new Go dependency, if any, needs a supply-chain note in its PR. P2 and P3 shouldn't need one.
 
+### 8.1 Open items (after P4c, PR #145, merged 2026-11-06)
+
+Kept open by the owner (2026-11-06). Strike each one through with its date and PR when it is done.
+
+**Owner, on the unit (P6; normal use, no extra session).** Pull `main` on the PC first. The agent validates against its clone's catalog and capture code. Items 1 and 2 are hardware step 12 in `deploy/qc-agent/README.md`.
+1. **Before the first capture push:** run `list_device_slots` once and send the `capture folder ...` and `My Presets: ... dependencies` lines from `agent.log`. They answer three things:
+   - the real factory folder names. If they aren't `Factory Captures V1`/`V2`, every factory capture is refused until a one-line fix in `qc_agent/captures.py`;
+   - whether `ProductData.version` calibrates V1/V2;
+   - whether saved presets carry dependency lists.
+2. **Three capture pushes:** one with a factory V1 capture, one with a factory V2 capture, and one with a downloaded (user) capture.
+   - Check each: `succeeded` and `mismatches 0`; the block type on the unit ("Capture" vs "Capture 2") matches the V1/V2 in the result; the capture name shows and it sounds right; GAIN..VOLUME match the dry run in scenes A and B.
+   - Then power-cycle and re-select each slot: the capture still loads, with its values kept.
+   - This also closes P4c's deferred security finding: a user capture's V1/V2 comes from `ProductData.version`, which a Cortex Cloud capture's author may control (PR #145 comment).
+3. Earlier README hardware steps not yet run: step 2 (G2 a, start from the shortcut), step 5 (G2 b, Cortex Control holding the unit) and step 7 (unplug detection).
+
+**Follow-up work (not started; each needs its own PR).**
+4. **Architect pan scale** (pipeline side, the open half of P2b's row). Every pan in the v6 evals is written `0`, which is hard left on the device's 0..10 scale, where center was meant. The export refuses pans other than Center until the Architect is shown the pan's catalog scale (section 7.1, P2c status).
+5. **P4b library sync** (Chat 7 in section 11). It uploads the unit's capture list, so the dry run resolves captures before a push. It also collects the cab mic strings seen on the unit, so a non-default mic can be written exactly instead of becoming a warning.
+6. **Visual e2e baseline.** The visual snapshot test fails on `main` in the cloud sandbox. Re-record it in the `mcr.microsoft.com/playwright:v1.58.2` container (CLAUDE.md, Tests) and review the new images before committing them.
+
 ## 9. Which model does what
 
 Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost policy: bots are the default PR gate, `/quick-review` runs on demand only, and the multi-agent `/code-review high` is reserved for risky changes.
