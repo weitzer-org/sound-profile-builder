@@ -305,7 +305,11 @@ func panStats(raw string) PanStats {
 				}
 				written[i] = true
 				c := ctl.Controls[i]
-				ps.Written = append(ps.Written, fmt.Sprintf("%s: %s = %s", b.Model, bp.Name, bp.Value))
+				info := ""
+				if c.Min != nil && c.Max != nil && c.Default != nil {
+					info = fmt.Sprintf(" (%g..%g, %g)", *c.Min, *c.Max, *c.Default)
+				}
+				ps.Written = append(ps.Written, fmt.Sprintf("%s: %s = %s%s", b.Model, bp.Name, bp.Value, info))
 				x, err := strconv.ParseFloat(strings.TrimSpace(bp.Value), 64)
 				switch {
 				case err != nil || c.Min == nil || c.Max == nil || c.Default == nil:

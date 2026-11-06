@@ -42,6 +42,9 @@ func TestPanStats(t *testing.T) {
 	    {"name":"Mic 1 Balance","value":"0.5"}]}]}}}`
 	got := panStats(raw)
 	want := PanStats{Default: 1, Kept: 2, AtMin: 1, Other: 1, OutOfRange: 1, Text: 1}
+	if len(got.Written) == 0 || got.Written[0] != "212 UK C30 65: Mic 1 Pan = 0 (0..10, 5)" {
+		t.Errorf("Written = %q, want the catalog range and default after the value", got.Written)
+	}
 	got.Written = nil
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("panStats = %+v, want %+v", got, want)
