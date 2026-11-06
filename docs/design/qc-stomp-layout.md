@@ -61,11 +61,38 @@ A block is classified from its **catalog model id** (`internal/catalog`, `id` �
 | `delay` | category `Delay` |
 | `mod` | category `Modulation` |
 | `reverb` | category `Reverb` |
-| *(none)* | everything else: amps, cabs, IR loaders, EQ, utility and gates, wah, pitch, filter, morph, synth, looper, FX loops, splitters, mixers, bass blocks, Neural Captures |
+| *(none)* | everything else: amps, cabs, IR loaders, EQ, utility and gates, wah, pitch, filter, morph, synth, looper, FX loops, splitters, mixers, bass blocks |
+| *(see 4.1)* | Neural Captures |
 
 **The boost rule is limited to drive blocks on purpose.** Without that limit it would also catch the amps "UK C30 TopBoost" and "UK C15 TopBoost". The rule is the owner's choice (2026-11-06): simple and predictable. The known cost: a Tube Screamer set up as a boost is still a Drive.
 
-**Neural Captures get no role.** The catalog can't say whether a capture is an amp or a pedal, and a capture's name is device text. A captured boost pedal therefore gets no switch in v1.
+### 4.1 Neural Captures
+
+The catalog can't say whether a capture is an amp or a pedal: every capture is the same Neural Capture block, and only its loaded file differs. Per qc-mcp, a capture block carries its capture as a parameter string, the capture's 64-hex key followed by its display name (`transport.py:942`). UNVERIFIED on the unit; G7 (h) checks it. A capture's role is decided in this order:
+
+1. **The modeler's category, for a block in a QC-2 preset.** Owner's decision, 2026-11-06. The block's `type` is a free-text string the Architect writes; its schema has no fixed list (`internal/agents/schemas.go`). Across the saved eval runs it appears in 23 spellings, among them `Drive`, `Overdrive`, `Overdrive (Capture)`, `Neural Capture (Drive)`, `Boost`, `Fuzz`, `Preamp`, `Capture` and `Neural Capture`. These runs span several prompt versions, so the counts describe what the field can hold, not what production v6 writes. So the label goes through a fixed table, never through string matching on the fly:
+
+   | `type` (case-insensitive, trimmed) | Role |
+   |---|---|
+   | `Boost` | `boost` |
+   | `Drive`, `Overdrive`, `Distortion`, `Fuzz`, `Overdrive (Capture)`, `Overdrive Capture`, `Neural Capture (Drive)` | `drive`, or `boost` if the capture's name contains "boost" (the same name rule as §4) |
+   | `Compressor` | `comp` |
+   | `Delay` | `delay` |
+   | `Modulation` | `mod` |
+   | `Reverb` | `reverb` |
+   | `Amplifier`, `Cabinet`, `Preamp` | no switch, decided (the step stops here) |
+   | `Capture`, `Neural Capture`, anything not in this table | undecided: go to step 2 |
+
+2. **The capture library.** A capture whose name exactly matches an entry in `internal/agents/user_captures.json` takes that entry's `block_type`. All 87 entries have one, and all are citation-checked (`description_verified: true`). `drive` → `drive`, or `boost` by the name rule (today that gives "Strymon Sunset BOOST" and "TR KOTyellow Boost SC"). `amp`, `full_rig`, `cab` and `other` → no switch. This is the only step for a preset this system didn't push (entry point 2, §6.1).
+3. **Otherwise no switch.** The dry run lists the capture as "unclassified capture", with a pointer to add it to `user_captures.json`. The tool never guesses a type from a capture's name, because names are often cryptic and words like "Boost", "Drive" or "Lead" often name an amp channel. It would also break CLAUDE.md's rule against hand-guessed capture metadata.
+
+**When steps 1 and 2 disagree** (the modeler says `Amplifier`, and the library says `drive`), step 1 wins, per the owner's decision. The dry run shows the disagreement so it can be fixed at the source.
+
+**A known weakness of step 1.** The Architect doesn't always label the same capture the same way. In the eval runs, "EP3 pre (V-12 EQ-mid)" appears as `Drive`, `Overdrive`, `Boost`, `Preamp`, `Capture` and `Neural Capture` in different presets, so its switch would vary between presets. That works against the goal of consistency. Fixing it belongs in generation (for example, deriving a capture block's `type` from the library when there's an entry), not here, and is out of scope.
+
+**Factory captures are not used.** `coros_map.json`'s `type` for factory captures is too coarse: 117 of its 179 captures are `fx`, which mixes drives, fuzzes and compressors (TS9, HM-2 and OC-76 Comp are all `fx`). They can join step 2 once they carry a finer, cited type.
+
+**Timing.** In v1 the device export marks every capture `unresolved` (bridge plan §4), so a QC-2 preset with a capture can't be pushed yet. Step 1 matters from the release where captures can be pushed. Step 2 applies to entry point 2 as soon as that ships.
 
 ## 5. Assignment rules
 
@@ -124,6 +151,7 @@ Run on a scratch preset in an **empty** slot (as G3 did), with a spike that is g
 | e | Do assignments survive `write_preset_file` and a recall of that slot? | Save into the empty slot, recall another preset, recall it again. |
 | f | **For entry point 2:** does an assignment change mark the preset as edited but unsaved, and does leaving the preset discard it without auto-saving? | Assign on a preset the system created, switch presets, come back, read back. |
 | g | **Scenes.** Which scene is active when a preset loads in Stomp mode? Does pressing a stomp change that scene's stored bypass flag? | Read the `Scene` state and the bypass flags before and after a press. |
+| h | **Captures.** Does a capture block's read-back carry the key and display name as qc-mcp says? Does that display name equal the `name` in `user_captures.json` exactly? Is the key stable for a given capture? | Read back a preset holding one downloaded capture that's in `user_captures.json`. |
 
 **If (f) fails** (the unit auto-saves, or keeps the change), entry point 2 is unsafe as designed and stays off until it's redesigned. **If (g) shows that stomps rewrite scene bypass,** add a note to the dry run explaining the effect on scenes. The design doesn't depend on (g) otherwise.
 
@@ -149,11 +177,12 @@ All by the owner, 2026-11-06.
 - Separate from the generation pipeline; works on any preset.
 - On presets this system didn't create: apply without saving (option 2).
 - Several blocks of one role share that role's switch (D for drives after the first).
+- A capture in a QC-2 preset takes the modeler's category (§4.1 step 1).
 
 ## 10. Defaults chosen here (change any of them)
 
 - `mod` is the `Modulation` category only. Filter, pitch, wah, morph and synth get no switch.
-- Neural Captures get no role (§4).
+- A capture whose modeler category is generic or missing falls back to `user_captures.json`. A capture in neither gets no switch and is listed in the dry run (§4.1 steps 2–3). Factory captures aren't classified until `coros_map.json` has a finer type for them.
 - The tool replaces existing A–G assignments, and never touches H (§5 rules 5–6).
 - Latching only, no secondary assignments (§5 rule 7).
 - No change to the Architect or the preset view in v1. A "Switch" column in the preset view is a possible follow-up; it would change `RenderPresetMarkdown`'s golden file and the display guide.
