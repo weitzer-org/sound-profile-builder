@@ -3,12 +3,13 @@
 // Architect's structured_payload from every *.agents.json under the given directories.
 // Offline: no LLM, no device, no storage.
 //
-//	go run ./cmd/device_census eval_results/v5_vs_v6_r2/v6_a/PROD
+//	go run ./cmd/device_census [-config config.json] eval_results/v5_vs_v6_r2/v6_a/PROD
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -18,20 +19,34 @@ import (
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
+	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/deviceexport"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("usage: device_census <dir> [dir...]")
+	configPath := flag.String("config", "config.json", "config.json to read allow_paid_plugins/available_plugins from")
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "usage: device_census [-config config.json] <dir> [dir...]")
+		flag.PrintDefaults()
 	}
-	exp, err := newExporter()
+	flag.Parse()
+	if flag.NArg() < 1 {
+		flag.Usage()
+		os.Exit(2)
+	}
+	cfg, err := config.LoadConfig(*configPath)
+	if err != nil {
+		log.Fatalf("load %s: %v", *configPath, err)
+	}
+	owned := deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
+	fmt.Printf("Owned plugins (from %s): %s\n\n", *configPath, ownedList(owned))
+	exp, err := newExporter(owned)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var files []string
-	for _, dir := range os.Args[1:] {
+	for _, dir := range flag.Args() {
 		err := filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
 			if err == nil && !d.IsDir() && strings.HasSuffix(p, ".agents.json") {
 				files = append(files, p)
@@ -147,6 +162,19 @@ func structured(path string) (storage.StructuredPreset, bool) {
 	return storage.StructuredPreset{}, false
 }
 
-func newExporter() (*deviceexport.Exporter, error) {
-	return deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: agents.CaptureSource})
+func newExporter(owned map[string]bool) (*deviceexport.Exporter, error) {
+	return deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: agents.CaptureSource, OwnedPlugins: owned})
+}
+
+// ownedList prints the owned plugin set sorted, or "(none)".
+func ownedList(owned map[string]bool) string {
+	names := make([]string, 0, len(owned))
+	for n := range owned {
+		names = append(names, n)
+	}
+	if len(names) == 0 {
+		return "(none)"
+	}
+	sort.Strings(names)
+	return strings.Join(names, ", ")
 }

@@ -349,3 +349,22 @@ func TestProcessLogin_InvalidMethod(t *testing.T) {
 		t.Errorf("expected 405, got %d", rr.Code)
 	}
 }
+
+func TestPasswordsEqual(t *testing.T) {
+	cases := []struct {
+		name, submitted, expected string
+		want                      bool
+	}{
+		{"match", "hunter2", "hunter2", true},
+		{"mismatch", "hunter3", "hunter2", false},
+		{"prefix of expected", "hunter", "hunter2", false},
+		{"extension of expected", "hunter22", "hunter2", false},
+		{"empty submitted", "", "hunter2", false},
+		{"case differs", "Hunter2", "hunter2", false},
+	}
+	for _, c := range cases {
+		if got := passwordsEqual(c.submitted, c.expected); got != c.want {
+			t.Errorf("%s: passwordsEqual(%q, %q) = %v, want %v", c.name, c.submitted, c.expected, got, c.want)
+		}
+	}
+}
