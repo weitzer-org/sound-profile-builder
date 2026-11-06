@@ -156,7 +156,7 @@ func renderMics(b *strings.Builder, o *deviceMicsOut) {
 // syncDevicePreset is sync_device_library: queue the read-only job, wait, store the answer.
 func syncDeviceLibrary(b *devicejobs.Bridge, lib *DeviceLibrary) mcp.ToolHandlerFor[deviceReadInput, deviceJobOutput] {
 	return func(ctx context.Context, _ *mcp.CallToolRequest, in deviceReadInput) (*mcp.CallToolResult, deviceJobOutput, error) {
-		wait, err := deviceWait(in.WaitSeconds, 60) // the directory listing alone takes ~15 s
+		wait, err := deviceWait(in.WaitSeconds, maxDeviceWait) // the directory listing alone takes ~15 s
 		if err != nil {
 			return nil, deviceJobOutput{}, err
 		}

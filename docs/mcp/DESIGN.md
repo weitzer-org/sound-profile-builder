@@ -333,9 +333,9 @@ Errors use `IsError: true` with an actionable message.
 | Tool | Input | Output |
 |---|---|---|
 | `device_status` | none | `{bridge: online\|offline, reason?, heartbeat_age_s?, agent_version, agent_state, firmware, expected_firmware, allowed_slots[], pending_jobs, ...}` |
-| `send_preset_to_device` | `preset_id`, `guitar`, `slot`, `name`, `dry_run?` (default true), `confirm_token?`, `wait_seconds?` (0-120, default 30) | Dry run: `{mode: dry_run, plan{blocks, unresolved, export_sha256}, can_push, confirm_token?, bridge_online}`. Confirm: `{mode: queued\|existing, job}` |
-| `list_device_slots`, `read_device_preset` | `wait_seconds?` (0-120, default 30) | The job: `{job_id, state, slots?\|readback?}` |
-| `get_device_job` | `job_id`, `wait_seconds?` (0-120, default 0) | `{job_id, kind, state, reason_code, message, push?, slots?, readback?}` |
+| `send_preset_to_device` | `preset_id`, `guitar`, `slot`, `name`, `dry_run?` (default true), `confirm_token?`, `wait_seconds?` (0-50, default 30) | Dry run: `{mode: dry_run, plan{blocks, unresolved, export_sha256}, can_push, confirm_token?, bridge_online}`. Confirm: `{mode: queued\|existing, job}` |
+| `list_device_slots`, `read_device_preset` | `wait_seconds?` (0-50, default 30) | The job: `{job_id, state, slots?\|readback?}` |
+| `get_device_job` | `job_id`, `wait_seconds?` (0-50, default 0) | `{job_id, kind, state, reason_code, message, push?, slots?, readback?}` |
 
 Tool annotations: `readOnlyHint: true` on the `get_*`/`list_*` tools.
 `generate_preset`/`refine_preset` get `openWorldHint: true` (they make paid

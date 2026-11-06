@@ -302,6 +302,7 @@ func TestSendPreset_Refusals(t *testing.T) {
 		{"bad preset id", pushArgs(map[string]any{"preset_id": "../x"}), "preset_id must be"},
 		{"missing preset", pushArgs(map[string]any{"preset_id": "nope"}), "does not exist"},
 		{"wait too long", pushArgs(map[string]any{"wait_seconds": 500}), "wait_seconds"},
+		{"wait over the client's 60 s limit", pushArgs(map[string]any{"wait_seconds": 51}), "between 0 and 50"},
 	}
 	// Every case above runs with the bridge offline; none changes the rig.
 	for _, c := range cases {
