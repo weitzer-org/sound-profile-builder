@@ -99,6 +99,9 @@ def from_mapping(env: dict[str, str]) -> Config:
         v = env[name]
         if any(c.isspace() or ord(c) < 0x21 or ord(c) > 0x7E for c in v):
             raise ConfigError(f"{name} contains spaces or non-printable characters")
+    nxt = (env.get("DEVICE_JOB_KEY_NEXT") or "").strip()
+    if nxt and not contract.KEY_RE.fullmatch(nxt):
+        raise ConfigError("DEVICE_JOB_KEY_NEXT must be exactly 64 hex characters")
     try:
         keys = contract.keyring(env["DEVICE_JOB_KEY"], env.get("DEVICE_JOB_KEY_NEXT"))
     except ValueError as e:  # the reference's messages name the variable, never the value
@@ -123,9 +126,12 @@ def from_mapping(env: dict[str, str]) -> Config:
 
 def load(path: Path) -> Config:
     try:
-        raw = path.read_bytes()
+        with open(path, "rb") as f:
+            raw = f.read(64 * 1024 + 1)
     except FileNotFoundError:
         raise ConfigError(f"{path} does not exist. Run deploy\\qc-agent\\write_agent_env.py first.") from None
+    except OSError as e:
+        raise ConfigError(f"cannot read {path}: {e.strerror or type(e).__name__}") from None
     if len(raw) > 64 * 1024:
         raise ConfigError(f"{path} is unexpectedly large")
     try:

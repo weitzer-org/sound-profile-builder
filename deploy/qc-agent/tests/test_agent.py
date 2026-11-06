@@ -93,6 +93,16 @@ class ListAndRead(Base):
         self.assertEqual(rb["payload"]["chains"][0]["blocks"][0]["params"][0]["values"], [0.4] * 8)
         self.assertEqual(self.dev.write_calls(), [])
 
+    def test_preset_switched_during_read(self):
+        def switch(name):
+            if name == "read_current_preset":
+                self.dev.open_position = 3
+        self.dev.on_call = switch
+        jid, _ = self.queue("read_preset")
+        self.poll()
+        r = self.result(jid)
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+
     def test_read_named_slot_is_refused_without_touching_the_unit(self):
         jid, _ = self.queue("read_preset", args={"slot": "20A"})
         self.poll()
@@ -289,6 +299,18 @@ class Push(Base):
         self.assertEqual((r["status"], r["reason_code"]), ("expired", "expired"))
         self.assert_no_writes()
 
+    def test_incomplete_bypass_readback_is_a_mismatch(self):
+        orig = self.dev.read_current_preset
+
+        def short_bypass():
+            p = orig()
+            p["bypass"][0][1] = [False] * 3  # the Brit 2203 (active in every scene) reads three flags
+            return p
+        self.dev.read_current_preset = short_bypass
+        r = self.push()
+        self.assertEqual(r["reason_code"], "readback_mismatch")
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
     def test_readback_mismatch_does_not_save(self):
         self.dev.corrupt_readback = True
         r = self.push()
@@ -336,6 +358,36 @@ class Push(Base):
         self.assertEqual(r["status"], "succeeded")
         self.assertFalse(r["push"]["listed"])
         self.assertIn("Check 20A on the unit", r["message"])
+
+    def test_switching_presets_mid_build_stops(self):
+        def switch(name):
+            if name == "add_block":
+                self.dev.open_position = 0
+        self.dev.on_call = switch
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("Another preset was selected", r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("add_block"), 1)
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_grid_edited_after_verification_is_not_saved(self):
+
+        def edit_on_unit(name):
+            if name == "list_my_presets" and any(c[0] == "set_routing" for c in self.dev.calls):
+                self.dev.grid[0]["params"][1] = [0.9] * 8  # the owner turns TREBLE during the save checks
+        self.dev.on_call = edit_on_unit
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertIn("changed after it was verified", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_owned_ledger_failure_keeps_the_success(self):
+        def boom(*a, **k):
+            raise OSError("disk full")
+        self.agent.owned.record = boom
+        r = self.push()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertEqual(r["push"]["mismatches"], 0)
 
     def test_disconnect_always_called(self):
         self.dev.no_echo_cols = {0}
@@ -493,6 +545,27 @@ class Recovery(Base):
         self.make_agent().recover()
         self.assertNotIn(("head", f"jobs/done/{jid}.json"), self.store.ops)
 
+    def test_recovery_republishes_over_an_existing_done_object(self):
+        jid, key = self.queue("list_slots")
+        self.store.fail["put"] = StoreError("put", None, "URLError")
+        self.poll()
+        stored = self.agent.ledger.finished[jid]["result"].encode()
+        del self.store.fail["put"]
+        self.store.objects[f"jobs/done/{jid}.json"] = b"someone else's object"
+        self.make_agent().recover()
+        self.assertEqual(self.store.objects[f"jobs/done/{jid}.json"], stored)
+
+    def test_pending_kept_while_its_result_waits_to_upload(self):
+        jid, key = self.queue("list_slots")
+        self.store.fail["put"] = StoreError("put", None, "URLError")
+        self.poll()
+        self.poll()  # the job is in the ledger now (a replay), but its result hasn't reached the bucket
+        self.assertIn(key, self.store.objects)
+        del self.store.fail["put"]
+        self.agent.retry_uploads()  # what the run loop does before each scan
+        self.assertNotIn(key, self.store.objects)
+        self.assertIn(f"jobs/done/{jid}.json", self.store.objects)
+
     def test_recovery_ignores_the_bucket_for_decisions(self):
         # A done object for an unfinished ledger entry doesn't stop the interrupted report from the ledger.
         jid, _ = self.queue("push_preset")
@@ -510,6 +583,13 @@ class Recovery(Base):
         self.assertTrue(agent.ledger.contains(jid))
         agent.ledger.take("11111111-1111-4111-8111-111111111111", "list_slots", "2026-11-05T20:00:00Z")
         self.assertIn("11111111-1111-4111-8111-111111111111", self.make_agent().ledger.taken)
+
+    def test_crash_while_marking_a_torn_line(self):
+        jid, _ = self.queue("list_slots")
+        self.poll()
+        with open(self.home / "executed_jobs.jsonl", "ab") as f:
+            f.write(b'{"event":"taken","job_id":"abc\n{"event": "to')  # torn line, then a torn marker
+        self.assertTrue(self.make_agent().ledger.contains(jid))
 
     def test_corrupt_middle_line_stops_start(self):
         from qc_agent.ledger import LedgerError

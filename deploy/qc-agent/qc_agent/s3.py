@@ -14,6 +14,7 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import hmac
+import http.client
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -143,6 +144,8 @@ class S3Store:
             except Exception:  # noqa: BLE001
                 pass
             return e.code, code
+        except http.client.HTTPException as e:  # a response cut short (IncompleteRead) or malformed
+            raise StoreError(op, None, type(e).__name__) from None
         except OSError as e:
             # The reason ("connection refused", a TLS error) helps the owner; it never holds credentials.
             reason = getattr(e, "reason", None)

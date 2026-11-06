@@ -194,7 +194,15 @@ class WireGuard:
                       "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
                       "bypass_cols": {b.col for b in plan.blocks if any(b.bypass_scenes)},
                       "max_index": {b.col: b.max_param_index for b in plan.blocks},
+                      # the exact values each write may carry (float32 on the wire, so compared within 1e-6)
+                      "values": {(b.col, p.index): {p.wire, *(p.scene_wires or ())}
+                                 for b in plan.blocks for p in b.params},
+                      "flags": {b.col: set(b.bypass_scenes) for b in plan.blocks},
+                      "bypass_index": {},  # col -> the unit's own bypass index, set by allow_bypass_index
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
+
+    def allow_bypass_index(self, col, index):
+        self._push["bypass_index"][col] = index
 
     def arm_save(self, folder_key, position, name):
         self._save = (folder_key, position, name)
@@ -320,8 +328,8 @@ class WireGuard:
             # "Assign to Scenes": only for the plan's scene-varying params, or a scene-varying block's bypass.
             if (col, p.index) in push["scene_params"]:
                 return
-            if col in push["bypass_cols"] and p.index > push["max_index"][col]:
-                return  # the bypass control sits past every listed parameter (one past the read)
+            if col in push["bypass_cols"] and p.index == push["bypass_index"].get(col):
+                return  # the bypass control: one past the unit's own read of this block (allow_bypass_index)
             raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
         if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
             raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
@@ -330,6 +338,8 @@ class WireGuard:
         v = p.param_values[0].float_value
         if not 0.0 <= v <= 1.0:
             raise WireRefused(f"Grid: wire value {v} outside 0..1")
+        if not any(abs(v - a) <= 1e-6 for a in push["values"][(col, p.index)]):
+            raise WireRefused(f"Grid: column {col} index {p.index} value {v} is not the plan's")
 
     def _check_bypass(self, b):
         push = self._push
@@ -341,6 +351,8 @@ class WireGuard:
             for sb in cb.sceneBypass:
                 if _names(sb) - {"bypass"}:
                     raise WireRefused("Grid: unexpected bypass fields")
+                if bool(sb.bypass) not in push["flags"][cb.column]:
+                    raise WireRefused(f"Grid: bypass {sb.bypass} on column {cb.column} is not the plan's")
 
     def _check_save(self, msg, fields):
         folder_key, position, name = self._save
@@ -544,6 +556,7 @@ class QcMcpBackend(DeviceBackend):
         self._save_target = (position, name)
 
     def end_push(self):
+        self._save_target = None
         if self._guard is not None:
             self._guard.disarm()
 
@@ -562,11 +575,23 @@ class QcMcpBackend(DeviceBackend):
     def set_block_bypass(self, row, col, scenes):
         # Always the per-scene path G6 verified (assign to scenes, then each scene's flag
         # explicitly), even when all eight agree: unwritten scenes keep their old value.
-        self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes])
+        # The bypass control's index is one past the block's own read (qc-mcp bypass_param_index); read it
+        # here and arm exactly that index, rather than letting the guard accept any index past the catalog.
+        preset = self.read_current_preset()
+        chain = next((c for c in (preset or {}).get("chains", []) if c["row"] == row), None)
+        block = next((b for b in (chain or {}).get("blocks", []) if b["col"] == col), None)
+        if block is None:
+            raise DeviceError(f"no block at row {row} column {col} to bypass")
+        n = len(block["params"])
+        if n <= self._guard._push["max_index"].get(col, 0):
+            raise DeviceError(f"column {col} reads {n} parameters, fewer than the catalog lists")
+        self._guard.allow_bypass_index(col, n)
+        self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=n)
 
     def save_to_slot(self, position, name):
         if getattr(self, "_save_target", None) != (position, name):
             raise DeviceError("save target differs from the armed push")
+        self._save_target = None  # one save per push
         self._guard.arm_save(SETLIST_KEY, position, name)
         try:
             self._call("write_preset_file", SETLIST_KEY, position, name)

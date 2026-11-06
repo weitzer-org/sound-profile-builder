@@ -112,6 +112,15 @@ class Store(unittest.TestCase):
         self.assertNotIn(SK, str(cm.exception))
         self.assertNotIn(SK, repr(st))
 
+    def test_truncated_response_is_a_store_error(self):
+        import http.client
+
+        def cut(req, timeout=None):
+            raise http.client.IncompleteRead(b"partial")
+        st = s3.S3Store("https://acct.r2.cloudflarestorage.com", "jobs-bucket", AK, SK, opener=cut)
+        with self.assertRaises(s3.StoreError):
+            st.get_bounded("k", 10)
+
     def test_redirects_are_not_followed(self):
         h = s3._NoRedirect()
         self.assertIsNone(h.redirect_request(None, None, 301, "x", {}, "https://elsewhere/"))

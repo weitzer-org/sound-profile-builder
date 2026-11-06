@@ -213,7 +213,10 @@ def read_preset(ctx, job) -> Outcome:
     try:
         pos = ctx.device.setlist_position() or {}
         preset = ctx.device.read_current_preset()
+        after = ctx.device.setlist_position() or {}
         _check_alive(ctx)
+        if after != pos:
+            return failed("device_error", "The selected preset changed during the read; read again.", firmware=fw)
     except (_Gone, UnitAbsent):
         return failed("unit_absent", "The Quad Cortex went away during the read.", firmware=fw, unit_gone=True)
     except DeviceError as e:
@@ -249,9 +252,9 @@ def _diff_param(row, col, p, vals, diff) -> int:
     expected = p.scene_wires or [p.wire]
     for s in (range(8) if p.scene_wires else [0]):
         v = vals[s] if s < len(vals) else None
-        if not p.scene_wires and vals:
-            # Not scene-assigned: the unit replicates one value into all 8 slots (G1).
-            ok = all(isinstance(x, float) and abs(x - p.wire) <= TOL for x in vals)
+        if not p.scene_wires:
+            # Not scene-assigned: the unit replicates one value into all 8 slots (G1); need all eight.
+            ok = len(vals) == 8 and all(isinstance(x, float) and abs(x - p.wire) <= TOL for x in vals)
         else:
             ok = isinstance(v, float) and abs(v - expected[s]) <= TOL
         mismatches += not ok
@@ -298,9 +301,8 @@ def _diff(plan, preset):
         if bypass and len(bypass) > plan.row and len(bypass[plan.row]) > b.col:
             have = [bool(x) for x in bypass[plan.row][b.col][:8]]
         if have is None or len(have) < 8:
-            if any(want):
-                mismatches += 1
-                problems.append(f"column {b.col}: bypass flags missing from the read-back")
+            mismatches += 1  # G6: the unit reports eight flags for every grid position
+            problems.append(f"column {b.col}: bypass flags missing from the read-back")
         elif have != want:
             mismatches += 1
             problems.append(f"column {b.col}: bypass reads {have}, expected {want}")
@@ -405,6 +407,11 @@ class _Push:
                            "nothing was written.", firmware=self.fw)
         return None
 
+    def still_open(self) -> bool:
+        cur = self.dev.setlist_position() or {}
+        return (cur.get("folder_key") == SETLIST_KEY and cur.get("position") == self.pos
+                and not cur.get("is_factory"))
+
     def build(self):
         """The writes, into the live edit buffer of the empty, open slot."""
         dev, plan, ctx = self.dev, self.plan, self.ctx
@@ -413,6 +420,10 @@ class _Push:
         ctx.sleep(PACE_S)
         for b in plan.blocks:
             _check_alive(ctx)
+            if not self.still_open():
+                return failed("device_error", f"Another preset was selected on the unit during the build, so the "
+                              f"bridge stopped. Nothing was saved; re-select {self.slot} or another preset to "
+                              "discard the partial edits.", firmware=self.fw, push=self.result)
             if not dev.add_block(plan.row, b.col, b.model_id):
                 return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
                               "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
@@ -458,10 +469,19 @@ class _Push:
             out.message = f"The unit changed while the preset was being built; nothing was saved. {out.message}"
             out.push = self.result
             return out
+        back = dev.read_current_preset()  # the listing takes ~15 s: the grid must still be the verified one
+        _check_alive(ctx)
+        if back is None or _diff(self.plan, back)[0]:
+            return failed("readback_mismatch", "The grid changed after it was verified (edited on the unit?). "
+                          "Nothing was saved; re-select the slot to discard the edits.",
+                          firmware=self.fw, push=self.result)
         dev.save_to_slot(pos, name)
         self.saved = True
         self.result["listed"] = False
-        ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
+        try:
+            ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
+        except OSError as e:  # the save happened; a local ledger problem mustn't turn it into a failure
+            log.error("could not record the owned slot %s: %s", slot, e)
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)

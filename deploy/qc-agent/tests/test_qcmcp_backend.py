@@ -252,9 +252,28 @@ class Guard(Base):
                 p.index, p.scene_mode = idx, True
             return build
         self.raw_grid(assign(1))       # DAMPING: a real parameter, not the bypass control
+        self.raw_grid(assign(6))       # nothing armed yet: the unit's own count hasn't been read
+        self.dev._guard.allow_bypass_index(4, 6)   # what set_block_bypass arms from the unit's read
+        self.raw_grid(assign(5))
+        self.raw_grid(assign(7))
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
-        assign(6)(g)                   # one past the Spring's listed params: the bypass control
+        assign(6)(g)
         self.qc.send("Grid", g)
+
+    def test_values_and_flags_must_be_the_plans(self):
+        self.dev.begin_push(152, "x", self.plan)
+        self.refused(self.qc.set_param, 0, 0, 1, 0.31)  # TREBLE is 0.3 in the plan
+        self.qc.set_param(0, 0, 1, 0.3)
+        self.dev._guard._push["flags"][4] = {False}     # a plan where the Spring is never bypassed
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        b = g.preset.bypass.add()
+        cb = b.colBypass.add()
+        cb.column = 4
+        cb.sceneBypass.add().bypass = True
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            self.qc.send("Grid", g)
+        self.assertEqual(len(self.hid.received), n)
 
     def test_save_only_to_the_armed_slot(self):
         self.dev.begin_push(152, "Texas Blues", self.plan)
@@ -273,6 +292,16 @@ class Guard(Base):
         self.dev.begin_push(152, "Texas Blues", self.plan)
         with self.assertRaises(DeviceError):
             self.dev.save_to_slot(153, "Texas Blues")
+
+    def test_save_authorisation_is_single_use_and_ends_with_the_push(self):
+        self.dev.begin_push(152, "Texas Blues", self.plan)
+        self.dev.save_to_slot(152, "Texas Blues")
+        with self.assertRaises(DeviceError):
+            self.dev.save_to_slot(152, "Texas Blues")
+        self.dev.begin_push(152, "Texas Blues", self.plan)
+        self.dev.end_push()
+        with self.assertRaises(DeviceError):
+            self.dev.save_to_slot(152, "Texas Blues")
 
     def test_end_push_disarms(self):
         self.dev.begin_push(152, "x", self.plan)

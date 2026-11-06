@@ -146,7 +146,9 @@ def main():
 
     slots = ask("Slots the bridge may create presets in (1A-32H = all; or e.g. 20A-25H,30A)", DEFAULT_SLOTS,
                 check=lambda v: bool(SLOTS_RE.fullmatch(v.upper())), error="use ranges like 20A-25H").upper()
-    firmware = ask("Expected Quad Cortex firmware", DEFAULT_FIRMWARE)
+    firmware = ask("Expected Quad Cortex firmware", DEFAULT_FIRMWARE,
+                   check=lambda v: bool(re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v)),
+                   error="use the exact three-part version the unit reports, e.g. 4.1.0")
     idle = ask("Idle minutes before the bridge exits", DEFAULT_IDLE_MINUTES,
                check=lambda v: v.isdigit() and 1 <= int(v) <= 240, error="a number of minutes, 1-240")
 

@@ -80,7 +80,7 @@ def build_lnk(target: str, arguments: str, working_dir: str, description: str = 
         strings += _string_data(icon)
 
     # EnvironmentVariableDataBlock (2.5.4): 260-byte ANSI + 520-byte Unicode target.
-    if len(target) >= 260:
+    if len(target.encode("utf-16-le")) // 2 >= 260:  # UTF-16 code units, as the block stores them
         raise ValueError("target path is too long for a shortcut")
     ansi = target.encode("ascii", "replace")[:259].ljust(260, b"\x00")
     uni = target.encode("utf-16-le").ljust(520, b"\x00")
@@ -145,6 +145,18 @@ def agent_dir() -> Path:
     return Path(__file__).resolve().parents[1]
 
 
+ARGUMENTS = "-E -s -m qc_agent run"
+
+
+def _is_ours(path: Path) -> bool:
+    """Written by install-shortcut for this checkout: exactly our arguments and working folder."""
+    try:
+        info = parse_lnk(path.read_bytes())
+    except (OSError, ValueError, struct.error, IndexError, UnicodeDecodeError):
+        return False
+    return info.get("arguments") == ARGUMENTS and info.get("working_dir") == str(agent_dir())
+
+
 def install(python_exe: str | None = None, desktop: Path | None = None) -> Path:
     # python.exe, not pythonw.exe: the console window is the bridge's UI, and closing it stops the bridge.
     # No resolve(): a venv's python.exe may be a link to the base interpreter, and the venv path is what counts.
@@ -153,7 +165,9 @@ def install(python_exe: str | None = None, desktop: Path | None = None) -> Path:
         raise RuntimeError("run install-shortcut with the bridge's venv python "
                            "(e.g. %LOCALAPPDATA%\\qc-agent\\venv\\Scripts\\python.exe), not the system one")
     path = (desktop or desktop_dir()) / SHORTCUT_NAME
-    data = build_lnk(exe, "-E -s -m qc_agent run", str(agent_dir()), DESCRIPTION)
+    if path.exists() and not _is_ours(path):
+        raise RuntimeError(f"{path} already exists and isn't the QC bridge's; leaving it alone")
+    data = build_lnk(exe, ARGUMENTS, str(agent_dir()), DESCRIPTION)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".lnk.tmp")
     tmp.write_bytes(data)
@@ -165,11 +179,7 @@ def uninstall(desktop: Path | None = None) -> Path | None:
     path = (desktop or desktop_dir()) / SHORTCUT_NAME
     if not path.exists():
         return None
-    try:
-        info = parse_lnk(path.read_bytes())
-    except (ValueError, struct.error, IndexError):
-        raise RuntimeError(f"{path} exists but wasn't written by install-shortcut; leaving it alone") from None
-    if "-m qc_agent run" not in info.get("arguments", ""):
-        raise RuntimeError(f"{path} doesn't start the QC bridge; leaving it alone")
+    if not _is_ours(path):
+        raise RuntimeError(f"{path} wasn't written by install-shortcut for this folder; leaving it alone")
     path.unlink()
     return path

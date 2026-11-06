@@ -68,6 +68,15 @@ class Strict(unittest.TestCase):
         self.bad("QC_AGENT_IDLE_MINUTES", QC_AGENT_IDLE_MINUTES="0")
         self.bad("QC_AGENT_IDLE_MINUTES", QC_AGENT_IDLE_MINUTES="241")
 
+    def test_malformed_next_key_is_named(self):
+        msg = self.bad("DEVICE_JOB_KEY_NEXT must be exactly 64 hex characters", DEVICE_JOB_KEY_NEXT="zz")
+        self.assertNotIn("zz", msg)
+
+    def test_unreadable_file_is_a_config_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(cfg.ConfigError, "cannot read"):
+                cfg.load(Path(d))  # a directory: open() fails with an OSError other than FileNotFoundError
+
     def test_errors_never_echo_secrets(self):
         secret = "f" * 63 + "g"
         msg = self.bad("DEVICE_JOB_KEY", DEVICE_JOB_KEY=secret)

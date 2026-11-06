@@ -128,10 +128,9 @@ class Agent:
             self.write_heartbeat()
 
     def kick_heartbeat(self):
-        if self._hb_thread is None:
-            self.write_heartbeat()
-        else:
-            self._hb_wake.set()
+        """A state change: written now, from the caller's thread, so no transition is coalesced away
+        (the lock serialises it with the periodic writer)."""
+        self.write_heartbeat()
 
     def result_payload(self, job_id, kind, outcome, started, finished):
         msg = outcome.message[:500]
@@ -204,15 +203,10 @@ class Agent:
                 "It is not retried. For a push, check the slot on the unit before sending again."), at)
         # Results whose upload was never confirmed. One whose upload the ledger records is not re-checked:
         # a bucket-token holder deleting it later is the "delete objects" power contract 15 already concedes.
+        # Even if a done object is there (a crash after the PUT, or someone else's object), the stored,
+        # signed bytes are the record: publish them again, never a newly minted result.
         for job_id in self.ledger.not_uploaded():
-            e = self.ledger.finished[job_id]
-            key = contract.done_key(job_id)
-            try:
-                if self.store.exists(key):
-                    continue
-            except StoreError as err:
-                log.warning("could not check %s: %s", key, err)
-            self._publish(job_id, e["result"].encode("ascii"))  # the stored bytes, never a new result
+            self._publish(job_id, self.ledger.finished[job_id]["result"].encode("ascii"))
 
     def retry_uploads(self):
         for job_id, data in list(self._unuploaded.items()):
@@ -271,6 +265,8 @@ class Agent:
         except contract.Reject as r:
             if r.outcome == "expired":
                 self.handle_expired(r.job, key)
+            elif r.outcome == "replay" and contract.PENDING_RE.fullmatch(key).group(1) in self._unuploaded:
+                pass  # our result for it isn't uploaded yet; _publish deletes the pending object afterwards
             elif r.outcome in DELETE_OUTCOMES:
                 hint = (" (DEVICE_JOB_KEY on this PC differs from QC-2's: update agent.env)"
                         if r.outcome == "unknown_kid" else "")

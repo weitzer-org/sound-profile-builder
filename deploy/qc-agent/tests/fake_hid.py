@@ -77,8 +77,10 @@ class FakeHID:
             self._rx.extend((r[0], r) for r in reports)
 
     def _n_params(self, col):
-        b = self.grid[col]
-        return max(list(b["params"]) + [0]) + 2
+        # Fixed per model, like the unit (G1: N = the full list + 1); not derived from what was written.
+        from helpers import catalog
+        m = catalog().models.get(self.grid[col]["hash"])
+        return (max(m["params_by_index"]) if m else 0) + 2
 
     def _handle(self, name, m):
         A = P.ACTION

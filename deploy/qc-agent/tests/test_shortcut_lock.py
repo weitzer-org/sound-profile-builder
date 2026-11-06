@@ -55,12 +55,31 @@ class Lnk(unittest.TestCase):
             self.assertIsNone(shortcut.uninstall(desktop=desk))
 
     def test_uninstall_leaves_foreign_shortcuts(self):
+        for args, wd in (("-m something_else", str(AGENT_DIR)), ("-E -s -m qc_agent runner", str(AGENT_DIR)),
+                         (shortcut.ARGUMENTS, WD)):  # another checkout's shortcut is not ours either
+            with self.subTest(args=args, wd=wd), tempfile.TemporaryDirectory() as d:
+                p = Path(d) / shortcut.SHORTCUT_NAME
+                p.write_bytes(shortcut.build_lnk(EXE, args, wd))
+                with self.assertRaises(RuntimeError):
+                    shortcut.uninstall(desktop=Path(d))
+                self.assertTrue(p.exists())
+
+    def test_install_never_replaces_a_foreign_shortcut(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / shortcut.SHORTCUT_NAME
-            p.write_bytes(shortcut.build_lnk(EXE, "-m something_else", WD))
+            p.write_bytes(b"not ours")
             with self.assertRaises(RuntimeError):
-                shortcut.uninstall(desktop=Path(d))
-            self.assertTrue(p.exists())
+                shortcut.install(python_exe=EXE, desktop=Path(d))
+            self.assertEqual(p.read_bytes(), b"not ours")
+            p.unlink()
+            shortcut.install(python_exe=EXE, desktop=Path(d))
+            shortcut.install(python_exe=EXE, desktop=Path(d))  # our own: replaced in place
+
+    def test_utf16_length_is_what_counts(self):
+        emoji_path = "C:\\" + "\U0001F3B8" * 129 + "\\p.exe"  # < 260 characters, > 260 UTF-16 units
+        self.assertLess(len(emoji_path), 260)
+        with self.assertRaises(ValueError):
+            shortcut.build_lnk(emoji_path, "x", WD)
 
     def test_no_scheduler_service_or_powershell(self):
         # The agent never shells out (so no schtasks/PowerShell/sc.exe), and never writes autostart entries.

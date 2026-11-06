@@ -50,14 +50,19 @@ def _read_lines(path: Path) -> list[dict]:
             n += 1
             obj = _parse(line)
             if bad_at is not None:
-                if obj != TORN:
-                    break
-                bad_at = None
+                if obj == TORN:
+                    bad_at = None
+                    continue
+                if obj is not None:
+                    break  # a good entry after a bad one: corruption, not a torn tail
+                continue   # more bad lines: still a tail (a crash while marking a torn line)
             if obj is None:
                 bad_at = n
             elif obj != TORN:
                 out.append(obj)
-    if bad_at is not None and bad_at != n:
+        else:
+            return out  # reached the end: any bad lines left are a torn tail
+    if bad_at is not None:
         raise LedgerError(f"{path}: entry {bad_at} is corrupt; fix or move it aside by hand "
                           "(the agent never rewrites this file)")
     return out

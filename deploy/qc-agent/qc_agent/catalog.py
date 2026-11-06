@@ -35,7 +35,8 @@ class Catalog:
     @classmethod
     def load(cls, path: Path = DEFAULT_PATH) -> "Catalog":
         try:
-            raw = path.read_bytes()
+            with open(path, "rb") as f:
+                raw = f.read(MAX_CATALOG_BYTES + 1)
         except OSError as e:
             raise CatalogError(f"cannot read the device catalog at {path}: {e}") from None
         if len(raw) > MAX_CATALOG_BYTES:
