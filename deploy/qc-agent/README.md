@@ -213,6 +213,17 @@ them; this guide uses **24H**).
       before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
       delete the preset.
 
+15. **Faders (P2d; normal use, no extra session).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone faders)
+    is pushed with a **linear display-to-wire guess** that nobody has read on the unit: the dry run marks it † and
+    the export labels it `encoding:fader-linear-guess`. It is **UNVERIFIED** until you do this:
+    - Dry-run and push, into an empty slot, a preset with a **Graphic-9 (or Plugin Graphic-9) block whose 65Hz band is
+      +6 dB** (use LPF on the block so the name resolves to the fader model) and a **CA John's 2C Ch1 block whose 80 Hz
+      fader is 8**, both off default.
+    - Expect `succeeded` and `mismatches 0`. Then read both on the unit's screen: the band should show **+6.0 dB** and
+      the CA John's fader **8.0**. Check one more band at a negative value (for example -6 dB) if you like.
+    - Phone: `read_device_preset(import=true)`; the imported values should agree with the dry run.
+    - If a screen value differs, send a photo. The linear rule is then wrong for that fader type; the label stays a guess.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.

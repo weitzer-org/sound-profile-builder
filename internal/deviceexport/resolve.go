@@ -564,7 +564,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if catalog.DiscreteParamTypes[cp.Type] {
 		return discrete(lp, vals)
 	}
-	if cp.Type != "float" {
+	if cp.Type != "float" && cp.Type != "fader" {
 		return Param{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
 	}
 	var disp [2]float64
@@ -578,7 +578,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if cp.Default != nil && sameValue(disp[0], *cp.Default) && sameValue(disp[1], *cp.Default) {
 		return Param{}, true, ""
 	}
-	evidence, why := taperEvidence(cp)
+	evidence, why := paramEvidence(cp)
 	if why != "" {
 		return Param{}, false, why
 	}
@@ -599,6 +599,30 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 		p.Wire[s] = wire[sceneIndex(s)]
 	}
 	return p, false, ""
+}
+
+// FaderEvidence labels a fader converted like a float on its catalog range (owner decision,
+// 2026-11-06): wire = ((display - min) / (max - min)) ^ skew, linear when the catalog has no
+// skew. A GUESS: qc-mcp's to_norm treats a fader like a float, but no one has read a fader
+// on the unit (plan 4.1, 8.1). Never counts as confirmed, so the dry run marks it with a dagger.
+const FaderEvidence = "encoding:fader-linear-guess"
+
+// paramEvidence is taperEvidence for a float, and for a fader the same labels behind
+// FaderEvidence. A fader without a skew of its own gets no taper label: "taper:g4" would
+// say the unit measured a fader's taper, and it measured none.
+func paramEvidence(p catalog.Param) ([]string, string) {
+	ev, why := taperEvidence(p)
+	if why != "" || p.Type != "fader" {
+		return ev, why
+	}
+	out := []string{FaderEvidence}
+	for _, e := range ev {
+		if strings.HasPrefix(e, "taper:") && p.Skew == nil && p.SkewSymbol == "" {
+			continue
+		}
+		out = append(out, e)
+	}
+	return out, ""
 }
 
 // taperEvidence says what a float parameter's display-to-wire mapping rests on (plan 4.1),
@@ -747,7 +771,8 @@ func isCentre(v string) bool {
 
 // linearSwitchTypes are the discrete types written with qc-mcp's position encoding,
 // wire = (value - min) / (max - min), where value = min + position (plan 4.1). Combo boxes
-// (and faders) have no such data and are only taken at their default.
+// have no such data and are only taken at their default. Faders are not discrete: param
+// converts them like floats (FaderEvidence).
 var linearSwitchTypes = map[string]bool{"switch": true, "rotarySwitch": true, "toggleButton": true}
 
 // discrete handles switches, rotary switches, toggles and combo boxes. A value equal to the
