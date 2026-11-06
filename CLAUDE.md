@@ -194,7 +194,7 @@ this app's MCP connector. Read these before any device work:
 - `internal/devicelib` — what QC-2 knows about the unit's contents (plan P4b): the capture list a `sync_device_library` job
   returned (`device/library.json` in the main bucket, through `storage.Client`), a reviewed alias table
   (`capture_aliases.json`, empty until the first real sync), and the per-cab mic strings seen in `read_device_preset`
-  results (`device/cab_mics.json`). `send_preset_to_device`'s dry run resolves each capture against the list with the
+  results (`device/cab_mics.json`). Also `device/slots.json`: which slots the most recent succeeded `list_slots` job showed occupied (no names). The dry run only warns from it (`slot_listing_note`), never blocks: it can be stale and the bridge decides. `send_preset_to_device`'s dry run resolves each capture against the list with the
   agent's own rules (exact name, then one reviewed alias, never fuzzy; not listed = unresolved, "not on your unit"); a seen
   mic is written exactly as the export's `mics`. All of it is device text: `devicejobs.ParseLibraryPayload` is strict,
   names must survive `SanitizeText` unchanged, and the agent still re-resolves captures on the unit at push time. With no

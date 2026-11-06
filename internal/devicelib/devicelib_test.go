@@ -293,3 +293,24 @@ func TestAddMics_StoredFileWithoutCabsDoesNotPanic(t *testing.T) {
 		t.Fatalf("n %d err %v", n, err)
 	}
 }
+
+func TestSlotListing(t *testing.T) {
+	name := "x"
+	l := NewSlotListing(&devicejobs.SlotsResult{Slots: []devicejobs.SlotInfo{
+		{Slot: "20b", State: "occupied", Name: &name}, {Slot: "20A", State: "empty"},
+		{Slot: "bogus", State: "occupied"}, {Slot: "1A", State: "occupied"}, {Slot: "20B", State: "occupied"},
+	}}, "job", "2026-11-06T12:00:00Z")
+	if got := strings.Join(l.Occupied, ","); got != "1A,20B" {
+		t.Fatalf("occupied = %q", got)
+	}
+	if !l.IsOccupied("20B") || l.IsOccupied("20A") {
+		t.Fatal("IsOccupied")
+	}
+	if err := l.validate(); err != nil {
+		t.Fatal(err)
+	}
+	l.Occupied = []string{"nope"}
+	if l.validate() == nil {
+		t.Fatal("a malformed slot must be rejected")
+	}
+}
