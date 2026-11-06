@@ -14,7 +14,7 @@ from qc_agent.vendor_pins import COMMIT
 ENV = f"""QC_AGENT_R2_ENDPOINT=https://abc.r2.cloudflarestorage.com
 QC_AGENT_R2_BUCKET=sound-profile-builder-device-jobs
 QC_AGENT_R2_ACCESS_KEY_ID=AKID
-QC_AGENT_R2_SECRET_ACCESS_KEY=s3cr3t-value
+QC_AGENT_R2_SECRET_ACCESS_KEY=TEST-SECRET-NOT-REAL-7f3a
 DEVICE_JOB_KEY={KEY_HEX}
 QC_AGENT_ALLOWED_SLOTS=1A-32H
 QC_AGENT_EXPECTED_FIRMWARE=4.1.0
@@ -58,7 +58,7 @@ class Main(unittest.TestCase):
         code, out = run(["check", "--home", str(self.home)])
         self.assertEqual(code, 0, out)
         self.assertIn("all checks passed", out)
-        self.assertNotIn("s3cr3t-value", out)
+        self.assertNotIn("TEST-SECRET-NOT-REAL-7f3a", out)
         self.assertNotIn(KEY_HEX, out)
 
     def test_run_refuses_bad_config(self):
