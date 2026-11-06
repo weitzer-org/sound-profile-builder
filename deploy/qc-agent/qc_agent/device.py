@@ -97,8 +97,9 @@ class DeviceBackend(ABC):
     # -- writes (only during a push, only into the verified-empty open slot) --
 
     @abstractmethod
-    def begin_push(self, position: int, name: str, plan) -> None:
-        """Arm the writes for this one plan; anything else stays refused."""
+    def begin_push(self, position: int, name: str, plan, folder_key: str = SETLIST_KEY) -> None:
+        """Arm the writes for this one plan; anything else stays refused. folder_key is the preset
+        folder (collection) open on the unit that the final save goes into."""
 
     @abstractmethod
     def end_push(self) -> None:
@@ -149,4 +150,4 @@ class DeviceBackend(ABC):
 
     @abstractmethod
     def save_to_slot(self, position: int, name: str) -> None:
-        """File CREATE of the live grid into My Presets at position (never RecallPreset SAVE)."""
+        """File CREATE of the live grid into the armed folder at position (never RecallPreset SAVE)."""
