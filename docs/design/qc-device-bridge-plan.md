@@ -125,10 +125,11 @@ The device capability is exposed as **a few intent-level tools**, not 60 low-lev
 | `get_device_job` | v1 | — | Read-only. The job's state and result: diff against the plan, read-back, CPU load. |
 | `read_device_preset` | v1 | `get_current_preset`, `current_preset_position`, `recall_preset` (read path) | Read-only by default. Reads the current preset, or a named slot. Recalling a slot changes what's live, but stored presets are untouched. With `import=true`, it stores the result as a QC-2 **draft**, for refine-from-device and evals. |
 | `list_device_slots` | v1 | `list_empty_slots`, `directory_summary`, `search_directory` | Read-only. Empty slots and occupied names in My Presets. |
-| `sync_device_library` | v2 | `directory_summary`, `search_directory`, `list_favorites` | Uploads the unit's **capture, IR and preset names** to QC-2. The pipeline can then prefer captures the owner actually has; today `user_captures.json` is hand-maintained. This text is device-sourced and untrusted (section 6). |
+| `sync_device_library` | **v1 (P4b)** | `directory_summary`, `search_directory` | A read-only agent job that uploads the unit's **capture names, keys, V1/V2 and kind** (IR and preset names later) to QC-2. The dry run then confirms a capture is on the unit before a push, and the pipeline can prefer captures the owner actually has (today `user_captures.json` is hand-maintained). Device-sourced and untrusted (section 6). Moved up from v2 because captures are core to the owner's presets (section 4.2). |
 | `audition_on_device` | v2 | `recall_preset`, `switch_scene` | Recalls a slot this system created, or switches its scene. |
 | `send_preset_to_device` overwrite | v2 | `save_preset` | Re-push into a slot **this system created**, tracked in the jobs bucket. Never into other slots. |
-| Scene labels, stomps, captures/IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_capture`, `add_ir` | Captures and IRs only if already on the unit (`sync_device_library`). |
+| **Captures on push** | **v1 (P2b + P4)** | `add_capture` (`transport.set_capture`) | Captures already on the unit (factory, or downloaded from Cortex Cloud). Section 4.2. |
+| Scene labels, stomps, IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_ir` | IRs only if already on the unit. |
 | Level report | v3, maybe | `measure_preset`, `suggest_levels` | **Report-only.** Needs audio loopback through the unit's USB 5/6 channels (qc-mcp `audio_io.py`). This is the measured counterpart to the FOH Optimizer's predictions. |
 | **Never** | — | `set_io_port`, `set_global_eq`, `load_settings_preset`, `set_master_volume`, `switch_mode`, `set_mode_cycle`, `delete_device_preset`, `save_device_preset`, `clear_grid`, `level_*` (writing), `sample_stop` (arbitrary file path), raw transport | These are global, destructive, or outside the product's job. |
 
@@ -177,14 +178,44 @@ The output is one guitar's chain as exact device operations:
 - **Scenes.** `Value` is Scene A and `ValueB` (or `Value` when empty) is Scene B. Scenes C-H take Scene A's value. **G6 measured that the device does not copy A into C-H** (unwritten scenes keep the parameter's earlier value), so the export carries all eight scene values for every written parameter and all eight bypass flags for every block; the agent never relies on the device to fill a scene. `scene_mode` is set when A and B differ.
 - **Bypass.** A block's `Bypass` parameter: `On` = bypassed, `Off` = active (Architect v4-v6, Rule 13); anything else is refused. A preset with no `basis` field anywhere predates that rule (v4 added both together), so its `Bypass` values are refused with "refine it to push it". No `Bypass` parameter = active in all eight scenes. The dry-run table shows the state as Active/Bypassed.
 - **Grid.** Row 0, columns in chain order, in 1 and out 19 (G3 read this routing back). **More than 8 grid blocks is refused** in v1; blocks past the eighth are not mapped. A refused block keeps its column (the gap stays visible). Splits and parallel paths come in v2.
-- **Captures and IRs** are `unresolved` in v1.
+- **Captures and IRs** were `unresolved` in P2. Captures move into v1 with P2b, P4 and P4b (section 4.2); IRs stay v2.
 - **A push needs zero unresolved items** (`devicejobs.Bridge`: no confirm token otherwise, and the confirm re-exports). A dry run, `get_preset(format=device)` and the UI's "Download device JSON" link all show the full list, so the user can refine first.
 
-**What would unlock more** (all measurements on the unit, recorded in section 7 and then in `internal/catalog/firmware_constants.go`):
-- **G4b**, screen readings: one or two points per unconfirmed skew (0.6 first: 241 controls, mostly delay/reverb times and filters; then 4.93 for cab OUTPUT VOLUME) and per pyquadcortex bound pair (EQ dB, EQ frequency, mixer, FX loop, tempo), plus one `LOG_SKEW` control (Envelope Filter FREQ).
-- **G7**, switch and combo wire values: set a few switches and a combo box by hand (Spring TRAILS, Slapback SYNC NOTE, Low-High Cut slope), dump them with `g1_dump_params.py` to learn how positions map to wire values, then one write check. The same dump of a cab with a hand-picked mic would show the IR-name strings needed to write `Mic 1`/`Mic 2`.
-- **G1b**: one read-back per other clone base (a stereo cab on 32000, a cloned reverb on 8010/8015).
-- Pan and unitless 0..1 display scales: one screen reading each.
+### 4.1 Revision after P2: no more manual device sessions (owner, 2026-11-06)
+
+P2 shipped strict: anything not confirmed by a Phase 0 reading was refused. Across all 28 guitar chains of the 14 v6 eval presets that left **none** pushable, and no chain was blocked by a single reason. The owner prefers no further hand-run measurement sessions (the G4b, G7 and G1b proposed in P2 are **dropped**), so P2b switches from "confirmed on the unit" to "**from the device's own data or a named third-party measurement, labelled, and checked in normal use**". Why that is acceptable:
+- **A mistake is cheap and visible.** The agent writes only into an empty slot and never overwrites. The worst case of a wrong mapping is a new preset whose control shows a different value than the dry run said. It shows on the unit's screen and the preset can be deleted.
+- **The data is not guessed.** Skew exponents come from the device's own `ModelRepo.xml`. G4 confirmed the formula `((v-min)/(max-min))^skew` at four exponents, below and above 1 (0.3, 1, 3.8018, 4.9594844); that it holds for the other exponents is an inference, labelled as one. The pyquadcortex bounds are a third party's measurements on CorOS 4.0.1.
+- **The check moves into P6**, the owner's first real pushes from the phone. That is normal use, not a separate session: compare the screen with the dry-run table. P5's read-back makes the comparison automatic for wire values (not for screen display).
+
+P2b rules (changing section 4):
+| Item | P2 | P2b | Evidence label carried in the export |
+|---|---|---|---|
+| Numeric skews other than the four measured (0.6, 4.93, 0.5, ...) | refused | **allowed** | `taper: "device-xml"` (vs `"g4"`) |
+| `LOG_SKEW` (16 controls) | refused | **allowed** with pyquadcortex's 0.3 | `taper: "pyquadcortex"` |
+| pyquadcortex bounds (EQ dB, EQ freq, mixer, FX loop, tempo) | refused | **allowed** | `bounds: "pyquadcortex-4.0.1"` |
+| `MIN/MAX_INPUT_TRIM` | refused | **still refused**: no data exists at all | — |
+| Switches, rotary switches, toggles (named or numbered positions) | refused unless default | **allowed**: wire = (position - min) / (max - min), the convention qc-mcp's `catalog.to_norm` uses on these units | `encoding: "qc-mcp-linear"` |
+| Combo boxes, faders, `floatWithLed` | refused | still refused unless at default (too few to matter: none blocked an eval chain) | — |
+| Cab `Mic 1`/`Mic 2` equal to the cab's default mic (the XML's default IR-name string, e.g. `ME_110 US PRN C10R_Dynamic 57`; "Dyn 57" matches "Dynamic 57") | refused | **accepted as at-default**, not written | — |
+| Cab `Mic 1`/`Mic 2` set to another mic | refused | still refused: which mics each cab offers is not in `ModelRepo.xml` | — |
+| Clones of bases other than 12000 | refused | still refused: a wrong index writes the wrong control, and the expansion rule for those bases is untested. The mono cabs (base 12000) cover the family resolution path | — |
+| Pans and unitless 0..1 controls | refused | still refused: the problem is the preset's text (the Architect is told "scale unknown"), not the device. Fix on the pipeline side later by showing the Architect the catalog range | — |
+
+The importer keeps the default IR-name string (`default_string`) for the mic rule; nothing else in the catalog changes.
+
+**Is any manual device work still justified?** Only one item would need it: non-default cab mics. Their names follow the pattern `ME_<cab>_<mic>` (seen at G1 and in all 82 XML defaults), but which mics each cab offers is unknown, and a wrong name could leave the cab without an IR. That is not worth a session. In the eval presets Mic 1 is "Dyn 57"/"Dynamic 57" in 22 of 28 cab blocks, and Dynamic 57 is the XML default Mic 1 (41 of 41 cab defaults), so most of them become at-default. That they match each chosen cab's own default is an inference: P2b's census will show the real count. A different mic is a refinement the user can make on the unit. If this changes, one read-only dump of a cab with a hand-picked mic would answer it.
+
+### 4.2 Captures on push (P2b + P4 + P4b)
+
+Captures are central to the owner's presets. 18 of the 28 eval chains use at least one: half of the amps (14 of 28) and 12 drive or pedal blocks (2026-11-06 count over the v6 eval set). qc-mcp already places them, and **none of this needs manual device work.** Everything below comes from qc-mcp's `DIRECTORY.md` and `transport.set_capture` at f634ecd. qc-mcp reports it verified live (`add_capture` loaded "CA John's 2"); **it has not been run on the owner's unit**.
+- **How the device binds a capture.** A Neural Capture block is model **14000 (V1) or 14001 (V2)**. Params 0-4 are GAIN, BASS, MID, TREBLE, VOLUME: plain linear dB controls (-24..24, -6..6, -6..6, -6..6, -24..24), so they convert under the existing rules. Param 5, `file_name`, is a string: the capture's 64-hex key followed by its display name. A capture must go into the block type of its version (V1 or V2). The preset file also lists the capture as a dependency (`factory_dependencies` by hash, or `product_dependencies` with name and cloud id for downloaded captures).
+- **Where the key comes from.** The capture must already be on the unit. Its key, version, kind (amp, combo, pedal, ...) and folder come from a directory read (`File` READ, type 2). That is a read the agent already makes for slots. QC-2 never invents a key.
+- **P2b, QC-2 side.** A capture block exports as `{"capture": {"name": "<as in the preset>", "source": "factory|user"}, "params": [...]}`, with GAIN/BASS/MID/TREBLE/VOLUME converted like any linear float and all eight scenes written. Its relative-dB values (Rule 9) are already in the block's own dB ranges. The export doesn't know the key or V1/V2; it marks the capture `resolved_on_unit: false` until P4b's library sync gives QC-2 the unit's list. With a synced list, the dry run resolves the name to `{key, version}` exactly and lists a capture that isn't on the unit as unresolved ("not on your unit: download it in Cortex Control").
+- **P4, agent side.** Before building, the agent reads the capture directory fresh and resolves every capture by key (or by exact name when the export has no key). A capture that's missing, or that matches more than one entry, fails the job without writing. It places 14000 or 14001 to match the version, writes `file_name` with the transport's typed string write, writes the five params per scene, and makes sure the saved preset carries the dependency entry. Whether `write_preset_file` adds dependencies by itself is **not established**: P4 reads qc-mcp's save path and adds them if it doesn't. A cloud capture that isn't downloaded is never fetched: the agent sends no `ProductForward`.
+- **Name matching.** `coros_map.json` names factory captures by their QC names ("CA John's", "Brit 2203 87"), and qc-mcp's example capture is "CA John's 2". Whether a " 2" suffix marks the V2 copy of the same capture is **unverified**. So matching is exact against the synced list, plus a reviewed alias table filled from the first sync, never fuzzy at push time.
+- **P4b, `sync_device_library`.** A read-only job that writes the unit's capture list (name, key, V1/V2, kind, instrument, folder) to QC-2. The names are untrusted: bounded, stripped and passed through `cell()`. It feeds the dry run's resolution and, later, the Librarian, so generation prefers captures the owner actually has.
+- **Checked in P6:** push one factory and one downloaded capture from the phone, and see that the unit loads them in the right block type.
 
 ## 5. The home agent
 
@@ -356,11 +387,13 @@ Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-co
 | **P0-a** | Phase 0 spike scripts under `tools/device-spikes/`, built on qc-mcp's transport in library mode (the trial's `qc-trial\qc-mcp` clone at `f634ecd` is fine for spikes): G1 read-back dump, G2 shortcut-start and disconnect checks, G3/G4/G6 checks. Results written up in this doc. | **yes** (owner runs) | low; read-mostly, one write to an empty slot | Manual. Outputs pasted into the PR. | — |
 | **P1** | Catalog: import `skew`; `firmware_constants.go` with the symbolic-bound values. These are data points taken from pyquadcortex's published measurements, with MIT attribution and no pyquadcortex code, and are confirmed on the owner's unit by G4. `Param.ToWire` / `ToDisplay` that refuse rather than clamp; **clone fix if G1 requires it**; re-import `qc_catalog.json` (`-diff` reviewed). | no | low–medium; the catalog feeds the pipeline | Golden vectors: G4's on-device readings, plus qc-mcp's measured points (Gain LEVEL 0 dB at 0.5, mixer −40..+12). Every symbolic bound resolved or listed as unmeasured. `go test ./...` plus the e2e suite. | G1, G4 |
 | **P2** | Device export: `internal/deviceexport` (section 4), plus `get_preset(format=device)` on MCP and a "Download device JSON" link. | no | medium; mapping rules | Golden exports for 3 eval presets. Round-trip display → wire → display. Every id and index exists. Refusal cases. | P1, PR #120 |
+| **P2b** | Section 4.1's rule changes (device-XML skews, `LOG_SKEW` and pyquadcortex bounds labelled; switches via qc-mcp's linear position encoding; default cab mics as at-default; importer keeps `default_string`) and capture blocks in the export (section 4.2). Plus the Architect-side fix so pans and 0..1 controls are written on the catalog's scale. | no | medium; changes what a push writes | Goldens regenerated and reviewed; a census of how many eval chains become pushable; refusal tests for what stays refused; capture block export tests. | P2 |
 | **P3** | Job queue and tools: `internal/devicejobs` (job schema, HMAC sign/verify, jobs-bucket config `DEVICE_JOBS_BUCKET`, `DEVICE_JOB_KEY[_NEXT]`); MCP tools `device_status`, `send_preset_to_device` (dry run, then confirm token), `get_device_job`, `list_device_slots`, `read_device_preset`; server instructions and style guide updated. | no (fake agent in tests) | **high**: auth, storage, new attack surface | `httptest` MCP integration tests as in `internal/mcpserver/*_test.go`, with an in-memory store. Signature, expiry and replay tests. A golden dry-run. | P2, G5 |
-| **P4** | Home agent: `deploy/qc-agent/` (Python; vendored qc-mcp transport behind a `DeviceBackend` interface, plus the vendoring checksum test), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-shortcut` / `uninstall-shortcut` (desktop shortcut), single-instance lock, idle and disconnect exit, Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
+| **P4** | Home agent, including **capture placement** (section 4.2): `deploy/qc-agent/` (Python; vendored qc-mcp transport behind a `DeviceBackend` interface, plus the vendoring checksum test), allowlist, owned-slot ledger, heartbeat, hash-pinned lockfile, `install-shortcut` / `uninstall-shortcut` (desktop shortcut), single-instance lock, idle and disconnect exit, Windows setup guide. | build and tests no; acceptance **yes** | **high**: writes to hardware | Offline: a fake `DeviceBackend` that records calls, reusing the `tools/qc-mcp-trial` harness pattern. Every refusal path. A job-signature test vector shared with P3's Go tests. | P3, G2, G3 |
+| **P4b** | `sync_device_library`: a read-only job and MCP tool that upload the unit's capture list to QC-2, the dry run's capture resolution against it, and the reviewed alias table. Feeding the list to the Librarian is a follow-up. | read-only job | medium; untrusted device text | Fake-agent tests; hostile capture names; exact and alias resolution; a missing capture is unresolved. | P4 |
 | **P5** | Read-back import: device preset → `StructuredPreset` draft (inverse mapping, wire → display), so the phone can say "refine what's on my unit". | acceptance yes | medium | Round trip: push a preset, read it back, compare the two `StructuredPreset`s. | P4 |
 | **P6** | Hardware acceptance and runbook: the owner's end-to-end run from the phone, with failure drills (agent offline, slot occupied, wrong firmware, unplugged mid-job). | **yes** | — | A checklist in `docs/design/`. | P4, P5 |
-| v2 | `sync_device_library` (and feeding owned captures to the Librarian), `audition_on_device`, owned-slot re-push, scene labels and stomps, captures and IRs | mixed | medium | — | P6 |
+| v2 | Feeding owned captures to the Librarian, `audition_on_device`, owned-slot re-push, scene labels and stomps, IRs, non-default cab mics | mixed | medium | — | P6 |
 
 **Things to watch.**
 - P1 touches `internal/catalog`, which several in-flight PRs also touch. Land it with a rebase, not a merge-race.
@@ -377,12 +410,14 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 | P1 catalog import and conversion | **Sonnet 5.5**, main session | Well-scoped Go with golden tests. |
 | P2 export mapping **design**: name → index for dual-mic cabs, value parsing, grid rules | `planner` agent (**Opus**, high) before coding | The trickiest data rules; easy to get subtly wrong. |
 | P2 implementation | **Sonnet 5.5** | Implements the planner's rules. |
+| P2b rule changes and capture export | **Sonnet 5.5** | Small, well-specified changes to tested Go code; the decisions are already made (section 4.1). |
 | P3 design: job schema, HMAC, bucket permissions, tool UX | `planner` (**Opus**, high), then `opus-verifier` on the R2 and token premises (G5) | Auth and storage are the CLAUDE.md "large/risky" class. The plan rests on external-system premises. |
 | P3 implementation | **Opus 5.5**, main session | Security-sensitive. Fewer review rounds pays for the higher per-token cost. |
 | P3 review | `security-reviewer` (**Opus**) **and** `/security-review`; `/code-review high` with the effort level stated; GSR `deep-review` label | Required for auth, storage and LLM-content changes. |
 | P4 agent: device backend, allowlist, job loop | **Opus 5.5**, main session | Code that writes to the owner's hardware. Device quirks (write stalls, uncorrelated pushes, save echoes) reward the stronger model. |
 | P4 desktop-shortcut install and uninstall, Windows setup guide | **Sonnet 5.5** | Packaging and documentation. |
 | P4 review | `security-reviewer` (**Opus**) for credential and job handling; `reviewer` (**Sonnet**) for the rest | — |
+| P4b library sync | **Sonnet 5.5**, with `security-reviewer` (**Opus**) on the device-text handling | Read-only, but device text is untrusted. |
 | P5 read-back import | **Sonnet 5.5** | Inverse of P2's well-tested mapping. |
 | Running tests after every change | `test-runner` agent (**Haiku**) | Cheap. Keeps long logs out of the main context. |
 | "Where is X / how does Y flow" lookups | `scout` agent (**Haiku**) | Cheap codebase search. |
@@ -404,6 +439,8 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
    - an optional list of protected banks the bridge never touches.
 
    This changes the contract (a new job kind or args) and the agent's slot rule, so it needs a contract version bump.
+
+8. **Decided (2026-11-06): no more hand-run device measurement sessions.** Mappings come from the device's own data or named third-party measurements, labelled, and are checked during P6's normal use (section 4.1). **Captures are core to v1** (section 4.2).
 
 ## 11. Kickoff prompts for the implementation chats
 
@@ -450,6 +487,39 @@ If this chat runs in the cloud (claude.ai or the phone), not in Claude Code on t
 > - grid placement (row 0, at most 8 blocks).
 >
 > Then implement `internal/deviceexport`, add `get_preset(format=device)`, and wire it into P3's `send_preset_to_device` in place of the fixture. Use golden exports for three eval presets, test round trips, and require zero unresolved items for a push.
+
+**Chat 6: rule changes and captures in the export, P2b** (Sonnet 5.5; P2 is merged. Run it before Chat 3 so the agent is built against the final payload)
+
+> Read `docs/design/qc-device-bridge-plan.md` sections 4, 4.1 and 4.2 and CLAUDE.md, then `internal/deviceexport`, `internal/catalog` and `internal/agents/catalog_params.go`. Branch from main as `claude/device-export-p2b`. Implement P2b exactly as section 4.1's table and 4.2's P2b bullet say. Don't revisit decisions recorded there.
+> - Allow device-XML skews, `LOG_SKEW` and the pyquadcortex bounds, with the evidence labels the table names in the payload.
+> - Switches use the qc-mcp linear position encoding.
+> - Default cab mics count as at-default (importer: keep `default_string`, re-import from the same f634ecd snapshot and check the `-diff`).
+> - Captures export as capture blocks.
+> - Keep refusing what the table still refuses.
+>
+> Before and after, run a census over every v6 eval preset (`eval_results/v5_vs_v6_r2/v6_a/PROD/rep*/`): pushable chains and unresolved reasons. Put both tables in the PR. Regenerate the goldens and review the diff. Show `go test ./...` and the e2e results via `test-runner`. Open the PR, subscribe, and address GSR's findings; don't wait for CodeRabbit.
+
+**Chat 3, revised: the home agent, P4, with capture placement** (Opus 5.5; after Chat 6. Replaces the Chat 3 prompt above)
+
+> Read `docs/design/qc-device-bridge-plan.md` (sections 4, 4.1, 4.2, 5, 5.1, 6, 7.1, 7.2 and 8) and `docs/design/device-job-contract.md`, then `internal/deviceexport` (payload and goldens), `internal/devicejobs`, `testdata/devicejobs/`, `deploy/qc-agent/write_agent_env.py` and `tools/qc-mcp-trial/`. Branch from main as `claude/qc-agent`. Run the `planner` agent first on the job loop's state machine and the payload-to-transport mapping, including captures, and show me its plan before coding. Build P4 as section 5 and the P4 row of section 8 describe:
+> - vendored qc-mcp f634ecd modules with a checksum test, behind a `DeviceBackend` with a fake;
+> - strict job parsing and HMAC per the contract and its vectors;
+> - re-validation of every payload operation against the agent's own catalog copy;
+> - all eight scene values and bypass flags (G6);
+> - G2 unit-gone detection off the job thread;
+> - G3 save-lag polling;
+> - captures resolved from a fresh capture-directory read, placed as 14000/14001 with `file_name`, and recorded as dependencies in the saved preset (check whether `write_preset_file` adds them itself);
+> - the owned-slot ledger, the lock file, idle exit, the desktop shortcut, the hash-pinned lockfile and the Windows guide.
+>
+> Never call `save_preset`, global, mode, raw-send or `quit_app` operations, and never send `ProductForward`. Offline tests only, against the fake backend, including a full push of each P2b golden. List what P6 should check on the unit. Run `/security-review` and the `security-reviewer` agent, open the PR with the `deep-review` label, subscribe, and reply inline to GSR's security, Architecture and Logic findings. Don't merge. You're in a cloud session: push, then give me the commands to pull and run the tests on my Windows PC.
+
+**Chat 7: library sync, P4b** (Sonnet 5.5; after Chat 3)
+
+> Read `docs/design/qc-device-bridge-plan.md` sections 3.3, 4.2 and 6, and the merged P3, P2b and P4 code. Branch from main as `claude/device-library-sync`. Implement P4b:
+> - the read-only `sync_device_library` job (agent) and MCP tool (QC-2) that store the unit's capture list;
+> - dry-run resolution of capture blocks against it (exact name, then a reviewed alias table), so a capture that isn't on the unit is unresolved.
+>
+> Device text is untrusted: bound it, strip it, and render it only through `cell()`. Run the `security-reviewer` agent on the device-text handling. Same PR and GSR routine as before.
 
 **After that:**
 - **P5, read-back import** (Sonnet 5.5): "Implement P5 from `docs/design/qc-device-bridge-plan.md`."
