@@ -80,6 +80,9 @@ var goldenCases = []struct{ preset, guitar string }{
 	{"pushable_g3", "Gibson ES-339 Humbuckers"},
 	// Faders (owner decision 2026-11-06): a 0..10 amp EQ and a dB graphic EQ, labelled guesses.
 	{"pushable_faders", "Gibson ES-339 Humbuckers"},
+	// An owned plugin model (F3, Cory Wong): the agent's validator must accept what the exporter allows
+	// (deploy/qc-agent/tests/test_go_goldens.py validates every golden).
+	{"pushable_plugin", "Gibson ES-339 Humbuckers"},
 }
 
 // golden is what a golden file holds: the payload plus the readable plan.
@@ -607,19 +610,20 @@ func TestOwnedPluginAllowed(t *testing.T) {
 	if name == "" {
 		t.Skip("no Cory Wong compressor in the catalog")
 	}
-	// The home bridge refuses plugin models, so the dry run says so even for an owned plugin
-	// (plan 7.3 F3); with the bridge side enabled the block goes through.
-	owned, _ := export(t, e, preset(block(name)), "g")
-	if len(owned.Unresolved) != 1 || !strings.Contains(owned.Unresolved[0].Reason, "home bridge refuses plugin models") {
-		t.Fatalf("%s owned, bridge refuses plugins: %+v", name, owned.Unresolved)
-	}
-	was := BridgePushesPlugins
-	BridgePushesPlugins = true
-	t.Cleanup(func() { BridgePushesPlugins = was })
+	// The agent accepts plugin models (F3), so an owned one goes through ...
 	_, p := export(t, e, preset(block(name)), "g")
 	if len(p.Unresolved) != 0 || p.Rows[0].Blocks[0].Plugin != "Cory Wong" {
 		t.Fatalf("%s: %+v", name, p)
 	}
+	// ... and with the switch off (a stand-in for an agent that refuses them) the dry run says so.
+	was := BridgePushesPlugins
+	BridgePushesPlugins = false
+	t.Cleanup(func() { BridgePushesPlugins = was })
+	off, _ := export(t, e, preset(block(name)), "g")
+	if len(off.Unresolved) != 1 || !strings.Contains(off.Unresolved[0].Reason, "home bridge refuses plugin models") {
+		t.Fatalf("%s owned, bridge refuses plugins: %+v", name, off.Unresolved)
+	}
+	BridgePushesPlugins = was
 	none, _ := NewEmbedded(Options{OwnedPlugins: OwnedPluginSet(false, []string{"Cory Wong"})})
 	ex, _ := export(t, none, preset(block(name)), "g")
 	if len(ex.Unresolved) != 1 || !strings.Contains(ex.Unresolved[0].Reason, "Cory Wong") {
@@ -889,6 +893,25 @@ func TestAmbiguousNameNoModelFits(t *testing.T) {
 	ex, b := firstBlock(t, e, block("Envelope Filter", prm("FREQ ENV AMT", "50%", ""), prm("FREQ DEPTH", "50%", "")))
 	if b != nil || len(ex.Unresolved) == 0 || !strings.Contains(ex.Unresolved[0].Reason, "none has every control") {
 		t.Fatalf("want refusal, got %+v / %+v", b, ex.Unresolved)
+	}
+}
+
+// F3: the owner's John Mayer Studio Verb Hall is exported (naming its plugin) when John Mayer is owned,
+// and is unresolved, with the reason, when it is not. deploy/qc-agent/tests/test_export_validator.py pins
+// that the agent accepts such a block and refuses one whose plugin differs.
+func TestPluginModelFollowsOwnership(t *testing.T) {
+	sp := preset(block("John Mayer Studio Verb Hall"))
+	owned, err := NewEmbedded(Options{OwnedPlugins: OwnedPluginSet(true, []string{"John Mayer"})})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ex, p := export(t, owned, sp, "g")
+	if len(ex.Unresolved) != 0 || len(p.Rows[0].Blocks) != 1 || p.Rows[0].Blocks[0].Plugin != "John Mayer" {
+		t.Fatalf("owned: unresolved %+v, blocks %+v", ex.Unresolved, p.Rows[0].Blocks)
+	}
+	ex, _ = export(t, testExporter(t), sp, "g") // owns Cory Wong only
+	if len(ex.Unresolved) != 1 || !strings.Contains(ex.Unresolved[0].Reason, "John Mayer plugin") {
+		t.Fatalf("not owned: %+v", ex.Unresolved)
 	}
 }
 

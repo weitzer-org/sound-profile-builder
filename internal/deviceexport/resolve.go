@@ -267,11 +267,11 @@ func sameLayout(ms []*catalog.Model) bool {
 	return true
 }
 
-// BridgePushesPlugins is whether the home agent accepts plugin models
-// (deploy/qc-agent/qc_agent/export_validator.py refuses any model with a plugin_id). While it
-// doesn't, the export says so in the dry run rather than letting the push fail at the bridge
-// (plan 7.3 follow-up F3). Flip it together with the agent's check.
-var BridgePushesPlugins = false
+// BridgePushesPlugins is whether the home agent accepts plugin models. It does (F3): the agent's
+// validator accepts a plugin model when the block names the plugin its catalog row belongs to
+// (export_validator.PLUGIN_NAMES). Setting it false makes the dry run report a plugin model as
+// unresolved instead; keep it in step with the agent's check (plan 7.3 follow-up F3).
+var BridgePushesPlugins = true
 
 // modelRefusal is why a resolved model can't be pushed, or "".
 func (b *builder) modelRefusal(m *catalog.Model) string {

@@ -170,8 +170,8 @@ this app's MCP connector. Read these before any device work:
   **Scene layouts:** `Exporter.ExportLayout` / `devicejobs.SceneLayout` put one or two guitars (same blocks, same order) in one slot, each guitar's
   Scene A (rhythm) and B (lead) values on scenes of the caller's choice; `scene_sources` is `A,B` (first guitar) and `2A,2B` (second), unused scenes
   carry the first guitar's rhythm. The default layout (one guitar, A/B) is byte-identical to the original export. The Python validator checks
-  "same source, same values" instead of a fixed pattern (`pushable_g3_layout` golden feeds both sides). Plugin models are reported unresolved in
-  the dry run while the agent refuses them (`BridgePushesPlugins`).
+  "same source, same values" instead of a fixed pattern (`pushable_g3_layout` golden feeds both sides). Plugin models (owned plugins only) are pushed:
+  the agent accepts a block that names the plugin its catalog row belongs to (`BridgePushesPlugins`, `export_validator.PLUGIN_NAMES`).
   Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-p6`
   (no †): **seen on the unit at two models** (P6: Graphic-9 4005 65 Hz +6 dB showed 6.0 dB, CA John's 2C Ch1 1139 80 Hz 8 showed 8.0), applied to
   all 48 faders on the 7 models by the owner's decision, so Parallax, the plugin/Nolly Graphic-9s and CA John's Ch2/Ch3 carry it unseen. The agent
