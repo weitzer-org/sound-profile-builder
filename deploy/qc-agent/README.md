@@ -235,16 +235,13 @@ them; this guide uses **24H**).
       before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
       delete the preset.
 
-15. **Faders (P2d; normal use, no extra session).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone faders)
-    is pushed with a **linear display-to-wire guess** that nobody has read on the unit: the dry run marks it † and
-    the export labels it `encoding:fader-linear-guess`. It is **UNVERIFIED** until you do this:
-    - Dry-run and push, into an empty slot, a preset with a **Graphic-9 (or Plugin Graphic-9) block whose 65Hz band is
-      +6 dB** (use LPF on the block so the name resolves to the fader model) and a **CA John's 2C Ch1 block whose 80 Hz
-      fader is 8**, both off default.
-    - Expect `succeeded` and `mismatches 0`. Then read both on the unit's screen: the band should show **+6.0 dB** and
-      the CA John's fader **8.0**. Check one more band at a negative value (for example -6 dB) if you like.
-    - Phone: `read_device_preset(import=true)`; the imported values should agree with the dry run.
-    - If a screen value differs, send a photo. The linear rule is then wrong for that fader type; the label stays a guess.
+15. **Faders (P2d; checked on the unit 2026-11-06, F8).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone
+    faders) is converted linearly on the catalog range. The owner saw Graphic-9 4005 65 Hz +6 dB show 6.0 dB and CA John's
+    2C Ch1 80 Hz 8 show 8.0, and decided to apply the rule to all 48 faders, so the export labels them
+    `encoding:fader-linear-p6` and the dry run no longer marks them †. Pull `main` on the PC first: an agent from before
+    F8 refuses a fader push with "evidence has unknown labels" (nothing is written). The Parallax (3008), the plugin and
+    Nolly Graphic-9s (4006, 4007) and CA John's Ch2/Ch3 (1140, 1141) were not seen; the first time you push one, compare the
+    unit's screen with the dry run and send a photo if it differs.
 
 16. **Footswitches (stomp layout, entry point 1; normal use).** Pull `main` on the PC first. On the first push whose
     dry run lists a **Footswitch layout**, expect `succeeded`, `mismatches 0`, and the message "N footswitch(es)

@@ -769,11 +769,18 @@ func screenPan(cp catalog.Param, wire float64) string {
 	return fmt.Sprintf("≈ %.0f R %s, inferred", pos, ScreenPanNote)
 }
 
-// FaderEvidence labels a fader converted like a float on its catalog range (owner decision,
-// 2026-11-06): wire = ((display - min) / (max - min)) ^ skew, linear when the catalog has no
-// skew. A GUESS: qc-mcp's to_norm treats a fader like a float, but no one has read a fader
-// on the unit (plan 4.1, 8.1). Never counts as confirmed, so the dry run marks it with a dagger.
-const FaderEvidence = "encoding:fader-linear-guess"
+// FaderEvidence labels a fader converted like a float on its catalog range: wire =
+// ((display - min) / (max - min)) ^ skew, linear when the catalog has no skew. CONFIRMED on the owner's
+// unit (P6, 2026-11-06): Graphic-9 4005 65 Hz +6 dB showed 6.0 dB and CA John's 2C Ch1 1139 80 Hz 8 showed 8.0,
+// and the read-back import agreed. The owner decided (same day) to apply that to all 48 faders on the 7
+// fader models by the same rule, so the Parallax (3008), the plugin and Nolly Graphic-9s (4006, 4007) and
+// CA John's Ch2/Ch3 (1140, 1141) carry the label on that decision, not on a reading of their own. The
+// "-p6" suffix is the convention for "read on the owner's unit" (Param.Confirmed).
+const FaderEvidence = "encoding:fader-linear-p6"
+
+// FaderGuessEvidence is the label faders carried before P6 confirmed the rule. The exporter no longer
+// writes it; the agent still accepts it (a payload from an older server), and it never counts as confirmed.
+const FaderGuessEvidence = "encoding:fader-linear-guess"
 
 // paramEvidence is taperEvidence for a float, and for a fader the same labels behind
 // FaderEvidence. A fader without a skew of its own gets no taper label: "taper:g4" would

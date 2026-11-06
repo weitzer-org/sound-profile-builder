@@ -172,8 +172,10 @@ this app's MCP connector. Read these before any device work:
   carry the first guitar's rhythm. The default layout (one guitar, A/B) is byte-identical to the original export. The Python validator checks
   "same source, same values" instead of a fixed pattern (`pushable_g3_layout` golden feeds both sides). Plugin models are reported unresolved in
   the dry run while the agent refuses them (`BridgePushesPlugins`).
-  Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-guess`
-  (†, **unverified on the unit** until plan 8.1 item 8; qc-mcp's `to_norm` has no type branch, so it is the same guess);
+  Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-p6`
+  (no †): **seen on the unit at two models** (P6: Graphic-9 4005 65 Hz +6 dB showed 6.0 dB, CA John's 2C Ch1 1139 80 Hz 8 showed 8.0), applied to
+  all 48 faders on the 7 models by the owner's decision, so Parallax, the plugin/Nolly Graphic-9s and CA John's Ch2/Ch3 carry it unseen. The agent
+  still accepts the old `encoding:fader-linear-guess`;
   combo boxes and `floatWithLed` stay refused. Clone indexes stay limited to `VerifiedCloneBases`. `go run ./cmd/device_census <eval dir>` shows how many eval chains
   are pushable and why not. `send_preset_to_device`,
   `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:

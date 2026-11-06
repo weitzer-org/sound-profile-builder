@@ -235,10 +235,11 @@ class Refusals(unittest.TestCase):
         with self.assertRaisesRegex(ExportRefused, "unconfirmed or missing bound"):
             validate(mutate(lambda p: swap(p, 0, 4000, params=[g])), cat, "4.1.0")
 
-    def test_fader_linear_guess(self):
-        # Faders (owner decision 2026-11-06, plan 4.1): converted like a float on the catalog range, and
-        # labelled a guess. Plugin Graphic-9 65Hz is -12..12 dB, CA John's 2C Ch1 80 Hz is 0..10; neither has a skew.
-        guess = ["encoding:fader-linear-guess"]
+    def test_fader_linear_p6(self):
+        # Faders (owner decision 2026-11-06, plan 4.1): converted like a float on the catalog range; confirmed on
+        # the unit at two models in P6 and labelled "-p6" for all of them. Plugin Graphic-9 65Hz is -12..12 dB,
+        # CA John's 2C Ch1 80 Hz is 0..10; neither has a skew.
+        guess = ["encoding:fader-linear-p6"]
         db = {"index": 1, "label": "65Hz", "scene_mode": False, "display": eight(6), "wire": eight(0.75),
               "units": "dB", "evidence": guess}
         dial = {"index": 10, "label": "80 Hz", "scene_mode": False, "display": eight(7.5), "wire": eight(0.75),
@@ -251,6 +252,13 @@ class Refusals(unittest.TestCase):
 
         accept(4006, db)
         accept(1139, dial)
+        # the pre-P6 label is still accepted (a payload from a server that was not updated), but both together are not
+        legacy = ["encoding:fader-linear-guess"]
+        accept(4006, db | {"evidence": legacy})
+        accept(1139, dial | {"evidence": legacy})
+        refuse(4006, db | {"evidence": guess + legacy}, "needs exactly one")
+        refuse(4005, {"index": 0, "label": "HPF", "scene_mode": False, "display": eight(20), "wire": eight(0),
+                      "units": "Hz", "evidence": ["taper:device-xml"] + legacy}, "doesn't match a float")
         # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map
         for d, w in ((-12, 0), (12, 1), (0, 0.5), (-6, 0.25)):
             with self.subTest(model=4006, d=d, w=w):
