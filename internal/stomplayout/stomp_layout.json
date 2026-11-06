@@ -1,0 +1,4 @@
+{"version": 1,
+ "switches": {"A": "comp", "B": "boost", "C": "drive", "D": "drive2",
+              "E": "delay", "F": "mod",   "G": "reverb"},
+ "reserved": ["H"]}

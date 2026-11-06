@@ -26,7 +26,7 @@ func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 	if cfg := s.appConfig; cfg != nil {
 		owned = deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
-	return deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: agents.CaptureSource, OwnedPlugins: owned})
+	return deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: agents.CaptureSource, OwnedPlugins: owned, StompCaptures: agents.StompCaptureLookup()})
 }
 
 // handleDeviceExport serves GET /api/preset/device_export?id=<preset>&guitar=<name>: one

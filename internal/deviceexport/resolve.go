@@ -196,7 +196,8 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			return nil, fmt.Errorf("catalog fault: no Neural Capture block (id %d)", captureBlockID)
 		}
 		out = &Block{Col: col, ModelID: 0, Model: capt.Name, Category: m.Category,
-			IndexEvidence: "capture-block", Capture: capt, Params: []Param{}, AtDefault: []string{}}
+			IndexEvidence: "capture-block", Capture: capt, Params: []Param{}, AtDefault: []string{},
+			modelerType: blk.Type}
 	default:
 		var why string
 		m, why = b.resolveModel(name)

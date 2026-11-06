@@ -478,6 +478,7 @@ type devicePlanOutput struct {
 	ExportFormat string                  `json:"export_format"`
 	ExportSHA256 string                  `json:"export_sha256"`
 	Blocks       []devicejobs.PlanBlock  `json:"blocks"`
+	Stomps       *devicejobs.PlanStomps  `json:"stomps,omitempty"`
 	Unresolved   []devicejobs.Unresolved `json:"unresolved"`
 	Warnings     []devicejobs.Unresolved `json:"warnings"`
 }
@@ -558,7 +559,7 @@ func sendPresetToDevice(svc *presetsvc.Service, b *devicejobs.Bridge) mcp.ToolHa
 				Plan: &devicePlanOutput{
 					PresetID: in.PresetID, Guitar: in.Guitar, Slot: slot, Name: name,
 					ExportFormat: plan.Export.Format, ExportSHA256: plan.PlanSHA256,
-					Blocks: plan.Export.Summary, Unresolved: plan.Export.Unresolved, Warnings: plan.Export.Warnings,
+					Blocks: plan.Export.Summary, Stomps: plan.Export.Stomps, Unresolved: plan.Export.Unresolved, Warnings: plan.Export.Warnings,
 				},
 			}
 			if out.Plan.Blocks == nil {
@@ -606,7 +607,7 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	fmt.Fprintf(t, "**Dry run, nothing was sent.** Plan: push guitar %s of preset `%s` to slot **%s** as \"%s\".\n\n",
 		cell(p.Guitar), p.PresetID, p.Slot, cell(p.Name))
 	fmt.Fprintf(t, "Export: %s, sha256 `%s`.\n\n", cell(p.ExportFormat), p.ExportSHA256)
-	renderExportTable(t, p.Blocks, p.Unresolved, p.Warnings)
+	renderExportTable(t, p.Blocks, p.Stomps, p.Unresolved, p.Warnings)
 	if len(p.Unresolved) > 0 {
 		t.WriteString("\nRefine the preset to remove these, then dry-run again.\n")
 	}
@@ -625,7 +626,7 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 
 // renderExportTable renders an export's readable plan and its unresolved items. Every
 // string from the preset or export goes through cell().
-func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unresolved, warnings []devicejobs.Unresolved) {
+func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps *devicejobs.PlanStomps, unresolved, warnings []devicejobs.Unresolved) {
 	unconfirmed := false
 	if len(blocks) > 0 {
 		t.WriteString("| Grid | Block | Parameter | Scene A | Scene B | State A/B |\n|---|---|---|---|---|---|\n")
@@ -677,6 +678,7 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unreso
 			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
 		}
 	}
+	renderStomps(t, stomps)
 	if len(unresolved) > 0 {
 		t.WriteString("\n**Unresolved, so this cannot be pushed:**\n")
 		for _, u := range unresolved {
@@ -686,6 +688,30 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unreso
 			}
 			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
 		}
+	}
+}
+
+// renderStomps shows the footswitch layout next to the blocks. Every string goes through
+// cell(). Switch behaviour is UNVERIFIED on the unit until gate G7.
+func renderStomps(t *strings.Builder, s *devicejobs.PlanStomps) {
+	if s == nil {
+		return
+	}
+	t.WriteString("\n**Footswitch layout** (stomp mode; UNVERIFIED on the unit until gate G7; saved with the preset, H is never used):\n")
+	if len(s.Assigned) == 0 {
+		t.WriteString("- No block gets a switch.\n")
+	}
+	for _, a := range s.Assigned {
+		fmt.Fprintf(t, "- %s: %s (row %d col %d, %s)\n", cell(dtext(a.Switch)), cell(dtext(a.Model)), a.Row, a.Col, cell(dtext(a.Role)))
+	}
+	if len(s.Skipped) > 0 {
+		t.WriteString("\nNo switch:\n")
+		for _, k := range s.Skipped {
+			fmt.Fprintf(t, "- %s (row %d col %d): %s\n", cell(dtext(k.Model)), k.Row, k.Col, cell(dtext(k.Reason)))
+		}
+	}
+	for _, w := range s.Warnings {
+		fmt.Fprintf(t, "⚠️ %s\n", cell(dtext(w)))
 	}
 }
 

@@ -21,6 +21,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/stomplayout"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -53,6 +54,11 @@ type Options struct {
 	// (config.json's available_plugins when allow_paid_plugins is on). Models of any other
 	// plugin are refused.
 	OwnedPlugins map[string]bool
+	// StompCaptures is the capture library lookup for the stomp layout (design doc
+	// qc-stomp-layout.md section 4.1 step 2); the caller supplies it so this package
+	// stays free of internal/agents. Nil means no library. In v1 captures are never
+	// placed, so it is not consulted yet.
+	StompCaptures stomplayout.CaptureLookup
 }
 
 // Exporter implements devicejobs.Exporter.
@@ -60,6 +66,7 @@ type Exporter struct {
 	cat       *catalog.Catalog
 	catalogSH string
 	opts      Options
+	stompCls  *stomplayout.Classifier
 }
 
 var _ devicejobs.Exporter = (*Exporter)(nil)
@@ -67,7 +74,11 @@ var _ devicejobs.Exporter = (*Exporter)(nil)
 // New builds an Exporter over a catalog. catalogSHA256 is the hash recorded in the export
 // header: the SHA-256 of the qc_catalog.json the catalog was decoded from.
 func New(cat *catalog.Catalog, catalogSHA256 string, o Options) *Exporter {
-	return &Exporter{cat: cat, catalogSH: catalogSHA256, opts: o}
+	e := &Exporter{cat: cat, catalogSH: catalogSHA256, opts: o}
+	if cat != nil {
+		e.stompCls = stomplayout.NewClassifier(cat, o.StompCaptures)
+	}
+	return e
 }
 
 // NewEmbedded builds an Exporter over the catalog compiled into the binary.
@@ -98,12 +109,16 @@ func OwnedPluginSet(allowPaid bool, available []string) map[string]bool {
 // Payload is the qc2-device-export/1 document. Field order is fixed (structs, never maps),
 // so the bytes, and the plan hash the confirm token binds, are deterministic.
 type Payload struct {
-	Format       string                  `json:"format"`
-	Catalog      CatalogRef              `json:"catalog"`
-	Guitar       string                  `json:"guitar"`
-	SceneSources [Scenes]string          `json:"scene_sources"`
-	Rows         []Row                   `json:"rows"`
-	Unresolved   []devicejobs.Unresolved `json:"unresolved"`
+	Format       string         `json:"format"`
+	Catalog      CatalogRef     `json:"catalog"`
+	Guitar       string         `json:"guitar"`
+	SceneSources [Scenes]string `json:"scene_sources"`
+	Rows         []Row          `json:"rows"`
+	// Stomps is the footswitch layout for the placed blocks (design doc qc-stomp-layout.md
+	// section 6.1, entry point 1). Always an array, never null. UNVERIFIED on the unit
+	// until gate G7.
+	Stomps     []stomplayout.Stomp     `json:"stomps"`
+	Unresolved []devicejobs.Unresolved `json:"unresolved"`
 	// Warnings are settings the push leaves out on purpose (plan 4.1: a non-default cab
 	// mic keeps the cab's default). They don't block a push.
 	Warnings []devicejobs.Unresolved `json:"warnings"`
@@ -142,6 +157,8 @@ type Block struct {
 	// the capture's key. Params use the capture block's own layout (GAIN..VOLUME, 0-4),
 	// which both block types share.
 	Capture *Capture `json:"capture,omitempty"`
+
+	modelerType string // the preset's block type, for the stomp layout of a capture
 	// Bypass is the block's bypass state in scenes A-H (true = bypassed). Always all eight.
 	Bypass [Scenes]bool `json:"bypass"`
 	Params []Param      `json:"params"`
@@ -244,11 +261,16 @@ func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar
 	if p.Warnings == nil {
 		p.Warnings = []devicejobs.Unresolved{}
 	}
+	stomps, err := e.planStomps(p.Rows)
+	if err != nil {
+		return nil, err
+	}
+	p.Stomps = stomps.assign
 	raw, err := marshal(p)
 	if err != nil {
 		return nil, err
 	}
-	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Warnings: p.Warnings}, nil
+	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Warnings: p.Warnings, Stomps: stomps.view}, nil
 }
 
 // marshal encodes compactly with Go's default HTML escaping, so preset text such as a
