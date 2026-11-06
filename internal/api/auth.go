@@ -23,6 +23,14 @@ const csrfHeaderName = "X-CSRF-Token"
 const secretName = "spb-login-pw"
 const sessionDuration = 24 * time.Hour
 
+// passwordsEqual compares the submitted and expected login passwords in constant time.
+// Both sides are SHA-256 hashed first so the compare is over equal-length inputs and
+// the password's length doesn't leak through subtle.ConstantTimeCompare's early return.
+func passwordsEqual(submitted, expected string) bool {
+	a, b := sha256.Sum256([]byte(submitted)), sha256.Sum256([]byte(expected))
+	return subtle.ConstantTimeCompare(a[:], b[:]) == 1
+}
+
 // simple hashing to secure the cookie based on the SecretManager password
 func generateCookieValue(password string) string {
 	expireTime := time.Now().Add(sessionDuration).Unix()
@@ -204,7 +212,7 @@ func (s *Server) handleProcessLogin() http.HandlerFunc {
 		}
 		expectedPassword = strings.TrimSpace(expectedPassword)
 
-		if submittedPassword == expectedPassword {
+		if passwordsEqual(submittedPassword, expectedPassword) {
 			secure := isRequestSecure(r)
 
 			// Generate the CSRF token before writing any cookies: if this
