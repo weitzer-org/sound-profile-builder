@@ -1,0 +1,136 @@
+{
+  "layout": "A=comp B=boost C=drive D=drive2 E=delay F=mod G=reverb",
+  "blocks": [
+    {
+      "row": 0,
+      "col": 0,
+      "model_id": 9014
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "model_id": 22
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "model_id": 4000
+    },
+    {
+      "row": 0,
+      "col": 3,
+      "model_id": 1092
+    },
+    {
+      "row": 0,
+      "col": 4,
+      "model_id": 12006
+    },
+    {
+      "row": 0,
+      "col": 5,
+      "model_id": 8039
+    }
+  ],
+  "current": [],
+  "plan": {
+    "assign": [
+      {
+        "row": 0,
+        "col": 1,
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "switch": "G"
+      }
+    ],
+    "remove": [],
+    "skipped": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 9014,
+        "model": "Crying Clyde Wah",
+        "reason": "no role for category Wah"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 4000,
+        "model": "Parametric-8",
+        "reason": "no role for category Equalizer"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 1092,
+        "model": "Brit Plexi 100 Patch",
+        "reason": "no role for category Guitar Amplifier"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 12006,
+        "model": "412 Brit 60B GB 71 (M)",
+        "reason": "no role for category Cabsim Guitar (M)"
+      }
+    ],
+    "warnings": [],
+    "roles": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 9014,
+        "model": "Crying Clyde Wah",
+        "category": "Wah",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 22,
+        "model": "Facial Fuzz",
+        "category": "Guitar Overdrive",
+        "role": "drive",
+        "source": "catalog",
+        "switch": "C"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 4000,
+        "model": "Parametric-8",
+        "category": "Equalizer",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "model_id": 1092,
+        "model": "Brit Plexi 100 Patch",
+        "category": "Guitar Amplifier",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "model_id": 12006,
+        "model": "412 Brit 60B GB 71 (M)",
+        "category": "Cabsim Guitar (M)",
+        "source": "catalog"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "model_id": 8039,
+        "model": "Vintage Digital",
+        "category": "Reverb",
+        "role": "reverb",
+        "source": "catalog",
+        "switch": "G"
+      }
+    ]
+  }
+}

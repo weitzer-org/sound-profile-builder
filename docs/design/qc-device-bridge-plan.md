@@ -129,7 +129,7 @@ The device capability is exposed as **a few intent-level tools**, not 60 low-lev
 | `audition_on_device` | v2 | `recall_preset`, `switch_scene` | Recalls a slot this system created, or switches its scene. |
 | `send_preset_to_device` overwrite | v2 | `save_preset` | Re-push into a slot **this system created**, tracked in the jobs bucket. Never into other slots. |
 | **Captures on push** | **v1 (P2b + P4)** | `add_capture` (`transport.set_capture`) | Captures already on the unit (factory, or downloaded from Cortex Cloud). Section 4.2. |
-| Scene labels, stomps, IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_ir` | IRs only if already on the unit. |
+| Scene labels, stomps, IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_ir` | IRs only if already on the unit (`sync_device_library`). Stomps follow the fixed role layout in `docs/design/qc-stomp-layout.md`. |
 | Level report | v3, maybe | `measure_preset`, `suggest_levels` | **Report-only.** Needs audio loopback through the unit's USB 5/6 channels (qc-mcp `audio_io.py`). This is the measured counterpart to the FOH Optimizer's predictions. |
 | **Never** | — | `set_io_port`, `set_global_eq`, `load_settings_preset`, `set_master_volume`, `switch_mode`, `set_mode_cycle`, `delete_device_preset`, `save_device_preset`, `clear_grid`, `level_*` (writing), `sample_stop` (arbitrary file path), raw transport | These are global, destructive, or outside the product's job. |
 
@@ -254,6 +254,21 @@ Captures are central to the owner's presets. 18 of the 28 eval chains use at lea
 - slot ownership from a `jobs/owned_slots.json` that only the agent writes.
 
 The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
+
+**As built in P4** (`deploy/qc-agent/`; decisions taken while implementing, recorded here):
+- **A push builds only into the empty slot that is open on the unit.** The agent never recalls a preset or clears a
+  grid: it requires the target slot to be selected on the unit with a blank live grid, which is exactly the save path
+  G3 verified. A different open slot is refused (`unsupported_arg`, "select slot X on the unit first").
+- **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
+  qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
+  to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
+- **Per-scene bypass:** a block bypassed in any scene goes through the G6-verified path (assign to scenes, then each
+  scene's flag, all eight written), even when all eight agree. A block active in every scene gets no bypass write:
+  it relies on a new block starting active, which the read-back checks (all eight flags must read back false). Scene labels are not written in v1 (they were v2 in section 3.3).
+- **Wire guard:** besides a method allowlist, the backend decodes every outgoing message and passes only session
+  plumbing, READs, the armed plan's Grid/Scene updates and one armed File CREATE.
+- **No boto3:** a standard-library SigV4 client, so the lockfile holds only `protobuf` (7.36.0, the pins from
+  qc-mcp's own lock).
 
 **Running it on Windows**
 

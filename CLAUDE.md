@@ -160,6 +160,16 @@ this app's MCP connector. Read these before any device work:
   in `firmware_constants.go`); add an entry there only with a section 7 measurement. `send_preset_to_device`,
   `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
   `go test ./internal/deviceexport -run Golden -update` (rerun after any catalog re-import: the header carries its hash).
+- `internal/stomplayout` — stomp layout (S1 of `docs/design/qc-stomp-layout.md`): which footswitch each block goes on. Pure
+  (blocks + current assignments -> plan of `assign`/`remove`/`skipped`/`warnings`); layout in the embedded `stomp_layout.json`.
+  It must not import `internal/agents`: the capture library comes in as a `CaptureLookup` (`agents.StompCaptureLookup()`).
+  Everything about the device in it is UNVERIFIED until gate G7. Goldens: `go test ./internal/stomplayout -run Golden -update`.
+- `deploy/qc-agent/` — the home agent (P4, Python). Its README has the Windows install, daily use and hardware
+  acceptance steps. qc-mcp's transport is vendored under `vendor/qc_mcp/` at `f634ecd`, byte for byte and SHA-256
+  pinned (test plus a runtime check): never edit those files; re-vendor in its own PR (`vendor/PROVENANCE.md`). The
+  agent validates pushes against `internal/catalog/qc_catalog.json` (hash-matched with the export), so a catalog
+  change means the PC's clone must be pulled before pushes work again. Run its tests with
+  `cd deploy/qc-agent && python -m unittest discover -s tests` (needs `protobuf` from `requirements.lock.txt`).
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing
   a vector, tag, field or check step is a contract change for both sides.

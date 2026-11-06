@@ -1,0 +1,128 @@
+{
+  "layout": "A=comp B=boost C=drive D=drive2 E=delay F=mod G=reverb",
+  "blocks": [
+    {
+      "row": 0,
+      "col": 0,
+      "model_id": 14001,
+      "modeler_type": "Capture",
+      "capture_name": "Strymon Sunset BOOST"
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "model_id": 14001,
+      "modeler_type": "Amplifier",
+      "capture_name": "Boss Blues Driver Waza"
+    },
+    {
+      "row": 0,
+      "col": 2,
+      "model_id": 14001,
+      "modeler_type": "Neural Capture",
+      "capture_name": "Mystery Pedal"
+    },
+    {
+      "row": 1,
+      "col": 0,
+      "model_id": 14001,
+      "modeler_type": "Fuzz",
+      "capture_name": "Unlisted Fuzz"
+    },
+    {
+      "row": 1,
+      "col": 1,
+      "model_id": 14001,
+      "modeler_type": "Capture",
+      "capture_name": "Boss Blues Driver Waza"
+    }
+  ],
+  "current": [],
+  "plan": {
+    "assign": [
+      {
+        "row": 0,
+        "col": 0,
+        "switch": "B"
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "switch": "C"
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "switch": "D"
+      }
+    ],
+    "remove": [],
+    "skipped": [
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "reason": "capture is not a switchable effect (modeler)"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "reason": "unclassified capture (no usable modeler type, not in the capture library)"
+      }
+    ],
+    "warnings": [
+      "block (0,1) \"Boss Blues Driver Waza\": modeler type \"Amplifier\" gives no switch but the capture library (drive) gives drive; the modeler wins",
+      "unclassified capture \"Mystery Pedal\" at (0,2): no usable modeler type and not in the capture library; add it to internal/agents/user_captures.json"
+    ],
+    "roles": [
+      {
+        "row": 0,
+        "col": 0,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "role": "boost",
+        "source": "library",
+        "switch": "B"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "source": "modeler"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture"
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "role": "drive",
+        "source": "modeler",
+        "switch": "C"
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "model_id": 14001,
+        "model": "Capture 2",
+        "category": "Neural Capture",
+        "role": "drive",
+        "source": "library",
+        "switch": "D"
+      }
+    ]
+  }
+}
