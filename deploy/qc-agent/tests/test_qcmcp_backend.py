@@ -96,15 +96,87 @@ class Session(Base):
     def test_dead_reader_thread_means_gone(self):
         self.dev.connect()
         self.hid._thread.running = False
+        self.assertFalse(self.dev._watchdog_sample())
         self.assertFalse(self.dev.alive())
 
     def test_rising_write_errors_mean_gone(self):
         self.dev.connect()
+        self.dev._errs = []
         for n in (1, 2):
             self.dev._raw.write_errors = n
+            self.assertTrue(self.dev._watchdog_sample())
             self.assertTrue(self.dev.alive())
-        self.dev._raw.write_errors = 3
+        self.dev._raw.write_errors = 3  # rose on two consecutive samples
+        self.assertFalse(self.dev._watchdog_sample())
         self.assertFalse(self.dev.alive())
+
+    def test_one_rise_is_not_gone(self):
+        self.dev.connect()
+        self.dev._errs = []
+        for n in (1, 1, 2, 2, 3):  # rises, but never on two consecutive samples
+            self.dev._raw.write_errors = n
+            self.assertTrue(self.dev._watchdog_sample())
+        self.assertTrue(self.dev.alive())
+
+    def test_gone_is_sticky_for_the_session(self):
+        self.dev.connect()
+        self.hid._thread.running = False
+        self.dev._watchdog_sample()
+        self.hid._thread.running = True  # a later healthy sample doesn't bring the unit back
+        self.dev._watchdog_sample()
+        self.assertFalse(self.dev.alive())
+
+    def test_the_watchdog_thread_samples_by_itself(self):
+        import time
+        with mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 0.02):
+            self.dev.connect()
+            t = self.dev._watch_thread
+            self.assertTrue(t is not None and t.is_alive() and t.daemon)
+            self.hid._thread.running = False  # nobody calls alive() or the transport here
+            deadline = time.monotonic() + 5
+            while not self.dev._gone.is_set() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(self.dev._gone.is_set())
+            self.assertFalse(self.dev.alive())
+        self.dev.disconnect()
+        self.assertIsNone(self.dev._watch_thread)
+        self.assertFalse(t.is_alive())
+
+    def test_a_stale_verdict_counts_as_gone(self):
+        import time
+        self.dev.connect()
+        self.assertTrue(self.dev.alive())
+        self.dev._last_sample = time.monotonic() - QcMcpBackend.WATCH_STALE_S - 1  # the watchdog stalled
+        self.assertFalse(self.dev.alive())
+
+    def test_a_broken_sample_is_gone(self):
+        import time
+        with mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 0.02):
+            self.dev.connect()
+            with mock.patch.object(self.dev, "_watchdog_sample", side_effect=RuntimeError("boom")):
+                deadline = time.monotonic() + 5
+                while not self.dev._gone.is_set() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+            self.assertFalse(self.dev.alive())
+
+    def test_the_watchdog_never_waits_for_the_transport(self):
+        import threading
+        self.dev.connect()
+        done = threading.Event()
+        with self.dev._raw._io_lock:  # a transport call is blocked, holding the lock (G2: seconds)
+            t = threading.Thread(target=lambda: (self.dev._watchdog_sample(), self.dev.alive(), done.set()))
+            t.start()
+            self.assertTrue(done.wait(2.0), "a liveness sample must not take the transport's lock")
+        t.join(2.0)
+
+    def test_reconnect_starts_with_a_clean_verdict(self):
+        self.dev.connect()
+        self.hid._thread.running = False
+        self.dev._watchdog_sample()
+        self.dev.disconnect()
+        self.hid._thread.running = True
+        self.dev.connect()
+        self.assertTrue(self.dev.alive())
 
     def test_no_device_maps_to_unit_absent(self):
         with mock.patch.object(T, "open_hid", side_effect=RuntimeError("no HID device 0x152a:0x880a found")):
@@ -120,7 +192,10 @@ class PushOverTheWire(Base):
         j = json.loads(contract.open_envelope(config().keys, contract.TAG_JOB, data))
         out = jobs.run(self.ctx(), j)
         self.assertEqual((out.status, out.reason_code), ("succeeded", ""), out.message)
-        self.assertTrue(out.push["listed"])
+        # contract section 9: the push result carries exactly these fields, and diff entries exactly these
+        self.assertEqual(set(out.push), {"slot", "name", "mismatches", "cpu_load", "diff"})
+        for d in out.push["diff"]:
+            self.assertEqual(set(d), {"row", "col", "param_index", "expected", "readback", "ok"})
         self.assertEqual(out.push["mismatches"], 0)
         self.assertEqual(self.hid.slots[152], "Texas Blues")
         sent = self.names()
@@ -140,6 +215,19 @@ class PushOverTheWire(Base):
             self.assertAlmostEqual(got, want, places=6)  # float32 on the wire
         self.assertEqual(self.hid.grid[4]["bypass"], [False, True] + [False] * 6)
         self.assertEqual(self.hid.routing[0], (1, 19))
+        # all eight bypass flags on every block, through its bypass control at param_count + 1 (the
+        # simulated unit marks a block's bypass scene-assigned only for an index past its own read)
+        cat = catalog()
+        grids = [o for n, o in self.hid.received if n == "Grid" and o.action == A["UPDATE"]]
+        for col, b in self.hid.grid.items():
+            self.assertTrue(b["bypass_scene"], col)
+            pc = cat.models[b["hash"]]["param_count"]
+            assigns = {p.index for g in grids for ch in g.preset.chains for mm in ch.models if mm.column == col
+                       for p in mm.params if p.scene_mode and not p.param_values}
+            self.assertIn(pc + 1, assigns, col)
+            written = {p.index for g in grids for ch in g.preset.chains for mm in ch.models if mm.column == col
+                       for p in mm.params if p.param_values}
+            self.assertTrue(all(i < pc for i in written), (col, written, pc))  # never the trailing slot
 
 
 class StrictPosition(Base):
@@ -298,24 +386,52 @@ class Guard(Base):
             for r in P.message_to_reports(full):
                 self.dev._guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
 
-    def test_scene_assign_on_bypass_column_only_past_the_params(self):
-        self.dev.begin_push(152, "x", self.plan)  # the Spring (column 4) has scene-varying bypass
+    def test_scene_assign_only_at_the_bypass_control(self):
+        self.dev.begin_push(152, "x", self.plan)  # the Spring (column 4): param_count 5, the unit reads 6
 
-        def assign(idx):
+        def assign(idx, col=4):
             def build(g):
                 m = g.preset.chains.add().models.add()
-                m.column = 4
+                m.column = col
                 p = m.params.add()
                 p.index, p.scene_mode = idx, True
             return build
-        self.raw_grid(assign(1))       # DAMPING: a real parameter, not the bypass control
-        self.raw_grid(assign(6))       # nothing armed yet: the unit's own count hasn't been read
-        self.dev._guard.allow_bypass_index(4, 6)   # what set_block_bypass arms from the unit's read
-        self.raw_grid(assign(5))
+        self.raw_grid(assign(1))       # DAMPING: a real parameter, not scene-varying in the plan
+        self.raw_grid(assign(5))       # the trailing slot
         self.raw_grid(assign(7))
+        for col, idx in ((4, 6), (0, 4), (2, 22)):  # every block's bypass control is armed: param_count + 1
+            g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+            assign(idx, col)(g)
+            self.qc.send("Grid", g)
+
+    def test_no_value_at_or_past_param_count(self):
+        self.dev.begin_push(152, "x", self.plan)
+        push = self.dev._guard._push
+        # even if the plan somehow held it, the trailing slot (param_count 3 on column 0) is never written
+        push["params"].add((0, 3))
+        push["values"][(0, 3)] = {0.5}
+        with self.assertRaisesRegex(WireRefused, "at or past param_count"):
+            self.qc.set_param(0, 0, 3, 0.5)
+        push["strings"][(0, 3)] = "x"
+        with self.assertRaisesRegex(WireRefused, "at or past param_count"):
+            self.raw_string(0, 3, "x")
+
+    def raw_string(self, col, idx, value):
         g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
-        assign(6)(g)
+        m = g.preset.chains.add().models.add()
+        m.column = col
+        p = m.params.add()
+        p.index = idx
+        p.param_values.add().string_value = value
         self.qc.send("Grid", g)
+
+    def test_backend_bypass_index_must_be_the_armed_one(self):
+        self.dev.begin_push(152, "x", self.plan)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 4, [False] * 8, 5)
+        self.dev.end_push()
+        with self.assertRaisesRegex(DeviceError, "not armed"):
+            self.dev.set_block_bypass(0, 4, [False] * 8, 6)
 
     def test_values_and_flags_must_be_the_plans(self):
         self.dev.begin_push(152, "x", self.plan)
@@ -398,6 +514,11 @@ class CapturesOverTheWire(Base):
         creates = [o for n, o in self.hid.received if n == "File" and o.action == A["CREATE"]]
         self.assertEqual(len(creates), 1)
         self.assertEqual(self.hid.grid[3]["strings"][5], KEY_USER + "66 AC30 JMP OD")
+        # same G1 rules as any block: catalog param_count 6 for 14000, bypass control at 7, no write at or past 6
+        self.assertTrue(self.hid.grid[3]["bypass_scene"])
+        idx3 = {p.index for g in grids for ch in g.preset.chains for mm in ch.models if mm.column == 3 for p in mm.params}
+        self.assertEqual(max(i for i in idx3 if i != 7), 5)
+        self.assertIn(7, idx3)
         self.assertIn("V1 (user)", out.message)
 
     def test_snapshot_parses_capture_fields(self):

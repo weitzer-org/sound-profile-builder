@@ -157,8 +157,11 @@ class Push(Base):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
         p = r["push"]
-        self.assertEqual((p["slot"], p["name"], p["mismatches"], p["listed"]), ("20A", "Texas Blues", 0, True))
+        self.assertEqual((p["slot"], p["name"], p["mismatches"]), ("20A", "Texas Blues", 0))
+        self.assertEqual(set(p), {"slot", "name", "mismatches", "cpu_load", "diff"})  # contract section 9 only
         self.assertEqual([d for d in p["diff"] if not d["ok"]], [])
+        for d in p["diff"]:
+            self.assertEqual(set(d), {"row", "col", "param_index", "expected", "readback", "ok"})
         self.assertNotIn("Scene labels", r["message"])  # the P2 export carries none
         names = [c[0] for c in self.dev.calls]
         # order: checks before any write; save last
@@ -170,8 +173,21 @@ class Push(Base):
         self.assertEqual(self.dev.slots[152], "Texas Blues")
         # scene-varying GAIN wrote all eight scenes; Spring bypass per scene (G6)
         self.assertIn(("set_param_scenes", 0, 0, 0, [0.2, 0.8] + [0.2] * 6), self.dev.calls)
-        self.assertIn(("set_block_bypass", 0, 4, [False, True] + [False] * 6), self.dev.calls)
-        self.assertNotIn("set_block_bypass", [c[0] for c in self.dev.calls if c[0] == "set_block_bypass" and c[2] != 4])
+        # all eight bypass flags on every block, through its bypass control at param_count + 1 (G3's N)
+        self.assertEqual([c for c in self.dev.calls if c[0] == "set_block_bypass"],
+                         [("set_block_bypass", 0, 0, [False] * 8, 4), ("set_block_bypass", 0, 1, [False] * 8, 8),
+                          ("set_block_bypass", 0, 2, [False] * 8, 22), ("set_block_bypass", 0, 3, [False] * 8, 6),
+                          ("set_block_bypass", 0, 4, [False, True] + [False] * 6, 6)])
+        # G1: place every block, then one read, then the first value write
+        places = [i for i, n in enumerate(names) if n == "add_block"]
+        values = [i for i, n in enumerate(names) if n in ("set_param", "set_param_scenes", "set_block_bypass")]
+        self.assertEqual(len(places), 5)
+        self.assertIn("read_current_preset", names[places[-1]:values[0]])
+        # the open slot is re-read before every write
+        writes = [i for i, n in enumerate(names) if n in ("set_routing", "add_block", "set_param", "set_param_scenes",
+                                                          "set_block_bypass")]
+        for i in writes:
+            self.assertEqual(names[i - 1], "setlist_position", (i, names[i]))
         # owned-slot ledger
         self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
         jid2, _ = self.queue("list_slots")
@@ -359,12 +375,106 @@ class Push(Base):
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
         self.assertTrue(self.agent.stop.is_set())
 
-    def test_save_not_yet_listed(self):
+    def test_save_never_seen_is_failed_and_the_slot_stays_owned(self):
         self.dev.listing_lag = 99
         r = self.push()
-        self.assertEqual(r["status"], "succeeded")
-        self.assertFalse(r["push"]["listed"])
-        self.assertIn("Check 20A on the unit", r["message"])
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("may still land", r["message"])
+        self.assertIn("check 20A on the unit", r["message"])
+        self.assertEqual(r["push"]["mismatches"], 0)
+        self.assertEqual([c[0] for c in self.dev.calls].count("read_directory"), 2 + jobs.SAVE_LIST_POLLS)
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))  # a late save is still the bridge's own
+        o = json.loads(contract.open_envelope(self.cfg.keys, contract.TAG_OWNED_SLOTS,
+                                              self.store.objects[contract.OWNED_SLOTS_KEY]))
+        self.assertEqual([(e["slot"], e["name"]) for e in o["slots"]], [("20A", "Texas Blues")])
+
+    def test_save_seen_on_the_last_poll_succeeds(self):
+        self.dev.listing_lag = jobs.SAVE_LIST_POLLS - 1
+        r = self.push()
+        self.assertEqual(r["status"], "succeeded", r["message"])
+
+    def test_unit_gone_after_the_save_is_failed_and_owned(self):
+        def gone(name):
+            if name == "save_to_slot":
+                self.dev.gone_after = self.dev._alive_calls
+        self.dev.on_call = gone
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "unit_absent"))
+        self.assertIn("may still land", r["message"])
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
+        self.assertTrue(self.agent.stop.is_set())
+
+    def no_value_writes(self):
+        self.assertEqual([c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")],
+                         [])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_wrong_param_count_stops_before_any_value(self):
+        for skew in (1, -1):
+            with self.subTest(skew):
+                self.dev = FakeDevice()
+                self.agent = self.make_agent()
+                self.dev.param_count_skew = {2: skew}  # the cab reads 23 (or 21) slots, not param_count + 1 = 22
+                r = self.push()
+                self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+                self.assertIn(f"reads {22 + skew} parameters; the catalog expects 22", r["message"])
+                self.assertIn("No parameter was written", r["message"])
+                self.no_value_writes()
+
+    def test_wrong_model_at_layout_stops_before_any_value(self):
+        def swap(name):
+            if name == "read_current_preset" and 1 in self.dev.grid:
+                self.dev.grid[1]["model_id"] = 1002
+        self.dev.on_call = swap
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("column 1 holds model 1002", r["message"])
+        self.no_value_writes()
+
+    def test_layout_read_timeout_stops_before_any_value(self):
+        orig, reads = self.dev.read_current_preset, {"n": 0}
+
+        def read():
+            reads["n"] += 1
+            return None if reads["n"] == 2 else orig()  # 1: the blank check, 2: the layout read
+        self.dev.read_current_preset = read
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("after placing the blocks", r["message"])
+        self.no_value_writes()
+
+    def test_switching_presets_between_value_writes_stops(self):
+        def switch(name):
+            if name == "set_param":
+                self.dev.open_position = 0
+        self.dev.on_call = switch
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("Another preset was selected", r["message"])
+        values = [c[0] for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")]
+        self.assertEqual(values, ["set_param_scenes", "set_param"])  # the write after the switch never ran
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_unit_gone_between_value_writes_stops(self):
+        def gone(name):
+            if name == "set_param":
+                self.dev.gone_after = self.dev._alive_calls
+        self.dev.on_call = gone
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "unit_absent"))
+        self.assertEqual([c[0] for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")],
+                         ["set_param_scenes", "set_param"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_defaults_are_logged_never_failed(self):
+        with self.assertLogs("qc_agent", level="INFO") as logs:
+            r = self.push()
+        self.assertEqual(r["status"], "succeeded", r["message"])
+        differ = [m for m in logs.output if "default differs" in m]
+        # the fake unit starts every control at wire 0.0, so controls whose default isn't 0.0 differ
+        self.assertTrue(differ)
+        self.assertIn(f"{len(differ)} control(s) the preset leaves at default read back differently", r["message"])
+        self.assertTrue(any("not compared" in m or "default differs" in m for m in logs.output))
 
     def test_switching_presets_mid_build_stops(self):
         def switch(name):
@@ -402,7 +512,7 @@ class Push(Base):
         def switch(name):
             if name == "read_current_preset":
                 reads["n"] += 1
-                if reads["n"] == 3:  # 1: blank check, 2: read-back, 3: the re-read just before the save
+                if reads["n"] == 4:  # 1: blank check, 2: layout, 3: read-back, 4: the re-read just before the save
                     self.dev.open_position = 0
         self.dev.on_call = switch
         r = self.push()
@@ -731,6 +841,71 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class DefaultsLog(unittest.TestCase):
+    """jobs._log_defaults: unwritten controls compared with the catalog default, logged, never failed."""
+
+    def preset(self, plan, value_for):
+        from qc_agent.export_validator import default_wire
+        cat = catalog()
+        blocks = []
+        for b in plan.blocks:
+            m = cat.models[b.model_id]
+            params = []
+            for i in range(b.param_count + 1):
+                cp = m["params_by_index"].get(i)
+                v = value_for(cp, default_wire(cp) if cp else None)
+                params.append({"index": i, "values": [v] * 8, "scene_mode": False})
+            blocks.append({"col": b.col, "model_id": b.model_id, "params": params})
+        return {"chains": [{"row": 0, "in_port": 1, "out_port": 19, "blocks": blocks}], "bypass": None}
+
+    def test_at_default_logs_nothing_and_counts_zero(self):
+        from qc_agent.export_validator import validate
+        plan = validate(export(), catalog(), "4.1.0")
+        pr = self.preset(plan, lambda cp, dw: dw if dw is not None else 0.0)
+        with self.assertNoLogs("qc_agent", level="WARNING"):
+            self.assertEqual(jobs._log_defaults(plan, pr, catalog()), 0)
+
+    def test_a_moved_control_is_logged_and_counted(self):
+        from qc_agent.export_validator import default_wire, validate
+        plan = validate(export(), catalog(), "4.1.0")
+        amp = plan.blocks[1]  # Brit 2203: GAIN (0) and OUTPUT (6) written, the rest left at default
+        written = {p.index for p in amp.params}
+        target = next(cp for cp in sorted(catalog().models[amp.model_id]["params"], key=lambda q: q["index"])
+                      if cp["index"] not in written and default_wire(cp) is not None)
+
+        def value(cp, dw):
+            if cp is target:
+                return 1.0 if dw < 0.5 else 0.0
+            return dw if dw is not None else 0.0
+        pr = self.preset(plan, value)
+        with self.assertLogs("qc_agent", level="WARNING") as logs:
+            self.assertEqual(jobs._log_defaults(plan, pr, catalog()), 1)
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn(f"col 1 Brit 2203 {target['name']} [{target['index']}]", logs.output[0])
+
+    def test_a_crash_in_the_defaults_log_doesnt_change_the_push(self):
+        from unittest import mock
+        dev, store, clock = FakeDevice(), MemoryStore(BUCKET), Clock()
+        with tempfile.TemporaryDirectory() as home:
+            a = Agent(config(), store, dev, catalog(), Path(home), now_fn=clock, sleep=lambda s: None)
+            a.ctx.sleep = lambda s: None
+            jid, key, data = job("push_preset")
+            store.objects[key] = data
+            with mock.patch.object(jobs, "_log_defaults", side_effect=RuntimeError("boom")), \
+                    self.assertLogs("qc_agent", level="ERROR"):
+                for k, d in a.scan():
+                    a.run_job(k, d)
+            self.assertEqual(open_result(store, jid)["status"], "succeeded")
+
+    def test_never_raises_on_a_short_or_odd_read(self):
+        from qc_agent.export_validator import validate
+        plan = validate(export(), catalog(), "4.1.0")
+        for pr in ({}, {"chains": []}, {"chains": [{"row": 0, "blocks": [{"col": 0, "model_id": 1}]}]},
+                   {"chains": [{"row": 0, "blocks": [{"col": 0, "model_id": 1,
+                                                       "params": [{"index": 1, "values": ["x", None]}]}]}]}):
+            jobs._log_defaults(plan, pr, catalog())
+
+
 class Captures(Base):
     """A push whose export holds a capture block (Go golden 03_British_Invasion: a user capture,
     '66 AC30 JMP OD', in column 3), against the fake unit's capture library (fake_device)."""
@@ -757,6 +932,10 @@ class Captures(Base):
         col3_params = [k for k, c in enumerate(calls) if c[0].startswith("set_param") and c[2] == 3]
         self.assertTrue(col3_params and all(k > i for k in col3_params))  # file_name before the controls
         self.assertIn("Captures: col 3 '66 AC30 JMP OD' V1 (user).", r["message"])
+        # the capture block gets the same treatment as any block: catalog param_count 6 for 14000, so the
+        # layout read expects 7 slots, and its bypass control is 7
+        self.assertIn(("set_block_bypass", 0, 3, [False] * 8, 7), calls)
+        self.assertTrue(all(c[3] < 6 for c in calls if c[0] in ("set_param", "set_param_scenes") and c[2] == 3))
         self.assertIn("names every placed capture as a dependency", r["message"])
         self.assertEqual(names.count("save_to_slot"), 1)
 
@@ -799,6 +978,21 @@ class Captures(Base):
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
         self.assertIn("did not confirm placing capture", r["message"])
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_capture_block_wrong_param_count_stops_before_any_value(self):
+        self.dev.param_count_skew = {3: 1}
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("column 3 (66 AC30 JMP OD) reads 8 parameters; the catalog expects 7", r["message"])
+        self.assertEqual([c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")],
+                         [])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_save_never_seen_keeps_the_capture_note(self):
+        self.dev.listing_lag = 99
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("Captures: col 3", r["message"])
 
     def test_file_name_read_back_wrong_is_not_saved(self):
         self.dev.corrupt_file_name = True

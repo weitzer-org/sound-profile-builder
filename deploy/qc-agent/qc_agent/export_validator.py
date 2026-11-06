@@ -17,7 +17,8 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * 1-8 blocks in columns 0..n-1, each a catalog model in an allowed category, not a plugin
   model, not denylisted (NC_Recorder 20000), name and category equal to the catalog's,
   and `index_evidence` consistent with the catalog (plain, or a clone of a base G1 checked);
-* each parameter: a catalog index of that model, a user-facing control (not an internal
+* each parameter: a catalog index of that model below its `param_count` (G1, plan 7.2: the device
+  reports param_count + 1 slots and the last one, index param_count, is never written), a user-facing control (not an internal
   bypass/phi/IR-selector slot or a meter), the label the catalog gives it (numbered per
   mic on dual-mic cabs, as catalog.LabelParams does), a writable type, a numeric range
   (symbolic bounds refused), eight display values inside the range (whole numbers for
@@ -32,7 +33,7 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * capture blocks (`capture`, model_id 0; plan 4.2): category Neural Capture, index_evidence
   "capture-block", a printable name equal to `model`, source factory|user, not yet resolved,
   and only the capture block's own controls (GAIN..VOLUME, indexes 0-4 of model 14000, which
-  14001 must list identically). Which capture and which block (V1 14000 / V2 14001) is decided
+  14001 must list identically, with the same param_count; file_name, index 5, must sit below it). Which capture and which block (V1 14000 / V2 14001) is decided
   on the unit, from a fresh directory listing, by qc_agent.captures;
 * `stomps` (design doc qc-stomp-layout.md, S2): at most 32 `{row, col, switch}` entries,
   row 0, a placed column, switch A-G (never H), one switch per block. They are VALIDATED
@@ -60,6 +61,7 @@ VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one
 CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
 CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
 CAPTURE_SOURCES = frozenset({"factory", "user"})
+CAPTURE_FILE_NAME_INDEX = 5               # file_name (qc-mcp transport.CAPTURE_FILE_NAME_PARAM; captures.FILE_NAME_PARAM)
 _CAPTURE_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")  # printable ASCII; leading/trailing space refused separately
 # Symbolic parameter bounds confirmed on the owner's unit (CorOS 4.1.0, plan 7.1 G4), the same
 # two internal/catalog/firmware_constants.go marks EvidenceConfirmed410. Every other symbolic
@@ -150,13 +152,21 @@ class PlannedBlock:
     model_id: int              # 0 for a capture block until the unit's listing resolves it
     model: str
     params: list[PlannedParam]
-    bypass_scenes: list[bool]  # 8 flags, A, B, then A for C-H
-    max_param_index: int = 0   # the catalog's highest listed index for this model (wire guard)
+    bypass_scenes: list[bool]  # 8 flags, A, B, then A for C-H; all eight are written on every block
+    param_count: int           # the catalog's full list, hidden params included (G1: the unit reads param_count + 1)
     capture: PlannedCapture | None = None
+    at_default: list[str] = field(default_factory=list)  # labels QC-2 says it left at default (logged only)
 
     @property
     def bypass_varies(self) -> bool:
         return len(set(self.bypass_scenes)) > 1
+
+    @property
+    def bypass_index(self) -> int:
+        """The block's bypass control: one past the unit's own read of the block (qc-mcp
+        bypass_param_index = N, and G1 measured N = param_count + 1). The push checks N on the unit
+        before any value is written, so this is never a guess at the moment it is used."""
+        return self.param_count + 1
 
 
 @dataclass
@@ -169,8 +179,7 @@ class Plan:
     stomps: list[PlannedStomp] = field(default_factory=list)  # validated, not written (gate G7 pending)
 
     def op_count(self) -> int:
-        return 1 + sum(1 + len(b.params) + (1 if any(b.bypass_scenes) else 0) + (1 if b.capture else 0)
-                       for b in self.blocks)
+        return 1 + sum(1 + len(b.params) + 1 for b in self.blocks)  # place (or capture), params, bypass
 
 
 def _exact(obj, keys, where, optional=()):
@@ -292,6 +301,33 @@ def _expected_labels(cm) -> dict[int, str]:
     return out
 
 
+def is_internal_param(p) -> bool:
+    """catalog.IsInternalParam: not a user control (bypass/phi/IR selector, strings, meters)."""
+    return _is_internal(p)
+
+
+def control_labels(cm) -> dict[int, str]:
+    """index -> label for a catalog model's user controls (catalog.LabelParams)."""
+    return _expected_labels(cm)
+
+
+def default_wire(cp) -> float | None:
+    """The catalog default of a control as the wire value an export would carry for it (the same
+    mapping _check_value accepts, evidence labels included), or None when the agent can't compute one:
+    no numeric default, a bound it can't resolve, a type with no wire mapping. For the defaults log
+    only; a None is logged as not compared, never treated as a failure."""
+    d = cp.get("default")
+    if isinstance(d, bool) or not isinstance(d, (int, float)) or not math.isfinite(d):
+        return None
+    try:
+        lo, hi = _bounds(cp, cp.get("name", "?"))
+        if not min(lo, hi) <= d <= max(lo, hi):
+            return None
+        return _expected_wire(cp, lo, hi, float(d))
+    except (ExportRefused, KeyError, TypeError, ValueError, ZeroDivisionError):
+        return None
+
+
 def _check_evidence(where, cm, ev):
     if not isinstance(ev, str):
         raise ExportRefused(f"{where}.index_evidence must be a string")
@@ -305,6 +341,27 @@ def _check_evidence(where, cm, ev):
                             f"against the device (only {sorted(VERIFIED_CLONE_BASES)} was)")
     if ev != want:
         raise ExportRefused(f"{where}: index_evidence is {ev!r}, the catalog says {want!r}")
+
+
+def _param_count(cm, where) -> int:
+    """The model's param_count (catalog.Model.ParamCount). Every listed index must sit below it: an
+    index at or past it would be the device's trailing slot or the bypass control (G1, plan 7.2)."""
+    pc = cm.get("param_count")
+    if isinstance(pc, bool) or not isinstance(pc, int) or pc < 1:
+        raise ExportRefused(f"{where}: the catalog has no param_count for model {cm.get('id')}; the bridge "
+                            "can't check the unit's layout of this block")
+    if max(cm["params_by_index"], default=-1) >= pc:
+        raise ExportRefused(f"{where}: the catalog lists an index at or past param_count {pc} for model "
+                            f"{cm.get('id')} (catalog fault)")
+    return pc
+
+
+def _at_default(b, where) -> list[str]:
+    ad = b["at_default"]
+    if (not isinstance(ad, list) or len(ad) > MAX_PARAMS_PER_BLOCK
+            or any(not isinstance(x, str) or len(x) > 80 for x in ad)):
+        raise ExportRefused(f"{where}.at_default must be a short list of control names")
+    return list(ad)
 
 
 def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
@@ -333,18 +390,15 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     if b["category"] != cm["category"]:
         raise ExportRefused(f"{where}: category is {cm['category']!r} in the catalog, not {b['category']!r}")
     _check_evidence(where, cm, b["index_evidence"])
-
-    ad = b["at_default"]
-    if (not isinstance(ad, list) or len(ad) > MAX_PARAMS_PER_BLOCK
-            or any(not isinstance(x, str) or len(x) > 80 for x in ad)):
-        raise ExportRefused(f"{where}.at_default must be a short list of control names")
+    pc = _param_count(cm, where)
+    ad = _at_default(b, where)
 
     if not isinstance(b["params"], list) or len(b["params"]) > MAX_PARAMS_PER_BLOCK:
         raise ExportRefused(f"{where}.params must be a list of at most {MAX_PARAMS_PER_BLOCK}")
     labels = _expected_labels(cm)
     params, seen = [], set()
     for pi, prm in enumerate(b["params"]):
-        p = _check_param(f"{where} param {pi}", prm, cm, labels)
+        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc)
         if p.index in seen:
             raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
         seen.add(p.index)
@@ -355,13 +409,13 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass flags must be true/false")
     if any(flags[i] != flags[0] for i in range(2, SCENES)):
         raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
-    return PlannedBlock(bi, mid, cm["name"], params, list(flags),
-                        max(cm["params_by_index"], default=0))
+    return PlannedBlock(bi, mid, cm["name"], params, list(flags), pc, at_default=ad)
 
 
-def _check_capture_layouts(catalog):
-    """The V1 and V2 capture blocks must list the same user controls, or a capture block's params
-    (checked against 14000) might not mean the same on a 14001 block."""
+def _check_capture_layouts(catalog) -> int:
+    """The V1 and V2 capture blocks must list the same user controls and the same param_count, or a
+    capture block's params (checked against 14000) might not mean the same on a 14001 block, and the
+    layout check after placement would expect the wrong count. Returns that param_count."""
     def controls(mid):
         m = catalog.models.get(mid)
         if m is None:
@@ -372,6 +426,15 @@ def _check_capture_layouts(catalog):
     if v1 is None or v1 != v2:
         raise ExportRefused("the catalog's V1 (14000) and V2 (14001) capture blocks don't list the same controls; "
                             "the bridge can't check this capture block")
+    m1, m2 = catalog.models[CAPTURE_BLOCK_IDS[1]], catalog.models[CAPTURE_BLOCK_IDS[2]]
+    pc = _param_count(m1, "capture block 14000")
+    if _param_count(m2, "capture block 14001") != pc:
+        raise ExportRefused("the catalog's V1 (14000) and V2 (14001) capture blocks have different param_count; "
+                            "the bridge can't check this capture block")
+    if not CAPTURE_FILE_NAME_INDEX < pc:
+        raise ExportRefused(f"the catalog's capture block param_count {pc} leaves no room for file_name at index "
+                            f"{CAPTURE_FILE_NAME_INDEX}")
+    return pc
 
 
 def _check_capture_block(bi, b, catalog) -> PlannedBlock:
@@ -397,20 +460,16 @@ def _check_capture_block(bi, b, catalog) -> PlannedBlock:
                             "trailing space")
     if b["model"] != name:
         raise ExportRefused(f"{where}: model must equal capture.name")
-    _check_capture_layouts(catalog)
+    pc = _check_capture_layouts(catalog)
     cm = catalog.models[CAPTURE_LAYOUT_ID]
     where = f"block {bi} (capture {name!r})"
-
-    ad = b["at_default"]
-    if (not isinstance(ad, list) or len(ad) > MAX_PARAMS_PER_BLOCK
-            or any(not isinstance(x, str) or len(x) > 80 for x in ad)):
-        raise ExportRefused(f"{where}.at_default must be a short list of control names")
+    ad = _at_default(b, where)
     if not isinstance(b["params"], list) or len(b["params"]) > MAX_PARAMS_PER_BLOCK:
         raise ExportRefused(f"{where}.params must be a list of at most {MAX_PARAMS_PER_BLOCK}")
     labels = _expected_labels(cm)
     params, seen = [], set()
     for pi, prm in enumerate(b["params"]):
-        p = _check_param(f"{where} param {pi}", prm, cm, labels)
+        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc)
         if p.index in seen:
             raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
         seen.add(p.index)
@@ -420,13 +479,15 @@ def _check_capture_block(bi, b, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass flags must be true/false")
     if any(flags[i] != flags[0] for i in range(2, SCENES)):
         raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
-    return PlannedBlock(bi, 0, name, params, list(flags), max(labels, default=0),
-                        PlannedCapture(name, c["source"]))
+    return PlannedBlock(bi, 0, name, params, list(flags), pc, PlannedCapture(name, c["source"]), at_default=ad)
 
 
-def _check_param(pw, prm, cm, labels) -> PlannedParam:
+def _check_param(pw, prm, cm, labels, param_count) -> PlannedParam:
     _exact(prm, ("index", "label", "scene_mode", "display", "wire", "evidence"), pw, optional=("units",))
     idx = _int(prm["index"], pw + ".index")
+    if not 0 <= idx < param_count:
+        raise ExportRefused(f"{pw}: index {idx} is at or past param_count {param_count} (the device's trailing "
+                            "slot and bypass control are never written as values)")
     cp = cm["params_by_index"].get(idx)
     if cp is None:
         raise ExportRefused(f"{pw}: index {idx} is not a listed parameter of this model")
