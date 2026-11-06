@@ -307,6 +307,11 @@ def sync_device_library(ctx, job) -> Outcome:
     except captures.LibraryTooLarge as e:
         return failed("device_error", f"The unit lists {e.args[0]} capture files, more than the {captures.MAX_LIBRARY_CAPTURES} "
                       "the sync carries. Nothing was sent.", firmware=fw)
+    try:  # evidence only (F2): whatever goes wrong here must not change the sync
+        for line in captures.skip_census(snap):
+            log.info("%s", line)
+    except Exception:  # noqa: BLE001
+        log.exception("the capture skip census failed; the sync goes on")
     rb = {"format": captures.LIBRARY_FORMAT, "payload": lib}
     if len(json.dumps(rb, separators=(",", ":"), ensure_ascii=False).encode("utf-8")) > contract.MAX_RESULT_BYTES - 16 * 1024:
         return failed("device_error", "The capture list is too large to return.", firmware=fw)
