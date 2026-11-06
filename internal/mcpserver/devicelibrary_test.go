@@ -300,7 +300,7 @@ func TestDryRun_FolderTextIsACodeSpan(t *testing.T) {
 	var b strings.Builder
 	renderExportTable(&b, []devicejobs.PlanBlock{{Row: 0, Col: 0, Model: "CA John's", Capture: "CA John's",
 		Params:      []devicejobs.PlanParam{{Name: "GAIN", A: "0 dB"}},
-		CaptureInfo: &devicejobs.PlanCapture{UnitName: "CA John's", Version: 2, Kind: "factory", Folder: "a[click](https://evil.example)", KeyPrefix: "abcd1234", SyncedAt: "2026-11-06T12:00:00Z"}}}, nil, nil, nil)
+		CaptureInfo: &devicejobs.PlanCapture{UnitName: "CA John's", Version: 2, Kind: "factory", Folder: "a[click](https://evil.example)", KeyPrefix: "abcd1234", SyncedAt: "2026-11-06T12:00:00Z"}}}, nil, nil, nil, nil)
 	if !strings.Contains(b.String(), "folder `a[click](https://evil.example)`") {
 		t.Fatalf("folder is not in a code span:\n%s", b.String())
 	}

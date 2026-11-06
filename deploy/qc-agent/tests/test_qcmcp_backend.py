@@ -112,6 +112,33 @@ class Session(Base):
         self.assertNotIn("\n", cm.records[0].getMessage())
         self.assertNotIn("`", out)
 
+    def test_other_complete_collections_are_listed_incomplete_ones_are_left_out(self):
+        from qc_agent.qcmcp_backend import directory_snapshot
+        self.dev.connect()
+
+        def folder(key, name, n, names=None, factory=False):
+            f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)
+            f.folder.key, f.folder.name, f.folder.is_factory = key, name, factory
+            for i in range(n):
+                f.folder.files.add().name = (names or {}).get(i, "")
+            return f
+
+        sounds, odd, fact = "/media/p4/Presets/Sounds profiles", "/media/p4/Presets/Short", "/opt/factory"
+        snap = directory_snapshot([
+            folder(fake_hid.SETLIST, "My Presets", 256),
+            folder(sounds, "Sounds profiles", 256, {24: "Chess"}),
+            folder(odd, "Short", 100),
+            folder(fact, "Factory", 256, factory=True),
+        ])
+        self.assertEqual(set(snap.preset_folders), {fake_hid.SETLIST, sounds})  # not the short or the factory one
+        self.assertEqual(snap.for_folder(sounds).my_presets[24], "Chess")
+        self.assertEqual(snap.for_folder(sounds).my_presets[25], "")
+        self.assertIsNone(snap.for_folder(odd))
+        self.assertIsNone(snap.for_folder(fact))
+        self.assertEqual(snap.my_presets, snap.for_folder(fake_hid.SETLIST).my_presets)  # My Presets still the main table
+        with self.assertRaisesRegex(DeviceError, "My Presets is missing"):
+            directory_snapshot([folder(sounds, "Sounds profiles", 256)])
+
     def test_dead_reader_thread_means_gone(self):
         self.dev.connect()
         self.hid._thread.running = False

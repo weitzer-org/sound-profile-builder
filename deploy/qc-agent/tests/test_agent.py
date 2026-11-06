@@ -17,6 +17,7 @@ from qc_agent.agent import Agent
 from qc_agent.s3 import MemoryStore, StoreError
 from fake_device import FakeDevice
 from qc_agent.device import PartialListing
+from qc_agent.device import SETLIST_KEY
 
 def setUpModule():
     # Pacing off for this module only; restored afterwards so other modules see the real values.
@@ -269,7 +270,7 @@ class Push(Base):
         self.dev.slots = {19: " texas BLUES "}
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
-        self.assertIn("Slot 3D already has a preset named", r["message"])
+        self.assertIn("Slot 3D in 'My Presets' already has a preset named", r["message"])
         self.assert_no_writes()
 
     def test_unknown_device_type_refused(self):
@@ -296,12 +297,78 @@ class Push(Base):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"))
         self.assertIn("Select slot 20A", r["message"])
+        self.assertIn("reports slot 1A in 'My Presets' as open", r["message"])
         self.assert_no_writes()
+
+    SOUNDS = "/media/p4/Presets/Sounds profiles"
+
+    def test_push_into_the_open_collection(self):
+        self.dev.collections = {self.SOUNDS: ("Sounds profiles", {})}
+        self.dev.open_folder = self.SOUNDS
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        self.assertIn("20A in 'Sounds profiles'", r["message"])
+        self.assertEqual(self.dev.push_folder, self.SOUNDS)
+        self.assertEqual(self.dev.collections[self.SOUNDS][1], {152: "Texas Blues"})
+        self.assertNotIn(152, self.dev.slots)  # My Presets was not touched
+
+    def test_collection_slot_is_checked_in_its_own_listing(self):
+        # empty in My Presets, taken in the open collection: the collection's listing decides
+        self.dev.collections = {self.SOUNDS: ("Sounds profiles", {152: "Existing"})}
+        self.dev.open_folder = self.SOUNDS
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "slot_not_empty"))
+        self.assertIn("'Sounds profiles'", r["message"])
+        self.assert_no_writes()
+
+    def test_collection_taken_slot_in_my_presets_does_not_block_an_empty_one_elsewhere(self):
+        self.dev.slots = {152: "In My Presets"}
+        self.dev.collections = {self.SOUNDS: ("Sounds profiles", {})}
+        self.dev.open_folder = self.SOUNDS
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+
+    def test_switching_collection_mid_build_stops(self):
+        self.dev.collections = {self.SOUNDS: ("Sounds profiles", {})}
+        self.dev.open_folder = self.SOUNDS
+
+        def switch(name):
+            if name == "add_block":
+                self.dev.open_folder = SETLIST_KEY  # same position, other collection
+        self.dev.on_call = switch
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("Another preset was selected", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_one_bad_listing_after_the_save_is_retried(self):
+        from qc_agent.device import DeviceError
+
+        def bad_once(fake, n):
+            if n == 3:  # check_unit = 1, the pre-save listing = 2, the first look after the save = 3
+                raise DeviceError("My Presets is missing from the unit's directory listing")
+        self.dev.on_listing = bad_once
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("save_to_slot"), 1)
+
+    def test_listings_that_keep_failing_after_the_save_end_unconfirmed(self):
+        from qc_agent.device import DeviceError
+
+        def bad_after_save(fake, n):
+            if n >= 3:
+                raise DeviceError("incomplete listing")
+        self.dev.on_listing = bad_after_save
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("It may still land", r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("save_to_slot"), 1)
 
     def test_factory_folder_open_is_refused(self):
         self.dev.open_folder = "/opt/neuraldsp/factory"
         r = self.push()
         self.assertEqual(r["reason_code"], "unsupported_arg")
+        self.assertIn("('factory') isn't listed as a complete 256-slot", r["message"])
         self.assert_no_writes()
 
     def test_live_grid_must_be_blank(self):
@@ -356,7 +423,7 @@ class Push(Base):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
         self.assertIn("nothing was saved", r["message"])
-        self.assertIn("1H already has a preset named", r["message"])
+        self.assertIn("1H in 'My Presets' already has a preset named", r["message"])
         self.assertIsNotNone(r["push"])
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
 
