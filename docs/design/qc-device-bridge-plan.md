@@ -423,6 +423,54 @@ The spikes are in [`tools/device-spikes/`](../../tools/device-spikes/README.md) 
 
 **If G1 shows our catalog's clone expansion is wrong,** fix the importer **first**. That also affects PR #120's Architect parameter context and the preset views. **If G2 (c) fails** (the unit going away isn't detected), keep only the idle-timeout exit. **If G3 shows a write misbehaving,** that operation stays out of v1 until it's understood. That includes per-scene parameters (also G6).
 
+### 7.3 P6 results (owner's unit, CorOS 4.1.0, 2026-11-06)
+
+The owner's first session with the bridge, driven from the phone through the MCP tools, with the PC on `main` (`a36359d`, then `5337845` after PR #165). **Seen** = in the job results, the bridge log or console output the owner pasted, or the owner's photos of the screen; **inferred** = reasoning from those, labelled. Offline tests say nothing here.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Setup: pull `main`, venv from `requirements.lock.txt` (hashes), `qc_agent check`, `install-shortcut` | pass | console: protobuf 7.36.0 only; `all checks passed`, catalog `3f98a080bd02`; shortcut on the OneDrive desktop |
+| **G2 (a)**: start from the desktop shortcut, heartbeat | **pass** | window `Bridge running`; `device_status` online. The server reports online only after the heartbeat's HMAC verifies and the bucket matches (`internal/devicejobs/store.go`), so `DEVICE_JOB_KEY` matches Fly |
+| `list_device_slots` against the unit | pass | 247 of 256 empty, 1A-1H and 2A occupied: same as G0 |
+| Capture sync, first run | **fail**, fixed in PR #165 | `The unit lists 2073 capture files, more than the 1500`; census: factory files' version field empty, downloaded ones `1`/`2` in a folder named `''` |
+| Capture sync after #165 | **partial** (follow-up F2) | stored 2186 captures, **0 factory**, 6197 left out by the name/key check; reason not logged |
+| Where V1/V2 lives (8.1 item 1) | answered | census: `Captures Library` > `Factory Captures V1` / `V2` > category (Amp, Pedal, Fuzz, ...) > device folder; every level lists all files below it (2073 = 1393 + 669 + 11). The parent-folder rule of #165 resolves every factory folder (`factory V1 4179, V2 2007, unknown 0`). `My Captures` (11 files) has an empty version field |
+| Saved presets carry dependency lists (8.1 item 1) | answered: **none** | `My Presets: 0 saved presets list dependencies` with 9 occupied slots |
+| Push with a plugin model (JM Studio Verb Hall) | **refused** by the bridge (follow-up F3) | `plugin models are not pushed in v1`, while the server's export allows owned plugins |
+| Push 1: values (JMP 2203 Blues, ES-339 → 3A) | pass | `mismatches 0`, 68 wire values `ok`, twice |
+| Controls the push doesn't write start at the catalog default (README step 13) | pass | no `default differs` / `default not compared` line in either push |
+| Per-scene bypass on a block other than the Spring (Chief OD1: A bypassed, B on) | pass | push read-back; `read_device_preset` after a reload; Scene A photo shows the block dimmed |
+| Pre-save "grid changed" guard | pass (it fired) | job `3b760d3b`: the owner was editing on the unit; nothing saved (issue #166) |
+| The save lands | pass, but the job reports **failure** (follow-up F1) | owner saw `3A QC2 P6 S JMP2203`; listing shows it `owned`; log `push failed: My Presets listed 1 slots, not 256` right after the save, in every push since |
+| Footswitch index → switch | **2 → C and 6 → G confirmed on screen**; 0, 1, 3, 4, 5 inferred from qc-mcp's source | photos (Stomp mode; block headers "C" and "G"); `footswitches read back as planned` |
+| Latching; H untouched | pass | owner; photo |
+| README step 9 / plan step 6: push into a slot holding our own preset | **pass** | `slot_not_empty`, names the preset, nothing written |
+| **G7 (f)** | **PASS** | `g7_stomps.py --apply`: C → A took, `PresetDirty` then true; after recalling 2A and 3A the assignments are back to C/G. Entry point 2 is unblocked for (f) |
+| Our save across a power cycle (3A) | pass | photos: name, 4 blocks, C/G, Chief OD1 2.0 / 7.5, Studio Plate 12.0 % / 1.60 s / 20 ms, Scene A bypass |
+| Device-XML taper (`taper:device-xml`) | **confirmed at two points** | Studio Plate 70 DECAY 1.6 s → **1.60 s**, PRE DELAY 20 ms → **20 ms** on screen |
+| Faders (`encoding:fader-linear-guess`, 8.1 item 8) | **confirmed at two points** | Graphic-9 (4005) 65Hz +6 dB → **6.0 dB**; CA John's 2C Ch1 80 Hz 8 → **8.0**; the other bands 0.0 / 5.0 (defaults). Parallax, the plugin Graphic-9s and Ch2/Ch3 not seen |
+| Graphic-9 LPF 12000 Hz | confirmed | **12k0 Hz** on screen |
+| Pan (`scale:catalog-range`, 8.1 item 4) | **direction confirmed; display scale differs** (follow-up F5) | MIC 1 PAN 7 (wire 0.70) shows **20 R**; the default (wire 0.5) shows **C**. Inferred: the screen scale is 50 L .. C .. 50 R, linear in wire (two points; the ends not seen) |
+| A downloaded capture (Klon Centaur 1, version field `1` → V1 block) | pass | loads with its name, all controls 0.0 dB, no warning; header `NEURAL CAPTURE`. Whether a V2 block's header differs is not established |
+| `read_device_preset(import=true)` against the dry run (3B) | pass | 0 unconverted; 65Hz 6 dB, LPF 12000 Hz, 80 Hz 8, MIC 1 PAN 7; capture matched as `Klon Centaur 1 (My Capture)` from a `file_name` with **no separator** after the key (`readback.go` trims an optional one) |
+| Factory V1 and V2 capture pushes | not run | blocked by F2 |
+| A capture preset across a power cycle | not run | owner decision: covered by 3A's power cycle |
+| G2 (b), wrong firmware, idle exit, unplug and watchdog (README steps 5-8, 13), empty-but-not-open slot, cab mic write (steps 10/14) | not run | — |
+
+Also seen: the current-preset read returned an empty name on the live grid right after a push, and the saved name once the slot was loaded again (G7's first preflight refused on that; inferred: the live buffer keeps the blank grid's name until a reload). `read_device_preset` recorded 6 cab mic strings (1A and 3A). A directory listing takes about 16 s (issue #164).
+
+**Follow-ups from P6** (each its own PR; listed in 8.1 too):
+- **F1** post-save confirmation: after File CREATE the unit sends a My Presets update with **1** entry, and `directory_snapshot` (keeps the latest message per folder) refuses it, so every push ends `device_error` "may still land" although the save landed. Inferred: a partial update for the changed slot. Log it first, then decide how a short table is handled.
+- **F2** sync: all factory-folder entries and `My Captures` left out by the name/key check (reason not logged), and the `Captures Library` view (flagged non-factory) stores factory captures as `user`, so a dry run refuses every factory capture as the wrong kind. Log the reason per folder, then classify.
+- **F3** plugin models: the server exports owned plugins, the bridge refuses them (`export_validator.py`, `plugin_id`). Owner decision on which side changes.
+- **F4** footswitch planner: a capture block is labelled with catalog model 0 ("Eltron 30") and gets its role from that lookup (3B dry run); stomp doc 4.1 says captures take the modeler's category or `user_captures.json`.
+- **F5** pan display: the Architect and the dry run show 0..10; the unit shows L/C/R (7 = "20 R").
+- **F6** `save()` logs nothing about which pre-save check failed (issue #166, with the user-interference handling).
+- **F7** `send_preset_to_device` times out after 60 s on the client while the job runs on (issue #164).
+- **F8** the fader label: change `encoding:fader-linear-guess` to a confirmed label for the models seen (4005, 1139), or for all 48 faders by the same rule; owner decides.
+- **F9** the dry run does not warn that the slot was occupied in the last listing (the bridge still refuses).
+- **F10** PR #165's LOW GSR finding (a local import in `_log_census`).
+
 ## 8. Phased PRs
 
 Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-code-assist and CodeRabbit bots review every PR.
@@ -449,25 +497,26 @@ Each PR merges to `main`, which **auto-deploys** (CLAUDE.md). The GSR, gemini-co
 Kept open by the owner (2026-11-06). Strike each one through with its date and PR when it is done.
 
 **Owner, on the unit (P6; normal use, no extra session).** Pull `main` on the PC first. The agent validates against its clone's catalog and capture code. Items 1 and 2 are hardware step 12 in `deploy/qc-agent/README.md`.
-1. **Before the first capture push:** run `list_device_slots` once and send the `capture folder ...` and `My Presets: ... dependencies` lines from `agent.log`. They answer three things:
+1. ~~**Before the first capture push:**~~ (answered 2026-11-06, 7.3: the folders are `Factory Captures V1/V2` one level up from per-device folders, the factory version field is empty, no saved preset lists dependencies; PR #165) run `list_device_slots` once and send the `capture folder ...` and `My Presets: ... dependencies` lines from `agent.log`. They answer three things:
    - the real factory folder names. If they aren't `Factory Captures V1`/`V2`, every factory capture is refused until a one-line fix in `qc_agent/captures.py`;
    - whether `ProductData.version` calibrates V1/V2;
    - whether saved presets carry dependency lists.
-2. **Three capture pushes:** one with a factory V1 capture, one with a factory V2 capture, and one with a downloaded (user) capture.
+2. **Three capture pushes** (2026-11-06: the downloaded capture is done, 7.3; the two factory pushes wait on follow-up F2): one with a factory V1 capture, one with a factory V2 capture, and one with a downloaded (user) capture.
    - Check each: `succeeded` and `mismatches 0`; the block type on the unit ("Capture" vs "Capture 2") matches the V1/V2 in the result; the capture name shows and it sounds right; GAIN..VOLUME match the dry run in scenes A and B.
    - Then power-cycle and re-select each slot: the capture still loads, with its values kept.
    - This also closes P4c's deferred security finding: a user capture's V1/V2 comes from `ProductData.version`, which a Cortex Cloud capture's author may control (PR #145 comment).
-3. Earlier README hardware steps not yet run: step 2 (G2 a, start from the shortcut), step 5 (G2 b, Cortex Control holding the unit) and step 7 (unplug detection).
+3. Earlier README hardware steps not yet run: ~~step 2 (G2 a, start from the shortcut)~~ (pass, 2026-11-06, 7.3), step 5 (G2 b, Cortex Control holding the unit) and step 7 (unplug detection).
 
-8. **Faders, labelled guess (P2d; README step 15; normal use, no extra session).** Faders (the Graphic-9 and Parallax bands, CA John's 2C tone faders) are pushed with a linear display-to-wire guess that nobody has read on the unit. Push a **Graphic-9 (or Plugin Graphic-9) with one band at a non-zero value, for example 65Hz +6 dB**, and a **CA John's 2C Ch1 fader off its default of 5, for example 80 Hz at 8**, then read both on the unit's screen. If the screen shows +6.0 dB and 8.0, the linear rule holds for -12..12 dB and 0..10 faders; strike this item through and change `encoding:fader-linear-guess` to a confirmed label. If either differs, send a photo: the export is wrong for that fader type and the label stays a guess. Also run `read_device_preset(import=true)` on it: the imported values should agree with the dry run.
+8. ~~**Faders, labelled guess**~~ (2026-11-06, 7.3: Graphic-9 4005 65Hz +6 dB showed 6.0 dB and CA John's 2C Ch1 80 Hz 8 showed 8.0; the label change is follow-up F8) **(P2d; README step 15; normal use, no extra session).** Faders (the Graphic-9 and Parallax bands, CA John's 2C tone faders) are pushed with a linear display-to-wire guess that nobody has read on the unit. Push a **Graphic-9 (or Plugin Graphic-9) with one band at a non-zero value, for example 65Hz +6 dB**, and a **CA John's 2C Ch1 fader off its default of 5, for example 80 Hz at 8**, then read both on the unit's screen. If the screen shows +6.0 dB and 8.0, the linear rule holds for -12..12 dB and 0..10 faders; strike this item through and change `encoding:fader-linear-guess` to a confirmed label. If either differs, send a photo: the export is wrong for that fader type and the label stays a guess. Also run `read_device_preset(import=true)` on it: the imported values should agree with the dry run.
 
-**Follow-up work (not started; each needs its own PR).**
-4. ~~**Architect pan scale**~~ (2026-11-06, branch `claude/architect-pan-scale`). The Architect now sees each pan's catalog range, default and L/R ends (`PAN 0=L..10=R d5`), and the export and read-back take a plain number on that range (`scale:catalog-range`, † in the dry run). **Still unverified on the unit:** what the screen shows for a pan (owner, P6: push a non-center pan and read the screen). Old v6 evals wrote every pan `0` before they were shown the scale, so exporting one of them now pushes hard left, not center; only presets generated after this change mean what they say.
+**Follow-up work (not started; each needs its own PR).** P6 added F1-F10 (section 7.3).
+4. ~~**Architect pan scale**~~ (2026-11-06, branch `claude/architect-pan-scale`). The Architect now sees each pan's catalog range, default and L/R ends (`PAN 0=L..10=R d5`), and the export and read-back take a plain number on that range (`scale:catalog-range`, † in the dry run). **Seen on the unit (P6, 2026-11-06):** MIC 1 PAN 7 shows "20 R" and the default shows "C": the direction holds, but the screen's scale is L/C/R, not 0..10 (follow-up F5). Old v6 evals wrote every pan `0` before they were shown the scale, so exporting one of them now pushes hard left, not center; only presets generated after this change mean what they say.
 5. ~~**P4b library sync**~~ (2026-11-06, PR #154) (Chat 7 in section 11). It uploads the unit's capture list, so the dry run resolves captures before a push. It also collects the cab mic strings seen on the unit, so a non-default mic can be written exactly instead of becoming a warning.
 6. **Visual e2e baseline.** The visual snapshot test fails on `main` in the cloud sandbox. Re-record it in the `mcr.microsoft.com/playwright:v1.58.2` container (CLAUDE.md, Tests) and review the new images before committing them.
 7. **G1-G6 push rules on the agent** (PR #150, merged 2026-11-06): built and tested offline only. On the unit it
-   still needs README hardware step 13: the bypass control at `param_count + 1` on blocks other than the Spring
-   (capture blocks included), the defaults log, and the watchdog during a blocking HID call. Strike this through
+   still needs README hardware step 13: ~~the bypass control at `param_count + 1` on blocks other than the Spring~~
+   (2026-11-06, 7.3: all eight flags read back on drive, amp, cab, EQ, reverb and a capture block), ~~the defaults log~~
+   (2026-11-06: no control differed), and the watchdog during a blocking HID call (not run). Strike this through
    when step 13 has been run. Answered by the owner (2026-11-06): a block's stomp footswitch acts across all
    scenes, not per scene, even with its bypass written per scene.
 

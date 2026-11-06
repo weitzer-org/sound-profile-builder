@@ -24,8 +24,9 @@ Results go to `C:\Users\bweit\qc-trial\spike-results\` (outside the repo). G1's 
 ```powershell
 $T = "$HOME\qc-trial"
 cd "$T\qc2"
-git fetch origin claude/device-phase0
-git checkout -B claude/device-phase0 origin/claude/device-phase0
+git fetch origin main
+git checkout main
+git pull --ff-only     # the spikes are on main since the P0-a merge; the bridge runs from the same clone
 git -C "$T\qc-mcp" rev-parse HEAD     # must print f634ecd3dcf426090b90bc4cc176e4b500494b9e
 ```
 
@@ -183,7 +184,9 @@ What you need first:
 
 It prints the baseline, the move and its read-back, the two recalls, the verdict and the raw read-backs, and writes them to `g7-<time>.json` in `spike-results` (including the device's `PresetDirty` flag after each step). It never prompts except, on a FAIL, whether to put the block back (a second live edit, still no save). Paste the console output and the JSON.
 
-**Unverified until you run it:** that the read-back's assignment row/column are the block's array position (the script refuses if an assignment points at an empty cell), that `unassign_stomp` then `assign_stomp` behaves as qc-mcp's source says, and everything in the stomp doc's section 2 about the unit.
+**Result (owner's unit, CorOS 4.1.0, 2026-11-06): PASS.** On 3A (a bridge-pushed preset with C and G), the move C → A took and set `PresetDirty`; after recalling 2A and 3A the assignments were C/G again. Entry point 2 is unblocked for (f). One precondition learned: load the pushed preset again (another slot, then it) before running the script. Right after a push the live grid reads its name as `''`, so the ledger check refuses (it did once; nothing was written).
+
+**Was unverified until the run:** that the read-back's assignment row/column are the block's array position (the script refuses if an assignment points at an empty cell), that `unassign_stomp` then `assign_stomp` behaves as qc-mcp's source says, and everything in the stomp doc's section 2 about the unit.
 
 ## If something goes wrong
 
