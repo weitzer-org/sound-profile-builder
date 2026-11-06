@@ -98,7 +98,7 @@ func (di *deviceImporter) run(ctx context.Context, v *devicejobs.JobView) *devic
 	origin := storage.PresetOrigin{
 		Kind: storage.OriginDeviceReadback, JobID: v.JobID, Slot: sanitizeDeviceText(meta.Slot, 8),
 		DeviceName: sanitizeDeviceText(imp.Name, 64), Firmware: meta.Firmware,
-		Format: devicejobs.ReadbackFormat, Unconverted: len(imp.Unconverted),
+		Format: devicejobs.ReadbackFormat, Unconverted: imp.UnconvertedCount,
 	}
 	if _, perr := devicejobs.ParseTime(r.FinishedAt); perr == nil {
 		origin.ReadAt = r.FinishedAt
@@ -121,7 +121,7 @@ func (di *deviceImporter) run(ctx context.Context, v *devicejobs.JobView) *devic
 func summarizeImport(imp *devicejobs.ImportedPreset) *deviceImportOut {
 	out := &deviceImportOut{
 		Guitar: dtext(imp.Guitar), DeviceName: sanitizeDeviceText(imp.Name, 64),
-		Blocks: imp.Blocks, Converted: imp.Converted, KeptDefaults: imp.AtDefault, UnconvertedCount: len(imp.Unconverted),
+		Blocks: imp.Blocks, Converted: imp.Converted, KeptDefaults: imp.AtDefault, UnconvertedCount: imp.UnconvertedCount,
 	}
 	for _, b := range imp.Preset.Guitars[imp.Guitar] {
 		ib := deviceImportBlock{Model: dtext(b.Model), Type: dtext(b.Type), Params: []string{}, KeptDefaults: len(b.KeptDefaults)}

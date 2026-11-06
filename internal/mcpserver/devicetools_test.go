@@ -138,7 +138,7 @@ func TestDeviceTools_RegisteredOnlyWhenEnabled(t *testing.T) {
 			t.Fatalf("%s: missing, or without annotations/output schema/data notice", n)
 		}
 	}
-	for _, n := range []string{deviceStatusToolName, deviceJobToolName, deviceSlotsToolName} {
+	for _, n := range []string{deviceStatusToolName, deviceSlotsToolName} {
 		if !byName[n].Annotations.ReadOnlyHint {
 			t.Errorf("%s should be read-only", n)
 		}

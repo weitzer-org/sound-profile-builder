@@ -226,8 +226,10 @@ type ImportedPreset struct {
 	Blocks      int
 	Converted   int
 	AtDefault   int
-	Unconverted []Unconverted
-	Notes       []string
+	Unconverted []Unconverted // capped; UnconvertedCount is the true number
+	// UnconvertedCount counts every item left out, including those past the cap.
+	UnconvertedCount int
+	Notes            []string
 }
 
 // Unconverted is one thing the importer left out, with the reason.

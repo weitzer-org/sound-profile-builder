@@ -164,6 +164,23 @@ func (s *PresetStore) Save(ctx context.Context, p *Preset) error {
 	return nil
 }
 
+// Exists reports whether a preset with this id is stored, telling "not there" from a storage
+// error (Get cannot: the backends have no not-found sentinel). It lists by the id as a
+// prefix, because ListFiles skips an object whose key equals the prefix.
+func (s *PresetStore) Exists(ctx context.Context, id string) (bool, error) {
+	names, err := s.client.ListFiles(ctx, s.bucket, s.prefix+id)
+	if err != nil {
+		return false, err
+	}
+	want := fmt.Sprintf("%s%s.json", s.prefix, id)
+	for _, n := range names {
+		if n == want {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Get retrieves a specific preset by ID
 func (s *PresetStore) Get(ctx context.Context, id string) (*Preset, error) {
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, id)

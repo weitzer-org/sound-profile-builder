@@ -715,3 +715,45 @@ func TestRoundTripFixtures(t *testing.T) {
 		})
 	}
 }
+
+func TestPlainNameCannotFormMarkdown(t *testing.T) {
+	cases := map[string]string{
+		"Clean x![a](https://evil.example/b.png?q=1)":       "Clean xa(https//evil.example/b.pngq1)",
+		"Lead [Click to fix](https://evil.example/fix) now": "Lead Click to fix(https//evil.example/fi",
+		"<script>alert(1)</script>":                         "scriptalert(1)/script",
+		"www.evil.example":                                  "evil.example",
+		"Brit 2203 *bold* _it_ ~s~ | \\ \"q\" a=b":          "Brit 2203 bold it s q ab",
+		"":                       "",
+		strings.Repeat("a", 100): strings.Repeat("a", 40),
+	}
+	for in, want := range cases {
+		got := plainName(in)
+		if got != want {
+			t.Errorf("plainName(%q) = %q, want %q", in, got, want)
+		}
+		if strings.ContainsAny(got, "[]!<>*_~|\\:\"=") {
+			t.Errorf("plainName(%q) = %q still has Markdown syntax", in, got)
+		}
+	}
+}
+
+func TestUnmatchedCaptureNameStaysOutOfRationale(t *testing.T) {
+	e := importExporter(t)
+	key := strings.Repeat("ab", 32)
+	rb := rbJSON(t, 14001, map[int][]any{5: {key + " Evil![x](https://evil.example/p.png)"}}, nil)
+	b := importOf(t, e, rb).Preset.Guitars[ReadbackGuitar][0]
+	if strings.ContainsAny(b.Model, "[]!:") || strings.Contains(b.Rationale, "Evil") {
+		t.Fatalf("model %q rationale %q", b.Model, b.Rationale)
+	}
+	if b.Model != "Evilx(https//evil.example/p.png) (Capture)" {
+		t.Errorf("model %q", b.Model)
+	}
+}
+
+func TestUnconvertedCountIsComplete(t *testing.T) {
+	e := importExporter(t)
+	res := importOf(t, e, rbJSON(t, 3008, nil, nil))
+	if res.UnconvertedCount < len(res.Unconverted) || res.UnconvertedCount == 0 {
+		t.Fatalf("count %d, listed %d", res.UnconvertedCount, len(res.Unconverted))
+	}
+}
