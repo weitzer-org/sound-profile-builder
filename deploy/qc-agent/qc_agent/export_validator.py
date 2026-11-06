@@ -70,7 +70,8 @@ PYQUADCORTEX_BOUNDS = {
 }
 # The evidence labels the exporter writes (internal/deviceexport, plan 4.1).
 EVIDENCE = frozenset({"taper:g4", "taper:device-xml", "taper:pyquadcortex",
-                      "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear"})
+                      "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear",
+                      "scale:catalog-range"})
 LINEAR_SWITCH_TYPES = frozenset({"switch", "rotarySwitch", "toggleButton"})
 WIRE_TOLERANCE = 1e-9
 ROW, IN_PORT, OUT_PORT = 0, 1, 19  # qc-mcp clear_grid default routing; read back exactly in G3

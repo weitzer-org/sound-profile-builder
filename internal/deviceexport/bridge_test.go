@@ -62,8 +62,9 @@ func TestBridgeWithRealExporter(t *testing.T) {
 		t.Fatalf("queued export differs from the dry run's")
 	}
 
-	blocked := loadPreset(t, "05_Clapton")
-	req2 := devicejobs.PushRequest{PresetID: "p-2", Guitar: "Gibson ES-339 Humbuckers", Slot: "20B", Name: "Clapton"}
+	// A chain with an invented block name is unresolved, so it gets no token.
+	blocked := preset(block("Myth Drive", prm("Gain", "3", "")), block("Plate Reverb"))
+	req2 := devicejobs.PushRequest{PresetID: "p-2", Guitar: "g", Slot: "20B", Name: "Blocked"}
 	plan2, err := b.PlanPush(ctx, blocked, req2)
 	if err != nil {
 		t.Fatal(err)
