@@ -320,7 +320,7 @@ func deviceExport(ctx context.Context, exp devicejobs.Exporter, sp storage.Struc
 	} else {
 		fmt.Fprintf(&t, "%d item(s) are unresolved, so it cannot be pushed yet.\n\n", len(out.Unresolved))
 	}
-	renderExportTable(&t, out.Blocks, out.Stomps, out.Unresolved, out.Warnings)
+	renderExportTable(&t, out.Blocks, out.Stomps, out.Unresolved, out.Warnings, nil)
 	// Compact, because the table above is the readable view and an 8-block export indented
 	// runs to hundreds of lines. JSON escapes newlines inside strings, so the payload is one
 	// line and can't close the fence early; HTML characters arrive as \u003c etc.
