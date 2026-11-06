@@ -175,7 +175,7 @@ The output is one guitar's chain as exact device operations:
   - **pans** (L/R labels) and **unitless 0..1 floats** have no verified display scale and are refused, except a pan written as Center when that is the default;
   - **switches, rotary switches, toggles, combo boxes, faders, `floatWithLed`** have no measured wire mapping and are refused. (As built in P2. Section 4.1 revised this: switches convert with qc-mcp's linear encoding (P2b) and faders as a labelled guess (P2d); combo boxes and `floatWithLed` stay refused.)
   - A control set to its catalog default in both scenes is **not written** (listed in `at_default`), whatever its type: a block added to an empty slot starts at its defaults. That rests on `add_block` initialising every parameter to the XML default, which was seen for two parameters only (G4 photos); P4's read-back diff should check it.
-- **Scenes.** `Value` is Scene A and `ValueB` (or `Value` when empty) is Scene B. Scenes C-H take Scene A's value. **G6 measured that the device does not copy A into C-H** (unwritten scenes keep the parameter's earlier value), so the export carries all eight scene values for every written parameter and all eight bypass flags for every block; the agent never relies on the device to fill a scene. `scene_mode` is set when A and B differ.
+- **Scenes.** `Value` is Scene A and `ValueB` (or `Value` when empty) is Scene B. Scenes C-H take Scene A's value. **Scene layouts:** `send_preset_to_device` also takes `rhythm_scene`/`lead_scene` and an optional `second_guitar` (+ `second_rhythm_scene`/`second_lead_scene`), so two guitars with the same blocks share one slot, e.g. ES-339 on A/B and Telecaster on E/F; `scene_sources` then holds `A`/`B` (first guitar) and `2A`/`2B` (second), and a scene nobody takes carries the first guitar's rhythm values. **G6 measured that the device does not copy A into C-H** (unwritten scenes keep the parameter's earlier value), so the export carries all eight scene values for every written parameter and all eight bypass flags for every block; the agent never relies on the device to fill a scene. `scene_mode` is set when A and B differ.
 - **Bypass.** A block's `Bypass` parameter: `On` = bypassed, `Off` = active (Architect v4-v6, Rule 13); anything else is refused. A preset with no `basis` field anywhere predates that rule (v4 added both together), so its `Bypass` values are refused with "refine it to push it". No `Bypass` parameter = active in all eight scenes. The dry-run table shows the state as Active/Bypassed.
 - **Grid.** Row 0, columns in chain order, in 1 and out 19 (G3 read this routing back). **More than 8 grid blocks is refused** in v1; blocks past the eighth are not mapped. A refused block keeps its column (the gap stays visible). Splits and parallel paths come in v2.
 - **Captures and IRs** were `unresolved` in P2. Captures move into v1 with P2b, P4 and P4b (section 4.2); IRs stay v2.
@@ -262,6 +262,18 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 - **A push builds only into the empty slot that is open on the unit.** The agent never recalls a preset or clears a
   grid: it requires the target slot to be selected on the unit with a blank live grid, which is exactly the save path
   G3 verified. A different open slot is refused (`unsupported_arg`, "select slot X on the unit first").
+- **The collection is whichever regular one is open (2026-11-06).** A push is not tied to "My Presets": it builds into the
+  empty slot of the non-factory preset collection open on the unit (e.g. the owner's "Sounds profiles"). The collection must
+  show in the listing as a full 256-slot table, the slot must be empty in *that* collection's own listing, and the
+  collection is pinned for the whole push (build guard, pre-save re-check, save, post-save verify). Found on hardware: slot
+  4A was open in "Sounds profiles", position matched, the folder did not, and the old My Presets-only check refused.
+  `list_device_slots` and `read_device_preset` still read My Presets only. **Verified on the owner's unit (2026-11-06):** a
+  push into slot 4A of "Sounds profiles" (CorOS 4.1.0) built the whole grid, read back with 0 mismatches and saved there;
+  the cab's values matched the unit's screen (Scene A: mics, positions, distances, level, HPF/LPF, output volume). The first
+  listing after that save raised "My Presets is missing" and the push was reported failed although the save had landed;
+  the wait for the save now retries an incomplete listing. **Not checked:** the other blocks' † values, Scene B and the
+  footswitch layout (G7) on this push.
+  into a collection other than My Presets saves there (README step 9).
 - **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
   qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
   to LF). It can't check `display` → `wire` until P1 adds `skew` to the catalog; it bounds both.
@@ -462,7 +474,7 @@ Also seen: the current-preset read returned an empty name on the live grid right
 **Follow-ups from P6** (each its own PR; listed in 8.1 too):
 - **F1** post-save confirmation: after File CREATE the unit sends a My Presets update with **1** entry, and `directory_snapshot` (keeps the latest message per folder) refuses it, so every push ends `device_error` "may still land" although the save landed. Inferred: a partial update for the changed slot. Log it first, then decide how a short table is handled.
 - **F2** sync: all factory-folder entries and `My Captures` left out by the name/key check (reason not logged), and the `Captures Library` view (flagged non-factory) stores factory captures as `user`, so a dry run refuses every factory capture as the wrong kind. Log the reason per folder, then classify.
-- **F3** plugin models: the server exports owned plugins, the bridge refuses them (`export_validator.py`, `plugin_id`). Owner decision on which side changes.
+- **F3** plugin models: the server exported owned plugins, the bridge refuses them (`export_validator.py`, `plugin_id`). Interim fix: the dry run now reports a plugin model as unresolved (`deviceexport.BridgePushesPlugins = false`, flip it together with the agent's check), so it is flagged before the push. Owner decision on which side finally changes is still open.
 - **F4** footswitch planner: a capture block is labelled with catalog model 0 ("Eltron 30") and gets its role from that lookup (3B dry run); stomp doc 4.1 says captures take the modeler's category or `user_captures.json`.
 - **F5** pan display: the Architect and the dry run show 0..10; the unit shows L/C/R (7 = "20 R").
 - **F6** `save()` logs nothing about which pre-save check failed (issue #166, with the user-interference handling).

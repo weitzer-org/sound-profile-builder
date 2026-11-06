@@ -100,7 +100,10 @@ func TestFaderConversion(t *testing.T) {
 				t.Fatalf("param not written: %+v", p.Rows[0].Blocks[0].Params)
 			}
 			for s := 0; s < Scenes; s++ {
-				i := sceneIndex(s)
+				i := 0 // default layout: Scene B is index 1, every other scene repeats A
+				if s == 1 {
+					i = 1
+				}
 				if math.Abs(pr.Wire[s]-c.wire[i]) > 1e-12 || math.Abs(pr.Display[s]-c.disp[i]) > 1e-12 {
 					t.Errorf("scene %d: display %g wire %g, want %g / %g", s, pr.Display[s], pr.Wire[s], c.disp[i], c.wire[i])
 				}

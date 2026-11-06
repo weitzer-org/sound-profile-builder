@@ -39,10 +39,26 @@ const (
 	Scenes    = 8
 )
 
-// SceneSources says which preset value each of the device's eight scenes A-H gets. G6
-// measured that the device does not copy Scene A into C-H (an unwritten scene keeps the
-// parameter's earlier value), so every scene is written explicitly; C-H take Scene A.
-var SceneSources = [Scenes]string{"A", "B", "A", "A", "A", "A", "A", "A"}
+// sceneTokens says which preset value each of the device's eight scenes A-H gets: "A" and "B"
+// are the first guitar's Scene A (rhythm) and Scene B (lead) values, "2A" and "2B" the second
+// guitar's. G6 measured that the device does not copy Scene A into C-H (an unwritten scene
+// keeps the parameter's earlier value), so every scene is written explicitly; a scene no tone
+// is assigned to takes the first guitar's rhythm value, "A". The default layout (one guitar on
+// A and B) gives A, B, A, A, A, A, A, A.
+func sceneTokens(l devicejobs.SceneLayout) [Scenes]string {
+	var out [Scenes]string
+	for s, so := range l.Sources() {
+		tok := "A"
+		if so.Lead {
+			tok = "B"
+		}
+		if so.Guitar > 0 {
+			tok = fmt.Sprintf("%d%s", so.Guitar+1, tok)
+		}
+		out[s] = tok
+	}
+	return out
+}
 
 // Options configures an Exporter.
 type Options struct {
@@ -240,7 +256,7 @@ type Param struct {
 	// to all faders by owner decision, FaderEvidence; "encoding:fader-linear-guess" before P6).
 	Evidence []string `json:"evidence"`
 
-	names [2]string // Scene A/B position names of a switch, for the readable plan
+	names [Scenes]string // each scene's position name of a switch, for the readable plan
 }
 
 // Confirmed reports whether every part of the mapping was read on the owner's unit (a ":g4" or "-p6" label).
@@ -257,14 +273,34 @@ func (p Param) Confirmed() bool {
 // isn't in the preset, an index fails the catalog's own check); every mapping problem is
 // an Unresolved item.
 func (e *Exporter) Export(ctx context.Context, sp storage.StructuredPreset, guitar string) (*devicejobs.Export, error) {
-	chain, ok := sp.Guitars[guitar]
-	if !ok {
-		return nil, fmt.Errorf("guitar %q is not in this preset", truncate(guitar, 60))
+	return e.ExportLayout(ctx, sp, devicejobs.DefaultLayout(guitar))
+}
+
+var _ devicejobs.LayoutExporter = (*Exporter)(nil)
+
+// ExportLayout builds the export for one or two guitars of a preset in one slot. Each guitar's
+// Scene A values go on its Rhythm scene and its Scene B values on its Lead scene; scenes
+// nobody takes carry the first guitar's rhythm values. Two guitars must have the same blocks
+// in the same order (their parameter values may differ, and a control only one of them sets
+// is at the device default for the other). With the default layout the result is exactly
+// Export's.
+func (e *Exporter) ExportLayout(ctx context.Context, sp storage.StructuredPreset, layout devicejobs.SceneLayout) (*devicejobs.Export, error) {
+	if err := layout.Validate(); err != nil {
+		return nil, err
 	}
+	chains := make([][]storage.EffectBlock, len(layout.Guitars))
+	for i, g := range layout.Guitars {
+		c, ok := sp.Guitars[g.Guitar]
+		if !ok {
+			return nil, fmt.Errorf("guitar %q is not in this preset", truncate(g.Guitar, 60))
+		}
+		chains[i] = c
+	}
+	chain := chains[0]
 	if e.cat == nil {
 		return nil, errors.New("device catalog unavailable")
 	}
-	b := &builder{e: e, legacy: !usesBasis(sp)}
+	b := &builder{e: e, legacy: !usesBasis(sp), layout: layout, src: layout.Sources()}
 	if e.opts.Device != nil {
 		snap, err := e.opts.Device(ctx)
 		if err != nil {
@@ -277,9 +313,13 @@ func (e *Exporter) Export(ctx context.Context, sp storage.StructuredPreset, guit
 	p := Payload{
 		Format:       Format,
 		Catalog:      CatalogRef{CorOS: e.cat.Source.CorOSVersion, Origin: e.cat.Source.Origin, SHA256: e.catalogSH},
-		Guitar:       guitar,
-		SceneSources: SceneSources,
+		Guitar:       truncate(layout.Label(), 200),
+		SceneSources: sceneTokens(layout),
 		Rows:         []Row{{Row: GridRow, InPort: InPort, OutPort: OutPort, Blocks: []Block{}}},
+	}
+	if !sameChains(b, layout, chains) {
+		// Nothing is placed: the blocks of two tones that don't line up can't share one slot.
+		chain = nil
 	}
 	col := 0
 	for i := range chain {
@@ -293,7 +333,11 @@ func (e *Exporter) Export(ctx context.Context, sp storage.StructuredPreset, guit
 			col++
 			continue
 		}
-		placed, err := b.block(ref, blk, col)
+		blks := make([]*storage.EffectBlock, len(chains))
+		for g := range chains {
+			blks[g] = &chains[g][i]
+		}
+		placed, err := b.block(ref, blks, col)
 		if err != nil {
 			return nil, err
 		}
@@ -325,7 +369,47 @@ func (e *Exporter) Export(ctx context.Context, sp storage.StructuredPreset, guit
 	if err != nil {
 		return nil, err
 	}
-	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Warnings: p.Warnings, Stomps: stomps.view}, nil
+	out := &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p, layout), Unresolved: p.Unresolved, Warnings: p.Warnings, Stomps: stomps.view}
+	if !layout.IsDefault() {
+		out.Layout = planLayout(layout)
+	}
+	return out, nil
+}
+
+// sameChains reports whether the layout's guitars have the same blocks in the same order,
+// and records an unresolved item when they don't. One guitar always matches.
+func sameChains(b *builder, layout devicejobs.SceneLayout, chains [][]storage.EffectBlock) bool {
+	ok := true
+	for g := 1; g < len(chains); g++ {
+		a, o := chains[0], chains[g]
+		who := fmt.Sprintf("%s and %s", truncate(layout.Guitars[0].Guitar, 40), truncate(layout.Guitars[g].Guitar, 40))
+		if len(a) != len(o) {
+			b.refuse("(guitars)", "", fmt.Sprintf("%s have different chains (%d and %d blocks): two guitars share one slot only with the same blocks in the same order", who, len(a), len(o)))
+			ok = false
+			continue
+		}
+		for i := range a {
+			ma, mo := strings.TrimSpace(a[i].Model), strings.TrimSpace(o[i].Model)
+			if !strings.EqualFold(ma, mo) {
+				b.refuse(fmt.Sprintf("#%d", i+1), "", fmt.Sprintf("%s differ at block %d (%s and %s): two guitars share one slot only with the same blocks in the same order", who, i+1, truncate(ma, 40), truncate(mo, 40)))
+				ok = false
+			}
+		}
+	}
+	return ok
+}
+
+// planLayout is the readable scene assignment of a non-default layout.
+func planLayout(l devicejobs.SceneLayout) *devicejobs.PlanLayout {
+	pl := &devicejobs.PlanLayout{}
+	for s := range pl.Scenes {
+		pl.Scenes[s] = devicejobs.PlanScene{Letter: devicejobs.Letter(s), Role: "unused"}
+	}
+	for _, g := range l.Guitars {
+		pl.Scenes[g.Rhythm] = devicejobs.PlanScene{Letter: devicejobs.Letter(g.Rhythm), Guitar: g.Guitar, Role: "rhythm"}
+		pl.Scenes[g.Lead] = devicejobs.PlanScene{Letter: devicejobs.Letter(g.Lead), Guitar: g.Guitar, Role: "lead"}
+	}
+	return pl
 }
 
 // marshal encodes compactly with Go's default HTML escaping, so preset text such as a
@@ -336,12 +420,15 @@ func marshal(p Payload) (json.RawMessage, error) {
 }
 
 // summary is the readable plan devicejobs shows in a dry run.
-func summary(p Payload) []devicejobs.PlanBlock {
+func summary(p Payload, layout devicejobs.SceneLayout) []devicejobs.PlanBlock {
 	out := []devicejobs.PlanBlock{}
 	for _, r := range p.Rows {
 		for _, bl := range r.Blocks {
 			pb := devicejobs.PlanBlock{Row: r.Row, Col: bl.Col, Model: bl.Model, ModelID: bl.ModelID,
 				Params: []devicejobs.PlanParam{}, BypassA: bl.Bypass[0], BypassB: bl.Bypass[1], AtDefault: bl.AtDefault}
+			if !layout.IsDefault() {
+				pb.BypassScenes = append([]bool(nil), bl.Bypass[:]...)
+			}
 			if bl.Capture != nil {
 				pb.Capture = bl.Capture.Name
 				if r := bl.Capture.res; r != nil {
@@ -361,6 +448,11 @@ func summary(p Payload) []devicejobs.PlanBlock {
 				if pr.Display[1] != pr.Display[0] {
 					pp.B = pr.shown(1)
 				}
+				if !layout.IsDefault() {
+					for sc := 0; sc < Scenes; sc++ {
+						pp.Scenes = append(pp.Scenes, pr.shown(sc))
+					}
+				}
 				pb.Params = append(pb.Params, pp)
 			}
 			out = append(out, pb)
@@ -376,7 +468,7 @@ func keyPrefix(k string) string {
 	return k
 }
 
-// shown is Scene A's (0) or B's (1) value as the plan shows it: a switch's position name,
+// shown is a scene's (0 = A .. 7 = H) value as the plan shows it: a switch's position name,
 // else the number and unit.
 func (p Param) shown(scene int) string {
 	if p.names[scene] != "" {

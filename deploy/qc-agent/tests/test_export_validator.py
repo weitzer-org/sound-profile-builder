@@ -317,8 +317,8 @@ class Refusals(unittest.TestCase):
             def f(p):
                 gain(p)["display"][i], gain(p)["wire"][i] = d, w
             return f
-        self.refused(mutate(scene(3, 9, 0.9)), "scenes C-H must carry Scene A")
-        self.refused(mutate(scene(7, 9, 0.9)), "scenes C-H must carry Scene A")
+        self.refused(mutate(scene(3, 9, 0.9)), "scenes with the same source must carry the same values")
+        self.refused(mutate(scene(7, 9, 0.9)), "scenes with the same source must carry the same values")
         self.refused(mutate(lambda p: gain(p).update(scene_mode=False)), "scene_mode is False")
         self.refused(mutate(lambda p: block(p, 0)["params"][1].update(scene_mode=True)), "scene_mode is True")
 
@@ -331,7 +331,7 @@ class Refusals(unittest.TestCase):
         self.refused(mutate(lambda p: block(p, 0).update(bypass=[False] * 7)), "exactly 8 values")
         self.refused(mutate(lambda p: block(p, 0).update(bypass=[0] + [False] * 7)), "true/false")
         self.refused(mutate(lambda p: block(p, 0).update(bypass=[False, False, True] + [False] * 5)),
-                     "scenes C-H must carry Scene A's flag")
+                     "scenes with the same source must carry the same flag")
 
     def test_stomps(self):
         def one(**kw):
@@ -426,7 +426,7 @@ class Additions(unittest.TestCase):
         # the capture path's bypass gets the same length/type/C-H checks as any block
         self.refused(cap(bypass=[False, False]), "exactly 8 values")
         self.refused(cap(bypass=[False] * 9), "exactly 8 values")
-        self.refused(cap(bypass=[False, False, True] + [False] * 5), "scenes C-H")
+        self.refused(cap(bypass=[False, False, True] + [False] * 5), "same source must carry the same flag")
         # only the capture block's own controls: index 5 (file_name) and anything unlisted are refused
         self.refused(cap(params=[gain | {"index": 5, "label": "file_name"}]), "not a listed parameter")
         self.refused(cap(params=[gain | {"index": 6, "label": "x"}]), "at or past param_count 6")
@@ -477,3 +477,64 @@ class Additions(unittest.TestCase):
                               block(p, 0).update(model_id=0, model="CA John's")))
         with self.assertRaisesRegex(ExportRefused, "don't list the same controls"):
             validate(e, cat, "4.1.0")
+
+
+class SceneLayouts(unittest.TestCase):
+    """Two guitars in one slot, or one guitar on other scenes (scene_sources other than A, B, A...)."""
+
+    def refused(self, e, text):
+        with self.assertRaises(ExportRefused) as cm:
+            validate(e, catalog(), "4.1.0")
+        self.assertIn(text, str(cm.exception))
+
+    def layout(self, p, sources, gain_disp, gain_wire, bypass4):
+        p["scene_sources"] = sources
+        pick = [1 if t in ("B", "2B") else 0 for t in sources]  # the other blocks: Scene A, or B where B is
+        for b in p["rows"][0]["blocks"]:
+            b["bypass"] = [b["bypass"][i] for i in pick]
+            for prm in b["params"]:
+                prm["display"] = [prm["display"][i] for i in pick]
+                prm["wire"] = [prm["wire"][i] for i in pick]
+        g = block(p, 0)["params"][0]
+        g.update(display=gain_disp, wire=gain_wire, scene_mode=True)
+        block(p, 4)["bypass"] = bypass4
+
+    def test_second_guitar_on_e_f(self):
+        # ES-339 on A/B (gain 2/8), Telecaster on E/F (gain 4/6); C D G H carry the first guitar's rhythm.
+        def f(p):
+            self.layout(p, ["A", "B", "A", "A", "2A", "2B", "A", "A"],
+                        [2, 8, 2, 2, 4, 6, 2, 2], [0.2, 0.8, 0.2, 0.2, 0.4, 0.6, 0.2, 0.2],
+                        [False, True, False, False, True, False, False, False])
+        plan = validate(mutate(f), catalog(), "4.1.0")
+        self.assertEqual(plan.blocks[0].params[0].scene_wires, [0.2, 0.8, 0.2, 0.2, 0.4, 0.6, 0.2, 0.2])
+        self.assertEqual(plan.blocks[4].bypass_scenes, [False, True, False, False, True, False, False, False])
+
+    def test_one_guitar_on_e_f(self):
+        def f(p):
+            self.layout(p, ["A", "A", "A", "A", "A", "B", "A", "A"],
+                        [2, 2, 2, 2, 2, 8, 2, 2], [0.2, 0.2, 0.2, 0.2, 0.2, 0.8, 0.2, 0.2],
+                        [False, False, False, False, False, True, False, False])
+        validate(mutate(f), catalog(), "4.1.0")
+
+    def test_same_source_must_agree(self):
+        def f(p):  # scene G also "A" but carries another value
+            self.layout(p, ["A", "B", "A", "A", "2A", "2B", "A", "A"],
+                        [2, 8, 2, 2, 4, 6, 2, 3], [0.2, 0.8, 0.2, 0.2, 0.4, 0.6, 0.2, 0.3],
+                        [False] * 8)
+        self.refused(mutate(f), "same source must carry the same values")
+
+    def test_bad_sources(self):
+        for src, text in [(["A", "B", "A", "A", "2A", "A", "A", "A"], "come together"),
+                          (["A", "B", "B", "A", "A", "A", "A", "A"], "exactly one scene"),
+                          (["A", "B", "A", "A", "2A", "2A", "2B", "A"], "at most one"),
+                          (["A", "B", "A", "A", "3A", "A", "A", "A"], "scene_sources"),
+                          (["A"] * 8, "exactly one scene")]:
+            with self.subTest(src=src):
+                self.refused(mutate(lambda p: p.update(scene_sources=src)), text)
+
+    def test_scene_mode_follows_all_scenes(self):
+        def f(p):  # the values differ only in Scene F: scene_mode must be true
+            self.layout(p, ["A", "B", "A", "A", "2A", "2B", "A", "A"],
+                        [2, 2, 2, 2, 2, 8, 2, 2], [0.2, 0.2, 0.2, 0.2, 0.2, 0.8, 0.2, 0.2], [False] * 8)
+            block(p, 0)["params"][0]["scene_mode"] = False
+        self.refused(mutate(f), "scene_mode is False")
