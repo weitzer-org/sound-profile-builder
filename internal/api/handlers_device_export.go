@@ -61,7 +61,11 @@ func (s *Server) handleDeviceExport() http.HandlerFunc {
 			http.Error(w, "This preset has no structured block data to export", http.StatusBadRequest)
 			return
 		}
-		if guitar == "" && len(sp.Guitars) == 1 {
+		if guitar == "" {
+			if len(sp.Guitars) != 1 {
+				http.Error(w, "This preset has several guitars; set the guitar parameter", http.StatusBadRequest)
+				return
+			}
 			for g := range sp.Guitars {
 				guitar = g
 			}

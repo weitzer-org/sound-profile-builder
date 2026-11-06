@@ -87,7 +87,7 @@ func TestDeviceExportDownloadErrors(t *testing.T) {
 		{"guitar=Tele", true, http.StatusBadRequest},
 		{"id=nope&guitar=Tele", true, http.StatusNotFound},
 		{"id=p-dl&guitar=Strat", true, http.StatusNotFound},
-		{"id=p-dl", true, http.StatusNotFound}, // two guitars, none chosen
+		{"id=p-dl", true, http.StatusBadRequest}, // two guitars, none chosen
 	}
 	for _, c := range cases {
 		if rr := getDL(s, c.query, c.authed); rr.Code != c.code {

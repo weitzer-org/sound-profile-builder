@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
@@ -240,13 +239,8 @@ func summary(p Payload) []devicejobs.PlanBlock {
 // prompts v4 and later require one on every parameter, and v4 is also where "Bypass: On"
 // was defined as bypassed (Rule 13), so a preset with none predates that definition.
 func usesBasis(sp storage.StructuredPreset) bool {
-	names := make([]string, 0, len(sp.Guitars))
-	for g := range sp.Guitars {
-		names = append(names, g)
-	}
-	sort.Strings(names)
-	for _, g := range names {
-		for _, b := range sp.Guitars[g] {
+	for _, chain := range sp.Guitars {
+		for _, b := range chain {
 			for _, p := range b.Parameters {
 				if strings.TrimSpace(p.Basis) != "" {
 					return true
