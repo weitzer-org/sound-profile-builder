@@ -1,0 +1,70 @@
+{
+ "_readme": "Shared by the Go tests (internal/devicejobs, ParseLibraryPayload) and the agent's tests (deploy/qc-agent/tests/test_library.py, captures.library_payload). 'snapshots' are fake directory listings in the agent's positional form; the agent must produce expect_payload from each, and Go must parse every expect_payload. 'invalid' payloads must be refused by Go, with an error containing the given text. Changing either is a contract change (docs/design/device-job-contract.md section 9.2).",
+ "snapshots": [
+  {
+   "name": "factory V1/V2, a user capture, a cloud item, a favorites view, hostile and over-long names",
+   "folders": [["Factory Captures V1", true, 2], ["Factory Captures V2", true, 1], ["My Captures", false, 4]],
+   "entries": [
+    {"name": "CA John's", "key": "A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1A1", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "Brit 2203 87", "key": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "CA John's 2", "key": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "2"},
+    {"name": "66 AC30 JMP OD", "key": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "From The Cloud", "key": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5", "folder": "My Captures", "factory": false, "cloud": true, "favorites": false, "version_field": "1"},
+    {"name": "Starred Copy", "key": "f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6", "folder": "My Captures", "factory": false, "cloud": false, "favorites": true, "version_field": "1"},
+    {"name": "Café Crunch", "key": "0101010101010101010101010101010101010101010101010101010101010101", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "Zero​Width", "key": "0202020202020202020202020202020202020202020202020202020202020202", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "Back`tick", "key": "0303030303030303030303030303030303030303030303030303030303030303", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "Two  Spaces", "key": "0404040404040404040404040404040404040404040404040404040404040404", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "X123456789X123456789X123456789X123456789X123456789X123456789X123456", "key": "0505050505050505050505050505050505050505050505050505050505050505", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"},
+    {"name": "Bad Key", "key": "not-a-key", "folder": "My Captures", "factory": false, "cloud": false, "favorites": false, "version_field": "1"}
+   ],
+   "expect_payload": {
+    "captures": [
+     {"name": "CA John's", "key": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1", "version": 1, "kind": "factory", "folder": "Factory Captures V1", "cloud": false},
+     {"name": "Brit 2203 87", "key": "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4", "version": 1, "kind": "factory", "folder": "Factory Captures V1", "cloud": false},
+     {"name": "CA John's 2", "key": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2", "version": 2, "kind": "factory", "folder": "Factory Captures V2", "cloud": false},
+     {"name": "66 AC30 JMP OD", "key": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3", "version": 1, "kind": "user", "folder": "My Captures", "cloud": false},
+     {"name": "From The Cloud", "key": "e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5", "version": 1, "kind": "user", "folder": "My Captures", "cloud": true}
+    ],
+    "skipped": 7
+   }
+  },
+  {
+   "name": "a user capture's version is null when the factory folders do not calibrate it; folder names are ASCII and bounded",
+   "folders": [["Factory Captures V1", true, 1], ["Factory Captures V2", true, 1], ["Café ✓ Downloads of a very long folder name indeed", false, 1]],
+   "entries": [
+    {"name": "Fac One", "key": "1111111111111111111111111111111111111111111111111111111111111111", "folder": "Factory Captures V1", "factory": true, "cloud": false, "favorites": false, "version_field": "7"},
+    {"name": "Fac Two", "key": "2222222222222222222222222222222222222222222222222222222222222222", "folder": "Factory Captures V2", "factory": true, "cloud": false, "favorites": false, "version_field": "7"},
+    {"name": "Mine", "key": "3333333333333333333333333333333333333333333333333333333333333333", "folder": "Café ✓ Downloads of a very long folder name indeed", "factory": false, "cloud": false, "favorites": false, "version_field": "7"}
+   ],
+   "expect_payload": {
+    "captures": [
+     {"name": "Fac One", "key": "1111111111111111111111111111111111111111111111111111111111111111", "version": 1, "kind": "factory", "folder": "Factory Captures V1", "cloud": false},
+     {"name": "Fac Two", "key": "2222222222222222222222222222222222222222222222222222222222222222", "version": 2, "kind": "factory", "folder": "Factory Captures V2", "cloud": false},
+     {"name": "Mine", "key": "3333333333333333333333333333333333333333333333333333333333333333", "version": null, "kind": "user", "folder": "Caf? ? Downloads of a very long folder n", "cloud": false}
+    ],
+    "skipped": 0
+   }
+  }
+ ],
+ "invalid": [
+  {"name": "not an object", "payload": [], "error": "does not match"},
+  {"name": "unknown top-level field", "payload": {"captures": [], "skipped": 0, "extra": 1}, "error": "does not match"},
+  {"name": "captures missing", "payload": {"skipped": 0}, "error": "captures is missing"},
+  {"name": "unknown capture field", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false, "x": 1}], "skipped": 0}, "error": "does not match"},
+  {"name": "negative skipped", "payload": {"captures": [], "skipped": -1}, "error": "skipped"},
+  {"name": "upper-case key", "payload": {"captures": [{"name": "A", "key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "key"},
+  {"name": "short key", "payload": {"captures": [{"name": "A", "key": "abcd", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "key"},
+  {"name": "version 3", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 3, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "version"},
+  {"name": "version as a string", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": "1", "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "does not match"},
+  {"name": "kind other", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "cloud", "folder": "F", "cloud": false}], "skipped": 0}, "error": "kind"},
+  {"name": "non-ASCII name", "payload": {"captures": [{"name": "Café", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "name"},
+  {"name": "control character in a name", "payload": {"captures": [{"name": "A\u0007B", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "name"},
+  {"name": "backtick in a name", "payload": {"captures": [{"name": "A`B", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "name"},
+  {"name": "leading space in a name", "payload": {"captures": [{"name": " A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "name"},
+  {"name": "65-character name", "payload": {"captures": [{"name": "A123456789A123456789A123456789A123456789A123456789A123456789A1234", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F", "cloud": false}], "skipped": 0}, "error": "name"},
+  {"name": "folder the clean-up would change", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F  G", "cloud": false}], "skipped": 0}, "error": "folder"},
+  {"name": "folder with a zero-width character", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "F​G", "cloud": false}], "skipped": 0}, "error": "folder"},
+  {"name": "empty folder", "payload": {"captures": [{"name": "A", "key": "0000000000000000000000000000000000000000000000000000000000000000", "version": 1, "kind": "user", "folder": "", "cloud": false}], "skipped": 0}, "error": "folder"}
+ ]
+}

@@ -189,6 +189,17 @@ this app's MCP connector. Read these before any device work:
   unit's own listing, V1/V2 decided on the unit (`qc_agent/captures.py`, plan 4.2); the only string write the wire
   guard allows is each capture's resolved `file_name`, once. Run its tests with
   `cd deploy/qc-agent && python -m unittest discover -s tests` (needs `protobuf` from `requirements.lock.txt`).
+- `internal/devicelib` — what QC-2 knows about the unit's contents (plan P4b): the capture list a `sync_device_library` job
+  returned (`device/library.json` in the main bucket, through `storage.Client`), a reviewed alias table
+  (`capture_aliases.json`, empty until the first real sync), and the per-cab mic strings seen in `read_device_preset`
+  results (`device/cab_mics.json`). `send_preset_to_device`'s dry run resolves each capture against the list with the
+  agent's own rules (exact name, then one reviewed alias, never fuzzy; not listed = unresolved, "not on your unit"); a seen
+  mic is written exactly as the export's `mics`. All of it is device text: `devicejobs.ParseLibraryPayload` is strict,
+  names must survive `SanitizeText` unchanged, and the agent still re-resolves captures on the unit at push time. With no
+  synced list the export is byte-identical to before. The agent side is `qc_agent/captures.library_payload` (one
+  directory read, shared with pushes) and `jobs.sync_device_library`; `testdata/devicejobs/library.json` pins both.
+  The cab mic string write (`set_param_typed`, held to the planned string by the wire guard) is **unverified on the
+  unit** until README step 14.
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing
   a vector, tag, field or check step is a contract change for both sides.
@@ -221,7 +232,8 @@ See `.env.example`.
   LLM prompts: keep it behind `validGuitars`.
 - **Device tools** (`internal/mcpserver/devicetools.go` over `internal/devicejobs`) are registered only when
   `DEVICE_JOBS_BUCKET` and `DEVICE_JOB_KEY` are set (a bad value logs and leaves them off; the jobs bucket must differ
-  from the main one). Without them the server has exactly the 9 tools the existing tests pin. Everything read back
+  from the main one). `sync_device_library` is registered too when the server has a device library (`WithDeviceLibrary`; `cmd/server` always
+  adds it with the device tools). Without them the server has exactly the 9 tools the existing tests pin. Everything read back
   from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path uses P2's
   `internal/deviceexport` (`cmd/server/main.go`); `get_preset(format=device)` works without the device tools.
 - `qc://style/preset-display` (`internal/mcpserver/style/preset-display.md`, <=40 lines) is the chat presentation

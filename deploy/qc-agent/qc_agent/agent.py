@@ -139,7 +139,7 @@ class Agent:
             "status": outcome.status, "reason_code": outcome.reason_code, "message": msg,
             "started_at": contract.format_time(started), "finished_at": contract.format_time(finished),
             "agent_version": AGENT_VERSION, "firmware": outcome.firmware,
-            "push": outcome.push, "slots": outcome.slots, "readback": outcome.readback,
+            "push": outcome.push, "slots": outcome.slots, "readback": outcome.readback, "library": outcome.library,
         }
 
     # ---- results ----
@@ -195,7 +195,7 @@ class Agent:
     def recover(self):
         for job_id in self.ledger.unfinished():
             kind = self.ledger.taken[job_id].get("kind", "")
-            if kind not in ("push_preset", "list_slots", "read_preset"):
+            if kind not in ("push_preset", "list_slots", "read_preset", "sync_device_library"):
                 kind = "push_preset"  # cannot happen: only parsed jobs are taken
             log.warning("job %s was interrupted by a crash or a closed window; reporting it, not retrying",
                         job_id[:8])

@@ -206,7 +206,7 @@ def _valid_name(s):
 
 
 def _check_args(kind, a):
-    if kind == "list_slots":
+    if kind in ("list_slots", "sync_device_library"):
         return _exact(a)
     if kind == "read_preset":
         return _exact(a, "slot") and (a["slot"] is None or (isinstance(a["slot"], str) and SLOT_RE.fullmatch(a["slot"])))

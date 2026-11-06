@@ -82,6 +82,9 @@ PK = "jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json"
 pend = [
  pj("valid list_slots job", env(K0,JOB,P1), "ok"),
  pj("valid push_preset job", env(K0,JOB,PP), "ok", object_key="jobs/pending/0b6d5f3e-9a41-8c2d-b7e5-1f0a2c3d4e5f.json"),
+ pj("valid sync_device_library job", sj(job(kind="sync_device_library")), "ok"),
+ pj("sync_device_library with args", sj(job(kind="sync_device_library", args={"slot":"1A"})), "bad_payload"),
+ pj("sync_device_library with a case-variant kind", sj(job(kind="Sync_Device_Library")), "bad_payload"),
  pj("valid read_preset job", sj(job(kind="read_preset", args={"slot":None})), "ok"),
  pj("object key not under jobs/pending/", env(K0,JOB,P1), "bad_object_key", object_key="jobs/done/%s.json" % ID),
  pj("object key with uppercase uuid", env(K0,JOB,P1), "bad_object_key", object_key="jobs/pending/%s.json" % ID.upper()),

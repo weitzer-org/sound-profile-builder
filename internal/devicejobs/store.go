@@ -336,7 +336,7 @@ func (s *Store) openResult(data []byte, id string) (*Result, bool) {
 		return nil, false
 	}
 	switch r.Kind { // shown to the model: only the contract's values
-	case KindPushPreset, KindListSlots, KindReadPreset:
+	case KindPushPreset, KindListSlots, KindReadPreset, KindSyncLibrary:
 	default:
 		return nil, false
 	}

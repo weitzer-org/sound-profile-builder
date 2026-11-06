@@ -706,10 +706,61 @@ class CaptureGuard(Base):
             self.dev.begin_push(152, "x", self.replace(self.plan, blocks=blocks))
 
 
+class MicGuard(Base):
+    """The typed write the cab mic needs (plan P4b): granted as a method, but the wire guard lets through
+    only the planned string, at the planned column and the catalog's ir selector index, once."""
+
+    def setUp(self):
+        super().setUp()
+        self.dev.connect()
+        self.qc = self.dev._raw
+        from helpers import export
+        e = export()
+        e["payload"]["rows"][0]["blocks"][2]["mics"] = [
+            {"slot": 1, "index": 1, "value": "ME_110 US PRN C10R_Ribbon 121", "evidence": "seen-on-unit"}]
+        self.plan = validate(e, catalog(), "4.1.0")
+        self.value = "ME_110 US PRN C10R_Ribbon 121"
+
+    def refused(self, fn, *a):
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            fn(*a)
+        self.assertEqual(len(self.hid.received), n, "nothing reached the device")
+
+    def test_the_armed_mic_passes_once_and_nothing_else_does(self):
+        self.dev.begin_push(152, "x", self.plan)
+        t = lambda col, idx, v: self.qc.set_param_typed(0, col, idx, [[None, None, v]])  # noqa: E731
+        self.refused(t, 2, 1, "ME_110 US PRN C10R_Ribbon 160")      # another string
+        self.refused(t, 2, 1, "C:\\IRs\\evil.wav")                    # another IR
+        self.refused(t, 1, 1, self.value)                           # another column
+        self.refused(t, 2, 9, self.value)                           # the other mic slot, not planned
+        self.refused(t, 2, 21, self.value)                          # past param_count
+        self.refused(self.qc.set_param_typed, 0, 2, 1, [[None, None, self.value], [None, None, self.value]])
+        self.refused(self.qc.set_param_typed, 0, 2, 1, [[0.5, None, None]])   # a float where a string is planned
+        t(2, 1, self.value)                                         # the plan's own write passes
+        self.refused(t, 2, 1, self.value)                           # but only once
+
+    def test_set_mic_needs_the_armed_string(self):
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_mic(0, 2, 1, self.value)                   # nothing armed
+        self.dev.begin_push(152, "x", self.plan)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_mic(0, 2, 1, self.value + "x")
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_mic(0, 3, 1, self.value)
+        self.dev.set_mic(0, 2, 1, self.value)
+
+    def test_an_unarmed_typed_write_is_refused(self):
+        self.refused(self.qc.set_param_typed, 0, 2, 1, [[None, None, self.value]])
+
+
 class MethodAllowlist(unittest.TestCase):
-    def test_set_capture_is_granted_typed_writes_are_not(self):
+    def test_set_capture_and_typed_writes_are_granted_other_typed_ones_are_not(self):
+        # set_param_typed is granted for the planned cab mic string only (P4b); the wire guard, not the
+        # method list, holds it to that (MicGuard below)
         self.assertIn("set_capture", qcmcp_backend.GRANT)
-        for name in ("set_param_typed", "set_ir", "list_directory"):
+        self.assertIn("set_param_typed", qcmcp_backend.GRANT)
+        for name in ("set_ir", "list_directory"):
             self.assertNotIn(name, qcmcp_backend.GRANT, name)
 
     def test_vendored_capture_constants_are_pinned(self):
@@ -723,7 +774,7 @@ class MethodAllowlist(unittest.TestCase):
         g = Guarded(object())
         for name in ("save_preset", "recall", "clear_grid", "send", "request", "delete_block", "set_mode",
                      "write_global_eq", "set_io_port", "load_settings_preset", "delete_model_preset",
-                     "set_scene_label", "set_preset_meta", "set_param_typed", "set_ir"):
+                     "set_scene_label", "set_preset_meta", "set_ir"):
             with self.subTest(name), self.assertRaisesRegex(GuardError, "is never allowed"):
                 getattr(g, name)
 

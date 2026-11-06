@@ -10,8 +10,10 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/api"
+	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/config"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/devicelib"
 	"github.com/weitzer-org/sound-builder/internal/mcpserver"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -168,6 +170,14 @@ func main() {
 	case dcfg != nil:
 		bridge := devicejobs.NewBridge(storeClient, dcfg, exporter)
 		mcpOpts = append(mcpOpts, mcpserver.WithDevice(bridge))
+		// The capture list sync and the cab mic record (plan P4b) are stored in the main bucket.
+		if cat, err := catalog.Embedded(); err != nil {
+			log.Printf("Device library sync disabled: %v", err)
+		} else {
+			mcpOpts = append(mcpOpts, mcpserver.WithDeviceLibrary(&mcpserver.DeviceLibrary{
+				Store: devicelib.NewStore(storeClient, bucket), Harvester: devicelib.NewHarvester(cat),
+			}))
+		}
 		log.Println("Device tools enabled (jobs bucket configured)")
 	}
 	mcpserver.Mount(server.Mux(), server.Service(), mcpserver.ConfigFromEnv(), server.RateLimit(), mcpOpts...)

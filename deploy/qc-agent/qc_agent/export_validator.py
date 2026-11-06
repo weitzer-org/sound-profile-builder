@@ -134,6 +134,17 @@ class PlannedParam:
 
 
 @dataclass(frozen=True)
+class PlannedMic:
+    """A cab mic string to write exactly (plan 4.1/4.2, P4b): the cab's `ir selector` parameter for one
+    mic slot. QC-2 only offers a string it saw on the unit for this same cab; the agent re-checks that it
+    is a variation of the catalog's own default string for that slot, and the wire guard then holds the
+    write to exactly this string, once. Whether the unit accepts it is UNVERIFIED on hardware."""
+    slot: int
+    index: int
+    value: str
+
+
+@dataclass(frozen=True)
 class PlannedCapture:
     """A capture block's capture. key and version are filled in on the unit (qc_agent.captures)."""
     name: str
@@ -156,6 +167,7 @@ class PlannedBlock:
     param_count: int           # the catalog's full list, hidden params included (G1: the unit reads param_count + 1)
     capture: PlannedCapture | None = None
     at_default: list[str] = field(default_factory=list)  # labels QC-2 says it left at default (logged only)
+    mics: list[PlannedMic] = field(default_factory=list)  # cab mic strings, written before the block's values
 
     @property
     def bypass_varies(self) -> bool:
@@ -367,10 +379,12 @@ def _at_default(b, where) -> list[str]:
 def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     where = f"block {bi}"
     _exact(b, ("col", "model_id", "model", "category", "index_evidence", "bypass", "params", "at_default"),
-           where, optional=("plugin", "capture"))
+           where, optional=("plugin", "capture", "mics"))
     if _int(b["col"], where + ".col") != bi:
         raise ExportRefused(f"{where}: columns must run 0..{nblocks - 1} in order")
     if "capture" in b:
+        if "mics" in b:
+            raise ExportRefused(f"{where}: a capture block has no cab mics")
         return _check_capture_block(bi, b, catalog)
     mid = _int(b["model_id"], where + ".model_id")
     if mid in DENY_MODEL_IDS:
@@ -409,7 +423,51 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass flags must be true/false")
     if any(flags[i] != flags[0] for i in range(2, SCENES)):
         raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
-    return PlannedBlock(bi, mid, cm["name"], params, list(flags), pc, at_default=ad)
+    return PlannedBlock(bi, mid, cm["name"], params, list(flags), pc, at_default=ad,
+                        mics=_check_mics(where, b.get("mics", []), cm))
+
+
+MIC_EVIDENCE = "seen-on-unit"
+MAX_MIC_VALUE = 128
+
+
+def _cab_part(s):
+    i = s.rfind("_")
+    return s[:i] if i > 0 else ""
+
+
+def _check_mics(where, mics, cm) -> list[PlannedMic]:
+    """Cab mic string writes. Only a cab's own `ir selector` slots, at the catalog's index for that slot,
+    and only a string that keeps the catalog's default string's `<prefix>_<cab>` and changes the mic:
+    anything else (another IR, a path, a different cab) is refused here, whatever QC-2 says it saw."""
+    if not isinstance(mics, list) or len(mics) > 2:
+        raise ExportRefused(f"{where}.mics must be a list of at most two mic writes")
+    if not mics:
+        return []
+    if not cm["category"].startswith("Cabsim"):
+        raise ExportRefused(f"{where}: only a cab has mics to write")
+    selectors = [p for p in cm["params"] if p["name"] == "ir selector"]
+    out, slots = [], set()
+    for i, m in enumerate(mics):
+        w = f"{where} mics[{i}]"
+        _exact(m, ("slot", "index", "value", "evidence"), w)
+        slot, index = _int(m["slot"], w + ".slot"), _int(m["index"], w + ".index")
+        if not 1 <= slot <= len(selectors) or slot in slots:
+            raise ExportRefused(f"{w}: slot {slot} is not one of this cab's mic slots, or appears twice")
+        slots.add(slot)
+        sel = selectors[slot - 1]
+        if index != sel["index"] or not 0 <= index < cm["param_count"]:
+            raise ExportRefused(f"{w}: index {index} is not the catalog's ir selector for mic slot {slot} ({sel['index']})")
+        if m["evidence"] != MIC_EVIDENCE:
+            raise ExportRefused(f"{w}.evidence must be {MIC_EVIDENCE!r}")
+        v = _printable(m["value"], MAX_MIC_VALUE, w + ".value")
+        default = sel.get("default_string") or ""
+        if (not v or v != v.strip() or "`" in v or not _cab_part(default) or _cab_part(v) != _cab_part(default)
+                or not v[len(_cab_part(v)) + 1:]):
+            raise ExportRefused(f"{w}: {v[:40]!r} is not a mic of this cab (it must keep {_cab_part(default)!r} and "
+                                "change only the mic)")
+        out.append(PlannedMic(slot, index, v))
+    return out
 
 
 def _check_capture_layouts(catalog) -> int:

@@ -25,6 +25,7 @@ Words in **MUST**/**MUST NOT** are requirements. Every premise about an external
   - the payload `v` changes with any job field change;
   - the domain tags end in `/v1` and change together with the payload `v`.
 - **Change policy.** Any change to a vector, a tag, a field, or the check order is a contract change: bump the version, regenerate the vectors, and land it in one PR that touches both sides.
+- **Revision 2026-11-06 (P4b): a fourth job kind, `sync_device_library`.** It adds a kind value, a result field (`library`, section 9) and a result payload (section 9.2). It adds **no job field**, so the job payload `v` and every domain tag stay as they were, and the vectors only gained entries (`pending_jobs`). An agent from before this revision reads the new kind as `bad_payload` (step 6) and answers nothing, so QC-2 reports the job as `expired_unclaimed` after its 15 minutes; pull `main` on the PC to get the new kind. (That is read from `parse_job`'s kind check in the old agent, not run against an old agent.) Both references, the Go `internal/devicejobs` and the Python `reference_check.py` and `qc_agent/contract.py`, change together in the same PR.
 
 ## 2. Who writes what
 
@@ -34,7 +35,7 @@ Words in **MUST**/**MUST NOT** are requirements. Every premise about an external
 | `jobs/done/<job_id>.json` | the agent only | nobody in v1 | yes | yes (replay check) |
 | `agent/heartbeat.json` | the agent only | nobody | yes | no |
 | `jobs/owned_slots.json` | the agent only | nobody | no in v1 | no (informational only) |
-| `agent/library.json` | reserved for v2 (`sync_device_library`) | — | — | — |
+| `agent/library.json` | **not used.** The capture list travels in a `sync_device_library` result (section 9.2); QC-2 stores it in its own bucket, not here | — | — | — |
 
 - QC-2 **MUST NOT** delete anything in the jobs bucket in v1.
 - The agent's **authoritative** records live on the PC, not in the bucket:
@@ -53,7 +54,6 @@ A dedicated bucket, named by `DEVICE_JOBS_BUCKET` on QC-2 and by the agent's own
   jobs/done/<job_id>.json       signed result
   jobs/owned_slots.json         signed, informational (agent)
   agent/heartbeat.json          signed heartbeat
-  agent/library.json            reserved (v2)
 ```
 
 - `<job_id>` is a **lowercase canonical UUID**: `^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`. Any version nibble is allowed (QC-2 uses v4 for reads and a deterministic v8 for pushes, section 12).
@@ -170,7 +170,7 @@ Signed with `qc2-device-job/v1`. The agent parses it **strictly** (the section 5
 | `type` | `"qc2-device-job"` |
 | `job_id` | lowercase canonical UUID; **MUST** equal the UUID in the object key |
 | `bucket` | the jobs bucket name; **MUST** equal the agent's configured bucket |
-| `kind` | `"push_preset"` \| `"list_slots"` \| `"read_preset"` |
+| `kind` | `"push_preset"` \| `"list_slots"` \| `"read_preset"` \| `"sync_device_library"` |
 | `created_at` | timestamp |
 | `expires_at` | timestamp; QC-2 sets `created_at + 15 min` |
 | `args` | object, by `kind` (below) |
@@ -178,6 +178,7 @@ Signed with `qc2-device-job/v1`. The agent parses it **strictly** (the section 5
 **`args` by kind**
 
 - `list_slots`: `{}` (exactly empty).
+- `sync_device_library`: `{}` (exactly empty). Read-only: the agent takes one fresh directory listing, the same read a push uses for its slot and capture checks, and loads, recalls and writes nothing.
 - `read_preset`: `{"slot": null}`.
   - The key is required. `slot` is `null` or a string matching the slot pattern exactly (no padding, no case change). A non-null slot (`"20A"`) is shape-valid but **reserved**. A v1 agent answers it with a `refused` result, `reason_code: "unsupported_arg"`, because recalling a slot changes what the unit is playing.
   - v1 reads the **current** preset only.
@@ -240,6 +241,7 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 | `push` | `null`, or for `push_preset`: `{"slot", "name", "mismatches": int, "cpu_load": number\|null, "diff": [≤512 × {"row", "col", "param_index", "expected": number, "readback": number\|null, "ok": bool}]}` |
 | `slots` | `null`, or for `list_slots`: `{"setlist": "My Presets", "slots": [≤256 × {"slot", "state": "empty"\|"occupied", "name": string≤64\|null, "owned": bool}]}` |
 | `readback` | `null`, or for `read_preset`: `{"format": "qc-device-readback/1", "slot": string\|null, "name": string\|null, "payload": object}`. `payload` is the object defined in section 9.1. |
+| `library` | `null`, or for `sync_device_library`: `{"format": "qc-device-library/1", "payload": object}`. `payload` is the object defined in section 9.2. Present as `null` on every other result. |
 
 **Why results are signed.** The agent already holds the key, so signing costs one function call. It turns "a leaked agent bucket token can forge results, heartbeats and LLM-visible text" into "it can only delete or spam objects". QC-2 shows a result that fails verification as state `unverified` and withholds all of its text.
 
@@ -273,6 +275,30 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 - **What QC-2 does with it** is not part of the contract: `internal/deviceexport/readback.go` (the inverse of the export) turns it into a draft preset. It never writes to the unit.
 - **Shared fixtures** keep the two sides in step. `testdata/devicejobs/readback.json` holds hand-written edge cases (hostile text, non-finite numbers, a ninth value, a capture `file_name`) and 15 invalid payloads with the error each must produce. `testdata/devicejobs/readback_roundtrip/*.json` are written by the Go tests (`go test ./internal/deviceexport -run RoundTripFixtures -update`): the simulated unit state in the agent's positional form and the payload the agent must produce from it. `deploy/qc-agent/tests/test_readback.py` feeds each `device_preset` to `readback_payload` and compares with `expect_payload`; the Go tests parse every `expect_payload` and every invalid payload.
 
+## 9.2. The `sync_device_library` payload: `qc-device-library/1` (P4b)
+
+```json
+{"captures": [{"name": "CA John's 2", "key": "<64 lowercase hex>", "version": 2,
+               "kind": "factory", "folder": "Factory Captures V2", "cloud": false}],
+ "skipped": 3}
+```
+
+| Field | Type and constraint |
+|---|---|
+| `captures` | at most 1500 objects, one per capture file in the unit's capture folders, in the listing's order. The agent **fails** the job (`device_error`) rather than cut a longer list: a truncated list would make a capture that is on the unit look missing. |
+| `captures[].name` | exactly the file name on the unit: printable ASCII (0x20-0x7E), 1-64 characters, no leading or trailing space, no double space, no backtick. The agent leaves a file out (counted in `skipped`) when its name is not like this **or** when contract section 11's clean-up would change it, so a stored name is byte for byte the string the agent compares at push time. A name that cleaning would turn into another capture's name therefore cannot appear. |
+| `captures[].key` | the capture's 64 hex characters, lower case. A file whose key is not that is left out. |
+| `captures[].version` | `1`, `2` or `null`: the version the push itself would use (`qc_agent.captures.version_of`). A factory capture's comes from its folder name (`Factory Captures V1`/`V2`, **UNVERIFIED** on the owner's unit), a user capture's from `ProductData.version` only when that field separates the factory V1 and V2 folders on that listing. Otherwise `null`, and a push of that capture is refused. |
+| `captures[].kind` | `"factory"` or `"user"`: whether the folder is a factory folder. |
+| `captures[].folder` | the folder's name for display: printable ASCII (anything else is replaced by `?`), cleaned, at most 40 characters, not empty. |
+| `captures[].cloud` | `true` when the folder, or one above it, is a Cortex Cloud or plugin folder: listed, but not a file on the unit, so a push refuses it (the flags' exact meaning on CorOS 4.1 is **UNVERIFIED**; they are inherited down the folder tree). |
+| `skipped` | integer 0..2^20: files left out for the reasons above, plus favorites views (which repeat other folders' files and are never a push source). |
+
+- **Strict parse (QC-2).** `devicejobs.ParseLibraryPayload` rejects a payload over 512 KiB, unknown fields, trailing data, wrong types, more than 1500 captures, a name that is not clean printable ASCII, a key that is not 64 lower-case hex characters, a version other than 1, 2 or null, a kind other than the two, and a folder that is empty, over 40 characters or that clean-up would change. A rejected payload stores nothing and the tool says why (without echoing the text).
+- **What QC-2 does with it** is not part of the contract: `internal/devicelib` stores it (`device/library.json` in QC-2's main bucket, through `storage.Client`) and the `send_preset_to_device` dry run resolves each capture against it: an exact, case-sensitive name match first; only when there is none, one entry of a reviewed alias table (`internal/devicelib/capture_aliases.json`, empty to start) whose target must itself be in the list; never fuzzy. The agent does not trust that resolution: at push time it resolves every capture again against a fresh listing, so a stale or edited list can only make a dry run wrong, never make a push write a different file.
+- **Cab mic strings are not part of this job.** Whether a stored preset can be read without loading it on the unit is **UNVERIFIED**, so the agent never reads one for the sync. QC-2 collects the cab mic strings (the `ir selector` values) from the `read_preset` payloads of presets the user asked to read (section 9.1), keeps only a string that is a variation of the cab's own catalog default (same `<prefix>_<cab>`, different mic), and a push may then write such a string exactly (the export's `mics`, `qc2-device-export/1`).
+- **Shared fixtures.** `testdata/devicejobs/library.json` holds fake directory listings in the agent's positional form with the payload `qc_agent.captures.library_payload` must produce (hostile names, a cloud item, a favorites view, an over-long and a non-ASCII folder), and 19 invalid payloads with the error each must produce. `deploy/qc-agent/tests/test_library.py` checks the first; the Go tests parse every expected payload and every invalid one.
+
 ## 10. Heartbeat
 
 Signed with `qc2-device-heartbeat/v1`, written to `agent/heartbeat.json`:
@@ -305,7 +331,7 @@ A heartbeat more than 60 s in the future is offline, with the reason "the bridge
 
 ## 11. Untrusted text
 
-All text that comes from the device or the agent is **data, not instructions**: preset, slot, capture and IR names, `message`, `firmware`, `agent_version`. Some of it was written by strangers on Cortex Cloud. QC-2 handles it in this order:
+All text that comes from the device or the agent is **data, not instructions** (a synced capture list included: some capture names were written by strangers on Cortex Cloud): preset, slot, capture and IR names, `message`, `firmware`, `agent_version`. Some of it was written by strangers on Cortex Cloud. QC-2 handles it in this order:
 1. drop control characters, Unicode format characters (bidi overrides, zero-width characters) and line breaks, and replace backticks (step 4's code span relies on there being none);
 2. collapse whitespace;
 3. cut to the field's length bound;
@@ -329,7 +355,7 @@ The agent never sees this, but it explains where push job ids come from.
 
 ## 13. Test vectors
 
-`testdata/devicejobs/vectors.json` (79 entries) is **generated by `gen_vectors.py`**, written from this document, not from the Go code. Two references must reach every `expect`:
+`testdata/devicejobs/vectors.json` (82 entries) is **generated by `gen_vectors.py`**, written from this document, not from the Go code. Two references must reach every `expect`:
 - Go, via `go test ./internal/devicejobs`;
 - Python, via `python3 -I testdata/devicejobs/reference_check.py testdata/devicejobs/vectors.json`.
 
@@ -351,7 +377,7 @@ Python isn't in CI, so run the Python check by hand whenever the vectors change.
   - payload not a string, duplicate key, unpaired surrogate, trailing data, not JSON;
   - nesting 3,000 deep, and `v` as `1e400`.
 - **`pending_jobs`:** the full section 8 check order, with `object_key`, `agent_bucket`, `now`, `ledger` and `expect`. Covers:
-  - valid jobs of each kind;
+  - valid jobs of each kind (`sync_device_library` included, with args, and with a case-variant kind as bad payloads);
   - bad object keys (wrong prefix, upper-case UUID, traversal);
   - signature and kid failures;
   - `NaN`, duplicate, unknown and missing fields;

@@ -35,7 +35,11 @@ func (e *Exporter) planStomps(rows []Row) (stompResult, error) {
 				// A capture block's id is chosen on the unit (V1 or V2); the planner reads it
 				// as a Neural Capture block and decides its role from the preset's block type
 				// and the capture library.
-				sb.ModelID, sb.CaptureName, sb.ModelerType = captureBlockID, b.Capture.Name, b.modelerType
+				name := b.Capture.Name
+				if b.Capture.presetName != "" {
+					name = b.Capture.presetName // the library knows the preset's name, not the unit's alias
+				}
+				sb.ModelID, sb.CaptureName, sb.ModelerType = captureBlockID, name, b.modelerType
 			}
 			blocks = append(blocks, sb)
 		}

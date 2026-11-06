@@ -1,0 +1,5 @@
+{
+ "format": "qc2-capture-aliases/1",
+ "_readme": "Reviewed name aliases for the sync_device_library capture list (plan 4.2). EMPTY on purpose: it is filled from the first real sync, by a person comparing a preset's capture name with what the unit calls it. Each entry maps a name QC-2's libraries use (name, source) to the exact name the unit lists (unit_name); the unit_name must still be in the synced list, so an alias never makes a capture appear. evidence says how the match was established (a screenshot, the capture's page); reviewed is the date. There is no fuzzy matching anywhere.",
+ "aliases": []
+}

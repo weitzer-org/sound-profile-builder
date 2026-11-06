@@ -130,13 +130,13 @@ NEVER = frozenset({
     "load_settings_preset", "save_model_preset", "delete_model_preset", "load_model_preset",
     "select_model_slot", "assign_stomp", "unassign_stomp", "assign_expression",
     "set_ir", "add_splitter", "add_mixer", "remove_split", "set_split_points", "set_lane_param",
-    "set_scene_label", "set_scene_color", "set_preset_meta", "set_param_typed", "set_scene",
+    "set_scene_label", "set_scene_color", "set_preset_meta", "set_scene",
     "latest_broadcast", "read_message", "list_model_presets", "list_recents_favorites",
 })
 GRANT = frozenset({
     "open", "close", "get_current_preset", "get_setlist_position", "list_directory_raw",
     "set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass", "write_preset_file",
-    "set_capture",
+    "set_capture", "set_param_typed",  # typed: only a planned cab mic string passes the wire guard
 })
 ATTRS = frozenset({"firmware", "device_type", "write_errors", "last_write_error", "io"})
 
@@ -208,9 +208,12 @@ class WireGuard:
             if b.model_id == 0 or (b.capture is not None and b.capture.file_name is None):
                 raise DeviceError(f"column {b.col}: a capture block is not resolved")
         self._push = {"cols": {b.col: b.model_id for b in plan.blocks},
-                      # each capture block's file_name: written once, exactly this string (plan 4.2)
-                      "strings": {(b.col, CAPTURE_FILE_NAME_PARAM): b.capture.file_name
-                                  for b in plan.blocks if b.capture is not None},
+                      # each capture block's file_name, and each cab mic string (plan 4.2, P4b): written
+                      # once, exactly this string
+                      "strings": {**{(b.col, CAPTURE_FILE_NAME_PARAM): b.capture.file_name
+                                     for b in plan.blocks if b.capture is not None},
+                                  **{(b.col, m.index): m.value for b in plan.blocks for m in b.mics}},
+                      "mic_cells": {(b.col, m.index) for b in plan.blocks for m in b.mics},
                       "params": {(b.col, p.index) for b in plan.blocks for p in b.params},
                       "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
                       # no value or string write at or past param_count (G1: the device's trailing slot)
@@ -372,7 +375,7 @@ class WireGuard:
             want = push["strings"][(col, p.index)]
             if (len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "string_value"
                     or p.param_values[0].string_value != want):
-                raise WireRefused(f"Grid: column {col} index {p.index} may only carry the planned capture file name")
+                raise WireRefused(f"Grid: column {col} index {p.index} may only carry the planned string")
             del push["strings"][(col, p.index)]  # once
             return
         if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
@@ -861,6 +864,13 @@ class QcMcpBackend(DeviceBackend):
         if not push or push["strings"].get((col, CAPTURE_FILE_NAME_PARAM)) != key + name:
             raise DeviceError(f"column {col}: the capture to place is not the armed one")
         return bool(self._call("set_capture", row, col, key, name, version=version))
+
+    def set_mic(self, row, col, index, value):
+        push = self._guard._push if self._guard is not None else None
+        if not push or (col, index) not in push["mic_cells"] or push["strings"].get((col, index)) != value:
+            raise DeviceError(f"column {col}: the mic to write is not the armed one")
+        # The vendored typed write; the wire guard lets exactly this string through once (_check_param).
+        self._call("set_param_typed", row, col, index, [[None, None, value]])
 
     def set_param(self, row, col, index, wire):
         self._call("set_param", row, col, index, wire)

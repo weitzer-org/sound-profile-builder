@@ -11,11 +11,12 @@ or UI: its only inputs are signed jobs. Design: `docs/design/qc-device-bridge-pl
 |---|---|
 | `list_slots` | Complete. Fresh directory listing of My Presets, 256 slots, empty/occupied/owned. |
 | `read_preset` | Complete for the **open** preset. A named slot is refused (`unsupported_arg`): recalling changes what's playing. |
+| `sync_device_library` | Complete (P4b), read-only. One fresh directory listing (the push's own read), sent to QC-2 as the unit's capture list: name, key, V1/V2, factory or user, folder. Loads and writes nothing. QC-2's dry run checks captures against it; this bridge still resolves every capture again when it pushes. |
 | `push_preset` | Implemented and tested offline against fixtures, but **refused end to end until P2** builds the device export: QC-2's `send_preset_to_device` still uses `devicejobs.UnavailableExporter`. |
 
 ## Safety rules (what the agent enforces, in order)
 
-For every job: the HMAC signature and the full contract section 8 check order (all 79 shared vectors pass), then
+For every job: the HMAC signature and the full contract section 8 check order (all 82 shared vectors pass), then
 the unit's firmware must equal `QC_AGENT_EXPECTED_FIRMWARE` exactly and the unit must be a full Quad Cortex.
 
 For a push, before anything is written:
@@ -191,6 +192,26 @@ them; this guide uses **24H**).
     - unplug the USB cable in the middle of a push once: the job should fail with `unit_absent` within a few seconds
       and the bridge should exit (the watchdog runs beside a blocking call only if ctypes releases the GIL during the
       HID call, which ctypes documents but nobody has run on Windows here).
+
+14. **Library sync and cab mics (P4b; read-only, then normal use).** Pull `main` on the PC first (the new job kind and the cab mic write are in this bridge; an older bridge ignores `sync_device_library` and the job expires unanswered).
+    - **Sync.** Unit on, Cortex Control closed, bridge running. Phone: `sync_device_library`. Expect `succeeded` and a count
+      close to what the unit's own capture lists show. Send me the counts (factory/user, V1/V2, "no V1/V2 marker", cloud
+      only, "left out") and the `capture folder ...` lines from `agent.log`. Two things are **unverified** here: that the
+      factory folders are named `Factory Captures V1`/`V2` (otherwise every factory capture shows "no V1/V2 marker"), and
+      that the cloud flags mean what the bridge assumes.
+    - **Names.** Dry-run a preset that uses a factory capture. If QC-2's library calls a capture something else than
+      the unit does (for example a trailing ` 2`), the dry run says "not on your unit". Send me both names: they fill
+      the reviewed alias table (`internal/devicelib/capture_aliases.json`), which is empty until you do.
+    - **A capture you don't have.** Dry-run a preset that uses a capture that is not on the unit: it must say "not on
+      your unit", with no confirm token.
+    - **Cab mics.** Select a preset on the unit whose cab uses a mic other than the cab's default, phone:
+      `read_device_preset` (the answer says how many cab mics it recorded). Then dry-run a preset that asks for that
+      mic on the same cab: the plan shows "cab mic written exactly". Push it into an empty slot: expect `succeeded`,
+      `mismatches 0`, and the cab on the unit shows that mic. Power-cycle and re-select: the mic is still set. This
+      is the first time the bridge writes a string into a cab, so these are **unverified** until you run it: whether
+      the unit accepts the string, and whether writing it resets the cab's other controls (the bridge writes the mic
+      before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
+      delete the preset.
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before

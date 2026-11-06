@@ -11,6 +11,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/devicelib"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -20,6 +21,7 @@ type builder struct {
 	legacy     bool // the preset predates Architect v4's Bypass definition (see usesBasis)
 	unresolved []devicejobs.Unresolved
 	warnings   []devicejobs.Unresolved
+	dev        *devicelib.Snapshot // the synced lists, nil when none were loaded
 }
 
 func (b *builder) warn(block, param, reason string) {
@@ -86,6 +88,14 @@ func (b *builder) resolveCapture(name string) (c *Capture, isCapture bool, why s
 	switch {
 	case src == "ir":
 		return nil, true, "this library entry is a cab IR, and IR loaders are not pushed in v1"
+	case src != "" && b.dev != nil && b.dev.Library != nil:
+		// A synced list: resolve exactly as the agent will (plan 4.2). A capture the unit
+		// doesn't list blocks the push here instead of failing at the bridge.
+		r := devicelib.Resolve(b.dev.Library, b.dev.Aliases, bare, src)
+		if r.Status != devicelib.StatusOnUnit {
+			return nil, true, r.Reason
+		}
+		return &Capture{Name: r.UnitName, Source: src, res: &r, presetName: bare, syncedAt: b.dev.Library.SyncedAt}, true, ""
 	case src != "":
 		return &Capture{Name: bare, Source: src}, true, ""
 	case annotated:
@@ -261,11 +271,14 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			b.bypass(ref, bp, &out.Bypass)
 			continue
 		case hasMics && (key == "MIC1" || key == "MIC2"):
-			label, note := micChoice(m, key, bp)
-			if note != "" {
+			label, note, mw := b.micChoice(m, key, bp)
+			switch {
+			case mw != nil:
+				out.Mics = append(out.Mics, *mw)
+			case note != "":
 				// Owner decision (plan 4.1): the cab keeps its default mic, visibly.
 				b.warn(ref, bp.Name, note)
-			} else {
+			default:
 				out.AtDefault = append(out.AtDefault, label)
 			}
 			continue
@@ -317,22 +330,24 @@ func (b *builder) captureModel() *catalog.Model {
 }
 
 // micChoice checks a cab's "Mic 1"/"Mic 2" against the mic that slot loads by default (the
-// XML's default IR name, "<prefix>_<cab>_<mic>"). The default isn't written. Any other mic
-// isn't written either, because which mics a cab offers isn't in ModelRepo.xml: the cab
-// keeps its default and note says so (a warning, not a refusal; plan 4.1).
-func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, note string) {
+// XML's default IR name, "<prefix>_<cab>_<mic>"). The default isn't written. Any other mic is
+// written only when it is exactly one of the strings seen on the unit for this same cab (plan
+// P4b: strings collected from presets the user asked to read), because which mics a cab offers
+// isn't in ModelRepo.xml. Otherwise the cab keeps its default and note says so (a warning,
+// not a refusal; plan 4.1).
+func (b *builder) micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, note string, write *Mic) {
 	slot := 1
 	if key == "MIC2" {
 		slot = 2
 	}
 	label = fmt.Sprintf("MIC %d", slot)
-	def := ""
+	def, idx := "", -1
 	n := 0
 	for _, p := range m.Params {
 		if p.Name == "ir selector" {
 			n++
 			if n == slot {
-				def = p.DefaultString
+				def, idx = p.DefaultString, p.Index
 			}
 		}
 	}
@@ -341,16 +356,47 @@ func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, 
 		defMic = def[i+1:]
 	}
 	if defMic == "" {
-		return "", "not applied: this cab's default mic isn't known, so the cab keeps whatever mic it loads"
+		return "", "not applied: this cab's default mic isn't known, so the cab keeps whatever mic it loads", nil
 	}
-	for _, v := range sceneStrings(bp) {
+	scenes := sceneStrings(bp)
+	want := ""
+	for _, v := range scenes {
 		if micKey(cleanValue(v)) != micKey(defMic) {
-			return "", fmt.Sprintf("not applied: %q can't be written yet (which mics this cab offers isn't known), so the cab keeps its default %s",
-				truncate(cleanValue(v), 40), defMic)
+			want = cleanValue(v)
+			break
 		}
 	}
-	return label, ""
+	if want == "" {
+		return label, "", nil // every scene asks for the default mic
+	}
+	if b.dev == nil || b.dev.Mics == nil || idx < 0 || !m.ValidParamIndex(idx) {
+		// No mic list yet: the note is exactly what it was before the library sync existed.
+		return "", fmt.Sprintf("not applied: %q can't be written yet (which mics this cab offers isn't known), so the cab keeps its default %s",
+			truncate(want, 40), defMic), nil
+	}
+	unseen := fmt.Sprintf("not applied: %q can't be written yet (it hasn't been seen on your unit for this cab; read a preset that uses it with read_device_preset), so the cab keeps its default %s",
+		truncate(want, 40), defMic)
+	if micKey(cleanValue(scenes[0])) != micKey(cleanValue(scenes[1])) {
+		return "", fmt.Sprintf("not applied: the mic differs between Scene A and Scene B, and a cab's mic is one setting for all scenes, so the cab keeps its default %s", defMic), nil
+	}
+	var hits []string
+	for _, s := range b.dev.Mics.For(m.ID) {
+		if b.e.harv != nil && b.e.harv.ValidMic(m.ID, s) && micKey(devicelib.MicPart(s)) == micKey(want) {
+			hits = append(hits, s)
+		}
+	}
+	switch len(hits) {
+	case 0:
+		return "", unseen, nil
+	case 1:
+		return label, "", &Mic{Slot: slot, Index: idx, Value: hits[0], Evidence: MicEvidence}
+	}
+	return "", fmt.Sprintf("not applied: %q matches %d different strings seen on your unit for this cab, and the bridge won't guess; the cab keeps its default %s",
+		truncate(want, 40), len(hits), defMic), nil
 }
+
+// MicEvidence labels a mic string taken from the unit's own read-back.
+const MicEvidence = "seen-on-unit"
 
 // micKey normalizes a mic name: case, spacing, the usual abbreviations ("Dyn 57" =
 // "Dynamic 57"), and trailing placement notes ("Dynamic 57 - Cap Edge", "Ribbon 160 (off-axis)").

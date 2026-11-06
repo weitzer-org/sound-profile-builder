@@ -23,6 +23,8 @@ const (
 	KindPushPreset = "push_preset"
 	KindListSlots  = "list_slots"
 	KindReadPreset = "read_preset"
+	// KindSyncLibrary is the read-only capture-library sync (plan P4b). Its args are exactly empty.
+	KindSyncLibrary = "sync_device_library"
 )
 
 // Result statuses.
@@ -80,7 +82,6 @@ const (
 	PendingPrefix = "jobs/pending/"
 	DonePrefix    = "jobs/done/"
 	HeartbeatKey  = "agent/heartbeat.json"
-	LibraryKey    = "agent/library.json"    // reserved (v2)
 	OwnedSlotsKey = "jobs/owned_slots.json" // agent-written, informational
 )
 
@@ -236,7 +237,7 @@ func ParseJob(payload []byte) (*Job, error) {
 
 func checkArgs(kind string, args json.RawMessage) error {
 	switch kind {
-	case KindListSlots:
+	case KindListSlots, KindSyncLibrary:
 		_, err := object(args)
 		return err
 	case KindReadPreset:
@@ -329,6 +330,8 @@ type Result struct {
 	Push         *PushResult    `json:"push"`
 	Slots        *SlotsResult   `json:"slots"`
 	Readback     *ReadbackBlock `json:"readback"`
+	// Library is a sync_device_library answer (contract section 9.2). Opaque here; ParseLibraryPayload checks it.
+	Library *LibraryBlock `json:"library"`
 }
 
 // PushResult reports a push's read-back comparison.
@@ -370,6 +373,12 @@ type ReadbackBlock struct {
 	Format  string          `json:"format"`
 	Slot    *string         `json:"slot"`
 	Name    *string         `json:"name"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+// LibraryBlock is a sync_device_library answer. Payload is checked by ParseLibraryPayload.
+type LibraryBlock struct {
+	Format  string          `json:"format"`
 	Payload json.RawMessage `json:"payload"`
 }
 

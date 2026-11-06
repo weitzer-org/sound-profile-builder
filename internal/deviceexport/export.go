@@ -21,6 +21,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/devicelib"
 	"github.com/weitzer-org/sound-builder/internal/stomplayout"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -69,6 +70,12 @@ type Options struct {
 	// whitespace runs) and cuts it to n runes. The read-back import requires it:
 	// cmd/server passes devicejobs.SanitizeText, the function mcpserver's sanitizeDeviceText is, so import and display share one definition.
 	Sanitize func(s string, n int) string
+	// Device loads what QC-2 knows about the unit's contents (plan P4b): the synced capture
+	// list, the reviewed alias table and the cab mics seen in presets the user asked to read.
+	// Nil, or a snapshot with no library, leaves the export exactly as it was before the
+	// sync existed: a capture is resolved on the unit at push time and a non-default cab
+	// mic is a warning.
+	Device func(ctx context.Context) (*devicelib.Snapshot, error)
 }
 
 // Exporter implements devicejobs.Exporter.
@@ -78,6 +85,7 @@ type Exporter struct {
 	opts      Options
 	stompCls  *stomplayout.Classifier
 	byID      map[int]*catalog.Model // model id -> model, for the read-back import
+	harv      *devicelib.Harvester   // validates a seen cab mic string before it is written
 }
 
 var _ devicejobs.Exporter = (*Exporter)(nil)
@@ -92,6 +100,7 @@ func New(cat *catalog.Catalog, catalogSHA256 string, o Options) *Exporter {
 			e.byID[cat.Models[i].ID] = &cat.Models[i]
 		}
 		e.stompCls = stomplayout.NewClassifier(cat, o.StompCaptures)
+		e.harv = devicelib.NewHarvester(cat)
 	}
 	return e
 }
@@ -180,6 +189,20 @@ type Block struct {
 	// AtDefault lists controls the preset sets to the catalog default in every scene. They
 	// are not written: a block added to an empty slot starts at its defaults.
 	AtDefault []string `json:"at_default"`
+	// Mics are cab mic strings written exactly (plan P4b): a mic the preset asks for that
+	// was seen on the unit, in a preset the user asked to read, for this same cab. Absent
+	// unless used, so an export without them is byte-identical to one before they existed.
+	Mics []Mic `json:"mics,omitempty"`
+}
+
+// Mic is one cab mic string write: the cab's "ir selector" parameter for the mic slot.
+type Mic struct {
+	Slot  int    `json:"slot"`  // 1 or 2: the cab's MIC 1 / MIC 2
+	Index int    `json:"index"` // the catalog's ir selector parameter index for that slot
+	Value string `json:"value"` // the exact string seen on the unit, "<prefix>_<cab>_<mic>"
+	// Evidence is "seen-on-unit". Whether the unit accepts the string is UNVERIFIED on
+	// hardware until the README's library-sync step has been run.
+	Evidence string `json:"evidence"`
 }
 
 // Capture names the capture a Neural Capture block loads.
@@ -192,6 +215,12 @@ type Capture struct {
 	// the agent then resolves the name against a fresh read of the unit's captures and
 	// fails the job, writing nothing, when it isn't there.
 	ResolvedOnUnit bool `json:"resolved_on_unit"`
+
+	// res is the synced list's answer, for the readable plan only. It is not in the payload:
+	// the agent always resolves against its own fresh listing.
+	res        *devicelib.Resolution
+	presetName string // the name the preset used, when an alias replaced Name
+	syncedAt   string
 }
 
 // Param is one parameter write.
@@ -225,7 +254,7 @@ func (p Param) Confirmed() bool {
 // Export builds the export for one guitar. It returns an error only for faults (the guitar
 // isn't in the preset, an index fails the catalog's own check); every mapping problem is
 // an Unresolved item.
-func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar string) (*devicejobs.Export, error) {
+func (e *Exporter) Export(ctx context.Context, sp storage.StructuredPreset, guitar string) (*devicejobs.Export, error) {
 	chain, ok := sp.Guitars[guitar]
 	if !ok {
 		return nil, fmt.Errorf("guitar %q is not in this preset", truncate(guitar, 60))
@@ -234,6 +263,15 @@ func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar
 		return nil, errors.New("device catalog unavailable")
 	}
 	b := &builder{e: e, legacy: !usesBasis(sp)}
+	if e.opts.Device != nil {
+		snap, err := e.opts.Device(ctx)
+		if err != nil {
+			// Not "not synced": the list exists but could not be read. Say so, in the plan.
+			b.warn("(device lists)", "", "the synced capture and cab mic lists could not be read, so captures are checked on the unit at push time and non-default cab mics are left out")
+		} else {
+			b.dev = snap
+		}
+	}
 	p := Payload{
 		Format:       Format,
 		Catalog:      CatalogRef{CorOS: e.cat.Source.CorOSVersion, Origin: e.cat.Source.Origin, SHA256: e.catalogSH},
@@ -304,6 +342,17 @@ func summary(p Payload) []devicejobs.PlanBlock {
 				Params: []devicejobs.PlanParam{}, BypassA: bl.Bypass[0], BypassB: bl.Bypass[1], AtDefault: bl.AtDefault}
 			if bl.Capture != nil {
 				pb.Capture = bl.Capture.Name
+				if r := bl.Capture.res; r != nil {
+					ci := &devicejobs.PlanCapture{UnitName: r.UnitName, Version: r.Version, Kind: r.Kind, Folder: r.Folder,
+						KeyPrefix: keyPrefix(r.Key), SyncedAt: bl.Capture.syncedAt}
+					if r.Aliased {
+						ci.AskedName = bl.Capture.presetName
+					}
+					pb.CaptureInfo = ci
+				}
+			}
+			for _, m := range bl.Mics {
+				pb.Mics = append(pb.Mics, devicejobs.PlanMic{Label: fmt.Sprintf("MIC %d", m.Slot), Value: m.Value})
 			}
 			for _, pr := range bl.Params {
 				pp := devicejobs.PlanParam{Name: pr.Label, A: pr.shown(0), Unconfirmed: !pr.Confirmed()}
@@ -316,6 +365,13 @@ func summary(p Payload) []devicejobs.PlanBlock {
 		}
 	}
 	return out
+}
+
+func keyPrefix(k string) string {
+	if len(k) > 8 {
+		return k[:8]
+	}
+	return k
 }
 
 // shown is Scene A's (0) or B's (1) value as the plan shows it: a switch's position name,

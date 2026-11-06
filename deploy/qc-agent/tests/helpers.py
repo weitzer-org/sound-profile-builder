@@ -83,7 +83,7 @@ def export():
 def job(kind="list_slots", args=None, job_id=None, created=T0, ttl_s=900, bucket=BUCKET, key_hex=KEY_HEX):
     jid = job_id or str(uuid.uuid4())
     if args is None:
-        args = {"list_slots": {}, "read_preset": {"slot": None},
+        args = {"list_slots": {}, "sync_device_library": {}, "read_preset": {"slot": None},
                 "push_preset": {"slot": "20A", "name": "Texas Blues",
                                 "source": {"preset_id": "p-123", "guitar": "Telecaster"},
                                 "export": export()}}[kind]

@@ -29,6 +29,9 @@ that bind every device write, in the order they run for a push:
      slot stays in the owned ledger in case it lands late.
 Before every write the open position is read again and the watchdog's verdict checked: writes address
 row/column/index, not a preset, so after the owner selects another preset they would land in it.
+A cab's mic string (plan 4.2, P4b: `mics` in the export) is written exactly once, before the
+block's values, and checked in the read-back; the wire guard allows only that string at that
+index. Whether the unit accepts a mic written this way is UNVERIFIED (README step 14).
 Capture blocks (plan 4.2) are resolved against the unit's own capture list from the
 rule-3 listing (qc_agent.captures): a capture that is missing, ambiguous, cloud-only
 or of unknown version refuses the job before any write. The second listing must
@@ -73,6 +76,7 @@ class Outcome:
     push: dict | None = None
     slots: dict | None = None
     readback: dict | None = None
+    library: dict | None = None
     unit_gone: bool = False     # the agent exits after this job
     extra: dict = field(default_factory=dict)
 
@@ -154,8 +158,9 @@ def _check_alive(ctx):
 
 def run(ctx, job) -> Outcome:
     kind = job["kind"]
-    executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset}.get(kind)
-    if executor is None:  # parse_job only admits the three kinds; keep the code anyway
+    executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
+                "sync_device_library": sync_device_library}.get(kind)
+    if executor is None:  # parse_job only admits the four kinds; keep the code anyway
         return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
     try:
         return executor(ctx, job)
@@ -269,6 +274,41 @@ def read_preset(ctx, job) -> Outcome:
     return Outcome("succeeded", "", f"Read the open preset ({nblocks} blocks).", firmware=fw, readback=rb)
 
 
+# ---- sync_device_library (plan P4b) ----
+
+def sync_device_library(ctx, job) -> Outcome:
+    """Read-only: one directory listing (the same read_directory a push takes, nothing new), turned into the
+    capture list QC-2 stores. Writes nothing to the unit, and does not load or recall any preset."""
+    bad = _connect_checked(ctx)
+    if bad:
+        return bad
+    fw = _fw(ctx.device.firmware)
+    try:
+        snap = ctx.device.read_directory()
+        _check_alive(ctx)
+    except (_Gone, UnitAbsent):
+        return failed("unit_absent", "The Quad Cortex went away during the listing.", firmware=fw, unit_gone=True)
+    except DeviceError as e:
+        log.warning("listing failed: %s", text.clean(str(e), 200))
+        return failed("device_error", "The unit's directory listing failed.", firmware=fw)
+    if not snap.capture_folders:
+        return failed("device_error", "The unit's directory listing had no capture folders (incomplete listing?), "
+                      "so there is no capture list to send. Send it again.", firmware=fw)
+    try:
+        lib = captures.library_payload(snap)
+    except captures.LibraryTooLarge as e:
+        return failed("device_error", f"The unit lists {e.args[0]} capture files, more than the {captures.MAX_LIBRARY_CAPTURES} "
+                      "the sync carries. Nothing was sent.", firmware=fw)
+    rb = {"format": captures.LIBRARY_FORMAT, "payload": lib}
+    if len(json.dumps(rb, separators=(",", ":"), ensure_ascii=False)) > contract.MAX_RESULT_BYTES - 16 * 1024:
+        return failed("device_error", "The capture list is too large to return.", firmware=fw)
+    caps = lib["captures"]
+    nf = sum(1 for c in caps if c["kind"] == "factory")
+    skipped = f", {lib['skipped']} left out (names the bridge can't compare exactly, or favorites)" if lib["skipped"] else ""
+    return Outcome("succeeded", "", f"Listed {len(caps)} capture files ({nf} factory, {len(caps) - nf} user){skipped}.",
+                   firmware=fw, library=rb)
+
+
 # ---- push_preset ----
 
 def _expired(ctx, job) -> bool:
@@ -328,6 +368,12 @@ def _diff(plan, preset):
             if not vals or any(not isinstance(v, str) or v != b.capture.file_name for v in vals):
                 mismatches += 1
                 problems.append(f"column {b.col}: the capture block's file_name doesn't read back as planned "
+                                f"({text.clean(str(vals[0]) if vals else '', 80)!r})")
+        for m in b.mics:
+            vals = (params.get(m.index) or {}).get("values") or []
+            if not vals or any(not isinstance(v, str) or v != m.value for v in vals):
+                mismatches += 1
+                problems.append(f"column {b.col}: the cab mic {m.slot} doesn't read back as planned "
                                 f"({text.clean(str(vals[0]) if vals else '', 80)!r})")
         for p in b.params:
             mismatches += _diff_param(plan.row, b.col, p, (params.get(p.index) or {}).get("values") or [], diff)
@@ -613,6 +659,8 @@ class _Push:
             out = self.recheck(b)
             if out:
                 return out
+            for m in b.mics:   # a cab mic first, like a capture's file_name: UNVERIFIED whether the unit resets the cab's controls
+                self.op(dev.set_mic, plan.row, b.col, m.index, m.value)
             for p in b.params:
                 if p.scene_wires:  # G6: unwritten scenes keep their old value, so all eight are written
                     self.op(dev.set_param_scenes, plan.row, b.col, p.index, list(p.scene_wires))
