@@ -10,7 +10,10 @@ Three layers keep the transport to the operations the plan allows (section 5):
    SAVE, the documented hang), recall, clear_grid, delete_block, load_preset, raw
    send/request, global I/O, EQ, master volume and mode writes, model presets,
    stomps, IRs, splits, scene labels and preset meta. set_capture is granted (plan 4.2):
-   its one string write is held to the armed capture by the wire guard.
+   its one string write is held to the armed capture by the wire guard. assign_stomp stays on
+   the NEVER list too; the only way past it is QcMcpBackend.assign_stomp, which opens it for one
+   call while the wire guard holds that exact assignment in a push's stomp step (stomp doc
+   section 6.1, entry point 1). unassign_stomp is never reachable.
 3. WireGuard sits between the transport and the HID device and decodes every
    outgoing message before it is written. Only these pass:
      * session plumbing the handshake sends (KeepAlive, ResetCommsBuffers,
@@ -26,6 +29,11 @@ Three layers keep the transport to the operations the plan allows (section 5):
        or set the plan's bypass flags; write each capture block's file_name (index 5)
        exactly once, as the exact string the push resolved from the unit's own listing; and
        Scene UPDATEs (the transport switches scenes to write per-scene values);
+     * in a push's stomp step (arm_stomps, after the values read back clean, before the save): only
+       Grid UPDATEs carrying exactly one stomp_mode_assignments entry, each the plan's (row 0, a block
+       the push placed and a read of the unit confirmed, switch index 0-6, never H = 7), PRIMARY,
+       once. No momentary flag, no secondary assignment, no delete. From then on no value, bypass,
+       routing or scene write passes for the rest of the push;
      * while a save is armed: one File CREATE of My Presets at the armed position
        with the armed name and nothing else (no payload).
    Messages with unknown fields, compressed payloads, or empty model entries (the shape
@@ -46,6 +54,7 @@ transport, and alive() only reads its verdict, so it never blocks either.
 """
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
 import threading
@@ -133,6 +142,9 @@ NEVER = frozenset({
     "set_scene_label", "set_scene_color", "set_preset_meta", "set_scene",
     "latest_broadcast", "read_message", "list_model_presets", "list_recents_favorites",
 })
+# On the NEVER list, but opened for one call at a time by QcMcpBackend.assign_stomp during a push's
+# stomp step only (Guarded.window); the wire guard then holds that call to one armed assignment.
+PUSH_STEP_ONLY = frozenset({"assign_stomp"})
 GRANT = frozenset({
     "open", "close", "get_current_preset", "get_setlist_position", "list_directory_raw",
     "set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass", "write_preset_file",
@@ -148,9 +160,26 @@ class Guarded:
             raise GuardError(f"grant includes never-allowed methods: {sorted(bad)}")
         object.__setattr__(self, "_qc", qc)
         object.__setattr__(self, "_grant", frozenset(grant))
+        object.__setattr__(self, "_open", set())  # PUSH_STEP_ONLY names open for the call in progress
+
+    @contextlib.contextmanager
+    def window(self, name):
+        """Open one PUSH_STEP_ONLY method for the duration of the `with` block. Never nested, never
+        anything outside PUSH_STEP_ONLY; it closes again even if the call raises."""
+        if name not in PUSH_STEP_ONLY:
+            raise GuardError(f"{name} can't be opened")
+        if self._open:
+            raise GuardError("a window is already open")
+        self._open.add(name)
+        try:
+            yield
+        finally:
+            self._open.clear()
 
     def __getattr__(self, name):
         if name in NEVER:
+            if name in self._open:
+                return getattr(self._qc, name)
             raise GuardError(f"{name} is never allowed")
         if name in self._grant or name in ATTRS:
             return getattr(self._qc, name)
@@ -161,6 +190,9 @@ class Guarded:
 
 
 # ---------------------------------------------------------------- wire guard
+
+MAX_STOMP_INDEX = 7  # stomp_index 7 is H (qc-mcp: 0-7 = A-H, UNVERIFIED on the unit): never assigned
+STOMP_PRIMARY = 0    # StompModeAssignment.type PRIMARY (descriptor 4.1); SECONDARY = 1 is never sent
 
 PLUMBING = frozenset({"KeepAlive", "ResetCommsBuffers", "Connection"})
 READABLE = frozenset({
@@ -186,6 +218,7 @@ class WireGuard:
         self._buf = bytearray()
         self._push = None   # the armed plan, see arm_push
         self._save = None   # (folder_key, position, name)
+        self._stomps = None  # the push's stomp step, see arm_stomps: {(row, col): stomp_index} not yet sent
         self.refused: list[str] = []
 
     @property
@@ -242,12 +275,35 @@ class WireGuard:
             raise WireRefused(f"column {col} reads {n} params, not the plan's {push['bypass_expected'][col]}")
         push["bypass_index"][col] = n
 
+    def arm_stomps(self, stomps):
+        """Enter the push's stomp step (stomp doc 6.1, entry point 1): `stomps` is [(row, col, index)].
+        Only for blocks this push placed whose layout a read of the unit confirmed (confirm_layout), row 0,
+        index 0-6 (H = 7 is the owner's switch), one switch per block. Once entered, the build is over:
+        the guard passes no further value, bypass, routing or scene write for this push."""
+        push = self._push
+        if push is None or self._stomps is not None or self._save is not None:
+            raise WireRefused("stomps can only be armed once, during a push, before the save")
+        armed = {}
+        for row, col, index in stomps:
+            if row != push["row"] or col not in push["cols"] or col not in push["bypass_index"]:
+                raise WireRefused(f"stomp at row {row} column {col}: not a block this push placed and confirmed")
+            if not 0 <= index < MAX_STOMP_INDEX or (row, col) in armed:
+                raise WireRefused(f"stomp at column {col}: switch index {index} is not allowed")
+            armed[(row, col)] = index
+        if not armed:
+            raise WireRefused("no stomps to arm")
+        self._stomps = armed
+
+    def stomp_armed(self, row, col, index) -> bool:
+        return self._stomps is not None and self._stomps.get((row, col)) == index
+
     def arm_save(self, folder_key, position, name):
         self._save = (folder_key, position, name)
 
     def disarm(self):
         self._push = None
         self._save = None
+        self._stomps = None
 
     # -- the gate --
 
@@ -308,9 +364,11 @@ class WireGuard:
             raise WireRefused("Version: only the read and the client-version announce")
         if name in READABLE and action == A["READ"] and fields <= {"action", "request_id"}:
             return
+        if name == "Grid" and self._push is not None and action == A["UPDATE"] and self._stomps is not None:
+            return self._check_stomp(msg, fields)
         if name == "Grid" and self._push is not None and action == A["UPDATE"]:
             return self._check_grid(msg, fields)
-        if name == "Scene" and self._push is not None and action == A["UPDATE"]:
+        if name == "Scene" and self._push is not None and self._stomps is None and action == A["UPDATE"]:
             if fields <= {"action", "request_id", "selected_scene"} and 0 <= msg.selected_scene < 8:
                 return
             raise WireRefused("Scene: only a scene switch A-H")
@@ -329,6 +387,23 @@ class WireGuard:
             self._check_chain(ch)
         for b in preset.bypass:
             self._check_bypass(b)
+
+    def _check_stomp(self, msg, fields):
+        """The stomp step: one armed PRIMARY assignment per message, each once (arm_stomps)."""
+        if fields != {"action", "request_id", "preset"}:
+            raise WireRefused(f"Grid: unexpected fields {sorted(fields)} in the stomp step")
+        preset = msg.preset
+        if _names(preset) != {"stomp_mode_assignments"} or len(preset.stomp_mode_assignments) != 1:
+            raise WireRefused("Grid: the stomp step allows exactly one footswitch assignment per message")
+        a = preset.stomp_mode_assignments[0]
+        if _names(a) - {"row", "column", "stomp_index", "type"}:
+            raise WireRefused("Grid: unexpected footswitch assignment fields")
+        if a.type != STOMP_PRIMARY:  # latching on/off only: never the Dual Footswitch secondary function
+            raise WireRefused("Grid: only primary footswitch assignments")
+        key = (a.row, a.column)
+        if self._stomps.get(key) != a.stomp_index or a.stomp_index >= MAX_STOMP_INDEX:
+            raise WireRefused(f"Grid: footswitch {a.stomp_index} on row {a.row} column {a.column} is not the plan's")
+        del self._stomps[key]  # once
 
     def _check_chain(self, ch):
         push = self._push
@@ -663,7 +738,12 @@ def preset_to_plain(bp):
     bypass = None
     if len(bp.bypass):
         bypass = [[[bool(sb.bypass) for sb in cb.sceneBypass] for cb in row.colBypass] for row in bp.bypass]
-    return {"name": bp.name, "chains": chains, "bypass": bypass}
+    # Footswitch assignments as the unit reports them (qc-mcp reads the same two fields; UNVERIFIED on the unit
+    # whether a read carries them, so a push with stomps fails closed when they are missing or differ).
+    stomps = [{"row": int(a.row), "col": int(a.column), "index": int(a.stomp_index), "type": int(a.type)}
+              for a in bp.stomp_mode_assignments]
+    momentary = {int(k): bool(v) for k, v in bp.stomp_is_momentary.items()}
+    return {"name": bp.name, "chains": chains, "bypass": bypass, "stomps": stomps, "momentary": momentary}
 
 
 class QcMcpBackend(DeviceBackend):
@@ -894,6 +974,25 @@ class QcMcpBackend(DeviceBackend):
             raise DeviceError(f"column {col}: bypass index {bypass_index} is not the armed one "
                               "(not confirmed from the unit's read)")
         self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=bypass_index)
+
+    STOMP_SETTLE_S = 1.0  # the transport's own default pause after each assignment
+
+    def arm_stomps(self, stomps):
+        if self._guard is None or self._guard._push is None:
+            raise DeviceError("not armed")
+        self._guard.arm_stomps([(s.row, s.col, s.index) for s in stomps])
+
+    def assign_stomp(self, row, col, index):
+        # The vendored assign_stomp (transport.py:1172): a Grid UPDATE with one stomp_mode_assignments entry,
+        # kind "primary", momentary left None so no stomp_is_momentary message is sent (latching). It is on the
+        # NEVER list; the window opens it for this one call, and the wire guard passes only the armed entry.
+        if self._guard is None or not self._guard.stomp_armed(row, col, index):
+            raise DeviceError(f"column {col}: footswitch {index} is not an armed stomp")
+        if self._qc is None:
+            raise DeviceError("not connected")
+        with self._qc.window("assign_stomp"):
+            self._call("assign_stomp", row, col, index, kind="primary", momentary=None,
+                       settle_s=self.STOMP_SETTLE_S)
 
     def save_to_slot(self, position, name):
         if getattr(self, "_save_target", None) != (position, name):

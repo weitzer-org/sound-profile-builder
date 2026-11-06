@@ -558,7 +558,8 @@ class Push(Base):
         def switch(name):
             if name == "read_current_preset":
                 reads["n"] += 1
-                if reads["n"] == 9:  # 1: blank check, 2: layout, 3-7: per-block re-check, 8: read-back, 9: before save
+                # 1: blank check, 2: layout, 3-7: per-block re-check, 8: read-back, 9: after the stomps, 10: before save
+                if reads["n"] == 10:
                     self.dev.open_position = 0
         self.dev.on_call = switch
         r = self.push()

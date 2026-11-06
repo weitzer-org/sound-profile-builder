@@ -50,9 +50,13 @@ writes the values (all eight scenes when A and B differ, G6) and **all eight byp
 the block's bypass control at `param_count + 1`. Before **every**
 write it re-reads which slot is open (a write lands in whatever preset is open) and checks the liveness verdict.
 It reads the grid back and diffs it; controls it didn't write are compared with the catalog default and only
-**logged** (`default differs: ...` in `agent.log`), never failed. It saves only if the diff is clean, a second
+**logged** (`default differs: ...` in `agent.log`), never failed. If the diff is clean and the export carries
+`stomps`, it then assigns each block's **footswitch** (qc-mcp's `assign_stomp`: primary, latching, never H), with
+the same open-slot and liveness checks before each, reads the grid again and fails the job unless the assignments are
+exactly the planned ones (none missing or extra, none secondary or momentary) and the values still match. Which
+physical switch each index is stays **unverified** until step 15. It saves only if the diff is clean, a second
 fresh listing still shows the slot empty (and still resolves every capture to the same file), the grid re-read
-after that listing is still the verified one, and the slot is still open. A save the listing doesn't show within
+after that listing is still the verified one (footswitches included), and the slot is still open. A save the listing doesn't show within
 six polls (about 2 minutes) is reported **failed** ("may still land: check the slot"), and the slot stays in the
 owned-slot ledger. A capture is placed with qc-mcp's `set_capture` (a V1 14000 or V2 14001 block, then its
 `file_name` = key + name) before its controls are written, goes through the same `param_count` check, and its
@@ -62,11 +66,13 @@ as a dependency of the saved preset.
 
 Three layers keep qc-mcp's transport to that (`qc_agent/qcmcp_backend.py`): a SHA-256 pin check of everything in
 `vendor/`, with each module compiled from the bytes just hashed (the folder is never on `sys.path`); a method allowlist with a never-list (`save_preset`, `recall`, `clear_grid`, deletes, raw
-`send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, IRs, typed writes, splits, scene labels);
+`send`/`request`, global I/O, EQ, master volume, mode, model presets, stomps, IRs, typed writes, splits, scene labels;
+`assign_stomp` opens for one call at a time, only in a push's footswitch step; `unassign_stomp` never);
 and a **wire guard** that decodes every outgoing message and lets through only session plumbing, reads, and, while a
 push is armed, exactly the plan's grid writes (including each capture's `file_name`, once, as the exact resolved
 string; never a write at or past the model's `param_count`; scene assignment only for the plan's scene-varying
-params and each block's bypass control) and one File CREATE to the armed slot and name. Nothing ever sends
+params and each block's bypass control), then in the footswitch step only the plan's assignments, one per message,
+each once, with no value, scene or routing write after it, and one File CREATE to the armed slot and name. Nothing ever sends
 ProductForward or a capture command.
 
 Liveness (G2 c): a watchdog thread samples the transport's reader thread and write-error counter once a second
@@ -212,6 +218,18 @@ them; this guide uses **24H**).
       the unit accepts the string, and whether writing it resets the cab's other controls (the bridge writes the mic
       before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
       delete the preset.
+
+15. **Footswitches (stomp layout, entry point 1; normal use).** Pull `main` on the PC first. On the first push whose
+    dry run lists a **Footswitch layout**, expect `succeeded`, `mismatches 0`, and the message "N footswitch(es)
+    assigned and read back". Then check **by eye**, with the unit in **Stomp** mode (you switch modes; the bridge never
+    does):
+    - each block sits on the switch the dry run named: the switch's label/LED on the unit matches the layout
+      (A-D top row, E-H bottom row). Index 0-6 = A-G comes from qc-mcp's source and is **unverified** until you see it;
+    - pressing each switch toggles its block on and off (latching, not momentary), and H is untouched;
+    - power-cycle and re-select the slot: the assignments are still there.
+    If a block is on the wrong switch, or a switch doesn't toggle its block, tell me which (dry-run line and what the
+    unit shows) and delete the preset. A push that fails with "footswitch assignments differ" saved nothing; send me
+    the `read-back after the footswitches` lines from `agent.log`.
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before

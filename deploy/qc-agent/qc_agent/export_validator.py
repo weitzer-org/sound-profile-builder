@@ -36,8 +36,10 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
   14001 must list identically, with the same param_count; file_name, index 5, must sit below it). Which capture and which block (V1 14000 / V2 14001) is decided
   on the unit, from a fresh directory listing, by qc_agent.captures;
 * `stomps` (design doc qc-stomp-layout.md, S2): at most 32 `{row, col, switch}` entries,
-  row 0, a placed column, switch A-G (never H), one switch per block. They are VALIDATED
-  here and not executed: the agent writes no stomp assignment until gate G7 has run.
+  row 0, a placed column, switch A-G (never H), one switch per block. The push assigns them
+  (latching, primary only) after the values read back clean and before the save, then reads
+  them back (jobs.py, entry point 1, owner decision #147). Which physical switch an index
+  lights is UNVERIFIED on the unit (stomp doc, G7 a): STOMP_INDEX is qc-mcp's 0-7 = A-H.
 
 Symbolic bounds: the cab bounds confirmed on the unit (G4) and the pyquadcortex 4.0.1 values
 (owner decision, plan 4.1: allowed, labelled) are resolved; any other symbol, including the
@@ -57,6 +59,10 @@ SCENES = 8
 SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
 MAX_STOMPS = 32
 STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assigned
+# Switch letter -> the transport's stomp_index. qc-mcp documents 0-7 = A-H (vendor/qc_mcp/transport.py:1174, 
+# assign_stomp's docstring); UNVERIFIED on the unit until the owner checks the first push by eye (README step 15).
+# H (7) has no entry, so it can never be planned.
+STOMP_INDEX = {s: i for i, s in enumerate(STOMP_SWITCHES)}
 VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
 CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
 CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
@@ -119,10 +125,15 @@ class ExportRefused(ValueError):
 
 @dataclass
 class PlannedStomp:
-    """A validated stomp assignment. Carried in the plan, not executed (needs gate G7)."""
+    """A validated stomp assignment: assigned by the push after the read-back, before the save."""
     row: int
     col: int
     switch: str
+
+    @property
+    def index(self) -> int:
+        """The transport's stomp_index for this switch (0-6; H is never planned). UNVERIFIED mapping."""
+        return STOMP_INDEX[self.switch]
 
 
 @dataclass
@@ -188,10 +199,11 @@ class Plan:
     out_port: int
     blocks: list[PlannedBlock]
     scene_labels: list[tuple[int, str]] = field(default_factory=list)  # none in the P2 export; not written in v1
-    stomps: list[PlannedStomp] = field(default_factory=list)  # validated, not written (gate G7 pending)
+    stomps: list[PlannedStomp] = field(default_factory=list)  # assigned after the read-back, before the save
 
     def op_count(self) -> int:
-        return 1 + sum(1 + len(b.params) + 1 for b in self.blocks)  # place (or capture), params, bypass
+        # routing, then per block: place (or capture), params, bypass; then one write per stomp
+        return 1 + sum(1 + len(b.params) + 1 for b in self.blocks) + len(self.stomps)
 
 
 def _exact(obj, keys, where, optional=()):

@@ -1,6 +1,6 @@
 # Stomp layout: consistent footswitch assignments on the Quad Cortex
 
-*Design, 2026-11-06. Status: S1 and S2 built and merged (no device involved); S3 (gate G7) no longer gates entry point 1, only entry point 2 (owner decision, section 9). See sections 7 and 8.*
+*Design, 2026-11-06. Status: S1 and S2 built and merged (no device involved); S5's entry-point-1 half built (the agent assigns stomps on a push, branch `claude/qc-agent-stomps-on-push`); S3 (gate G7) no longer gates entry point 1, only entry point 2 (owner decision, section 9). See sections 7 and 8.*
 *Builds on `docs/design/qc-device-bridge-plan.md` (the bridge, its phases and gates) and `docs/design/device-job-contract.md` (jobs between QC-2 and the home agent).*
 
 **Verify-or-label.** Each premise about the device says where it comes from: **owner** (the owner's statement about their unit), **qc-mcp** (read in qc-mcp's source at the pinned commit `f634ecd`, not run on the unit), or **UNVERIFIED**. Gate G7 (section 7) settles them; per the owner's decision it is required only before entry point 2, and entry point 1 ships with these premises still UNVERIFIED until the owner's first push shows them on the unit.
@@ -24,7 +24,7 @@ Every preset on the unit puts the same kind of effect on the same footswitch, so
 | Stomp assignments are **stored per preset**. | owner |
 | **One switch can control several blocks.** | owner |
 | A block holds **one** primary assignment; assigning it again **moves** it. | qc-mcp (`server.py:2048`) — UNVERIFIED on the unit |
-| `assign_stomp(row, column, stomp_index)` with index **0–7 = A–H**, sent as a Grid UPDATE carrying only `stomp_mode_assignments`. `unassign_stomp` is the matching Grid DELETE. | qc-mcp (`transport.py:1172-1220`) — UNVERIFIED on the unit |
+| `assign_stomp(row, column, stomp_index)` with index **0–7 = A–H**, sent as a Grid UPDATE carrying only `stomp_mode_assignments`. `unassign_stomp` is the matching Grid DELETE. | qc-mcp (`transport.py:1172-1220`; the agent's vendored copy has the same lines) — UNVERIFIED on the unit; the agent's push uses `assign_stomp` only (§6.1) |
 | A full preset read includes `stomp_assignments` (row, column, switch, momentary). | qc-mcp (`server.py:317-324`, `preset.py:70`) — UNVERIFIED on the unit |
 | Assignments only matter in Stomp mode; in Scene mode the switches pick scenes and the assignments sit unused. | UNVERIFIED (it's how the modes are described, not something measured here) |
 | The grid is 4 rows × 8 columns. | G6 read-back (bridge plan §7.1) |
@@ -115,6 +115,7 @@ The catalog can't say whether a capture is an amp or a pedal: every capture is t
 - The device export (bridge plan §4, P2) gains a `stomps` array: `[{"row": 0, "col": 2, "switch": "C"}]`.
 - The dry run shows the layout next to the blocks and values.
 - The agent assigns stomps after the blocks and before the save, so they're saved with the preset. That's fine, because the slot is one this system creates.
+- **As built (S5, entry point 1).** After the values and bypass flags read back clean, `jobs._Push.assign_stomps` (`deploy/qc-agent/qc_agent/jobs.py`) assigns each stomp with the vendored `QuadCortex.assign_stomp` (`deploy/qc-agent/vendor/qc_mcp/transport.py:1172`, unedited): kind `primary`, `momentary` left unset (latching, no `stomp_is_momentary` message), index A-G = 0-6 (`export_validator.STOMP_INDEX`; H = 7 is never planned or allowed). Each assignment goes through the same open-slot and liveness checks as every other write. One read then compares the unit's `stomp_mode_assignments` and `stomp_is_momentary` with the plan (exactly the planned set; nothing missing, extra, secondary or momentary) and re-diffs every value and bypass flag; any difference fails the job before the save, and the pre-save re-read checks the assignments again. `assign_stomp` stays on the agent's never-allowed method list: `QcMcpBackend.assign_stomp` opens it for one call at a time (`Guarded.window`), and the wire guard passes only the armed assignments (row 0, a block this push placed and a read of the unit confirmed, one per message, each once) and, once the stomp step begins, no further value, scene or routing write. `unassign_stomp` is never reachable. No contract change: the `stomps` array was already in the export. Everything about which physical switch an index is stays UNVERIFIED until the owner's first push with stomps (README step 15).
 
 **Entry point 2: laying out the preset that's loaded on the unit** (any preset).
 - **Owner's decision (2026-11-06): apply the layout but don't save.** If the owner likes the result, they save it on the unit. If not, they leave the preset or reload it and the change is gone. This respects the bridge's rule against overwriting slots this system didn't create.
@@ -167,7 +168,7 @@ Run on a scratch preset in an **empty** slot (as G3 did), with a spike that is g
 | S2 | `stomps` in the device export, shown in the `send_preset_to_device` dry run | no | P2, S1 | **Done**, PR #139 |
 | S3 | G7 spike; required only for entry point 2 (f). The other questions are checked by eye on the first real push | **yes** (owner runs) | P0-a harness | Not started; does not block entry point 1 |
 | S4 | `apply_stomps` job kind: contract, vectors, Go side, `apply_stomp_layout` MCP tool | no (fake agent) | P3, S1; S3 (f) for the entry-point-2 tool only | Not started. The `apply_stomps` job and `apply_stomp_layout` tool wait on (f); the push path (entry point 1) does not |
-| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S4; S3 (f) for entry point 2 | Partly: the agent's export validator checks and carries `stomps` but writes none yet. Writing them on a push no longer waits for G7; applying them to a loaded preset does |
+| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S4; S3 (f) for entry point 2 | **Entry point 1 built** (branch `claude/qc-agent-stomps-on-push`, 2026-11-06): a push assigns the export's `stomps` after the values read back clean and before the save, reads them back and fails on any mismatch (§6.1, "As built"). Tested offline only; acceptance is README step 15 (by eye on the unit). Entry point 2 (`apply_stomps` on a loaded preset) not started: waits on S3 (f) |
 
 S1 and S2 touch no device, no auth and no storage. Everything the code does with switch indexes and assignment behaviour stays UNVERIFIED until it is seen on the unit. Entry point 1 may proceed on that basis; nothing that applies stomps to a preset this system did not create may be built before (f) has run.
 

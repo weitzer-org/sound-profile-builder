@@ -23,6 +23,14 @@ that bind every device write, in the order they run for a push:
      every block, through its bypass control at param_count + 1;
   7. read back and diff every written value and every bypass flag; controls the push didn't write
      are compared with the catalog default and logged, never failed;
+  7b. footswitches (stomp doc section 6.1, entry point 1; owner decision #147: this does not wait for
+     gate G7): only when the export has `stomps`, and only after step 7 is clean. Each planned stomp is
+     assigned with the vendored assign_stomp (primary, latching, never H), through the same op() checks
+     as every other write, so only into the empty slot this push is building and only on blocks it
+     placed. Then one read: the assignments must be exactly the planned ones (none missing, none extra,
+     no secondary, none momentary) and the step-7 diff must still be clean, or the job fails before the
+     save. Which physical switch an index lights, and that a switch toggles its block, is UNVERIFIED
+     until the owner checks the first such push on the unit (README step 15);
   8. save only if the diff is clean: a second fresh listing still shows the slot empty, then the
      grid is re-read (the listing takes ~15 s) and the same slot is still open; File CREATE; then
      poll the listing (G3: it lags). A save the listing never shows is reported as FAILED, and the
@@ -390,6 +398,42 @@ def _diff(plan, preset):
     return mismatches, diff, problems
 
 
+def _stomp_problems(plan, preset):
+    """Compare the read-back's footswitch assignments with the plan's stomps. Empty when they match
+    exactly, or when the plan has no stomps (then nothing was assigned and nothing is checked, as before).
+    Fails closed: a read without the assignments, an extra or missing one, a secondary assignment, H, or a
+    planned switch that reads back momentary is each a problem."""
+    if not plan.stomps:
+        return []
+    got = preset.get("stomps")
+    if not isinstance(got, list):
+        return ["the read-back has no footswitch assignments"]
+    want = {(s.row, s.col, s.index) for s in plan.stomps}
+    problems, seen = [], set()
+    for a in got[:64]:
+        key = (a.get("row"), a.get("col"), a.get("index"))
+        if a.get("type") != 0:
+            problems.append(f"row {key[0]} column {key[1]}: a secondary footswitch assignment")
+        elif key not in want:
+            problems.append(f"row {key[0]} column {key[1]}: footswitch {_switch(key[2])} is not the plan's")
+        elif key in seen:
+            problems.append(f"row {key[0]} column {key[1]}: footswitch {_switch(key[2])} reads back twice")
+        seen.add(key)
+    if len(got) > 64:
+        problems.append(f"{len(got)} footswitch assignments read back")
+    for row, col, index in sorted(want - seen):
+        problems.append(f"row {row} column {col}: footswitch {_switch(index)} did not read back")
+    momentary = preset.get("momentary") or {}
+    for index in sorted({s.index for s in plan.stomps}):
+        if momentary.get(index):
+            problems.append(f"footswitch {_switch(index)} reads back momentary (the bridge assigns latching only)")
+    return problems
+
+
+def _switch(index):
+    return "ABCDEFGH"[index] if isinstance(index, int) and 0 <= index < 8 else f"index {text.clean(str(index), 8)}"
+
+
 def _row(plan, preset):
     return next((c for c in (preset or {}).get("chains", []) if c.get("row") == plan.row), None)
 
@@ -493,7 +537,7 @@ class _Push:
             return out
         self.fw = _fw(self.dev.firmware)
         try:
-            for step in (self.check_unit, self.build, self.verify):
+            for step in (self.check_unit, self.build, self.verify, self.assign_stomps):
                 outcome = step()
                 if outcome is not None:  # a step stops the push by returning its Outcome
                     return outcome
@@ -708,6 +752,35 @@ class _Push:
                           firmware=self.fw, push=self.result)
         return None
 
+    def assign_stomps(self):
+        """Step 7b: the export's footswitches, after a clean read-back and before the save, then read back."""
+        dev, plan = self.dev, self.plan
+        if not plan.stomps:
+            return None
+        dev.arm_stomps(plan.stomps)
+        for s in plan.stomps:
+            self.op(dev.assign_stomp, plan.row, s.col, s.index)
+        self.ctx.sleep(0.5)
+        back = dev.read_current_preset()
+        _check_alive(self.ctx)
+        if back is None:
+            return failed("device_error", "The read-back after assigning the footswitches timed out. Nothing was "
+                          "saved; re-select the slot on the unit to discard the edits.",
+                          firmware=self.fw, push=self.result)
+        mismatches, diff, problems = _diff(plan, back)
+        stomp_problems = _stomp_problems(plan, back)
+        if mismatches or stomp_problems:
+            self.result.update(mismatches=mismatches + len(stomp_problems), diff=diff)
+            for pr in (stomp_problems + problems)[:10]:
+                log.warning("read-back after the footswitches: %s", text.clean(pr, 200))
+            what = "footswitch assignments" if stomp_problems else "values"
+            return failed("readback_mismatch", f"After assigning the footswitches, the unit's {what} differ from "
+                          f"the plan in {mismatches + len(stomp_problems)} place(s). Nothing was saved; re-select the "
+                          "slot on the unit to discard the edits.", firmware=self.fw, push=self.result)
+        log.info("footswitches read back as planned: %s",
+                 ", ".join(f"{s.switch}=column {s.col}" for s in plan.stomps))
+        return None
+
     def save(self):
         """Rule 6: a second fresh listing, then File CREATE, then wait for the listing to show it."""
         dev, ctx, slot, pos, name = self.dev, self.ctx, self.slot, self.pos, self.name
@@ -730,7 +803,7 @@ class _Push:
                               f"{slot} on the unit to discard the partial grid.", firmware=self.fw, push=self.result)
         back = dev.read_current_preset()  # the listing takes ~15 s: the grid must still be the verified one
         _check_alive(ctx)
-        if back is None or _diff(self.plan, back)[0]:
+        if back is None or _diff(self.plan, back)[0] or _stomp_problems(self.plan, back):
             return failed("readback_mismatch", "The grid changed after it was verified (edited on the unit?). "
                           "Nothing was saved; re-select the slot to discard the edits.",
                           firmware=self.fw, push=self.result)
@@ -763,7 +836,9 @@ class _Push:
         labels = " Scene labels are not written in v1." if self.plan.scene_labels else ""
         note = (f" {self.defaults_differ} control(s) the preset leaves at default read back differently; "
                 "see the bridge log." if self.defaults_differ else "")
-        return self.done(f"Saved {name!r} to {slot}; read-back matched.{labels}{note}")
+        stomps = (f" {len(self.plan.stomps)} footswitch(es) assigned and read back; check them on the unit."
+                  if self.plan.stomps else "")
+        return self.done(f"Saved {name!r} to {slot}; read-back matched.{stomps}{labels}{note}")
 
 
 def push_preset(ctx, job) -> Outcome:
