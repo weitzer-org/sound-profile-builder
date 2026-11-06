@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "dbdda9031a32e3483675b7dc89b0499e876596711f64835fb2bc6ed40e8289f4",
+ "plan_sha256": "03866fa7c03b502fb275c7f70efbd34d8e5bcca1b2424053981a1792c7a07db1",
  "summary": [
   {
    "row": 0,
@@ -16,18 +16,15 @@
     {
      "name": "80 Hz",
      "a": "5",
-     "b": "7.5",
-     "unconfirmed": true
+     "b": "7.5"
     },
     {
      "name": "240 Hz",
-     "a": "2.5",
-     "unconfirmed": true
+     "a": "2.5"
     },
     {
      "name": "6600 Hz",
-     "a": "10",
-     "unconfirmed": true
+     "a": "10"
     }
    ],
    "bypass_a": false,
@@ -42,24 +39,20 @@
     {
      "name": "65Hz",
      "a": "6 dB",
-     "b": "-4.5 dB",
-     "unconfirmed": true
+     "b": "-4.5 dB"
     },
     {
      "name": "500Hz",
-     "a": "-12 dB",
-     "unconfirmed": true
+     "a": "-12 dB"
     },
     {
      "name": "2kHz",
-     "a": "12 dB",
-     "unconfirmed": true
+     "a": "12 dB"
     },
     {
      "name": "8kHz",
      "a": "0 dB",
-     "b": "3 dB",
-     "unconfirmed": true
+     "b": "3 dB"
     },
     {
      "name": "LPF",
@@ -166,7 +159,7 @@
          0.5
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {
@@ -194,7 +187,7 @@
          0.25
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {
@@ -222,7 +215,7 @@
          1
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        }
       ],
@@ -271,7 +264,7 @@
          0.75
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {
@@ -300,7 +293,7 @@
          0
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {
@@ -329,7 +322,7 @@
          1
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {
@@ -358,7 +351,7 @@
          0.5
         ],
         "evidence": [
-         "encoding:fader-linear-guess"
+         "encoding:fader-linear-p6"
         ]
        },
        {

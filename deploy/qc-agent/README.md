@@ -235,16 +235,13 @@ them; this guide uses **24H**).
       before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
       delete the preset.
 
-15. **Faders (P2d; normal use, no extra session).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone faders)
-    is pushed with a **linear display-to-wire guess** that nobody has read on the unit: the dry run marks it † and
-    the export labels it `encoding:fader-linear-guess`. It is **UNVERIFIED** until you do this:
-    - Dry-run and push, into an empty slot, a preset with a **Graphic-9 (or Plugin Graphic-9) block whose 65Hz band is
-      +6 dB** (use LPF on the block so the name resolves to the fader model) and a **CA John's 2C Ch1 block whose 80 Hz
-      fader is 8**, both off default.
-    - Expect `succeeded` and `mismatches 0`. Then read both on the unit's screen: the band should show **+6.0 dB** and
-      the CA John's fader **8.0**. Check one more band at a negative value (for example -6 dB) if you like.
-    - Phone: `read_device_preset(import=true)`; the imported values should agree with the dry run.
-    - If a screen value differs, send a photo. The linear rule is then wrong for that fader type; the label stays a guess.
+15. **Faders (P2d; checked on the unit 2026-11-06, F8).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone
+    faders) is converted linearly on the catalog range. The owner saw Graphic-9 4005 65 Hz +6 dB show 6.0 dB and CA John's
+    2C Ch1 80 Hz 8 show 8.0, and decided to apply the rule to all 48 faders, so the export labels them
+    `encoding:fader-linear-p6` and the dry run no longer marks them †. Pull `main` on the PC first: an agent from before
+    F8 refuses a fader push with "evidence has unknown labels" (nothing is written). The Parallax (3008), the plugin and
+    Nolly Graphic-9s (4006, 4007) and CA John's Ch2/Ch3 (1140, 1141) were not seen; the first time you push one, compare the
+    unit's screen with the dry run and send a photo if it differs.
 
 16. **Footswitches (stomp layout, entry point 1; normal use).** Pull `main` on the PC first. On the first push whose
     dry run lists a **Footswitch layout**, expect `succeeded`, `mismatches 0`, and the message "N footswitch(es)
@@ -268,6 +265,21 @@ them; this guide uses **24H**).
     footswitch toggles it in every scene. Power-cycle and check again. **Unverified on the unit until you run it.**
     A push the agent refuses with "scenes with the same source must carry the same values" means the PC is on an
     older clone: pull `main`.
+
+18. **Save confirmation (P6 follow-up F1/F6; normal use).** Pull `main` on the PC first. A push now ends `succeeded`
+    ("Saved ...; read-back matched") instead of failed with "It may still land". If the unit sends a short My Presets
+    table after the save, `agent.log` shows `My Presets listed N entries, not 256: index=... name=...` (at most five
+    entries) and `post-save listing k/6 did not count`; that listing is skipped and never counted as "listed". If the
+    push still ends "may still land", paste those lines. A push that stops with "The grid changed after it was
+    verified" now says which cause (re-read timed out / values or bypass flags differ / footswitch assignments differ),
+    and `agent.log` has `pre-save re-read: ...` lines with the first differences.
+
+19. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
+    From the phone run `sync_device_library`, then paste from `agent.log` every line starting `capture skip census`
+    and `capture skip sample` (per folder: how many files are kept and how many are left out for each reason:
+    favorites / name length / name not printable ASCII / name changed by clean-up / key not 64 hex), plus the
+    `capture census:` summary line. The samples show lengths and character classes only, no names or keys. Nothing about
+    what is synced changes in this step; the fix follows once the lines show why the factory files are left out.
 
 20. **Plugin models (P6 follow-up F3; normal use).** Pull `main` on the PC first. Dry-run a preset with a plugin model you own
     (for example the John Mayer Studio Verb Hall) into an empty slot, confirm, and expect `succeeded` with `mismatches 0`.

@@ -158,6 +158,14 @@ func TestStompsForCaptures(t *testing.T) {
 	if got[0] == "" || got[1] != "" || got[2] != "G" {
 		t.Fatalf("stomps %+v (view %+v)", p.Stomps, ex.Stomps)
 	}
+	// F4: the layout names the capture, not the catalog slot behind the capture block ("Eltron 30", id 14000)
+	labels := map[int]string{}
+	for _, a := range ex.Stomps.Assigned {
+		labels[a.Col] = a.Model
+	}
+	if labels[0] != "66 AC30 JMP OD" {
+		t.Errorf("capture block labelled %q, want its capture name (all: %v)", labels[0], labels)
+	}
 	for _, s := range ex.Stomps.Skipped {
 		if strings.Contains(s.Reason, "unknown model id") {
 			t.Errorf("capture block not classified: %+v", s)

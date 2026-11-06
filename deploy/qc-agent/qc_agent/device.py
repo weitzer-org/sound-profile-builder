@@ -38,6 +38,16 @@ class DeviceError(RuntimeError):
     """The unit misbehaved or a transport call failed."""
 
 
+class PartialListing(DeviceError):
+    """My Presets came back with a number of entries other than the fixed 256 (e.g. a one-slot update after a save).
+    Never read as the full table. Only the post-save poll treats it as "this listing doesn't count"; every other
+    listing (before the writes, before the save) refuses on it exactly as on any DeviceError."""
+
+    def __init__(self, count: int):
+        super().__init__(f"My Presets listed {count} slots, not 256")
+        self.count = count
+
+
 class UnitAbsent(DeviceError):
     """No Quad Cortex found, or it went away (switched off, unplugged)."""
 

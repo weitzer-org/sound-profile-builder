@@ -168,6 +168,7 @@ class PushStomps(test_agent.Base):
         r = self.push()
         self.assert_not_saved(r)
         self.assertIn("changed after it was verified", r["message"])
+        self.assertIn("the footswitch assignments differ", r["message"])
 
     def test_the_index_map_never_reaches_h(self):
         self.assertEqual(STOMP_INDEX, {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6})

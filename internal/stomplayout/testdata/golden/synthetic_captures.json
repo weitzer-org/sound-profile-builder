@@ -62,14 +62,14 @@
         "row": 0,
         "col": 1,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Boss Blues Driver Waza",
         "reason": "capture is not a switchable effect (modeler)"
       },
       {
         "row": 0,
         "col": 2,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Mystery Pedal",
         "reason": "unclassified capture (no usable modeler type, not in the capture library)"
       }
     ],
@@ -82,7 +82,7 @@
         "row": 0,
         "col": 0,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Strymon Sunset BOOST",
         "category": "Neural Capture",
         "role": "boost",
         "source": "library",
@@ -92,7 +92,7 @@
         "row": 0,
         "col": 1,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Boss Blues Driver Waza",
         "category": "Neural Capture",
         "source": "modeler"
       },
@@ -100,14 +100,14 @@
         "row": 0,
         "col": 2,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Mystery Pedal",
         "category": "Neural Capture"
       },
       {
         "row": 1,
         "col": 0,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Unlisted Fuzz",
         "category": "Neural Capture",
         "role": "drive",
         "source": "modeler",
@@ -117,7 +117,7 @@
         "row": 1,
         "col": 1,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "Boss Blues Driver Waza",
         "category": "Neural Capture",
         "role": "drive",
         "source": "library",

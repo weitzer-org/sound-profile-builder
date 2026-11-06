@@ -151,7 +151,7 @@ set it will cause the next run to needlessly re-research that entry.
     output (the preset uses `kept_defaults`) the check notes a plain number outside that range; older output isn't
     checked, and a pan is still never `confirmed_range`. The export and read-back take a plain number on the catalog
     range, labelled `scale:catalog-range` († in the dry run); a unit, an out-of-range number or a word other than Center
-    is refused. 0 is hard left on a 0..10 pan: center is the default.
+    is refused. 0 is hard left on a 0..10 pan: center is the default. The dry run and `get_preset(format=device)` also show the screen's reading of a 0..10 PAN beside the number (`7 (≈ 20 R on the unit, inferred)`, `deviceexport.screenPan`): inferred from two readings on the owner's unit (7 showed 20 R, the default C; the ends unseen), display only, never in the payload; BALANCE gets none.
   - **Cab families.** A family name (no `(M)`/`(ST)`) merges the mono and stereo cab, and the export places the mono one.
     Controls only one side has (PAN / BALANCE) are marked `[mono cab only]` / `[stereo cab only]` in the Architect's context.
 
@@ -172,8 +172,10 @@ this app's MCP connector. Read these before any device work:
   carry the first guitar's rhythm. The default layout (one guitar, A/B) is byte-identical to the original export. The Python validator checks
   "same source, same values" instead of a fixed pattern (`pushable_g3_layout` golden feeds both sides). Plugin models (owned plugins only) are pushed:
   the agent accepts a block that names the plugin its catalog row belongs to (`BridgePushesPlugins`, `export_validator.PLUGIN_NAMES`).
-  Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-guess`
-  (†, **unverified on the unit** until plan 8.1 item 8; qc-mcp's `to_norm` has no type branch, so it is the same guess);
+  Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-p6`
+  (no †): **seen on the unit at two models** (P6: Graphic-9 4005 65 Hz +6 dB showed 6.0 dB, CA John's 2C Ch1 1139 80 Hz 8 showed 8.0), applied to
+  all 48 faders on the 7 models by the owner's decision, so Parallax, the plugin/Nolly Graphic-9s and CA John's Ch2/Ch3 carry it unseen. The agent
+  still accepts the old `encoding:fader-linear-guess`;
   combo boxes and `floatWithLed` stay refused. Clone indexes stay limited to `VerifiedCloneBases`. `go run ./cmd/device_census <eval dir>` shows how many eval chains
   are pushable and why not. `send_preset_to_device`,
   `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
@@ -199,7 +201,7 @@ this app's MCP connector. Read these before any device work:
 - `internal/devicelib` — what QC-2 knows about the unit's contents (plan P4b): the capture list a `sync_device_library` job
   returned (`device/library.json` in the main bucket, through `storage.Client`), a reviewed alias table
   (`capture_aliases.json`, empty until the first real sync), and the per-cab mic strings seen in `read_device_preset`
-  results (`device/cab_mics.json`). `send_preset_to_device`'s dry run resolves each capture against the list with the
+  results (`device/cab_mics.json`). Also `device/slots.json`: which slots the most recent succeeded `list_slots` job showed occupied (no names). The dry run only warns from it (`slot_listing_note`), never blocks: it can be stale and the bridge decides. `send_preset_to_device`'s dry run resolves each capture against the list with the
   agent's own rules (exact name, then one reviewed alias, never fuzzy; not listed = unresolved, "not on your unit"); a seen
   mic is written exactly as the export's `mics`. All of it is device text: `devicejobs.ParseLibraryPayload` is strict,
   names must survive `SanitizeText` unchanged, and the agent still re-resolves captures on the unit at push time. With no

@@ -739,14 +739,48 @@ func (b *builder) param(lp catalog.LabelledParam, sp sceneParam) (Param, bool, s
 			p.SceneMode = true
 		}
 	}
+	for s := 0; s < Scenes; s++ {
+		p.screen[s] = screenPan(cp, p.Wire[s])
+	}
 	return p, false, ""
 }
 
-// FaderEvidence labels a fader converted like a float on its catalog range (owner decision,
-// 2026-11-06): wire = ((display - min) / (max - min)) ^ skew, linear when the catalog has no
-// skew. A GUESS: qc-mcp's to_norm treats a fader like a float, but no one has read a fader
-// on the unit (plan 4.1, 8.1). Never counts as confirmed, so the dry run marks it with a dagger.
-const FaderEvidence = "encoding:fader-linear-guess"
+// ScreenPanNote marks the unit's inferred on-screen reading of a pan in the readable plan.
+const ScreenPanNote = "on the unit"
+
+// screenPan is the unit's on-screen reading of a pan written on the catalog's 0..10 range, or "".
+//
+// INFERRED, not established (owner's first push, 2026-11-06, plan 7.3): MIC 1 PAN written as 7 (wire 0.70)
+// showed "20 R" and the default (wire 0.5) showed "C". Two points: the screen reads 50 L .. C .. 50 R, linear in
+// wire, i.e. (wire - 0.5) * 100; the ends were not seen. Only a "PAN" control on the 0..10 range with no skew
+// is covered; BALANCE (stereo cabs, -1..1) was not seen and gets nothing.
+func screenPan(cp catalog.Param, wire float64) string {
+	if !isPan(cp) || !strings.Contains(strings.ToUpper(cp.Name), "PAN") || cp.Min == nil || cp.Max == nil ||
+		*cp.Min != 0 || *cp.Max != 10 || (cp.Skew != nil && *cp.Skew != 0 && *cp.Skew != 1) {
+		return ""
+	}
+	pos := math.Round((wire - 0.5) * 100) // the branch and the printed number come from the same rounded value
+	switch {
+	case pos == 0:
+		return "≈ C " + ScreenPanNote + ", inferred"
+	case pos < 0:
+		return fmt.Sprintf("≈ %.0f L %s, inferred", -pos, ScreenPanNote)
+	}
+	return fmt.Sprintf("≈ %.0f R %s, inferred", pos, ScreenPanNote)
+}
+
+// FaderEvidence labels a fader converted like a float on its catalog range: wire =
+// ((display - min) / (max - min)) ^ skew, linear when the catalog has no skew. CONFIRMED on the owner's
+// unit (P6, 2026-11-06): Graphic-9 4005 65 Hz +6 dB showed 6.0 dB and CA John's 2C Ch1 1139 80 Hz 8 showed 8.0,
+// and the read-back import agreed. The owner decided (same day) to apply that to all 48 faders on the 7
+// fader models by the same rule, so the Parallax (3008), the plugin and Nolly Graphic-9s (4006, 4007) and
+// CA John's Ch2/Ch3 (1140, 1141) carry the label on that decision, not on a reading of their own. The
+// "-p6" suffix is the convention for "read on the owner's unit" (Param.Confirmed).
+const FaderEvidence = "encoding:fader-linear-p6"
+
+// FaderGuessEvidence is the label faders carried before P6 confirmed the rule. The exporter no longer
+// writes it; the agent still accepts it (a payload from an older server), and it never counts as confirmed.
+const FaderGuessEvidence = "encoding:fader-linear-guess"
 
 // paramEvidence is taperEvidence for a float, and for a fader the same labels behind
 // FaderEvidence. A fader without a skew of its own gets no taper label: "taper:g4" would

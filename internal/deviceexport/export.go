@@ -252,16 +252,20 @@ type Param struct {
 	// "taper:g4" (read on the owner's unit), "taper:device-xml" (the device's own skew,
 	// formula confirmed at other exponents), "taper:pyquadcortex", "bounds:g4",
 	// "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear" (switch positions),
-	// "encoding:fader-linear-guess" (a fader converted like a float: UNVERIFIED, FaderEvidence).
+	// "encoding:fader-linear-p6" (a fader converted like a float: read on the owner's unit at two models, applied
+	// to all faders by owner decision, FaderEvidence; "encoding:fader-linear-guess" before P6).
 	Evidence []string `json:"evidence"`
 
 	names [Scenes]string // each scene's position name of a switch, for the readable plan
+	// screen is the unit's on-screen reading of a 0..10 pan per scene, inferred (screenPan); shown beside the
+	// number in the readable plan only. Never part of the payload or the plan hash.
+	screen [Scenes]string
 }
 
-// Confirmed reports whether every part of the mapping was read on the owner's unit.
+// Confirmed reports whether every part of the mapping was read on the owner's unit (a ":g4" or "-p6" label).
 func (p Param) Confirmed() bool {
 	for _, e := range p.Evidence {
-		if !strings.HasSuffix(e, ":g4") {
+		if !strings.HasSuffix(e, ":g4") && !strings.HasSuffix(e, "-p6") {
 			return false
 		}
 	}
@@ -472,6 +476,9 @@ func keyPrefix(k string) string {
 func (p Param) shown(scene int) string {
 	if p.names[scene] != "" {
 		return p.names[scene]
+	}
+	if p.screen[scene] != "" {
+		return displayString(p.Display[scene], p.Units) + " (" + p.screen[scene] + ")"
 	}
 	return displayString(p.Display[scene], p.Units)
 }
