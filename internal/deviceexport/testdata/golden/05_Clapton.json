@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "7fc8bb095a157e422384fbb07ec5143a38e69ed3483a420de326a3e400a07a73",
+ "plan_sha256": "e15daea69a1eb5e2508c2d7d0de3a125ec1cccac8ce834ecf94af4c58bde3d22",
  "summary": [
   {
    "row": 0,
@@ -1005,6 +1005,18 @@
       "at_default": []
      }
     ]
+   }
+  ],
+  "stomps": [
+   {
+    "row": 0,
+    "col": 1,
+    "switch": "C"
+   },
+   {
+    "row": 0,
+    "col": 5,
+    "switch": "G"
    }
   ],
   "unresolved": [

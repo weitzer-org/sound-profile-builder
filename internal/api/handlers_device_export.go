@@ -26,7 +26,7 @@ func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 	if cfg := s.appConfig; cfg != nil {
 		owned = deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
-	return deviceexport.NewEmbedded(deviceexport.Options{IsCapture: isCaptureName, OwnedPlugins: owned})
+	return deviceexport.NewEmbedded(deviceexport.Options{IsCapture: isCaptureName, OwnedPlugins: owned, StompCaptures: agents.StompCaptureLookup()})
 }
 
 // isCaptureName reports names coros_map.json or user_captures.json mark as captures.
