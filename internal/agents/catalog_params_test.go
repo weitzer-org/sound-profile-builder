@@ -458,7 +458,7 @@ func TestCatalogEffectParamContext(t *testing.T) {
 	valid := BuildEffectiveValidBlocks(true, true)
 	none := NewPluginGate(false, nil)
 	got := CatalogEffectParamContext([]string{"Analog Delay", "Green 808", "Chief DC2W"}, valid, none)
-	for _, want := range []string{"Spring [Reverb]: MIX", "Slapback Delay [Delay]:"} {
+	for _, want := range []string{"Spring [Reverb]: MIX", "Slapback Delay [Delay]:", "Adaptive Gate [Utility]: NOISE REDUCTION", "[Compressor]:"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("effect parameters missing %q", want)
 		}
@@ -466,9 +466,9 @@ func TestCatalogEffectParamContext(t *testing.T) {
 	if strings.Contains(got, "\nAnalog Delay [") || strings.HasPrefix(got, "Analog Delay [") {
 		t.Error("a chosen block's controls are already listed and shouldn't repeat")
 	}
-	for _, unwanted := range []string{"[Modulation]:", "[Compressor]:", "[Equalizer]:", "[Wah]:", "John Mayer"} {
+	for _, unwanted := range []string{"[Modulation]:", "[Equalizer]:", "[Wah]:", "[Pitch]:", "John Mayer"} {
 		if strings.Contains(got, unwanted) {
-			t.Errorf("effect parameters should not contain %q (only delays and reverbs; plugins need ownership)", unwanted)
+			t.Errorf("effect parameters should not contain %q (only delays, reverbs, compressors and utility; plugins need ownership)", unwanted)
 		}
 	}
 	owned := CatalogEffectParamContext(nil, valid, NewPluginGate(true, []string{"John Mayer"}))
@@ -476,10 +476,11 @@ func TestCatalogEffectParamContext(t *testing.T) {
 		t.Error("an owned plugin's reverb should be listed")
 	}
 	all := CatalogEffectParamContext(nil, valid, PluginGate{}) // inactive gate: every plugin allowed
-	t.Logf("delays+reverbs: no plugins %d bytes (~%d tokens), shipped config's plugins %d bytes, every plugin %d bytes",
+	t.Logf("delays, reverbs, compressors, utility: no plugins %d bytes (~%d tokens), shipped config's plugins %d bytes, every plugin %d bytes",
 		len(got), len(got)/4, len(owned), len(all))
-	if len(all) > 24000 {
-		t.Errorf("effect parameter section is %d bytes with every plugin, over the 24000-byte ceiling", len(all))
+	// 24000 before compressors and utility joined delays and reverbs (26486 with them).
+	if len(all) > 30000 {
+		t.Errorf("effect parameter section is %d bytes with every plugin, over the 30000-byte ceiling", len(all))
 	}
 }
 
