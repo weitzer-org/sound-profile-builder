@@ -16,6 +16,7 @@ from qc_agent import contract, jobs
 from qc_agent.agent import Agent
 from qc_agent.s3 import MemoryStore, StoreError
 from fake_device import FakeDevice
+from qc_agent.device import PartialListing
 
 def setUpModule():
     # Pacing off for this module only; restored afterwards so other modules see the real values.
@@ -393,6 +394,33 @@ class Push(Base):
         r = self.push()
         self.assertEqual(r["status"], "succeeded", r["message"])
 
+    def test_short_my_presets_update_after_the_save_does_not_count(self):
+        # F1: the unit may send a one-slot My Presets update after File CREATE; that listing is skipped, a later
+        # full listing that shows the name ends the push succeeded
+        self.dev.short_after_save = 2
+        with self.assertLogs("qc_agent", "WARNING") as cm:
+            r = self.push()
+        self.assertEqual(r["status"], "succeeded", r["message"])
+        self.assertEqual(sum("did not count" in m for m in cm.output), 2)
+        self.assertEqual([c[0] for c in self.dev.calls].count("read_directory"), 2 + 3)
+
+    def test_short_update_that_keeps_coming_stays_unconfirmed(self):
+        self.dev.short_after_save = 99
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("may still land", r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("read_directory"), 2 + jobs.SAVE_LIST_POLLS)
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
+
+    def test_short_listing_before_the_save_still_refuses(self):
+        def short(fake, n):
+            if n == 2:  # the pre-save listing
+                raise PartialListing(1)
+        self.dev.on_listing = short
+        r = self.push()
+        self.assertEqual(r["status"], "failed")
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
     def test_unit_gone_after_the_save_is_failed_and_owned(self):
         def gone(name):
             if name == "save_to_slot":
@@ -532,7 +560,30 @@ class Push(Base):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
         self.assertIn("changed after it was verified", r["message"])
+        self.assertIn("values or bypass flags differ", r["message"])  # F6: the message says which cause
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_grid_edit_after_verification_is_logged(self):
+        def edit_on_unit(name):
+            if name == "read_directory" and any(c[0] == "set_routing" for c in self.dev.calls):
+                self.dev.grid[0]["params"][1] = [0.9] * 8
+        self.dev.on_call = edit_on_unit
+        with self.assertLogs("qc_agent", "WARNING") as cm:
+            self.push()
+        self.assertTrue(any("pre-save re-read:" in m for m in cm.output), cm.output)
+
+    def test_pre_save_reread_timeout_is_its_own_cause(self):
+        real = self.dev.read_current_preset
+
+        def read():  # after the pre-save listing (the 2nd) the re-read times out
+            return None if self.dev.calls.count(("read_directory",)) >= 2 else real()
+        self.dev.read_current_preset = read
+        with self.assertLogs("qc_agent", "WARNING") as cm:
+            r = self.push()
+        self.assertEqual(r["status"], "failed")
+        self.assertIn("re-read just before the save timed out", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+        self.assertTrue(any("timed out" in m for m in cm.output), cm.output)
 
     def test_owned_ledger_failure_keeps_the_success(self):
         def boom(*a, **k):

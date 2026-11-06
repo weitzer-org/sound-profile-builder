@@ -64,9 +64,11 @@ import time
 import types
 from pathlib import Path
 
+from . import text
 from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
 from .captures import CaptureEntry, DirectorySnapshot, factory_version_of
-from .device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from .device import (SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, PartialListing, Presence,
+                     UnitAbsent, UnitBusy)
 from .export_validator import CAPTURE_BLOCK_IDS
 from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
 
@@ -666,7 +668,8 @@ def directory_snapshot(file_msgs):
     # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256). A shorter or longer
     # table would make a missing slot look empty, so it is refused rather than guessed at.
     if len(files) != 256:
-        raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
+        _log_short_table(files)
+        raise PartialListing(len(files))
     # In a READ the array position is the slot and the `index` field is left 0 (upstream's
     # PROTOCOL.md 5, directory._file_dict). A non-zero index that disagrees with the position
     # would mean that rule doesn't hold on this unit: refuse rather than pick one of the two.
@@ -688,6 +691,14 @@ def directory_snapshot(file_msgs):
         census.append(_census_row(fo, chain, end, cloud, fav, fver))
     return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders,
                              folder_census=census)
+
+
+def _log_short_table(files, limit=5):
+    """Evidence for F1: what a My Presets table that isn't 256 long carries (count, then each entry's index field
+    and cleaned name, at most `limit`). Logged before the refusal; the table is never used."""
+    shown = "; ".join(f"index={f.index} name={text.clean(f.name, 40)!r}" for f in files[:limit])
+    log.warning("My Presets listed %d entries, not 256: %s%s", len(files), shown or "(none)",
+                " ..." if len(files) > limit else "")
 
 
 def _chain(key, folders, depth=16):
@@ -712,7 +723,6 @@ def _census_row(fo, chain, end, cloud, fav, fver):
     """What the agent log's census says about one capture folder. Device text: cleaned and bounded. The
     ProductData fields beyond `version` (coros_version, device, extraMetadata) are logged, not used: which
     of them, if any, marks a factory capture's V1/V2 is unknown (P6, 2026-11-06)."""
-    from . import text
 
     def vals(attr, n=16):
         return sorted({text.clean(str(getattr(f, attr, "") or ""), n) for f in fo.files})[:5]

@@ -10,7 +10,7 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 from __future__ import annotations
 
 from qc_agent.captures import CaptureEntry, DirectorySnapshot, factory_version_of
-from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, PartialListing, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
                          "set_block_bypass", "save_to_slot", "set_mic", "assign_stomp"})
@@ -66,6 +66,7 @@ class FakeDevice(DeviceBackend):
         self.stomp_index_skew = 0                       # the read-back reports each index shifted by this
         self.momentary: dict[int, bool] = {}            # what the read-back reports in stomp_is_momentary
         self.omit_stomps = False                        # the read-back carries no assignments field at all
+        self.short_after_save = 0                       # listings after the save that carry only the changed slot
         self._listings = 0
         self._alive_calls = 0
 
@@ -113,6 +114,9 @@ class FakeDevice(DeviceBackend):
         if self.on_listing:
             self.on_listing(self, self._listings)
         self._rec("read_directory")
+        if self.short_after_save and self._pending_save is not None:
+            self.short_after_save -= 1  # the backend refuses such a table (PartialListing) and logs what it carried
+            raise PartialListing(1)
         out = {p: "" for p in range(256)}
         out.update(self.slots)
         deps = dict(self.preset_deps)

@@ -96,6 +96,22 @@ class Session(Base):
         with self.assertRaisesRegex(DeviceError, "not 256"):
             self.dev.list_my_presets()
 
+    def test_short_table_is_logged_bounded_and_refused_as_partial(self):
+        f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)
+        f.folder.key, f.folder.name = fake_hid.SETLIST, "My Presets"
+        for i in range(8):
+            e = f.folder.files.add()
+            e.index, e.name = i + 100, "Texas\nBlues`" + "x" * 80
+        with self.assertLogs(qcmcp_backend.log, "WARNING") as cm:
+            with self.assertRaises(qcmcp_backend.PartialListing) as ctx:
+                qcmcp_backend.directory_snapshot([f])
+        self.assertEqual(ctx.exception.count, 8)
+        out = "\n".join(cm.output)
+        self.assertIn("8 entries, not 256", out)
+        self.assertEqual(out.count("index="), 5)  # bounded
+        self.assertNotIn("\n", cm.records[0].getMessage())
+        self.assertNotIn("`", out)
+
     def test_dead_reader_thread_means_gone(self):
         self.dev.connect()
         self.hid._thread.running = False
