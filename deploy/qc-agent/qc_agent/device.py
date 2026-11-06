@@ -68,9 +68,15 @@ class DeviceBackend(ABC):
         """False once the unit's liveness signals say it is gone (G2 c)."""
 
     @abstractmethod
+    def read_directory(self):
+        """A FRESH directory listing as a qc_agent.captures.DirectorySnapshot: My Presets
+        ({position: name} for all 256 positions; exactly '' means empty), each saved preset's
+        dependency hashes, and every capture folder's files. Raises DeviceError if My Presets
+        isn't complete. Names in it are untrusted."""
+
     def list_my_presets(self) -> dict[int, str]:
-        """A FRESH directory listing of My Presets: {position: name} for all 256 positions; exactly ''
-        means empty. Raises DeviceError if the table isn't complete."""
+        """My Presets from a fresh listing (see read_directory)."""
+        return self.read_directory().my_presets
 
     @abstractmethod
     def setlist_position(self) -> dict | None:
@@ -96,6 +102,11 @@ class DeviceBackend(ABC):
     @abstractmethod
     def add_block(self, row: int, col: int, model_id: int) -> bool:
         """True when the unit echoed the placement."""
+
+    @abstractmethod
+    def place_capture(self, row: int, col: int, model_id: int, key: str, name: str) -> bool:
+        """Place a Neural Capture block (model_id 14000 = V1, 14001 = V2) and load the capture
+        `key + name` into it (its file_name). True when the unit echoed the block."""
 
     @abstractmethod
     def set_param(self, row: int, col: int, index: int, wire: float) -> None: ...

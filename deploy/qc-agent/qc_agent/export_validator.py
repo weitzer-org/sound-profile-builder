@@ -29,8 +29,11 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
   got wrong is refused here too;
 * eight boolean bypass flags per block; `unresolved` is empty; `warnings` (settings the push
   leaves out on purpose, e.g. a non-default cab mic) is a list of short items and changes nothing;
-* capture blocks (`capture`, model_id 0) are refused: this agent can't place captures yet
-  (plan 4.2, a P4 follow-up), so it fails the job before touching the unit;
+* capture blocks (`capture`, model_id 0; plan 4.2): category Neural Capture, index_evidence
+  "capture-block", a printable name equal to `model`, source factory|user, not yet resolved,
+  and only the capture block's own controls (GAIN..VOLUME, indexes 0-4 of model 14000, which
+  14001 must list identically). Which capture and which block (V1 14000 / V2 14001) is decided
+  on the unit, from a fresh directory listing, by qc_agent.captures;
 * `stomps` (design doc qc-stomp-layout.md, S2): at most 32 `{row, col, switch}` entries,
   row 0, a placed column, switch A-G (never H), one switch per block. They are VALIDATED
   here and not executed: the agent writes no stomp assignment until gate G7 has run.
@@ -53,7 +56,11 @@ SCENES = 8
 SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
 MAX_STOMPS = 32
 STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assigned
-VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
+VERIFIED_CLONE_BASES = frozenset({12000})
+CAPTURE_LAYOUT_ID = 14000                 # the controls a capture block exports (catalog model 14000)
+CAPTURE_BLOCK_IDS = {1: 14000, 2: 14001}  # V1 / V2 Neural Capture blocks (qc-mcp transport.CAPTURE_V1/V2)
+CAPTURE_SOURCES = frozenset({"factory", "user"})
+_CAPTURE_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")  # catalog.VerifiedCloneBases: the one base G1 checked
 # Symbolic parameter bounds confirmed on the owner's unit (CorOS 4.1.0, plan 7.1 G4), the same
 # two internal/catalog/firmware_constants.go marks EvidenceConfirmed410. Every other symbolic
 # bound (pyquadcortex-only EQ/mixer/FX-loop/tempo values, the unmeasured input trim) stays
@@ -123,14 +130,28 @@ class PlannedParam:
     scene_wires: list[float] | None  # all 8 scenes (A, B, then A for C-H) when B differs
 
 
+@dataclass(frozen=True)
+class PlannedCapture:
+    """A capture block's capture. key and version are filled in on the unit (qc_agent.captures)."""
+    name: str
+    source: str
+    key: str | None = None
+    version: int | None = None
+
+    @property
+    def file_name(self) -> str | None:
+        return None if self.key is None else self.key + self.name
+
+
 @dataclass
 class PlannedBlock:
     col: int
-    model_id: int
+    model_id: int              # 0 for a capture block until the unit's listing resolves it
     model: str
     params: list[PlannedParam]
     bypass_scenes: list[bool]  # 8 flags, A, B, then A for C-H
     max_param_index: int = 0   # the catalog's highest listed index for this model (wire guard)
+    capture: PlannedCapture | None = None
 
     @property
     def bypass_varies(self) -> bool:
@@ -147,7 +168,8 @@ class Plan:
     stomps: list[PlannedStomp] = field(default_factory=list)  # validated, not written (gate G7 pending)
 
     def op_count(self) -> int:
-        return 1 + sum(1 + len(b.params) + (1 if any(b.bypass_scenes) else 0) for b in self.blocks)
+        return 1 + sum(1 + len(b.params) + (1 if any(b.bypass_scenes) else 0) + (1 if b.capture else 0)
+                       for b in self.blocks)
 
 
 def _exact(obj, keys, where, optional=()):
@@ -291,8 +313,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     if _int(b["col"], where + ".col") != bi:
         raise ExportRefused(f"{where}: columns must run 0..{nblocks - 1} in order")
     if "capture" in b:
-        raise ExportRefused(f"{where}: this bridge can't place captures yet (plan 4.2, a P4 follow-up); "
-                            "nothing was written")
+        return _check_capture_block(bi, b, catalog)
     mid = _int(b["model_id"], where + ".model_id")
     if mid in DENY_MODEL_IDS:
         raise ExportRefused(f"{where}: model {mid} is denied (NC_Recorder)")
@@ -335,6 +356,71 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
     return PlannedBlock(bi, mid, cm["name"], params, list(flags),
                         max(cm["params_by_index"], default=0))
+
+
+def _check_capture_layouts(catalog):
+    """The V1 and V2 capture blocks must list the same user controls, or a capture block's params
+    (checked against 14000) might not mean the same on a 14001 block."""
+    def controls(mid):
+        m = catalog.models.get(mid)
+        if m is None:
+            return None
+        keys = ("index", "name", "type", "min", "max", "skew", "units")
+        return [tuple(p.get(k) for k in keys) for p in m["params"] if not _is_internal(p)]
+    v1, v2 = controls(CAPTURE_BLOCK_IDS[1]), controls(CAPTURE_BLOCK_IDS[2])
+    if v1 is None or v1 != v2:
+        raise ExportRefused("the catalog's V1 (14000) and V2 (14001) capture blocks don't list the same controls; "
+                            "the bridge can't check this capture block")
+
+
+def _check_capture_block(bi, b, catalog) -> PlannedBlock:
+    where = f"block {bi}"
+    if _int(b["model_id"], where + ".model_id") != 0:
+        raise ExportRefused(f"{where}: a capture block must have model_id 0 (the bridge picks 14000 or 14001 on the unit)")
+    if "plugin" in b:
+        raise ExportRefused(f"{where}: a capture block can't name a plugin")
+    if b["category"] != "Neural Capture":
+        raise ExportRefused(f"{where}: a capture block's category must be 'Neural Capture'")
+    if b["index_evidence"] != "capture-block":
+        raise ExportRefused(f"{where}: a capture block's index_evidence must be 'capture-block'")
+    c = b["capture"]
+    _exact(c, ("name", "source", "resolved_on_unit"), where + ".capture")
+    if c["source"] not in CAPTURE_SOURCES:
+        raise ExportRefused(f"{where}.capture.source must be 'factory' or 'user'")
+    if c["resolved_on_unit"] is not False:
+        raise ExportRefused(f"{where}.capture.resolved_on_unit must be false: this bridge resolves captures on the "
+                            "unit itself")
+    name = c["name"]
+    if not isinstance(name, str) or not _CAPTURE_NAME_RE.fullmatch(name) or name != name.strip():
+        raise ExportRefused(f"{where}.capture.name must be 1-64 printable ASCII characters with no leading or "
+                            "trailing space")
+    if b["model"] != name:
+        raise ExportRefused(f"{where}: model must equal capture.name")
+    _check_capture_layouts(catalog)
+    cm = catalog.models[CAPTURE_LAYOUT_ID]
+    where = f"block {bi} (capture {name!r})"
+
+    ad = b["at_default"]
+    if (not isinstance(ad, list) or len(ad) > MAX_PARAMS_PER_BLOCK
+            or any(not isinstance(x, str) or len(x) > 80 for x in ad)):
+        raise ExportRefused(f"{where}.at_default must be a short list of control names")
+    if not isinstance(b["params"], list) or len(b["params"]) > MAX_PARAMS_PER_BLOCK:
+        raise ExportRefused(f"{where}.params must be a list of at most {MAX_PARAMS_PER_BLOCK}")
+    labels = _expected_labels(cm)
+    params, seen = [], set()
+    for pi, prm in enumerate(b["params"]):
+        p = _check_param(f"{where} param {pi}", prm, cm, labels)
+        if p.index in seen:
+            raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
+        seen.add(p.index)
+        params.append(p)
+    flags = _array(b["bypass"], where + ".bypass")
+    if any(not isinstance(f, bool) for f in flags):
+        raise ExportRefused(f"{where}.bypass flags must be true/false")
+    if any(flags[i] != flags[0] for i in range(2, SCENES)):
+        raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
+    return PlannedBlock(bi, 0, name, params, list(flags), max(labels, default=0),
+                        PlannedCapture(name, c["source"]))
 
 
 def _check_param(pw, prm, cm, labels) -> PlannedParam:

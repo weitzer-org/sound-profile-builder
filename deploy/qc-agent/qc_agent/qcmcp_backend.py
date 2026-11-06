@@ -9,7 +9,8 @@ Three layers keep the transport to the operations the plan allows (section 5):
    which a grant can't include, names the forbidden ones: save_preset (RecallPreset
    SAVE, the documented hang), recall, clear_grid, delete_block, load_preset, raw
    send/request, global I/O, EQ, master volume and mode writes, model presets,
-   stomps, captures/IRs, splits, scene labels and preset meta.
+   stomps, IRs, splits, scene labels and preset meta. set_capture is granted (plan 4.2):
+   its one string write is held to the armed capture by the wire guard.
 3. WireGuard sits between the transport and the HID device and decodes every
    outgoing message before it is written. Only these pass:
      * session plumbing the handshake sends (KeepAlive, ResetCommsBuffers,
@@ -18,7 +19,9 @@ Three layers keep the transport to the operations the plan allows (section 5):
        handshake's subscription reads);
      * while a push is armed: Grid UPDATEs on row 0 that place exactly the plan's
        models in the plan's columns, set the plan's parameter indexes to float
-       values in 0..1, set routing in 1 -> out 19, or set bypass flags; and
+       values in 0..1, set routing in 1 -> out 19, or set bypass flags; write each capture
+       block's file_name (index 5) exactly once, as the exact string the push resolved
+       from the unit's own listing; and
        Scene UPDATEs (the transport switches scenes to write per-scene values);
      * while a save is armed: one File CREATE of My Presets at the armed position
        with the armed name and nothing else (no payload).
@@ -30,7 +33,8 @@ Three layers keep the transport to the operations the plan allows (section 5):
 The vendored files are not modified. One upstream bug is worked around in a subclass
 (_fixed_quad_cortex, below): request() never dropped the reply it matched, so its pending queue
 could double per request (_make_request). The same subclass reads the open slot strictly by
-request_id (_make_setlist_position). Liveness (G2 c) reads two private attributes
+request_id (_make_setlist_position), and lists the directory without the vendored parser, which
+drops the capture version and dependency fields (_make_list_directory_raw). Liveness (G2 c) reads two private attributes
 of the vendored Windows transport (its reader thread, its write-error counter), as
 the Phase 0 spikes did; nothing is written to them.
 """
@@ -43,7 +47,10 @@ import time
 import types
 from pathlib import Path
 
+from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
+from .captures import CaptureEntry, DirectorySnapshot
 from .device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from .export_validator import CAPTURE_BLOCK_IDS
 from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
 
 log = logging.getLogger("qc_agent")
@@ -115,14 +122,15 @@ NEVER = frozenset({
     "send", "request", "save_preset", "recall", "clear_grid", "delete_block", "load_preset",
     "apply_spec", "reconnect", "set_mode", "set_mode_cycle", "write_global_eq", "set_io_port",
     "load_settings_preset", "save_model_preset", "delete_model_preset", "load_model_preset",
-    "select_model_slot", "assign_stomp", "unassign_stomp", "assign_expression", "set_capture",
+    "select_model_slot", "assign_stomp", "unassign_stomp", "assign_expression",
     "set_ir", "add_splitter", "add_mixer", "remove_split", "set_split_points", "set_lane_param",
     "set_scene_label", "set_scene_color", "set_preset_meta", "set_param_typed", "set_scene",
     "latest_broadcast", "read_message", "list_model_presets", "list_recents_favorites",
 })
 GRANT = frozenset({
-    "open", "close", "get_current_preset", "get_setlist_position", "list_directory",
+    "open", "close", "get_current_preset", "get_setlist_position", "list_directory_raw",
     "set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass", "write_preset_file",
+    "set_capture",
 })
 ATTRS = frozenset({"firmware", "device_type", "write_errors", "last_write_error", "io"})
 
@@ -190,7 +198,13 @@ class WireGuard:
     # -- arming --
 
     def arm_push(self, plan):
+        for b in plan.blocks:
+            if b.model_id == 0 or (b.capture is not None and b.capture.file_name is None):
+                raise DeviceError(f"column {b.col}: a capture block is not resolved")
         self._push = {"cols": {b.col: b.model_id for b in plan.blocks},
+                      # each capture block's file_name: written once, exactly this string (plan 4.2)
+                      "strings": {(b.col, CAPTURE_FILE_NAME_PARAM): b.capture.file_name
+                                  for b in plan.blocks if b.capture is not None},
                       "params": {(b.col, p.index) for b in plan.blocks for p in b.params},
                       "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
                       "bypass_cols": {b.col for b in plan.blocks if any(b.bypass_scenes)},
@@ -332,6 +346,13 @@ class WireGuard:
             if col in push["bypass_cols"] and p.index == push["bypass_index"].get(col):
                 return  # the bypass control: one past the unit's own read of this block (allow_bypass_index)
             raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
+        if qf == {"index", "param_values"} and (col, p.index) in push["strings"]:
+            want = push["strings"][(col, p.index)]
+            if (len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "string_value"
+                    or p.param_values[0].string_value != want):
+                raise WireRefused(f"Grid: column {col} index {p.index} may only carry the planned capture file name")
+            del push["strings"][(col, p.index)]  # once
+            return
         if not qf <= {"index", "param_values"} or (col, p.index) not in push["params"]:
             raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
         if len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "float_value":
@@ -453,16 +474,99 @@ def _make_setlist_position(mods):
     return get_setlist_position
 
 
+MAX_LISTING_MESSAGES = 2048
+MAX_LISTING_FILES = 50_000
+
+
+def _make_list_directory_raw(mods):
+    """The vendored list_directory's READ and collect loop, returning the raw File messages.
+
+    Upstream hands them to directory.structure_directory, which keeps neither a capture's
+    ProductData.version nor the folder's is_cloud/is_favorites flags nor a preset's dependency
+    lists, all of which capture placement needs (qc_agent.captures). The READ sent is the same
+    bare {action, request_id} the wire guard allows. Bounded: a stream larger than the caps is
+    refused rather than held in memory.
+    """
+    P = mods["protocol"]
+
+    def list_directory_raw(self, timeout_ms=45000, quiet_ms=3000):
+        with self._io_lock:  # upstream's @_serialized
+            cls = P.message_class("File")
+            m = cls(action=P.ACTION["READ"], request_id=self.next_request_id())
+            self.send("File", m)
+            want = P.NAME_TO_CMD["File"]
+            deadline = time.time() + timeout_ms / 1000.0
+            last = time.time()
+            folders, nfiles = [], 0
+            while time.time() < deadline:
+                self._collect(0.15)
+                got = False
+                keep = []
+                for item in self._pending:
+                    cmd, obj, _raw, _pb = item
+                    if cmd == want and obj is not None and obj.HasField("folder"):
+                        folders.append(obj)
+                        nfiles += len(obj.folder.files)
+                        got = True
+                    else:
+                        keep.append(item)
+                self._pending = keep
+                if len(folders) > MAX_LISTING_MESSAGES or nfiles > MAX_LISTING_FILES:
+                    raise DeviceError("the unit's directory listing is too large")
+                if got:
+                    last = time.time()
+                elif folders and (time.time() - last) * 1000 > quiet_ms:
+                    break
+            return folders
+
+    return list_directory_raw
+
+
+def directory_snapshot(file_msgs):
+    """Raw File UPDATE messages -> captures.DirectorySnapshot (My Presets, its dependencies, captures).
+
+    Later messages for a folder key replace earlier ones, as upstream's structure_directory does."""
+    presets, caps = {}, {}
+    for m in file_msgs:
+        if not m.HasField("folder"):
+            continue
+        if m.type == 0:
+            presets[m.folder.key] = m.folder
+        elif m.type == 2:
+            caps[m.folder.key] = m.folder
+    mine = [f for k, f in presets.items() if k == SETLIST_KEY and not f.is_factory]
+    if len(mine) != 1:
+        raise DeviceError("My Presets is missing from the unit's directory listing")
+    files = list(mine[0].files)
+    # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256). A shorter or longer
+    # table would make a missing slot look empty, so it is refused rather than guessed at.
+    if len(files) != 256:
+        raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
+    my = {i: f.name or "" for i, f in enumerate(files)}  # in a READ the array position is the index
+    deps = {i: frozenset(d.hash.lower() for d in (*f.factory_dependencies, *f.product_dependencies))
+            for i, f in enumerate(files) if f.name}
+    entries, folders = [], []
+    for key, fo in caps.items():
+        folders.append((fo.name, bool(fo.is_factory), len(fo.files)))
+        for f in fo.files:
+            entries.append(CaptureEntry(name=f.name, key=f.key, folder_key=key, folder_name=fo.name,
+                                        is_factory=bool(fo.is_factory), is_cloud=bool(fo.is_cloud),
+                                        is_favorites=bool(fo.is_favorites), version_field=f.version))
+    return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders)
+
+
 def _fixed_quad_cortex(mods):
     """Upstream's QuadCortex with request() and get_setlist_position() replaced (see above).
 
     A subclass rather than per-instance patching: the vendored module stays byte-identical, and
     every method that calls self.request() (scene reads, directory listing, the push writes) gets
-    the fixed one. When the fix lands upstream and is re-vendored, this class goes away.
+    the fixed one. It also adds list_directory_raw (capture placement needs fields the vendored
+    parser drops), which stays even when the request fix lands upstream.
     """
     class FixedQuadCortex(mods["transport"].QuadCortex):
         request = _make_request(mods)
         get_setlist_position = _make_setlist_position(mods)
+        list_directory_raw = _make_list_directory_raw(mods)
 
     return FixedQuadCortex
 
@@ -497,6 +601,11 @@ class QcMcpBackend(DeviceBackend):
         # `mods` lets a caller pass modules load_vendored() already returned; nothing else is accepted
         # as the transport, so the pin check can't be skipped by accident.
         self._mods = mods if mods is not None and mods is _loaded else load_vendored(vendor_dir)
+        QC = self._mods["transport"].QuadCortex
+        if (getattr(QC, "CAPTURE_V1", None), getattr(QC, "CAPTURE_V2", None),
+                getattr(QC, "CAPTURE_FILE_NAME_PARAM", None)) != (CAPTURE_BLOCK_IDS[1], CAPTURE_BLOCK_IDS[2],
+                                                                  CAPTURE_FILE_NAME_PARAM):
+            raise DeviceError("the vendored transport's capture constants differ from the agent's")
         self._QC = _fixed_quad_cortex(self._mods)
         self._qc = None
         self._raw = None
@@ -526,6 +635,7 @@ class QcMcpBackend(DeviceBackend):
         guard = WireGuard(qc.io, P)
         qc.io = guard
         self._raw, self._guard, self._errs = qc, guard, []
+        self._census_logged = False
         self._qc = Guarded(qc)
         try:
             self._qc.open(handshake=True)
@@ -579,17 +689,12 @@ class QcMcpBackend(DeviceBackend):
 
     # -- reads --
 
-    def list_my_presets(self):
-        cat = self._call("list_directory")
-        folders = [f for f in cat.get("presets", []) if f.get("key") == SETLIST_KEY and not f.get("is_factory")]
-        if len(folders) != 1:
-            raise DeviceError("My Presets is missing from the unit's directory listing")
-        files = folders[0].get("files", [])
-        # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256). A shorter or longer
-        # table would make a missing slot look empty, so it is refused rather than guessed at.
-        if len(files) != 256:
-            raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
-        return {int(f["index"]): f.get("name") or "" for f in files}
+    def read_directory(self):
+        snap = directory_snapshot(self._call("list_directory_raw"))
+        if not getattr(self, "_census_logged", False):  # once per session: a push lists several times
+            _log_census(snap)
+            self._census_logged = True
+        return snap
 
     def setlist_position(self):
         return self._call("get_setlist_position")
@@ -616,6 +721,15 @@ class QcMcpBackend(DeviceBackend):
 
     def add_block(self, row, col, model_id):
         return bool(self._call("add_block", model_id, row=row, column=col))
+
+    def place_capture(self, row, col, model_id, key, name):
+        version = {CAPTURE_BLOCK_IDS[1]: "v1", CAPTURE_BLOCK_IDS[2]: "v2"}.get(model_id)
+        if version is None:
+            raise DeviceError(f"model {model_id} is not a capture block")
+        push = self._guard._push if self._guard is not None else None
+        if not push or push["strings"].get((col, CAPTURE_FILE_NAME_PARAM)) != key + name:
+            raise DeviceError(f"column {col}: the capture to place is not the armed one")
+        return bool(self._call("set_capture", row, col, key, name, version=version))
 
     def set_param(self, row, col, index, wire):
         self._call("set_param", row, col, index, wire)
@@ -648,6 +762,20 @@ class QcMcpBackend(DeviceBackend):
             self._call("write_preset_file", SETLIST_KEY, position, name)
         finally:
             self._guard._save = None
+
+
+def _log_census(snap):
+    """What capture placement depends on, for P6 to read from the agent log. Folder names come
+    from the unit: cleaned and bounded."""
+    from . import text
+    by_folder = {}
+    for e in snap.captures:
+        by_folder.setdefault((e.folder_name, e.is_factory, e.is_cloud, e.is_favorites), set()).add(e.version_field)
+    for (name, fac, cloud, fav), versions in sorted(by_folder.items(), key=lambda kv: kv[0][0])[:40]:
+        shown = sorted(text.clean(v, 16) for v in versions)[:5]
+        log.info("capture folder %r: factory=%s cloud=%s favorites=%s version values %s", text.clean(name, 40),
+                 fac, cloud, fav, shown)
+    log.info("My Presets: %d saved presets list dependencies", sum(1 for d in snap.preset_deps.values() if d))
 
 
 def _quiet(fn):

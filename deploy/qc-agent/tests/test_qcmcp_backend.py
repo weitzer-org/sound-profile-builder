@@ -366,12 +366,127 @@ class Guard(Base):
         self.refused(self.qc.set_param, 0, 0, 1, 0.3)
 
 
+class CapturesOverTheWire(Base):
+    """A capture block through the real vendored set_capture and the wire guard (plan 4.2)."""
+
+    def capture_job(self):
+        import json
+        from helpers import go_golden
+        from qc_agent import contract
+        args = {"slot": "20A", "name": "British Invasion", "source": {"preset_id": "p-9", "guitar": "ES-339"},
+                "export": go_golden("03_British_Invasion")}
+        _jid, _key, data = job("push_preset", args=args)
+        return json.loads(contract.open_envelope(config().keys, contract.TAG_JOB, data))
+
+    def test_capture_push(self):
+        from fake_device import KEY_USER
+        out = jobs.run(self.ctx(), self.capture_job())
+        self.assertEqual((out.status, out.reason_code), ("succeeded", ""), out.message)
+        self.assertEqual(out.push["mismatches"], 0)
+        self.assertEqual(self.dev._guard.refused, [])
+        A = P.ACTION
+        grids = [o for n, o in self.hid.received if n == "Grid" and o.action == A["UPDATE"]]
+        placed = [(mm.column, mm.hash) for g in grids for ch in g.preset.chains for mm in ch.models if mm.hash]
+        self.assertIn((3, 14000), placed)
+        strings = [(mm.column, p.index, p.param_values[0].string_value) for g in grids for ch in g.preset.chains
+                   for mm in ch.models for p in mm.params
+                   if p.param_values and p.param_values[0].WhichOneof("value") == "string_value"]
+        self.assertEqual(strings, [(3, 5, KEY_USER + "66 AC30 JMP OD")])  # exactly one string write
+        sent = {n for n, _o in self.hid.received}
+        for never in ("ProductForward", "NeuralCapture", "NeuralCapture2"):
+            self.assertNotIn(never, sent)
+        creates = [o for n, o in self.hid.received if n == "File" and o.action == A["CREATE"]]
+        self.assertEqual(len(creates), 1)
+        self.assertEqual(self.hid.grid[3]["strings"][5], KEY_USER + "66 AC30 JMP OD")
+        self.assertIn("V1 (user)", out.message)
+
+    def test_snapshot_parses_capture_fields(self):
+        self.hid.preset_deps = {9: ["AB" * 32]}
+        self.hid.slots = {9: "Saved"}
+        self.dev.connect()
+        snap = self.dev.read_directory()
+        self.assertEqual(snap.my_presets[9], "Saved")
+        self.assertEqual(snap.preset_deps[9], frozenset({"ab" * 32}))
+        names = {(e.name, e.folder_name, e.is_factory, e.version_field) for e in snap.captures}
+        self.assertIn(("CA John's 2", "Factory Captures V2", True, "2"), names)
+        self.assertIn(("66 AC30 JMP OD", "My Captures", False, "1"), names)
+
+
+class CaptureGuard(Base):
+    def setUp(self):
+        super().setUp()
+        self.dev.connect()
+        self.qc = self.dev._raw
+        from dataclasses import replace
+        from helpers import go_golden
+        from qc_agent import captures
+        from qc_agent.export_validator import CAPTURE_BLOCK_IDS
+        plan = validate(go_golden("03_British_Invasion"), catalog(), "4.1.0")
+        res = captures.resolve(plan.blocks, self.dev.read_directory())
+        self.plan = captures.with_resolution(plan, res, CAPTURE_BLOCK_IDS)
+        self.cap = next(b for b in self.plan.blocks if b.capture)
+        self.replace = replace
+
+    def string_write(self, col, index, value):
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"], request_id=self.qc.next_request_id())
+        ch = g.preset.chains.add()
+        m = ch.models.add()
+        m.column = col
+        p = m.params.add()
+        p.index = index
+        p.param_values.add().string_value = value
+        self.qc.send("Grid", g)
+
+    def refused(self, fn, *a):
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            fn(*a)
+        self.assertEqual(len(self.hid.received), n, "nothing reached the device")
+
+    def test_only_the_armed_string_once(self):
+        self.dev.begin_push(152, "x", self.plan)
+        c, fn = self.cap.col, self.cap.capture.file_name
+        self.refused(self.string_write, c, 5, fn + "x")          # another string
+        self.refused(self.string_write, c - 1, 5, fn)            # another column
+        self.refused(self.string_write, c, 4, fn)                # another index
+        self.string_write(c, 5, fn)                              # the armed one passes
+        self.refused(self.string_write, c, 5, fn)                # but only once
+
+    def test_the_other_capture_block_type_is_refused(self):
+        self.dev.begin_push(152, "x", self.plan)
+        self.refused(self.qc.add_block, 14001, 0, self.cap.col)
+
+    def test_place_capture_needs_the_armed_capture(self):
+        self.dev.begin_push(152, "x", self.plan)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.place_capture(0, self.cap.col, 14000, "ab" * 32, self.cap.capture.name)
+        with self.assertRaisesRegex(DeviceError, "not a capture block"):
+            self.dev.place_capture(0, self.cap.col, 1001, self.cap.capture.key, self.cap.capture.name)
+
+    def test_an_unresolved_capture_cannot_be_armed(self):
+        blocks = [self.replace(b, model_id=0) if b.capture else b for b in self.plan.blocks]
+        with self.assertRaisesRegex(DeviceError, "not resolved"):
+            self.dev.begin_push(152, "x", self.replace(self.plan, blocks=blocks))
+
+
 class MethodAllowlist(unittest.TestCase):
+    def test_set_capture_is_granted_typed_writes_are_not(self):
+        self.assertIn("set_capture", qcmcp_backend.GRANT)
+        for name in ("set_param_typed", "set_ir", "list_directory"):
+            self.assertNotIn(name, qcmcp_backend.GRANT, name)
+
+    def test_vendored_capture_constants_are_pinned(self):
+        QC = fake_hid.M["transport"].QuadCortex
+        self.assertEqual((QC.CAPTURE_V1, QC.CAPTURE_V2, QC.CAPTURE_FILE_NAME_PARAM), (14000, 14001, 5))
+        with mock.patch.object(QC, "CAPTURE_V2", 14002):
+            with self.assertRaisesRegex(DeviceError, "capture constants"):
+                QcMcpBackend()
+
     def test_never_methods_raise(self):
         g = Guarded(object())
         for name in ("save_preset", "recall", "clear_grid", "send", "request", "delete_block", "set_mode",
                      "write_global_eq", "set_io_port", "load_settings_preset", "delete_model_preset",
-                     "set_scene_label", "set_preset_meta"):
+                     "set_scene_label", "set_preset_meta", "set_param_typed", "set_ir"):
             with self.subTest(name), self.assertRaisesRegex(GuardError, "is never allowed"):
                 getattr(g, name)
 

@@ -28,17 +28,15 @@ class Goldens(unittest.TestCase):
             with self.subTest(name):
                 g = json.loads((GO_GOLDENS / f"{name}.json").read_text())
                 e = go_golden(name)
-                captures = any("capture" in b for b in g["payload"]["rows"][0]["blocks"])
                 if g["unresolved"]:
                     # Some eval presets still have unresolved items (scales, shared names, plugins).
                     with self.assertRaisesRegex(V.ExportRefused, "unresolved item"):
                         V.validate(e, catalog(), "4.1.0")
-                elif captures:
-                    # Pushable on the QC-2 side, but this bridge can't place captures yet (plan 4.2).
-                    with self.assertRaisesRegex(V.ExportRefused, "can't place captures yet"):
-                        V.validate(e, catalog(), "4.1.0")
                 else:
-                    V.validate(e, catalog(), "4.1.0")
+                    plan = V.validate(e, catalog(), "4.1.0")
+                    caps = [b for b in g["payload"]["rows"][0]["blocks"] if "capture" in b]
+                    self.assertEqual([(b.col, b.capture.name) for b in plan.blocks if b.capture],
+                                     [(b["col"], b["capture"]["name"]) for b in caps])
 
     def test_the_pushable_golden_is_accepted_unmodified(self):
         # No catalog-hash override: Go's embedded catalog and the agent's copy are the same file.

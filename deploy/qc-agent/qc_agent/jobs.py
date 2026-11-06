@@ -16,6 +16,10 @@ that bind every device write, in the order they run for a push:
   5. the job has not expired (re-checked immediately before the first write);
   6. build, read back and diff; save only if the diff is clean, after a second fresh
      listing still shows the slot empty and the same slot still open.
+Capture blocks (plan 4.2) are resolved against the unit's own capture list from the
+rule-3 listing (qc_agent.captures): a capture that is missing, ambiguous, cloud-only
+or of unknown version refuses the job before any write. The second listing must
+resolve every capture to the same key and version, or nothing is saved.
 """
 from __future__ import annotations
 
@@ -25,9 +29,9 @@ import math
 import time
 from dataclasses import dataclass, field
 
-from . import contract, slots, text
+from . import captures, contract, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, DeviceError, UnitAbsent, UnitBusy
-from .export_validator import SUPPORTED_FORMATS, ExportRefused, check_preset_name, validate
+from .export_validator import CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name, validate
 
 log = logging.getLogger("qc_agent")
 
@@ -36,7 +40,9 @@ PACE_S = 0.15              # between writes; G3 used the same pacing
 SAVE_LIST_POLLS = 6        # G3: a listing 3 s after the save still showed the slot blank
 SAVE_LIST_INTERVAL_S = 6.0
 MAX_DIFF = 512
+CAPTURE_SETTLE_S = 1.0     # after loading a capture, before its params (unverified timing; the read-back checks)
 NAME_LIMIT = 64
+STRING_LIMIT = 160         # a read-back string param: a capture's file_name is 64 hex + its name
 
 
 @dataclass
@@ -181,7 +187,7 @@ def _plain_value(v):
     if isinstance(v, float):
         return v if math.isfinite(v) else None
     if isinstance(v, str):
-        return text.clean(v, NAME_LIMIT)
+        return text.clean(v, STRING_LIMIT)
     return None
 
 
@@ -294,6 +300,12 @@ def _diff(plan, preset):
                             f"{None if got is None else got.get('model_id')}")
             continue
         params = {p["index"]: p for p in got.get("params", [])}
+        if b.capture is not None:
+            vals = (params.get(captures.FILE_NAME_PARAM) or {}).get("values") or []
+            if not vals or any(not isinstance(v, str) or v != b.capture.file_name for v in vals):
+                mismatches += 1
+                problems.append(f"column {b.col}: the capture block's file_name doesn't read back as planned "
+                                f"({text.clean(str(vals[0]) if vals else '', 80)!r})")
         for p in b.params:
             mismatches += _diff_param(plan.row, b.col, p, (params.get(p.index) or {}).get("values") or [], diff)
         want = b.bypass_scenes
@@ -322,6 +334,8 @@ class _Push:
         self.plan = None
         self.fw = None
         self.saved = False
+        self.resolved = {}   # col -> captures.ResolvedCapture
+        self.deps_note = ""
 
     def run(self) -> Outcome:
         out = self.check_job()                              # rule 1 (no device contact)
@@ -353,6 +367,7 @@ class _Push:
                           "unit to discard any partial grid.", firmware=self.fw, push=self.result)
 
     def done(self, msg, **kw):
+        msg = msg + captures.summary(self.resolved) + self.deps_note
         return Outcome("succeeded", "", msg, firmware=self.fw, push=self.result, **kw)
 
     def check_job(self):
@@ -389,12 +404,16 @@ class _Push:
         return None
 
     def check_unit(self):
-        """Rules 3-5: fresh listing, the slot open with a blank grid, not expired."""
-        listing = self.dev.list_my_presets()
+        """Rules 3-5: fresh listing, the slot open with a blank grid, not expired; captures resolved."""
+        snap = self.dev.read_directory()
         _check_alive(self.ctx)
-        out = self.check_slot(listing, self.dev.setlist_position() or {})
+        out = self.check_slot(snap.my_presets, self.dev.setlist_position() or {})
         if out:
             return out
+        if any(b.capture for b in self.plan.blocks):
+            out = self.resolve_captures(snap)
+            if out:
+                return out
         live = self.dev.read_current_preset()
         _check_alive(self.ctx)
         if live is None:
@@ -405,6 +424,18 @@ class _Push:
         if _expired(self.ctx, self.job):
             return Outcome("expired", "expired", "The request expired before the bridge got to it; "
                            "nothing was written.", firmware=self.fw)
+        return None
+
+    def resolve_captures(self, snap):
+        if not snap.capture_folders:
+            return failed("device_error", "The unit's directory listing had no capture folders (incomplete "
+                          "listing?), so the bridge can't place captures. Nothing was written; send it again.",
+                          firmware=self.fw)
+        try:
+            self.resolved = captures.resolve(self.plan.blocks, snap)
+        except captures.CaptureRefused as e:
+            return refused("validation", str(e), firmware=self.fw)
+        self.plan = captures.with_resolution(self.plan, self.resolved, CAPTURE_BLOCK_IDS)
         return None
 
     def still_open(self) -> bool:
@@ -424,7 +455,15 @@ class _Push:
                 return failed("device_error", f"Another preset was selected on the unit during the build, so the "
                               f"bridge stopped. Nothing was saved; re-select {self.slot} or another preset to "
                               "discard the partial edits.", firmware=self.fw, push=self.result)
-            if not dev.add_block(plan.row, b.col, b.model_id):
+            if b.capture is not None:
+                # file_name first, then the controls: a capture loaded after them could reset them.
+                if not dev.place_capture(plan.row, b.col, b.model_id, b.capture.key, b.capture.name):
+                    return failed("device_error", f"The unit did not confirm placing capture "
+                                  f"{text.clean(b.capture.name, 64)!r} (a V{b.capture.version} capture block) in "
+                                  f"column {b.col}. Nothing was saved; re-select the slot on the unit to discard "
+                                  "the partial grid.", firmware=self.fw, push=self.result)
+                ctx.sleep(CAPTURE_SETTLE_S)
+            elif not dev.add_block(plan.row, b.col, b.model_id):
                 return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
                               "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
                               firmware=self.fw, push=self.result)
@@ -461,14 +500,23 @@ class _Push:
     def save(self):
         """Rule 6: a second fresh listing, then File CREATE, then wait for the listing to show it."""
         dev, ctx, slot, pos, name = self.dev, self.ctx, self.slot, self.pos, self.name
-        listing = dev.list_my_presets()
+        snap = dev.read_directory()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
-        out = self.check_slot(listing, cur)
+        out = self.check_slot(snap.my_presets, cur)
         if out:
             out.message = f"The unit changed while the preset was being built; nothing was saved. {out.message}"
             out.push = self.result
             return out
+        if self.resolved:
+            try:
+                again = captures.resolve(self.plan.blocks, snap)
+            except captures.CaptureRefused:
+                again = None
+            if again != self.resolved:
+                return failed("device_error", "The unit's capture library changed during the build (a capture no "
+                              "longer resolves to the same file). Nothing was saved; re-select "
+                              f"{slot} on the unit to discard the partial grid.", firmware=self.fw, push=self.result)
         back = dev.read_current_preset()  # the listing takes ~15 s: the grid must still be the verified one
         _check_alive(ctx)
         if back is None or _diff(self.plan, back)[0]:
@@ -488,9 +536,13 @@ class _Push:
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
-            if dev.list_my_presets().get(pos) == name:
+            snap = dev.read_directory()
+            if snap.my_presets.get(pos) == name:
                 self.result["listed"] = True
+                self.deps_note = captures.deps_report(snap, pos, self.resolved)
                 break
+        if self.resolved and not self.result["listed"]:
+            self.deps_note = captures.deps_report(captures.DirectorySnapshot(my_presets={}), pos, self.resolved)
         labels = " Scene labels are not written in v1." if self.plan.scene_labels else ""
         if self.result["listed"]:
             return self.done(f"Saved {name!r} to {slot}; read-back matched.{labels}")

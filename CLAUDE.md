@@ -170,7 +170,9 @@ this app's MCP connector. Read these before any device work:
   acceptance steps. qc-mcp's transport is vendored under `vendor/qc_mcp/` at `f634ecd`, byte for byte and SHA-256
   pinned (test plus a runtime check): never edit those files; re-vendor in its own PR (`vendor/PROVENANCE.md`). The
   agent validates pushes against `internal/catalog/qc_catalog.json` (hash-matched with the export), so a catalog
-  change means the PC's clone must be pulled before pushes work again. Run its tests with
+  change means the PC's clone must be pulled before pushes work again. Captures are placed by exact name from the
+  unit's own listing, V1/V2 decided on the unit (`qc_agent/captures.py`, plan 4.2); the only string write the wire
+  guard allows is each capture's resolved `file_name`, once. Run its tests with
   `cd deploy/qc-agent && python -m unittest discover -s tests` (needs `protobuf` from `requirements.lock.txt`).
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing

@@ -9,10 +9,28 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 """
 from __future__ import annotations
 
+from qc_agent.captures import CaptureEntry, DirectorySnapshot
 from qc_agent.device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 
-WRITE_CALLS = frozenset({"set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass",
-                         "save_to_slot"})
+WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
+                         "set_block_bypass", "save_to_slot"})
+
+KEY_V1 = "a1" * 32   # a factory V1 capture
+KEY_V2 = "b2" * 32   # a factory V2 capture
+KEY_USER = "c3" * 32  # a user capture (version field "1", as the factory V1 entries carry)
+
+
+def capture(name, key, folder="My Captures", factory=False, version="1", cloud=False, favorites=False):
+    return CaptureEntry(name=name, key=key, folder_key="k-" + folder, folder_name=folder, is_factory=factory,
+                        is_cloud=cloud, is_favorites=favorites, version_field=version)
+
+
+def default_captures():
+    """A small library shaped like qc-mcp DIRECTORY.md's: factory V1/V2 folders, a user folder."""
+    return [capture("CA John's", KEY_V1, "Factory Captures V1", factory=True, version="1"),
+            capture("Brit 2203 87", "d4" * 32, "Factory Captures V1", factory=True, version="1"),
+            capture("CA John's 2", KEY_V2, "Factory Captures V2", factory=True, version="2"),
+            capture("66 AC30 JMP OD", KEY_USER, "My Captures", version="1")]
 
 
 class FakeDevice(DeviceBackend):
@@ -34,6 +52,12 @@ class FakeDevice(DeviceBackend):
         self.on_connect = None                          # hook(fake) run inside connect()
         self.on_call = None                             # hook(name) run on every call
         self.listing_lag = 0                            # listings that still show the slot empty after a save
+        self.captures = default_captures()              # the unit's capture library (read_directory)
+        self.deps_on_save = True                        # the saved preset lists its captures as dependencies
+        self.preset_deps: dict[int, frozenset] = {}
+        self.on_listing = None                          # hook(fake, n) before the n-th listing (1-based)
+        self.corrupt_file_name = False                  # the read-back's file_name differs
+        self._listings = 0
         self._alive_calls = 0
 
     def _rec(self, name, *args):
@@ -74,15 +98,25 @@ class FakeDevice(DeviceBackend):
         if not self.connected:
             raise DeviceError("not connected")
 
-    def list_my_presets(self):
+    def read_directory(self):
         self._need()
-        self._rec("list_my_presets")
+        self._listings += 1
+        if self.on_listing:
+            self.on_listing(self, self._listings)
+        self._rec("read_directory")
         out = {p: "" for p in range(256)}
         out.update(self.slots)
+        deps = dict(self.preset_deps)
         if self.listing_lag and self._pending_save is not None:
             self.listing_lag -= 1
             out[self._pending_save[0]] = ""
-        return out
+            deps.pop(self._pending_save[0], None)
+        folders = {}
+        for e in self.captures:
+            n, f, c = folders.get(e.folder_name, (e.folder_name, e.is_factory, 0))
+            folders[e.folder_name] = (n, f, c + 1)
+        return DirectorySnapshot(my_presets=out, preset_deps=deps, captures=list(self.captures),
+                                 capture_folders=list(folders.values()))
 
     _pending_save = None
 
@@ -102,6 +136,11 @@ class FakeDevice(DeviceBackend):
                       for i in range(n)]
             if self.corrupt_readback and params:
                 params[0]["values"] = [0.999] * 8
+            for idx, sv in b.get("strings", {}).items():
+                while len(params) <= idx:
+                    params.append({"index": len(params), "values": [0.0] * 8, "scene_mode": False})
+                params[idx] = {"index": idx, "values": [sv + ("X" if self.corrupt_file_name else "")],
+                               "scene_mode": False}
             blocks.append({"col": col, "model_id": b["model_id"], "params": params})
         bypass = [[[False] * 8 for _ in range(8)] for _ in range(4)]
         for col, b in self.grid.items():
@@ -130,6 +169,15 @@ class FakeDevice(DeviceBackend):
         self.grid[col] = {"model_id": model_id, "params": {}, "bypass": [False] * 8}
         return True
 
+    def place_capture(self, row, col, model_id, key, name):
+        self._need()
+        self._rec("place_capture", row, col, model_id, key, name)
+        if col in self.no_echo_cols:
+            return False
+        self.grid[col] = {"model_id": model_id, "params": {}, "bypass": [False] * 8, "strings": {5: key + name},
+                          "loaded": True}
+        return True
+
     def set_param(self, row, col, index, wire):
         self._need()
         self._rec("set_param", row, col, index, wire)
@@ -150,3 +198,6 @@ class FakeDevice(DeviceBackend):
         self._rec("save_to_slot", position, name)
         self.slots[position] = name
         self._pending_save = (position, name)
+        # like the backend's snapshot: every saved preset has an entry, empty when it lists none
+        self.preset_deps[position] = frozenset(b["strings"][5][:64].lower() for b in self.grid.values()
+                                               if "strings" in b) if self.deps_on_save else frozenset()
