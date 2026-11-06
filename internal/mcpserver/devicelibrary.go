@@ -204,10 +204,15 @@ func renderMics(b *strings.Builder, o *deviceMicsOut) {
 	b.WriteString(". A later dry run can write a recorded mic exactly instead of leaving the cab on its default.\n")
 }
 
+// syncDeviceLibraryInput differs from deviceReadInput only in the default wait, which the schema must state.
+type syncDeviceLibraryInput struct {
+	WaitSeconds *int `json:"wait_seconds,omitempty" jsonschema:"wait up to this many seconds for the bridge's answer (0-50, default 50)"`
+}
+
 // syncDevicePreset is sync_device_library: queue the read-only job, wait, store the answer.
-func syncDeviceLibrary(b *devicejobs.Bridge, lib *DeviceLibrary) mcp.ToolHandlerFor[deviceReadInput, deviceJobOutput] {
-	return func(ctx context.Context, _ *mcp.CallToolRequest, in deviceReadInput) (*mcp.CallToolResult, deviceJobOutput, error) {
-		wait, err := deviceWait(in.WaitSeconds, 60) // the directory listing alone takes ~15 s
+func syncDeviceLibrary(b *devicejobs.Bridge, lib *DeviceLibrary) mcp.ToolHandlerFor[syncDeviceLibraryInput, deviceJobOutput] {
+	return func(ctx context.Context, _ *mcp.CallToolRequest, in syncDeviceLibraryInput) (*mcp.CallToolResult, deviceJobOutput, error) {
+		wait, err := deviceWait(in.WaitSeconds, maxDeviceWait) // the directory listing alone takes ~15 s
 		if err != nil {
 			return nil, deviceJobOutput{}, err
 		}
