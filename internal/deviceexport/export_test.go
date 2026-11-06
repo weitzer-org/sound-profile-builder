@@ -706,6 +706,34 @@ func TestCatalogHash(t *testing.T) {
 	}
 }
 
+// TestCaptureCabIRControlsWarn: a cab-type block that is a full-rig capture carries no IR cab
+// controls on the device; the generator's mic/position/filter settings are dropped with a warning
+// instead of making the whole push unresolvable.
+func TestCaptureCabIRControlsWarn(t *testing.T) {
+	e := testExporter(t)
+	names := []string{"Mic 1", "Mic 2", "MIC 1 POSITION", "MIC 2 DISTANCE", "MIC 1 LEVEL", "HPF", "LPF", "OUTPUT VOLUME"}
+	var ps []storage.BlockParameter
+	for _, n := range names {
+		ps = append(ps, prm(n, "5", ""))
+	}
+	ps = append(ps, prm("Gain", "5", ""))
+	b := block("CA John's", ps...)
+	b.Type = "Cab"
+	ex, _ := export(t, e, preset(b), "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved: %+v", ex.Unresolved)
+	}
+	if len(ex.Warnings) != len(names) {
+		t.Fatalf("want %d warnings, got %+v", len(names), ex.Warnings)
+	}
+	// Not a cab slot: a stray cab control is still refused.
+	b.Type = "Amp"
+	ex, _ = export(t, e, preset(b), "g")
+	if len(ex.Unresolved) == 0 {
+		t.Fatal("an amp-type capture with IR cab controls must still be refused")
+	}
+}
+
 // ---- helpers ----
 
 func prm(name, a, b string) storage.BlockParameter {

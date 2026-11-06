@@ -738,6 +738,9 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 				}
 				if !known || isCap {
 					counts.UncheckedBlocks++
+					if isCap {
+						flagCaptureCabControls(b, &counts)
+					}
 					continue
 				}
 			}
@@ -754,6 +757,27 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 		}
 	}
 	return counts
+}
+
+// flagCaptureCabControls notes IR cab controls (mics, position, distance, filters) written on a
+// capture standing in a cab slot: a capture has only Gain/Bass/Mid/Treble/Volume, so the device
+// push drops them. Counted as UnknownNames; Value/ValueB are untouched.
+func flagCaptureCabControls(b *storage.EffectBlock, counts *CatalogParamCounts) {
+	if t := strings.ToLower(strings.TrimSpace(b.Type)); t != "cab" && t != "cabinet" {
+		return
+	}
+	var bad []string
+	for _, p := range b.Parameters {
+		if catalog.IsCabIRControl(paramNameKey(p.Name)) {
+			bad = append(bad, p.Name)
+		}
+	}
+	if len(bad) == 0 {
+		return
+	}
+	counts.UnknownNames += len(bad)
+	appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"%s is a capture, which has no cab controls; %s can't be set and will be left out of a device push. Drop them, or use a cab IR.",
+		stripCaptureAnnotation(b.Model), strings.Join(bad, ", ")))
 }
 
 // catalogAware: the preset came from a catalog-aware prompt (it uses kept_defaults), the only

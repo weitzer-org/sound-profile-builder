@@ -120,3 +120,13 @@ func UnitDimension(u string) (dim string, factor float64, ok bool) {
 	}
 	return "", 0, false
 }
+
+// cabIRControlPattern matches (in ParamNameKey form) the controls an IR cab has and a Neural
+// Capture doesn't: the mic choice, per-mic position/distance/level/pan, the cab's filters and its
+// output trim.
+var cabIRControlPattern = regexp.MustCompile(`^(?:MIC[12][A-Z]*|HPF|LPF|HPFFREQ|LPFFREQ|HIGHCUT|LOWCUT|OUTPUTVOLUME|OUTPUTLEVEL|BLEND)$`)
+
+// IsCabIRControl reports whether key (a ParamNameKey) is an IR cab control that a Neural Capture
+// standing in a cab slot doesn't have. The one list shared by the generate-time check and the
+// device export.
+func IsCabIRControl(key string) bool { return cabIRControlPattern.MatchString(key) }

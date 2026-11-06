@@ -382,6 +382,9 @@ func (b *builder) block(ref string, blks []*storage.EffectBlock, col int) (*Bloc
 	}
 	written := map[int]string{}
 	cab := strings.HasPrefix(m.Category, "Cabsim")
+	// A capture in a cab slot is a full-rig Neural Capture: it has Gain/Bass/Mid/Treble/Volume and
+	// none of an IR cab's mic, position, distance or filter controls.
+	captureCab := out.Capture != nil && isCabBlockType(blk.Type)
 	canon := func(key string) string {
 		if lp, ok := lookup(byKey, key); ok {
 			return fmt.Sprintf("#%d", lp.Param.Index) // "Time" and "Delay Time" are one control
@@ -407,6 +410,9 @@ func (b *builder) block(ref string, blks []*storage.EffectBlock, col int) (*Bloc
 			default:
 				out.AtDefault = append(out.AtDefault, label)
 			}
+			continue
+		case captureCab && catalog.IsCabIRControl(key):
+			b.warn(ref, bp.Name, fmt.Sprintf("%s is an IR cab control; the capture %q is a Neural Capture with none, so it is left out (a pre-built rig capture needs no cab settings)", bp.Name, out.Model))
 			continue
 		case cab && key == "BLEND":
 			b.refuse(ref, bp.Name, "device cabs have no Blend control; set MIC 1 LEVEL and MIC 2 LEVEL instead")
@@ -442,6 +448,11 @@ func (b *builder) block(ref string, blks []*storage.EffectBlock, col int) (*Bloc
 	}
 	sort.Slice(out.Params, func(i, j int) bool { return out.Params[i].Index < out.Params[j].Index })
 	return out, nil
+}
+
+func isCabBlockType(t string) bool {
+	t = strings.ToLower(strings.TrimSpace(t))
+	return t == "cab" || t == "cabinet"
 }
 
 // unionBlock is the block the model is resolved from: the first guitar's block, carrying every
