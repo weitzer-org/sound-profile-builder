@@ -280,3 +280,16 @@ func TestStoredLibraryIsRevalidatedOnRead(t *testing.T) {
 		t.Errorf("a valid list was refused: %v", err)
 	}
 }
+
+func TestAddMics_StoredFileWithoutCabsDoesNotPanic(t *testing.T) {
+	mem := devicejobstest.NewMemClient()
+	s := NewStore(mem, "main")
+	ctx := context.Background()
+	if err := mem.WriteFile(ctx, "main", MicsObject, []byte(`{"format":"qc2-cab-mics/1"}`)); err != nil {
+		t.Fatal(err)
+	}
+	n, err := s.AddMics(ctx, map[int][]string{12045: {"ME_110 US PRN C10R_Ribbon 121"}}, time.Now())
+	if err != nil || n != 1 {
+		t.Fatalf("n %d err %v", n, err)
+	}
+}

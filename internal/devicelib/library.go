@@ -229,6 +229,9 @@ func (s *Store) Mics(ctx context.Context) (*Mics, error) {
 	if m.Format != MicsFormat {
 		return nil, errors.New("the stored cab mic list has an unknown format")
 	}
+	if m.Cabs == nil { // a file without "cabs" decodes to a nil map; AddMics writes into it
+		m.Cabs = map[string][]string{}
+	}
 	return &m, nil
 }
 
