@@ -386,7 +386,7 @@ def _check_capture_block(bi, b, catalog) -> PlannedBlock:
         raise ExportRefused(f"{where}: a capture block's index_evidence must be 'capture-block'")
     c = b["capture"]
     _exact(c, ("name", "source", "resolved_on_unit"), where + ".capture")
-    if c["source"] not in CAPTURE_SOURCES:
+    if not isinstance(c["source"], str) or c["source"] not in CAPTURE_SOURCES:
         raise ExportRefused(f"{where}.capture.source must be 'factory' or 'user'")
     if c["resolved_on_unit"] is not False:
         raise ExportRefused(f"{where}.capture.resolved_on_unit must be false: this bridge resolves captures on the "

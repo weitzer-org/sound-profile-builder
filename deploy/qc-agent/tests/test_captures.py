@@ -84,7 +84,7 @@ class Resolve(unittest.TestCase):
 
     def test_cloud_only(self):
         e = default_captures() + [capture("Cloud Amp", "a7" * 32, "Cloud", cloud=True)]
-        self.refused("only as a Cortex Cloud item", "Cloud Amp", "user", snap(e))
+        self.refused("only as a Cortex Cloud", "Cloud Amp", "user", snap(e))
 
     def test_unknown_factory_folder(self):
         e = [capture("Odd", "a8" * 32, "Factory Captures V3", True, "3")] + default_captures()
@@ -123,6 +123,14 @@ class Resolve(unittest.TestCase):
         self.assertEqual((b.model_id, b.capture.key, b.capture.version, b.capture.file_name),
                          (14001, KEY_V2, 2, KEY_V2 + "CA John's 2"))
         self.assertIs(out.blocks[0], plan.blocks[0])
+
+
+class SummaryCap(unittest.TestCase):
+    def test_at_most_four_named(self):
+        res = {c: C.ResolvedCapture("x" * 64, "user", "ab" * 32, 1) for c in range(7)}
+        s = C.summary(res)
+        self.assertIn("+3 more", s)
+        self.assertLess(len(s), 260)
 
 
 class Reports(unittest.TestCase):

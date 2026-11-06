@@ -491,10 +491,13 @@ def _make_list_directory_raw(mods):
 
     def list_directory_raw(self, timeout_ms=45000, quiet_ms=3000):
         with self._io_lock:  # upstream's @_serialized
+            want = P.NAME_TO_CMD["File"]
+            # A folder message still queued from an earlier listing must not stand in for a fresh one.
+            self._pending = [it for it in self._pending
+                             if not (it[0] == want and it[1] is not None and it[1].HasField("folder"))]
             cls = P.message_class("File")
             m = cls(action=P.ACTION["READ"], request_id=self.next_request_id())
             self.send("File", m)
-            want = P.NAME_TO_CMD["File"]
             deadline = time.time() + timeout_ms / 1000.0
             last = time.time()
             folders, nfiles = [], 0
@@ -516,8 +519,10 @@ def _make_list_directory_raw(mods):
                 if got:
                     last = time.time()
                 elif folders and (time.time() - last) * 1000 > quiet_ms:
-                    break
-            return folders
+                    return folders  # the stream went quiet: complete
+            # Upstream returns whatever arrived by the deadline; a listing cut off mid-stream could hide a
+            # preset or a second capture with the same name, so it is refused here.
+            raise DeviceError("the unit's directory listing did not finish in time")
 
     return list_directory_raw
 
@@ -548,11 +553,32 @@ def directory_snapshot(file_msgs):
     entries, folders = [], []
     for key, fo in caps.items():
         folders.append((fo.name, bool(fo.is_factory), len(fo.files)))
+        cloud, fav = _inherited(key, caps)
         for f in fo.files:
             entries.append(CaptureEntry(name=f.name, key=f.key, folder_key=key, folder_name=fo.name,
-                                        is_factory=bool(fo.is_factory), is_cloud=bool(fo.is_cloud),
-                                        is_favorites=bool(fo.is_favorites), version_field=f.version))
+                                        is_factory=bool(fo.is_factory), is_cloud=cloud,
+                                        is_favorites=fav, version_field=f.version))
     return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders)
+
+
+def _inherited(key, folders, depth=16):
+    """(cloud, favorites) for a capture folder: set when it or any folder above it (parent_key)
+    is a cloud or plugin folder / a favorites view. A loop or a chain deeper than `depth` counts
+    as cloud, so the folder's files are never treated as local."""
+    cloud = fav = False
+    seen = set()
+    k = key
+    for _ in range(depth):
+        fo = folders.get(k)
+        if fo is None or k in seen:
+            return cloud or k in seen, fav
+        seen.add(k)
+        cloud = cloud or bool(fo.is_cloud) or bool(fo.is_plugin)
+        fav = fav or bool(fo.is_favorites)
+        k = fo.parent_key
+        if not k:
+            return cloud, fav
+    return True, fav
 
 
 def _fixed_quad_cortex(mods):

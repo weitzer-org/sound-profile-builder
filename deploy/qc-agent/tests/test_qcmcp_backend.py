@@ -412,6 +412,58 @@ class CapturesOverTheWire(Base):
         self.assertIn(("66 AC30 JMP OD", "My Captures", False, "1"), names)
 
 
+class DirectoryListing(Base):
+    def folder(self, typ, key, name, parent="", cloud=False, fav=False, plugin=False, files=()):
+        f = P.message_class("File")(action=P.ACTION["UPDATE"], type=typ)
+        f.folder.key, f.folder.name, f.folder.parent_key = key, name, parent
+        f.folder.is_cloud, f.folder.is_favorites, f.folder.is_plugin = cloud, fav, plugin
+        for n, k in files:
+            fi = f.folder.files.add()
+            fi.name, fi.key, fi.version = n, k, "1"
+        return f
+
+    def my_presets(self):
+        f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)
+        f.folder.key, f.folder.name = fake_hid.SETLIST, "My Presets"
+        for _ in range(256):
+            f.folder.files.add().name = ""
+        return f
+
+    def test_flags_are_inherited_from_parent_folders(self):
+        msgs = [self.my_presets(),
+                self.folder(2, "cloud", "Cortex Cloud", cloud=True),
+                self.folder(2, "sub", "Downloads 1", parent="cloud", files=[("Amp", "ab" * 32)]),
+                self.folder(2, "favs", "Favorites", fav=True),
+                self.folder(2, "favsub", "Fav amps", parent="favs", files=[("Amp", "cd" * 32)]),
+                self.folder(2, "plug", "Plugin", plugin=True, files=[("Amp", "ef" * 32)]),
+                self.folder(2, "loop", "Loop", parent="loop", files=[("Amp", "aa" * 32)]),
+                self.folder(2, "mine", "My Captures", files=[("Amp", "bb" * 32)])]
+        snap = qcmcp_backend.directory_snapshot(msgs)
+        flags = {e.folder_key: (e.is_cloud, e.is_favorites) for e in snap.captures}
+        self.assertEqual(flags, {"sub": (True, False), "favsub": (False, True), "plug": (True, False),
+                                 "loop": (True, False), "mine": (False, False)})
+
+    def test_stale_queued_folders_are_dropped(self):
+        self.dev.connect()
+        stale = self.my_presets()
+        stale.folder.files[3].name = "STALE"
+        self.dev._raw._pending.append((P.NAME_TO_CMD["File"], stale, b"", b"xx"))
+        snap = self.dev.read_directory()
+        self.assertEqual(snap.my_presets[3], "")
+
+    def test_an_unfinished_listing_is_refused(self):
+        self.dev.connect()
+        orig = self.hid._handle
+
+        def silent(name, m):
+            if name == "File" and m.action == P.ACTION["READ"]:
+                return None
+            return orig(name, m)
+        self.hid._handle = silent
+        with self.assertRaisesRegex(DeviceError, "did not finish"):
+            self.dev._call("list_directory_raw", timeout_ms=300, quiet_ms=100)
+
+
 class CaptureGuard(Base):
     def setUp(self):
         super().setUp()

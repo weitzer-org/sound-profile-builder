@@ -11,8 +11,10 @@ anything is written):
   favorites folders excluded. "CA John's" and "CA John's 2" are different captures.
 * The export's source must agree: a "factory" capture must be in a factory folder,
   a "user" capture must not be.
-* A name found only in cloud folders isn't a file on the unit; the bridge never
-  fetches captures.
+* A name found only in cloud (or plugin) folders isn't a file on the unit; the bridge
+  never fetches captures. A folder counts as cloud, favorites or plugin when it or any
+  folder above it (FolderInfo.parent_key) carries that flag: the flags' exact meaning on
+  CorOS 4.1 is unverified, so they are inherited rather than trusted per folder.
 * Exactly one key: the same key in several folders counts once; two keys with the
   same name is ambiguous.
 * The version picks the block (V1 -> 14000, V2 -> 14001). A factory capture's
@@ -44,8 +46,8 @@ class CaptureEntry:
     folder_key: str
     folder_name: str
     is_factory: bool
-    is_cloud: bool
-    is_favorites: bool
+    is_cloud: bool       # the folder or one above it is a cloud folder (or a plugin folder)
+    is_favorites: bool   # the folder or one above it is a favorites view
     version_field: str
 
 
@@ -130,14 +132,15 @@ def resolve_one(name: str, source: str, col: int, snap: DirectorySnapshot) -> Re
                              f"{other} capture. Nothing was written.")
     on_unit = [e for e in same if not e.is_cloud]
     if not on_unit:
-        raise CaptureRefused(f"Capture {q} is listed only as a Cortex Cloud item, not as a file on the unit. "
+        raise CaptureRefused(f"Capture {q} is listed only as a Cortex Cloud (or plugin) item, not as a file on the unit. "
                              "Download it to the unit in Cortex Control first; the bridge never fetches captures. "
                              "Nothing was written.")
     by_key: dict[str, list[CaptureEntry]] = {}
     for e in on_unit:
         by_key.setdefault(e.key.lower(), []).append(e)
     if len(by_key) > 1:
-        where = ", ".join(sorted({repr(text.clean(e.folder_name, 40)) for e in on_unit}))
+        folders = sorted({repr(text.clean(e.folder_name, 40)) for e in on_unit})
+        where = ", ".join(folders[:6]) + (" ..." if len(folders) > 6 else "")
         raise CaptureRefused(f"Capture {q} (column {col}) matches {len(by_key)} different captures on the unit "
                              f"(in {where}); the bridge won't guess which one. Nothing was written.")
     entries = next(iter(by_key.values()))
@@ -200,5 +203,7 @@ def deps_report(snap: DirectorySnapshot, pos: int, resolved: dict[int, ResolvedC
 def summary(resolved: dict[int, ResolvedCapture]) -> str:
     if not resolved:
         return ""
-    parts = [f"col {c} {text.clean(rc.name, 40)!r} V{rc.version} ({rc.source})" for c, rc in sorted(resolved.items())]
-    return " Captures: " + "; ".join(parts) + "."
+    items = sorted(resolved.items())
+    parts = [f"col {c} {text.clean(rc.name, 32)!r} V{rc.version} ({rc.source})" for c, rc in items[:4]]
+    more = f"; +{len(items) - 4} more" if len(items) > 4 else ""  # keeps the result message under its 500 chars
+    return " Captures: " + "; ".join(parts) + more + "."

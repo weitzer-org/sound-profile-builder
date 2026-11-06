@@ -319,6 +319,7 @@ class Additions(unittest.TestCase):
         self.refused(cap(category="Guitar Amplifier"), "category must be 'Neural Capture'")
         self.refused(cap(index_evidence="plain"), "index_evidence must be 'capture-block'")
         self.refused(cap(capture={"source": "cloud"}), "must be 'factory' or 'user'")
+        self.refused(cap(capture={"source": ["user"]}), "must be 'factory' or 'user'")
         self.refused(cap(capture={"resolved_on_unit": True}), "must be false")
         self.refused(cap(capture={"name": " CA John's"}), "printable ASCII")
         self.refused(cap(capture={"name": "x" * 65}), "printable ASCII")
