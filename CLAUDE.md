@@ -169,7 +169,7 @@ this app's MCP connector. Read these before any device work:
   the unit; device-XML skews, pyquadcortex bounds and qc-mcp's switch encoding are allowed but labelled, plan 4.1).
   **Scene layouts:** `Exporter.ExportLayout` / `devicejobs.SceneLayout` put one or two guitars (same blocks, same order) in one slot, each guitar's
   Scene A (rhythm) and B (lead) values on scenes of the caller's choice; `scene_sources` is `A,B` (first guitar) and `2A,2B` (second), unused scenes
-  are `-`: written at the control's device default with every block active, never copied from Scene A. The default layout (one guitar, A/B) is byte-identical to the original export. The Python validator checks
+  carry the first guitar's rhythm. The default layout (one guitar, A/B) is byte-identical to the original export. The Python validator checks
   "same source, same values" instead of a fixed pattern (`pushable_g3_layout` golden feeds both sides). Plugin models are reported unresolved in
   the dry run while the agent refuses them (`BridgePushesPlugins`).
   Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-guess`

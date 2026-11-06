@@ -39,16 +39,12 @@ const (
 	Scenes    = 8
 )
 
-// UnusedScene is the scene_sources token of a scene no tone is assigned to in a non-default layout:
-// it is written explicitly at the device default of every control, with every block active, and
-// copies nothing. (The default one-guitar A/B layout keeps its original C-H = Scene A.)
-const UnusedScene = "-"
-
 // sceneTokens says which preset value each of the device's eight scenes A-H gets: "A" and "B"
 // are the first guitar's Scene A (rhythm) and Scene B (lead) values, "2A" and "2B" the second
-// guitar's, and "-" a scene nobody uses. G6 measured that the device does not copy Scene A into
-// C-H (an unwritten scene keeps the parameter's earlier value), so every scene is written
-// explicitly. The default layout (one guitar on A and B) gives A, B, A, A, A, A, A, A.
+// guitar's. G6 measured that the device does not copy Scene A into C-H (an unwritten scene
+// keeps the parameter's earlier value), so every scene is written explicitly; a scene no tone
+// is assigned to takes the first guitar's rhythm value, "A". The default layout (one guitar on
+// A and B) gives A, B, A, A, A, A, A, A.
 func sceneTokens(l devicejobs.SceneLayout) [Scenes]string {
 	var out [Scenes]string
 	for s, so := range l.Sources() {
@@ -58,9 +54,6 @@ func sceneTokens(l devicejobs.SceneLayout) [Scenes]string {
 		}
 		if so.Guitar > 0 {
 			tok = fmt.Sprintf("%d%s", so.Guitar+1, tok)
-		}
-		if !l.IsDefault() && !l.Used(s) {
-			tok = UnusedScene
 		}
 		out[s] = tok
 	}
@@ -289,7 +282,7 @@ var _ devicejobs.LayoutExporter = (*Exporter)(nil)
 
 // ExportLayout builds the export for one or two guitars of a preset in one slot. Each guitar's
 // Scene A values go on its Rhythm scene and its Scene B values on its Lead scene; scenes
-// nobody takes are written at the device default with every block active. Two guitars must have the same blocks
+// nobody takes carry the first guitar's rhythm values. Two guitars must have the same blocks
 // in the same order (their parameter values may differ, and a control only one of them sets
 // is at the device default for the other). With the default layout the result is exactly
 // Export's.
