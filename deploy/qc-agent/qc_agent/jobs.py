@@ -729,6 +729,9 @@ class _Push:
                               "the partial grid.", firmware=self.fw, push=self.result)
             self.ctx.sleep(CAPTURE_SETTLE_S)
         elif not self.op(dev.add_block, plan.row, b.col, b.model_id):
+            log.warning("add_block not echoed by the unit: model %s (id %s) at row %s column %s (the unit has %s "
+                        "to answer; placed so far: %s)", text.clean(b.model, 60), b.model_id, plan.row, b.col,
+                        "0.8 s", ", ".join(f"col {x.col}" for x in plan.blocks if x.col < b.col) or "none")
             return failed("device_error", f"The unit did not confirm placing {b.model} in column {b.col}. "
                           "Nothing was saved; re-select the slot on the unit to discard the partial grid.",
                           firmware=self.fw, push=self.result)
