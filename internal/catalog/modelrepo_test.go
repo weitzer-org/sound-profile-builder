@@ -243,10 +243,23 @@ func TestParseModelRepoSkewAndParamCount(t *testing.T) {
 			t.Errorf("%s skew = %v, want %v", p.Name, p.Skew, want[i])
 		}
 	}
-	// A cloned model's count is the base list plus appended params.
+	wantSym := []string{"", "LIN_SKEW", "LOG_SKEW", ""}
+	for i, p := range m.Params {
+		if p.SkewSymbol != wantSym[i] {
+			t.Errorf("%s skew_symbol = %q, want %q", p.Name, p.SkewSymbol, wantSym[i])
+		}
+	}
+	// A cloned model's count is the base list plus appended params, and it records its base.
 	cl := parseFixture(t)
-	if r, _ := cl.Lookup("Cloned Reverb"); r.ParamCount != 3 {
+	r, _ := cl.Lookup("Cloned Reverb")
+	if r.ParamCount != 3 {
 		t.Errorf("Cloned Reverb ParamCount = %d, want 3 (base 2 + 1 appended)", r.ParamCount)
+	}
+	if r.Clones != 8015 {
+		t.Errorf("Cloned Reverb Clones = %d, want 8015", r.Clones)
+	}
+	if a, _ := cl.Lookup("Test Amp"); a.Clones != 0 {
+		t.Errorf("Test Amp Clones = %d, want 0", a.Clones)
 	}
 }
 

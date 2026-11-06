@@ -152,6 +152,7 @@ func (s *Server) routes() {
 	s.mux.Handle("/api/preset/copy_ui", s.authMiddleware(s.handleCopyPresetUI()))
 	s.mux.Handle("/api/preset/copy", s.authMiddleware(s.handleCopyPreset()))
 	s.mux.Handle("/api/preset/view", s.authMiddleware(s.handleViewPreset()))
+	s.mux.Handle("/api/preset/device_export", s.authMiddleware(s.handleDeviceExport()))
 	s.mux.Handle("/api/preset/chat", s.authMiddleware(llmRateLimit(s.handleChatPreset())))
 	s.mux.Handle("/api/preset/rename", s.authMiddleware(s.handleRenamePreset()))
 	s.mux.Handle("/api/preset/update_parameter", s.authMiddleware(s.handleUpdateParameter()))

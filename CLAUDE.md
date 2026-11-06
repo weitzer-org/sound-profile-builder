@@ -154,6 +154,12 @@ this app's MCP connector. Read these before any device work:
 - `docs/design/qc-device-bridge-plan.md` — the design and phased plan (Phase 0 hardware gates, P1–P6), the MCP
   tool inventory, which model does what, and the kickoff prompt for each implementation chat (section 11).
 - `tools/qc-mcp-trial/` — the allowlist proxy and Windows walkthrough used to trial qc-mcp on the owner's unit.
+- `internal/deviceexport` — the device export (plan P2, section 4): one guitar's chain to `qc2-device-export/1` (model ids,
+  param indexes, all eight scene values and bypass flags, row 0). Pure and deterministic; it refuses rather than guesses,
+  and only converts where the unit confirmed the mapping (`catalog.ConfirmedSkews`, `VerifiedCloneBases`, bound evidence
+  in `firmware_constants.go`); add an entry there only with a section 7 measurement. `send_preset_to_device`,
+  `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
+  `go test ./internal/deviceexport -run Golden -update` (rerun after any catalog re-import: the header carries its hash).
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing
   a vector, tag, field or check step is a contract change for both sides.
@@ -187,8 +193,8 @@ See `.env.example`.
 - **Device tools** (`internal/mcpserver/devicetools.go` over `internal/devicejobs`) are registered only when
   `DEVICE_JOBS_BUCKET` and `DEVICE_JOB_KEY` are set (a bad value logs and leaves them off; the jobs bucket must differ
   from the main one). Without them the server has exactly the 9 tools the existing tests pin. Everything read back
-  from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path refuses until P2's
-  exporter replaces `devicejobs.UnavailableExporter` in `cmd/server/main.go`.
+  from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path uses P2's
+  `internal/deviceexport` (`cmd/server/main.go`); `get_preset(format=device)` works without the device tools.
 - `qc://style/preset-display` (`internal/mcpserver/style/preset-display.md`, <=40 lines) is the chat presentation
   guide; the server `instructions` summarise it. If you change `RenderPresetMarkdown`'s columns, update the guide
   and `testdata/preset.golden.md` (`go test ./internal/mcpserver -run Golden -update`).

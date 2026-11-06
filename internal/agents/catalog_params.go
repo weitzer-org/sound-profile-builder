@@ -108,41 +108,12 @@ func (b *deviceBlock) labels() []string {
 	return out
 }
 
-// internalParamNames are catalog parameters that aren't user controls: the per-slot
-// bypass/phase switches and the IR file index. Lower-case in the device's own XML.
-var internalParamNames = map[string]bool{"bypass": true, "phi": true, "ir selector": true}
+// paramNameKey, isInternalParam and unitDimension are internal/catalog's shared helpers
+// (catalog/labels.go), so the labels the Architect sees are the ones the device export
+// resolves.
+func paramNameKey(name string) string { return catalog.ParamNameKey(name) }
 
-// internalParamTypes are read-only meters and placeholders.
-var internalParamTypes = map[string]bool{"string": true, "grMeter": true, "empty": true}
-
-func isInternalParam(p catalog.Param) bool {
-	return internalParamTypes[p.Type] || internalParamNames[p.Name]
-}
-
-var interLetterHyphen = regexp.MustCompile(`([A-Z])-([A-Z])`)
-
-// paramNameKey normalizes a parameter name for comparison: upper case, a hyphen between
-// two letters dropped ("PRE-DELAY" = "PRE DELAY"), spaces and underscores dropped ("65 Hz"
-// = "65Hz"). Other punctuation is kept, so "OCT +1" and "OCT -1" stay distinct.
-// TestParamNameKeyHasNoCollisions checks that no two parameters of one model share a key.
-func paramNameKey(name string) string {
-	s := strings.ToUpper(strings.TrimSpace(name))
-	s = interLetterHyphen.ReplaceAllString(s, "$1$2")
-	return paramKeyStripper.Replace(s)
-}
-
-// paramKeyStripper drops the separators paramNameKey ignores. Built once: a Replacer
-// compiles its lookup table at construction.
-var paramKeyStripper = strings.NewReplacer(" ", "", "_", "", "\t", "")
-
-// slotPrefix is how a repeated per-slot parameter is labelled: "MIC 1 LEVEL" on cabs,
-// "IR 1 LEVEL" on dual IR loaders.
-func slotPrefix(category string) string {
-	if category == "IRLoaders" {
-		return "IR"
-	}
-	return "MIC"
-}
+func unitDimension(u string) (string, float64, bool) { return catalog.UnitDimension(u) }
 
 func normalizeUnits(u string) string {
 	u = strings.TrimSpace(u)
@@ -164,25 +135,10 @@ func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 				b.Plugin = plugin
 			}
 		}
-		total := map[string]int{}
-		for _, p := range m.Params {
-			if !isInternalParam(p) {
-				total[p.Name]++
-			}
-		}
-		seen := map[string]int{}
 		inModel := map[string]bool{}
-		for _, p := range m.Params {
-			if isInternalParam(p) {
-				continue
-			}
-			seen[p.Name]++
-			label := p.Name
-			if total[p.Name] > 1 {
-				label = fmt.Sprintf("%s %d %s", slotPrefix(m.Category), seen[p.Name], p.Name)
-			}
-			b.merge(label, p)
-			inModel[paramNameKey(label)] = true
+		for _, lp := range catalog.LabelParams(m) {
+			b.merge(lp.Label, lp.Param)
+			inModel[lp.Key] = true
 		}
 		for k := range inModel {
 			modelsWith[k]++
@@ -207,7 +163,7 @@ func (b *deviceBlock) merge(label string, p catalog.Param) {
 			Min: p.Min, Max: p.Max, Default: p.Default, StepNames: steps,
 			MinOff: strings.EqualFold(p.MinLabel, "OFF"), MaxOff: strings.EqualFold(p.MaxLabel, "OFF"),
 			Pan:    isPanLabel(p.MinLabel) || isPanLabel(p.MaxLabel),
-			Switch: discreteParamTypes[p.Type],
+			Switch: catalog.DiscreteParamTypes[p.Type],
 		}
 		b.byKey[key] = dp
 		b.Params = append(b.Params, dp)
@@ -235,9 +191,6 @@ func (b *deviceBlock) merge(label string, p catalog.Param) {
 	dp.MaxOff = dp.MaxOff || strings.EqualFold(p.MaxLabel, "OFF")
 	dp.Pan = dp.Pan || isPanLabel(p.MinLabel) || isPanLabel(p.MaxLabel)
 }
-
-// discreteParamTypes are the catalog parameter types with discrete positions.
-var discreteParamTypes = map[string]bool{"switch": true, "rotarySwitch": true, "toggleButton": true, "comboBox": true}
 
 func isPanLabel(s string) bool { return s == "L" || s == "R" }
 
@@ -660,21 +613,13 @@ const deviceCheckPrefix = "⚠️ Device check: "
 // block and the global EQ. Compared lower-cased.
 var deviceElementNames = map[string]bool{"input gate": true, "input": true, "output": true, "global eq": true}
 
-// paramNameAliases are spellings the Architect uses for a control the device names
-// differently. An alias only applies when its target exists on that model.
-var paramNameAliases = map[string][]string{
-	"TIME":    {"DELAYTIME"},
-	"LOWCUT":  {"HPF", "HIGHPASS", "HIPASS", "HPFFREQ"},
-	"HIGHCUT": {"LPF", "LOWPASS", "LPFFREQ"},
-}
-
 // lookupParam finds the device parameter a written name refers to.
 func (b *deviceBlock) lookupParam(written string) (*deviceParam, bool) {
 	key := paramNameKey(written)
 	if p, ok := b.byKey[key]; ok {
 		return p, true
 	}
-	for _, alias := range paramNameAliases[key] {
+	for _, alias := range catalog.ParamNameAliases[key] {
 		if p, ok := b.byKey[alias]; ok {
 			return p, true
 		}
@@ -684,26 +629,6 @@ func (b *deviceBlock) lookupParam(written string) (*deviceParam, bool) {
 
 // valuePattern is a single number with an optional unit: "5", "-6.5 dB", "250ms", "18 %".
 var valuePattern = regexp.MustCompile(`^\s*([+-]?\d+(?:\.\d+)?)\s*([A-Za-z%]*)\s*$`)
-
-// unitDimension maps a written or catalog unit to its dimension and the factor to its base
-// unit (Hz, s), so "0.25 s" compares with a "ms" range. Unknown units return ok=false.
-func unitDimension(u string) (dim string, factor float64, ok bool) {
-	switch strings.ToLower(strings.TrimSpace(u)) {
-	case "db":
-		return "level", 1, true
-	case "hz":
-		return "frequency", 1, true
-	case "khz":
-		return "frequency", 1000, true
-	case "ms":
-		return "time", 0.001, true
-	case "s", "sec", "secs", "seconds":
-		return "time", 1, true
-	case "%":
-		return "percent", 1, true
-	}
-	return "", 0, false
-}
 
 // FlagCatalogParamMismatches checks every block whose model resolves in the device catalog
 // against that model's real parameters, appends a "⚠️ Device check:" note to the block's

@@ -838,7 +838,15 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 			}
 		</script>
 	`
-	matrixContainerHtml := tabsHtml + contentHtml + tabScript
+	deviceLinksHtml := ""
+	if !isCopyMode && len(structured.Guitars) > 0 {
+		names := make([]string, 0, len(structured.Guitars))
+		for g := range structured.Guitars {
+			names = append(names, g)
+		}
+		deviceLinksHtml = deviceExportLinksHTML(p.ID, names)
+	}
+	matrixContainerHtml := deviceLinksHtml + tabsHtml + contentHtml + tabScript
 
 	refinementSummaryHtml := ""
 	if len(p.ChatHistory) > 0 {

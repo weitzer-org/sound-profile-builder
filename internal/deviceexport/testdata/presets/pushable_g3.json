@@ -1,0 +1,29 @@
+{
+ "guitars": {
+  "Gibson ES-339 Humbuckers": [
+   {"id": "b1", "type": "Overdrive", "model": "Myth Drive", "parameters": [
+     {"name": "Gain", "type": "slider", "value": "2", "value_b": "8", "basis": "engineering_convention"},
+     {"name": "Treble", "type": "slider", "value": "5.5*", "basis": "estimate"},
+     {"name": "Level", "type": "slider", "value": "6", "basis": "estimate"}],
+    "kept_defaults": []},
+   {"id": "b2", "type": "Amplifier", "model": "Brit 2203", "parameters": [
+     {"name": "Gain", "type": "slider", "value": "4.5", "value_b": "6", "basis": "real_gear_analog"},
+     {"name": "Master", "type": "slider", "value": "3", "basis": "real_gear_analog"},
+     {"name": "Output", "type": "slider", "value": "-10 dB", "basis": "estimate"}],
+    "kept_defaults": ["BASS", "MID", "TREBLE", "PRESENCE"]},
+   {"id": "b3", "type": "Cab", "model": "110 US PRN C10R", "parameters": [
+     {"name": "Mic 1 Level", "type": "slider", "value": "0 dB", "basis": "estimate"},
+     {"name": "Mic 2 Level", "type": "slider", "value": "-21.8", "unit": "dB", "basis": "estimate"},
+     {"name": "Mic 1 Pan", "type": "slider", "value": "Center", "basis": "engineering_convention"},
+     {"name": "HPF", "type": "slider", "value": "80 Hz", "basis": "engineering_convention"},
+     {"name": "LPF", "type": "slider", "value": "8 kHz", "basis": "engineering_convention"}]},
+   {"id": "b4", "type": "EQ", "model": "Low-High Cut", "parameters": [
+     {"name": "HPF Freq", "type": "slider", "value": "217 Hz", "basis": "estimate"},
+     {"name": "HPF Slope", "type": "dropdown", "value": "-12", "basis": "estimate"}]},
+   {"id": "b5", "type": "Reverb", "model": "Spring", "parameters": [
+     {"name": "Mix", "type": "slider", "value": "35%", "value_b": "20%", "basis": "estimate"},
+     {"name": "Trails", "type": "toggle", "value": "On", "basis": "estimate"},
+     {"name": "Bypass", "type": "toggle", "value": "Off", "value_b": "On", "basis": "engineering_convention"}]}
+  ]
+ }
+}

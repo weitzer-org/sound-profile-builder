@@ -44,6 +44,9 @@ type PlanBlock struct {
 	Params  []PlanParam `json:"params"`
 	BypassA bool        `json:"bypass_a"`
 	BypassB bool        `json:"bypass_b"`
+	// AtDefault names controls the preset sets to the device default, which are
+	// therefore not written.
+	AtDefault []string `json:"at_default,omitempty"`
 }
 
 // PlanParam is one parameter write: display values for Scenes A and B.

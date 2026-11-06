@@ -1,0 +1,818 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "25ba3bee3fb3f089bdcf37c483267796a8125be6b297f83b61579be25f66cbea",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "Jewel",
+   "model_id": 5011,
+   "params": [
+    {
+     "name": "COMP",
+     "a": "3.5"
+    },
+    {
+     "name": "EQ",
+     "a": "6"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "model": "Rage Booster",
+   "model_id": 21,
+   "params": [
+    {
+     "name": "VOLUME",
+     "a": "5",
+     "b": "7"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 2,
+   "model": "Brit Blues",
+   "model_id": 9,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "3.5",
+     "b": "4.5"
+    },
+    {
+     "name": "TONE",
+     "a": "5.5",
+     "b": "6"
+    },
+    {
+     "name": "VOLUME",
+     "a": "6",
+     "b": "6.5"
+    }
+   ],
+   "bypass_a": true,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 4,
+   "model": "212 UK C30 65 (M)",
+   "model_id": 12024,
+   "params": [
+    {
+     "name": "MIC 1 DISTANCE",
+     "a": "2"
+    },
+    {
+     "name": "MIC 1 POSITION",
+     "a": "3.5"
+    },
+    {
+     "name": "MIC 2 LEVEL",
+     "a": "-5.4 dB"
+    },
+    {
+     "name": "MIC 2 DISTANCE",
+     "a": "4.5"
+    },
+    {
+     "name": "MIC 2 POSITION",
+     "a": "6"
+    },
+    {
+     "name": "HPF",
+     "a": "95 Hz"
+    },
+    {
+     "name": "LPF",
+     "a": "7200 Hz"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "at_default": [
+    "MIC 1 LEVEL"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 5,
+   "model": "Circular Delay",
+   "model_id": 6015,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "15 %",
+     "b": "22 %"
+    },
+    {
+     "name": "DELAY TIME",
+     "a": "95 ms"
+    },
+    {
+     "name": "FEEDBACK",
+     "a": "10 %",
+     "b": "18 %"
+    }
+   ],
+   "bypass_a": true,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 6,
+   "model": "Studio Plate 70 (ST)",
+   "model_id": 8029,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "18 %",
+     "b": "25 %"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  }
+ ],
+ "unresolved": [
+  {
+   "block": "#4 66 AC30 JMP OD",
+   "reason": "captures and IRs are not pushed in v1"
+  },
+  {
+   "block": "#5 212 UK C30 65",
+   "param": "Mic 1",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#5 212 UK C30 65",
+   "param": "Mic 2",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#6 Circular Delay",
+   "param": "SYNC",
+   "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
+  },
+  {
+   "block": "#6 Circular Delay",
+   "param": "HIGH PASS",
+   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  },
+  {
+   "block": "#6 Circular Delay",
+   "param": "LOW PASS",
+   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  },
+  {
+   "block": "#6 Circular Delay",
+   "param": "VINTAGE MODE",
+   "reason": "switch positions have no measured wire mapping; only the default (OFF) can be taken"
+  },
+  {
+   "block": "#7 Studio Plate 70 (ST)",
+   "param": "DECAY",
+   "reason": "taper skew 0.227670248697 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  },
+  {
+   "block": "#7 Studio Plate 70 (ST)",
+   "param": "PRE DELAY",
+   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  }
+ ],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+  },
+  "guitar": "Gibson ES-339 Humbuckers",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 5011,
+      "model": "Jewel",
+      "category": "Compressor",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "COMP",
+        "scene_mode": false,
+        "display": [
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5
+        ],
+        "wire": [
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35
+        ]
+       },
+       {
+        "index": 1,
+        "label": "EQ",
+        "scene_mode": false,
+        "display": [
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 1,
+      "model_id": 21,
+      "model": "Rage Booster",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "VOLUME",
+        "scene_mode": true,
+        "display": [
+         5,
+         7,
+         5,
+         5,
+         5,
+         5,
+         5,
+         5
+        ],
+        "wire": [
+         0.5,
+         0.7,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 2,
+      "model_id": 9,
+      "model": "Brit Blues",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "bypass": [
+       true,
+       false,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "scene_mode": true,
+        "display": [
+         3.5,
+         4.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5
+        ],
+        "wire": [
+         0.35,
+         0.45,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35
+        ]
+       },
+       {
+        "index": 1,
+        "label": "TONE",
+        "scene_mode": true,
+        "display": [
+         5.5,
+         6,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5
+        ],
+        "wire": [
+         0.55,
+         0.6,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55
+        ]
+       },
+       {
+        "index": 2,
+        "label": "VOLUME",
+        "scene_mode": true,
+        "display": [
+         6,
+         6.5,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.65,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 4,
+      "model_id": 12024,
+      "model": "212 UK C30 65 (M)",
+      "category": "Cabsim Guitar (M)",
+      "index_evidence": "clone-12000-g1",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 4,
+        "label": "MIC 1 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         2,
+         2,
+         2,
+         2,
+         2,
+         2,
+         2,
+         2
+        ],
+        "wire": [
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2,
+         0.2
+        ]
+       },
+       {
+        "index": 5,
+        "label": "MIC 1 POSITION",
+        "scene_mode": false,
+        "display": [
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5
+        ],
+        "wire": [
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35
+        ]
+       },
+       {
+        "index": 10,
+        "label": "MIC 2 LEVEL",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -5.4,
+         -5.4,
+         -5.4,
+         -5.4,
+         -5.4,
+         -5.4,
+         -5.4,
+         -5.4
+        ],
+        "wire": [
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844,
+         0.24355798655558844
+        ]
+       },
+       {
+        "index": 12,
+        "label": "MIC 2 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5
+        ],
+        "wire": [
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45
+        ]
+       },
+       {
+        "index": 13,
+        "label": "MIC 2 POSITION",
+        "scene_mode": false,
+        "display": [
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ]
+       },
+       {
+        "index": 16,
+        "label": "HPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95
+        ],
+        "wire": [
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082
+        ]
+       },
+       {
+        "index": 17,
+        "label": "LPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         7200,
+         7200,
+         7200,
+         7200,
+         7200,
+         7200,
+         7200,
+         7200
+        ],
+        "wire": [
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958,
+         0.7257918002854958
+        ]
+       }
+      ],
+      "at_default": [
+       "MIC 1 LEVEL"
+      ]
+     },
+     {
+      "col": 5,
+      "model_id": 6015,
+      "model": "Circular Delay",
+      "category": "Delay",
+      "index_evidence": "plain",
+      "bypass": [
+       true,
+       false,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         15,
+         22,
+         15,
+         15,
+         15,
+         15,
+         15,
+         15
+        ],
+        "wire": [
+         0.15,
+         0.22,
+         0.15,
+         0.15,
+         0.15,
+         0.15,
+         0.15,
+         0.15
+        ]
+       },
+       {
+        "index": 4,
+        "label": "DELAY TIME",
+        "units": "ms",
+        "scene_mode": false,
+        "display": [
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95
+        ],
+        "wire": [
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647,
+         0.03446528129751647
+        ]
+       },
+       {
+        "index": 5,
+        "label": "FEEDBACK",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         10,
+         18,
+         10,
+         10,
+         10,
+         10,
+         10,
+         10
+        ],
+        "wire": [
+         0.10526315789473684,
+         0.18947368421052632,
+         0.10526315789473684,
+         0.10526315789473684,
+         0.10526315789473684,
+         0.10526315789473684,
+         0.10526315789473684,
+         0.10526315789473684
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 6,
+      "model_id": 8029,
+      "model": "Studio Plate 70 (ST)",
+      "category": "Reverb",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         18,
+         25,
+         18,
+         18,
+         18,
+         18,
+         18,
+         18
+        ],
+        "wire": [
+         0.18,
+         0.25,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18
+        ]
+       }
+      ],
+      "at_default": []
+     }
+    ]
+   }
+  ],
+  "unresolved": [
+   {
+    "block": "#4 66 AC30 JMP OD",
+    "reason": "captures and IRs are not pushed in v1"
+   },
+   {
+    "block": "#5 212 UK C30 65",
+    "param": "Mic 1",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#5 212 UK C30 65",
+    "param": "Mic 2",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#6 Circular Delay",
+    "param": "SYNC",
+    "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
+   },
+   {
+    "block": "#6 Circular Delay",
+    "param": "HIGH PASS",
+    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   },
+   {
+    "block": "#6 Circular Delay",
+    "param": "LOW PASS",
+    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   },
+   {
+    "block": "#6 Circular Delay",
+    "param": "VINTAGE MODE",
+    "reason": "switch positions have no measured wire mapping; only the default (OFF) can be taken"
+   },
+   {
+    "block": "#7 Studio Plate 70 (ST)",
+    "param": "DECAY",
+    "reason": "taper skew 0.227670248697 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   },
+   {
+    "block": "#7 Studio Plate 70 (ST)",
+    "param": "PRE DELAY",
+    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   }
+  ]
+ }
+}

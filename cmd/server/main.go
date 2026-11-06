@@ -149,14 +149,24 @@ func main() {
 	// Quad Cortex device tools (docs/design/device-job-contract.md) are added
 	// only when DEVICE_JOBS_BUCKET and DEVICE_JOB_KEY are set. A bad device
 	// config disables those tools and is logged; it never stops the app.
+	//
+	// The device export (plan P2) is pure and needs no bridge: get_preset
+	// (format=device) and the UI's download link use it even when the device
+	// tools are off. One exporter serves all three, so a dry run, a push and a
+	// download describe the same operations.
 	var mcpOpts []mcpserver.Option
+	var exporter devicejobs.Exporter = devicejobs.UnavailableExporter{}
+	if exp, err := server.DeviceExporter(); err != nil {
+		log.Printf("Device export unavailable: %v", err)
+	} else {
+		exporter = exp
+		mcpOpts = append(mcpOpts, mcpserver.WithExporter(exp))
+	}
 	switch dcfg, err := devicejobs.ConfigFromEnv(bucket); {
 	case err != nil:
 		log.Printf("Device tools disabled: %v", err)
 	case dcfg != nil:
-		// The device export (plan P2) isn't built yet: pushes are refused with
-		// a clear message until it replaces UnavailableExporter here.
-		bridge := devicejobs.NewBridge(storeClient, dcfg, devicejobs.UnavailableExporter{})
+		bridge := devicejobs.NewBridge(storeClient, dcfg, exporter)
 		mcpOpts = append(mcpOpts, mcpserver.WithDevice(bridge))
 		log.Println("Device tools enabled (jobs bucket configured)")
 	}

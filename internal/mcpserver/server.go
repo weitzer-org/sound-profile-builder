@@ -26,7 +26,14 @@ const instructions = "QC-2 Modeler: design, refine, read and name Quad Cortex pr
 type Option func(*options)
 
 type options struct {
-	device *devicejobs.Bridge
+	device   *devicejobs.Bridge
+	exporter devicejobs.Exporter
+}
+
+// WithExporter enables get_preset(format=device) with the device export (plan P2).
+// It is independent of WithDevice: the export is pure, so it works without a bridge.
+func WithExporter(e devicejobs.Exporter) Option {
+	return func(o *options) { o.exporter = e }
 }
 
 // WithDevice enables the Quad Cortex device tools (device_status,
@@ -49,7 +56,7 @@ func NewServer(svc *presetsvc.Service, opts ...Option) *mcp.Server {
 	}
 	s := mcp.NewServer(&mcp.Implementation{Name: "qc2-modeler", Title: "QC-2 Modeler", Version: "0.1.0"},
 		&mcp.ServerOptions{Instructions: instr})
-	registerTools(s, svc)
+	registerTools(s, svc, o.exporter)
 	if o.device != nil {
 		registerDeviceTools(s, svc, o.device)
 	}
