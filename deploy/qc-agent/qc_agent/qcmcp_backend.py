@@ -66,7 +66,7 @@ from pathlib import Path
 
 from . import text
 from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
-from .captures import CaptureEntry, DirectorySnapshot, factory_version_of
+from .captures import CaptureEntry, DirectorySnapshot, factory_version_of, version_of
 from .device import (SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, PartialListing, Presence,
                      UnitAbsent, UnitBusy)
 from .export_validator import CAPTURE_BLOCK_IDS
@@ -1103,7 +1103,6 @@ def _log_census(snap):
                  f"V{r['v']}" if r["v"] else "no V1/V2 folder")
     if len(rows) > MAX_CENSUS_LINES:
         log.info("capture census: %d more folders not shown", len(rows) - MAX_CENSUS_LINES)
-    from .captures import version_of
     count = {}
     for e in snap.captures:
         k = ("factory" if e.is_factory else "user", version_of(e))

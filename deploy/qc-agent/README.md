@@ -277,6 +277,13 @@ them; this guide uses **24H**).
     verified" now says which cause (re-read timed out / values or bypass flags differ / footswitch assignments differ),
     and `agent.log` has `pre-save re-read: ...` lines with the first differences.
 
+19. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
+    From the phone run `sync_device_library`, then paste from `agent.log` every line starting `capture skip census`
+    and `capture skip sample` (per folder: how many files are kept and how many are left out for each reason:
+    favorites / name length / name not printable ASCII / name changed by clean-up / key not 64 hex), plus the
+    `capture census:` summary line. The samples show lengths and character classes only, no names or keys. Nothing about
+    what is synced changes in this step; the fix follows once the lines show why the factory files are left out.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.
