@@ -145,11 +145,19 @@ class Session(Base):
         from qc_agent.vendor_pins import verified_bytes
         win = verified_bytes("qc_mcp/winhid.py", VENDOR_DIR).decode()
         tr = verified_bytes("qc_mcp/transport.py", VENDOR_DIR).decode()
-        self.assertIn("self._thread = threading.Thread(", win)
+        self.assertIn("self._thread = threading.Thread(target=self._reader", win)
         self.assertIn("self.write_errors += 1", tr)
+        # the real vendored classes, not the fakes (WinHIDTransport builds without opening hid.dll)
+        mods = qcmcp_backend.load_vendored()
+        self.assertIn("_thread", vars(mods["winhid"].WinHIDTransport()))
+        self.assertEqual(vars(mods["transport"].QuadCortex(io=fake_hid.FakeHID()))["write_errors"], 0)
+
+    def test_a_missing_reader_thread_fails_closed(self):
+        # a re-vendoring that renamed _thread (or a transport closed under us) must read as gone, not alive
         self.dev.connect()
-        self.assertTrue(hasattr(self.dev._raw.io.inner, "_thread"))  # what the watchdog actually reads
-        self.assertIsInstance(self.dev._raw.write_errors, int)
+        del self.hid._thread
+        self.assertFalse(self.dev._watchdog_sample())
+        self.assertFalse(self.dev.alive())
 
     def test_a_stale_verdict_counts_as_gone(self):
         import time

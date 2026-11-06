@@ -746,9 +746,12 @@ class QcMcpBackend(DeviceBackend):
         """The one place that reads the vendored transport's private state: WinHIDTransport._thread, its
         HID reader (qc.io is our WireGuard; .inner is the transport). Upstream has no public liveness API
         at f634ecd, and the vendored files can't change without a re-vendoring PR; a test pins this
-        attribute in the vendored source so such a PR can't drop it silently."""
+        attribute in the vendored source. Fails closed: while a session is open the transport always has
+        a reader thread (WinHIDTransport sets _thread to None only in close(), which runs after the
+        watchdog stops), so a missing one means a renamed attribute or an unexpected close, and both
+        count as gone rather than letting the check be skipped."""
         thread = getattr(getattr(qc.io, "inner", None), "_thread", None)
-        return thread is not None and not thread.is_alive()
+        return thread is None or not thread.is_alive()
 
     def _watchdog_sample(self):
         """One liveness sample, from attributes only: it never calls into the transport, so it can't
