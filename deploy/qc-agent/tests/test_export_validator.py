@@ -326,6 +326,14 @@ class Additions(unittest.TestCase):
         self.refused(cap(capture={"name": "CA\nJohn's"}), "printable ASCII")
         self.refused(cap(model="CA Johns"), "model must equal capture.name")
         self.refused(cap(capture={"key": "ab"}), "has keys")
+        # `unresolved` and `warnings` are payload keys, checked once for every block kind before the
+        # rows: a block (capture or not) can't carry them, and a capture export with unresolved items
+        # is refused like any other
+        self.refused(cap(unresolved=[{"block": "x", "reason": "y"}]), "block 0 has keys")
+        self.refused(cap(warnings=[{"block": "x", "reason": "y"}]), "block 0 has keys")
+        e = cap()
+        e["payload"]["unresolved"] = [{"block": "#1 CA John's", "reason": "not on the unit"}]
+        self.refused(e, "1 unresolved item(s); a push needs zero")
         # only the capture block's own controls: index 5 (file_name) and anything unlisted are refused
         self.refused(cap(params=[gain | {"index": 5, "label": "file_name"}]), "not a listed parameter")
         self.refused(cap(params=[gain | {"label": "VOLUME"}]), "in the catalog, not")
