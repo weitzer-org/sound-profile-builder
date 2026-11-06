@@ -85,7 +85,12 @@ def _append(path: Path, obj: dict, torn_tail: bool = False) -> None:
                     lead, torn_tail = b"\n", True
         if torn_tail:
             data = lead + TORN_TEXT + b"\n" + data
-        os.write(fd, data)
+        view = memoryview(data)
+        while view:  # os.write may write only part of the buffer (a signal, a full disk)
+            n = os.write(fd, view)
+            if n <= 0:
+                raise OSError(f"{path}: write made no progress")
+            view = view[n:]
         os.fsync(fd)
     finally:
         os.close(fd)

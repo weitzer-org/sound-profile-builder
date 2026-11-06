@@ -635,6 +635,22 @@ class Recovery(Base):
             self.make_agent()
 
 
+class ShortWrites(unittest.TestCase):
+    def test_partial_os_writes_still_append_whole_lines(self):
+        from unittest import mock
+        from qc_agent import ledger as ledger_mod
+        real = ledger_mod.os.write
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(ledger_mod.os, "write", side_effect=lambda fd, b: real(fd, bytes(b)[:7])):
+            path = Path(d) / "executed_jobs.jsonl"
+            led = ledger_mod.JobLedger(path)
+            led.take("job-1", "list_slots", "2026-11-06T00:00:00Z")
+            led.finish("job-1", "2026-11-06T00:00:01Z", b"result-envelope")
+            again = ledger_mod.JobLedger(path)
+        self.assertTrue(again.contains("job-1"))
+        self.assertEqual(again.finished["job-1"]["result"], "result-envelope")
+
+
 class HeartbeatAndExit(Base):
     def hb(self):
         data = self.store.objects[contract.HEARTBEAT_KEY]
