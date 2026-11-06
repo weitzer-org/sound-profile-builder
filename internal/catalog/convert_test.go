@@ -274,6 +274,8 @@ func TestFaderConvertsLikeAFloat(t *testing.T) {
 	for _, d := range []float64{-12.0001, 12.0001, math.NaN(), math.Inf(1)} {
 		if v, err := db.ToWire(d); err == nil {
 			t.Errorf("ToWire(%v) = %v, want a refusal (never clamped)", d, v)
+		} else if !strings.Contains(err.Error(), "outside") && !strings.Contains(err.Error(), "finite") {
+			t.Errorf("ToWire(%v): want an out-of-range or not-finite error, got %v", d, err)
 		}
 	}
 	// A fader that did carry a skew would use it, as qc-mcp's to_norm does for any parameter.
