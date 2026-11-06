@@ -153,7 +153,7 @@ class Push(Base):
         self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
         p = r["push"]
         self.assertEqual((p["slot"], p["name"], p["mismatches"], p["listed"]), ("20A", "Texas Blues", 0, True))
-        self.assertTrue(all(d["ok"] for d in p["diff"]))
+        self.assertEqual([d for d in p["diff"] if not d["ok"]], [])
         self.assertIn("Scene labels are not written", r["message"])
         names = [c[0] for c in self.dev.calls]
         # order: checks before any write; save last

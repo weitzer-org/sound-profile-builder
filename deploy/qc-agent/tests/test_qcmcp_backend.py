@@ -124,7 +124,7 @@ class PushOverTheWire(Base):
         self.assertNotIn(("SetlistPosition", A["UPDATE"]), sent)       # never recall
         self.assertNotIn(("Grid", A["DELETE"]), sent)                  # never delete_block / clear_grid
         for name in ("IOSettings", "GlobalEQ", "MasterVolume", "Mode", "ModelPreset"):
-            self.assertFalse([1 for n, a in sent if n == name and a != A["READ"]], name)
+            self.assertEqual([(n, a) for n, a in sent if n == name and a != A["READ"]], [], name)
         creates = [o for n, o in self.hid.received if n == "File" and o.action == A["CREATE"]]
         self.assertEqual(len(creates), 1)
         self.assertEqual((creates[0].folder.key, creates[0].folder.files[0].index, creates[0].folder.files[0].name),
@@ -173,8 +173,8 @@ class StrictPosition(Base):
         out = jobs.run(self.ctx(), json.loads(contract.open_envelope(config().keys, contract.TAG_JOB, data)))
         self.assertNotEqual(out.status, "succeeded")
         A = P.ACTION
-        self.assertFalse([1 for n, o in self.hid.received if n in ("Grid", "File") and o.action != A["READ"]],
-                         "nothing may be written when the open slot can't be read reliably")
+        self.assertEqual([(n, o.action) for n, o in self.hid.received if n in ("Grid", "File") and o.action != A["READ"]],
+                         [], "nothing may be written when the open slot can't be read reliably")
         self.assertEqual(self.hid.grid, {})
 
 
@@ -188,7 +188,7 @@ class PendingQueue(Base):
         msg = P.message_class("Scene")(action=P.ACTION["READ"])  # no request_id: the upstream fallback branch
         for _ in range(3):
             self.dev._raw.request("Scene", msg)
-            self.assertFalse([1 for c, *_ in self.dev._raw._pending if c == P.NAME_TO_CMD["Scene"]],
+            self.assertEqual([o for c, o, *_ in self.dev._raw._pending if c == P.NAME_TO_CMD["Scene"]], [],
                              "the matched reply must not stay queued for the next request")
 
     def test_pending_grows_linearly_not_exponentially(self):

@@ -41,8 +41,8 @@ class VendorPins(unittest.TestCase):
             (v / "qc_mcp" / "__pycache__").mkdir(exist_ok=True)
             (v / "qc_mcp" / "__pycache__" / "backend.cpython-312.pyc").write_bytes(b"x")
             bad = mismatches(v)
-            self.assertTrue(any("google/__init__.py" in b for b in bad))
-            self.assertTrue(any("__pycache__" in b for b in bad))
+            self.assertIn("google/__init__.py", "\n".join(bad))
+            self.assertIn("__pycache__", "\n".join(bad))
 
     def test_loading_writes_no_bytecode(self):
         import sys
