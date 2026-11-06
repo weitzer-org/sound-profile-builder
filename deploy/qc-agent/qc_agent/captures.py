@@ -245,7 +245,7 @@ def skip_reason(e: CaptureEntry) -> str | None:
 def char_classes(s: str) -> str:
     """Length and character classes only, never the text itself (device text stays out of the log)."""
     printable = sum(1 for c in s if 0x20 <= ord(c) <= 0x7E)
-    nonascii = sum(1 for c in s if ord(c) > 0x7E)
+    nonascii = sum(1 for c in s if ord(c) > 0x7F)
     control = sum(1 for c in s if ord(c) < 0x20 or ord(c) == 0x7F)
     spaces = sum(1 for c in s if c == " ")
     hexc = sum(1 for c in s if c in "0123456789abcdefABCDEF")
@@ -290,10 +290,10 @@ def library_payload(snap: DirectorySnapshot) -> dict:
     (skip_reason): QC-2 must never hold a name the bridge would not match byte for byte."""
     out, skipped = [], 0
     for e in snap.captures:
-        folder = _library_folder(e.folder_name)
         if skip_reason(e):
             skipped += 1
             continue
+        folder = _library_folder(e.folder_name)
         out.append({"name": e.name, "key": e.key.lower(), "version": version_of(e, snap),
                     "kind": "factory" if e.is_factory else "user", "folder": folder, "cloud": bool(e.is_cloud)})
     if len(out) > MAX_LIBRARY_CAPTURES:
