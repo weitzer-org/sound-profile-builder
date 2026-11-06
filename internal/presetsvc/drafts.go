@@ -2,6 +2,7 @@ package presetsvc
 
 import (
 	"context"
+	"log"
 	"sort"
 	"time"
 
@@ -64,7 +65,9 @@ func CleanUpOldDrafts(ctx context.Context, store *storage.PresetStore) []*storag
 			for _, id := range ids {
 				// Re-checked under the store's lock: the snapshot above may be stale, and a
 				// draft the user has named since must survive.
-				store.DeleteIf(context.Background(), id, func(p *storage.Preset) bool { return p.Name == DraftName })
+				if _, err := store.DeleteIf(context.Background(), id, func(p *storage.Preset) bool { return p.Name == DraftName }); err != nil {
+					log.Printf("draft cleanup: %s not deleted, retrying on the next cleanup: %v", id, err)
+				}
 			}
 		}(stale)
 	}

@@ -109,7 +109,20 @@ type PresetStore struct {
 	bucket string
 	prefix string
 	cache  []*Preset
-	mu     sync.RWMutex
+	// mu guards cache only; it is never held across a storage call except by the one-time
+	// load in List. idLocks serialises a preset's own storage write/delete and its cache
+	// update, so operations on different presets run in parallel and readers (List) aren't
+	// stalled behind a slow write.
+	mu      sync.RWMutex
+	idLocks sync.Map // preset id -> *sync.Mutex (one small entry per id touched; never freed)
+}
+
+// lockID takes the per-preset lock and returns its release func.
+func (s *PresetStore) lockID(id string) func() {
+	v, _ := s.idLocks.LoadOrStore(id, &sync.Mutex{})
+	m := v.(*sync.Mutex)
+	m.Lock()
+	return m.Unlock
 }
 
 // NewPresetStore creates a new generic preset store
@@ -141,15 +154,17 @@ func (s *PresetStore) Save(ctx context.Context, p *Preset) error {
 
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, p.ID)
 
-	// The lock spans the write and the cache update so a concurrent Delete (the draft
-	// cleanup) can't land between them and leave storage and cache disagreeing.
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// Held across the write and the cache update, so a concurrent Delete or DeleteIf of this
+	// preset (the draft cleanup) can't land between them and leave storage and cache
+	// disagreeing. Other presets are unaffected.
+	defer s.lockID(p.ID)()
 
 	if err := s.client.WriteFile(ctx, s.bucket, objectName, data); err != nil {
 		return err
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.cache != nil {
 		found := false
 		for i, cached := range s.cache {
@@ -299,19 +314,27 @@ func (s *PresetStore) Delete(ctx context.Context, id string) error {
 // DeleteIf deletes a preset only if keep-or-delete says so about its current stored
 // state: when check is non-nil it is given the preset as stored right now, and the delete
 // happens only if it returns true. The read, the check and the delete run under the same
-// lock as Save, so a rename can't slip in between (the draft cleanup used to delete a
+// per-preset lock as Save, so a rename can't slip in between (the draft cleanup used to delete a
 // draft by id after a user had just named it). A preset that is already gone is not an
 // error. It reports whether it deleted.
 func (s *PresetStore) DeleteIf(ctx context.Context, id string, check func(*Preset) bool) (bool, error) {
 	objectName := fmt.Sprintf("%s%s.json", s.prefix, id)
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	defer s.lockID(id)()
 
 	if check != nil {
 		data, err := s.client.ReadFile(ctx, s.bucket, objectName)
 		if err != nil {
-			return false, nil // already gone (or unreadable): nothing safe to delete
+			// The backends have no not-found sentinel, so ask the listing: gone is fine,
+			// but a transient read failure must surface so the caller can retry.
+			exists, lerr := s.Exists(ctx, id)
+			if lerr != nil {
+				return false, lerr
+			}
+			if !exists {
+				return false, nil
+			}
+			return false, fmt.Errorf("reading preset %s for delete check: %w", id, err)
 		}
 		var p Preset
 		if err := json.Unmarshal(data, &p); err != nil || !check(&p) {
@@ -323,6 +346,8 @@ func (s *PresetStore) DeleteIf(ctx context.Context, id string, check func(*Prese
 		return false, err
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.cache != nil {
 		for i, p := range s.cache {
 			if p.ID == id {

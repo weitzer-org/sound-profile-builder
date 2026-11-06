@@ -143,3 +143,68 @@ func TestPresetStore_DeleteIfSkipsRenamed(t *testing.T) {
 		t.Fatalf("missing preset: ok=%v err=%v", ok, err)
 	}
 }
+
+// A transient read failure in DeleteIf must surface (so the cleanup can retry), not be
+// treated as "already gone"; a genuinely missing object still isn't an error.
+func TestPresetStore_DeleteIfPropagatesTransientReadError(t *testing.T) {
+	bg := context.Background()
+	c := &flakyRead{mockStorageClient: newMockStorageClient()}
+	st := NewPresetStore(c, "b")
+	_ = st.Save(bg, &Preset{ID: "d", Name: "Draft Preset"})
+	always := func(*Preset) bool { return true }
+
+	c.fails = 1
+	if ok, err := st.DeleteIf(bg, "d", always); ok || err == nil {
+		t.Fatalf("transient read error swallowed: ok=%v err=%v", ok, err)
+	}
+	if ex, _ := st.Exists(bg, "d"); !ex {
+		t.Fatal("preset removed despite the failed check")
+	}
+	if ok, err := st.DeleteIf(bg, "d", always); !ok || err != nil {
+		t.Fatalf("retry: ok=%v err=%v", ok, err)
+	}
+	if ok, err := st.DeleteIf(bg, "never-existed", always); ok || err != nil {
+		t.Fatalf("missing preset: ok=%v err=%v", ok, err)
+	}
+}
+
+// A slow write of one preset must not stall reads or writes of another.
+func TestPresetStore_SlowSaveDoesNotBlockOtherPresets(t *testing.T) {
+	bg := context.Background()
+	c := &gatedWrite{mockStorageClient: newMockStorageClient(), gateID: "presets/slow.json", release: make(chan struct{})}
+	st := NewPresetStore(c, "b")
+	_ = st.Save(bg, &Preset{ID: "other", Name: "x"})
+	if _, err := st.List(bg); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	go func() { _ = st.Save(bg, &Preset{ID: "slow", Name: "y"}); close(done) }()
+	time.Sleep(20 * time.Millisecond) // the slow write is now in flight
+
+	finished := make(chan struct{})
+	go func() {
+		_, _ = st.List(bg)
+		_ = st.Save(bg, &Preset{ID: "other2", Name: "z"})
+		close(finished)
+	}()
+	select {
+	case <-finished:
+	case <-time.After(2 * time.Second):
+		t.Fatal("List/Save of another preset blocked behind a slow Save")
+	}
+	close(c.release)
+	<-done
+}
+
+type gatedWrite struct {
+	*mockStorageClient
+	gateID  string
+	release chan struct{}
+}
+
+func (g *gatedWrite) WriteFile(ctx context.Context, b, o string, d []byte) error {
+	if o == g.gateID {
+		<-g.release
+	}
+	return g.mockStorageClient.WriteFile(ctx, b, o, d)
+}
