@@ -173,6 +173,12 @@ func TestPresetStore_SlowSaveDoesNotBlockOtherPresets(t *testing.T) {
 	bg := context.Background()
 	c := &gatedWrite{mockStorageClient: newMockStorageClient(), gateID: "presets/slow.json", release: make(chan struct{})}
 	st := NewPresetStore(c, "b")
+	// Distinct stripes, or the "other" presets would legitimately wait behind "slow".
+	for _, id := range []string{"other", "other2"} {
+		if lockStripe(id) == lockStripe("slow") {
+			t.Fatalf("test ids %q and slow share a lock stripe; pick another", id)
+		}
+	}
 	_ = st.Save(bg, &Preset{ID: "other", Name: "x"})
 	if _, err := st.List(bg); err != nil {
 		t.Fatal(err)
@@ -207,4 +213,33 @@ func (g *gatedWrite) WriteFile(ctx context.Context, b, o string, d []byte) error
 		<-g.release
 	}
 	return g.mockStorageClient.WriteFile(ctx, b, o, d)
+}
+
+// Concurrent first Lists with Saves and Deletes: the cache must end up equal to storage
+// (run with -race). Guards the cold-load path against lost updates or unlocked writes.
+func TestPresetStore_ConcurrentColdListSaveDelete(t *testing.T) {
+	bg := context.Background()
+	for run := 0; run < 20; run++ {
+		st := NewPresetStore(slowClient{newMockStorageClient(), time.Millisecond, 0}, "b")
+		for i := 0; i < 12; i++ {
+			_ = st.Save(bg, &Preset{ID: fmt.Sprintf("p%02d", i), Name: "old"})
+		}
+		var wg sync.WaitGroup
+		for g := 0; g < 4; g++ {
+			wg.Add(1)
+			go func() { defer wg.Done(); _, _ = st.List(bg) }()
+		}
+		for i := 0; i < 4; i++ {
+			i := i
+			wg.Add(2)
+			go func() { defer wg.Done(); _ = st.Save(bg, &Preset{ID: fmt.Sprintf("n%d", i), Name: "new"}) }()
+			go func() { defer wg.Done(); _ = st.Delete(bg, fmt.Sprintf("p%02d", i)) }()
+		}
+		wg.Wait()
+		l, err := st.List(bg)
+		files, _ := st.client.ListFiles(bg, "b", "presets/")
+		if err != nil || len(l) != len(files) {
+			t.Fatalf("run %d: cache has %d presets, storage %d (err=%v)", run, len(l), len(files), err)
+		}
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"strings"
 	"sync"
@@ -111,16 +112,26 @@ type PresetStore struct {
 	cache  []*Preset
 	// mu guards cache only; it is never held across a storage call except by the one-time
 	// load in List. idLocks serialises a preset's own storage write/delete and its cache
-	// update, so operations on different presets run in parallel and readers (List) aren't
-	// stalled behind a slow write.
+	// update, so operations on different presets (almost always) run in parallel and
+	// readers (List) aren't stalled behind a slow write. A fixed set of stripes keyed by
+	// a hash of the id keeps memory constant however many presets come and go; two ids
+	// sharing a stripe only serialise, and no code path holds two stripes at once.
 	mu      sync.RWMutex
-	idLocks sync.Map // preset id -> *sync.Mutex (one small entry per id touched; never freed)
+	idLocks [idLockStripes]sync.Mutex
+}
+
+const idLockStripes = 256
+
+// lockStripe is the stripe an id maps to.
+func lockStripe(id string) int {
+	h := fnv.New32a()
+	h.Write([]byte(id))
+	return int(h.Sum32() % idLockStripes)
 }
 
 // lockID takes the per-preset lock and returns its release func.
 func (s *PresetStore) lockID(id string) func() {
-	v, _ := s.idLocks.LoadOrStore(id, &sync.Mutex{})
-	m := v.(*sync.Mutex)
+	m := &s.idLocks[lockStripe(id)]
 	m.Lock()
 	return m.Unlock
 }
