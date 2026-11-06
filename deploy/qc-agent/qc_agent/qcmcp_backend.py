@@ -700,7 +700,8 @@ def _slot_table(folder, what):
     if len(files) != 256:
         if what == "My Presets":
             _log_short_table(files)
-        raise PartialListing(len(files)) if what == "My Presets" else DeviceError(f"{what} listed {len(files)} slots, not 256")
+            raise PartialListing(len(files))
+        raise DeviceError(f"{what} listed {len(files)} slots, not 256")
     # In a READ the array position is the slot and the `index` field is left 0 (upstream's
     # PROTOCOL.md 5, directory._file_dict). A non-zero index that disagrees with the position
     # would mean that rule doesn't hold on this unit: refuse rather than pick one of the two.
