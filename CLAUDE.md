@@ -166,6 +166,12 @@ this app's MCP connector. Read these before any device work:
   (blocks + current assignments -> plan of `assign`/`remove`/`skipped`/`warnings`); layout in the embedded `stomp_layout.json`.
   It must not import `internal/agents`: the capture library comes in as a `CaptureLookup` (`agents.StompCaptureLookup()`).
   Everything about the device in it is UNVERIFIED until gate G7. Goldens: `go test ./internal/stomplayout -run Golden -update`.
+- `internal/deviceexport/readback.go` — the inverse of the export (plan P5): the `qc-device-readback/1` payload (contract
+  section 9.1, `devicejobs.ParseReadbackPayload`) becomes a `StructuredPreset` draft. It shares the export's tables and
+  refuses rather than guesses (unconverted items carry a reason). `read_device_preset(import=true)` is the only thing
+  that stores it (`presetsvc.ImportDraft`, id `device-<job_id>`, `Preset.Origin`). Device text goes through
+  `devicejobs.SanitizeText` first. Shared fixtures: `testdata/devicejobs/readback*.json`, read by Go and by
+  `deploy/qc-agent/tests/test_readback.py` (`go test ./internal/deviceexport -run RoundTripFixtures -update` rewrites the round-trip ones).
 - `deploy/qc-agent/` — the home agent (P4, Python). Its README has the Windows install, daily use and hardware
   acceptance steps. qc-mcp's transport is vendored under `vendor/qc_mcp/` at `f634ecd`, byte for byte and SHA-256
   pinned (test plus a runtime check): never edit those files; re-vendor in its own PR (`vendor/PROVENANCE.md`). The

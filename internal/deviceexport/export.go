@@ -59,6 +59,16 @@ type Options struct {
 	// stays free of internal/agents. Nil means no library. In v1 captures are never
 	// placed, so it is not consulted yet.
 	StompCaptures stomplayout.CaptureLookup
+	// LookupCapture resolves a capture name read from the unit to its entry in
+	// coros_map.json or user_captures.json (exact name, case-insensitive; source is
+	// "factory" or "user"). The read-back import uses it; nil means every capture keeps the
+	// name the unit shows. The caller supplies it so this package stays free of
+	// internal/agents.
+	LookupCapture func(deviceName string) (name, source string, ok bool)
+	// Sanitize cleans a string read from the unit (control and format characters, backticks,
+	// whitespace runs) and cuts it to n runes. The read-back import requires it:
+	// cmd/server passes devicejobs.SanitizeText, the function mcpserver's sanitizeDeviceText is, so import and display share one definition.
+	Sanitize func(s string, n int) string
 }
 
 // Exporter implements devicejobs.Exporter.
@@ -67,6 +77,7 @@ type Exporter struct {
 	catalogSH string
 	opts      Options
 	stompCls  *stomplayout.Classifier
+	byID      map[int]*catalog.Model // model id -> model, for the read-back import
 }
 
 var _ devicejobs.Exporter = (*Exporter)(nil)
@@ -76,6 +87,10 @@ var _ devicejobs.Exporter = (*Exporter)(nil)
 func New(cat *catalog.Catalog, catalogSHA256 string, o Options) *Exporter {
 	e := &Exporter{cat: cat, catalogSH: catalogSHA256, opts: o}
 	if cat != nil {
+		e.byID = make(map[int]*catalog.Model, len(cat.Models))
+		for i := range cat.Models {
+			e.byID[cat.Models[i].ID] = &cat.Models[i]
+		}
 		e.stompCls = stomplayout.NewClassifier(cat, o.StompCaptures)
 	}
 	return e

@@ -42,7 +42,10 @@ SAVE_LIST_INTERVAL_S = 6.0
 MAX_DIFF = 512
 CAPTURE_SETTLE_S = 1.0     # after loading a capture, before its params (unverified timing; the read-back checks)
 NAME_LIMIT = 64
-STRING_LIMIT = 160         # a read-back string param: a capture's file_name is 64 hex + its name
+# A read-back text value (contract section 9.1). A Neural Capture block's file_name is a 64-hex key plus the
+# capture's name, so NAME_LIMIT would cut the name off entirely. internal/devicejobs.MaxReadbackStringRn is the
+# same number; testdata/devicejobs/readback.json pins both sides.
+VALUE_STRING_LIMIT = 192
 
 
 @dataclass
@@ -187,7 +190,7 @@ def _plain_value(v):
     if isinstance(v, float):
         return v if math.isfinite(v) else None
     if isinstance(v, str):
-        return text.clean(v, STRING_LIMIT)
+        return text.clean(v, VALUE_STRING_LIMIT)
     return None
 
 

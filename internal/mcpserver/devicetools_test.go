@@ -42,6 +42,12 @@ type deviceRig struct {
 // fixture exporter and a fake home agent. clock nil means real time.
 func newDeviceRig(t *testing.T, clock func() time.Time) *deviceRig {
 	t.Helper()
+	return newDeviceRigWith(t, clock)
+}
+
+// newDeviceRigWith is newDeviceRig plus extra server options (e.g. WithImporter).
+func newDeviceRigWith(t *testing.T, clock func() time.Time, extra ...Option) *deviceRig {
+	t.Helper()
 	kr, err := devicejobs.NewKeyring(devKeyHex, "")
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +62,7 @@ func newDeviceRig(t *testing.T, clock func() time.Time) *deviceRig {
 		b.Now, a.Now = clock, clock
 	}
 	mux := http.NewServeMux()
-	Mount(mux, h.svc, Config{Token: testToken}, nil, WithDevice(b))
+	Mount(mux, h.svc, Config{Token: testToken}, nil, append([]Option{WithDevice(b)}, extra...)...)
 	ts := httptest.NewServer(mux)
 	t.Cleanup(ts.Close)
 	hc := &http.Client{Transport: itBearer{token: testToken, base: http.DefaultTransport}}
@@ -132,7 +138,7 @@ func TestDeviceTools_RegisteredOnlyWhenEnabled(t *testing.T) {
 			t.Fatalf("%s: missing, or without annotations/output schema/data notice", n)
 		}
 	}
-	for _, n := range []string{deviceStatusToolName, deviceJobToolName, deviceSlotsToolName, deviceReadToolName} {
+	for _, n := range []string{deviceStatusToolName, deviceSlotsToolName} {
 		if !byName[n].Annotations.ReadOnlyHint {
 			t.Errorf("%s should be read-only", n)
 		}

@@ -28,6 +28,14 @@ type Option func(*options)
 type options struct {
 	device   *devicejobs.Bridge
 	exporter devicejobs.Exporter
+	importer devicejobs.ReadbackImporter
+}
+
+// WithImporter enables read_device_preset(import=true): the read-back becomes a QC-2 draft
+// (plan P5). Without it that argument is refused with a plain message. Needs WithDevice to
+// matter, since only the device tools read the unit.
+func WithImporter(i devicejobs.ReadbackImporter) Option {
+	return func(o *options) { o.importer = i }
 }
 
 // WithExporter enables get_preset(format=device) with the device export (plan P2).
@@ -58,7 +66,7 @@ func NewServer(svc *presetsvc.Service, opts ...Option) *mcp.Server {
 		&mcp.ServerOptions{Instructions: instr})
 	registerTools(s, svc, o.exporter)
 	if o.device != nil {
-		registerDeviceTools(s, svc, o.device)
+		registerDeviceTools(s, svc, o.device, o.importer)
 	}
 	registerResources(s, svc)
 	registerPrompts(s)
