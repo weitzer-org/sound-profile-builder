@@ -205,8 +205,8 @@ func (im *importer) block(pb devicejobs.ReadbackPlaced, bypass *[Scenes]bool) (*
 		return nil, nil
 	default:
 		blk.Model = im.importName(m)
-		if ms := im.e.cat.Resolve(m.Name); len(ms) > 1 && ms[0].Name == m.Name {
-			im.note(fmt.Sprintf("%s: %d device models share this name, so re-pushing this draft will be refused as ambiguous", truncate(m.Name, 60), len(ms)))
+		if _, why := (&builder{e: im.e}).resolveModel(m.Name); strings.Contains(why, "ambiguous") {
+			im.note(fmt.Sprintf("%s: several device models share this name with different controls, so re-pushing this draft will be refused as ambiguous", truncate(m.Name, 60)))
 		}
 	}
 	if plugin, gated := m.RequiredPlugin(); gated {
@@ -476,12 +476,14 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 	if isPan(cp) {
 		return im.pan(cp, wire)
 	}
-	if cp.Units == "" && cp.Min != nil && cp.Max != nil && *cp.Min == 0 && *cp.Max == 1 {
-		return storage.BlockParameter{}, false, "unitless 0..1 control: its display scale is not verified on the device"
-	}
 	evidence, why := taperEvidence(cp)
 	if why != "" {
 		return storage.BlockParameter{}, false, why
+	}
+	if unitless01(cp) {
+		// P2c: a unitless 0..1 control is read on its own catalog range, labelled (the
+		// device's display scale for it is not verified).
+		evidence = append(evidence, "scale:catalog-range")
 	}
 	var disp [Scenes]float64
 	for s, w := range wire {

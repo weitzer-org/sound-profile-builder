@@ -442,7 +442,6 @@ func TestUnconverted(t *testing.T) {
 	}{
 		{"unknown model id", 999999, nil, "", "unknown model id", true},
 		{"non-default pan", 3008, map[int][]any{17: {0.9}}, "PAN", "pan display scale", false},
-		{"unitless 0..1", 3008, map[int][]any{18: {0.4}}, "DISTANCE", "unitless 0..1", false},
 		{"switch off a whole position", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
 		{"combo box has no mapping", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
 		{"NaN stored as null", 1, map[int][]any{0: {nil}}, "GAIN", "not a finite number", false},
@@ -499,6 +498,18 @@ func TestP2bRulesInTheImport(t *testing.T) {
 	t.Run("pyquadcortex bound", func(t *testing.T) {
 		bp := get(importOf(t, e, rbJSON(t, 4000, map[int][]any{0: {0.75}}, nil)), "1 GAIN")
 		if !strings.Contains(bp.Evidence, "bounds:pyquadcortex-4.0.1") || bp.Value != "6 dB" {
+			t.Errorf("%+v", bp)
+		}
+	})
+	t.Run("unitless 0..1 on its catalog range (P2c)", func(t *testing.T) {
+		res := importOf(t, e, rbJSON(t, 3008, map[int][]any{18: {0.4}}, nil))
+		var bp storage.BlockParameter
+		for _, x := range res.Preset.Guitars[ReadbackGuitar][0].Parameters {
+			if strings.HasSuffix(x.Name, "DISTANCE") && x.Value == "0.4" {
+				bp = x
+			}
+		}
+		if bp.Value != "0.4" || !strings.Contains(bp.Evidence, "scale:catalog-range") {
 			t.Errorf("%+v", bp)
 		}
 	})
