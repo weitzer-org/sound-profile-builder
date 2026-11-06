@@ -172,3 +172,23 @@ func TestGetPresetDeviceCaptureAndUnconfirmed(t *testing.T) {
 		}
 	}
 }
+
+// TestGetPresetDeviceWarnings: a non-default cab mic is listed as left out, and the export
+// can still be pushed.
+func TestGetPresetDeviceWarnings(t *testing.T) {
+	h := newTestService(t)
+	cs := newExportSession(t, h, true)
+	chain := []storage.EffectBlock{{Model: "110 US PRN C10R", Parameters: []storage.BlockParameter{
+		{Name: "Mic 2", Value: "Ribbon 121", Basis: "estimate"}, {Name: "Mic 1 Level", Value: "-3 dB", Basis: "estimate"}}}}
+	seedDevicePreset(t, h, "p-dev6", map[string][]storage.EffectBlock{"Tele": chain})
+	text := okText(t, itCall(t, cs, getToolName, map[string]any{"preset_id": "p-dev6", "format": "device"}))
+	for _, want := range []string{
+		"Nothing is unresolved",
+		"**Left out of the push (it can still go ahead):**",
+		"Mic 2: not applied: \"Ribbon 121\" can't be written yet",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("missing %q in:\n%s", want, text)
+		}
+	}
+}

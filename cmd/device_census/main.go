@@ -46,8 +46,8 @@ func main() {
 	// Reasons are grouped with quoted text and numbers blanked, so "skew 0.6" and
 	// "skew 4.93" count as one kind.
 	norm := regexp.MustCompile(`"[^"]*"|[-+]?\d+(\.\d+)?|\(ids [^)]*\)`)
-	counts := map[string]int{}
-	chains, pushable, presets := 0, 0, 0
+	counts, warnings := map[string]int{}, map[string]int{}
+	chains, pushable, presets, warned := 0, 0, 0, 0
 	for _, f := range files {
 		sp, ok := structured(f)
 		if !ok {
@@ -68,13 +68,28 @@ func main() {
 			chains++
 			if len(e.Unresolved) == 0 {
 				pushable++
+				if len(e.Warnings) > 0 {
+					warned++
+				}
 			}
 			for _, u := range e.Unresolved {
 				counts[norm.ReplaceAllString(u.Reason, "#")]++
 			}
+			for _, u := range e.Warnings {
+				warnings[norm.ReplaceAllString(u.Reason, "#")]++
+			}
 		}
 	}
-	fmt.Printf("%d presets, %d guitar chains, %d pushable\n\n| Count | Unresolved reason |\n|---:|---|\n", presets, chains, pushable)
+	fmt.Printf("%d presets, %d guitar chains, %d pushable (%d of them with warnings)\n", presets, chains, pushable, warned)
+	table("Unresolved reason", counts)
+	table("Warning (pushed without it)", warnings)
+}
+
+// table prints reason counts, most frequent first.
+func table(title string, counts map[string]int) {
+	if len(counts) == 0 {
+		return
+	}
 	type kv struct {
 		k string
 		v int
@@ -89,6 +104,7 @@ func main() {
 		}
 		return rows[i].k < rows[j].k
 	})
+	fmt.Printf("\n| Count | %s |\n|---:|---|\n", title)
 	for _, r := range rows {
 		fmt.Printf("| %d | %s |\n", r.v, strings.ReplaceAll(r.k, "|", `\|`))
 	}

@@ -33,6 +33,10 @@ type Export struct {
 	// Unresolved lists everything the exporter could not map exactly. A push
 	// needs none.
 	Unresolved []Unresolved
+	// Warnings lists what a push leaves out on purpose (e.g. a cab mic the
+	// export can't write, so the cab keeps its default). A push may have
+	// warnings; the dry run shows them so the user decides with them in view.
+	Warnings []Unresolved
 }
 
 // PlanBlock is one block of the readable plan.

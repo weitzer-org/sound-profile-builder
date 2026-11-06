@@ -104,6 +104,9 @@ type Payload struct {
 	SceneSources [Scenes]string          `json:"scene_sources"`
 	Rows         []Row                   `json:"rows"`
 	Unresolved   []devicejobs.Unresolved `json:"unresolved"`
+	// Warnings are settings the push leaves out on purpose (plan 4.1: a non-default cab
+	// mic keeps the cab's default). They don't block a push.
+	Warnings []devicejobs.Unresolved `json:"warnings"`
 }
 
 // CatalogRef names the catalog the ids and indexes come from.
@@ -237,11 +240,15 @@ func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar
 	if p.Unresolved == nil {
 		p.Unresolved = []devicejobs.Unresolved{}
 	}
+	p.Warnings = b.warnings
+	if p.Warnings == nil {
+		p.Warnings = []devicejobs.Unresolved{}
+	}
 	raw, err := marshal(p)
 	if err != nil {
 		return nil, err
 	}
-	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved}, nil
+	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Warnings: p.Warnings}, nil
 }
 
 // marshal encodes compactly with Go's default HTML escaping, so preset text such as a

@@ -367,8 +367,6 @@ func TestRefusals(t *testing.T) {
 		{"unknown param", preset(block("Myth Drive", prm("Bass", "5", ""))), "", "not a control of Myth Drive"},
 		{"internal param", preset(block("110 US PRN C10R", prm("phi", "1", ""))), "", "internal device parameter"},
 		{"written twice", preset(block("Low-High Cut", prm("HPF FREQ", "100", ""), prm("Low Cut", "120", ""))), "", "written twice"},
-		{"non-default mic", preset(block("110 US PRN C10R", prm("Mic 2", "Ribbon 121", ""))), "", "only the cab's default mic (Ribbon 160)"},
-		{"non-default mic in B", preset(block("110 US PRN C10R", prm("Mic 1", "Dyn 57", "Condenser 414"))), "", "only the cab's default mic (Dynamic 57)"},
 		{"cab blend", preset(block("110 US PRN C10R", prm("Blend", "50%", ""))), "", "no Blend control"},
 		{"no value", preset(block("Myth Drive", prm("Gain", "", ""))), "", "no value"},
 		{"unparseable", preset(block("Myth Drive", prm("Gain", "noon", ""))), "", "unparseable value"},
@@ -729,4 +727,31 @@ func nine() []storage.EffectBlock {
 func taperRefusal(p catalog.Param) string {
 	_, why := taperEvidence(p)
 	return why
+}
+
+// TestNonDefaultMicIsAWarning: a mic other than the cab's default is left out with a warning
+// (owner decision, plan 4.1). The push isn't blocked and the mic isn't written.
+func TestNonDefaultMicIsAWarning(t *testing.T) {
+	e := testExporter(t)
+	sp := preset(block("110 US PRN C10R",
+		prm("Mic 1", "Dyn 57", "Condenser 414"), prm("Mic 2", "Ribbon 121", ""), prm("Mic 1 Level", "-3 dB", "")))
+	ex, p := export(t, e, sp, "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved: %+v", ex.Unresolved)
+	}
+	if len(ex.Warnings) != 2 || len(p.Warnings) != 2 {
+		t.Fatalf("warnings: %+v", ex.Warnings)
+	}
+	for i, want := range []string{`"Condenser 414" can't be written yet`, `"Ribbon 121" can't be written yet`} {
+		if !strings.Contains(ex.Warnings[i].Reason, want) {
+			t.Errorf("warning %d %q lacks %q", i, ex.Warnings[i].Reason, want)
+		}
+	}
+	if !strings.Contains(ex.Warnings[1].Reason, "keeps its default Ribbon 160") {
+		t.Errorf("warning doesn't name the default: %q", ex.Warnings[1].Reason)
+	}
+	b := p.Rows[0].Blocks[0]
+	if len(b.AtDefault) != 0 || len(b.Params) != 1 || b.Params[0].Label != "MIC 1 LEVEL" {
+		t.Fatalf("block: %+v", b)
+	}
 }

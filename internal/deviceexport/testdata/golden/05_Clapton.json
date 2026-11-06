@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "e070872afada5ab5405009f278e27b649d72c77d6bac149682e6474ecb2229cd",
+ "plan_sha256": "45d61bc024adf66600a256ed290ad7090e062e29069575585ce48a2d47cce84b",
  "summary": [
   {
    "row": 0,
@@ -209,11 +209,6 @@
    "block": "#1 Crying Clyde Wah",
    "param": "WAH",
    "reason": "unitless 0..1 control: its display scale is not verified on the device"
-  },
-  {
-   "block": "#5 412 Brit 60B GB 71",
-   "param": "Mic 2",
-   "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
   }
  ],
  "payload": {
@@ -1202,11 +1197,13 @@
     "block": "#1 Crying Clyde Wah",
     "param": "WAH",
     "reason": "unitless 0..1 control: its display scale is not verified on the device"
-   },
+   }
+  ],
+  "warnings": [
    {
     "block": "#5 412 Brit 60B GB 71",
     "param": "Mic 2",
-    "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
+    "reason": "not applied: \"Ribbon 121\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Ribbon 160"
    }
   ]
  }

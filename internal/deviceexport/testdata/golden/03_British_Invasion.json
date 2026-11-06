@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "697f03459a0f0be9be64c7ca7e7a7351943fdd300a795fd930e8651bdf295e8f",
+ "plan_sha256": "62ef97abb5e2354cee945b92231172f4c5918f26006953c9328cab019e80a7a1",
  "summary": [
   {
    "row": 0,
@@ -206,18 +206,7 @@
    "bypass_b": false
   }
  ],
- "unresolved": [
-  {
-   "block": "#5 212 UK C30 65",
-   "param": "Mic 1",
-   "reason": "only the cab's default mic (Dynamic 57) can be taken: which other mics this cab offers isn't in the device catalog"
-  },
-  {
-   "block": "#5 212 UK C30 65",
-   "param": "Mic 2",
-   "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
-  }
- ],
+ "unresolved": [],
  "payload": {
   "format": "qc2-device-export/1",
   "catalog": {
@@ -1193,16 +1182,17 @@
     ]
    }
   ],
-  "unresolved": [
+  "unresolved": [],
+  "warnings": [
    {
     "block": "#5 212 UK C30 65",
     "param": "Mic 1",
-    "reason": "only the cab's default mic (Dynamic 57) can be taken: which other mics this cab offers isn't in the device catalog"
+    "reason": "not applied: \"Condenser 67\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Dynamic 57"
    },
    {
     "block": "#5 212 UK C30 65",
     "param": "Mic 2",
-    "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
+    "reason": "not applied: \"Ribbon 121\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Ribbon 160"
    }
   ]
  }

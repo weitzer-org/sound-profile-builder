@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "ee9ef9b068c965de3197d7f32e373342d57dc2b6ef249cc9bba5ed65e6c7d796",
+ "plan_sha256": "fb26b12a5197fd9c964aeedc2af01ec3ae5ea2db83e970e4f9aaa07cebd02e13",
  "summary": [
   {
    "row": 0,
@@ -121,11 +121,6 @@
   {
    "block": "#2 Green 808",
    "reason": "ambiguous: 2 device models share this name (ids 5, 27); use a name that picks one"
-  },
-  {
-   "block": "#4 410 US Basslad P10Q 16",
-   "param": "Mic 2",
-   "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
   },
   {
    "block": "#6 John Mayer Spring Reverb",
@@ -688,13 +683,15 @@
     "reason": "ambiguous: 2 device models share this name (ids 5, 27); use a name that picks one"
    },
    {
-    "block": "#4 410 US Basslad P10Q 16",
-    "param": "Mic 2",
-    "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
-   },
-   {
     "block": "#6 John Mayer Spring Reverb",
     "reason": "needs the John Mayer plugin, which isn't in config.json's available_plugins"
+   }
+  ],
+  "warnings": [
+   {
+    "block": "#4 410 US Basslad P10Q 16",
+    "param": "Mic 2",
+    "reason": "not applied: \"Ribbon 121\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Ribbon 160"
    }
   ]
  }

@@ -18,6 +18,11 @@ type builder struct {
 	e          *Exporter
 	legacy     bool // the preset predates Architect v4's Bypass definition (see usesBasis)
 	unresolved []devicejobs.Unresolved
+	warnings   []devicejobs.Unresolved
+}
+
+func (b *builder) warn(block, param, reason string) {
+	b.warnings = append(b.warnings, devicejobs.Unresolved{Block: block, Param: truncate(param, 80), Reason: reason})
 }
 
 func (b *builder) refuse(block, param, reason string) {
@@ -229,9 +234,10 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			b.bypass(ref, bp, &out.Bypass)
 			continue
 		case hasMics && (key == "MIC1" || key == "MIC2"):
-			label, why := micChoice(m, key, bp)
-			if why != "" {
-				b.refuse(ref, bp.Name, why)
+			label, note := micChoice(m, key, bp)
+			if note != "" {
+				// Owner decision (plan 4.1): the cab keeps its default mic, visibly.
+				b.warn(ref, bp.Name, note)
 			} else {
 				out.AtDefault = append(out.AtDefault, label)
 			}
@@ -284,9 +290,10 @@ func (b *builder) captureModel() *catalog.Model {
 }
 
 // micChoice checks a cab's "Mic 1"/"Mic 2" against the mic that slot loads by default (the
-// XML's default IR name, "ME_<cab>_<mic>"). Only the default can be taken: which other mics
-// a cab offers isn't in ModelRepo.xml (plan 4.1). The default isn't written.
-func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, why string) {
+// XML's default IR name, "<prefix>_<cab>_<mic>"). The default isn't written. Any other mic
+// isn't written either, because which mics a cab offers isn't in ModelRepo.xml: the cab
+// keeps its default and note says so (a warning, not a refusal; plan 4.1).
+func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, note string) {
 	slot := 1
 	if key == "MIC2" {
 		slot = 2
@@ -307,11 +314,12 @@ func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, 
 		defMic = def[i+1:]
 	}
 	if defMic == "" {
-		return "", "this cab's default mic isn't known, so the mic choice can't be checked"
+		return "", "not applied: this cab's default mic isn't known, so the cab keeps whatever mic it loads"
 	}
 	for _, v := range sceneStrings(bp) {
 		if micKey(cleanValue(v)) != micKey(defMic) {
-			return "", fmt.Sprintf("only the cab's default mic (%s) can be taken: which other mics this cab offers isn't in the device catalog", defMic)
+			return "", fmt.Sprintf("not applied: %q can't be written yet (which mics this cab offers isn't known), so the cab keeps its default %s",
+				truncate(cleanValue(v), 40), defMic)
 		}
 	}
 	return label, ""
