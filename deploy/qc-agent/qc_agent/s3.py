@@ -34,7 +34,9 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-class S3Error(Exception):
+class StoreError(Exception):
+    """The JobStore Protocol's failure type: every store raises it, whatever its backend."""
+
     def __init__(self, op: str, status: int | None, code: str = ""):
         super().__init__(f"{op}: HTTP {status} {code}".strip() if status else f"{op}: {code}")
         self.status, self.code = status, code
@@ -82,7 +84,7 @@ def sign_v4(method: str, host: str, path: str, query: dict[str, str], headers: d
 
 class JobStore(Protocol):
     """What the agent needs from the jobs bucket. S3Store (R2) and MemoryStore (tests) implement it;
-    every method raises S3Error on failure."""
+    every method raises StoreError on failure."""
 
     bucket: str
 
@@ -98,7 +100,7 @@ class JobStore(Protocol):
 
 
 class S3Store:
-    """The jobs bucket over HTTPS. All methods raise S3Error on failure."""
+    """The jobs bucket over HTTPS. All methods raise StoreError on failure."""
 
     def __init__(self, endpoint: str, bucket: str, access_key: str, secret_key: str,
                  region: str = "auto", opener=None):
@@ -144,7 +146,7 @@ class S3Store:
         except OSError as e:
             # The reason ("connection refused", a TLS error) helps the owner; it never holds credentials.
             reason = getattr(e, "reason", None)
-            raise S3Error(op, None, f"{type(e).__name__} {reason}"[:160] if reason else type(e).__name__) from None
+            raise StoreError(op, None, f"{type(e).__name__} {reason}"[:160] if reason else type(e).__name__) from None
 
     # ---- operations ----
 
@@ -159,19 +161,19 @@ class S3Store:
                 q["continuation-token"] = token
             status, data = self._request("list", "GET", query=q, max_read=MAX_LIST_RESPONSE)
             if status != 200:
-                raise S3Error("list", status, data if isinstance(data, str) else "")
+                raise StoreError("list", status, data if isinstance(data, str) else "")
             if len(data) > MAX_LIST_RESPONSE:
-                raise S3Error("list", status, "response too large")
+                raise StoreError("list", status, "response too large")
             if b"<!DOCTYPE" in data or b"<!ENTITY" in data:
-                raise S3Error("list", status, "unexpected DTD in response")
+                raise StoreError("list", status, "unexpected DTD in response")
             try:
                 root = ET.fromstring(data)
             except ET.ParseError:
-                raise S3Error("list", status, "unparseable response") from None
+                raise StoreError("list", status, "unparseable response") from None
             for c in root.iter(_S3_NS + "Contents"):
                 k, s = c.findtext(_S3_NS + "Key"), c.findtext(_S3_NS + "Size")
                 if k is None or s is None or not s.isdigit():
-                    raise S3Error("list", status, "malformed entry")
+                    raise StoreError("list", status, "malformed entry")
                 items.append((k, int(s)))
                 if len(items) > limit:
                     return items[:limit], True
@@ -186,9 +188,9 @@ class S3Store:
         if status == 416:  # Range on an empty object
             return b""
         if status == 404:
-            raise S3Error("get", 404, "NoSuchKey")
+            raise StoreError("get", 404, "NoSuchKey")
         if status not in (200, 206):
-            raise S3Error("get", status, data if isinstance(data, str) else "")
+            raise StoreError("get", status, data if isinstance(data, str) else "")
         return None if len(data) > cap else data
 
     def exists(self, key: str) -> bool:
@@ -197,18 +199,18 @@ class S3Store:
             return True
         if status == 404:
             return False
-        raise S3Error("head", status, data if isinstance(data, str) else "")
+        raise StoreError("head", status, data if isinstance(data, str) else "")
 
     def put(self, key: str, body: bytes) -> None:
         status, data = self._request("put", "PUT", key, body=body,
                                      extra={"content-type": "application/json"})
         if status not in (200, 201):
-            raise S3Error("put", status, data if isinstance(data, str) else "")
+            raise StoreError("put", status, data if isinstance(data, str) else "")
 
     def delete(self, key: str) -> None:
         status, data = self._request("delete", "DELETE", key)
         if status not in (200, 204, 404):
-            raise S3Error("delete", status, data if isinstance(data, str) else "")
+            raise StoreError("delete", status, data if isinstance(data, str) else "")
 
 
 class MemoryStore:
@@ -234,7 +236,7 @@ class MemoryStore:
         self._maybe_fail("get")
         self.ops.append(("get", key))
         if key not in self.objects:
-            raise S3Error("get", 404, "NoSuchKey")
+            raise StoreError("get", 404, "NoSuchKey")
         data = self.objects[key][:cap + 1]
         return None if len(data) > cap else data
 

@@ -14,7 +14,7 @@ from helpers import BUCKET, KEY_HEX, NEXT_HEX, T0, Clock, catalog, config, expor
 from qc_agent import agent as agent_mod
 from qc_agent import contract, jobs
 from qc_agent.agent import Agent
-from qc_agent.s3 import MemoryStore, S3Error
+from qc_agent.s3 import MemoryStore, StoreError
 from fake_device import FakeDevice
 
 jobs.SAVE_LIST_INTERVAL_S = 0
@@ -413,8 +413,9 @@ class Queue(Base):
         late, _ = self.queue("list_slots", created=T0 - dt.timedelta(seconds=10))
         early, _ = self.queue("list_slots", created=T0 - dt.timedelta(seconds=60))
         self.poll()
-        ledger = (self.home / "executed_jobs.jsonl").read_text()
-        self.assertLess(ledger.index(early), ledger.index(late))
+        taken = [e["job_id"] for e in map(json.loads, (self.home / "executed_jobs.jsonl").read_text().splitlines())
+                 if e.get("event") == "taken"]
+        self.assertLess(taken.index(early), taken.index(late))
 
     def test_misrouted_bucket(self):
         jid, key = self.queue("list_slots", bucket="another-bucket")
@@ -431,7 +432,7 @@ class Queue(Base):
 
     def test_upload_failure_is_retried_from_ledger_bytes(self):
         jid, key = self.queue("list_slots")
-        self.store.fail["put"] = S3Error("put", 500)
+        self.store.fail["put"] = StoreError("put", 500)
         self.poll()
         self.assertNotIn(f"jobs/done/{jid}.json", self.store.objects)
         self.assertIn(key, self.store.objects, "pending kept until the result is uploaded")
@@ -467,7 +468,7 @@ class Recovery(Base):
 
     def test_finished_without_done_reuploads_stored_bytes(self):
         jid, key = self.queue("list_slots")
-        self.store.fail["put"] = S3Error("put", None, "URLError")  # crash window: finished, never uploaded
+        self.store.fail["put"] = StoreError("put", None, "URLError")  # crash window: finished, never uploaded
         self.poll()
         stored = self.agent.ledger.finished[jid]["result"].encode()
         del self.store.fail["put"]

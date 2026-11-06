@@ -140,23 +140,19 @@ class JobLedger:
 class OwnedSlots:
     def __init__(self, path: Path):
         self.path = path
-        self.entries = _read_lines(path)
+        self._latest: dict[int, dict] = {}  # position -> the most recent save there
+        for e in _read_lines(path):
+            if isinstance(e.get("position"), int):
+                self._latest[e["position"]] = e
 
     def record(self, slot: str, position: int, name: str, job_id: str, at: str) -> None:
         e = {"slot": slot, "position": position, "name": name, "job_id": job_id, "at": at}
         _append(self.path, e)
-        self.entries.append(e)
+        self._latest[position] = e
 
     def owned(self, position: int, current_name: str) -> bool:
-        latest = None
-        for e in self.entries:
-            if e.get("position") == position:
-                latest = e
+        latest = self._latest.get(position)
         return bool(latest) and bool(current_name) and latest.get("name") == current_name
 
     def current(self) -> list[dict]:
-        latest: dict[int, dict] = {}
-        for e in self.entries:
-            if isinstance(e.get("position"), int):
-                latest[e["position"]] = e
-        return [latest[p] for p in sorted(latest)]
+        return [self._latest[p] for p in sorted(self._latest)]

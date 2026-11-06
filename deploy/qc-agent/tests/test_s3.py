@@ -83,7 +83,7 @@ class Store(unittest.TestCase):
 
     def test_list_rejects_dtd(self):
         st, _ = store([(200, b'<?xml version="1.0"?><!DOCTYPE x [<!ENTITY a "b">]><x/>')])
-        with self.assertRaises(s3.S3Error):
+        with self.assertRaises(s3.StoreError):
             st.list_prefix("", 3)
 
     def test_bounded_get(self):
@@ -107,7 +107,7 @@ class Store(unittest.TestCase):
 
     def test_errors_carry_no_credentials(self):
         st, _ = store([(403, b"<Error><Code>AccessDenied</Code></Error>")])
-        with self.assertRaisesRegex(s3.S3Error, "AccessDenied") as cm:
+        with self.assertRaisesRegex(s3.StoreError, "AccessDenied") as cm:
             st.put("k", b"{}")
         self.assertNotIn(SK, str(cm.exception))
         self.assertNotIn(SK, repr(st))

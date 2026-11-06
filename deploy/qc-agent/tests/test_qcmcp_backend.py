@@ -137,6 +137,31 @@ class PushOverTheWire(Base):
         self.assertEqual(self.hid.routing[0], (1, 19))
 
 
+class PendingQueue(Base):
+    """Upstream request() never removed the matched reply (`t is not (cmd, obj, raw, pb)` compares
+    with a new tuple), so every unconsumed message doubled per matched request. With one broadcast
+    per Scene read, twelve requests grew _pending to 6,153 entries; a per-scene write makes ~9."""
+
+    def test_pending_grows_linearly_not_exponentially(self):
+        orig = self.hid._handle
+
+        def with_broadcast(name, m):
+            if name == "Scene" and m.action == P.ACTION["READ"]:
+                self.hid._reply("GlobalTempo", P.message_class("GlobalTempo")())
+            return orig(name, m)
+        self.hid._handle = with_broadcast
+        self.dev.connect()
+        self.assertIsNotNone(self.dev._raw.__dict__.get("request"), "the fixed request() is bound per instance")
+        plan = validate(export(), catalog(), "4.1.0")
+        self.dev.begin_push(152, "x", plan)
+        self.dev.add_block(0, 0, 1)
+        for _ in range(3):
+            self.dev.set_param_scenes(0, 0, 0, [0.2, 0.8] + [0.2] * 6)
+        self.assertLessEqual(len(self.dev._raw._pending), 40)  # ~9 unconsumed broadcasts per call
+        for got, want in zip(self.hid.grid[0]["params"][0], [0.2, 0.8] + [0.2] * 6, strict=True):
+            self.assertAlmostEqual(got, want, places=6)
+
+
 class Guard(Base):
     def setUp(self):
         super().setUp()

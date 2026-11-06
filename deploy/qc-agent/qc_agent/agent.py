@@ -17,7 +17,7 @@ import traceback
 from . import AGENT_VERSION, contract, jobs
 from .device import SETLIST_NAME
 from .ledger import JobLedger, OwnedSlots
-from .s3 import JobStore, S3Error
+from .s3 import JobStore, StoreError
 
 log = logging.getLogger("qc_agent")
 
@@ -115,7 +115,7 @@ class Agent:
             try:
                 self.store.put(contract.HEARTBEAT_KEY, data)
                 return True
-            except S3Error as e:
+            except StoreError as e:
                 log.warning("heartbeat not written: %s", e)
                 return False
 
@@ -149,7 +149,7 @@ class Agent:
         """Upload a result already recorded in the ledger, then drop the pending job."""
         try:
             self.store.put(contract.done_key(job_id), data)
-        except S3Error as e:
+        except StoreError as e:
             log.warning("result for %s not uploaded yet (%s); will retry", job_id[:8], e)
             self._unuploaded[job_id] = data
             return
@@ -160,7 +160,7 @@ class Agent:
     def _delete(self, key):
         try:
             self.store.delete(key)
-        except S3Error as e:
+        except StoreError as e:
             log.warning("could not delete %s: %s", key, e)
 
     def finish(self, job_id, kind, outcome, started):
@@ -186,7 +186,7 @@ class Agent:
                              for e in entries]}
         try:
             self.store.put(contract.OWNED_SLOTS_KEY, self._seal(contract.TAG_OWNED_SLOTS, payload))
-        except S3Error as e:
+        except StoreError as e:
             log.warning("owned-slots copy not written: %s", e)
 
     # ---- crash recovery (local state only) ----
@@ -210,7 +210,7 @@ class Agent:
             try:
                 if self.store.exists(key):
                     continue
-            except S3Error as err:
+            except StoreError as err:
                 log.warning("could not check %s: %s", key, err)
             self._publish(job_id, e["result"].encode("ascii"))  # the stored bytes, never a new result
 
@@ -223,13 +223,13 @@ class Agent:
     def _seen(self, job_id):
         if self.ledger.contains(job_id):
             return True
-        return self.store.exists(contract.done_key(job_id))  # S3Error propagates: skip this round
+        return self.store.exists(contract.done_key(job_id))  # StoreError propagates: skip this round
 
     def scan(self):
         """Steps 1-9 for up to MAX_SCAN pending objects. Returns verified jobs, oldest first."""
         try:
             items, more = self.store.list_prefix(contract.PENDING_PREFIX, MAX_LIST)
-        except S3Error as e:
+        except StoreError as e:
             log.warning("could not list pending jobs: %s", e)
             return []
         if more:
@@ -250,7 +250,7 @@ class Agent:
                 continue
             try:
                 data = self.store.get_bounded(key, contract.MAX_JOB_BYTES)
-            except S3Error as e:
+            except StoreError as e:
                 log.warning("could not read %s: %s", key[13:21], e)
                 continue
             if data is None:
@@ -278,7 +278,7 @@ class Agent:
                 self._delete(key)
             else:
                 log.warning("skipping pending object %s: %s", key[13:21], r.outcome)
-        except S3Error as e:
+        except StoreError as e:
             log.warning("could not check %s for replay: %s; will retry", key[13:21], e)
         return None
 

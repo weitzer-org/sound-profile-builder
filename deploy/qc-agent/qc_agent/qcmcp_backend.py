@@ -27,7 +27,9 @@ Three layers keep the transport to the operations the plan allows (section 5):
    RecallPreset UPDATE (save_preset), SetlistPosition UPDATE (recall), Grid DELETE,
    File DELETE, and every IOSettings / GlobalEQ / MasterVolume / Mode / ModelPreset write.
 
-The vendored files are not modified. Liveness (G2 c) reads two private attributes
+The vendored files are not modified. One upstream bug is worked around on our own instance:
+request() never dropped the reply it matched, so its pending queue could double per request
+(_make_request, below). Liveness (G2 c) reads two private attributes
 of the vendored Windows transport (its reader thread, its write-error counter), as
 the Phase 0 spikes did; nothing is written to them.
 """
@@ -36,6 +38,7 @@ from __future__ import annotations
 import logging
 import sys
 import threading
+import time
 import types
 from pathlib import Path
 
@@ -352,6 +355,55 @@ class WireGuard:
         self._save = None  # one save per arming
 
 
+# ---------------------------------------------------------------- a fix to one transport method
+
+def _make_request(mods):
+    """QuadCortex.request from f634ecd with one fix, bound per instance in connect().
+
+    Upstream removes the matched reply with `t is not (cmd, obj, raw, pb)`, comparing each
+    pending tuple to a NEW tuple, so nothing is ever removed and `keep + _pending` duplicates
+    every unconsumed message on each matched request. With the unit streaming broadcasts while a
+    session is live, `_pending` doubles per request; a per-scene write makes ~9 requests, so a
+    push could exhaust memory (tests/test_qcmcp_backend.py reproduces it with the simulated
+    unit). This copy removes the matched entry by identity of the pending tuple itself. The
+    vendored file stays byte-identical; the fix belongs upstream, then a re-vendoring PR.
+    """
+    P, QCError = mods["protocol"], mods["transport"].QCError
+
+    def request(self, command, proto_message=None, proto_bytes=None, expect=None, timeout_ms=2000):
+        with self._io_lock:  # upstream's @_serialized
+            want = command if isinstance(command, int) else P.NAME_TO_CMD[command]
+            if expect is not None:
+                want = expect if isinstance(expect, int) else P.NAME_TO_CMD[expect]
+            exp_rid = int(getattr(proto_message, "request_id", 0) or 0) if proto_message is not None else 0
+            self.send(command, proto_message, proto_bytes)
+            deadline = time.time() + timeout_ms / 1000.0
+            best = None
+            while time.time() < deadline:
+                self._collect(0.1)
+                keep = []
+                for i, item in enumerate(self._pending):
+                    cmd, obj, raw, pb = item
+                    if cmd == want:
+                        rid = int(getattr(obj, "request_id", 0) or 0) if obj is not None else 0
+                        if exp_rid and rid == exp_rid and obj is not None and len(pb) > 2:
+                            # what upstream meant: the unconsumed messages so far, then everything
+                            # after the match (stale replies before it are dropped, as below)
+                            self._pending = keep + self._pending[i + 1:]
+                            return cmd, obj, raw
+                        if not exp_rid and obj is not None and len(pb) > 2:
+                            return cmd, obj, raw
+                        best = best or (cmd, obj, raw)
+                    else:
+                        keep.append(item)
+                self._pending = keep
+            if best:
+                return best
+            raise QCError(f"no response to {command} within {timeout_ms}ms")
+
+    return request
+
+
 # ---------------------------------------------------------------- the backend
 
 def preset_to_plain(bp):
@@ -409,6 +461,7 @@ class QcMcpBackend(DeviceBackend):
             raise UnitAbsent(str(e)) from None
         guard = WireGuard(qc.io, P)
         qc.io = guard
+        qc.request = types.MethodType(_make_request(self._mods), qc)  # see _make_request
         self._raw, self._guard, self._errs = qc, guard, []
         self._qc = Guarded(qc)
         try:

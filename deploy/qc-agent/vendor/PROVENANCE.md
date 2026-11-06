@@ -61,6 +61,14 @@ From the audit (section 1.5) and Phase 0 (plan section 7):
 - `send()` counts non-benign write codes in `write_errors` instead of raising; G2(c) found that and a dead reader
   thread are the earliest signs the unit went away. The agent reads both (private attributes, read-only).
 - `float_value` travels as a 32-bit float: 0.2 reads back as 0.20000000298. The read-back diff uses a 1e-4 tolerance.
+- **`QuadCortex.request` never removes the matched reply** (`t is not (cmd, obj, raw, pb)` compares each pending
+  tuple with a newly built one, so it is always true), and `keep + _pending` then duplicates every unconsumed message
+  on each matched request. With broadcasts arriving while a session is live, `_pending` doubles per request; in the
+  simulated unit twelve requests reached 6,153 entries, and a per-scene write makes about nine. Found by GSR on PR #134
+  and reproduced in `tests/test_qcmcp_backend.py` (`PendingQueue`). The agent binds a fixed copy of `request` on its
+  own transport instance (`qcmcp_backend._make_request`); this file is unchanged. Whether the real unit echoes
+  `request_id` on Scene reads (which is what triggers it) is **unverified**: G6's per-scene writes passed on the unit.
+  Report it upstream; the fix comes back through a re-vendoring PR.
 - `protocol._recovered_fdps` would import `tools/extract_protos` if the descriptor sets were missing; both are
   vendored, so that path never runs.
 
