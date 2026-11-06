@@ -196,6 +196,13 @@ type FakeAgent struct {
 	// ClaimBucket, when set, replaces the bucket named inside heartbeats and
 	// results (objects still go to Bucket), to test the bucket binding.
 	ClaimBucket string
+	// ReadbackPayload, when set, is the qc-device-readback/1 payload every read_preset
+	// answers with (default: a small legacy-shaped object that is not a valid payload).
+	ReadbackPayload json.RawMessage
+	// ReadbackName and ReadbackSlot override the preset name and slot a read answers
+	// with (defaults "Clean Verb" and "1A"); Hostile still wins for the name.
+	ReadbackName string
+	ReadbackSlot string
 
 	mu       sync.Mutex
 	ledger   map[string]bool
@@ -339,10 +346,20 @@ func (a *FakeAgent) result(j *devicejobs.Job, now time.Time) devicejobs.Result {
 			{Slot: "20B", State: "occupied", Name: &name, Owned: true},
 		}}
 	case devicejobs.KindReadPreset:
-		name := a.text("Clean Verb")
+		def := "Clean Verb"
+		if a.ReadbackName != "" {
+			def = a.ReadbackName
+		}
+		name := a.text(def)
 		slot := "1A"
-		r.Readback = &devicejobs.ReadbackBlock{Format: "qc-device-readback/1", Slot: &slot, Name: &name,
-			Payload: json.RawMessage(fmt.Sprintf(`{"rows":[{"row":0,"blocks":[{"col":0,"model_id":5011,"label":%q}]}]}`, a.text("Jewel")))}
+		if a.ReadbackSlot != "" {
+			slot = a.ReadbackSlot
+		}
+		payload := a.ReadbackPayload
+		if payload == nil {
+			payload = json.RawMessage(fmt.Sprintf(`{"rows":[{"row":0,"blocks":[{"col":0,"model_id":5011,"label":%q}]}]}`, a.text("Jewel")))
+		}
+		r.Readback = &devicejobs.ReadbackBlock{Format: devicejobs.ReadbackFormat, Slot: &slot, Name: &name, Payload: payload}
 	}
 	return r
 }

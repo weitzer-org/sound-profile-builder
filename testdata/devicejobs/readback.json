@@ -1,0 +1,2934 @@
+{
+ "format": "qc-device-readback/1",
+ "note": "Shared by internal/deviceexport/readback_test.go and deploy/qc-agent/tests/test_readback.py. cases: feed device_preset (the agent's positional preset; {\"$float\": \"nan\"|\"inf\"|\"-inf\"} stands for a non-finite float, which JSON cannot hold) and position to qc_agent.jobs.readback_payload and expect expect_payload exactly. invalid: ParseReadbackPayload must reject payload with an error containing error.",
+ "cases": [
+  {
+   "name": "minimal_myth_drive",
+   "device_preset": {
+    "name": "Minimal",
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "values": [
+           0.2,
+           0.8,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6
+          ],
+          "scene_mode": true
+         },
+         {
+          "index": 1,
+          "values": [
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 2,
+          "values": [
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 3,
+          "values": [
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0
+          ],
+          "scene_mode": false
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   },
+   "position": {
+    "folder": "My Presets",
+    "position": 3
+   },
+   "expect_payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 3
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "values": [
+           0.2,
+           0.8,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6
+          ],
+          "scene_mode": true
+         },
+         {
+          "index": 1,
+          "values": [
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55,
+           0.55
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 2,
+          "values": [
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6,
+           0.6
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 3,
+          "values": [
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0,
+           0.0
+          ],
+          "scene_mode": false
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "name": "hostile_and_odd_values",
+   "device_preset": {
+    "name": "Evil\u202e `name`\u0000\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 2,
+        "model_id": 12045,
+        "params": [
+         {
+          "index": 0,
+          "values": [
+           {
+            "$float": "nan"
+           },
+           {
+            "$float": "inf"
+           },
+           {
+            "$float": "-inf"
+           },
+           true,
+           7,
+           "ME_110\u202e US\u0000 PRN`C10R\n Dynamic 57",
+           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+           null,
+           "ninth value dropped"
+          ],
+          "scene_mode": true
+         }
+        ]
+       },
+       {
+        "col": 5,
+        "model_id": 0,
+        "params": []
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": null
+   },
+   "position": {
+    "folder": "other",
+    "position": null
+   },
+   "expect_payload": {
+    "setlist": {
+     "folder": "other",
+     "position": null
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 2,
+        "model_id": 12045,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": true,
+          "values": [
+           null,
+           null,
+           null,
+           true,
+           7,
+           "ME_110 US PRN'C10R Dynamic 57",
+           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+           null
+          ]
+         }
+        ]
+       },
+       {
+        "col": 5,
+        "model_id": 0,
+        "params": []
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": null
+   }
+  },
+  {
+   "name": "capture_block_keeps_key_and_name",
+   "device_preset": {
+    "name": "Cap",
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 14001,
+        "params": [
+         {
+          "index": 0,
+          "values": [
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 1,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 2,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 3,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 4,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 5,
+          "values": [
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+          ],
+          "scene_mode": false
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   },
+   "position": {
+    "folder": "My Presets",
+    "position": 0
+   },
+   "expect_payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 0
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 14001,
+        "params": [
+         {
+          "index": 0,
+          "values": [
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75,
+           0.75
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 1,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 2,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 3,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 4,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ],
+          "scene_mode": false
+         },
+         {
+          "index": 5,
+          "values": [
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+           "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f Super Long Capture Name ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+          ],
+          "scene_mode": false
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   }
+  }
+ ],
+ "invalid": [
+  {
+   "name": "unknown top-level field",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     }
+    ],
+    "bypass": null,
+    "extra": 1
+   },
+   "error": "unknown or malformed field"
+  },
+  {
+   "name": "chains missing",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "bypass": null
+   },
+   "error": "chains is missing"
+  },
+  {
+   "name": "five chains",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 1,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 2,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 3,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     },
+     {
+      "row": 4,
+      "in_port": 0,
+      "out_port": 0,
+      "blocks": []
+     }
+    ],
+    "bypass": null
+   },
+   "error": "at most 4"
+  },
+  {
+   "name": "duplicate row",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     },
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     }
+    ],
+    "bypass": null
+   },
+   "error": "unique values 0-3"
+  },
+  {
+   "name": "column 8",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 8,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "unique values 0-7"
+  },
+  {
+   "name": "negative model id",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": -1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "model_id out of range"
+  },
+  {
+   "name": "seven values",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "has 7 values, want 8"
+  },
+  {
+   "name": "object as value",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           {},
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "must be a number, string, boolean or null"
+  },
+  {
+   "name": "193-character text value",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "text value is too long"
+  },
+  {
+   "name": "duplicate parameter index",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         },
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "parameter indexes must be unique"
+  },
+  {
+   "name": "bypass with three rows",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   },
+   "error": "bypass has 3 rows"
+  },
+  {
+   "name": "bypass column with seven scenes",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     }
+    ],
+    "bypass": [
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ],
+     [
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ]
+     ]
+    ]
+   },
+   "error": "bypass column has 7 scenes"
+  },
+  {
+   "name": "unknown folder",
+   "payload": {
+    "setlist": {
+     "folder": "Factory",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": []
+     }
+    ],
+    "bypass": null
+   },
+   "error": "setlist.folder must be"
+  },
+  {
+   "name": "index as a string",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 1,
+        "params": [
+         {
+          "index": "0",
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "wrong type"
+  },
+  {
+   "name": "model id as a float",
+   "payload": {
+    "setlist": {
+     "folder": "My Presets",
+     "position": 1
+    },
+    "chains": [
+     {
+      "row": 0,
+      "in_port": 1,
+      "out_port": 19,
+      "blocks": [
+       {
+        "col": 0,
+        "model_id": 5011.5,
+        "params": [
+         {
+          "index": 0,
+          "scene_mode": false,
+          "values": [
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5,
+           0.5
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "bypass": null
+   },
+   "error": "wrong type"
+  }
+ ]
+}

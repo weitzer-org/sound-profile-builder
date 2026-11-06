@@ -1,0 +1,2358 @@
+{
+ "device_preset": {
+  "bypass": [
+   [
+    [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    [
+     true,
+     false,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ]
+  ],
+  "chains": [
+   {
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 9014,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 1,
+      "model_id": 5,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.15000000596046448,
+         0.25,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5199999809265137,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": true,
+        "values": [
+         0.8500000238418579,
+         0.8999999761581421,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 2,
+      "model_id": 14000,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.5208333134651184,
+         0.5520833134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5208333134651184,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb"
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 3,
+      "model_id": 21002,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57"
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160"
+        ]
+       },
+       {
+        "index": 10,
+        "scene_mode": false,
+        "values": [
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586
+        ]
+       },
+       {
+        "index": 11,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 12,
+        "scene_mode": false,
+        "values": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 13,
+        "scene_mode": false,
+        "values": [
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579
+        ]
+       },
+       {
+        "index": 14,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 15,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 16,
+        "scene_mode": false,
+        "values": [
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421
+        ]
+       },
+       {
+        "index": 17,
+        "scene_mode": false,
+        "values": [
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823
+        ]
+       },
+       {
+        "index": 18,
+        "scene_mode": false,
+        "values": [
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827
+        ]
+       },
+       {
+        "index": 19,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 20,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 21,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 4,
+      "model_id": 6009,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.18000000715255737,
+         0.25,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612
+        ]
+       },
+       {
+        "index": 10,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 11,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 12,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 13,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 14,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 15,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 16,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 17,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 18,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 19,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 20,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "in_port": 1,
+    "out_port": 19,
+    "row": 0
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 1
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 2
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 3
+   }
+  ],
+  "name": "Round trip"
+ },
+ "expect_payload": {
+  "bypass": [
+   [
+    [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    [
+     true,
+     false,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ],
+   [
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   ]
+  ],
+  "chains": [
+   {
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 9014,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 1,
+      "model_id": 5,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.15000000596046448,
+         0.25,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448,
+         0.15000000596046448
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5199999809265137,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": true,
+        "values": [
+         0.8500000238418579,
+         0.8999999761581421,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579,
+         0.8500000238418579
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 2,
+      "model_id": 14000,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.5208333134651184,
+         0.5520833134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5208333134651184,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb"
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 3,
+      "model_id": 21002,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57"
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355,
+         0.3499999940395355
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160"
+        ]
+       },
+       {
+        "index": 10,
+        "scene_mode": false,
+        "values": [
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586,
+         0.31750133633613586
+        ]
+       },
+       {
+        "index": 11,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 12,
+        "scene_mode": false,
+        "values": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 13,
+        "scene_mode": false,
+        "values": [
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579,
+         0.6000000238418579
+        ]
+       },
+       {
+        "index": 14,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 15,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 16,
+        "scene_mode": false,
+        "values": [
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421,
+         0.5612508654594421
+        ]
+       },
+       {
+        "index": 17,
+        "scene_mode": false,
+        "values": [
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823,
+         0.7192230820655823
+        ]
+       },
+       {
+        "index": 18,
+        "scene_mode": false,
+        "values": [
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827,
+         0.5595231652259827
+        ]
+       },
+       {
+        "index": 19,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 20,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 21,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "col": 4,
+      "model_id": 6009,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.18000000715255737,
+         0.25,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737,
+         0.18000000715255737
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574,
+         0.2915702760219574
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725,
+         0.2985129952430725
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071,
+         0.699999988079071
+        ]
+       },
+       {
+        "index": 7,
+        "scene_mode": false,
+        "values": [
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277
+        ]
+       },
+       {
+        "index": 8,
+        "scene_mode": false,
+        "values": [
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827,
+         0.14583268761634827
+        ]
+       },
+       {
+        "index": 9,
+        "scene_mode": false,
+        "values": [
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612,
+         0.10000000149011612
+        ]
+       },
+       {
+        "index": 10,
+        "scene_mode": false,
+        "values": [
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 11,
+        "scene_mode": false,
+        "values": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "index": 12,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 13,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 14,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 15,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 16,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 17,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 18,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 19,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       {
+        "index": 20,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    ],
+    "in_port": 1,
+    "out_port": 19,
+    "row": 0
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 1
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 2
+   },
+   {
+    "blocks": [],
+    "in_port": 0,
+    "out_port": 0,
+    "row": 3
+   }
+  ],
+  "setlist": {
+   "folder": "My Presets",
+   "position": 8
+  }
+ },
+ "name": "01_SRV_Clean",
+ "position": {
+  "folder": "My Presets",
+  "position": 8
+ }
+}

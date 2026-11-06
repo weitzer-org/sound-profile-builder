@@ -160,7 +160,7 @@ func main() {
 		log.Printf("Device export unavailable: %v", err)
 	} else {
 		exporter = exp
-		mcpOpts = append(mcpOpts, mcpserver.WithExporter(exp))
+		mcpOpts = append(mcpOpts, mcpserver.WithExporter(exp), mcpserver.WithImporter(exp))
 	}
 	switch dcfg, err := devicejobs.ConfigFromEnv(bucket); {
 	case err != nil:
