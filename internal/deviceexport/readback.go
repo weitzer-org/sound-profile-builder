@@ -236,13 +236,11 @@ func (im *importer) block(pb devicejobs.ReadbackPlaced, bypass *[Scenes]bool) (*
 		im.captureFileCheck(ref, byIdx)
 	}
 
-	claimed := map[int]bool{}
 	for _, lp := range catalog.LabelParams(m) {
 		cp := lp.Param
 		if !m.ValidParamIndex(cp.Index) {
 			return nil, fmt.Errorf("catalog fault: %s (%d) param %s has index %d, outside its %d parameters", m.Name, m.ID, lp.Label, cp.Index, m.ParamCount)
 		}
-		claimed[cp.Index] = true
 		rp, ok := byIdx[cp.Index]
 		if !ok {
 			im.unconv(ref, lp.Label, "the unit's read-back has no value at this position")
