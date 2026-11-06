@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,6 +45,7 @@ type xmlParam struct {
 	DisplayPos string `xml:"displayPos,attr"`
 	Hidden     string `xml:"hidden,attr"`
 	Replaces   string `xml:"replaces,attr"`
+	Skew       string `xml:"skew,attr"`
 }
 
 // indexedParam is a parameter at its device index.
@@ -170,15 +172,29 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 				PluginID: strings.TrimSpace(xm.PluginID),
 				Params:   []Param{},
 			}
+			if c := strings.TrimSpace(xm.Clones); c != "" {
+				base, err := strconv.Atoi(c)
+				if err != nil {
+					return nil, fmt.Errorf("model %q: bad clones %q", xm.Name, xm.Clones)
+				}
+				m.Clones = base
+			}
 			params, err := effectiveParams(xm, byID, dupIDs, 0)
 			if err != nil {
 				return nil, err
 			}
+			// ParamCount counts every parameter, hidden ones included: the device's
+			// params array holds all of them (plus one trailing slot, see Model.ParamCount).
+			m.ParamCount = len(params)
 			for _, ip := range params {
 				if ip.xp.Hidden == "true" {
 					continue
 				}
-				m.Params = append(m.Params, convertParam(ip.index, ip.xp))
+				p, err := convertParam(ip.index, ip.xp)
+				if err != nil {
+					return nil, fmt.Errorf("model %q (%d): %w", m.Name, m.ID, err)
+				}
+				m.Params = append(m.Params, p)
 			}
 			out = append(out, m)
 		}
@@ -192,7 +208,7 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 	return out, nil
 }
 
-func convertParam(index int, xp xmlParam) Param {
+func convertParam(index int, xp xmlParam) (Param, error) {
 	p := Param{
 		Index:    index,
 		Name:     strings.TrimSpace(xp.Name),
@@ -200,6 +216,14 @@ func convertParam(index int, xp xmlParam) Param {
 		Units:    xp.Units,
 		MinLabel: xp.MinString,
 		MaxLabel: xp.MaxString,
+	}
+	skew, err := parseSkew(xp.Skew)
+	if err != nil {
+		return Param{}, fmt.Errorf("param %q (index %d): %w", p.Name, index, err)
+	}
+	p.Skew = skew
+	if s := strings.TrimSpace(xp.Skew); s == "LIN_SKEW" || s == "LOG_SKEW" {
+		p.SkewSymbol = s
 	}
 	p.Min, p.MinSymbol = numberOrSymbol(xp.Min)
 	p.Max, p.MaxSymbol = numberOrSymbol(xp.Max)
@@ -215,7 +239,41 @@ func convertParam(index int, xp xmlParam) Param {
 	if n, err := strconv.Atoi(strings.TrimSpace(xp.DisplayPos)); err == nil {
 		p.DisplayPos = &n
 	}
-	return p
+	return p, nil
+}
+
+// Skew values for the symbolic names ModelRepo.xml uses. LIN_SKEW is linear by definition.
+// LOG_SKEW = 0.3 is pyquadcortex's measurement (MIT, data only), not confirmed on our unit
+// (plan 7.1, G4: "Not covered: LOG_SKEW parameters").
+const (
+	linSkew = 1.0
+	logSkew = 0.3
+)
+
+// parseSkew reads a skew attribute: a finite number > 0 as is, LIN_SKEW as 1.0 and LOG_SKEW
+// as 0.3. An absent or empty attribute is nil (read as linear by Param.ToWire). Any other
+// value, including a number that is zero, negative, NaN or infinite, is an error, so a
+// CorOS update that introduces a new skew name fails the import instead of being guessed.
+func parseSkew(s string) (*float64, error) {
+	s = strings.TrimSpace(s)
+	switch s {
+	case "":
+		return nil, nil
+	case "LIN_SKEW":
+		v := linSkew
+		return &v, nil
+	case "LOG_SKEW":
+		v := logSkew
+		return &v, nil
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return nil, fmt.Errorf("unknown skew %q (want a number, LIN_SKEW or LOG_SKEW)", s)
+	}
+	if math.IsNaN(v) || math.IsInf(v, 0) || v <= 0 {
+		return nil, fmt.Errorf("skew %q must be a finite number > 0", s)
+	}
+	return &v, nil
 }
 
 // numberOrSymbol returns a numeric bound, or the symbolic name the XML used instead

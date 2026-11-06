@@ -1,0 +1,442 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "855e9928cb00fc1249b399db88a237ea9bb41c367c49f75b9e5d23524928408d",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "Crying Clyde Wah",
+   "model_id": 9014,
+   "params": [],
+   "bypass_a": true,
+   "bypass_b": true
+  },
+  {
+   "row": 0,
+   "col": 3,
+   "model": "410 US Basslad P10Q 16 (M)",
+   "model_id": 21002,
+   "params": [
+    {
+     "name": "MIC 1 DISTANCE",
+     "a": "1"
+    },
+    {
+     "name": "MIC 1 POSITION",
+     "a": "3.5"
+    },
+    {
+     "name": "MIC 2 LEVEL",
+     "a": "-3.5 dB"
+    },
+    {
+     "name": "MIC 2 DISTANCE",
+     "a": "2.5"
+    },
+    {
+     "name": "MIC 2 POSITION",
+     "a": "6"
+    },
+    {
+     "name": "HPF",
+     "a": "90 Hz"
+    },
+    {
+     "name": "LPF",
+     "a": "7000 Hz"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "at_default": [
+    "MIC 1 LEVEL"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 4,
+   "model": "Slapback Delay (M)",
+   "model_id": 6009,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "18 %",
+     "b": "25 %"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  }
+ ],
+ "unresolved": [
+  {
+   "block": "#1 Crying Clyde Wah",
+   "param": "WAH",
+   "reason": "unitless 0..1 control: its display scale is not verified on the device"
+  },
+  {
+   "block": "#2 Green 808",
+   "reason": "ambiguous: 2 device models share this name (ids 5, 27); use a name that picks one"
+  },
+  {
+   "block": "#3 1964 Fender Super Reverb",
+   "reason": "captures and IRs are not pushed in v1"
+  },
+  {
+   "block": "#4 410 US Basslad P10Q 16",
+   "param": "Mic 1",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#4 410 US Basslad P10Q 16",
+   "param": "Mic 2",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#5 Slapback Delay",
+   "param": "SYNC",
+   "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
+  },
+  {
+   "block": "#5 Slapback Delay",
+   "param": "DELAY TIME",
+   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  },
+  {
+   "block": "#6 John Mayer Spring Reverb",
+   "reason": "needs the John Mayer plugin, which isn't in config.json's available_plugins"
+  }
+ ],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+  },
+  "guitar": "Fender Telecaster Single Coil",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 9014,
+      "model": "Crying Clyde Wah",
+      "category": "Wah",
+      "index_evidence": "plain",
+      "bypass": [
+       true,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true
+      ],
+      "params": [],
+      "at_default": []
+     },
+     {
+      "col": 3,
+      "model_id": 21002,
+      "model": "410 US Basslad P10Q 16 (M)",
+      "category": "Cabsim Bass (M)",
+      "index_evidence": "clone-12000-g1",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 4,
+        "label": "MIC 1 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "wire": [
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1
+        ]
+       },
+       {
+        "index": 5,
+        "label": "MIC 1 POSITION",
+        "scene_mode": false,
+        "display": [
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5,
+         3.5
+        ],
+        "wire": [
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35,
+         0.35
+        ]
+       },
+       {
+        "index": 10,
+        "label": "MIC 2 LEVEL",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5
+        ],
+        "wire": [
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005
+        ]
+       },
+       {
+        "index": 12,
+        "label": "MIC 2 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5
+        ],
+        "wire": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 13,
+        "label": "MIC 2 POSITION",
+        "scene_mode": false,
+        "display": [
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ]
+       },
+       {
+        "index": 16,
+        "label": "HPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         90,
+         90,
+         90,
+         90,
+         90,
+         90,
+         90,
+         90
+        ],
+        "wire": [
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581,
+         0.5612508875445581
+        ]
+       },
+       {
+        "index": 17,
+        "label": "LPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         7000,
+         7000,
+         7000,
+         7000,
+         7000,
+         7000,
+         7000,
+         7000
+        ],
+        "wire": [
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643,
+         0.7192230933248643
+        ]
+       }
+      ],
+      "at_default": [
+       "MIC 1 LEVEL"
+      ]
+     },
+     {
+      "col": 4,
+      "model_id": 6009,
+      "model": "Slapback Delay (M)",
+      "category": "Delay",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         18,
+         25,
+         18,
+         18,
+         18,
+         18,
+         18,
+         18
+        ],
+        "wire": [
+         0.18,
+         0.25,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18
+        ]
+       }
+      ],
+      "at_default": []
+     }
+    ]
+   }
+  ],
+  "unresolved": [
+   {
+    "block": "#1 Crying Clyde Wah",
+    "param": "WAH",
+    "reason": "unitless 0..1 control: its display scale is not verified on the device"
+   },
+   {
+    "block": "#2 Green 808",
+    "reason": "ambiguous: 2 device models share this name (ids 5, 27); use a name that picks one"
+   },
+   {
+    "block": "#3 1964 Fender Super Reverb",
+    "reason": "captures and IRs are not pushed in v1"
+   },
+   {
+    "block": "#4 410 US Basslad P10Q 16",
+    "param": "Mic 1",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#4 410 US Basslad P10Q 16",
+    "param": "Mic 2",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#5 Slapback Delay",
+    "param": "SYNC",
+    "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
+   },
+   {
+    "block": "#5 Slapback Delay",
+    "param": "DELAY TIME",
+    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   },
+   {
+    "block": "#6 John Mayer Spring Reverb",
+    "reason": "needs the John Mayer plugin, which isn't in config.json's available_plugins"
+   }
+  ]
+ }
+}

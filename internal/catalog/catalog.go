@@ -14,7 +14,9 @@
 package catalog
 
 import (
+	"crypto/sha256"
 	_ "embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -58,8 +60,16 @@ type Model struct {
 	BasedOn string `json:"based_on,omitempty"`
 	// PluginID is set for models that belong to a paid Neural DSP plugin. The model
 	// appears in every unit's catalog, but using it needs that plugin's licence.
-	PluginID string  `json:"plugin_id,omitempty"`
-	Params   []Param `json:"params"`
+	PluginID string `json:"plugin_id,omitempty"`
+	// ParamCount is the number of parameters in the model's full list: ModelRepo.xml's
+	// <Parameter> elements with clones= resolved, hidden ones included (what Params
+	// leaves out). See DeviceParamCount and ValidParamIndex.
+	ParamCount int `json:"param_count,omitempty"`
+	// Clones is the id of the model this one inherits its parameter list from
+	// (ModelRepo.xml's clones="<id>"), 0 when it has its own. Clone index layouts are
+	// checked against the device only for the bases in VerifiedCloneBases.
+	Clones int     `json:"clones,omitempty"`
+	Params []Param `json:"params"`
 }
 
 // Param is one user-visible parameter of a model.
@@ -79,8 +89,14 @@ type Param struct {
 	Max       *float64 `json:"max,omitempty"`
 	MinSymbol string   `json:"min_symbol,omitempty"`
 	MaxSymbol string   `json:"max_symbol,omitempty"`
-	Default   *float64 `json:"default,omitempty"`
-	Units     string   `json:"units,omitempty"`
+	// Skew is the exponent of the display-to-wire taper (see ToWire). Nil means the XML
+	// gave none, which is read as linear (1.0). LIN_SKEW is stored as 1.0 and LOG_SKEW as 0.3.
+	Skew *float64 `json:"skew,omitempty"`
+	// SkewSymbol is the skew's symbolic name when the XML gave one ("LIN_SKEW" or
+	// "LOG_SKEW"), so a measured numeric 0.3 can be told apart from LOG_SKEW's 0.3.
+	SkewSymbol string   `json:"skew_symbol,omitempty"`
+	Default    *float64 `json:"default,omitempty"`
+	Units      string   `json:"units,omitempty"`
 	// Steps is the number of discrete positions for switch-like parameters.
 	Steps     int      `json:"steps,omitempty"`
 	StepNames []string `json:"step_names,omitempty"`
@@ -181,4 +197,11 @@ func Embedded() (*Catalog, error) {
 		embedded, embeddedErr = Decode(embeddedCatalog)
 	})
 	return embedded, embeddedErr
+}
+
+// EmbeddedSHA256 is the SHA-256 (lowercase hex) of the qc_catalog.json compiled into the
+// binary. The device export records it, so an export names the exact catalog it used.
+func EmbeddedSHA256() string {
+	sum := sha256.Sum256(embeddedCatalog)
+	return hex.EncodeToString(sum[:])
 }

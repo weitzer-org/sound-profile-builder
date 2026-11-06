@@ -602,36 +602,8 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	fmt.Fprintf(t, "**Dry run, nothing was sent.** Plan: push guitar %s of preset `%s` to slot **%s** as \"%s\".\n\n",
 		cell(p.Guitar), p.PresetID, p.Slot, cell(p.Name))
 	fmt.Fprintf(t, "Export: %s, sha256 `%s`.\n\n", cell(p.ExportFormat), p.ExportSHA256)
-	if len(p.Blocks) > 0 {
-		t.WriteString("| Grid | Block | Parameter | Scene A | Scene B | Bypass A/B |\n|---|---|---|---|---|---|\n")
-		for _, bl := range p.Blocks {
-			byp := fmt.Sprintf("%s/%s", onOff(bl.BypassA), onOff(bl.BypassB))
-			grid := fmt.Sprintf("row %d col %d", bl.Row, bl.Col)
-			model := fmt.Sprintf("%s (id %d)", cell(bl.Model), bl.ModelID)
-			if len(bl.Params) == 0 {
-				fmt.Fprintf(t, "| %s | %s | (defaults) | | | %s |\n", grid, model, byp)
-			}
-			for i, pr := range bl.Params {
-				bval := pr.B
-				if bval == "" {
-					bval = pr.A
-				}
-				if i > 0 {
-					grid, model, byp = "", "", ""
-				}
-				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, cell(pr.Name), cell(pr.A), cell(bval), byp)
-			}
-		}
-	}
+	renderExportTable(t, p.Blocks, p.Unresolved)
 	if len(p.Unresolved) > 0 {
-		t.WriteString("\n**Unresolved, so this plan cannot be pushed:**\n")
-		for _, u := range p.Unresolved {
-			what := cell(u.Block)
-			if u.Param != "" {
-				what += " / " + cell(u.Param)
-			}
-			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
-		}
 		t.WriteString("\nRefine the preset to remove these, then dry-run again.\n")
 	}
 	if !o.BridgeOnline {
@@ -647,11 +619,55 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	}
 }
 
-func onOff(bypassed bool) string {
-	if bypassed {
-		return "off"
+// renderExportTable renders an export's readable plan and its unresolved items. Every
+// string from the preset or export goes through cell().
+func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unresolved []devicejobs.Unresolved) {
+	if len(blocks) > 0 {
+		t.WriteString("| Grid | Block | Parameter | Scene A | Scene B | State A/B |\n|---|---|---|---|---|---|\n")
+		for _, bl := range blocks {
+			state := fmt.Sprintf("%s/%s", activeBypassed(bl.BypassA), activeBypassed(bl.BypassB))
+			grid := fmt.Sprintf("row %d col %d", bl.Row, bl.Col)
+			model := fmt.Sprintf("%s (id %d)", cell(bl.Model), bl.ModelID)
+			if len(bl.Params) == 0 {
+				fmt.Fprintf(t, "| %s | %s | (defaults) | | | %s |\n", grid, model, state)
+			}
+			for i, pr := range bl.Params {
+				bval := pr.B
+				if bval == "" {
+					bval = pr.A
+				}
+				if i > 0 {
+					grid, model, state = "", "", ""
+				}
+				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, cell(pr.Name), cell(pr.A), cell(bval), state)
+			}
+			if len(bl.AtDefault) > 0 {
+				names := make([]string, len(bl.AtDefault))
+				for i, n := range bl.AtDefault {
+					names[i] = cell(n)
+				}
+				fmt.Fprintf(t, "| | | (left at default: %s) | | | |\n", strings.Join(names, ", "))
+			}
+		}
+		t.WriteString("\nScenes C-H get Scene A's values and state; all eight scenes are written explicitly.\n")
 	}
-	return "on"
+	if len(unresolved) > 0 {
+		t.WriteString("\n**Unresolved, so this cannot be pushed:**\n")
+		for _, u := range unresolved {
+			what := cell(u.Block)
+			if u.Param != "" {
+				what += " / " + cell(u.Param)
+			}
+			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
+		}
+	}
+}
+
+func activeBypassed(bypassed bool) string {
+	if bypassed {
+		return "Bypassed"
+	}
+	return "Active"
 }
 
 // ---- registration ----

@@ -98,7 +98,14 @@ set it will cause the next run to needlessly re-research that entry.
   repo. It's the ground truth for block *names*: `TestCorosMapNamesExistInCatalog` fails if
   a non-capture `coros_map.json` entry's `coros_equivalent` isn't a real model (or mono/stereo
   family) name. Neural Captures aren't in it. Bounds the device gives symbolically (e.g.
-  `MAX_CABSIM_DB`) are left unknown, not guessed.
+  `MAX_CABSIM_DB`) stay symbolic in the JSON (`min_symbol`/`max_symbol`, so the range checks below still
+  skip them). `internal/catalog/firmware_constants.go` resolves them with per-entry evidence (only the cab
+  bounds are confirmed on CorOS 4.1.0; the rest are pyquadcortex 4.0.1 data, MIT) and lists the unmeasured
+  ones (`MIN/MAX_INPUT_TRIM`); `Param.ToWire`/`ToDisplay` (`convert.go`) use it and *refuse* (never clamp)
+  out-of-range, NaN, non-float and unmeasured. The catalog also carries each param's `skew` (taper exponent;
+  none = linear) and each model's `param_count` (full list, hidden included; the device's array is one longer,
+  an unexplained trailing slot, and `Model.ValidParamIndex` rejects any index >= `param_count`). Only one
+  clone family (the dual-mic cab) is checked against the device, not all 196.
   It also feeds the pipeline directly:
   - Every catalog model and family name is a valid block (`GetValidNativeBlocks`). Only amp/cab/drive
     names are fuzzy-snap targets; other categories and every plugin model are exact-match only.
@@ -147,6 +154,12 @@ this app's MCP connector. Read these before any device work:
 - `docs/design/qc-device-bridge-plan.md` — the design and phased plan (Phase 0 hardware gates, P1–P6), the MCP
   tool inventory, which model does what, and the kickoff prompt for each implementation chat (section 11).
 - `tools/qc-mcp-trial/` — the allowlist proxy and Windows walkthrough used to trial qc-mcp on the owner's unit.
+- `internal/deviceexport` — the device export (plan P2, section 4): one guitar's chain to `qc2-device-export/1` (model ids,
+  param indexes, all eight scene values and bypass flags, row 0). Pure and deterministic; it refuses rather than guesses,
+  and only converts where the unit confirmed the mapping (`catalog.ConfirmedSkews`, `VerifiedCloneBases`, bound evidence
+  in `firmware_constants.go`); add an entry there only with a section 7 measurement. `send_preset_to_device`,
+  `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
+  `go test ./internal/deviceexport -run Golden -update` (rerun after any catalog re-import: the header carries its hash).
 - `deploy/qc-agent/` — the home agent (P4, Python). Its README has the Windows install, daily use and hardware
   acceptance steps. qc-mcp's transport is vendored under `vendor/qc_mcp/` at `f634ecd`, byte for byte and SHA-256
   pinned (test plus a runtime check): never edit those files; re-vendor in its own PR (`vendor/PROVENANCE.md`). The
@@ -186,8 +199,8 @@ See `.env.example`.
 - **Device tools** (`internal/mcpserver/devicetools.go` over `internal/devicejobs`) are registered only when
   `DEVICE_JOBS_BUCKET` and `DEVICE_JOB_KEY` are set (a bad value logs and leaves them off; the jobs bucket must differ
   from the main one). Without them the server has exactly the 9 tools the existing tests pin. Everything read back
-  from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path refuses until P2's
-  exporter replaces `devicejobs.UnavailableExporter` in `cmd/server/main.go`.
+  from the bridge is untrusted: pass it through `sanitizeDeviceText` and `cell()`. The push path uses P2's
+  `internal/deviceexport` (`cmd/server/main.go`); `get_preset(format=device)` works without the device tools.
 - `qc://style/preset-display` (`internal/mcpserver/style/preset-display.md`, <=40 lines) is the chat presentation
   guide; the server `instructions` summarise it. If you change `RenderPresetMarkdown`'s columns, update the guide
   and `testdata/preset.golden.md` (`go test ./internal/mcpserver -run Golden -update`).
@@ -241,6 +254,10 @@ key, not Claude's — and are now the sole default gate for routine PRs.
   CodeRabbit review it. No automatic Claude review step. Read and address
   `security-high`/`security-critical` findings before merging regardless of
   what else ran.
+- **Always subscribe to the PR and address its comments.** After opening a PR, call
+  `subscribe_pr_activity` on it and keep it subscribed until it is merged or closed; work
+  review comments, bot findings and CI as they arrive (owner standing instruction, 2026-11-05).
+  Merging stays the owner's call: never merge unless asked.
 - **Run `/quick-review` on demand, not automatically** — when you explicitly
   want a local pass before opening a PR, or a bot finding is worth a second
   look. Still the project's own **`/quick-review`** (`.claude/skills/quick-review/`):
