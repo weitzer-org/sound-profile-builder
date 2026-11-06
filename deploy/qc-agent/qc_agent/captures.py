@@ -34,6 +34,7 @@ anything is written):
 from __future__ import annotations
 
 import re
+import dataclasses
 from dataclasses import dataclass, field, replace
 
 from . import text
@@ -67,8 +68,22 @@ class DirectorySnapshot:
     preset_deps: dict[int, frozenset[str]] = field(default_factory=dict)  # position -> dependency hashes (lower case)
     captures: list[CaptureEntry] = field(default_factory=list)
     capture_folders: list[tuple[str, bool, int]] = field(default_factory=list)  # (name, is_factory, file count)
+    # Every non-factory preset folder the listing shows as a full 256-slot table, by folder key:
+    # (display name, {position: name}, {position: dependency hashes}). My Presets is in it; so is any
+    # other collection the owner has made. A folder that isn't a complete table is left out, so the
+    # agent can't tell whether a slot there is empty and refuses.
+    preset_folders: dict[str, tuple] = field(default_factory=dict)
     # One dict per capture folder for the agent log's census (qcmcp_backend._log_census); never used to decide.
     folder_census: list[dict] = field(default_factory=list, repr=False, compare=False)
+
+
+    def for_folder(self, key):
+        """This snapshot seen through one preset folder (my_presets / preset_deps are that folder's),
+        or None when the listing doesn't show it as a complete table."""
+        if key not in self.preset_folders:
+            return None
+        _name, table, deps = self.preset_folders[key]
+        return dataclasses.replace(self, my_presets=table, preset_deps=deps)
 
 
 @dataclass(frozen=True)

@@ -169,7 +169,10 @@ them; this guide uses **24H**).
 8. **Idle exit.** Set `QC_AGENT_IDLE_MINUTES=2`, start, wait: it should stop after 2 minutes. Put `30` back.
 9. **Push refusals (works before P2).** These need a push job, which QC-2 can't build until P2. Once P2 is merged:
    - occupied slot: `slot_not_empty`, nothing written;
-   - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first");
+   - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first"; the message says what the unit
+     reports as open, with the collection name);
+   - an empty slot open in a collection other than My Presets (e.g. your own): the push builds there, not in My Presets.
+     **Unverified on the unit until you run it:** check the preset appears in that collection and My Presets is unchanged;
    - an empty slot outside `QC_AGENT_ALLOWED_SLOTS` (narrow it to `24H` to test): `slot_not_allowed`.
 10. **Before the first real push: are position replies correlated?** The push reads which slot is open several
     times, and the bridge accepts only the SetlistPosition reply that carries its own `request_id` (no fallback to
@@ -255,7 +258,18 @@ them; this guide uses **24H**).
     unit shows) and delete the preset. A push that fails with "footswitch assignments differ" saved nothing; send me
     the `read-back after the footswitches` lines from `agent.log`.
 
-18. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
+17. **Scene layouts (two guitars in one slot, or one guitar on other scenes; normal use).** Pull `main` on the PC first
+    (the agent's validator changed). Dry-run a push with `second_guitar` and the four scene letters (for example
+    ES-339 on A/B and Telecaster on E/F). The plan's table has one column per used scene; scenes nobody takes are
+    named under it and carry the first guitar's rhythm values. Select the empty slot on the unit, confirm, and expect
+    `succeeded`, `mismatches 0`. Then step through the scenes on the unit **by eye**: A and B show the first guitar's
+    rhythm and lead values, E and F the second guitar's, and a scene you did not assign (C, D, G, H) matches Scene A.
+    A bypass that differs between the guitars (a block on for one, off for the other) must follow the scene, but its
+    footswitch toggles it in every scene. Power-cycle and check again. **Unverified on the unit until you run it.**
+    A push the agent refuses with "scenes with the same source must carry the same values" means the PC is on an
+    older clone: pull `main`.
+
+19. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
     From the phone run `sync_device_library`, then paste from `agent.log` every line starting `capture skip census`
     and `capture skip sample` (per folder: how many files are kept and how many are left out for each reason:
     favorites / name length / name not printable ASCII / name changed by clean-up / key not 64 hex), plus the

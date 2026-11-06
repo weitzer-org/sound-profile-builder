@@ -64,6 +64,7 @@ import time
 import types
 from pathlib import Path
 
+from . import text
 from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
 from .captures import CaptureEntry, DirectorySnapshot, factory_version_of, version_of
 from .device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
@@ -488,7 +489,7 @@ class WireGuard:
             raise WireRefused(f"File CREATE: unexpected fields {sorted(fields)}")
         f = msg.folder
         if _names(f) - {"key", "files"} or f.key != folder_key or len(f.files) != 1:
-            raise WireRefused("File CREATE: only one file in My Presets")
+            raise WireRefused("File CREATE: only one file, in the armed folder")
         fi = f.files[0]
         if _names(fi) - {"index", "name"} or fi.index != position or fi.name != name:
             raise WireRefused("File CREATE: position or name differs from the armed save")
@@ -662,19 +663,18 @@ def directory_snapshot(file_msgs):
     mine = [f for k, f in presets.items() if k == SETLIST_KEY and not f.is_factory]
     if len(mine) != 1:
         raise DeviceError("My Presets is missing from the unit's directory listing")
-    files = list(mine[0].files)
-    # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256). A shorter or longer
-    # table would make a missing slot look empty, so it is refused rather than guessed at.
-    if len(files) != 256:
-        raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
-    # In a READ the array position is the slot and the `index` field is left 0 (upstream's
-    # PROTOCOL.md 5, directory._file_dict). A non-zero index that disagrees with the position
-    # would mean that rule doesn't hold on this unit: refuse rather than pick one of the two.
-    if any(f.index not in (0, i) for i, f in enumerate(files)):
-        raise DeviceError("My Presets listed a slot index that disagrees with its position")
-    my = {i: f.name or "" for i, f in enumerate(files)}
-    deps = {i: frozenset(d.hash.lower() for d in (*f.factory_dependencies, *f.product_dependencies))
-            for i, f in enumerate(files) if f.name}
+    my, deps = _slot_table(mine[0], "My Presets")
+    # Every other non-factory collection that is a complete table is a place a push may build into when it
+    # is the one open on the unit. One that isn't complete is left out (the push then refuses), never guessed.
+    folders_by_key = {SETLIST_KEY: ("My Presets", my, deps)}
+    for k, f in presets.items():
+        if k == SETLIST_KEY or f.is_factory:
+            continue
+        try:
+            table, fdeps = _slot_table(f, "folder")
+        except DeviceError:
+            continue
+        folders_by_key[k] = (text.clean(f.name, 40) or "unnamed", table, fdeps)
     entries, folders, census = [], [], []
     for key, fo in caps.items():
         folders.append((fo.name, bool(fo.is_factory), len(fo.files)))
@@ -687,7 +687,26 @@ def directory_snapshot(file_msgs):
                                         is_favorites=fav, version_field=f.version, factory_version=fver))
         census.append(_census_row(fo, chain, end, cloud, fav, fver))
     return DirectorySnapshot(my_presets=my, preset_deps=deps, captures=entries, capture_folders=folders,
-                             folder_census=census)
+                             folder_census=census, preset_folders=folders_by_key)
+
+
+def _slot_table(folder, what):
+    """One preset folder -> ({position: name}, {position: dependency hashes}), or DeviceError if it isn't a
+    complete 256-slot table."""
+    files = list(folder.files)
+    # A setlist is a fixed 256-slot table, empty slots included (G0 saw 256 for My Presets). A shorter or longer
+    # table would make a missing slot look empty, so it is refused rather than guessed at.
+    if len(files) != 256:
+        raise DeviceError(f"{what} listed {len(files)} slots, not 256")
+    # In a READ the array position is the slot and the `index` field is left 0 (upstream's
+    # PROTOCOL.md 5, directory._file_dict). A non-zero index that disagrees with the position
+    # would mean that rule doesn't hold on this unit: refuse rather than pick one of the two.
+    if any(f.index not in (0, i) for i, f in enumerate(files)):
+        raise DeviceError(f"{what} listed a slot index that disagrees with its position")
+    table = {i: f.name or "" for i, f in enumerate(files)}
+    deps = {i: frozenset(d.hash.lower() for d in (*f.factory_dependencies, *f.product_dependencies))
+            for i, f in enumerate(files) if f.name}
+    return table, deps
 
 
 def _chain(key, folders, depth=16):
@@ -712,8 +731,6 @@ def _census_row(fo, chain, end, cloud, fav, fver):
     """What the agent log's census says about one capture folder. Device text: cleaned and bounded. The
     ProductData fields beyond `version` (coros_version, device, extraMetadata) are logged, not used: which
     of them, if any, marks a factory capture's V1/V2 is unknown (P6, 2026-11-06)."""
-    from . import text
-
     def vals(attr, n=16):
         return sorted({text.clean(str(getattr(f, attr, "") or ""), n) for f in fo.files})[:5]
 
@@ -966,11 +983,12 @@ class QcMcpBackend(DeviceBackend):
 
     # -- writes --
 
-    def begin_push(self, position, name, plan):
+    def begin_push(self, position, name, plan, folder_key=SETLIST_KEY):
         if self._guard is None:
             raise DeviceError("not connected")
         self._guard.arm_push(plan)
         self._save_target = (position, name)
+        self._save_folder = folder_key
 
     def end_push(self):
         self._save_target = None
@@ -1045,9 +1063,10 @@ class QcMcpBackend(DeviceBackend):
         if getattr(self, "_save_target", None) != (position, name):
             raise DeviceError("save target differs from the armed push")
         self._save_target = None  # one save per push
-        self._guard.arm_save(SETLIST_KEY, position, name)
+        folder_key = getattr(self, "_save_folder", SETLIST_KEY)
+        self._guard.arm_save(folder_key, position, name)
         try:
-            self._call("write_preset_file", SETLIST_KEY, position, name)
+            self._call("write_preset_file", folder_key, position, name)
         finally:
             self._guard._save = None
 

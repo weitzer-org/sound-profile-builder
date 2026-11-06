@@ -1,0 +1,701 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "820c91658a13d358dbf460e7b89c55a63badf8bb40fa7c57ec42721f2420428d",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "Myth Drive",
+   "model_id": 1,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "2",
+     "b": "8",
+     "scenes": [
+      "2",
+      "8",
+      "2",
+      "2",
+      "3",
+      "6",
+      "2",
+      "2"
+     ]
+    },
+    {
+     "name": "TREBLE",
+     "a": "5.5",
+     "scenes": [
+      "5.5",
+      "5.5",
+      "5.5",
+      "5.5",
+      "5.5",
+      "5.5",
+      "5.5",
+      "5.5"
+     ]
+    },
+    {
+     "name": "LEVEL",
+     "a": "6",
+     "scenes": [
+      "6",
+      "6",
+      "6",
+      "6",
+      "6",
+      "6",
+      "6",
+      "6"
+     ]
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "bypass_scenes": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "model": "Brit 2203",
+   "model_id": 1001,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "4.5",
+     "b": "6",
+     "scenes": [
+      "4.5",
+      "6",
+      "4.5",
+      "4.5",
+      "3",
+      "6",
+      "4.5",
+      "4.5"
+     ]
+    },
+    {
+     "name": "OUTPUT",
+     "a": "-10 dB",
+     "scenes": [
+      "-10 dB",
+      "-10 dB",
+      "-10 dB",
+      "-10 dB",
+      "-10 dB",
+      "-10 dB",
+      "-10 dB",
+      "-10 dB"
+     ]
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "bypass_scenes": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "at_default": [
+    "MASTER"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 2,
+   "model": "110 US PRN C10R (M)",
+   "model_id": 12045,
+   "params": [
+    {
+     "name": "MIC 2 LEVEL",
+     "a": "-21.8 dB",
+     "scenes": [
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB",
+      "-21.8 dB"
+     ]
+    },
+    {
+     "name": "HPF",
+     "a": "80 Hz",
+     "scenes": [
+      "80 Hz",
+      "80 Hz",
+      "80 Hz",
+      "80 Hz",
+      "80 Hz",
+      "80 Hz",
+      "80 Hz",
+      "80 Hz"
+     ]
+    },
+    {
+     "name": "LPF",
+     "a": "8000 Hz",
+     "scenes": [
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz",
+      "8000 Hz"
+     ]
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "bypass_scenes": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "at_default": [
+    "MIC 1 LEVEL",
+    "MIC 1 PAN"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 3,
+   "model": "Low-High Cut",
+   "model_id": 4003,
+   "params": [
+    {
+     "name": "HPF FREQ",
+     "a": "217 Hz",
+     "scenes": [
+      "217 Hz",
+      "217 Hz",
+      "217 Hz",
+      "217 Hz",
+      "217 Hz",
+      "217 Hz",
+      "217 Hz",
+      "217 Hz"
+     ]
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "bypass_scenes": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "at_default": [
+    "HPF SLOPE"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 4,
+   "model": "Spring (M)",
+   "model_id": 8006,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "35 %",
+     "b": "20 %",
+     "scenes": [
+      "35 %",
+      "20 %",
+      "35 %",
+      "35 %",
+      "35 %",
+      "20 %",
+      "35 %",
+      "35 %"
+     ]
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": true,
+   "bypass_scenes": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false
+   ],
+   "at_default": [
+    "TRAILS"
+   ]
+  }
+ ],
+ "unresolved": [],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
+  },
+  "guitar": "Gibson ES-339 Humbuckers + Fender Telecaster Single Coil",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "2A",
+   "2B",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 1,
+      "model": "Myth Drive",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "scene_mode": true,
+        "display": [
+         2,
+         8,
+         2,
+         2,
+         3,
+         6,
+         2,
+         2
+        ],
+        "wire": [
+         0.2,
+         0.8,
+         0.2,
+         0.2,
+         0.3,
+         0.6,
+         0.2,
+         0.2
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 1,
+        "label": "TREBLE",
+        "scene_mode": false,
+        "display": [
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5
+        ],
+        "wire": [
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "LEVEL",
+        "scene_mode": false,
+        "display": [
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 1,
+      "model_id": 1001,
+      "model": "Brit 2203",
+      "category": "Guitar Amplifier",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "scene_mode": true,
+        "display": [
+         4.5,
+         6,
+         4.5,
+         4.5,
+         3,
+         6,
+         4.5,
+         4.5
+        ],
+        "wire": [
+         0.45,
+         0.6,
+         0.45,
+         0.45,
+         0.3,
+         0.6,
+         0.45,
+         0.45
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 6,
+        "label": "OUTPUT",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -10,
+         -10,
+         -10,
+         -10,
+         -10,
+         -10,
+         -10,
+         -10
+        ],
+        "wire": [
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012,
+         0.24999854297459012
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": [
+       "MASTER"
+      ]
+     },
+     {
+      "col": 2,
+      "model_id": 12045,
+      "model": "110 US PRN C10R (M)",
+      "category": "Cabsim Guitar (M)",
+      "index_evidence": "clone-12000-g1",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 10,
+        "label": "MIC 2 LEVEL",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -21.8,
+         -21.8,
+         -21.8,
+         -21.8,
+         -21.8,
+         -21.8,
+         -21.8,
+         -21.8
+        ],
+        "wire": [
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444,
+         0.010066601212044444
+        ],
+        "evidence": [
+         "taper:g4",
+         "bounds:g4"
+        ]
+       },
+       {
+        "index": 16,
+        "label": "HPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         80,
+         80,
+         80,
+         80,
+         80,
+         80,
+         80,
+         80
+        ],
+        "wire": [
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466,
+         0.5358867312681466
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 17,
+        "label": "LPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000
+        ],
+        "wire": [
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262,
+         0.7507718761305262
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": [
+       "MIC 1 LEVEL",
+       "MIC 1 PAN"
+      ]
+     },
+     {
+      "col": 3,
+      "model_id": 4003,
+      "model": "Low-High Cut",
+      "category": "Equalizer",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 1,
+        "label": "HPF FREQ",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         217,
+         217,
+         217,
+         217,
+         217,
+         217,
+         217,
+         217
+        ],
+        "wire": [
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895,
+         0.25012737345710895
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": [
+       "HPF SLOPE"
+      ]
+     },
+     {
+      "col": 4,
+      "model_id": 8006,
+      "model": "Spring (M)",
+      "category": "Reverb",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       true,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         35,
+         20,
+         35,
+         35,
+         35,
+         20,
+         35,
+         35
+        ],
+        "wire": [
+         0.35,
+         0.2,
+         0.35,
+         0.35,
+         0.35,
+         0.2,
+         0.35,
+         0.35
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": [
+       "TRAILS"
+      ]
+     }
+    ]
+   }
+  ],
+  "stomps": [
+   {
+    "row": 0,
+    "col": 0,
+    "switch": "C"
+   },
+   {
+    "row": 0,
+    "col": 4,
+    "switch": "G"
+   }
+  ],
+  "unresolved": [],
+  "warnings": []
+ }
+}
