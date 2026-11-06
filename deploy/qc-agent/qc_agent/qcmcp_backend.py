@@ -391,6 +391,17 @@ class WireGuard:
 
 # ---------------------------------------------------------------- a fix to one transport method
 
+MAX_PENDING = 4096  # unconsumed messages kept between reads (broadcasts nobody asks for, stray replies)
+
+
+def _bounded(keep):
+    """The unconsumed queue, newest MAX_PENDING kept. Called only on what a read loop left after
+    taking its own messages, so it never drops a reply or folder that loop is waiting for. Without
+    it, broadcasts for commands the agent never requests would grow the queue for the whole session.
+    Dropping the oldest is safe: a stale message is never a valid reply (request() drops those too)."""
+    return keep[-MAX_PENDING:] if len(keep) > MAX_PENDING else keep
+
+
 def _make_request(mods):
     """QuadCortex.request from f634ecd with one fix, installed by _fixed_quad_cortex.
 
@@ -445,7 +456,7 @@ def _make_request(mods):
                         # dropped otherwise: another request's reply, or one we can't attribute
                     else:
                         keep.append(item)
-                self._pending = keep
+                self._pending = _bounded(keep)
             if best:
                 return best
             if strict:
@@ -511,9 +522,12 @@ def _make_list_directory_raw(mods):
                         folders.append(obj)
                         nfiles += len(obj.folder.files)
                         got = True
+                    elif (cmd == want and obj is not None
+                          and int(getattr(obj, "request_id", 0) or 0) == m.request_id):
+                        pass  # this READ's own reply without a folder (an ack, if the unit sends one)
                     else:
                         keep.append(item)
-                self._pending = keep
+                self._pending = _bounded(keep)
                 if len(folders) > MAX_LISTING_MESSAGES or nfiles > MAX_LISTING_FILES:
                     raise DeviceError("the unit's directory listing is too large")
                 if got:

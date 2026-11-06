@@ -459,6 +459,35 @@ class DirectoryListing(Base):
         snap = self.dev.read_directory()
         self.assertEqual(snap.my_presets[3], "")
 
+    def test_the_reads_own_folderless_reply_is_consumed(self):
+        self.dev.connect()
+        raw = self.dev._raw
+        orig = self.hid._handle
+        File = P.message_class("File")
+
+        def with_ack(name, m):
+            out = orig(name, m)
+            if name == "File" and m.action == P.ACTION["READ"]:
+                self.hid._reply("File", File(action=P.ACTION["READ"], request_id=m.request_id))
+                self.hid._reply("File", File(action=P.ACTION["READ"], request_id=m.request_id + 1000))
+            return out
+        self.hid._handle = with_ack
+        self.dev.read_directory()
+        left = [o for c, o, *_ in raw._pending if c == P.NAME_TO_CMD["File"]]
+        # its own ack is gone; another request's reply is left for request() to judge
+        self.assertEqual(len(left), 1)
+        self.assertFalse(left[0].HasField("folder"))
+
+    def test_unconsumed_queue_is_bounded(self):
+        self.dev.connect()
+        raw = self.dev._raw
+        tempo = P.message_class("GlobalTempo")()
+        raw._pending.extend((P.NAME_TO_CMD["GlobalTempo"], tempo, b"", b"xx")
+                            for _ in range(qcmcp_backend.MAX_PENDING + 500))
+        snap = self.dev.read_directory()  # the listing itself still completes
+        self.assertEqual(len(snap.my_presets), 256)
+        self.assertLessEqual(len(raw._pending), qcmcp_backend.MAX_PENDING)
+
     def test_an_unfinished_listing_is_refused(self):
         self.dev.connect()
         orig = self.hid._handle
