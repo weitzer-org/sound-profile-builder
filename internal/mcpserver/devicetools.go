@@ -708,18 +708,13 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 				model = fmt.Sprintf("%s (capture, found on the unit at push time)", cell(bl.Capture))
 			}
 			if ci := bl.CaptureInfo; ci != nil {
-				// Every string here came from the unit's synced list: sanitised, then escaped by cell().
+				// Every string here came from the unit's synced list: sanitised, escaped by cell(), and put in a
+				// code span (dcell's reason: a folder named "[x](https://evil.example)" must not become a link).
+				span := func(x string) string { return "`" + cell(dtext(x)) + "`" }
 				model = fmt.Sprintf("%s (capture on your unit: V%d %s, folder %s, key %s…, list synced %s)",
-					cell(dtext(ci.UnitName)), ci.Version, cell(dtext(ci.Kind)), cell(dtext(ci.Folder)), cell(dtext(ci.KeyPrefix)), cell(dtext(ci.SyncedAt)))
+					span(ci.UnitName), ci.Version, span(ci.Kind), span(ci.Folder), span(ci.KeyPrefix), span(ci.SyncedAt))
 				if ci.AskedName != "" {
-					model += fmt.Sprintf(", the preset calls it %s (reviewed alias)", cell(dtext(ci.AskedName)))
-				}
-			}
-			if ci := bl.CaptureInfo; ci != nil {
-				model = fmt.Sprintf("%s (capture on your unit: V%d %s, folder %s, key %s…, from the list synced %s)",
-					cell(dtext(ci.UnitName)), ci.Version, cell(dtext(ci.Kind)), cell(dtext(ci.Folder)), cell(dtext(ci.KeyPrefix)), cell(dtext(ci.SyncedAt)))
-				if ci.AskedName != "" {
-					model += fmt.Sprintf(" — the preset calls it %s; reviewed alias", cell(dtext(ci.AskedName)))
+					model += fmt.Sprintf(", the preset calls it %s (reviewed alias)", span(ci.AskedName))
 				}
 			}
 			if len(bl.Params) == 0 {
@@ -748,7 +743,7 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 				fmt.Fprintf(t, "| | | (left at default: %s) | | | |\n", strings.Join(names, ", "))
 			}
 			for _, m := range bl.Mics {
-				fmt.Fprintf(t, "| | | (cab mic written exactly: %s = %s) | | | |\n", cell(dtext(m.Label)), cell(dtext(m.Value)))
+				fmt.Fprintf(t, "| | | (cab mic written exactly: %s = `%s`) | | | |\n", cell(dtext(m.Label)), cell(dtext(m.Value)))
 				micsWritten = true
 			}
 		}

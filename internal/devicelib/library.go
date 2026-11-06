@@ -152,7 +152,30 @@ func (s *Store) Library(ctx context.Context) (*Library, error) {
 	if l.Format != LibraryFormat {
 		return nil, errors.New("the stored capture list has an unknown format")
 	}
+	if err := l.validate(); err != nil {
+		return nil, err
+	}
 	return &l, nil
+}
+
+// validate re-checks a stored list as strictly as the payload it came from, so whoever can write
+// the main bucket can't put Markdown, control characters or an odd timestamp in front of the user.
+func (l *Library) validate() error {
+	bad := errors.New("the stored capture list is malformed")
+	if _, err := devicejobs.ParseTime(l.SyncedAt); err != nil || len(l.Captures) > devicejobs.MaxLibraryCaptures {
+		return bad
+	}
+	for _, c := range l.Captures {
+		v := c.Version
+		p := devicejobs.LibraryCapture{Name: c.Name, Key: c.Key, Kind: c.Kind, Folder: c.Folder, Cloud: c.Cloud}
+		if v != 0 {
+			p.Version = &v
+		}
+		if v < 0 || v > 2 || p.Validate() != nil {
+			return bad
+		}
+	}
+	return nil
 }
 
 // SaveLibrary replaces the stored list: the newest sync is the unit's current truth.

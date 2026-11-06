@@ -253,3 +253,24 @@ func TestHarvest(t *testing.T) {
 		t.Error("ValidMic")
 	}
 }
+
+func TestStoredLibraryIsRevalidatedOnRead(t *testing.T) {
+	mem := devicejobstest.NewMemClient()
+	s := NewStore(mem, "main")
+	ctx := context.Background()
+	k := strings.Repeat("a", 64)
+	for name, body := range map[string]string{
+		"markdown folder": `{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"` + k + `","version":1,"kind":"user","folder":"[x](https://evil.example)‮","cloud":false}]}`,
+		"bad timestamp":   `{"format":"qc2-device-library/1","synced_at":"later","captures":[]}`,
+		"bad version":     `{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"` + k + `","version":7,"kind":"user","folder":"F","cloud":false}]}`,
+	} {
+		_ = mem.WriteFile(ctx, "main", LibraryObject, []byte(body))
+		if _, err := s.Library(ctx); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	_ = mem.WriteFile(ctx, "main", LibraryObject, []byte(`{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"`+k+`","version":0,"kind":"user","folder":"F","cloud":true}]}`))
+	if l, err := s.Library(ctx); err != nil || len(l.Captures) != 1 {
+		t.Errorf("a valid list was refused: %v", err)
+	}
+}

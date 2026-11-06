@@ -98,14 +98,15 @@ func ParseLibraryPayload(raw json.RawMessage) (*LibraryPayload, error) {
 		return nil, errors.New("library payload: skipped out of range")
 	}
 	for _, c := range p.Captures {
-		if err := c.validate(); err != nil {
+		if err := c.Validate(); err != nil {
 			return nil, err
 		}
 	}
 	return &p, nil
 }
 
-func (c LibraryCapture) validate() error {
+// Validate checks one entry as ParseLibraryPayload does.
+func (c LibraryCapture) Validate() error {
 	switch {
 	case !libNameRe.MatchString(c.Name) || strings.TrimSpace(c.Name) != c.Name || strings.Contains(c.Name, "  ") || strings.Contains(c.Name, "`"):
 		return errors.New("library payload: a capture name is not clean printable ASCII")
