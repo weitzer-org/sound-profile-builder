@@ -694,7 +694,7 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 		fmt.Fprintf(t, "\n⚠️ %s.\n", o.SlotNote)
 	}
 	if o.SlotListingNote != "" {
-		fmt.Fprintf(t, "\n⚠️ %s.\n", sanitizeDeviceText(o.SlotListingNote, 400))
+		fmt.Fprintf(t, "\n⚠️ %s.\n", cell(o.SlotListingNote))
 	}
 	if o.CanPush {
 		fmt.Fprintf(t, "\nTo push: show this plan to the user and, only if they approve, call send_preset_to_device again with the same "+
