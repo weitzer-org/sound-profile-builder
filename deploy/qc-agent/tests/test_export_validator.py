@@ -334,6 +334,10 @@ class Additions(unittest.TestCase):
         e = cap()
         e["payload"]["unresolved"] = [{"block": "#1 CA John's", "reason": "not on the unit"}]
         self.refused(e, "1 unresolved item(s); a push needs zero")
+        # the capture path's bypass gets the same length/type/C-H checks as any block
+        self.refused(cap(bypass=[False, False]), "exactly 8 values")
+        self.refused(cap(bypass=[False] * 9), "exactly 8 values")
+        self.refused(cap(bypass=[False, False, True] + [False] * 5), "scenes C-H")
         # only the capture block's own controls: index 5 (file_name) and anything unlisted are refused
         self.refused(cap(params=[gain | {"index": 5, "label": "file_name"}]), "not a listed parameter")
         self.refused(cap(params=[gain | {"label": "VOLUME"}]), "in the catalog, not")
