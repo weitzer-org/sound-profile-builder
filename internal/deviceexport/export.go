@@ -235,7 +235,8 @@ type Param struct {
 	// Evidence says what the display-to-wire mapping rests on (plan 4.1), e.g.
 	// "taper:g4" (read on the owner's unit), "taper:device-xml" (the device's own skew,
 	// formula confirmed at other exponents), "taper:pyquadcortex", "bounds:g4",
-	// "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear" (switch positions).
+	// "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear" (switch positions),
+	// "encoding:fader-linear-guess" (a fader converted like a float: UNVERIFIED, FaderEvidence).
 	Evidence []string `json:"evidence"`
 
 	names [2]string // Scene A/B position names of a switch, for the readable plan

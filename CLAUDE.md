@@ -167,7 +167,9 @@ this app's MCP connector. Read these before any device work:
   param indexes, all eight scene values and bypass flags, row 0, capture blocks by name). Pure and deterministic; it
   refuses what has no data at all, and labels every conversion with its source in the param's `evidence` (`:g4` = read on
   the unit; device-XML skews, pyquadcortex bounds and qc-mcp's switch encoding are allowed but labelled, plan 4.1).
-  Clone indexes stay limited to `VerifiedCloneBases`. `go run ./cmd/device_census <eval dir>` shows how many eval chains
+  Faders (Graphic-9 bands, Parallax, CA John's 2C) convert like a float on the catalog range, labelled `encoding:fader-linear-guess`
+  (†, **unverified on the unit** until plan 8.1 item 8; qc-mcp's `to_norm` has no type branch, so it is the same guess);
+  combo boxes and `floatWithLed` stay refused. Clone indexes stay limited to `VerifiedCloneBases`. `go run ./cmd/device_census <eval dir>` shows how many eval chains
   are pushable and why not. `send_preset_to_device`,
   `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
   `go test ./internal/deviceexport -run Golden -update` (rerun after any catalog re-import: the header carries its hash).

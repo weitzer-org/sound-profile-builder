@@ -75,9 +75,13 @@ func (p Param) skewOrLinear() (float64, error) {
 
 // convertible checks what both directions need before touching a number.
 func (p Param) convertible() (lo, hi, skew float64, err error) {
-	// Only plain floats have a measured taper. Switches, combo boxes, rotary switches and
-	// strings map steps to wire values by a rule nobody has checked on the unit.
-	if p.Type != "float" {
+	// Only plain floats have a measured taper. Faders convert the same way, by owner
+	// decision (2026-11-06): a labelled guess, not a measurement. qc-mcp's to_norm
+	// (catalog.py:170-185 at f634ecd) has no type branch either, so a fader gets the same
+	// range and skew as a float there. Callers must label the result (deviceexport's
+	// FaderEvidence). Switches, combo boxes, rotary switches and strings map steps to wire
+	// values by a rule nobody has checked on the unit.
+	if !ContinuousParamTypes[p.Type] {
 		return 0, 0, 0, fmt.Errorf("param %q: type %q has no measured wire mapping", p.Name, p.Type)
 	}
 	if lo, hi, err = p.Bounds(); err != nil {

@@ -10,6 +10,7 @@ import re
 import unittest
 
 from helpers import catalog, export
+from qc_agent import export_validator as V
 from qc_agent.export_validator import ExportRefused, validate
 
 A8 = [0.0] * 8
@@ -233,6 +234,59 @@ class Refusals(unittest.TestCase):
         cat.models[4000]["params_by_index"][gain["index"]]["min_symbol"] = "MIN_INPUT_TRIM"
         with self.assertRaisesRegex(ExportRefused, "unconfirmed or missing bound"):
             validate(mutate(lambda p: swap(p, 0, 4000, params=[g])), cat, "4.1.0")
+
+    def test_fader_linear_guess(self):
+        # Faders (owner decision 2026-11-06, plan 4.1): converted like a float on the catalog range, and
+        # labelled a guess. Plugin Graphic-9 65Hz is -12..12 dB, CA John's 2C Ch1 80 Hz is 0..10; neither has a skew.
+        guess = ["encoding:fader-linear-guess"]
+        db = {"index": 1, "label": "65Hz", "scene_mode": False, "display": eight(6), "wire": eight(0.75),
+              "units": "dB", "evidence": guess}
+        dial = {"index": 10, "label": "80 Hz", "scene_mode": False, "display": eight(7.5), "wire": eight(0.75),
+                "evidence": guess}
+        def accept(mid, prm):
+            validate(mutate(lambda p: swap(p, 0, mid, params=[prm])), catalog(), "4.1.0")
+
+        def refuse(mid, prm, why):
+            self.refused(mutate(lambda p: swap(p, 0, mid, params=[prm])), why)
+
+        accept(4006, db)
+        accept(1139, dial)
+        # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map
+        for d, w in ((-12, 0), (12, 1), (0, 0.5), (-6, 0.25)):
+            with self.subTest(model=4006, d=d, w=w):
+                accept(4006, db | {"display": eight(d), "wire": eight(w)})
+        for d, w in ((0, 0), (10, 1), (5, 0.5), (2.5, 0.25)):
+            with self.subTest(model=1139, d=d, w=w):
+                accept(1139, dial | {"display": eight(d), "wire": eight(w)})
+        # a scene-varying fader: Scene B (index 1) differs, scenes C-H carry Scene A
+        accept(4006, db | {"scene_mode": True, "display": [6, -4.5] + [6] * 6, "wire": [0.75, 0.3125] + [0.75] * 6})
+        # the wire is recomputed from the catalog
+        refuse(4006, db | {"wire": eight(0.7)}, "not the catalog's mapping")
+        refuse(1139, dial | {"wire": eight(0.5)}, "not the catalog's mapping")  # a 0..10 fader is not a 0..1 value
+        refuse(4006, db | {"display": eight(13), "wire": eight(1)}, "outside -12..12")
+        refuse(1139, dial | {"display": eight(11), "wire": eight(1)}, "outside 0..10")
+        refuse(4006, db | {"wire": eight(1.01)}, "outside 0..1")
+        # the label: required on a fader, refused on anything else
+        refuse(4006, db | {"evidence": ["taper:g4"]}, "doesn't match a fader")
+        refuse(4006, db | {"evidence": ["taper:device-xml"]}, "doesn't match a fader")
+        refuse(4006, db | {"evidence": ["encoding:qc-mcp-linear"]}, "doesn't match a fader")
+        refuse(4006, db | {"evidence": guess + ["encoding:qc-mcp-linear"]}, "doesn't match a fader")
+        refuse(4006, db | {"evidence": guess + ["bounds:g4"]}, "doesn't match the catalog's bounds")
+        # ... on a float (Graphic-9 4005's HPF, a plain float) and on a switch (Spring's TRAILS)
+        hpf = {"index": 0, "label": "HPF", "scene_mode": False, "display": eight(20), "wire": eight(0),
+               "units": "Hz", "evidence": ["taper:device-xml"]}
+        cm = catalog().models[4005]["params_by_index"][0]
+        hpf |= {"display": eight(cm["min"]), "wire": eight(0)}
+        accept(4005, hpf)
+        refuse(4005, hpf | {"evidence": ["taper:device-xml"] + guess}, "doesn't match a float")
+        trails = {"index": 4, "label": "TRAILS", "scene_mode": False, "display": eight(1), "wire": eight(1),
+                  "evidence": guess}
+        self.refused(mutate(lambda p: block(p, 4).update(params=[trails])), "doesn't match a switch")
+        # the defaults log can compute a fader's default wire now (it is the float rule)
+        for mid, name in ((1139, "80 Hz"), (4006, "65Hz")):
+            found = next((q for q in catalog().models[mid]["params"] if q["name"] == name), None)
+            self.assertIsNotNone(found, f"{name} is missing from model {mid}")
+            self.assertEqual(V.default_wire(found), 0.5)
 
     def test_discrete_position_is_whole(self):
         trails = {"index": 4, "label": "TRAILS", "scene_mode": False, "display": eight(0.5), "wire": eight(0.5),

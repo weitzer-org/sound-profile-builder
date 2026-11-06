@@ -1,0 +1,17 @@
+{
+ "guitars": {
+  "Gibson ES-339 Humbuckers": [
+   {"id": "b1", "type": "Amplifier", "model": "CA John's 2C Ch1", "parameters": [
+     {"name": "Gain", "type": "slider", "value": "4", "value_b": "6", "basis": "estimate"},
+     {"name": "80 Hz", "type": "slider", "value": "5", "value_b": "7.5", "basis": "estimate"},
+     {"name": "240 Hz", "type": "slider", "value": "2.5", "basis": "estimate"},
+     {"name": "6600 Hz", "type": "slider", "value": "10", "basis": "estimate"}]},
+   {"id": "b2", "type": "EQ", "model": "Plugin Graphic-9", "parameters": [
+     {"name": "65Hz", "type": "slider", "value": "6 dB", "value_b": "-4.5 dB", "basis": "estimate"},
+     {"name": "500Hz", "type": "slider", "value": "-12 dB", "basis": "estimate"},
+     {"name": "2kHz", "type": "slider", "value": "12", "unit": "dB", "basis": "estimate"},
+     {"name": "8kHz", "type": "slider", "value": "0 dB", "value_b": "3 dB", "basis": "estimate"},
+     {"name": "LPF", "type": "slider", "value": "8000 Hz", "basis": "estimate"}]}
+  ]
+ }
+}

@@ -269,6 +269,7 @@ func TestFlagCatalogParamMismatches(t *testing.T) {
 	valid := map[string]bool{
 		"Green 808": false, "Rodent Drive": false, "Analog Delay": false, "US TWN Vibrato": false,
 		"Plate": false, "412 Brit 60B V30 95": false, "Some Capture": true,
+		"Plugin Graphic-9": false, "CA John's 2C Ch1": false,
 	}
 	cases := []struct {
 		name  string
@@ -302,6 +303,19 @@ func TestFlagCatalogParamMismatches(t *testing.T) {
 		{"confirmed_range on an unknown range", storage.EffectBlock{Type: "Cabinet", Model: "412 Brit 60B V30 95", Parameters: []storage.BlockParameter{
 			{Name: "Mic 1 Level", Value: "-3 dB", Basis: "confirmed_range"}, {Name: "HPF", Value: "80 Hz", Basis: "confirmed_range"}}},
 			CatalogParamCounts{BasisOverclaims: 1, CheckedBlocks: 1}, `Mic 1 Level is tagged confirmed_range, but the device's range for it isn't known`},
+		// Faders (Graphic-9 bands -12..12 dB, an amp's EQ faders 0..10) are checked on their range like any
+		// other dB / 0..10 control, so an export that later converts them as a guess never sees one the
+		// Architect wrote outside it.
+		{"fader in range", storage.EffectBlock{Type: "EQ", Model: "Plugin Graphic-9", Parameters: []storage.BlockParameter{param("65Hz", "-12 dB"), param("125Hz", "12 dB"), param("250Hz", "0")}},
+			CatalogParamCounts{CheckedBlocks: 1}, ""},
+		{"dB fader out of range", storage.EffectBlock{Type: "EQ", Model: "Plugin Graphic-9", Parameters: []storage.BlockParameter{param("65Hz", "+15 dB")}},
+			CatalogParamCounts{OutOfRange: 1, CheckedBlocks: 1}, `65Hz +15 dB is outside the device's -12..12dB range`},
+		{"dB fader in the wrong unit", storage.EffectBlock{Type: "EQ", Model: "Plugin Graphic-9", Parameters: []storage.BlockParameter{param("500Hz", "3 Hz")}},
+			CatalogParamCounts{UnitMismatches: 1, CheckedBlocks: 1}, `500Hz is written in Hz, but the device control is in dB`},
+		{"0..10 fader out of range", storage.EffectBlock{Type: "Amplifier", Model: "CA John's 2C Ch1", Parameters: []storage.BlockParameter{param("80 Hz", "11")}},
+			CatalogParamCounts{OutOfRange: 1, CheckedBlocks: 1}, `80 Hz 11 is outside the device's 0..10 range`},
+		{"0..10 fader in dB", storage.EffectBlock{Type: "Amplifier", Model: "CA John's 2C Ch1", Parameters: []storage.BlockParameter{param("240 Hz", "3 dB")}},
+			CatalogParamCounts{UnitMismatches: 1, CheckedBlocks: 1}, `240 Hz is written in dB, but the device control is a unitless 0..10 dial`},
 		{"capture is skipped", storage.EffectBlock{Type: "Amplifier", Model: "Some Capture (My Capture)", Parameters: []storage.BlockParameter{param("Drive", "99")}},
 			CatalogParamCounts{UncheckedBlocks: 1}, ""},
 		{"unverified is skipped", storage.EffectBlock{Type: "Amplifier", Model: FlagUnverifiedBlock("Made Up Amp"), Parameters: []storage.BlockParameter{param("Drive", "99")}},
