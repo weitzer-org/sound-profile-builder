@@ -22,6 +22,53 @@ type builder struct {
 	unresolved []devicejobs.Unresolved
 	warnings   []devicejobs.Unresolved
 	dev        *devicelib.Snapshot // the synced lists, nil when none were loaded
+	layout     devicejobs.SceneLayout
+	src        [Scenes]devicejobs.SceneSource // layout.Sources(), cached
+}
+
+// absentValue marks a scene whose guitar doesn't list a parameter that another guitar of the
+// same layout sets: that guitar's tone has the control at the device default.
+const absentValue = "\x00default"
+
+// sceneParam is one parameter as the layout sees it: the text each of the eight scenes
+// takes. For the default layout, Scenes A and B hold the preset's Value and ValueB (B falls
+// back to A when empty) and Scenes C-H repeat Scene A, as before.
+type sceneParam struct {
+	Name string
+	Unit string
+	Vals [Scenes]string
+}
+
+// sceneWords says which scenes a note about "the scenes" means.
+func (b *builder) sceneWords() string {
+	if b.layout.IsDefault() {
+		return "Scene A and Scene B"
+	}
+	return "the scenes you assigned"
+}
+
+// sceneParamOf builds a parameter's per-scene text. per[g] is guitar g's entry for it, nil
+// when that guitar doesn't list the control.
+func (b *builder) sceneParamOf(per []*storage.BlockParameter) sceneParam {
+	var sp sceneParam
+	for _, bp := range per {
+		if bp != nil && sp.Name == "" {
+			sp.Name, sp.Unit = bp.Name, bp.Unit
+		}
+	}
+	for s := 0; s < Scenes; s++ {
+		so := b.src[s]
+		bp := per[so.Guitar]
+		switch {
+		case bp == nil:
+			sp.Vals[s] = absentValue
+		case so.Lead:
+			sp.Vals[s] = sceneStrings(*bp)[1]
+		default:
+			sp.Vals[s] = bp.Value
+		}
+	}
+	return sp
 }
 
 func (b *builder) warn(block, param, reason string) {
@@ -220,6 +267,12 @@ func sameLayout(ms []*catalog.Model) bool {
 	return true
 }
 
+// BridgePushesPlugins is whether the home agent accepts plugin models
+// (deploy/qc-agent/qc_agent/export_validator.py refuses any model with a plugin_id). While it
+// doesn't, the export says so in the dry run rather than letting the push fail at the bridge
+// (plan 7.3 follow-up F3). Flip it together with the agent's check.
+var BridgePushesPlugins = false
+
 // modelRefusal is why a resolved model can't be pushed, or "".
 func (b *builder) modelRefusal(m *catalog.Model) string {
 	switch {
@@ -246,6 +299,9 @@ func (b *builder) modelRefusal(m *catalog.Model) string {
 		if _, ok := catalog.VerifiedCloneBases[m.Clones]; !ok {
 			return fmt.Sprintf("parameter indexes of models cloning %d are not verified on the device (G1 checked only clones of %s)", m.Clones, verifiedBases())
 		}
+	}
+	if plugin, gated := m.RequiredPlugin(); gated && !BridgePushesPlugins {
+		return fmt.Sprintf("%s is a model of the %s plugin, and the home bridge refuses plugin models in v1 (it would refuse the whole push); use a native model for this block, or build this block on the unit by hand", m.Name, plugin)
 	}
 	return ""
 }
@@ -274,7 +330,8 @@ func indexEvidence(m *catalog.Model) string {
 
 // block maps one grid block. A block whose model can't be resolved is not placed (nil),
 // but still takes its column.
-func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, error) {
+func (b *builder) block(ref string, blks []*storage.EffectBlock, col int) (*Block, error) {
+	blk := unionBlock(blks)
 	name := strings.TrimSpace(blk.Model)
 	var out *Block
 	var m *catalog.Model
@@ -325,14 +382,22 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 	}
 	written := map[int]string{}
 	cab := strings.HasPrefix(m.Category, "Cabsim")
-	for _, bp := range blk.Parameters {
+	canon := func(key string) string {
+		if lp, ok := lookup(byKey, key); ok {
+			return fmt.Sprintf("#%d", lp.Param.Index) // "Time" and "Delay Time" are one control
+		}
+		return key
+	}
+	for _, mp := range b.mergeParams(ref, blks, canon) {
+		bp := mp.first
+		sp := b.sceneParamOf(mp.per)
 		key := catalog.ParamNameKey(bp.Name)
 		switch {
 		case key == "BYPASS":
-			b.bypass(ref, bp, &out.Bypass)
+			b.bypass(ref, sp, &out.Bypass)
 			continue
 		case hasMics && (key == "MIC1" || key == "MIC2"):
-			label, note, mw := b.micChoice(m, key, bp)
+			label, note, mw := b.micChoice(m, key, sp)
 			switch {
 			case mw != nil:
 				out.Mics = append(out.Mics, *mw)
@@ -365,7 +430,7 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			return nil, fmt.Errorf("catalog fault: %s (%d) param %s has index %d, outside its %d parameters",
 				m.Name, m.ID, lp.Label, lp.Param.Index, m.ParamCount)
 		}
-		p, atDefault, why := b.param(lp, bp)
+		p, atDefault, why := b.param(lp, sp)
 		switch {
 		case why != "":
 			b.refuse(ref, bp.Name, why)
@@ -377,6 +442,70 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 	}
 	sort.Slice(out.Params, func(i, j int) bool { return out.Params[i].Index < out.Params[j].Index })
 	return out, nil
+}
+
+// unionBlock is the block the model is resolved from: the first guitar's block, carrying every
+// parameter and kept default that any guitar of the layout names, so a name shared by models
+// with different controls is picked by what all the tones need. One guitar returns its own block.
+func unionBlock(blks []*storage.EffectBlock) *storage.EffectBlock {
+	if len(blks) == 1 {
+		return blks[0]
+	}
+	u := *blks[0]
+	u.Parameters = append([]storage.BlockParameter(nil), blks[0].Parameters...)
+	u.KeptDefaults = append([]string(nil), blks[0].KeptDefaults...)
+	for _, o := range blks[1:] {
+		u.Parameters = append(u.Parameters, o.Parameters...)
+		u.KeptDefaults = append(u.KeptDefaults, o.KeptDefaults...)
+	}
+	return &u
+}
+
+// mergedParam is one control of a block across the layout's guitars: per[g] is guitar g's
+// entry, nil when that guitar doesn't list it. first is the entry that names it.
+type mergedParam struct {
+	first *storage.BlockParameter
+	per   []*storage.BlockParameter
+}
+
+// mergeParams lines up the guitars' parameters by control. The first guitar's order comes
+// first, with every entry kept as before (a control listed twice is caught later by the
+// written-twice check); controls only a later guitar sets follow. A later guitar listing one
+// control twice is refused.
+func (b *builder) mergeParams(ref string, blks []*storage.EffectBlock, canon func(string) string) []mergedParam {
+	var out []mergedParam
+	for i := range blks[0].Parameters {
+		bp := &blks[0].Parameters[i]
+		per := make([]*storage.BlockParameter, len(blks))
+		per[0] = bp
+		out = append(out, mergedParam{first: bp, per: per})
+	}
+	for g := 1; g < len(blks); g++ {
+		seen := map[string]bool{}
+		for i := range blks[g].Parameters {
+			bp := &blks[g].Parameters[i]
+			key := canon(catalog.ParamNameKey(bp.Name))
+			if seen[key] {
+				b.refuse(ref, bp.Name, fmt.Sprintf("%s is listed twice for the same guitar", truncate(bp.Name, 40)))
+				continue
+			}
+			seen[key] = true
+			placed := false
+			for j := range out {
+				if canon(catalog.ParamNameKey(out[j].first.Name)) == key && out[j].per[g] == nil {
+					out[j].per[g] = bp
+					placed = true
+					break
+				}
+			}
+			if !placed {
+				per := make([]*storage.BlockParameter, len(blks))
+				per[g] = bp
+				out = append(out, mergedParam{first: bp, per: per})
+			}
+		}
+	}
+	return out
 }
 
 // captureModel is the catalog's V1 Neural Capture block, whose controls a capture block
@@ -396,7 +525,7 @@ func (b *builder) captureModel() *catalog.Model {
 // P4b: strings collected from presets the user asked to read), because which mics a cab offers
 // isn't in ModelRepo.xml. Otherwise the cab keeps its default and note says so (a warning,
 // not a refusal; plan 4.1).
-func (b *builder) micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, note string, write *Mic) {
+func (b *builder) micChoice(m *catalog.Model, key string, sp sceneParam) (label, note string, write *Mic) {
 	slot := 1
 	if key == "MIC2" {
 		slot = 2
@@ -419,7 +548,13 @@ func (b *builder) micChoice(m *catalog.Model, key string, bp storage.BlockParame
 	if defMic == "" {
 		return "", "not applied: this cab's default mic isn't known, so the cab keeps whatever mic it loads", nil
 	}
-	scenes := sceneStrings(bp)
+	var scenes [Scenes]string
+	for i, v := range sp.Vals {
+		scenes[i] = v
+		if v == absentValue {
+			scenes[i] = defMic // this guitar doesn't name a mic: the cab's default
+		}
+	}
 	want := ""
 	for _, v := range scenes {
 		if micKey(cleanValue(v)) != micKey(defMic) {
@@ -437,8 +572,10 @@ func (b *builder) micChoice(m *catalog.Model, key string, bp storage.BlockParame
 	}
 	unseen := fmt.Sprintf("not applied: %q can't be written yet (it hasn't been seen on your unit for this cab; read a preset that uses it with read_device_preset), so the cab keeps its default %s",
 		truncate(want, 40), defMic)
-	if micKey(cleanValue(scenes[0])) != micKey(cleanValue(scenes[1])) {
-		return "", fmt.Sprintf("not applied: the mic differs between Scene A and Scene B, and a cab's mic is one setting for all scenes, so the cab keeps its default %s", defMic), nil
+	for _, v := range scenes[1:] {
+		if micKey(cleanValue(v)) != micKey(cleanValue(scenes[0])) {
+			return "", fmt.Sprintf("not applied: the mic differs between %s, and a cab's mic is one setting for all scenes, so the cab keeps its default %s", b.sceneWords(), defMic), nil
+		}
 	}
 	var hits []string
 	for _, s := range b.dev.Mics.For(m.ID) {
@@ -496,34 +633,27 @@ func lookup(byKey map[string]catalog.LabelledParam, key string) (catalog.Labelle
 
 // bypass reads the block's Bypass parameter: "On" = bypassed, "Off" = active (Architect
 // prompts v4-v6, Rule 13). Older presets never defined it, so theirs is refused.
-func (b *builder) bypass(ref string, bp storage.BlockParameter, out *[Scenes]bool) {
+func (b *builder) bypass(ref string, sp sceneParam, out *[Scenes]bool) {
 	if b.legacy {
-		b.refuse(ref, bp.Name, "this preset predates the rule that Bypass On means bypassed (Architect v4); refine it to push it")
+		b.refuse(ref, sp.Name, "this preset predates the rule that Bypass On means bypassed (Architect v4); refine it to push it")
 		return
 	}
-	var ab [2]bool
-	for i, v := range sceneStrings(bp) {
+	var flags [Scenes]bool
+	for i, v := range sp.Vals {
+		if v == absentValue {
+			continue // this guitar's block has no Bypass entry: active, as a block with none always was
+		}
 		switch strings.ToLower(cleanValue(v)) {
 		case "on":
-			ab[i] = true
+			flags[i] = true
 		case "off":
-			ab[i] = false
+			flags[i] = false
 		default:
-			b.refuse(ref, bp.Name, fmt.Sprintf("Bypass must be On (bypassed) or Off (active), got %q", truncate(v, 40)))
+			b.refuse(ref, sp.Name, fmt.Sprintf("Bypass must be On (bypassed) or Off (active), got %q", truncate(v, 40)))
 			return
 		}
 	}
-	for s := range out {
-		out[s] = ab[sceneIndex(s)]
-	}
-}
-
-// sceneIndex maps a device scene (0-7) to the preset value it takes: 0 = A, 1 = B.
-func sceneIndex(s int) int {
-	if SceneSources[s] == "B" {
-		return 1
-	}
-	return 0
+	*out = flags
 }
 
 // sceneStrings is the preset's Scene A and Scene B text; an empty ValueB means "same as A".
@@ -555,11 +685,13 @@ func cleanValue(v string) string {
 
 // param maps one written parameter. atDefault means every scene is the catalog default, so
 // nothing needs writing.
-func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Param, bool, string) {
+func (b *builder) param(lp catalog.LabelledParam, sp sceneParam) (Param, bool, string) {
 	cp := lp.Param
-	vals := sceneStrings(bp)
-	if strings.TrimSpace(vals[0]) == "" {
-		return Param{}, false, "no value"
+	vals := sp.Vals
+	for _, v := range vals {
+		if v != absentValue && strings.TrimSpace(v) == "" {
+			return Param{}, false, "no value"
+		}
 	}
 	if catalog.DiscreteParamTypes[cp.Type] {
 		return discrete(lp, vals)
@@ -567,15 +699,26 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if !catalog.ContinuousParamTypes[cp.Type] {
 		return Param{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
 	}
-	var disp [2]float64
+	var disp [Scenes]float64
+	allDefault := cp.Default != nil
 	for i, v := range vals {
-		x, why := parseFloatValue(cp, v, bp.Unit)
+		if v == absentValue {
+			if cp.Default == nil {
+				return Param{}, false, "one guitar doesn't set this control and it has no catalog default to fall back on"
+			}
+			disp[i] = *cp.Default
+			continue
+		}
+		x, why := parseFloatValue(cp, v, sp.Unit)
 		if why != "" {
 			return Param{}, false, why
 		}
 		disp[i] = x
+		if allDefault && !sameValue(x, *cp.Default) {
+			allDefault = false
+		}
 	}
-	if cp.Default != nil && sameValue(disp[0], *cp.Default) && sameValue(disp[1], *cp.Default) {
+	if allDefault {
 		return Param{}, true, ""
 	}
 	evidence, why := paramEvidence(cp)
@@ -585,21 +728,19 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if unitless01(cp) || isPan(cp) {
 		evidence = append(evidence, "scale:catalog-range")
 	}
-	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, SceneMode: disp[0] != disp[1], Evidence: evidence}
-	var wire [2]float64
-	for i, x := range disp {
+	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, Evidence: evidence}
+	for s, x := range disp {
 		w, err := cp.ToWire(x)
 		if err != nil {
 			return Param{}, false, "cannot convert: " + err.Error()
 		}
-		wire[i] = w
+		p.Display[s], p.Wire[s] = x, w
+		if x != disp[0] {
+			p.SceneMode = true
+		}
 	}
 	for s := 0; s < Scenes; s++ {
-		p.Display[s] = disp[sceneIndex(s)]
-		p.Wire[s] = wire[sceneIndex(s)]
-	}
-	for s := 0; s < 2; s++ {
-		p.screen[s] = screenPan(cp, p.Wire[s]) // Scenes A and B are p.Wire[0], p.Wire[1] (SceneSources)
+		p.screen[s] = screenPan(cp, p.Wire[s])
 	}
 	return p, false, ""
 }
@@ -804,44 +945,49 @@ var linearSwitchTypes = map[string]bool{"switch": true, "rotarySwitch": true, "t
 
 // discrete handles switches, rotary switches, toggles and combo boxes. A value equal to the
 // catalog default in both scenes is not written.
-func discrete(lp catalog.LabelledParam, vals [2]string) (Param, bool, string) {
+func discrete(lp catalog.LabelledParam, vals [Scenes]string) (Param, bool, string) {
 	p := lp.Param
 	if p.Min == nil || p.Max == nil || !(*p.Max > *p.Min) {
 		return Param{}, false, fmt.Sprintf("%s has no numeric range", p.Type)
 	}
-	var pos [2]int
+	var pos [Scenes]int
+	allDefault := p.Default != nil
 	for i, v := range vals {
+		if v == absentValue {
+			if p.Default == nil {
+				return Param{}, false, "one guitar doesn't set this control and it has no catalog default to fall back on"
+			}
+			pos[i] = int(math.Round(*p.Default - *p.Min))
+			continue
+		}
 		n, ok := position(p, cleanValue(v))
 		if !ok {
 			return Param{}, false, fmt.Sprintf("%q isn't a position of this control (%s)", truncate(cleanValue(v), 40), positions(p))
 		}
 		pos[i] = n
-	}
-	if p.Default != nil {
-		def := int(math.Round(*p.Default - *p.Min))
-		if pos[0] == def && pos[1] == def {
-			return Param{}, true, ""
+		if allDefault && n != int(math.Round(*p.Default-*p.Min)) {
+			allDefault = false
 		}
+	}
+	if allDefault {
+		return Param{}, true, ""
 	}
 	if !linearSwitchTypes[p.Type] {
 		return Param{}, false, fmt.Sprintf("%s positions have no known wire mapping; only the default can be taken", p.Type)
 	}
-	out := Param{Index: p.Index, Label: lp.Label, Units: p.Units, SceneMode: pos[0] != pos[1],
-		Evidence: []string{"encoding:qc-mcp-linear"}}
-	var disp, wire [2]float64
+	out := Param{Index: p.Index, Label: lp.Label, Units: p.Units, Evidence: []string{"encoding:qc-mcp-linear"}}
 	for i, n := range pos {
-		disp[i] = *p.Min + float64(n)
-		wire[i] = (disp[i] - *p.Min) / (*p.Max - *p.Min)
-		if wire[i] < 0 || wire[i] > 1 {
+		out.Display[i] = *p.Min + float64(n)
+		out.Wire[i] = (out.Display[i] - *p.Min) / (*p.Max - *p.Min)
+		if out.Wire[i] < 0 || out.Wire[i] > 1 {
 			return Param{}, false, fmt.Sprintf("position %d is outside %s..%s", n, fmtNum(*p.Min), fmtNum(*p.Max))
 		}
 		if n < len(p.StepNames) {
 			out.names[i] = strings.TrimSpace(p.StepNames[n])
 		}
-	}
-	for s := 0; s < Scenes; s++ {
-		out.Display[s] = disp[sceneIndex(s)]
-		out.Wire[s] = wire[sceneIndex(s)]
+		if n != pos[0] {
+			out.SceneMode = true
+		}
 	}
 	return out, false, ""
 }
