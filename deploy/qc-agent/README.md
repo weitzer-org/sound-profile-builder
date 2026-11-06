@@ -255,7 +255,7 @@ them; this guide uses **24H**).
     unit shows) and delete the preset. A push that fails with "footswitch assignments differ" saved nothing; send me
     the `read-back after the footswitches` lines from `agent.log`.
 
-17. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
+18. **Capture sync evidence (P6 follow-up F2, phase 1; read-only).** Pull `main` on the PC first and restart the bridge.
     From the phone run `sync_device_library`, then paste from `agent.log` every line starting `capture skip census`
     and `capture skip sample` (per folder: how many files are kept and how many are left out for each reason:
     favorites / name length / name not printable ASCII / name changed by clean-up / key not 64 hex), plus the
