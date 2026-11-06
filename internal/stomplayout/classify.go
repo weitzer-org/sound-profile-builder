@@ -153,6 +153,11 @@ func (c *Classifier) Classify(b Block) Classification {
 func (c *Classifier) classifyCapture(b Block, cl Classification) Classification {
 	cl.Capture = true
 	name := strings.TrimSpace(b.CaptureName)
+	if name != "" {
+		// The catalog row behind a capture block is only a slot ("Eltron 30" is id 14000, the V1 block), not the
+		// capture: label it with the capture's own name (F4, owner's dry run 2026-11-06).
+		cl.Model = name
+	}
 
 	// Step 1: the modeler's label, through the fixed table.
 	var mRole Role

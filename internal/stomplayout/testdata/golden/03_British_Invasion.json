@@ -74,7 +74,7 @@
         "row": 0,
         "col": 3,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "66 AC30 JMP OD",
         "reason": "capture is not a switchable effect (modeler)"
       },
       {
@@ -121,7 +121,7 @@
         "row": 0,
         "col": 3,
         "model_id": 14001,
-        "model": "Capture 2",
+        "model": "66 AC30 JMP OD",
         "category": "Neural Capture",
         "source": "modeler"
       },

@@ -257,6 +257,9 @@ type Param struct {
 	Evidence []string `json:"evidence"`
 
 	names [Scenes]string // each scene's position name of a switch, for the readable plan
+	// screen is the unit's on-screen reading of a 0..10 pan per scene, inferred (screenPan); shown beside the
+	// number in the readable plan only. Never part of the payload or the plan hash.
+	screen [Scenes]string
 }
 
 // Confirmed reports whether every part of the mapping was read on the owner's unit (a ":g4" or "-p6" label).
@@ -473,6 +476,9 @@ func keyPrefix(k string) string {
 func (p Param) shown(scene int) string {
 	if p.names[scene] != "" {
 		return p.names[scene]
+	}
+	if p.screen[scene] != "" {
+		return displayString(p.Display[scene], p.Units) + " (" + p.screen[scene] + ")"
 	}
 	return displayString(p.Display[scene], p.Units)
 }

@@ -96,6 +96,22 @@ class Session(Base):
         with self.assertRaisesRegex(DeviceError, "not 256"):
             self.dev.list_my_presets()
 
+    def test_short_table_is_logged_bounded_and_refused_as_partial(self):
+        f = P.message_class("File")(action=P.ACTION["UPDATE"], type=0)
+        f.folder.key, f.folder.name = fake_hid.SETLIST, "My Presets"
+        for i in range(8):
+            e = f.folder.files.add()
+            e.index, e.name = i + 100, "Texas\nBlues`" + "x" * 80
+        with self.assertLogs(qcmcp_backend.log, "WARNING") as cm:
+            with self.assertRaises(qcmcp_backend.PartialListing) as ctx:
+                qcmcp_backend.directory_snapshot([f])
+        self.assertEqual(ctx.exception.count, 8)
+        out = "\n".join(cm.output)
+        self.assertIn("8 entries, not 256", out)
+        self.assertEqual(out.count("index="), 5)  # bounded
+        self.assertNotIn("\n", cm.records[0].getMessage())
+        self.assertNotIn("`", out)
+
     def test_other_complete_collections_are_listed_incomplete_ones_are_left_out(self):
         from qc_agent.qcmcp_backend import directory_snapshot
         self.dev.connect()
@@ -623,6 +639,39 @@ class DirectoryListing(Base):
         self.assertEqual(rows["Aggi 700"]["path"], "<parent not listed>")
         self.assertEqual(rows["ABA MPre1"]["path"], "-")
         self.assertEqual((rows["Brit 2210"]["v"], rows["Brit 2210"]["files"], rows["Brit 2210"]["version"]), (2, 1, [""]))
+
+    def test_skip_census_over_a_tree_shaped_like_the_owners(self):
+        # P6 census shape: Captures Library (not factory) holds everything below it; Factory V1/V2, My Captures
+        # and a top-level '' folder with downloads. Which reason actually hits the factory files is the open
+        # question, so each reason gets one entry here and the log must count them per folder and bound samples.
+        good = "ab" * 32
+        msgs = [self.my_presets(),
+                self.folder(2, "lib", "Captures Library", version="1", files=[("Lib A", good)]),
+                self.folder(2, "v1", "Factory Captures V1", parent="lib", factory=True, version="",
+                            files=[("Fac \u00e9", good), ("Fac B`", good), ("Fac C", "xyz")]),
+                self.folder(2, "amp", "Amp", parent="v1", factory=True, version="",
+                            files=[("x" * 70, good), ("", good), ("Fac D", good)]),
+                self.folder(2, "v2", "Factory Captures V2", parent="lib", factory=True, version=""),
+                self.folder(2, "mine", "My Captures", parent="lib", version="", files=[("Mine", good)]),
+                self.folder(2, "fav", "Favs", fav=True, files=[("Lib A", good)]),
+                self.folder(2, "dl", "", version="2", files=[("Down A", good)])]
+        snap = qcmcp_backend.directory_snapshot(msgs)
+        lines = captures.skip_census(snap)
+        out = "\n".join(lines)
+        self.assertIn("folder 'Factory Captures V1': name_charset 1, name_cleaned 1, key_format 1", out)
+        self.assertIn("folder 'Amp': kept 1, name_length 2", out)
+        self.assertIn("folder 'Favs': favorites 1", out)
+        self.assertIn("folder '(unnamed folder)': kept 1", out)
+        self.assertIn("totals kept 4, favorites 1, name_length 2, name_charset 1, name_cleaned 1, key_format 1", out)
+        for r in captures.SKIP_REASONS:
+            self.assertEqual(out.count(f"capture skip sample ({r})"), 1)
+        # samples show lengths and classes only: no key or name text
+        self.assertNotIn(good, out)
+        self.assertIn("non_ascii=1", out)
+        self.assertIn("backtick=1", out)
+        # the payload and the census agree on what is kept
+        self.assertEqual(len(captures.library_payload(snap)["captures"]), 4)
+        self.assertEqual(captures.library_payload(snap)["skipped"], 6)
 
     def test_census_logs_once_per_process(self):
         msgs = [self.my_presets(),

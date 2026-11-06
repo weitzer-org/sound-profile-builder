@@ -238,19 +238,77 @@ def _library_folder(name: str) -> str:
     return text.clean(ascii_only, 40).strip() or UNNAMED_FOLDER
 
 
+SKIP_REASONS = ("favorites", "name_length", "name_charset", "name_cleaned", "key_format")
+
+
+def skip_reason(e: CaptureEntry) -> str | None:
+    """Why library_payload leaves this file out (the first reason that applies), or None when it is kept."""
+    name, key = e.name or "", e.key or ""
+    if e.is_favorites:
+        return "favorites"
+    if not 1 <= len(name) <= 64:
+        return "name_length"
+    if not _LIB_NAME_RE.fullmatch(name):
+        return "name_charset"
+    if name != text.clean(name, 64):
+        return "name_cleaned"
+    if not _KEY_RE.fullmatch(key):
+        return "key_format"
+    return None
+
+
+def char_classes(s: str) -> str:
+    """Length and character classes only, never the text itself (device text stays out of the log)."""
+    printable = sum(1 for c in s if 0x20 <= ord(c) <= 0x7E)
+    nonascii = sum(1 for c in s if ord(c) > 0x7F)
+    control = sum(1 for c in s if ord(c) < 0x20 or ord(c) == 0x7F)
+    spaces = sum(1 for c in s if c == " ")
+    hexc = sum(1 for c in s if c in "0123456789abcdefABCDEF")
+    return (f"len={len(s)} printable_ascii={printable} (spaces {spaces}, hex digits {hexc}) "
+            f"non_ascii={nonascii} control={control} backtick={s.count(chr(96))}")
+
+
+def skip_census(snap: DirectorySnapshot, max_folders: int = 60) -> list[str]:
+    """Log lines for the F2 evidence: per capture folder how many files are kept and how many are left out for
+    each reason, then one sample per reason showing only lengths and character classes. Folder names are cleaned
+    and bounded (they are shown, never matched). Nothing here decides anything."""
+    per: dict[tuple[str, str], dict[str, int]] = {}
+    samples: dict[str, CaptureEntry] = {}
+    for e in snap.captures:
+        r = skip_reason(e)
+        row = per.setdefault((e.folder_key, _library_folder(e.folder_name)), {"kept": 0})
+        row[r or "kept"] = row.get(r or "kept", 0) + 1
+        if r and r not in samples:
+            samples[r] = e
+    lines = []
+    ordered = sorted(per.items(), key=lambda kv: (-sum(kv[1].values()), kv[0][1]))
+    for (_k, name), row in ordered[:max_folders]:
+        lines.append(f"capture skip census: folder {name!r}: " + ", ".join(
+            f"{k} {row[k]}" for k in ("kept", *SKIP_REASONS) if row.get(k)))
+    if len(ordered) > max_folders:
+        lines.append(f"capture skip census: {len(ordered) - max_folders} more folders not shown")
+    totals = {k: sum(r.get(k, 0) for r in per.values()) for k in ("kept", *SKIP_REASONS)}
+    lines.append("capture skip census: totals " + ", ".join(f"{k} {v}" for k, v in totals.items()))
+    for r in SKIP_REASONS:
+        e = samples.get(r)
+        if e is not None:
+            lines.append(f"capture skip sample ({r}): name[{char_classes(e.name or '')}] key[{char_classes(e.key or '')}] "
+                         f"factory={e.is_factory} cloud={e.is_cloud} version_field_len={len(e.version_field or '')}")
+    return lines
+
+
 def library_payload(snap: DirectorySnapshot) -> dict:
     """The sync_device_library answer (contract section 9.2): every capture file of the same fresh listing a
     push resolves captures from, with the version the push would use (version_of). Favorites views are left
     out, as resolve_one leaves them out. A file whose name could not be compared exactly (not printable ASCII,
-    changed by clean-up, over 64 characters), or whose key is not 64 hex characters, is skipped and counted:
-    QC-2 must never hold a name the bridge would not match byte for byte."""
+    changed by clean-up, over 64 characters), or whose key is not 64 hex characters, is skipped and counted
+    (skip_reason): QC-2 must never hold a name the bridge would not match byte for byte."""
     out, skipped = [], 0
     for e in snap.captures:
-        folder = _library_folder(e.folder_name)
-        if (e.is_favorites or not _LIB_NAME_RE.fullmatch(e.name or "") or e.name != text.clean(e.name, 64)
-                or not _KEY_RE.fullmatch(e.key or "")):
+        if skip_reason(e):
             skipped += 1
             continue
+        folder = _library_folder(e.folder_name)
         out.append({"name": e.name, "key": e.key.lower(), "version": version_of(e, snap),
                     "kind": "factory" if e.is_factory else "user", "folder": folder, "cloud": bool(e.is_cloud)})
     if len(out) > MAX_LIBRARY_CAPTURES:
