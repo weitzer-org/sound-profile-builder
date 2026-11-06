@@ -24,6 +24,7 @@ class LedgerError(RuntimeError):
 
 
 TORN = {"event": "torn"}  # written after a torn line, so the next read knows it was a crash, not corruption
+TORN_TEXT = json.dumps(TORN).encode("ascii")
 
 
 def _parse(line: bytes):
@@ -34,52 +35,56 @@ def _parse(line: bytes):
     return obj if isinstance(obj, dict) else None
 
 
-def _read_lines(path: Path) -> list[dict]:
-    """Entries in order. A torn line (an append cut short by a crash before its fsync) is
-    skipped when it is the last line, or when the agent has since marked it with a TORN
-    line; anything else unparseable is corruption and stops the agent."""
+def _read_lines(path: Path) -> tuple[list[dict], bool]:
+    """(entries in order, whether the file ends in a torn tail).
+
+    A torn line is an append cut short by a crash before its fsync, so it never counted. It is
+    accepted only as the tail of the file, optionally followed by a cut-short marker (a prefix of
+    TORN_TEXT: a crash while marking it), or when a full TORN marker follows it. Anything else
+    unparseable, or a real entry after a bad line, is corruption and stops the agent."""
     if not path.exists():
-        return []
+        return [], False
     out = []
-    bad_at = None  # entry number of an unparseable line, pending a look at the next one
+    bad_at = None  # entry number of a torn line not yet followed by a TORN marker
     n = 0
     with open(path, "rb") as f:  # streamed: only the parsed entries are kept
         for line in f:
-            if not line.strip():
+            text = line.strip()
+            if not text:
                 continue
             n += 1
-            obj = _parse(line)
+            obj = _parse(text)
             if bad_at is not None:
                 if obj == TORN:
                     bad_at = None
                     continue
-                if obj is not None:
-                    break  # a good entry after a bad one: corruption, not a torn tail
-                continue   # more bad lines: still a tail (a crash while marking a torn line)
+                if obj is None and TORN_TEXT.startswith(text):
+                    continue  # a marker that was itself cut short
+                raise LedgerError(f"{path}: entry {bad_at} is corrupt; fix or move it aside by hand "
+                                  "(the agent never rewrites this file)")
             if obj is None:
                 bad_at = n
             elif obj != TORN:
                 out.append(obj)
-        else:
-            return out  # reached the end: any bad lines left are a torn tail
-    if bad_at is not None:
-        raise LedgerError(f"{path}: entry {bad_at} is corrupt; fix or move it aside by hand "
-                          "(the agent never rewrites this file)")
-    return out
+    return out, bad_at is not None
 
 
-def _append(path: Path, obj: dict) -> None:
+def _append(path: Path, obj: dict, torn_tail: bool = False) -> None:
+    """Append one fsynced line. After a torn tail (known from the load, or a file not ending in a
+    newline) a TORN marker goes first, so the torn line is never followed by an unmarked entry."""
     data = json.dumps(obj, separators=(",", ":"), ensure_ascii=True).encode("ascii") + b"\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, "O_BINARY", 0), 0o600)
     try:
         size = os.fstat(fd).st_size
+        lead = b""
         if size:
-            # If the previous append was torn, start on a fresh line.
             with open(path, "rb") as f:
                 f.seek(size - 1)
                 if f.read(1) != b"\n":
-                    data = b"\n" + json.dumps(TORN).encode("ascii") + b"\n" + data
+                    lead, torn_tail = b"\n", True
+        if torn_tail:
+            data = lead + TORN_TEXT + b"\n" + data
         os.write(fd, data)
         os.fsync(fd)
     finally:
@@ -93,7 +98,8 @@ class JobLedger:
         self.finished: dict[str, dict] = {}
         self.uploaded: set[str] = set()
         self.order: list[str] = []
-        for e in _read_lines(path):
+        entries, self._torn_tail = _read_lines(path)
+        for e in entries:
             jid = e.get("job_id")
             if not isinstance(jid, str):
                 raise LedgerError(f"{path}: an entry has no job_id")
@@ -118,19 +124,22 @@ class JobLedger:
 
     def take(self, job_id: str, kind: str, at: str) -> None:
         e = {"event": "taken", "job_id": job_id, "kind": kind, "at": at}
-        _append(self.path, e)
+        _append(self.path, e, self._torn_tail)
+        self._torn_tail = False
         self.taken[job_id] = e
         self.order.append(job_id)
 
     def finish(self, job_id: str, at: str, result: bytes) -> None:
         e = {"event": "finished", "job_id": job_id, "at": at, "result": result.decode("ascii")}
-        _append(self.path, e)
+        _append(self.path, e, self._torn_tail)
+        self._torn_tail = False
         self.finished[job_id] = e
 
     def mark_uploaded(self, job_id: str, at: str) -> None:
         if job_id in self.uploaded:
             return
-        _append(self.path, {"event": "uploaded", "job_id": job_id, "at": at})
+        _append(self.path, {"event": "uploaded", "job_id": job_id, "at": at}, self._torn_tail)
+        self._torn_tail = False
         self.uploaded.add(job_id)
         if job_id in self.finished:
             self.finished[job_id] = {**self.finished[job_id], "result": None}
@@ -146,13 +155,15 @@ class OwnedSlots:
     def __init__(self, path: Path):
         self.path = path
         self._latest: dict[int, dict] = {}  # position -> the most recent save there
-        for e in _read_lines(path):
+        entries, self._torn_tail = _read_lines(path)
+        for e in entries:
             if isinstance(e.get("position"), int):
                 self._latest[e["position"]] = e
 
     def record(self, slot: str, position: int, name: str, job_id: str, at: str) -> None:
         e = {"slot": slot, "position": position, "name": name, "job_id": job_id, "at": at}
-        _append(self.path, e)
+        _append(self.path, e, self._torn_tail)
+        self._torn_tail = False
         self._latest[position] = e
 
     def owned(self, position: int, current_name: str) -> bool:

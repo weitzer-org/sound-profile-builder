@@ -389,6 +389,20 @@ class Push(Base):
         self.assertEqual(r["status"], "succeeded")
         self.assertEqual(r["push"]["mismatches"], 0)
 
+    def test_selection_change_just_before_the_save_is_refused(self):
+        reads = {"n": 0}
+
+        def switch(name):
+            if name == "read_current_preset":
+                reads["n"] += 1
+                if reads["n"] == 3:  # 1: blank check, 2: read-back, 3: the re-read just before the save
+                    self.dev.open_position = 0
+        self.dev.on_call = switch
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("just before the save", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
     def test_disconnect_always_called(self):
         self.dev.no_echo_cols = {0}
         self.push()
@@ -590,6 +604,27 @@ class Recovery(Base):
         with open(self.home / "executed_jobs.jsonl", "ab") as f:
             f.write(b'{"event":"taken","job_id":"abc\n{"event": "to')  # torn line, then a torn marker
         self.assertTrue(self.make_agent().ledger.contains(jid))
+
+    def test_crash_after_the_separator_then_append_then_restart(self):
+        jid, _ = self.queue("list_slots")
+        self.poll()
+        with open(self.home / "executed_jobs.jsonl", "ab") as f:
+            f.write(b'{"event":"taken","job_id":"abc\n')  # torn entry, then a crash right after the newline
+        agent = self.make_agent()
+        new = "22222222-2222-4222-8222-222222222222"
+        agent.ledger.take(new, "list_slots", "2026-11-05T20:00:00Z")  # must mark the torn line first
+        again = self.make_agent()
+        self.assertIn(new, again.ledger.taken)
+        self.assertTrue(again.ledger.contains(jid))
+
+    def test_unrelated_malformed_suffix_is_corruption(self):
+        from qc_agent.ledger import LedgerError
+        jid, _ = self.queue("list_slots")
+        self.poll()
+        with open(self.home / "executed_jobs.jsonl", "ab") as f:
+            f.write(b'{"event":"taken","job_id":"abc\nnot a torn marker\n')
+        with self.assertRaises(LedgerError):
+            self.make_agent()
 
     def test_corrupt_middle_line_stops_start(self):
         from qc_agent.ledger import LedgerError

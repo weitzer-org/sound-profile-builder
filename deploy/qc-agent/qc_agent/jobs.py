@@ -475,6 +475,9 @@ class _Push:
             return failed("readback_mismatch", "The grid changed after it was verified (edited on the unit?). "
                           "Nothing was saved; re-select the slot to discard the edits.",
                           firmware=self.fw, push=self.result)
+        if not self.still_open():  # File CREATE saves whatever grid is live: the slot must still be the open one
+            return failed("device_error", "Another preset was selected on the unit just before the save. "
+                          "Nothing was saved.", firmware=self.fw, push=self.result)
         dev.save_to_slot(pos, name)
         self.saved = True
         self.result["listed"] = False
