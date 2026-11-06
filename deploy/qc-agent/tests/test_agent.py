@@ -542,6 +542,16 @@ class Push(Base):
         self.assertEqual(r["status"], "succeeded")
         self.assertEqual(r["push"]["mismatches"], 0)
 
+    def test_a_ledger_bug_after_the_save_keeps_the_success_and_logs_the_traceback(self):
+        def boom(*a, **k):
+            raise TypeError("ledger bug")
+        self.agent.owned.record = boom
+        with self.assertLogs("qc_agent", level="ERROR") as logs:
+            r = self.push()
+        self.assertEqual(r["status"], "succeeded")
+        rec = next(x for x in logs.records if "could not record the owned slot" in x.getMessage())
+        self.assertIsNotNone(rec.exc_info)  # the bug is visible in the log, with its traceback
+
     def test_selection_change_just_before_the_save_is_refused(self):
         reads = {"n": 0}
 

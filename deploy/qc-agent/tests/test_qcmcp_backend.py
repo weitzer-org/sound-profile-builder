@@ -178,10 +178,12 @@ class Session(Base):
         self.dev.connect()
         done = threading.Event()
         with self.dev._raw._io_lock:  # a transport call is blocked, holding the lock (G2: seconds)
-            t = threading.Thread(target=lambda: (self.dev._watchdog_sample(), self.dev.alive(), done.set()))
+            t = threading.Thread(target=lambda: (self.dev._watchdog_sample(), self.dev.alive(), done.set()),
+                                 daemon=True)
             t.start()
-            self.assertTrue(done.wait(2.0), "a liveness sample must not take the transport's lock")
-        t.join(2.0)
+            finished = done.wait(2.0)
+        t.join(2.0)  # the lock is released and the thread joined before anything can fail
+        self.assertTrue(finished, "a liveness sample must not take the transport's lock")
 
     def test_reconnect_starts_with_a_clean_verdict(self):
         self.dev.connect()

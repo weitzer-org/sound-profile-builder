@@ -694,7 +694,9 @@ class _Push:
         try:  # before the polls: a save that lands late is still the bridge's own slot
             ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
         except Exception as e:  # noqa: BLE001  the save was issued; a local ledger problem mustn't change the outcome
-            log.error("could not record the owned slot %s: %s", slot, text.clean(str(e), 200))
+            # broad on purpose: anything escaping here would turn an issued save into "internal error" and lose
+            # the saved flag; the traceback goes to the log so a bug is still visible
+            log.error("could not record the owned slot %s: %s", slot, text.clean(str(e), 200), exc_info=True)
         listed = False
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
