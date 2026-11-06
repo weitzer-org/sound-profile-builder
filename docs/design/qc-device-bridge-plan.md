@@ -267,7 +267,12 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
   show in the listing as a full 256-slot table, the slot must be empty in *that* collection's own listing, and the
   collection is pinned for the whole push (build guard, pre-save re-check, save, post-save verify). Found on hardware: slot
   4A was open in "Sounds profiles", position matched, the folder did not, and the old My Presets-only check refused.
-  `list_device_slots` and `read_device_preset` still read My Presets only. **Unverified on the unit:** that `write_preset_file`
+  `list_device_slots` and `read_device_preset` still read My Presets only. **Verified on the owner's unit (2026-11-06):** a
+  push into slot 4A of "Sounds profiles" (CorOS 4.1.0) built the whole grid, read back with 0 mismatches and saved there;
+  the cab's values matched the unit's screen (Scene A: mics, positions, distances, level, HPF/LPF, output volume). The first
+  listing after that save raised "My Presets is missing" and the push was reported failed although the save had landed;
+  the wait for the save now retries an incomplete listing. **Not checked:** the other blocks' † values, Scene B and the
+  footswitch layout (G7) on this push.
   into a collection other than My Presets saves there (README step 9).
 - **Catalog copy:** the agent validates against this repo's `internal/catalog/qc_catalog.json` in the PC's clone (not
   qc-mcp's XML, per G1), and refuses an export whose `catalog.sha256` differs (hash over the file with CRLF normalised
