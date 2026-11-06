@@ -26,8 +26,8 @@ type builder struct {
 	src        [Scenes]devicejobs.SceneSource // layout.Sources(), cached
 }
 
-// absentValue marks a scene whose guitar doesn't list a parameter that another guitar of the
-// same layout sets: that guitar's tone has the control at the device default.
+// absentValue marks a scene whose control is at the device default: the guitar of that scene
+// doesn't list a parameter another guitar sets, or no tone is assigned to the scene.
 const absentValue = "\x00default"
 
 // sceneParam is one parameter as the layout sees it: the text each of the eight scenes
@@ -60,6 +60,8 @@ func (b *builder) sceneParamOf(per []*storage.BlockParameter) sceneParam {
 		so := b.src[s]
 		bp := per[so.Guitar]
 		switch {
+		case !b.layout.IsDefault() && !b.layout.Used(s):
+			sp.Vals[s] = absentValue // no tone on this scene: the control's device default, not a copy of Scene A
 		case bp == nil:
 			sp.Vals[s] = absentValue
 		case so.Lead:
@@ -704,7 +706,7 @@ func (b *builder) param(lp catalog.LabelledParam, sp sceneParam) (Param, bool, s
 	for i, v := range vals {
 		if v == absentValue {
 			if cp.Default == nil {
-				return Param{}, false, "one guitar doesn't set this control and it has no catalog default to fall back on"
+				return Param{}, false, "a scene would take this control's device default (no tone sets it there), and the catalog gives it none"
 			}
 			disp[i] = *cp.Default
 			continue
@@ -955,7 +957,7 @@ func discrete(lp catalog.LabelledParam, vals [Scenes]string) (Param, bool, strin
 	for i, v := range vals {
 		if v == absentValue {
 			if p.Default == nil {
-				return Param{}, false, "one guitar doesn't set this control and it has no catalog default to fall back on"
+				return Param{}, false, "a scene would take this control's device default (no tone sets it there), and the catalog gives it none"
 			}
 			pos[i] = int(math.Round(*p.Default - *p.Min))
 			continue

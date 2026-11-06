@@ -12,11 +12,12 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * the export was built from the same catalog file the agent holds (sha256);
 * the catalog generation matches the firmware the agent expects;
 * `scene_sources` says which tone each scene A-H carries: "A"/"B" are the first guitar's rhythm and
-  lead, "2A"/"2B" the second guitar's (a layout of two guitars, or one guitar on other scenes). "B",
-  "2A" and "2B" each name at most one scene, "2A" and "2B" come together, and every other scene is
-  "A" (G6: the device does not copy a scene, so every scene is written; one nobody takes carries
-  the first guitar's rhythm). The default is A, B, then A for C-H. Scenes with the same source must
-  carry the same values and bypass flag;
+  lead, "2A"/"2B" the second guitar's (a layout of two guitars, or one guitar on other scenes), and
+  "-" a scene nobody uses. "B" names exactly one scene, "2A" and "2B" at most one each and together.
+  The default is A, B, then A for C-H. In a layout, a "-" scene must hold the catalog default of
+  every control it carries and every block active (G6: the device does not copy a scene, so every
+  scene is written; nothing is copied into an unused one). Scenes with the same source must carry
+  the same values and bypass flag;
 * exactly one row (row 0) routed in 1 -> out 19, the routing G3 verified;
 * 1-8 blocks in columns 0..n-1, each a catalog model in an allowed category, not a plugin
   model, not denylisted (NC_Recorder 20000), name and category equal to the catalog's,
@@ -62,15 +63,16 @@ MAX_BLOCKS = 8
 MAX_PARAMS_PER_BLOCK = 64
 SCENES = 8
 DEFAULT_SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
-SCENE_TOKENS = ("A", "B", "2A", "2B")
+UNUSED = "-"  # a scene no tone is assigned to: written at the catalog default, every block active
+SCENE_TOKENS = ("A", "B", "2A", "2B", UNUSED)
 
 
 def _scene_sources(v):
     """The payload's scene_sources, or ExportRefused. Returns the list of eight tokens."""
     if (not isinstance(v, list) or len(v) != SCENES or any(not isinstance(t, str) or t not in SCENE_TOKENS for t in v)):
         raise ExportRefused(f"payload.scene_sources must be a list of {SCENES} entries from {list(SCENE_TOKENS)}")
-    if v.count("B") != 1:
-        raise ExportRefused("payload.scene_sources: 'B' must name exactly one scene")
+    if v.count("B") != 1 or v.count("A") < 1:
+        raise ExportRefused("payload.scene_sources: 'A' must name a scene and 'B' exactly one")
     for tok in ("2A", "2B"):
         if v.count(tok) > 1:
             raise ExportRefused(f"payload.scene_sources: {tok!r} may name at most one scene")
@@ -479,6 +481,8 @@ def _check_block(bi, b, nblocks, catalog, sources) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass flags must be true/false")
     if not _same_by_source(flags, sources):
         raise ExportRefused(f"{where}.bypass: scenes with the same source must carry the same flag")
+    if any(f and tok == UNUSED for f, tok in zip(flags, sources)):
+        raise ExportRefused(f"{where}.bypass: a scene with no tone must leave every block active")
     return PlannedBlock(bi, mid, cm["name"], params, list(flags), pc, at_default=ad,
                         mics=_check_mics(where, b.get("mics", []), cm))
 
@@ -594,6 +598,8 @@ def _check_capture_block(bi, b, catalog, sources) -> PlannedBlock:
         raise ExportRefused(f"{where}.bypass flags must be true/false")
     if not _same_by_source(flags, sources):
         raise ExportRefused(f"{where}.bypass: scenes with the same source must carry the same flag")
+    if any(f and tok == UNUSED for f, tok in zip(flags, sources)):
+        raise ExportRefused(f"{where}.bypass: a scene with no tone must leave every block active")
     return PlannedBlock(bi, 0, name, params, list(flags), pc, PlannedCapture(name, c["source"]), at_default=ad)
 
 
@@ -624,6 +630,13 @@ def _check_param(pw, prm, cm, labels, param_count, sources) -> PlannedParam:
     dnum = [float(d) for d in disp]
     if not _same_by_source(dnum, sources) or not _same_by_source(wires, sources):
         raise ExportRefused(f"{pw}: scenes with the same source must carry the same values")
+    if UNUSED in sources:
+        want = default_wire(cp)
+        if want is None:
+            raise ExportRefused(f"{pw}: a scene with no tone must hold the control's default, and the agent can't compute one")
+        for i, tok in enumerate(sources):
+            if tok == UNUSED and abs(wires[i] - want) > WIRE_TOLERANCE:
+                raise ExportRefused(f"{pw}: scene {'ABCDEFGH'[i]} has no tone, so it must hold the control's default")
     differs = any(dnum[i] != dnum[0] for i in range(1, SCENES))
     if prm["scene_mode"] != differs:
         raise ExportRefused(f"{pw}: scene_mode is {prm['scene_mode']} but the scenes "

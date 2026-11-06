@@ -62,7 +62,7 @@ func TestLayoutDefaultIsExport(t *testing.T) {
 	}
 }
 
-// ES-339 rhythm A / lead B, Telecaster rhythm E / lead F, C D G H unused (= ES rhythm).
+// ES-339 rhythm A / lead B, Telecaster rhythm E / lead F, C D G H unused (device default, active).
 func TestLayoutTwoGuitarsPlaceScenes(t *testing.T) {
 	es := []storage.EffectBlock{block("Myth Drive", prm("Gain", "2", "8"), prm("Bypass", "Off", "Off"))}
 	tele := []storage.EffectBlock{block("Myth Drive", prm("Gain", "4", "6"), prm("Bypass", "On", "Off"))}
@@ -73,7 +73,7 @@ func TestLayoutTwoGuitarsPlaceScenes(t *testing.T) {
 	if p.Guitar != "ES + Tele" {
 		t.Errorf("guitar %q", p.Guitar)
 	}
-	if want := [Scenes]string{"A", "B", "A", "A", "2A", "2B", "A", "A"}; p.SceneSources != want {
+	if want := [Scenes]string{"A", "B", "-", "-", "2A", "2B", "-", "-"}; p.SceneSources != want {
 		t.Errorf("scene_sources %v, want %v", p.SceneSources, want)
 	}
 	blk := p.Rows[0].Blocks[0]
@@ -86,9 +86,10 @@ func TestLayoutTwoGuitarsPlaceScenes(t *testing.T) {
 	if gain == nil {
 		t.Fatalf("no gain: %+v", blk.Params)
 	}
-	if want := [Scenes]float64{2, 8, 2, 2, 4, 6, 2, 2}; gain.Display != want || !gain.SceneMode {
+	if want := [Scenes]float64{2, 8, 5, 5, 4, 6, 5, 5}; gain.Display != want || !gain.SceneMode {
 		t.Errorf("gain display %v mode %v, want %v", gain.Display, gain.SceneMode, want)
 	}
+	// Unused scenes (C, D, G, H) are active, whatever the guitars do in their own.
 	if want := [Scenes]bool{false, false, false, false, true, false, false, false}; blk.Bypass != want {
 		t.Errorf("bypass %v, want %v", blk.Bypass, want)
 	}
@@ -105,11 +106,11 @@ func TestLayoutTwoGuitarsPlaceScenes(t *testing.T) {
 func TestLayoutSingleGuitarOtherScenes(t *testing.T) {
 	es := []storage.EffectBlock{block("Myth Drive", prm("Gain", "2", "8"))}
 	_, p := layoutExport(t, twoGuitars(es, nil), devicejobs.SceneLayout{Guitars: []devicejobs.GuitarScenes{gs("ES", "E", "F")}})
-	if want := [Scenes]string{"A", "A", "A", "A", "A", "B", "A", "A"}; p.SceneSources != want {
+	if want := [Scenes]string{"-", "-", "-", "-", "A", "B", "-", "-"}; p.SceneSources != want {
 		t.Errorf("scene_sources %v", p.SceneSources)
 	}
 	g := p.Rows[0].Blocks[0].Params[0]
-	if want := [Scenes]float64{2, 2, 2, 2, 2, 8, 2, 2}; g.Display != want {
+	if want := [Scenes]float64{5, 5, 5, 5, 2, 8, 5, 5}; g.Display != want {
 		t.Errorf("display %v, want %v", g.Display, want)
 	}
 }
@@ -218,5 +219,15 @@ func TestGoldenExport_TwoGuitarsLayout(t *testing.T) {
 	}
 	if !bytes.Equal(got, want) {
 		t.Errorf("export differs from %s; rerun with -update and review the diff", path)
+	}
+}
+
+// An unused scene copies nothing: a block that is bypassed in the guitars' scenes is active there.
+func TestLayoutUnusedScenesAreActiveAtDefault(t *testing.T) {
+	es := []storage.EffectBlock{block("Myth Drive", prm("Gain", "2", "2"), prm("Bypass", "On", "On"))}
+	_, p := layoutExport(t, twoGuitars(es, nil), devicejobs.SceneLayout{Guitars: []devicejobs.GuitarScenes{gs("ES", "E", "F")}})
+	want := [Scenes]bool{false, false, false, false, true, true, false, false}
+	if got := p.Rows[0].Blocks[0].Bypass; got != want {
+		t.Errorf("bypass %v, want %v", got, want)
 	}
 }
