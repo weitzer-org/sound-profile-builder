@@ -1,6 +1,8 @@
 package deviceexport
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"regexp"
@@ -105,11 +107,23 @@ func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 	var m *catalog.Model
 	if ms[0].Name == name {
 		if len(ms) > 1 {
-			ids := make([]string, len(ms))
-			for i, x := range ms {
-				ids[i] = strconv.Itoa(x.ID)
+			// Owner decision (2026-11-06): models that share a name and have identical
+			// controls are interchangeable; take the lowest id (Green 808 is 5 and 27, and
+			// G1 read a hand-placed Green 808 back as 5). Different layouts stay ambiguous.
+			if !sameLayout(ms) {
+				ids := make([]string, len(ms))
+				for i, x := range ms {
+					ids[i] = strconv.Itoa(x.ID)
+				}
+				return nil, fmt.Sprintf("ambiguous: %d device models share this name with different controls (ids %s); use a name that picks one", len(ms), strings.Join(ids, ", "))
 			}
-			return nil, fmt.Sprintf("ambiguous: %d device models share this name (ids %s); use a name that picks one", len(ms), strings.Join(ids, ", "))
+			m = ms[0]
+			for _, x := range ms[1:] {
+				if x.ID < m.ID {
+					m = x
+				}
+			}
+			return m, b.modelRefusal(m)
 		}
 		m = ms[0]
 	} else {
@@ -126,6 +140,24 @@ func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 		m = mono[0]
 	}
 	return m, b.modelRefusal(m)
+}
+
+// sameLayout reports whether every model has the same category, parameter count and
+// parameter list (indexes, names, types, ranges, defaults, steps), so any of them is the
+// same block on the device.
+func sameLayout(ms []*catalog.Model) bool {
+	first, err := json.Marshal(ms[0].Params)
+	if err != nil {
+		return false
+	}
+	for _, m := range ms[1:] {
+		next, err := json.Marshal(m.Params)
+		if err != nil || !bytes.Equal(first, next) || m.ParamCount != ms[0].ParamCount ||
+			m.Category != ms[0].Category || m.Clones != ms[0].Clones || m.PluginID != ms[0].PluginID {
+			return false
+		}
+	}
+	return true
 }
 
 // modelRefusal is why a resolved model can't be pushed, or "".
@@ -449,6 +481,9 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if why != "" {
 		return Param{}, false, why
 	}
+	if unitless01(cp) {
+		evidence = append(evidence, "scale:catalog-range")
+	}
 	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, SceneMode: disp[0] != disp[1], Evidence: evidence}
 	var wire [2]float64
 	for i, x := range disp {
@@ -533,8 +568,15 @@ func parseFloatValue(p catalog.Param, raw, unitField string) (float64, string) {
 			return *p.Default, ""
 		}
 		return 0, "pan display scale is not verified on the device; only Center (the default) can be taken"
-	case p.Units == "" && p.Min != nil && p.Max != nil && *p.Min == 0 && *p.Max == 1:
-		return 0, "unitless 0..1 control: its display scale is not verified on the device"
+	case unitless01(p):
+		// Owner decision (2026-11-06): a bare number on the control's own 0..1 scale is
+		// taken as written ("scale:catalog-range", marked unconfirmed in the dry run). A unit
+		// or another scale's number (e.g. 40 or "40%") is refused, never rescaled.
+		x, err := strconv.ParseFloat(v, 64)
+		if err != nil || math.IsNaN(x) || math.IsInf(x, 0) {
+			return 0, fmt.Sprintf("unitless 0..1 control: only a plain number on its 0..1 scale can be taken, got %q", truncate(v, 40))
+		}
+		return x, ""
 	}
 	if strings.EqualFold(v, "off") {
 		minOff, maxOff := strings.EqualFold(p.MinLabel, "OFF"), strings.EqualFold(p.MaxLabel, "OFF")
@@ -573,6 +615,12 @@ func parseFloatValue(p catalog.Param, raw, unitField string) (float64, string) {
 		return 0, fmt.Sprintf("written in %s, but the control is in %s", truncate(written, 12), p.Units)
 	}
 	return x * wFactor / cFactor, ""
+}
+
+// unitless01 is a unitless control with a 0..1 range: the preset's number is read on that
+// scale (plan 4.1).
+func unitless01(p catalog.Param) bool {
+	return p.Units == "" && p.Min != nil && p.Max != nil && *p.Min == 0 && *p.Max == 1 && !isPan(p)
 }
 
 func isPan(p catalog.Param) bool {

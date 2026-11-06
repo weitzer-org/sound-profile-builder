@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "0c5a26b710ecc12a4edebc015c7a4c62c17e889107c9cecf5cded5c3f45427d1",
+ "plan_sha256": "489dd1ae71286f1f561426ea5a27d2cdd00dbed5f0e3561ee3d0a35336fdffbd",
  "summary": [
   {
    "row": 0,
@@ -9,7 +9,10 @@
    "model_id": 9014,
    "params": [],
    "bypass_a": true,
-   "bypass_b": true
+   "bypass_b": true,
+   "at_default": [
+    "WAH"
+   ]
   },
   {
    "row": 0,
@@ -204,13 +207,7 @@
    "bypass_b": false
   }
  ],
- "unresolved": [
-  {
-   "block": "#1 Crying Clyde Wah",
-   "param": "WAH",
-   "reason": "unitless 0..1 control: its display scale is not verified on the device"
-  }
- ],
+ "unresolved": [],
  "payload": {
   "format": "qc2-device-export/1",
   "catalog": {
@@ -252,7 +249,9 @@
        true
       ],
       "params": [],
-      "at_default": []
+      "at_default": [
+       "WAH"
+      ]
      },
      {
       "col": 1,
@@ -1204,13 +1203,7 @@
     "switch": "G"
    }
   ],
-  "unresolved": [
-   {
-    "block": "#1 Crying Clyde Wah",
-    "param": "WAH",
-    "reason": "unitless 0..1 control: its display scale is not verified on the device"
-   }
-  ],
+  "unresolved": [],
   "warnings": [
    {
     "block": "#5 412 Brit 60B GB 71",
