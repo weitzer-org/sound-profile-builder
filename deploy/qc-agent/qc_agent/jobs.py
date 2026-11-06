@@ -882,7 +882,15 @@ class _Push:
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
-            snap = dev.read_directory()
+            try:
+                snap = dev.read_directory()
+            except (UnitAbsent, UnitBusy):
+                raise
+            except DeviceError as e:
+                # The save was issued. One incomplete listing (seen on the owner's unit: "My Presets is missing")
+                # says nothing about whether it landed: look again rather than fail a push that may have worked.
+                log.warning("listing after the save was incomplete (%s); will look again", text.clean(str(e), 120))
+                continue
             view = _folder_view(snap, self.folder_key)
             if view is not None and view.my_presets.get(pos) == name:
                 listed = True

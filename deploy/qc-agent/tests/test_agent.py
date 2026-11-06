@@ -340,6 +340,29 @@ class Push(Base):
         self.assertIn("Another preset was selected", r["message"])
         self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
 
+    def test_one_bad_listing_after_the_save_is_retried(self):
+        from qc_agent.device import DeviceError
+
+        def bad_once(fake, n):
+            if n == 3:  # check_unit = 1, the pre-save listing = 2, the first look after the save = 3
+                raise DeviceError("My Presets is missing from the unit's directory listing")
+        self.dev.on_listing = bad_once
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("save_to_slot"), 1)
+
+    def test_listings_that_keep_failing_after_the_save_end_unconfirmed(self):
+        from qc_agent.device import DeviceError
+
+        def bad_after_save(fake, n):
+            if n >= 3:
+                raise DeviceError("incomplete listing")
+        self.dev.on_listing = bad_after_save
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("It may still land", r["message"])
+        self.assertEqual([c[0] for c in self.dev.calls].count("save_to_slot"), 1)
+
     def test_factory_folder_open_is_refused(self):
         self.dev.open_folder = "/opt/neuraldsp/factory"
         r = self.push()
