@@ -695,12 +695,17 @@ func sendPresetToDevice(svc *presetsvc.Service, b *devicejobs.Bridge, lib *Devic
 			if err != nil {
 				return nil, none, deviceError(devicePushToolName, err)
 			}
+			// A requested layout must show in the plan the user is asked to approve. If it doesn't,
+			// the plan describes something else, so refuse rather than show it.
+			if layout != nil && !layout.IsDefault() && plan.Export.Layout == nil {
+				return nil, none, errors.New("The scene layout was requested but the device export did not apply it, so the plan would not show both guitars. Nothing was queued. This is a bug: report it.")
+			}
 			out := devicePushOutput{
 				Mode: "dry_run", CanPush: plan.Token != "", ConfirmToken: plan.Token,
 				BridgeOnline: plan.Bridge.Online, BridgeReason: plan.Bridge.Reason, SlotNote: plan.SlotNote,
 				Plan: &devicePlanOutput{
 					PresetID: in.PresetID, Guitar: in.Guitar, Slot: slot, Name: name,
-					ExportFormat: plan.Export.Format, ExportSHA256: plan.PlanSHA256,
+					ExportFormat: plan.Export.Format, ExportSHA256: plan.PlanSHA256, Layout: plan.Export.Layout,
 					Blocks: plan.Export.Summary, Stomps: plan.Export.Stomps, Unresolved: plan.Export.Unresolved, Warnings: plan.Export.Warnings,
 				},
 			}

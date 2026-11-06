@@ -4,7 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/weitzer-org/sound-builder/internal/deviceexport"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 func TestPushLayout(t *testing.T) {
@@ -52,5 +54,47 @@ func TestRenderLayoutTable(t *testing.T) {
 	}
 	if strings.Contains(out, "Scenes C-H get Scene A") {
 		t.Errorf("layout table must not claim C-H copy A:\n%s", out)
+	}
+}
+
+// End to end through the MCP client with the real exporter behind the bridge: the second
+// guitar and its scenes must reach the plan, not be dropped.
+func TestSendPreset_TwoGuitarLayoutReachesThePlan(t *testing.T) {
+	r := newDeviceRig(t, nil)
+	exp, err := deviceexport.NewEmbedded(deviceexport.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.bridge.Exporter = exp
+	tele := pushableChain()
+	tele[0].Parameters[0] = storage.BlockParameter{Name: "Gain", Value: "4", ValueB: "6", Basis: "estimate"}
+	seedDevicePreset(t, r.h, "p-two", map[string][]storage.EffectBlock{"Gibson ES-339 Humbuckers": pushableChain(), "Fender Telecaster": tele})
+	r.online(t)
+	res := itCall(t, r.cs, devicePushToolName, map[string]any{
+		"preset_id": "p-two", "guitar": "Gibson ES-339 Humbuckers", "rhythm_scene": "A", "lead_scene": "B",
+		"second_guitar": "Fender Telecaster", "second_rhythm_scene": "E", "second_lead_scene": "F",
+		"slot": "20A", "name": "BB King Late Era"})
+	text := okText(t, res)
+	for _, want := range []string{"Scene E: Fender Telecaster rhythm", "Scene F: Fender Telecaster lead", "| 4 | 6 |"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("missing %q in:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "Scenes C-H get Scene A") {
+		t.Errorf("the plan fell back to the single-guitar rendering:\n%s", text)
+	}
+
+	// The confirm step carries the layout too: the same fields queue the push, other scenes do not.
+	out := itStructured[devicePushOutput](t, res)
+	args := func(sceneF string) map[string]any {
+		return map[string]any{"preset_id": "p-two", "guitar": "Gibson ES-339 Humbuckers", "rhythm_scene": "A", "lead_scene": "B",
+			"second_guitar": "Fender Telecaster", "second_rhythm_scene": "E", "second_lead_scene": sceneF,
+			"slot": "20A", "name": "BB King Late Era", "dry_run": false, "confirm_token": out.ConfirmToken, "wait_seconds": 0}
+	}
+	if msg := errText(t, itCall(t, r.cs, devicePushToolName, args("G"))); !strings.Contains(msg, "does not match") {
+		t.Errorf("a different layout must not fit the token: %s", msg)
+	}
+	if msg := okText(t, itCall(t, r.cs, devicePushToolName, args("F"))); !strings.Contains(msg, "Queued the push") {
+		t.Errorf("the same layout should queue: %s", msg)
 	}
 }
