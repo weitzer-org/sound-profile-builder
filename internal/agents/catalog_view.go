@@ -19,7 +19,7 @@ type DeviceControl struct {
 	Min, Max, Default *float64
 	// Steps are the switch positions, when the device names them.
 	Steps []string
-	// Switch: a discrete control. Pan: L..R labelled ends (display scale unverified).
+	// Switch: a discrete control. Pan: L..R labelled ends (the display on the unit is unverified).
 	Switch, Pan bool
 	// MinOff/MaxOff: that end of the range turns the control off.
 	MinOff, MaxOff bool

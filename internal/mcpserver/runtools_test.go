@@ -232,6 +232,18 @@ func TestRunTools_LongPollWakesAndProgress(t *testing.T) {
 		t.Fatalf("expected running + poll hint, got %s / %s", first.Status, itText(t, res))
 	}
 
+	// generate returns before the pipeline goroutine has necessarily reported Phase A. Wait
+	// for it, or the status call below starts from an empty phase and takes Phase A as the
+	// change it is waiting for.
+	for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(5 * time.Millisecond) {
+		if rec, err := h.svc.Run(t.Context(), first.RunID); err == nil && rec.Phase == "Phase A" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("run never reached Phase A")
+		}
+	}
+
 	// Concurrent second run is refused with the actionable message.
 	t.Setenv("MCP_MAX_CONCURRENT_RUNS", "1")
 

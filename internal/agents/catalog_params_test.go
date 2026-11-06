@@ -89,7 +89,7 @@ func TestRenderDeviceParamForms(t *testing.T) {
 		}
 	}
 	cab := renderDeviceBlock(mustDeviceBlock(t, "412 Brit 60B V30 95 (M)"))
-	for _, want := range []string{"MIC 1 LEVEL dB range?", "MIC 1 PAN L..R", "HPF 20..500Hz min=OFF d20", "LPF 500..20000Hz max=OFF", "MIC 1 GRID MODE switch 0..1 d1"} {
+	for _, want := range []string{"MIC 1 LEVEL dB range?", "MIC 1 PAN 0=L..10=R d5", "HPF 20..500Hz min=OFF d20", "LPF 500..20000Hz max=OFF", "MIC 1 GRID MODE switch 0..1 d1"} {
 		if !strings.Contains(cab, want) {
 			t.Errorf("cab render missing %q: %s", want, cab)
 		}
@@ -97,6 +97,72 @@ func TestRenderDeviceParamForms(t *testing.T) {
 	delay := renderDeviceBlock(mustDeviceBlock(t, "Analog Delay"))
 	if !strings.Contains(delay, "TRAILS {") {
 		t.Errorf("delay render should list TRAILS positions: %s", delay)
+	}
+}
+
+// TestCabFamilyMarksModelOnlyControls: a family name merges the mono and stereo cab; the
+// export places the mono one, so the Architect is told PAN is its to set and BALANCE is not.
+func TestCabFamilyMarksModelOnlyControls(t *testing.T) {
+	cab := mustDeviceBlock(t, "212 UK C30 65")
+	line := renderDeviceBlock(cab)
+	for _, want := range []string{"MIC 1 PAN 0=L..10=R d5 [mono cab only]", "MIC 1 BALANCE -1=L..1=R d0 [stereo cab only]"} {
+		if !strings.Contains(line, want) {
+			t.Errorf("render missing %q: %s", want, line)
+		}
+	}
+	if strings.Contains(renderDeviceParam(cab.byKey["MIC1LEVEL"]), "only]") {
+		t.Error("a control both cabs have must not be marked")
+	}
+	// A single model, and non-family merges (two Graphic-9 models), are not marked.
+	if strings.Contains(renderDeviceBlock(mustDeviceBlock(t, "212 UK C30 65 (M)")), "only]") ||
+		strings.Contains(renderDeviceBlock(mustDeviceBlock(t, "Graphic-9")), "only]") {
+		t.Error("only a mono/stereo family marks model-only controls")
+	}
+}
+
+// TestPanScaleRendering: a pan is shown with its catalog range, which end is L and R, and the
+// default; a name whose models disagree on the scale stays "L..R" (nothing is guessed).
+func TestPanScaleRendering(t *testing.T) {
+	if got := renderDeviceParam(mustDeviceBlock(t, "412 Brit 60B V30 95 (M)").byKey["MIC1PAN"]); got != "MIC 1 PAN 0=L..10=R d5" {
+		t.Errorf("mono cab pan = %q", got)
+	}
+	if got := renderDeviceParam(&deviceParam{Label: "PAN", Pan: true, PanScale: true, Min: fp(-1), Max: fp(1), Default: fp(0)}); got != "PAN -1=L..1=R d0" {
+		t.Errorf("-1..1 pan = %q", got)
+	}
+	if got := renderDeviceParam(&deviceParam{Label: "PAN", Pan: true, Min: fp(0), Max: fp(10)}); got != "PAN L..R" {
+		t.Errorf("a pan with no agreed scale = %q", got)
+	}
+	// Merging two models with different pan scales drops the scale.
+	b := &deviceBlock{byKey: map[string]*deviceParam{}}
+	b.merge("PAN", catalog.Param{MinLabel: "L", MaxLabel: "R", Min: fp(0), Max: fp(10), Default: fp(5)})
+	b.merge("PAN", catalog.Param{MinLabel: "L", MaxLabel: "R", Min: fp(0), Max: fp(10), Default: fp(5)})
+	if !b.byKey["PAN"].PanScale {
+		t.Error("two models with the same pan scale should keep it")
+	}
+	b.merge("PAN", catalog.Param{MinLabel: "L", MaxLabel: "R", Min: fp(-1), Max: fp(1), Default: fp(0)})
+	if b.byKey["PAN"].PanScale || renderDeviceParam(b.byKey["PAN"]) != "PAN L..R" {
+		t.Errorf("disagreeing pan scales should render L..R, got %q", renderDeviceParam(b.byKey["PAN"]))
+	}
+}
+
+// TestPanRangeCheckOnlyForCatalogAwareOutput: a pan outside its catalog range is noted only
+// when the preset uses kept_defaults (the catalog-aware prompt, which showed the scale);
+// v5-and-older output is unchanged.
+func TestPanRangeCheckOnlyForCatalogAwareOutput(t *testing.T) {
+	mk := func(kept []string) *storage.StructuredPreset {
+		return catalogCheckFixture(storage.EffectBlock{Type: "Cabinet", Model: "412 Brit 60B V30 95", KeptDefaults: kept,
+			Parameters: []storage.BlockParameter{{Name: "Mic 1 Pan", Value: "-40"}, {Name: "Mic 2 Pan", Value: "3.5"}}})
+	}
+	valid := map[string]bool{"412 Brit 60B V30 95": false}
+	if got := FlagCatalogParamMismatches(mk(nil), valid); got.OutOfRange != 0 {
+		t.Errorf("v5-style output: OutOfRange = %d, want 0", got.OutOfRange)
+	}
+	sp := mk([]string{})
+	if got := FlagCatalogParamMismatches(sp, valid); got.OutOfRange != 1 {
+		t.Errorf("catalog-aware output: OutOfRange = %d, want 1 (only -40; 3.5 is on the 0..10 scale)", got.OutOfRange)
+	}
+	if r := sp.Guitars["Guitar"][0].Rationale; !strings.Contains(r, "Mic 1 Pan -40 is outside the device's 0..10 range") {
+		t.Errorf("rationale = %q", r)
 	}
 }
 
@@ -424,3 +490,5 @@ func tokenIndex(haystack, needle string) int {
 	}
 	return -1
 }
+
+func fp(x float64) *float64 { return &x }

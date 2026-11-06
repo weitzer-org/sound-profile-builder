@@ -53,6 +53,12 @@ type deviceParam struct {
 	MinOff, MaxOff bool
 	// Pan: the range ends are labelled L/R. How the device displays these is unverified.
 	Pan bool
+	// PanScale: a Pan whose catalog range runs L at Min to R at Max, with the same Min,
+	// Max and Default in every model the block name merges. The Architect is shown that
+	// range (renderDeviceParam) and the export reads a plain number on it. Taken only from
+	// the catalog; what the unit's screen shows for it is unverified. False when the models
+	// disagree or the labels are not L(min)/R(max): then the pan stays "L..R" as before.
+	PanScale bool
 	// Switch: a discrete control (switch, rotary switch, toggle, combo box), with or
 	// without named positions.
 	Switch bool
@@ -60,6 +66,11 @@ type deviceParam struct {
 	// Architect must account for it (set it or keep its default). A control only some
 	// members have -- a stereo cab's BALANCE where the mono one has PAN -- isn't required.
 	Required bool
+	// Only is "mono" or "stereo" for a control only the (M) or only the (ST) cabs behind a
+	// mono/stereo family name have (a stereo cab's BALANCE where the mono one has PAN). The
+	// device export places a family as its mono model, so a stereo-only control can't be
+	// pushed; the Architect is told which is which (renderDeviceParam).
+	Only string
 }
 
 func (p *deviceParam) numericRange() bool { return p.Min != nil && p.Max != nil }
@@ -128,7 +139,16 @@ func normalizeUnits(u string) string {
 func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 	b := &deviceBlock{Name: name, Category: models[0].Category, byKey: map[string]*deviceParam{}}
 	modelsWith := map[string]int{}
+	monoWith, stereoWith := map[string]int{}, map[string]int{}
+	nMono, nStereo := 0, 0
 	for _, m := range models {
+		isMono, isStereo := strings.HasSuffix(m.Name, " (M)"), strings.HasSuffix(m.Name, " (ST)")
+		if isMono {
+			nMono++
+		}
+		if isStereo {
+			nStereo++
+		}
 		if plugin, gated := m.RequiredPlugin(); gated {
 			b.Gated = true
 			if b.Plugin == "" {
@@ -142,10 +162,25 @@ func buildDeviceBlock(name string, models []*catalog.Model) *deviceBlock {
 		}
 		for k := range inModel {
 			modelsWith[k]++
+			if isMono {
+				monoWith[k]++
+			}
+			if isStereo {
+				stereoWith[k]++
+			}
 		}
 	}
+	family := nMono > 0 && nStereo > 0 && nMono+nStereo == len(models)
 	for _, p := range b.Params {
 		p.Required = modelsWith[p.Key] == len(models)
+		if family && !p.Required {
+			switch {
+			case monoWith[p.Key] > 0 && stereoWith[p.Key] == 0:
+				p.Only = "mono"
+			case stereoWith[p.Key] > 0 && monoWith[p.Key] == 0:
+				p.Only = "stereo"
+			}
+		}
 	}
 	return b
 }
@@ -165,9 +200,13 @@ func (b *deviceBlock) merge(label string, p catalog.Param) {
 			Pan:    isPanLabel(p.MinLabel) || isPanLabel(p.MaxLabel),
 			Switch: catalog.DiscreteParamTypes[p.Type],
 		}
+		dp.PanScale = dp.Pan && p.MinLabel == "L" && p.MaxLabel == "R" && p.Min != nil && p.Max != nil && p.Default != nil
 		b.byKey[key] = dp
 		b.Params = append(b.Params, dp)
 		return
+	}
+	if dp.PanScale && !(p.MinLabel == "L" && p.MaxLabel == "R" && samePtr(dp.Min, p.Min) && samePtr(dp.Max, p.Max) && samePtr(dp.Default, p.Default)) {
+		dp.PanScale = false // the models behind this name disagree on the pan's scale
 	}
 	// Widest range: a value is only out of range if it's out for every model.
 	if dp.Min == nil || p.Min == nil {
@@ -191,6 +230,8 @@ func (b *deviceBlock) merge(label string, p catalog.Param) {
 	dp.MaxOff = dp.MaxOff || strings.EqualFold(p.MaxLabel, "OFF")
 	dp.Pan = dp.Pan || isPanLabel(p.MinLabel) || isPanLabel(p.MaxLabel)
 }
+
+func samePtr(a, b *float64) bool { return a != nil && b != nil && *a == *b }
 
 func isPanLabel(s string) bool { return s == "L" || s == "R" }
 
@@ -259,10 +300,18 @@ func formatNum(x float64) string { return strconv.FormatFloat(x, 'g', -1, 64) }
 //	OUTPUT -60..12dB min=OFF d0
 //	TRAILS {Off|On} d=Off    switch positions
 //	LEVEL dB range?          the device's bounds aren't known (firmware symbols)
-//	PAN L..R                 a pan; its display scale isn't known
+//	PAN 0=L..10=R d5         a pan on its catalog range (which end is L, which R, default)
+//	PAN L..R                 a pan whose models disagree on the scale; it isn't known
 //	GRID MODE switch 0..1 d1 a switch the device gives no position names for
 //	DISTANCE 0..1?           unitless 0..1; display scale isn't known
 func renderDeviceParam(p *deviceParam) string {
+	if p.Only == "" {
+		return renderDeviceParamBody(p)
+	}
+	return renderDeviceParamBody(p) + " [" + p.Only + " cab only]"
+}
+
+func renderDeviceParamBody(p *deviceParam) string {
 	var s strings.Builder
 	s.WriteString(p.Label)
 	switch {
@@ -273,6 +322,9 @@ func renderDeviceParam(p *deviceParam) string {
 				s.WriteString(" d=" + p.StepNames[i])
 			}
 		}
+		return s.String()
+	case p.Pan && p.PanScale:
+		s.WriteString(" " + formatNum(*p.Min) + "=L.." + formatNum(*p.Max) + "=R d" + formatNum(*p.Default))
 		return s.String()
 	case p.Pan:
 		s.WriteString(" L..R")
@@ -691,7 +743,7 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 				continue
 			}
 			counts.CheckedBlocks++
-			checkBlockParams(b, dev, &counts)
+			checkBlockParams(b, dev, &counts, keptDefaultsConvention)
 			if keptDefaultsConvention {
 				checkKeptDefaults(b, dev, &counts)
 			}
@@ -700,7 +752,9 @@ func FlagCatalogParamMismatches(sp *storage.StructuredPreset, validBlocks map[st
 	return counts
 }
 
-func checkBlockParams(b *storage.EffectBlock, dev *deviceBlock, counts *CatalogParamCounts) {
+// catalogAware: the preset came from a catalog-aware prompt (it uses kept_defaults), the only
+// one shown pans on their catalog scale; older output is not held to it.
+func checkBlockParams(b *storage.EffectBlock, dev *deviceBlock, counts *CatalogParamCounts, catalogAware bool) {
 	blockType := strings.ToLower(strings.TrimSpace(b.Type))
 	var unknown []string
 	for _, p := range b.Parameters {
@@ -734,7 +788,7 @@ func checkBlockParams(b *storage.EffectBlock, dev *deviceBlock, counts *CatalogP
 			continue // FlagCaptureFormattingMismatches reports this one
 		}
 		for _, v := range []string{p.Value, p.ValueB} {
-			checkParamValue(b, p, dp, v, counts)
+			checkParamValue(b, p, dp, v, counts, catalogAware)
 		}
 	}
 	if len(unknown) > 0 {
@@ -791,7 +845,7 @@ func checkKeptDefaults(b *storage.EffectBlock, dev *deviceBlock, counts *Catalog
 	appendRationaleNote(b, fmt.Sprintf(deviceCheckPrefix+"not set and not marked as kept at the device default: %s.", strings.Join(shown, ", ")))
 }
 
-func checkParamValue(b *storage.EffectBlock, p storage.BlockParameter, dp *deviceParam, value string, counts *CatalogParamCounts) {
+func checkParamValue(b *storage.EffectBlock, p storage.BlockParameter, dp *deviceParam, value string, counts *CatalogParamCounts, catalogAware bool) {
 	v := strings.TrimSpace(value)
 	if v == "" {
 		return
@@ -843,7 +897,10 @@ func checkParamValue(b *storage.EffectBlock, p storage.BlockParameter, dp *devic
 	} else if _, _, known := unitDimension(dp.Units); dp.Units != "" && !known {
 		return // a bare number on a Semitones/BPM/... control: its convention isn't checked
 	}
-	if !dp.rangeCheckable() {
+	// A pan the Architect was shown on its catalog range (catalog-aware output only) is
+	// checked against that range. The range is the catalog's; the unit's screen is unverified.
+	panChecked := catalogAware && dp.Pan && dp.PanScale
+	if !dp.rangeCheckable() && !panChecked {
 		return
 	}
 	const eps = 1e-9

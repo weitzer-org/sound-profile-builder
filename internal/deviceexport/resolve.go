@@ -475,7 +475,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if why != "" {
 		return Param{}, false, why
 	}
-	if unitless01(cp) {
+	if unitless01(cp) || isPan(cp) {
 		evidence = append(evidence, "scale:catalog-range")
 	}
 	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, SceneMode: disp[0] != disp[1], Evidence: evidence}
@@ -561,7 +561,15 @@ func parseFloatValue(p catalog.Param, raw, unitField string) (float64, string) {
 		if isCentre(v) && p.Default != nil && p.Min != nil && p.Max != nil && sameValue(*p.Default, (*p.Min+*p.Max)/2) {
 			return *p.Default, ""
 		}
-		return 0, "pan display scale is not verified on the device; only Center (the default) can be taken"
+		// A plain number is read on the control's own catalog range ("scale:catalog-range",
+		// marked unconfirmed in the dry run) -- the Architect is shown that range, with L
+		// and R ends, in a catalog-aware prompt. What the unit's screen shows for it is
+		// unverified. A unit, a word other than Center, or a number outside the range is refused
+		// (ToWire refuses out-of-range), never rescaled.
+		if x, err := strconv.ParseFloat(v, 64); err == nil && !math.IsNaN(x) && !math.IsInf(x, 0) {
+			return x, ""
+		}
+		return 0, fmt.Sprintf("pan: only Center or a plain number on its catalog range can be taken, got %q", truncate(v, 40))
 	case unitless01(p):
 		// Owner decision (2026-11-06): a bare number on the control's own 0..1 scale is
 		// taken as written ("scale:catalog-range", marked unconfirmed in the dry run). A unit

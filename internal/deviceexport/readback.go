@@ -473,16 +473,13 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 		}
 		wire[s] = w
 	}
-	if isPan(cp) {
-		return im.pan(cp, wire)
-	}
 	evidence, why := taperEvidence(cp)
 	if why != "" {
 		return storage.BlockParameter{}, false, why
 	}
-	if unitless01(cp) {
-		// P2c: a unitless 0..1 control is read on its own catalog range, labelled (the
-		// device's display scale for it is not verified).
+	if unitless01(cp) || isPan(cp) {
+		// P2c: a unitless 0..1 control, and (the Architect pan-scale PR) a pan, is read on its
+		// own catalog range, labelled (the device's display scale for it is not verified).
 		evidence = append(evidence, "scale:catalog-range")
 	}
 	var disp [Scenes]float64
@@ -569,25 +566,6 @@ func (im *importer) discrete(lp catalog.LabelledParam, rp devicejobs.ReadbackPar
 		bp.ValueB = name(pos[1])
 	}
 	return bp, false, ""
-}
-
-// pan: only a centred pan at the catalog default is accepted (the export's rule for a
-// pan written as Center); any other position has no verified display scale.
-func (im *importer) pan(cp catalog.Param, wire [Scenes]float64) (storage.BlockParameter, bool, string) {
-	why := "pan display scale is not verified on the device; only a centred pan at the default can be taken"
-	if cp.Default == nil || cp.Min == nil || cp.Max == nil || !sameValue(*cp.Default, (*cp.Min+*cp.Max)/2) {
-		return storage.BlockParameter{}, false, why
-	}
-	want, err := cp.ToWire(*cp.Default)
-	if err != nil {
-		return storage.BlockParameter{}, false, why
-	}
-	for _, w := range wire {
-		if math.Abs(w-want) > eps {
-			return storage.BlockParameter{}, false, why
-		}
-	}
-	return storage.BlockParameter{}, true, ""
 }
 
 // displayText formats a display value for a Value field: five significant figures, so
