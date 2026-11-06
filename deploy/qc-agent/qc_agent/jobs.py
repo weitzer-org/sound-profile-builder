@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 
 from . import contract, slots, text
 from .catalog import default_wire, is_internal_param
-from .device import SETLIST_KEY, SETLIST_NAME, DeviceError, UnitAbsent, UnitBusy
+from .device import SETLIST_KEY, SETLIST_NAME, BridgeRefused, DeviceError, UnitAbsent, UnitBusy
 from .export_validator import SUPPORTED_FORMATS, ExportRefused, check_preset_name, validate
 
 log = logging.getLogger("qc_agent")
@@ -523,8 +523,8 @@ class _Push:
         try:
             echoed = self.op(self.dev.add_block, self.plan.row, b.col, b.model_id)
         except DeviceError as e:
-            if not b.plugin or isinstance(e, UnitAbsent):
-                raise
+            if not b.plugin or isinstance(e, (UnitAbsent, BridgeRefused)):
+                raise  # the unit going away, or the bridge's own guard, is not the unit refusing a plugin
             log.warning("placing plugin model %s failed: %s", b.model_id, text.clean(str(e), 200))
             echoed = False
         if echoed:
@@ -614,8 +614,8 @@ class _Push:
         self.saved = True
         try:
             ctx.owned.record(slot, pos, name, self.job["job_id"], contract.format_time(ctx.now()))
-        except OSError as e:  # the save happened; a local ledger problem mustn't change the outcome
-            log.error("could not record the owned slot %s: %s", slot, e)
+        except Exception as e:  # noqa: BLE001  the save was issued; a local ledger problem mustn't change the outcome
+            log.error("could not record the owned slot %s: %s", slot, text.clean(str(e), 200))
         listed = False
         for _ in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)

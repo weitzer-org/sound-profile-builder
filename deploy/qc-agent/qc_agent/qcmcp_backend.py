@@ -49,17 +49,17 @@ import time
 import types
 from pathlib import Path
 
-from .device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from .device import SETLIST_KEY, BridgeRefused, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
 
 log = logging.getLogger("qc_agent")
 
 
-class WireRefused(DeviceError):
+class WireRefused(BridgeRefused):
     """The wire guard stopped a message the plan doesn't allow."""
 
 
-class GuardError(DeviceError):
+class GuardError(BridgeRefused):
     """Code tried to use a transport method that isn't granted."""
 
 

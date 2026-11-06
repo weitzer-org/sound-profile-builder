@@ -520,6 +520,27 @@ class Push(Base):
                 self.assertEqual(names[-2:], ["end_push", "disconnect"])
                 self.assertFalse(self.agent.stop.is_set())
 
+    def test_a_guard_refusal_on_a_plugin_block_is_not_blamed_on_the_unit(self):
+        from qc_agent.device import BridgeRefused
+        m, args = self._plugin_export()
+        orig = self.dev.add_block
+
+        def guarded(row, col, model_id):
+            orig(row, col, model_id)
+            raise BridgeRefused("wire guard refused it")
+        self.dev.add_block = guarded
+        r = self.push(args=args)
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertNotIn("did not accept", r["message"])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_a_non_os_ledger_error_after_the_save_keeps_the_outcome(self):
+        def boom(*a, **k):
+            raise ValueError("bad line")
+        self.agent.owned.record = boom
+        r = self.push()
+        self.assertEqual(r["status"], "succeeded")
+
     def test_plugin_block_the_unit_accepts_is_pushed(self):
         m, args = self._plugin_export()
         r = self.push(args=args)

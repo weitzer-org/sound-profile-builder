@@ -39,6 +39,10 @@ class UnitBusy(DeviceError):
     """Another program (Cortex Control) holds the unit exclusively."""
 
 
+class BridgeRefused(DeviceError):
+    """The bridge's own guard stopped a call before it reached the unit (not the unit refusing)."""
+
+
 @dataclass
 class Presence:
     present: bool | None  # None: can't tell without opening the unit
