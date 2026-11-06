@@ -429,7 +429,7 @@ Treat them as **search-sourced, page-unread** until the owner confirms them in t
 |---|---|---|---|
 | Agent polls `jobs/pending/` with one LIST every 5 s, the whole time it runs | 720 per hour | A | 2 h/day: ~43,000. 24/7 (worst case, against the owner's on-demand rule): ~518,000 |
 | Agent heartbeat, one PUT every 60 s | 60 per hour | A | 24/7: ~43,000 |
-| QC-2 waiting on a result: one GET every 2 s for at most 120 s per call | ≤ 60 per call | B | negligible |
+| QC-2 waiting on a result: one GET every 2 s for at most 50 s per call (the device tools' `wait_seconds` cap; the owner's MCP client gave up at 60 s) | ≤ 25 per call | B | negligible |
 
 - All of it fits inside the free tier, unless the app's own Class A traffic already uses most of the 1M. That free tier is account-wide and shared: **UNVERIFIED** how much the app uses today; see `usage_analytics_reference.md` for the bucket's write volume.
 - Even always-on at 3 s polling (~864,000 LISTs), the overage would be at most about $3.90 a month.
