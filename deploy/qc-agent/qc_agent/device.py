@@ -15,7 +15,7 @@ Read shape (positional, as the unit reports it; plan 7.2 and G6): a preset is
                  "blocks": [{"col": j, "model_id": int,
                              "params": [{"index": k, "values": [v_A..v_H], "scene_mode": bool}]}]}],
      "bypass": [[[8 bools] per column] per row] or None,
-     "stomps": [{"row": i, "col": j, "index": 0-7, "type": 0 primary | 1 secondary}],
+     "stomps": [{"row": i, "col": j, "index": 0-7, "type": STOMP_PRIMARY | STOMP_SECONDARY}],
      "momentary": {index: bool}}
 where i, j and k are array positions (in a read the unit leaves the row/column/index
 fields at 0, so the position is the address). A footswitch assignment carries its own
@@ -29,6 +29,9 @@ from dataclasses import dataclass
 
 SETLIST_KEY = "/media/p4/Presets/My Presets"  # qc-mcp's My Presets folder key; G0/G3 used it on the owner's unit
 SETLIST_NAME = "My Presets"
+# A footswitch assignment's type in the read shape (StompModeAssignment.type in the 4.1 descriptors): the
+# bridge only ever writes PRIMARY (on/off); SECONDARY is the Dual Footswitch function and is never written.
+STOMP_PRIMARY, STOMP_SECONDARY = 0, 1
 
 
 class DeviceError(RuntimeError):

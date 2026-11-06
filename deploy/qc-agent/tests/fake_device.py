@@ -10,7 +10,7 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 from __future__ import annotations
 
 from qc_agent.captures import CaptureEntry, DirectorySnapshot
-from qc_agent.device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
                          "set_block_bypass", "save_to_slot", "set_mic", "assign_stomp"})
@@ -163,7 +163,7 @@ class FakeDevice(DeviceBackend):
                                                               for r in (1, 2, 3)],
                 "bypass": bypass,
                 **({} if self.omit_stomps else {
-                    "stomps": [{"row": r, "col": c, "index": i + self.stomp_index_skew, "type": 0}
+                    "stomps": [{"row": r, "col": c, "index": i + self.stomp_index_skew, "type": STOMP_PRIMARY}
                                for (r, c), i in sorted(self.stomps.items())] + list(self.extra_stomps),
                     "momentary": dict(self.momentary)})}
 

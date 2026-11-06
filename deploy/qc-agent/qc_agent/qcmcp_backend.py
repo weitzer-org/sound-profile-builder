@@ -13,8 +13,9 @@ Three layers keep the transport to the operations the plan allows (section 5):
    its one string write is held to the armed capture by the wire guard. assign_stomp stays on
    the NEVER list too; the only way past it is QcMcpBackend.assign_stomp, which opens it for one
    call while the wire guard holds that exact assignment in a push's stomp step (stomp doc
-   section 6.1, entry point 1): Guarded.window yields a single-use callable for that one call and
-   keeps no state of its own. unassign_stomp is never reachable.
+   section 6.1, entry point 1): Guarded.window yields a scoped callable, dead once its with-block
+   exits, opened around that one call, and keeps no state of its own. unassign_stomp is never
+   reachable.
 3. WireGuard sits between the transport and the HID device and decodes every
    outgoing message before it is written. Only these pass:
      * session plumbing the handshake sends (KeepAlive, ResetCommsBuffers,
@@ -65,7 +66,7 @@ from pathlib import Path
 
 from .captures import FILE_NAME_PARAM as CAPTURE_FILE_NAME_PARAM
 from .captures import CaptureEntry, DirectorySnapshot
-from .device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from .device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 from .export_validator import CAPTURE_BLOCK_IDS
 from .vendor_pins import VENDOR_DIR, mismatches, verified_bytes
 
@@ -143,7 +144,7 @@ NEVER = frozenset({
     "set_scene_label", "set_scene_color", "set_preset_meta", "set_scene",
     "latest_broadcast", "read_message", "list_model_presets", "list_recents_favorites",
 })
-# On the NEVER list, but QcMcpBackend.assign_stomp gets a single-use callable for one call during a push's
+# On the NEVER list, but QcMcpBackend.assign_stomp opens a scoped callable around one call during a push's
 # stomp step (Guarded.window); the wire guard then holds that call to one armed assignment.
 PUSH_STEP_ONLY = frozenset({"assign_stomp"})
 GRANT = frozenset({
@@ -164,7 +165,7 @@ class Guarded:
 
     @contextlib.contextmanager
     def window(self, name):
-        """Yield a single-use capability: a callable for one PUSH_STEP_ONLY method, valid only inside the
+        """Yield a scoped capability: a callable for one PUSH_STEP_ONLY method, valid only inside the
         `with` block (it refuses once the block exits, also after an exception). Guarded itself keeps no
         state for it, so the method stays never-allowed through Guarded's attributes, on every thread, even
         while a window is open; only the code holding the yielded callable can make the call."""
@@ -196,7 +197,6 @@ class Guarded:
 # ---------------------------------------------------------------- wire guard
 
 MAX_STOMP_INDEX = 7  # stomp_index 7 is H (qc-mcp: 0-7 = A-H, UNVERIFIED on the unit): never assigned
-STOMP_PRIMARY = 0    # StompModeAssignment.type PRIMARY (descriptor 4.1); SECONDARY = 1 is never sent
 
 PLUMBING = frozenset({"KeepAlive", "ResetCommsBuffers", "Connection"})
 READABLE = frozenset({

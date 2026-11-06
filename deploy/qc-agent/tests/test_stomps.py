@@ -341,7 +341,7 @@ class StompWindow(unittest.TestCase):
                 with g.window(name):
                     pass
 
-    def test_the_window_yields_one_single_use_method(self):
+    def test_the_window_yields_a_scoped_method_dead_after_the_block(self):
         qc = mock.Mock()
         g = Guarded(qc)
         with g.window("assign_stomp") as assign:
@@ -360,7 +360,9 @@ class StompWindow(unittest.TestCase):
             again(0, 0, 2)                          # closed after an exception too
         self.assertEqual(qc.assign_stomp.call_count, 1)
 
-    def test_the_window_is_for_the_opening_thread_only(self):
+    def test_guarded_refuses_the_method_on_any_thread_while_a_window_is_open(self):
+        # The authority is the yielded callable (object capability), not the thread: whoever holds it can call
+        # it until the block exits. What this pins is that opening a window grants nothing through Guarded.
         import threading
         g, seen = Guarded(mock.Mock()), []
 

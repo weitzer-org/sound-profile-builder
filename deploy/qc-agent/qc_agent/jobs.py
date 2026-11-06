@@ -56,7 +56,7 @@ import time
 from dataclasses import dataclass, field
 
 from . import captures, contract, slots, text
-from .device import SETLIST_KEY, SETLIST_NAME, DeviceError, UnitAbsent, UnitBusy
+from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, UnitAbsent, UnitBusy
 from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
                                control_labels, default_wire, is_internal_param, validate)
 
@@ -408,11 +408,13 @@ def _stomp_problems(plan, preset):
     got = preset.get("stomps")
     if not isinstance(got, list):
         return ["the read-back has no footswitch assignments"]
+    # s.row is the row each stomp was validated (export_validator: always ROW, the same constant as plan.row) and
+    # armed on; the wire guard refuses any other row, so a mismatch fails closed rather than being remapped here.
     want = {(s.row, s.col, s.index) for s in plan.stomps}
     problems, seen = [], set()
     for a in got[:64]:
         key = (a.get("row"), a.get("col"), a.get("index"))
-        if a.get("type") != 0:
+        if a.get("type") != STOMP_PRIMARY:
             problems.append(f"row {key[0]} column {key[1]}: a secondary footswitch assignment")
         elif key not in want:
             problems.append(f"row {key[0]} column {key[1]}: footswitch {_switch(key[2])} is not the plan's")
