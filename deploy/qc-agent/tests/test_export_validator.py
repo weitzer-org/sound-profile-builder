@@ -256,7 +256,7 @@ class Refusals(unittest.TestCase):
         legacy = ["encoding:fader-linear-guess"]
         accept(4006, db | {"evidence": legacy})
         accept(1139, dial | {"evidence": legacy})
-        refuse(4006, db | {"evidence": guess + legacy}, "exactly one such label")
+        refuse(4006, db | {"evidence": guess + legacy}, "needs exactly one")
         refuse(4005, {"index": 0, "label": "HPF", "scene_mode": False, "display": eight(20), "wire": eight(0),
                       "units": "Hz", "evidence": ["taper:device-xml"] + legacy}, "doesn't match a float")
         # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map

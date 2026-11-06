@@ -305,9 +305,10 @@ def _check_param_evidence(pw, cp, ev):
     switch = cp["type"] in LINEAR_SWITCH_TYPES
     if switch != ("encoding:qc-mcp-linear" in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter")
-    if (cp["type"] == "fader") != (len(FADER_LABELS & set(ev)) == 1) or len(FADER_LABELS & set(ev)) > 1:
+    expected_labels = 1 if cp["type"] == "fader" else 0
+    if len(FADER_LABELS.intersection(ev)) != expected_labels:
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter "
-                            f"({FADER_EVIDENCE} belongs on faders only, and every fader needs exactly one such label)")
+                            "(a fader evidence label belongs on faders only, and every fader needs exactly one)")
     symbolic = cp.get("min_symbol") is not None or cp.get("max_symbol") is not None
     if not switch and symbolic != any(e.startswith("bounds:") for e in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match the catalog's bounds")
