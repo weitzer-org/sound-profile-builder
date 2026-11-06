@@ -43,6 +43,8 @@ class FakeDevice(DeviceBackend):
         self.slots = dict(slots or {})                  # position -> name
         self.open_position = open_position              # the slot open on the unit (152 = 20A)
         self.open_folder = SETLIST_KEY
+        self.collections: dict[str, tuple[str, dict[int, str]]] = {}  # other non-factory collections: key -> (name, {pos: name})
+        self.push_folder = None                         # the folder begin_push was armed for
         self.grid: dict[int, dict] = {}                 # col -> {"model_id", "params": {idx: [8]}, "bypass": [8]}
         self.routing = (0, 0)
         self.connected = False
@@ -124,8 +126,11 @@ class FakeDevice(DeviceBackend):
         for e in self.captures:
             n, f, c = folders.get(e.folder_name, (e.folder_name, e.is_factory, 0))
             folders[e.folder_name] = (n, f, c + 1)
+        pf = {SETLIST_KEY: ("My Presets", out, deps)}
+        for key, (cname, cslots) in self.collections.items():
+            pf[key] = (cname, {p: cslots.get(p, "") for p in range(256)}, {})
         return DirectorySnapshot(my_presets=out, preset_deps=deps, captures=list(self.captures),
-                                 capture_folders=list(folders.values()))
+                                 capture_folders=list(folders.values()), preset_folders=pf)
 
     _pending_save = None
 
@@ -180,8 +185,9 @@ class FakeDevice(DeviceBackend):
             raise DeviceError(f"fake unit: no block at column {col}")
         self.stomps[(row, col)] = index  # qc-mcp: assigning a block again moves it
 
-    def begin_push(self, position, name, plan):
+    def begin_push(self, position, name, plan, folder_key=None):
         self._rec("begin_push", position, name)
+        self.push_folder = folder_key
 
     def end_push(self):
         self._rec("end_push")
@@ -236,6 +242,9 @@ class FakeDevice(DeviceBackend):
     def save_to_slot(self, position, name):
         self._need()
         self._rec("save_to_slot", position, name)
+        if self.open_folder in self.collections:
+            self.collections[self.open_folder][1][position] = name
+            return
         self.slots[position] = name
         self._pending_save = (position, name)
         # like the backend's snapshot: every saved preset has an entry, empty when it lists none

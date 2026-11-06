@@ -71,6 +71,10 @@ type PushRequest struct {
 	Guitar   string
 	Slot     string // normalized
 	Name     string
+	// Layout puts a second guitar, or the guitar on other scenes, into the slot. Nil is the
+	// original one-guitar A/B push. Guitar must be the layout's first guitar. The plan hash
+	// covers every scene's values, so a token never fits a different layout.
+	Layout *SceneLayout
 }
 
 // PushPlan is a dry run's answer.
@@ -85,8 +89,24 @@ type PushPlan struct {
 	BlockRows int
 }
 
-func (b *Bridge) export(ctx context.Context, sp storage.StructuredPreset, guitar string) (*Export, string, error) {
-	e, err := b.Exporter.Export(ctx, sp, guitar)
+func (b *Bridge) export(ctx context.Context, sp storage.StructuredPreset, r PushRequest) (*Export, string, error) {
+	var e *Export
+	var err error
+	if r.Layout != nil && !r.Layout.IsDefault() {
+		if verr := r.Layout.Validate(); verr != nil {
+			return nil, "", userErr("The scene layout is not valid: %s.", verr.Error())
+		}
+		if r.Layout.Guitars[0].Guitar != r.Guitar {
+			return nil, "", errors.New("the scene layout's first guitar must be the request's guitar")
+		}
+		le, ok := b.Exporter.(LayoutExporter)
+		if !ok {
+			return nil, "", userErr("Scene layouts are not available: the device export does not support them.")
+		}
+		e, err = le.ExportLayout(ctx, sp, *r.Layout)
+	} else {
+		e, err = b.Exporter.Export(ctx, sp, r.Guitar)
+	}
 	if errors.Is(err, ErrExportUnavailable) {
 		return nil, "", userErr("Pushing presets to the device is not available yet: the device export (plan step P2) has not been built. Nothing was queued.")
 	}
@@ -110,7 +130,7 @@ func (r PushRequest) claims(sum string) ConfirmClaims {
 // PlanPush is the dry run: it builds the export and, when nothing is
 // unresolved, a confirm token. It writes nothing.
 func (b *Bridge) PlanPush(ctx context.Context, sp storage.StructuredPreset, r PushRequest) (*PushPlan, error) {
-	e, sum, err := b.export(ctx, sp, r.Guitar)
+	e, sum, err := b.export(ctx, sp, r)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +155,7 @@ func (b *Bridge) ConfirmPush(ctx context.Context, sp storage.StructuredPreset, r
 	now := b.now()
 	// The claims include the plan hash, so the export is rebuilt from the
 	// preset as it is now before the token can be checked.
-	e, sum, err := b.export(ctx, sp, r.Guitar)
+	e, sum, err := b.export(ctx, sp, r)
 	if err != nil {
 		return "", false, err
 	}

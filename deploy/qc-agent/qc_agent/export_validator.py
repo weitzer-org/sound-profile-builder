@@ -11,8 +11,12 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
 * `format` is exactly qc2-device-export/1 (the job's export.format too);
 * the export was built from the same catalog file the agent holds (sha256);
 * the catalog generation matches the firmware the agent expects;
-* `scene_sources` is exactly A, B, then A for C-H (G6: the device does not copy A into
-  C-H, so every scene is written; C-H must carry Scene A's values and bypass flag);
+* `scene_sources` says which tone each scene A-H carries: "A"/"B" are the first guitar's rhythm and
+  lead, "2A"/"2B" the second guitar's (a layout of two guitars, or one guitar on other scenes). "B",
+  "2A" and "2B" each name at most one scene, "2A" and "2B" come together, and every other scene is
+  "A" (G6: the device does not copy a scene, so every scene is written; one nobody takes carries
+  the first guitar's rhythm). The default is A, B, then A for C-H. Scenes with the same source must
+  carry the same values and bypass flag;
 * exactly one row (row 0) routed in 1 -> out 19, the routing G3 verified;
 * 1-8 blocks in columns 0..n-1, each a catalog model in an allowed category, not a plugin
   model, not denylisted (NC_Recorder 20000), name and category equal to the catalog's,
@@ -59,7 +63,31 @@ SUPPORTED_FORMATS = frozenset({FORMAT})
 MAX_BLOCKS = 8
 MAX_PARAMS_PER_BLOCK = 64
 SCENES = 8
-SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
+DEFAULT_SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explicitly from Scene A
+SCENE_TOKENS = ("A", "B", "2A", "2B")
+
+
+def _scene_sources(v):
+    """The payload's scene_sources, or ExportRefused. Returns the list of eight tokens."""
+    if (not isinstance(v, list) or len(v) != SCENES or any(not isinstance(t, str) or t not in SCENE_TOKENS for t in v)):
+        raise ExportRefused(f"payload.scene_sources must be a list of {SCENES} entries from {list(SCENE_TOKENS)}")
+    if v.count("B") != 1:
+        raise ExportRefused("payload.scene_sources: 'B' must name exactly one scene")
+    for tok in ("2A", "2B"):
+        if v.count(tok) > 1:
+            raise ExportRefused(f"payload.scene_sources: {tok!r} may name at most one scene")
+    if (v.count("2A") == 1) != (v.count("2B") == 1):
+        raise ExportRefused("payload.scene_sources: '2A' and '2B' come together")
+    return list(v)
+
+
+def _same_by_source(values, sources) -> bool:
+    """True when scenes that share a source hold equal values."""
+    first = {}
+    for tok, val in zip(sources, values):
+        if first.setdefault(tok, val) != val:
+            return False
+    return True
 MAX_STOMPS = 32
 STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assigned
 # Switch letter -> the transport's stomp_index. qc-mcp documents 0-7 = A-H (vendor/qc_mcp/transport.py:1174, 
@@ -411,7 +439,7 @@ def _at_default(b, where) -> list[str]:
     return list(ad)
 
 
-def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
+def _check_block(bi, b, nblocks, catalog, sources) -> PlannedBlock:
     where = f"block {bi}"
     _exact(b, ("col", "model_id", "model", "category", "index_evidence", "bypass", "params", "at_default"),
            where, optional=("plugin", "capture", "mics"))
@@ -420,7 +448,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     if "capture" in b:
         if "mics" in b:
             raise ExportRefused(f"{where}: a capture block has no cab mics")
-        return _check_capture_block(bi, b, catalog)
+        return _check_capture_block(bi, b, catalog, sources)
     mid = _int(b["model_id"], where + ".model_id")
     if mid in DENY_MODEL_IDS:
         raise ExportRefused(f"{where}: model {mid} is denied (NC_Recorder)")
@@ -459,7 +487,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     labels = _expected_labels(cm)
     params, seen = [], set()
     for pi, prm in enumerate(b["params"]):
-        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc)
+        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc, sources)
         if p.index in seen:
             raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
         seen.add(p.index)
@@ -468,8 +496,8 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     flags = _array(b["bypass"], where + ".bypass")
     if any(not isinstance(f, bool) for f in flags):
         raise ExportRefused(f"{where}.bypass flags must be true/false")
-    if any(flags[i] != flags[0] for i in range(2, SCENES)):
-        raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
+    if not _same_by_source(flags, sources):
+        raise ExportRefused(f"{where}.bypass: scenes with the same source must carry the same flag")
     return PlannedBlock(bi, mid, cm["name"], params, list(flags), pc, at_default=ad,
                         mics=_check_mics(where, b.get("mics", []), cm))
 
@@ -543,7 +571,7 @@ def _check_capture_layouts(catalog) -> int:
     return pc
 
 
-def _check_capture_block(bi, b, catalog) -> PlannedBlock:
+def _check_capture_block(bi, b, catalog, sources) -> PlannedBlock:
     where = f"block {bi}"
     if _int(b["model_id"], where + ".model_id") != 0:
         raise ExportRefused(f"{where}: a capture block must have model_id 0 (the bridge picks 14000 or 14001 on the unit)")
@@ -575,7 +603,7 @@ def _check_capture_block(bi, b, catalog) -> PlannedBlock:
     labels = _expected_labels(cm)
     params, seen = [], set()
     for pi, prm in enumerate(b["params"]):
-        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc)
+        p = _check_param(f"{where} param {pi}", prm, cm, labels, pc, sources)
         if p.index in seen:
             raise ExportRefused(f"{where} param {pi}: index {p.index} appears twice")
         seen.add(p.index)
@@ -583,12 +611,12 @@ def _check_capture_block(bi, b, catalog) -> PlannedBlock:
     flags = _array(b["bypass"], where + ".bypass")
     if any(not isinstance(f, bool) for f in flags):
         raise ExportRefused(f"{where}.bypass flags must be true/false")
-    if any(flags[i] != flags[0] for i in range(2, SCENES)):
-        raise ExportRefused(f"{where}.bypass: scenes C-H must carry Scene A's flag")
+    if not _same_by_source(flags, sources):
+        raise ExportRefused(f"{where}.bypass: scenes with the same source must carry the same flag")
     return PlannedBlock(bi, 0, name, params, list(flags), pc, PlannedCapture(name, c["source"]), at_default=ad)
 
 
-def _check_param(pw, prm, cm, labels, param_count) -> PlannedParam:
+def _check_param(pw, prm, cm, labels, param_count, sources) -> PlannedParam:
     _exact(prm, ("index", "label", "scene_mode", "display", "wire", "evidence"), pw, optional=("units",))
     idx = _int(prm["index"], pw + ".index")
     if not 0 <= idx < param_count:
@@ -613,14 +641,14 @@ def _check_param(pw, prm, cm, labels, param_count) -> PlannedParam:
     wire = _array(prm["wire"], pw + ".wire")
     wires = [_check_value(cp, d, w, f"{pw} scene {'ABCDEFGH'[i]}") for i, (d, w) in enumerate(zip(disp, wire))]
     dnum = [float(d) for d in disp]
-    if any(dnum[i] != dnum[0] or wires[i] != wires[0] for i in range(2, SCENES)):
-        raise ExportRefused(f"{pw}: scenes C-H must carry Scene A's values")
-    differs = dnum[0] != dnum[1]
+    if not _same_by_source(dnum, sources) or not _same_by_source(wires, sources):
+        raise ExportRefused(f"{pw}: scenes with the same source must carry the same values")
+    differs = any(dnum[i] != dnum[0] for i in range(1, SCENES))
     if prm["scene_mode"] != differs:
-        raise ExportRefused(f"{pw}: scene_mode is {prm['scene_mode']} but Scenes A and B "
-                            f"{'differ' if differs else 'are equal'}")
-    if not differs and wires[1] != wires[0]:
-        raise ExportRefused(f"{pw}: Scenes A and B have equal display values but different wire values")
+        raise ExportRefused(f"{pw}: scene_mode is {prm['scene_mode']} but the scenes "
+                            f"{'differ' if differs else 'are all equal'}")
+    if not differs and any(w != wires[0] for w in wires):
+        raise ExportRefused(f"{pw}: the scenes have equal display values but different wire values")
     return PlannedParam(idx, cp["name"], wires[0], wires if differs else None)
 
 
@@ -676,8 +704,7 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
     # The guitar's name comes from the preset and is never written to the unit; bound it only.
     if not isinstance(p["guitar"], str) or not 0 < len(p["guitar"]) <= 200:
         raise ExportRefused("payload.guitar must be a non-empty string of at most 200 characters")
-    if p["scene_sources"] != SCENE_SOURCES:
-        raise ExportRefused(f"payload.scene_sources must be exactly {SCENE_SOURCES}")
+    sources = _scene_sources(p["scene_sources"])
 
     if not isinstance(p["unresolved"], list):
         raise ExportRefused("payload.unresolved must be a list")
@@ -706,6 +733,6 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
     if not isinstance(blocks, list) or not 1 <= len(blocks) <= MAX_BLOCKS:
         raise ExportRefused(f"rows[0].blocks must hold 1-{MAX_BLOCKS} blocks")
 
-    planned = [_check_block(bi, b, len(blocks), catalog) for bi, b in enumerate(blocks)]
+    planned = [_check_block(bi, b, len(blocks), catalog, sources) for bi, b in enumerate(blocks)]
     stomps = _check_stomps(p["stomps"], planned)
     return Plan(ROW, IN_PORT, OUT_PORT, planned, [], stomps)

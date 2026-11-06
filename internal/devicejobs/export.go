@@ -21,6 +21,14 @@ type Exporter interface {
 	Export(ctx context.Context, sp storage.StructuredPreset, guitar string) (*Export, error)
 }
 
+// LayoutExporter is an Exporter that can also put two guitars, or one guitar on other
+// scenes, into one slot (SceneLayout). A Bridge asks for it only when the request has a
+// non-default layout.
+type LayoutExporter interface {
+	Exporter
+	ExportLayout(ctx context.Context, sp storage.StructuredPreset, layout SceneLayout) (*Export, error)
+}
+
 // Export is a versioned, opaque device export plus a human-readable summary.
 type Export struct {
 	// Format names the payload schema, e.g. "qc2-device-export/1".
@@ -41,6 +49,9 @@ type Export struct {
 	// qc-stomp-layout.md S2). Optional and display-only: the assignments that are
 	// pushed are the payload's own "stomps" array, which the plan hash covers.
 	Stomps *PlanStomps
+	// Layout is set only for a non-default scene layout: which guitar and role each scene
+	// holds. Display-only; the payload's own values are what is pushed.
+	Layout *PlanLayout
 }
 
 // PlanStomps is the readable stomp layout: where each block goes, and what was left
@@ -77,6 +88,9 @@ type PlanBlock struct {
 	Params  []PlanParam `json:"params"`
 	BypassA bool        `json:"bypass_a"`
 	BypassB bool        `json:"bypass_b"`
+	// BypassScenes is the bypass state in all eight scenes (true = bypassed). Set only for a
+	// non-default layout, where A and B alone don't say it.
+	BypassScenes []bool `json:"bypass_scenes,omitempty"`
 	// AtDefault names controls the preset sets to the device default, which are
 	// therefore not written.
 	AtDefault []string `json:"at_default,omitempty"`
@@ -113,6 +127,9 @@ type PlanParam struct {
 	Name string `json:"name"`
 	A    string `json:"a"`
 	B    string `json:"b,omitempty"`
+	// Scenes is the value shown for each of the eight scenes. Set only for a non-default
+	// layout.
+	Scenes []string `json:"scenes,omitempty"`
 	// Unconfirmed: the display-to-wire mapping comes from the device's own data or a
 	// third-party measurement, not a reading on the owner's unit.
 	Unconfirmed bool `json:"unconfirmed,omitempty"`

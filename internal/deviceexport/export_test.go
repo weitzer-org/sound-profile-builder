@@ -610,10 +610,20 @@ func TestOwnedPluginAllowed(t *testing.T) {
 	if name == "" {
 		t.Skip("no Cory Wong compressor in the catalog")
 	}
+	// The agent accepts plugin models (F3), so an owned one goes through ...
 	_, p := export(t, e, preset(block(name)), "g")
 	if len(p.Unresolved) != 0 || p.Rows[0].Blocks[0].Plugin != "Cory Wong" {
 		t.Fatalf("%s: %+v", name, p)
 	}
+	// ... and with the switch off (a stand-in for an agent that refuses them) the dry run says so.
+	was := BridgePushesPlugins
+	BridgePushesPlugins = false
+	t.Cleanup(func() { BridgePushesPlugins = was })
+	off, _ := export(t, e, preset(block(name)), "g")
+	if len(off.Unresolved) != 1 || !strings.Contains(off.Unresolved[0].Reason, "home bridge refuses plugin models") {
+		t.Fatalf("%s owned, bridge refuses plugins: %+v", name, off.Unresolved)
+	}
+	BridgePushesPlugins = was
 	none, _ := NewEmbedded(Options{OwnedPlugins: OwnedPluginSet(false, []string{"Cory Wong"})})
 	ex, _ := export(t, none, preset(block(name)), "g")
 	if len(ex.Unresolved) != 1 || !strings.Contains(ex.Unresolved[0].Reason, "Cory Wong") {
