@@ -201,6 +201,44 @@ def deps_report(snap: DirectorySnapshot, pos: int, resolved: dict[int, ResolvedC
             "check that it still loads after a power cycle.")
 
 
+LIBRARY_FORMAT = "qc-device-library/1"
+MAX_LIBRARY_CAPTURES = 1500   # internal/devicejobs.MaxLibraryCaptures
+_LIB_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")
+
+
+class LibraryTooLarge(Exception):
+    """More capture files than the contract carries. The sync fails rather than cut the list: a
+    truncated list would make a capture that is on the unit look missing."""
+
+
+def _library_folder(name: str) -> str | None:
+    """A folder name for display: printable ASCII (anything else becomes '?'), clean, at most 40
+    characters. Chosen to be a fixed point of QC-2's SanitizeText, which refuses what it would change."""
+    ascii_only = "".join(c if 0x20 <= ord(c) <= 0x7E else "?" for c in text.clean(name, 400))
+    out = text.clean(ascii_only, 40).strip()
+    return out or None
+
+
+def library_payload(snap: DirectorySnapshot) -> dict:
+    """The sync_device_library answer (contract section 9.2): every capture file of the same fresh listing a
+    push resolves captures from, with the version the push would use (version_of). Favorites views are left
+    out, as resolve_one leaves them out. A file whose name could not be compared exactly (not printable ASCII,
+    changed by clean-up, over 64 characters), or whose key is not 64 hex characters, is skipped and counted:
+    QC-2 must never hold a name the bridge would not match byte for byte."""
+    out, skipped = [], 0
+    for e in snap.captures:
+        folder = _library_folder(e.folder_name)
+        if (e.is_favorites or not _LIB_NAME_RE.fullmatch(e.name or "") or e.name != text.clean(e.name, 64)
+                or not _KEY_RE.fullmatch(e.key or "") or folder is None):
+            skipped += 1
+            continue
+        out.append({"name": e.name, "key": e.key.lower(), "version": version_of(e, snap),
+                    "kind": "factory" if e.is_factory else "user", "folder": folder, "cloud": bool(e.is_cloud)})
+    if len(out) > MAX_LIBRARY_CAPTURES:
+        raise LibraryTooLarge(len(out))
+    return {"captures": out, "skipped": skipped}
+
+
 def summary(resolved: dict[int, ResolvedCapture]) -> str:
     if not resolved:
         return ""

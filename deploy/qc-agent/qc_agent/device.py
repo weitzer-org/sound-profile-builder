@@ -110,6 +110,11 @@ class DeviceBackend(ABC):
         `key + name` into it (its file_name). True when the unit echoed the block."""
 
     @abstractmethod
+    def set_mic(self, row: int, col: int, index: int, value: str) -> None:
+        """Write a cab's `ir selector` (mic) string, exactly the one the armed plan names for that
+        column and index, once. UNVERIFIED on the unit until the README's library-sync step has run."""
+
+    @abstractmethod
     def set_param(self, row: int, col: int, index: int, wire: float) -> None: ...
 
     @abstractmethod

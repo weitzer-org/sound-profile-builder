@@ -15,6 +15,7 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/deviceexport"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
+	"github.com/weitzer-org/sound-builder/internal/devicelib"
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 )
 
@@ -27,10 +28,21 @@ func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 	if cfg := s.appConfig; cfg != nil {
 		owned = deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
-	return deviceexport.NewEmbedded(deviceexport.Options{
+	opts := deviceexport.Options{
 		CaptureSource: agents.CaptureSource, OwnedPlugins: owned, StompCaptures: agents.StompCaptureLookup(),
 		LookupCapture: lookupCapture, Sanitize: devicejobs.SanitizeText,
-	})
+	}
+	// The synced capture list, reviewed aliases and seen cab mics (plan P4b) live in the main
+	// bucket. With no store (tests) or no sync yet the export is exactly what it was before.
+	if s.client != nil && s.store != nil {
+		aliases, err := devicelib.EmbeddedAliases()
+		if err != nil {
+			return nil, err
+		}
+		src := &devicelib.Source{Store: devicelib.NewStore(s.client, s.store.Bucket()), Aliases: aliases}
+		opts.Device = src.Snapshot
+	}
+	return deviceexport.NewEmbedded(opts)
 }
 
 // lookupCapture finds a capture name read from the unit in coros_map.json or

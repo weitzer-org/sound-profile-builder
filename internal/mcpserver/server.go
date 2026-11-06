@@ -29,6 +29,13 @@ type options struct {
 	device   *devicejobs.Bridge
 	exporter devicejobs.Exporter
 	importer devicejobs.ReadbackImporter
+	library  *DeviceLibrary
+}
+
+// WithDeviceLibrary enables sync_device_library and the cab mic record kept by
+// read_device_preset (plan P4b). Needs WithDevice to matter.
+func WithDeviceLibrary(l *DeviceLibrary) Option {
+	return func(o *options) { o.library = l }
 }
 
 // WithImporter enables read_device_preset(import=true): the read-back becomes a QC-2 draft
@@ -66,7 +73,7 @@ func NewServer(svc *presetsvc.Service, opts ...Option) *mcp.Server {
 		&mcp.ServerOptions{Instructions: instr})
 	registerTools(s, svc, o.exporter)
 	if o.device != nil {
-		registerDeviceTools(s, svc, o.device, o.importer)
+		registerDeviceTools(s, svc, o.device, o.importer, o.library)
 	}
 	registerResources(s, svc)
 	registerPrompts(s)

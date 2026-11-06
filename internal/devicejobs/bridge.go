@@ -219,7 +219,7 @@ func (b *Bridge) checkQueue(ctx context.Context, pushSlot string) error {
 func (b *Bridge) QueueRead(ctx context.Context, kind string) (string, error) {
 	var args any
 	switch kind {
-	case KindListSlots:
+	case KindListSlots, KindSyncLibrary:
 		args = struct{}{}
 	case KindReadPreset:
 		args = ReadArgs{Slot: nil}

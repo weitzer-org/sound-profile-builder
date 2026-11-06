@@ -13,7 +13,7 @@ from qc_agent.captures import CaptureEntry, DirectorySnapshot
 from qc_agent.device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
-                         "set_block_bypass", "save_to_slot"})
+                         "set_block_bypass", "save_to_slot", "set_mic"})
 
 KEY_V1 = "a1" * 32   # a factory V1 capture
 KEY_V2 = "b2" * 32   # a factory V2 capture
@@ -186,6 +186,11 @@ class FakeDevice(DeviceBackend):
                           "loaded": True}
         return True
 
+    def set_mic(self, row, col, index, value):
+        self._need()
+        self._rec("set_mic", row, col, index, value)
+        self.grid[col].setdefault("strings", {})[index] = value
+
     def set_param(self, row, col, index, wire):
         self._need()
         self._rec("set_param", row, col, index, wire)
@@ -213,4 +218,4 @@ class FakeDevice(DeviceBackend):
         self._pending_save = (position, name)
         # like the backend's snapshot: every saved preset has an entry, empty when it lists none
         self.preset_deps[position] = frozenset(b["strings"][5][:64].lower() for b in self.grid.values()
-                                               if "strings" in b) if self.deps_on_save else frozenset()
+                                               if b.get("loaded")) if self.deps_on_save else frozenset()

@@ -203,6 +203,9 @@ type FakeAgent struct {
 	// with (defaults "Clean Verb" and "1A"); Hostile still wins for the name.
 	ReadbackName string
 	ReadbackSlot string
+	// LibraryPayload, when set, is the qc-device-library/1 payload every sync_device_library
+	// answers with (default: one valid V2 factory capture).
+	LibraryPayload json.RawMessage
 
 	mu       sync.Mutex
 	ledger   map[string]bool
@@ -345,6 +348,13 @@ func (a *FakeAgent) result(j *devicejobs.Job, now time.Time) devicejobs.Result {
 			{Slot: "20A", State: "empty"},
 			{Slot: "20B", State: "occupied", Name: &name, Owned: true},
 		}}
+	case devicejobs.KindSyncLibrary:
+		payload := a.LibraryPayload
+		if payload == nil {
+			payload = json.RawMessage(`{"captures":[{"name":"CA John's","key":"` + strings.Repeat("ab", 32) +
+				`","version":2,"kind":"factory","folder":"Factory Captures V2","cloud":false}],"skipped":0}`)
+		}
+		r.Library = &devicejobs.LibraryBlock{Format: devicejobs.LibraryFormat, Payload: payload}
 	case devicejobs.KindReadPreset:
 		def := "Clean Verb"
 		if a.ReadbackName != "" {

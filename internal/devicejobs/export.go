@@ -83,6 +83,29 @@ type PlanBlock struct {
 	// Capture is the capture a Neural Capture block loads (ModelID is then 0: the
 	// bridge picks the V1 or V2 block from the capture on the unit).
 	Capture string `json:"capture,omitempty"`
+	// CaptureInfo is set on a capture block when a synced capture list resolved it (plan P4b).
+	// Nil means no list was synced: the capture is only found on the unit at push time.
+	CaptureInfo *PlanCapture `json:"capture_info,omitempty"`
+	// Mics are cab mic strings the push writes exactly, because they were seen on the unit.
+	Mics []PlanMic `json:"mics,omitempty"`
+}
+
+// PlanCapture is a capture resolved against the synced list. Every string came from the
+// unit (or QC-2's own library) and is untrusted text: render it through cell().
+type PlanCapture struct {
+	UnitName  string `json:"unit_name"`
+	AskedName string `json:"asked_name,omitempty"` // the preset's name, when an alias mapped it
+	Version   int    `json:"version"`
+	Kind      string `json:"kind"`
+	Folder    string `json:"folder"`
+	KeyPrefix string `json:"key_prefix"` // first 8 hex characters of the key
+	SyncedAt  string `json:"synced_at"`
+}
+
+// PlanMic is one cab mic written as a string seen on the unit.
+type PlanMic struct {
+	Label string `json:"label"` // "MIC 1"
+	Value string `json:"value"`
 }
 
 // PlanParam is one parameter write: display values for Scenes A and B.
