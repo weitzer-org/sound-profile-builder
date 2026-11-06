@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "8606a98d065b9e6e852974104ef46d6accdf54911c48fcc153416466217bae84",
+ "plan_sha256": "5cb71de9921c96a2be855c149b92c1250ffa503e91d5b7661516bf8d27f93d60",
  "summary": [
   {
    "row": 0,
@@ -62,6 +62,40 @@
   },
   {
    "row": 0,
+   "col": 3,
+   "model": "66 AC30 JMP OD",
+   "model_id": 0,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "0 dB",
+     "b": "1.5 dB"
+    },
+    {
+     "name": "BASS",
+     "a": "-1.5 dB"
+    },
+    {
+     "name": "MID",
+     "a": "0.5 dB",
+     "b": "1.5 dB"
+    },
+    {
+     "name": "TREBLE",
+     "a": "1 dB"
+    },
+    {
+     "name": "VOLUME",
+     "a": "-0.5 dB",
+     "b": "0.5 dB"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "capture": "66 AC30 JMP OD"
+  },
+  {
+   "row": 0,
    "col": 4,
    "model": "212 UK C30 65 (M)",
    "model_id": 12024,
@@ -113,6 +147,11 @@
      "b": "22 %"
     },
     {
+     "name": "SYNC",
+     "a": "Off",
+     "unconfirmed": true
+    },
+    {
      "name": "DELAY TIME",
      "a": "95 ms"
     },
@@ -120,6 +159,21 @@
      "name": "FEEDBACK",
      "a": "10 %",
      "b": "18 %"
+    },
+    {
+     "name": "HIGH PASS",
+     "a": "140 Hz",
+     "unconfirmed": true
+    },
+    {
+     "name": "LOW PASS",
+     "a": "5000 Hz",
+     "unconfirmed": true
+    },
+    {
+     "name": "VINTAGE MODE",
+     "a": "ON",
+     "unconfirmed": true
     }
    ],
    "bypass_a": true,
@@ -135,64 +189,30 @@
      "name": "MIX",
      "a": "18 %",
      "b": "25 %"
+    },
+    {
+     "name": "DECAY",
+     "a": "1.8 s",
+     "b": "2.4 s",
+     "unconfirmed": true
+    },
+    {
+     "name": "PRE DELAY",
+     "a": "20 ms",
+     "unconfirmed": true
     }
    ],
    "bypass_a": false,
    "bypass_b": false
   }
  ],
- "unresolved": [
-  {
-   "block": "#4 66 AC30 JMP OD",
-   "reason": "captures and IRs are not pushed in v1"
-  },
-  {
-   "block": "#5 212 UK C30 65",
-   "param": "Mic 1",
-   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-  },
-  {
-   "block": "#5 212 UK C30 65",
-   "param": "Mic 2",
-   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-  },
-  {
-   "block": "#6 Circular Delay",
-   "param": "SYNC",
-   "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
-  },
-  {
-   "block": "#6 Circular Delay",
-   "param": "HIGH PASS",
-   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-  },
-  {
-   "block": "#6 Circular Delay",
-   "param": "LOW PASS",
-   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-  },
-  {
-   "block": "#6 Circular Delay",
-   "param": "VINTAGE MODE",
-   "reason": "switch positions have no measured wire mapping; only the default (OFF) can be taken"
-  },
-  {
-   "block": "#7 Studio Plate 70 (ST)",
-   "param": "DECAY",
-   "reason": "taper skew 0.227670248697 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-  },
-  {
-   "block": "#7 Studio Plate 70 (ST)",
-   "param": "PRE DELAY",
-   "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-  }
- ],
+ "unresolved": [],
  "payload": {
   "format": "qc2-device-export/1",
   "catalog": {
    "coros": "4.1",
    "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
-   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
   },
   "guitar": "Gibson ES-339 Humbuckers",
   "scene_sources": [
@@ -251,6 +271,9 @@
          0.35,
          0.35,
          0.35
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -276,6 +299,9 @@
          0.6,
          0.6,
          0.6
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -321,6 +347,9 @@
          0.5,
          0.5,
          0.5
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -366,6 +395,9 @@
          0.35,
          0.35,
          0.35
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -391,6 +423,9 @@
          0.55,
          0.55,
          0.55
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -416,6 +451,179 @@
          0.6,
          0.6,
          0.6
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 3,
+      "model_id": 0,
+      "model": "66 AC30 JMP OD",
+      "category": "Neural Capture",
+      "index_evidence": "capture-block",
+      "capture": {
+       "name": "66 AC30 JMP OD",
+       "source": "user",
+       "resolved_on_unit": false
+      },
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         0,
+         1.5,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "wire": [
+         0.5,
+         0.53125,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 1,
+        "label": "BASS",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5
+        ],
+        "wire": [
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "MID",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         0.5,
+         1.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "wire": [
+         0.5416666666666666,
+         0.625,
+         0.5416666666666666,
+         0.5416666666666666,
+         0.5416666666666666,
+         0.5416666666666666,
+         0.5416666666666666,
+         0.5416666666666666
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 3,
+        "label": "TREBLE",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "wire": [
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334,
+         0.5833333333333334
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 4,
+        "label": "VOLUME",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         -0.5,
+         0.5,
+         -0.5,
+         -0.5,
+         -0.5,
+         -0.5,
+         -0.5,
+         -0.5
+        ],
+        "wire": [
+         0.4895833333333333,
+         0.5104166666666666,
+         0.4895833333333333,
+         0.4895833333333333,
+         0.4895833333333333,
+         0.4895833333333333,
+         0.4895833333333333,
+         0.4895833333333333
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -461,6 +669,9 @@
          0.2,
          0.2,
          0.2
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -486,6 +697,9 @@
          0.35,
          0.35,
          0.35
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -512,6 +726,10 @@
          0.24355798655558844,
          0.24355798655558844,
          0.24355798655558844
+        ],
+        "evidence": [
+         "taper:g4",
+         "bounds:g4"
         ]
        },
        {
@@ -537,6 +755,9 @@
          0.45,
          0.45,
          0.45
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -562,6 +783,9 @@
          0.6,
          0.6,
          0.6
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -588,6 +812,9 @@
          0.572988634748082,
          0.572988634748082,
          0.572988634748082
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -614,6 +841,9 @@
          0.7257918002854958,
          0.7257918002854958,
          0.7257918002854958
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -662,6 +892,37 @@
          0.15,
          0.15,
          0.15
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "SYNC",
+        "scene_mode": false,
+        "display": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "wire": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "evidence": [
+         "encoding:qc-mcp-linear"
         ]
        },
        {
@@ -688,6 +949,9 @@
          0.03446528129751647,
          0.03446528129751647,
          0.03446528129751647
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -714,6 +978,95 @@
          0.10526315789473684,
          0.10526315789473684,
          0.10526315789473684
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 7,
+        "label": "HIGH PASS",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         140,
+         140,
+         140,
+         140,
+         140,
+         140,
+         140,
+         140
+        ],
+        "wire": [
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606,
+         0.06019271492737606
+        ],
+        "evidence": [
+         "taper:device-xml"
+        ]
+       },
+       {
+        "index": 8,
+        "label": "LOW PASS",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         5000,
+         5000,
+         5000,
+         5000,
+         5000,
+         5000,
+         5000,
+         5000
+        ],
+        "wire": [
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999,
+         0.4285235064509999
+        ],
+        "evidence": [
+         "taper:device-xml"
+        ]
+       },
+       {
+        "index": 11,
+        "label": "VINTAGE MODE",
+        "scene_mode": false,
+        "display": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "wire": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "evidence": [
+         "encoding:qc-mcp-linear"
         ]
        }
       ],
@@ -760,6 +1113,67 @@
          0.18,
          0.18,
          0.18
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 1,
+        "label": "DECAY",
+        "units": "s",
+        "scene_mode": true,
+        "display": [
+         1.8,
+         2.4,
+         1.8,
+         1.8,
+         1.8,
+         1.8,
+         1.8,
+         1.8
+        ],
+        "wire": [
+         0.4233319280705407,
+         0.45516455432372566,
+         0.4233319280705407,
+         0.4233319280705407,
+         0.4233319280705407,
+         0.4233319280705407,
+         0.4233319280705407,
+         0.4233319280705407
+        ],
+        "evidence": [
+         "taper:device-xml"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "PRE DELAY",
+        "units": "ms",
+        "scene_mode": false,
+        "display": [
+         20,
+         20,
+         20,
+         20,
+         20,
+         20,
+         20,
+         20
+        ],
+        "wire": [
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391,
+         0.1449559327355391
+        ],
+        "evidence": [
+         "taper:device-xml"
         ]
        }
       ],
@@ -795,50 +1209,17 @@
     "switch": "G"
    }
   ],
-  "unresolved": [
-   {
-    "block": "#4 66 AC30 JMP OD",
-    "reason": "captures and IRs are not pushed in v1"
-   },
+  "unresolved": [],
+  "warnings": [
    {
     "block": "#5 212 UK C30 65",
     "param": "Mic 1",
-    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+    "reason": "not applied: \"Condenser 67\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Dynamic 57"
    },
    {
     "block": "#5 212 UK C30 65",
     "param": "Mic 2",
-    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-   },
-   {
-    "block": "#6 Circular Delay",
-    "param": "SYNC",
-    "reason": "switch positions have no measured wire mapping; only the default (On) can be taken"
-   },
-   {
-    "block": "#6 Circular Delay",
-    "param": "HIGH PASS",
-    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-   },
-   {
-    "block": "#6 Circular Delay",
-    "param": "LOW PASS",
-    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-   },
-   {
-    "block": "#6 Circular Delay",
-    "param": "VINTAGE MODE",
-    "reason": "switch positions have no measured wire mapping; only the default (OFF) can be taken"
-   },
-   {
-    "block": "#7 Studio Plate 70 (ST)",
-    "param": "DECAY",
-    "reason": "taper skew 0.227670248697 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-   },
-   {
-    "block": "#7 Studio Plate 70 (ST)",
-    "param": "PRE DELAY",
-    "reason": "taper skew 0.6 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+    "reason": "not applied: \"Ribbon 121\" can't be written yet (which mics this cab offers isn't known), so the cab keeps its default Ribbon 160"
    }
   ]
  }

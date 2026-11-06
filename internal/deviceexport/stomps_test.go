@@ -37,7 +37,7 @@ func TestStompsInExport(t *testing.T) {
 			[]storage.EffectBlock{block("Myth Drive"), block("Obsessive Drive"), block("Rage Booster"), block("Myth Drive"), block("Hall"), block("Spring (M)")},
 			[]stomplayout.Stomp{st(0, 0, "C"), st(0, 1, "D"), st(0, 2, "B"), st(0, 3, "D"), st(0, 4, "G"), st(0, 5, "G")}, 0, 0},
 		{"an unresolved block is not placed and gets no switch; columns keep their gap",
-			[]storage.EffectBlock{block("Myth Drive"), block("66 AC30 JMP OD"), block("Hall")},
+			[]storage.EffectBlock{block("Myth Drive"), block("FNDR TWDLX IN Edge BAL CAB"), block("Hall")},
 			[]stomplayout.Stomp{st(0, 0, "C"), st(0, 2, "G")}, 0, 1},
 		{"an unknown block is not placed",
 			[]storage.EffectBlock{block("Not A Real Block"), block("Hall")},
@@ -135,5 +135,32 @@ func TestStompCapturesOption(t *testing.T) {
 	// v1 never places a capture, so the library is not asked yet.
 	if called {
 		t.Error("capture lookup consulted although no capture is placed")
+	}
+}
+
+// TestStompsForCaptures: a placed capture block is classified as a Neural Capture block
+// (its id is picked on the unit), so a drive capture gets a drive switch and an amp
+// capture none.
+func TestStompsForCaptures(t *testing.T) {
+	e := testExporter(t)
+	drive := block("66 AC30 JMP OD")
+	drive.Type = "Overdrive (Capture)"
+	amp := block("CA John's")
+	amp.Type = "Amplifier"
+	ex, p := export(t, e, preset(drive, amp, block("Hall")), "g")
+	if len(p.Unresolved) != 0 || len(p.Rows[0].Blocks) != 3 {
+		t.Fatalf("unresolved %+v, blocks %d", p.Unresolved, len(p.Rows[0].Blocks))
+	}
+	got := map[int]string{}
+	for _, s := range p.Stomps {
+		got[s.Col] = s.Switch
+	}
+	if got[0] == "" || got[1] != "" || got[2] != "G" {
+		t.Fatalf("stomps %+v (view %+v)", p.Stomps, ex.Stomps)
+	}
+	for _, s := range ex.Stomps.Skipped {
+		if strings.Contains(s.Reason, "unknown model id") {
+			t.Errorf("capture block not classified: %+v", s)
+		}
 	}
 }

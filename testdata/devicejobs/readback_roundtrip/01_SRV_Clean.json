@@ -368,6 +368,110 @@
       ]
      },
      {
+      "col": 2,
+      "model_id": 14000,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.5208333134651184,
+         0.5520833134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5208333134651184,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb"
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
       "col": 3,
       "model_id": 21002,
       "params": [
@@ -389,14 +493,14 @@
         "index": 1,
         "scene_mode": false,
         "values": [
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         ""
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57"
         ]
        },
        {
@@ -501,14 +605,14 @@
         "index": 9,
         "scene_mode": false,
         "values": [
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         ""
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160"
         ]
        },
        {
@@ -759,14 +863,14 @@
         "index": 5,
         "scene_mode": false,
         "values": [
-         1,
-         1,
-         1,
-         1,
-         1,
-         1,
-         1,
-         1
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
         ]
        },
        {
@@ -787,14 +891,14 @@
         "index": 7,
         "scene_mode": false,
         "values": [
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277
         ]
        },
        {
@@ -1376,6 +1480,110 @@
       ]
      },
      {
+      "col": 2,
+      "model_id": 14000,
+      "params": [
+       {
+        "index": 0,
+        "scene_mode": true,
+        "values": [
+         0.5208333134651184,
+         0.5520833134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184,
+         0.5208333134651184
+        ]
+       },
+       {
+        "index": 1,
+        "scene_mode": false,
+        "values": [
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816,
+         0.5416666865348816
+        ]
+       },
+       {
+        "index": 2,
+        "scene_mode": false,
+        "values": [
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184,
+         0.7083333134651184
+        ]
+       },
+       {
+        "index": 3,
+        "scene_mode": false,
+        "values": [
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375,
+         0.375
+        ]
+       },
+       {
+        "index": 4,
+        "scene_mode": true,
+        "values": [
+         0.5,
+         0.5208333134651184,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ]
+       },
+       {
+        "index": 5,
+        "scene_mode": false,
+        "values": [
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb",
+         "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f 1964 Fender Super Reverb"
+        ]
+       },
+       {
+        "index": 6,
+        "scene_mode": false,
+        "values": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ]
+       }
+      ]
+     },
+     {
       "col": 3,
       "model_id": 21002,
       "params": [
@@ -1397,14 +1605,14 @@
         "index": 1,
         "scene_mode": false,
         "values": [
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         ""
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57",
+         "NG_410 Fend Bassman P10Q 16_Dynamic 57"
         ]
        },
        {
@@ -1509,14 +1717,14 @@
         "index": 9,
         "scene_mode": false,
         "values": [
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         "",
-         ""
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160",
+         "NG_410 Fend Bassman P10Q 16_Ribbon 160"
         ]
        },
        {
@@ -1767,14 +1975,14 @@
         "index": 5,
         "scene_mode": false,
         "values": [
-         1,
-         1,
-         1,
-         1,
-         1,
-         1,
-         1,
-         1
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
         ]
        },
        {
@@ -1795,14 +2003,14 @@
         "index": 7,
         "scene_mode": false,
         "values": [
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166,
-         0.5551607608795166
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277,
+         0.6346945762634277
         ]
        },
        {

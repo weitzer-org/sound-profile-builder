@@ -33,6 +33,10 @@ type Export struct {
 	// Unresolved lists everything the exporter could not map exactly. A push
 	// needs none.
 	Unresolved []Unresolved
+	// Warnings lists what a push leaves out on purpose (e.g. a cab mic the
+	// export can't write, so the cab keeps its default). A push may have
+	// warnings; the dry run shows them so the user decides with them in view.
+	Warnings []Unresolved
 	// Stomps is the exporter's footswitch layout for the dry run (design doc
 	// qc-stomp-layout.md S2). Optional and display-only: the assignments that are
 	// pushed are the payload's own "stomps" array, which the plan hash covers.
@@ -76,6 +80,9 @@ type PlanBlock struct {
 	// AtDefault names controls the preset sets to the device default, which are
 	// therefore not written.
 	AtDefault []string `json:"at_default,omitempty"`
+	// Capture is the capture a Neural Capture block loads (ModelID is then 0: the
+	// bridge picks the V1 or V2 block from the capture on the unit).
+	Capture string `json:"capture,omitempty"`
 }
 
 // PlanParam is one parameter write: display values for Scenes A and B.
@@ -83,6 +90,9 @@ type PlanParam struct {
 	Name string `json:"name"`
 	A    string `json:"a"`
 	B    string `json:"b,omitempty"`
+	// Unconfirmed: the display-to-wire mapping comes from the device's own data or a
+	// third-party measurement, not a reading on the owner's unit.
+	Unconfirmed bool `json:"unconfirmed,omitempty"`
 }
 
 // Unresolved is one item the exporter refused to map.

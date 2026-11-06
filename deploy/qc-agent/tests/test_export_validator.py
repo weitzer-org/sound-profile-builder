@@ -74,8 +74,8 @@ class Valid(unittest.TestCase):
         self.assertIsNone(validate(mutate(f), catalog(), "4.1.0").blocks[0].params[0].scene_wires)
 
     def test_integers_are_numbers(self):
-        def f(p):
-            block(p, 4)["params"][0].update(scene_mode=False, display=eight(35), wire=eight(1))
+        def f(p):  # Spring MIX 0..100 %, linear: display 100 is wire 1, both written as JSON integers
+            block(p, 4)["params"][0].update(scene_mode=False, display=eight(100), wire=eight(1))
         self.assertEqual(validate(mutate(f), catalog(), "4.1.0").blocks[4].params[0].wire, 1.0)
 
 
@@ -164,7 +164,8 @@ class Refusals(unittest.TestCase):
             return mutate(lambda p: block(p, 2).update(params=[param]))
 
         def prm(index, label, d, w, mode=False, **kw):
-            return {"index": index, "label": label, "scene_mode": mode, "display": d, "wire": w, **kw}
+            return {"index": index, "label": label, "scene_mode": mode, "display": d, "wire": w,
+                    "evidence": ["taper:g4"], **kw}
 
         ok = prm(4, "MIC 1 DISTANCE", eight(1), eight(0.1))
         validate(cab(ok), catalog(), "4.1.0")  # the control case: this shape is accepted
@@ -183,33 +184,69 @@ class Refusals(unittest.TestCase):
         self.refused(cab(ok | {"scene_mode": 1}), "scene_mode")
         dup = prm(4, "MIC 1 DISTANCE", eight(1), eight(0.1))
         self.refused(mutate(lambda p: block(p, 2).update(params=[dup, dup])), "appears twice")
+        # evidence: required, known labels only, and consistent with the catalog parameter
+        self.refused(cab({k: v for k, v in ok.items() if k != "evidence"}), "has keys")
+        self.refused(cab(ok | {"evidence": ["taper:guess"]}), "unknown labels")
+        self.refused(cab(ok | {"evidence": []}), "short list")
+        self.refused(cab(ok | {"evidence": ["taper:g4", "taper:g4"]}), "short list")
+        self.refused(cab(ok | {"evidence": ["encoding:qc-mcp-linear"]}), "doesn't match a float")
+        self.refused(cab(ok | {"evidence": ["taper:g4", "bounds:g4"]}), "doesn't match the catalog's bounds")
+        # the wire must be the catalog's mapping of the display value, not just inside 0..1
+        self.refused(cab(prm(4, "MIC 1 DISTANCE", eight(1), eight(0.2))), "not the catalog's mapping")
 
-    def test_symbolic_bounds_the_unit_never_confirmed(self):
-        # Parametric-8's gains are MIN/MAX_EQ_DB: pyquadcortex's 4.0.1 numbers, not confirmed on 4.1.0.
+    def test_taper_is_rechecked(self):
+        # Brit 2203 OUTPUT: -60..+12 dB, skew 3.8018. G4 read wire 0.25 as -10.0 dB on the unit.
+        out = lambda d, w: {"index": 6, "label": "OUTPUT", "scene_mode": False, "display": eight(d),  # noqa: E731
+                            "wire": eight(w), "units": "dB", "evidence": ["taper:g4"]}
+        w = ((-10 + 60) / 72) ** 3.8018
+        validate(mutate(lambda p: block(p, 1).update(params=[out(-10, w)])), catalog(), "4.1.0")
+        self.refused(mutate(lambda p: block(p, 1).update(params=[out(-10, (50 / 72))])), "not the catalog's mapping")
+
+    def test_symbolic_bounds(self):
+        # Parametric-8's gains are MIN/MAX_EQ_DB: pyquadcortex's 4.0.1 numbers, not confirmed on 4.1.0,
+        # allowed with their label (owner decision, plan 4.1). -12..+12 dB, linear: 0 dB is wire 0.5.
         gain = next(x for x in catalog().models[4000]["params"] if x["name"] == "1 GAIN")
         self.assertEqual(gain["min_symbol"], "MIN_EQ_DB")
-        e = mutate(lambda p: swap(p, 0, 4000, params=[
-            {"index": gain["index"], "label": "1 GAIN", "scene_mode": False, "display": eight(0), "wire": eight(0.5)}]))
-        self.refused(e, "unconfirmed or missing bound")
+        g = {"index": gain["index"], "label": "1 GAIN", "scene_mode": False, "display": eight(0), "wire": eight(0.5),
+             "evidence": ["taper:g4", "bounds:pyquadcortex-4.0.1"]}
+        validate(mutate(lambda p: swap(p, 0, 4000, params=[g])), catalog(), "4.1.0")
+        self.refused(mutate(lambda p: swap(p, 0, 4000, params=[g | {"display": eight(13), "wire": eight(1)}])),
+                     "outside -12..12")
+        # A symbol nobody measured (the input trim) has no value at all: refused.
+        cat = copy.deepcopy(catalog())
+        cat.models[4000]["params_by_index"][gain["index"]]["min_symbol"] = "MIN_INPUT_TRIM"
+        with self.assertRaisesRegex(ExportRefused, "unconfirmed or missing bound"):
+            validate(mutate(lambda p: swap(p, 0, 4000, params=[g])), cat, "4.1.0")
 
     def test_discrete_position_is_whole(self):
-        trails = {"index": 4, "label": "TRAILS", "scene_mode": False, "display": eight(0.5), "wire": eight(0.5)}
+        trails = {"index": 4, "label": "TRAILS", "scene_mode": False, "display": eight(0.5), "wire": eight(0.5),
+                  "evidence": ["encoding:qc-mcp-linear"]}
         self.refused(mutate(lambda p: block(p, 4).update(params=[trails])), "whole number")
         validate(mutate(lambda p: block(p, 4).update(params=[trails | {"display": eight(1), "wire": eight(1)}])),
                  catalog(), "4.1.0")
+        # a switch must say it uses the position encoding, and use it
+        self.refused(mutate(lambda p: block(p, 4).update(params=[trails | {"display": eight(1), "wire": eight(1),
+                                                                            "evidence": ["taper:g4"]}])),
+                     "doesn't match a switch")
+        self.refused(mutate(lambda p: block(p, 4).update(params=[trails | {"display": eight(1), "wire": eight(0.9)}])),
+                     "not the catalog's mapping")
 
     def test_scene_arrays(self):
         gain = lambda p: block(p, 0)["params"][0]  # noqa: E731
         self.refused(mutate(lambda p: gain(p).update(display=[2, 8])), "exactly 8 values")
         self.refused(mutate(lambda p: gain(p).update(wire=0.2)), "exactly 8 values")
-        self.refused(mutate(lambda p: gain(p)["wire"].__setitem__(3, 0.9)), "scenes C-H must carry Scene A")
-        self.refused(mutate(lambda p: gain(p)["display"].__setitem__(7, 9)), "scenes C-H must carry Scene A")
+        def scene(i, d, w):  # a consistent display/wire pair, but in Scene C-H
+            def f(p):
+                gain(p)["display"][i], gain(p)["wire"][i] = d, w
+            return f
+        self.refused(mutate(scene(3, 9, 0.9)), "scenes C-H must carry Scene A")
+        self.refused(mutate(scene(7, 9, 0.9)), "scenes C-H must carry Scene A")
         self.refused(mutate(lambda p: gain(p).update(scene_mode=False)), "scene_mode is False")
         self.refused(mutate(lambda p: block(p, 0)["params"][1].update(scene_mode=True)), "scene_mode is True")
 
         def wire_only(p):  # equal displays but different wires: a lie about the taper
             block(p, 0)["params"][1]["wire"][1] = 0.9
-        self.refused(mutate(wire_only), "different wire values")
+        self.refused(mutate(wire_only), "not the catalog's mapping")
 
     def test_bypass(self):
         self.refused(mutate(lambda p: block(p, 0).update(bypass={"A": False, "B": False})), "exactly 8 values")
@@ -238,3 +275,26 @@ class Refusals(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Additions(unittest.TestCase):
+    """P2b (plan 4.1/4.2): warnings ride along, capture blocks are refused for now."""
+
+    def refused(self, e, needle):
+        with self.assertRaisesRegex(ExportRefused, re.escape(needle)):
+            validate(e, catalog(), "4.1.0")
+
+    def test_warnings_are_carried_not_executed(self):
+        w = [{"block": "#3 110 US PRN C10R", "param": "Mic 2", "reason": "not applied: ..."}]
+        plan = validate(mutate(lambda p: p.update(warnings=w)), catalog(), "4.1.0")
+        self.assertEqual(len(plan.blocks), 5)
+        self.refused(mutate(lambda p: p.update(warnings="x")), "warnings must be a list")
+        self.refused(mutate(lambda p: p.update(warnings=[{"block": "x"}])), "has keys")
+        self.refused(mutate(lambda p: p.update(warnings=[{"block": "x", "reason": 5}])), "short strings")
+        self.refused(mutate(lambda p: p.pop("warnings")), "payload has keys")
+
+    def test_capture_blocks_are_refused(self):
+        def cap(p):
+            swap(p, 0, 14000, capture={"name": "CA John's", "source": "factory", "resolved_on_unit": False})
+            block(p, 0)["model_id"] = 0
+        self.refused(mutate(cap), "can't place captures yet")

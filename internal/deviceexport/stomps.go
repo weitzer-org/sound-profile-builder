@@ -30,7 +30,14 @@ func (e *Exporter) planStomps(rows []Row) (stompResult, error) {
 	var blocks []stomplayout.Block
 	for _, r := range rows {
 		for _, b := range r.Blocks {
-			blocks = append(blocks, stomplayout.Block{Row: r.Row, Col: b.Col, ModelID: b.ModelID})
+			sb := stomplayout.Block{Row: r.Row, Col: b.Col, ModelID: b.ModelID}
+			if b.Capture != nil {
+				// A capture block's id is chosen on the unit (V1 or V2); the planner reads it
+				// as a Neural Capture block and decides its role from the preset's block type
+				// and the capture library.
+				sb.ModelID, sb.CaptureName, sb.ModelerType = captureBlockID, b.Capture.Name, b.modelerType
+			}
+			blocks = append(blocks, sb)
 		}
 	}
 	plan, err := stomplayout.Build(layout, e.stompCls, blocks, nil)

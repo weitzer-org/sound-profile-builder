@@ -23,13 +23,21 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
   (symbolic bounds refused), eight display values inside the range (whole numbers for
   switches), eight finite wire values in 0..1, and `scene_mode` matching whether A and B
   differ;
-* eight boolean bypass flags per block; `unresolved` is empty;
+* each parameter's `evidence` (plan 4.1) names only known sources, and the wire values are the
+  ones the catalog gives for those sources: the taper ((d-min)/(max-min))^skew for a float,
+  (d-min)/(max-min) for a switch position ("encoding:qc-mcp-linear"), so a conversion QC-2
+  got wrong is refused here too;
+* eight boolean bypass flags per block; `unresolved` is empty; `warnings` (settings the push
+  leaves out on purpose, e.g. a non-default cab mic) is a list of short items and changes nothing;
+* capture blocks (`capture`, model_id 0) are refused: this agent can't place captures yet
+  (plan 4.2, a P4 follow-up), so it fails the job before touching the unit;
 * `stomps` (design doc qc-stomp-layout.md, S2): at most 32 `{row, col, switch}` entries,
   row 0, a placed column, switch A-G (never H), one switch per block. They are VALIDATED
   here and not executed: the agent writes no stomp assignment until gate G7 has run.
 
-What it cannot check yet: that `wire` is the right taper of `display`. QC-2's export owns
-that mapping (catalog.ConfirmedSkews); the agent only bounds both values.
+Symbolic bounds: the cab bounds confirmed on the unit (G4) and the pyquadcortex 4.0.1 values
+(owner decision, plan 4.1: allowed, labelled) are resolved; any other symbol, including the
+unmeasured input trim, is refused. Both tables are checked against firmware_constants.go.
 """
 from __future__ import annotations
 
@@ -51,6 +59,20 @@ VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one
 # bound (pyquadcortex-only EQ/mixer/FX-loop/tempo values, the unmeasured input trim) stays
 # refused, as in the exporter. tests/test_go_goldens.py checks this table against the Go source.
 CONFIRMED_BOUNDS = {"MIN_CABSIM_DB": -40.0, "MAX_CABSIM_DB": 6.0}
+# pyquadcortex 4.0.1 measurements (MIT, data only), not confirmed on the unit; the exporter uses
+# them, labelled "bounds:pyquadcortex-4.0.1" (owner decision, plan 4.1). Pinned to Go by
+# tests/test_go_goldens.py.
+PYQUADCORTEX_BOUNDS = {
+    "MIN_EQ_DB": -12.0, "MAX_EQ_DB": 12.0, "MIN_MIXER_DB": -40.0, "MAX_MIXER_DB": 12.0,
+    "MIN_FXLOOP_OUT_GAIN_DB": -40.0, "MAX_FXLOOP_OUT_GAIN_DB": 0.0,
+    "MIN_FXLOOP_IN_GAIN_DB": -40.0, "MAX_FXLOOP_IN_GAIN_DB": 12.0,
+    "MIN_TEMPO": 40.0, "MAX_TEMPO": 240.0, "MIN_EQ_FREQ": 20.0, "MAX_EQ_FREQ": 20000.0,
+}
+# The evidence labels the exporter writes (internal/deviceexport, plan 4.1).
+EVIDENCE = frozenset({"taper:g4", "taper:device-xml", "taper:pyquadcortex",
+                      "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear"})
+LINEAR_SWITCH_TYPES = frozenset({"switch", "rotarySwitch", "toggleButton"})
+WIRE_TOLERANCE = 1e-9
 ROW, IN_PORT, OUT_PORT = 0, 1, 19  # qc-mcp clear_grid default routing; read back exactly in G3
 
 ALLOWED_CATEGORIES = frozenset({
@@ -166,7 +188,8 @@ def _bounds(cp, where):
     for key in ("min", "max"):
         sym, v = cp.get(key + "_symbol"), cp.get(key)
         if sym is not None:
-            v = CONFIRMED_BOUNDS.get(sym)  # a symbol the device confirmed, or nothing
+            # A symbol the device confirmed, a labelled pyquadcortex value, or nothing.
+            v = CONFIRMED_BOUNDS.get(sym, PYQUADCORTEX_BOUNDS.get(sym))
         if v is None or isinstance(v, bool) or not isinstance(v, (int, float)):
             raise ExportRefused(f"{where}: the catalog has no usable numeric range for this parameter "
                                 f"(unconfirmed or missing bound {sym or key}); the agent can't check it")
@@ -184,7 +207,41 @@ def _check_value(cp, display, wire, where):
     w = _num(wire, where + ".wire")
     if not 0.0 <= w <= 1.0:
         raise ExportRefused(f"{where}: wire {w:g} is outside 0..1")
+    want = _expected_wire(cp, lo, hi, d)
+    if abs(w - want) > WIRE_TOLERANCE:
+        raise ExportRefused(f"{where}: wire {w!r} is not the catalog's mapping of display {d:g} ({want!r})")
     return w
+
+
+def _expected_wire(cp, lo, hi, d):
+    """The wire value the catalog gives for a display value: the taper for a float
+    (catalog.Param.ToWire), the linear position encoding for a switch."""
+    if not hi > lo:
+        raise ExportRefused(f"{cp['name']}: empty range {lo:g}..{hi:g}")
+    r = (d - lo) / (hi - lo)
+    if cp["type"] in LINEAR_SWITCH_TYPES:
+        return r
+    if cp["type"] != "float":
+        raise ExportRefused(f"{cp['name']}: type {cp['type']!r} has no wire mapping the agent can check")
+    skew = cp.get("skew", 1.0)
+    if isinstance(skew, bool) or not isinstance(skew, (int, float)) or not skew > 0:
+        raise ExportRefused(f"{cp['name']}: catalog skew {skew!r} is not a positive number")
+    return r ** skew
+
+
+def _check_param_evidence(pw, cp, ev):
+    if (not isinstance(ev, list) or not 1 <= len(ev) <= 3 or any(not isinstance(e, str) for e in ev)
+            or len(set(ev)) != len(ev)):
+        raise ExportRefused(f"{pw}.evidence must be a short list of distinct labels")
+    unknown = sorted(set(ev) - EVIDENCE)
+    if unknown:
+        raise ExportRefused(f"{pw}.evidence has unknown labels {unknown}")
+    switch = cp["type"] in LINEAR_SWITCH_TYPES
+    if switch != ("encoding:qc-mcp-linear" in ev):
+        raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter")
+    symbolic = cp.get("min_symbol") is not None or cp.get("max_symbol") is not None
+    if not switch and symbolic != any(e.startswith("bounds:") for e in ev):
+        raise ExportRefused(f"{pw}.evidence {ev} doesn't match the catalog's bounds")
 
 
 # catalog.IsInternalParam: not user controls, never in an export.
@@ -230,9 +287,12 @@ def _check_evidence(where, cm, ev):
 def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
     where = f"block {bi}"
     _exact(b, ("col", "model_id", "model", "category", "index_evidence", "bypass", "params", "at_default"),
-           where, optional=("plugin",))
+           where, optional=("plugin", "capture"))
     if _int(b["col"], where + ".col") != bi:
         raise ExportRefused(f"{where}: columns must run 0..{nblocks - 1} in order")
+    if "capture" in b:
+        raise ExportRefused(f"{where}: this bridge can't place captures yet (plan 4.2, a P4 follow-up); "
+                            "nothing was written")
     mid = _int(b["model_id"], where + ".model_id")
     if mid in DENY_MODEL_IDS:
         raise ExportRefused(f"{where}: model {mid} is denied (NC_Recorder)")
@@ -278,7 +338,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
 
 
 def _check_param(pw, prm, cm, labels) -> PlannedParam:
-    _exact(prm, ("index", "label", "scene_mode", "display", "wire"), pw, optional=("units",))
+    _exact(prm, ("index", "label", "scene_mode", "display", "wire", "evidence"), pw, optional=("units",))
     idx = _int(prm["index"], pw + ".index")
     cp = cm["params_by_index"].get(idx)
     if cp is None:
@@ -292,6 +352,7 @@ def _check_param(pw, prm, cm, labels) -> PlannedParam:
         raise ExportRefused(f"{pw}.units must be a short string")
     if cp["type"] not in WRITABLE_TYPES:
         raise ExportRefused(f"{pw}: type {cp['type']!r} is not writable by the agent")
+    _check_param_evidence(pw, cp, prm["evidence"])
     if not isinstance(prm["scene_mode"], bool):
         raise ExportRefused(f"{pw}.scene_mode must be true/false")
     disp = _array(prm["display"], pw + ".display")
@@ -340,7 +401,7 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
     if fmt not in SUPPORTED_FORMATS:
         raise ExportRefused(f"unsupported export format {fmt!r}; this agent implements {FORMAT}")
     p = export["payload"]
-    _exact(p, ("format", "catalog", "guitar", "scene_sources", "rows", "stomps", "unresolved"), "payload")
+    _exact(p, ("format", "catalog", "guitar", "scene_sources", "rows", "stomps", "unresolved", "warnings"), "payload")
     if p["format"] != fmt:
         raise ExportRefused("payload.format differs from export.format")
 
@@ -368,6 +429,16 @@ def validate(export: dict, catalog, expected_firmware: str) -> Plan:
         raise ExportRefused("payload.unresolved must be a list")
     if p["unresolved"]:
         raise ExportRefused(f"the export has {len(p['unresolved'])} unresolved item(s); a push needs zero")
+
+    # Warnings are what QC-2 leaves out on purpose (the user saw them in the dry run); they
+    # carry no operation. Bound them only.
+    w = p["warnings"]
+    if not isinstance(w, list) or len(w) > 64:
+        raise ExportRefused("payload.warnings must be a list of at most 64 items")
+    for i, item in enumerate(w):
+        _exact(item, ("block", "reason"), f"warnings[{i}]", optional=("param",))
+        if any(not isinstance(v, str) or len(v) > 400 for v in item.values()):
+            raise ExportRefused(f"warnings[{i}] must hold short strings")
 
     rows = p["rows"]
     if not isinstance(rows, list) or len(rows) != 1:

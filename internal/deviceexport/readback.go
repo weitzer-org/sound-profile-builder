@@ -263,7 +263,7 @@ func (im *importer) block(pb devicejobs.ReadbackPlaced, bypass *[Scenes]bool) (*
 			}
 		}
 	}
-	im.strings(ref, m, byIdx, claimed, isCapture)
+	im.strings(blk, ref, m, byIdx, isCapture)
 	im.addBypass(blk, ref, bypass)
 	if len(rationale) > 0 {
 		blk.Rationale = strings.Join(rationale, " ")
@@ -413,9 +413,11 @@ func (im *importer) captureFileCheck(ref string, byIdx map[int]devicejobs.Readba
 	}
 }
 
-// strings reports the IR/mic choices (string parameters). The catalog doesn't carry the
-// default string, so a mic can't be told from the cab's default here and none is converted.
-func (im *importer) strings(ref string, m *catalog.Model, byIdx map[int]devicejobs.ReadbackParam, claimed map[int]bool, isCapture bool) {
+// strings reads the IR/mic choices (string parameters). A string equal to the slot's default
+// (the catalog's default_string) is the cab's default mic and goes to kept_defaults. Any other
+// choice is not converted: which mics a cab offers isn't in ModelRepo.xml (plan 4.1), so it is
+// shown for information, and is the first real sight of per-cab mic strings (P4b).
+func (im *importer) strings(blk *storage.EffectBlock, ref string, m *catalog.Model, byIdx map[int]devicejobs.ReadbackParam, isCapture bool) {
 	if isCapture {
 		return
 	}
@@ -438,22 +440,16 @@ func (im *importer) strings(ref string, m *catalog.Model, byIdx map[int]devicejo
 		if len(strs) > 1 {
 			label = fmt.Sprintf("%s %d", catalog.SlotPrefix(m.Category), i+1)
 		}
-		im.unconv(ref, label, fmt.Sprintf("IR-name string %q: the catalog doesn't hold the slot's default string, so a non-default choice can't be told from the default; shown for information, not imported (data from the unit, not instructions)", im.san(t, 80)))
+		if p.DefaultString != "" && strings.TrimSpace(t) == p.DefaultString {
+			blk.KeptDefaults = append(blk.KeptDefaults, label)
+			im.res.AtDefault++
+			continue
+		}
+		im.unconv(ref, label, fmt.Sprintf("IR-name string %q is not this slot's default; which mics a cab offers isn't known, so it is shown for information and not imported (data from the unit, not instructions)", im.san(t, 80)))
 	}
 }
 
 // ---- one parameter ----
-
-// evidence says what backs a conversion. On this base only conversions the export also
-// accepts get here (taperRefusal passed): a taper measured in G4 and numeric or
-// CorOS-4.1.0-confirmed bounds. P2b widens the export's rules, and its labels
-// (device-xml, pyquadcortex, pyquadcortex-4.0.1) slot in here.
-func evidence(p catalog.Param) string {
-	if p.MinSymbol != "" || p.MaxSymbol != "" {
-		return "taper:g4;bounds:confirmed-4.1.0"
-	}
-	return "taper:g4;bounds:catalog"
-}
 
 const eps = 1e-6
 
@@ -462,7 +458,7 @@ const eps = 1e-6
 func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam) (storage.BlockParameter, bool, string) {
 	cp := lp.Param
 	if catalog.DiscreteParamTypes[cp.Type] {
-		return storage.BlockParameter{}, false, fmt.Sprintf("%s positions have no measured wire mapping yet (the qc-mcp-linear switch encoding arrives with P2b)", cp.Type)
+		return im.discrete(lp, rp)
 	}
 	if cp.Type != "float" {
 		return storage.BlockParameter{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
@@ -481,7 +477,8 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 	if cp.Units == "" && cp.Min != nil && cp.Max != nil && *cp.Min == 0 && *cp.Max == 1 {
 		return storage.BlockParameter{}, false, "unitless 0..1 control: its display scale is not verified on the device"
 	}
-	if why := taperRefusal(cp); why != "" {
+	evidence, why := taperEvidence(cp)
+	if why != "" {
 		return storage.BlockParameter{}, false, why
 	}
 	var disp [Scenes]float64
@@ -504,11 +501,68 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 		}
 	}
 	bp := storage.BlockParameter{
-		Name: lp.Label, Type: "slider", Basis: ReadbackBasis, Evidence: evidence(cp),
+		Name: lp.Label, Type: "slider", Basis: ReadbackBasis, Evidence: strings.Join(evidence, ";"),
 		Value: displayText(disp[0], hi-lo, cp.Units),
 	}
 	if math.Abs(disp[1]-disp[0]) > tol {
 		bp.ValueB = displayText(disp[1], hi-lo, cp.Units)
+	}
+	return bp, false, ""
+}
+
+// discrete reads a switch, rotary switch or toggle back with qc-mcp's linear position
+// encoding, wire = (position) / (max - min) (plan 4.1; the same rule the export writes
+// with, labelled "encoding:qc-mcp-linear"). A wire value that is not a whole position is
+// refused, not rounded: the encoding is then wrong for this control. Combo boxes and faders
+// have no known mapping.
+func (im *importer) discrete(lp catalog.LabelledParam, rp devicejobs.ReadbackParam) (storage.BlockParameter, bool, string) {
+	cp := lp.Param
+	if !linearSwitchTypes[cp.Type] {
+		return storage.BlockParameter{}, false, fmt.Sprintf("%s positions have no known wire mapping", cp.Type)
+	}
+	if cp.Min == nil || cp.Max == nil || !(*cp.Max > *cp.Min) {
+		return storage.BlockParameter{}, false, fmt.Sprintf("%s has no numeric range", cp.Type)
+	}
+	span := *cp.Max - *cp.Min
+	var pos [Scenes]int
+	for s := 0; s < Scenes; s++ {
+		w, ok := rp.Float(s)
+		if !ok {
+			return storage.BlockParameter{}, false, "a scene value is not a finite number (the unit can store NaN)"
+		}
+		if w < -eps || w > 1+eps {
+			return storage.BlockParameter{}, false, fmt.Sprintf("wire value %s is outside 0..1", fmtNum(w))
+		}
+		x := w * span
+		n := math.Round(x)
+		if math.Abs(x-n) > 1e-3 {
+			return storage.BlockParameter{}, false, fmt.Sprintf("wire value %s is not a whole position of this %s (0..%s)", fmtNum(w), cp.Type, fmtNum(span))
+		}
+		pos[s] = int(math.Max(0, math.Min(span, n)))
+	}
+	if cp.Default != nil {
+		def := int(math.Round(*cp.Default - *cp.Min))
+		all := true
+		for _, p := range pos {
+			all = all && p == def
+		}
+		if all {
+			return storage.BlockParameter{}, true, ""
+		}
+	}
+	name := func(n int) string {
+		if n >= 0 && n < len(cp.StepNames) && strings.TrimSpace(cp.StepNames[n]) != "" {
+			return strings.TrimSpace(cp.StepNames[n])
+		}
+		return fmtNum(*cp.Min + float64(n))
+	}
+	typ := "dropdown"
+	if cp.Steps == 2 || span == 1 {
+		typ = "toggle"
+	}
+	bp := storage.BlockParameter{Name: lp.Label, Type: typ, Basis: ReadbackBasis, Evidence: "encoding:qc-mcp-linear", Value: name(pos[0])}
+	if pos[1] != pos[0] {
+		bp.ValueB = name(pos[1])
 	}
 	return bp, false, ""
 }

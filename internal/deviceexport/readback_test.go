@@ -37,21 +37,23 @@ func testSanitize(s string, n int) string {
 	return string(r)
 }
 
-var testLibrary = map[string][2]string{ // lower-case device name -> canonical, source
-	"1964 fender super reverb": {"1964 Fender Super Reverb", "user"},
-	"ca john's":                {"CA John's", "factory"},
+// testLookup resolves a device capture name against the same fake library the export tests use.
+func testLookup(n string) (string, string, bool) {
+	for name, src := range testCaptures {
+		if src != "ir" && strings.EqualFold(name, strings.TrimSpace(n)) {
+			return name, src, true
+		}
+	}
+	return "", "", false
 }
 
 func importExporter(t *testing.T) *Exporter {
 	t.Helper()
 	e, err := NewEmbedded(Options{
-		IsCapture:    func(n string) bool { return testCaptures[n] },
-		OwnedPlugins: OwnedPluginSet(true, []string{"Cory Wong"}),
-		Sanitize:     testSanitize,
-		LookupCapture: func(n string) (string, string, bool) {
-			v, ok := testLibrary[strings.ToLower(strings.TrimSpace(n))]
-			return v[0], v[1], ok
-		},
+		CaptureSource: func(n string) string { return testCaptures[n] },
+		OwnedPlugins:  OwnedPluginSet(true, []string{"Cory Wong"}),
+		Sanitize:      testSanitize,
+		LookupCapture: testLookup,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -83,9 +85,13 @@ func simDevice(t *testing.T, e *Exporter, p Payload, f32 bool) (device map[strin
 		}
 	}
 	for _, b := range p.Rows[0].Blocks {
-		m := e.byID[b.ModelID]
+		id := b.ModelID
+		if b.Capture != nil {
+			id = captureV1 // the export doesn't know V1/V2 (plan 4.2); the unit holds one of them
+		}
+		m := e.byID[id]
 		if m == nil {
-			t.Fatalf("model %d", b.ModelID)
+			t.Fatalf("model %d", id)
 		}
 		set := map[int]Param{}
 		for _, pr := range b.Params {
@@ -108,7 +114,7 @@ func simDevice(t *testing.T, e *Exporter, p Payload, f32 bool) (device map[strin
 					}
 					switch {
 					case cp.Type == "string":
-						def = ""
+						def = cp.DefaultString
 					case cp.Default == nil:
 					case cp.Type == "float":
 						if w, err := cp.ToWire(*cp.Default); err == nil {
@@ -120,13 +126,16 @@ func simDevice(t *testing.T, e *Exporter, p Payload, f32 bool) (device map[strin
 						def = conv((*cp.Default - *cp.Min) / (*cp.Max - *cp.Min))
 					}
 				}
+				if b.Capture != nil && i == captureFileIndex {
+					def = strings.Repeat("0f", 32) + " " + b.Capture.Name
+				}
 				for s := range vals {
 					vals[s] = def
 				}
 			}
 			params = append(params, map[string]any{"index": i, "values": vals, "scene_mode": scene})
 		}
-		blocks = append(blocks, map[string]any{"col": b.Col, "model_id": b.ModelID, "params": params})
+		blocks = append(blocks, map[string]any{"col": b.Col, "model_id": id, "params": params})
 		copy(bypass[0][b.Col], b.Bypass[:])
 	}
 	chains := []any{map[string]any{"row": 0, "in_port": InPort, "out_port": OutPort, "blocks": blocks}}
@@ -204,8 +213,12 @@ func TestRoundTripGoldens(t *testing.T) {
 				for i, b := range p.Rows[0].Blocks {
 					ib := chain[i]
 					// The name the Architect would write resolves to the same device model.
-					rm, why := (&builder{e: e}).resolveModel(ib.Model)
-					if why != "" || rm.ID != b.ModelID {
+					if b.Capture != nil {
+						capt, isCap, why := (&builder{e: e}).resolveCapture(ib.Model)
+						if why != "" || !isCap || capt.Name != b.Capture.Name || capt.Source != b.Capture.Source {
+							t.Errorf("block %d: imported capture %q resolves to %+v (%q), want %+v", i, ib.Model, capt, why, b.Capture)
+						}
+					} else if rm, why := (&builder{e: e}).resolveModel(ib.Model); why != "" || rm.ID != b.ModelID {
 						t.Errorf("block %d: imported name %q resolves to %v (%q), want id %d", i, ib.Model, rm, why, b.ModelID)
 					}
 					got := map[string]storage.BlockParameter{}
@@ -224,8 +237,34 @@ func TestRoundTripGoldens(t *testing.T) {
 							t.Errorf("%s: %s not imported (unconverted %+v, kept %v)", b.Model, pr.Label, res.Unconverted, ib.KeptDefaults)
 							continue
 						}
-						if bp.Basis != ReadbackBasis || !strings.HasPrefix(bp.Evidence, "taper:g4") {
+						if bp.Basis != ReadbackBasis || !strings.Contains(bp.Evidence, "taper:") && !strings.Contains(bp.Evidence, "encoding:") {
 							t.Errorf("%s %s: basis %q evidence %q", b.Model, pr.Label, bp.Basis, bp.Evidence)
+						}
+						if strings.Contains(bp.Evidence, "encoding:qc-mcp-linear") {
+							// A switch reads back as its step name (or position number).
+							id := b.ModelID
+							if b.Capture != nil {
+								id = captureV1
+							}
+							for _, lp := range catalog.LabelParams(e.byID[id]) {
+								if lp.Label != pr.Label {
+									continue
+								}
+								stepName := func(disp float64) string {
+									n := int(math.Round(disp - *lp.Param.Min))
+									if n < len(lp.Param.StepNames) && strings.TrimSpace(lp.Param.StepNames[n]) != "" {
+										return strings.TrimSpace(lp.Param.StepNames[n])
+									}
+									return fmtNum(disp)
+								}
+								if bp.Value != stepName(pr.Display[0]) {
+									t.Errorf("%s %s Scene A: imported %q, want %q", b.Model, pr.Label, bp.Value, stepName(pr.Display[0]))
+								}
+								if pr.Display[1] != pr.Display[0] && bp.ValueB != stepName(pr.Display[1]) {
+									t.Errorf("%s %s Scene B: imported %q, want %q", b.Model, pr.Label, bp.ValueB, stepName(pr.Display[1]))
+								}
+							}
+							continue
 						}
 						if d := math.Abs(parseDisplay(t, bp.Value) - pr.Display[0]); d > tolOf(pr) {
 							t.Errorf("%s %s Scene A: imported %q, source %v (off by %v)", b.Model, pr.Label, bp.Value, pr.Display[0], d)
@@ -404,14 +443,13 @@ func TestUnconverted(t *testing.T) {
 		{"unknown model id", 999999, nil, "", "unknown model id", true},
 		{"non-default pan", 3008, map[int][]any{17: {0.9}}, "PAN", "pan display scale", false},
 		{"unitless 0..1", 3008, map[int][]any{18: {0.4}}, "DISTANCE", "unitless 0..1", false},
-		{"unconfirmed skew", 4005, map[int][]any{0: {0.5}}, "HPF", "taper skew", false},
-		{"pyquadcortex bound", 4000, map[int][]any{0: {0.5}}, "1 GAIN", "bound", false},
-		{"switch", 5011, map[int][]any{3: {1.0}}, "HIGH CUT", "no measured wire mapping", false},
+		{"switch off a whole position", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
+		{"combo box has no mapping", 5011, map[int][]any{3: {0.4}}, "HIGH CUT", "not a whole position", false},
 		{"NaN stored as null", 1, map[int][]any{0: {nil}}, "GAIN", "not a finite number", false},
 		{"wire above 1", 1, map[int][]any{0: {1.5}}, "GAIN", "outside 0..1", false},
 		{"text where a number belongs", 1, map[int][]any{0: {"hello"}}, "GAIN", "not a finite number", false},
 		{"clone of an unverified base", 8016, nil, "(all parameters)", "cloning 8015", false},
-		{"cab mic string", 12045, map[int][]any{1: {"ME_110 US PRN C10R_Dynamic 57"}, 9: {"ME_110 US PRN C10R_Ribbon 160"}}, "MIC 1", "IR-name string", false},
+		{"cab mic string", 12045, map[int][]any{1: {"ME_110 US PRN C10R_Condenser 414"}, 9: {"ME_110 US PRN C10R_Ribbon 160"}}, "MIC 1", "not this slot's default", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -436,6 +474,48 @@ func TestUnconverted(t *testing.T) {
 			}
 		})
 	}
+}
+
+// P2b's rules: device-XML skews and pyquadcortex bounds convert with their evidence labels;
+// switches convert by position (qc-mcp-linear); a default mic string is a kept default.
+func TestP2bRulesInTheImport(t *testing.T) {
+	e := importExporter(t)
+	get := func(res *devicejobs.ImportedPreset, name string) storage.BlockParameter {
+		t.Helper()
+		for _, bp := range res.Preset.Guitars[ReadbackGuitar][0].Parameters {
+			if bp.Name == name {
+				return bp
+			}
+		}
+		t.Fatalf("%s not imported: %+v %+v", name, res.Preset.Guitars[ReadbackGuitar][0].Parameters, res.Unconverted)
+		return storage.BlockParameter{}
+	}
+	t.Run("device-xml skew", func(t *testing.T) {
+		bp := get(importOf(t, e, rbJSON(t, 4005, map[int][]any{0: {0.5}}, nil)), "HPF")
+		if !strings.Contains(bp.Evidence, "taper:device-xml") {
+			t.Errorf("evidence %q", bp.Evidence)
+		}
+	})
+	t.Run("pyquadcortex bound", func(t *testing.T) {
+		bp := get(importOf(t, e, rbJSON(t, 4000, map[int][]any{0: {0.75}}, nil)), "1 GAIN")
+		if !strings.Contains(bp.Evidence, "bounds:pyquadcortex-4.0.1") || bp.Value != "6 dB" {
+			t.Errorf("%+v", bp)
+		}
+	})
+	t.Run("switch by position", func(t *testing.T) {
+		res := importOf(t, e, rbJSON(t, 5011, map[int][]any{3: {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}}, nil))
+		bp := get(res, "HIGH CUT")
+		if bp.Evidence != "encoding:qc-mcp-linear" || bp.Value != "0" || bp.ValueB != "1" {
+			t.Errorf("%+v", bp)
+		}
+	})
+	t.Run("default mic string is kept", func(t *testing.T) {
+		res := importOf(t, e, rbJSON(t, 12045, map[int][]any{1: {"ME_110 US PRN C10R_Dynamic 57"}, 9: {"ME_110 US PRN C10R_Ribbon 160"}}, nil))
+		kept := strings.Join(res.Preset.Guitars[ReadbackGuitar][0].KeptDefaults, ",")
+		if !strings.Contains(kept, "MIC 1") || !strings.Contains(kept, "MIC 2") {
+			t.Errorf("kept %s; unconverted %+v", kept, res.Unconverted)
+		}
+	})
 }
 
 func TestDefaultsAndTrailingSlot(t *testing.T) {

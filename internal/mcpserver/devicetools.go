@@ -532,6 +532,7 @@ type devicePlanOutput struct {
 	Blocks       []devicejobs.PlanBlock  `json:"blocks"`
 	Stomps       *devicejobs.PlanStomps  `json:"stomps,omitempty"`
 	Unresolved   []devicejobs.Unresolved `json:"unresolved"`
+	Warnings     []devicejobs.Unresolved `json:"warnings"`
 }
 
 type devicePushOutput struct {
@@ -610,7 +611,7 @@ func sendPresetToDevice(svc *presetsvc.Service, b *devicejobs.Bridge) mcp.ToolHa
 				Plan: &devicePlanOutput{
 					PresetID: in.PresetID, Guitar: in.Guitar, Slot: slot, Name: name,
 					ExportFormat: plan.Export.Format, ExportSHA256: plan.PlanSHA256,
-					Blocks: plan.Export.Summary, Stomps: plan.Export.Stomps, Unresolved: plan.Export.Unresolved,
+					Blocks: plan.Export.Summary, Stomps: plan.Export.Stomps, Unresolved: plan.Export.Unresolved, Warnings: plan.Export.Warnings,
 				},
 			}
 			if out.Plan.Blocks == nil {
@@ -618,6 +619,9 @@ func sendPresetToDevice(svc *presetsvc.Service, b *devicejobs.Bridge) mcp.ToolHa
 			}
 			if out.Plan.Unresolved == nil {
 				out.Plan.Unresolved = []devicejobs.Unresolved{}
+			}
+			if out.Plan.Warnings == nil {
+				out.Plan.Warnings = []devicejobs.Unresolved{}
 			}
 			if plan.Token != "" {
 				out.ConfirmExpiresAt = devicejobs.FormatTime(plan.TokenExp)
@@ -655,7 +659,7 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 	fmt.Fprintf(t, "**Dry run, nothing was sent.** Plan: push guitar %s of preset `%s` to slot **%s** as \"%s\".\n\n",
 		cell(p.Guitar), p.PresetID, p.Slot, cell(p.Name))
 	fmt.Fprintf(t, "Export: %s, sha256 `%s`.\n\n", cell(p.ExportFormat), p.ExportSHA256)
-	renderExportTable(t, p.Blocks, p.Stomps, p.Unresolved)
+	renderExportTable(t, p.Blocks, p.Stomps, p.Unresolved, p.Warnings)
 	if len(p.Unresolved) > 0 {
 		t.WriteString("\nRefine the preset to remove these, then dry-run again.\n")
 	}
@@ -674,13 +678,17 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 
 // renderExportTable renders an export's readable plan and its unresolved items. Every
 // string from the preset or export goes through cell().
-func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps *devicejobs.PlanStomps, unresolved []devicejobs.Unresolved) {
+func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps *devicejobs.PlanStomps, unresolved, warnings []devicejobs.Unresolved) {
+	unconfirmed := false
 	if len(blocks) > 0 {
 		t.WriteString("| Grid | Block | Parameter | Scene A | Scene B | State A/B |\n|---|---|---|---|---|---|\n")
 		for _, bl := range blocks {
 			state := fmt.Sprintf("%s/%s", activeBypassed(bl.BypassA), activeBypassed(bl.BypassB))
 			grid := fmt.Sprintf("row %d col %d", bl.Row, bl.Col)
 			model := fmt.Sprintf("%s (id %d)", cell(bl.Model), bl.ModelID)
+			if bl.Capture != "" {
+				model = fmt.Sprintf("%s (capture, found on the unit at push time)", cell(bl.Capture))
+			}
 			if len(bl.Params) == 0 {
 				fmt.Fprintf(t, "| %s | %s | (defaults) | | | %s |\n", grid, model, state)
 			}
@@ -692,7 +700,12 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 				if i > 0 {
 					grid, model, state = "", "", ""
 				}
-				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, cell(pr.Name), cell(pr.A), cell(bval), state)
+				name := cell(pr.Name)
+				if pr.Unconfirmed {
+					name += " †"
+					unconfirmed = true
+				}
+				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, name, cell(pr.A), cell(bval), state)
 			}
 			if len(bl.AtDefault) > 0 {
 				names := make([]string, len(bl.AtDefault))
@@ -703,6 +716,19 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 			}
 		}
 		t.WriteString("\nScenes C-H get Scene A's values and state; all eight scenes are written explicitly.\n")
+		if unconfirmed {
+			t.WriteString("† Converted from the device's own data or a third-party measurement, not yet checked on this unit: compare the unit's screen after the push.\n")
+		}
+	}
+	if len(warnings) > 0 {
+		t.WriteString("\n**Left out of the push (it can still go ahead):**\n")
+		for _, u := range warnings {
+			what := cell(u.Block)
+			if u.Param != "" {
+				what += " / " + cell(u.Param)
+			}
+			fmt.Fprintf(t, "- %s: %s\n", what, cell(u.Reason))
+		}
 	}
 	renderStomps(t, stomps)
 	if len(unresolved) > 0 {

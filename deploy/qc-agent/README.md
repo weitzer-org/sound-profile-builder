@@ -22,8 +22,11 @@ For a push, before anything is written:
 1. the export format is one the agent implements (`qc2-device-export/1`), and the export passes
    `qc_agent/export_validator.py` against the agent's own catalog copy (`internal/catalog/qc_catalog.json` in this
    clone, hash-matched with the export): known models in allowed categories, no plugin/capture/IR/FX-loop/splitter
-   models, NC_Recorder denied, only listed parameter indexes with numeric ranges, values in range, wire values 0..1,
-   one row (in 1, out 19), at most 8 blocks, zero unresolved items. The preset name may use letters, digits, spaces
+   models (capture blocks are refused until capture placement is built, plan 4.2), NC_Recorder denied, only listed
+   parameter indexes with numeric ranges (the cab bounds confirmed on the unit, or pyquadcortex's labelled values),
+   values in range, each wire value equal to the catalog's mapping of its display value (taper or switch position,
+   with the `evidence` label to match), one row (in 1, out 19), at most 8 blocks, zero unresolved items. The export's
+   `warnings` (settings QC-2 left out on purpose, e.g. a non-default cab mic) are carried and change nothing. The preset name may use letters, digits, spaces
    and `_ ( ) + , ! ' & # . -` only (it becomes a file name on the unit);
 2. the slot is inside `QC_AGENT_ALLOWED_SLOTS`;
 3. a **fresh** directory listing (all 256 slots, or it's refused) shows the slot **empty** (an exactly blank name),

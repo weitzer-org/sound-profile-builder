@@ -24,13 +24,14 @@ var update = flag.Bool("update", false, "rewrite testdata/golden/*.json from cur
 
 // testCaptures are the capture names the eval presets use (user_captures.json entries), so
 // the goldens don't change when the capture library does.
-var testCaptures = map[string]bool{"1964 Fender Super Reverb": true, "66 AC30 JMP OD": true}
+var testCaptures = map[string]string{"1964 Fender Super Reverb": "user", "66 AC30 JMP OD": "user",
+	"CA John's": "factory", "FNDR TWDLX IN Edge BAL CAB": "ir"}
 
 func testExporter(t *testing.T) *Exporter {
 	t.Helper()
 	e, err := NewEmbedded(Options{
-		IsCapture:    func(n string) bool { return testCaptures[n] },
-		OwnedPlugins: OwnedPluginSet(true, []string{"Cory Wong"}),
+		CaptureSource: func(n string) string { return testCaptures[n] },
+		OwnedPlugins:  OwnedPluginSet(true, []string{"Cory Wong"}),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -157,7 +158,13 @@ func TestEveryIDAndIndexExists(t *testing.T) {
 				}
 				for i, b := range r.Blocks {
 					m, ok := byID[b.ModelID]
-					if !ok || m.Name != b.Model || m.Category != b.Category {
+					if b.Capture != nil {
+						m, ok = byID[captureBlockID]
+						ok = ok && b.ModelID == 0 && b.Model == b.Capture.Name
+					} else {
+						ok = ok && m.Name == b.Model
+					}
+					if !ok || m.Category != b.Category {
 						t.Fatalf("%s/%s: block %d model %d %q is not that catalog model", c.preset, g, i, b.ModelID, b.Model)
 					}
 					if b.Col < 0 || b.Col >= MaxBlocks || (i > 0 && b.Col <= r.Blocks[i-1].Col) {
@@ -306,7 +313,7 @@ func TestValueParsing(t *testing.T) {
 		{"Spring", "Mix", "40", "%", 40, false},
 		{"Brit 2203", "Output", "-6dB", "", -6, false},
 		{"Low-High Cut", "HPF Freq", "0.1 kHz", "", 100, false},
-		{"Low-High Cut", "Low Cut", "150 Hz", "", 150, false}, // alias
+		{"Low-High Cut", "Low Cut", "150 Hz", "", 150, false},   // alias
 		{"110 US PRN C10R", "HPF", "Off", "", 20, true},         // min label OFF, the default
 		{"110 US PRN C10R", "Mic 1 Pan", "Center", "", 5, true}, // pan centre, the default
 		{"Spring", "Trails", "on", "", 0, true},                 // switch at its default
@@ -343,10 +350,11 @@ func TestRefusals(t *testing.T) {
 		want  string
 	}{
 		{"unknown block", preset(block("Plate Reverb")), "", "not a block on the device"},
-		{"capture by library", preset(block("66 AC30 JMP OD")), "", "captures and IRs"},
-		{"capture annotation", preset(block("Brit 2203 (capture)")), "", "captures and IRs"},
-		{"catalog capture slot", preset(block("Eltron 30")), "", "captures and IRs"},
-		{"IR loader", preset(block("Dual (M)")), "", "captures and IRs"},
+		{"cab IR from the library", preset(block("FNDR TWDLX IN Edge BAL CAB")), "", "cab IR"},
+		{"capture annotation without a library entry", preset(block("Brit 2203 (capture)")), "", "isn't in coros_map.json or user_captures.json"},
+		{"catalog capture slot", preset(block("Eltron 30")), "", "needs a specific capture"},
+		{"IR loader", preset(block("Dual (M)")), "", "IR loaders are not pushed"},
+		{"capture param unknown", preset(block("CA John's", prm("Presence", "+1 dB", ""))), "", "not a control of"},
 		{"unowned plugin", preset(block("John Mayer Spring Reverb")), "", "needs the John Mayer plugin"},
 		{"FX loop", preset(block("FX Loop 1")), "", "FX Loop blocks are not pushed"},
 		{"splitter", preset(block("Splitter AB")), "", "Splitter blocks are not pushed"},
@@ -359,7 +367,6 @@ func TestRefusals(t *testing.T) {
 		{"unknown param", preset(block("Myth Drive", prm("Bass", "5", ""))), "", "not a control of Myth Drive"},
 		{"internal param", preset(block("110 US PRN C10R", prm("phi", "1", ""))), "", "internal device parameter"},
 		{"written twice", preset(block("Low-High Cut", prm("HPF FREQ", "100", ""), prm("Low Cut", "120", ""))), "", "written twice"},
-		{"mic choice", preset(block("110 US PRN C10R", prm("Mic 1", "Dynamic 57", ""))), "", "IR-name string"},
 		{"cab blend", preset(block("110 US PRN C10R", prm("Blend", "50%", ""))), "", "no Blend control"},
 		{"no value", preset(block("Myth Drive", prm("Gain", "", ""))), "", "no value"},
 		{"unparseable", preset(block("Myth Drive", prm("Gain", "noon", ""))), "", "unparseable value"},
@@ -371,12 +378,11 @@ func TestRefusals(t *testing.T) {
 		{"out of range in B", preset(block("Myth Drive", prm("Gain", "5", "12"))), "", "cannot convert"},
 		{"pan", preset(block("110 US PRN C10R", prm("Mic 1 Pan", "L20", ""))), "", "pan display scale"},
 		{"unitless 0..1", preset(block("Crying Clyde Wah", prm("Wah", "0.4", ""))), "", "unitless 0..1"},
-		{"switch off default", preset(block("Spring", prm("Trails", "Off", ""))), "", "no measured wire mapping"},
+		{"combo box off default", preset(block("Tremolo", prm("Waveform", "Square", ""))), "", "comboBox positions have no known wire mapping"},
+		{"fader", preset(block("Plugin Graphic-9", prm("65Hz", "3 dB", ""))), "", "type \"fader\" has no measured wire mapping"},
 		{"switch bad name", preset(block("Spring", prm("Trails", "Maybe", ""))), "", "isn't a position"},
 		{"unnamed switch named", preset(block("Jewel", prm("High Cut", "On", ""))), "", "isn't a position"},
-		{"skew 0.6", preset(block("Slapback Delay", prm("Delay Time", "120 ms", ""))), "", "taper skew 0.6 is not confirmed"},
-		{"skew 4.93", preset(block("110 US PRN C10R", prm("Output Volume", "-3 dB", ""))), "", "taper skew 4.93 is not confirmed"},
-		{"pyquadcortex bound", preset(block("Parametric-8", prm("1 Gain", "3 dB", ""))), "", "bound MIN_EQ_DB = -12 is pyquadcortex"},
+		{"pyquadcortex bound, out of range", preset(block("Parametric-8", prm("1 Gain", "15 dB", ""))), "", "cannot convert"},
 		{"bad bypass", preset(block("Myth Drive", prm("Bypass", "Engaged", ""))), "", "Bypass must be On"},
 		{"legacy bypass", legacy(block("Myth Drive", prm("Bypass", "On", ""))), "", "predates the rule"},
 		{"nine blocks", preset(nine()...), "", "the chain has 9 grid blocks"},
@@ -398,9 +404,9 @@ func TestRefusals(t *testing.T) {
 	}
 }
 
-// TestLogSkewRefused finds a real LOG_SKEW parameter and checks it is refused even though
-// its stored skew (0.3) equals a confirmed numeric skew.
-func TestLogSkewRefused(t *testing.T) {
+// TestLogSkewLabelled finds the real LOG_SKEW parameters and checks they convert with the
+// pyquadcortex label, though their stored skew (0.3) equals a measured numeric skew.
+func TestLogSkewLabelled(t *testing.T) {
 	cat, _ := catalog.Embedded()
 	found := 0
 	for _, m := range cat.Models {
@@ -409,13 +415,147 @@ func TestLogSkewRefused(t *testing.T) {
 				continue
 			}
 			found++
-			if why := taperRefusal(p); !strings.Contains(why, "LOG_SKEW") {
-				t.Errorf("%s %s: taperRefusal = %q", m.Name, p.Name, why)
+			ev, why := taperEvidence(p)
+			if why != "" || len(ev) == 0 || ev[0] != "taper:pyquadcortex" {
+				t.Errorf("%s %s: evidence %v, refusal %q", m.Name, p.Name, ev, why)
 			}
 		}
 	}
 	if found == 0 {
 		t.Fatal("no LOG_SKEW parameter in the catalog; the importer lost skew_symbol")
+	}
+}
+
+// TestEvidenceLabels pins what each kind of mapping is labelled with (plan 4.1).
+func TestEvidenceLabels(t *testing.T) {
+	e := testExporter(t)
+	cases := []struct {
+		model, param, value string
+		want                []string
+	}{
+		{"Myth Drive", "Gain", "3", []string{"taper:g4"}},
+		{"Brit 2203", "Output", "-6 dB", []string{"taper:g4"}},
+		{"110 US PRN C10R", "Mic 1 Level", "-3 dB", []string{"taper:g4", "bounds:g4"}},
+		{"Slapback Delay", "Delay Time", "120 ms", []string{"taper:device-xml"}},
+		{"110 US PRN C10R", "Output Volume", "-3 dB", []string{"taper:device-xml"}},
+		{"Parametric-8", "1 Gain", "3 dB", []string{"taper:g4", "bounds:pyquadcortex-4.0.1"}},
+		{"Spring", "Trails", "Off", []string{"encoding:qc-mcp-linear"}},
+	}
+	for _, c := range cases {
+		ex, p := export(t, e, preset(block(c.model, prm(c.param, c.value, ""))), "g")
+		if len(ex.Unresolved) != 0 || len(p.Rows[0].Blocks[0].Params) != 1 {
+			t.Errorf("%s %s: %+v", c.model, c.param, ex.Unresolved)
+			continue
+		}
+		pr := p.Rows[0].Blocks[0].Params[0]
+		if strings.Join(pr.Evidence, ",") != strings.Join(c.want, ",") {
+			t.Errorf("%s %s: evidence %v, want %v", c.model, c.param, pr.Evidence, c.want)
+		}
+		confirmed := true
+		for _, w := range c.want {
+			confirmed = confirmed && strings.HasSuffix(w, ":g4")
+		}
+		if ex.Summary[0].Params[0].Unconfirmed == confirmed {
+			t.Errorf("%s %s: plan Unconfirmed = %v", c.model, c.param, ex.Summary[0].Params[0].Unconfirmed)
+		}
+	}
+}
+
+// TestSwitchEncoding checks qc-mcp's linear position encoding, wire = (value-min)/(max-min).
+func TestSwitchEncoding(t *testing.T) {
+	e := testExporter(t)
+	cases := []struct {
+		model, param, a, b string
+		wire               [2]float64
+		names              [2]string
+	}{
+		{"Spring", "Trails", "Off", "On", [2]float64{0, 1}, [2]string{"Off", "On"}},
+		{"Low-High Cut", "HPF Slope", "-6", "-48", [2]float64{1.0 / 8, 1}, [2]string{"-6", "-48"}},
+		{"Jewel", "High Cut", "1", "", [2]float64{1, 1}, [2]string{}},
+	}
+	for _, c := range cases {
+		ex, p := export(t, e, preset(block(c.model, prm(c.param, c.a, c.b))), "g")
+		if len(ex.Unresolved) != 0 {
+			t.Fatalf("%s %s: %+v", c.model, c.param, ex.Unresolved)
+		}
+		pr := p.Rows[0].Blocks[0].Params[0]
+		if pr.Wire[0] != c.wire[0] || pr.Wire[1] != c.wire[1] || pr.Wire[2] != c.wire[0] {
+			t.Errorf("%s %s: wire %v, want A %v B %v", c.model, c.param, pr.Wire, c.wire[0], c.wire[1])
+		}
+		if c.names[0] != "" && (ex.Summary[0].Params[0].A != c.names[0] || ex.Summary[0].Params[0].B != c.names[1]) {
+			t.Errorf("%s %s: plan shows %+v", c.model, c.param, ex.Summary[0].Params[0])
+		}
+	}
+}
+
+// TestDefaultMics: a cab's Mic 1/Mic 2 equal to the slot's default IR name is at-default.
+func TestDefaultMics(t *testing.T) {
+	e := testExporter(t)
+	sp := preset(block("110 US PRN C10R",
+		prm("Mic 1", "Dyn 57", ""), prm("Mic 2", "ribbon 160 - off axis", "Ribbon 160"), prm("Mic 1 Level", "-3 dB", "")))
+	ex, p := export(t, e, sp, "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved: %+v", ex.Unresolved)
+	}
+	b := p.Rows[0].Blocks[0]
+	if strings.Join(b.AtDefault, ",") != "MIC 1,MIC 2" || len(b.Params) != 1 {
+		t.Fatalf("block: %+v", b)
+	}
+}
+
+// TestCaptureBlock: a library capture exports as a Neural Capture block with no model id,
+// the capture's name and source, and its five controls on the capture block's layout.
+func TestCaptureBlock(t *testing.T) {
+	e := testExporter(t)
+	sp := preset(block("CA John's", prm("Gain", "0 dB", "+3 dB"), prm("Treble", "-1.5 dB", ""), prm("Bass", "0", ""), prm("Bypass", "Off", "")),
+		block("66 AC30 JMP OD (capture)", prm("Volume", "+1 dB", "")))
+	ex, p := export(t, e, sp, "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved: %+v", ex.Unresolved)
+	}
+	john, ac30 := p.Rows[0].Blocks[0], p.Rows[0].Blocks[1]
+	if john.ModelID != 0 || john.Capture == nil || *john.Capture != (Capture{Name: "CA John's", Source: "factory"}) ||
+		john.Category != "Neural Capture" || john.IndexEvidence != "capture-block" {
+		t.Fatalf("capture block: %+v", john)
+	}
+	if len(john.Params) != 2 || john.Params[0].Label != "GAIN" || john.Params[0].Index != 0 ||
+		john.Params[1].Label != "TREBLE" || john.Params[1].Index != 3 || !john.Params[0].SceneMode {
+		t.Fatalf("capture params: %+v", john.Params)
+	}
+	if w := john.Params[0].Wire; w[0] != 0.5 || w[1] != 27.0/48 {
+		t.Errorf("GAIN wire %v, want 0.5 and %v (linear -24..24 dB)", w, 27.0/48)
+	}
+	if strings.Join(john.AtDefault, ",") != "BASS" {
+		t.Errorf("at default: %v", john.AtDefault)
+	}
+	if ac30.Capture == nil || ac30.Capture.Name != "66 AC30 JMP OD" || ac30.Capture.Source != "user" {
+		t.Fatalf("annotated capture: %+v", ac30.Capture)
+	}
+	if ex.Summary[0].Capture != "CA John's" || ex.Summary[0].ModelID != 0 {
+		t.Errorf("plan block: %+v", ex.Summary[0])
+	}
+}
+
+// TestCaptureBlockLayouts: the V1 (14000) and V2 (14001) capture blocks share the controls
+// a capture block exports, so the agent can pick either by the capture's version.
+func TestCaptureBlockLayouts(t *testing.T) {
+	cat, _ := catalog.Embedded()
+	var v1, v2 *catalog.Model
+	for i := range cat.Models {
+		switch cat.Models[i].ID {
+		case 14000:
+			v1 = &cat.Models[i]
+		case 14001:
+			v2 = &cat.Models[i]
+		}
+	}
+	if v1 == nil || v2 == nil {
+		t.Fatal("capture blocks missing from the catalog")
+	}
+	a, _ := json.Marshal(v1.Params)
+	b, _ := json.Marshal(v2.Params)
+	if !bytes.Equal(a, b) || v1.ParamCount != v2.ParamCount {
+		t.Fatalf("V1 and V2 capture blocks differ:\n%s\n%s", a, b)
 	}
 }
 
@@ -581,4 +721,37 @@ func nine() []storage.EffectBlock {
 		out[i] = block("Myth Drive")
 	}
 	return out
+}
+
+// taperRefusal is why taperEvidence refuses a parameter, or "".
+func taperRefusal(p catalog.Param) string {
+	_, why := taperEvidence(p)
+	return why
+}
+
+// TestNonDefaultMicIsAWarning: a mic other than the cab's default is left out with a warning
+// (owner decision, plan 4.1). The push isn't blocked and the mic isn't written.
+func TestNonDefaultMicIsAWarning(t *testing.T) {
+	e := testExporter(t)
+	sp := preset(block("110 US PRN C10R",
+		prm("Mic 1", "Dyn 57", "Condenser 414"), prm("Mic 2", "Ribbon 121", ""), prm("Mic 1 Level", "-3 dB", "")))
+	ex, p := export(t, e, sp, "g")
+	if len(ex.Unresolved) != 0 {
+		t.Fatalf("unresolved: %+v", ex.Unresolved)
+	}
+	if len(ex.Warnings) != 2 || len(p.Warnings) != 2 {
+		t.Fatalf("warnings: %+v", ex.Warnings)
+	}
+	for i, want := range []string{`"Condenser 414" can't be written yet`, `"Ribbon 121" can't be written yet`} {
+		if !strings.Contains(ex.Warnings[i].Reason, want) {
+			t.Errorf("warning %d %q lacks %q", i, ex.Warnings[i].Reason, want)
+		}
+	}
+	if !strings.Contains(ex.Warnings[1].Reason, "keeps its default Ribbon 160") {
+		t.Errorf("warning doesn't name the default: %q", ex.Warnings[1].Reason)
+	}
+	b := p.Rows[0].Blocks[0]
+	if len(b.AtDefault) != 0 || len(b.Params) != 1 || b.Params[0].Label != "MIC 1 LEVEL" {
+		t.Fatalf("block: %+v", b)
+	}
 }
