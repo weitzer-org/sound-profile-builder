@@ -460,10 +460,11 @@ Kept open by the owner (2026-11-06). Strike each one through with its date and P
 4. ~~**Architect pan scale**~~ (2026-11-06, branch `claude/architect-pan-scale`). The Architect now sees each pan's catalog range, default and L/R ends (`PAN 0=L..10=R d5`), and the export and read-back take a plain number on that range (`scale:catalog-range`, † in the dry run). **Still unverified on the unit:** what the screen shows for a pan (owner, P6: push a non-center pan and read the screen). Old v6 evals wrote every pan `0` before they were shown the scale, so exporting one of them now pushes hard left, not center; only presets generated after this change mean what they say.
 5. **P4b library sync** (Chat 7 in section 11). It uploads the unit's capture list, so the dry run resolves captures before a push. It also collects the cab mic strings seen on the unit, so a non-default mic can be written exactly instead of becoming a warning.
 6. **Visual e2e baseline.** The visual snapshot test fails on `main` in the cloud sandbox. Re-record it in the `mcr.microsoft.com/playwright:v1.58.2` container (CLAUDE.md, Tests) and review the new images before committing them.
-7. **G1-G6 push rules on the agent** (the PR replacing #142, branch `claude/qc-agent-g1-g6-mw3f1k`): built and
-   tested offline only. On the unit it still needs README hardware step 13: the bypass control at `param_count + 1`
-   on blocks other than the Spring (capture blocks included), a footswitch's effect on a scene-assigned bypass, the
-   defaults log, and the watchdog during a blocking HID call. Strike this through when step 13 has been run.
+7. **G1-G6 push rules on the agent** (PR #150, merged 2026-11-06): built and tested offline only. On the unit it
+   still needs README hardware step 13: the bypass control at `param_count + 1` on blocks other than the Spring
+   (capture blocks included), the defaults log, and the watchdog during a blocking HID call. Strike this through
+   when step 13 has been run. Answered by the owner (2026-11-06): a block's stomp footswitch acts across all
+   scenes, not per scene, even with its bypass written per scene.
 
 ## 9. Which model does what
 

@@ -184,8 +184,8 @@ them; this guide uses **24H**).
     - every block in the push, not only one that varies by scene, reads back its eight bypass flags as planned. G6
       checked the bypass control at `param_count + 1` on the Spring only; this is the first check on amps, drives,
       cabs, EQs and capture blocks;
-    - with a block bypassed in Scene B, press that block's footswitch in Scene A and switch to B: tell me whether the
-      footswitch changed only Scene A (whether a footswitch acts per scene once bypass is scene-assigned is unknown);
+    - (no check needed) a block's stomp footswitch acts across all scenes, not per scene, even though the bridge
+      writes the block's bypass per scene (owner, on the unit, 2026-11-06);
     - send the `default differs` and `default not compared` lines from `agent.log` (they show whether every control of
       a newly placed block starts at its catalog default; never a failure);
     - unplug the USB cable in the middle of a push once: the job should fail with `unit_absent` within a few seconds
