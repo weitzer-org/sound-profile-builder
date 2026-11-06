@@ -94,11 +94,11 @@ class Strict(unittest.TestCase):
         self.assertNotIn(secret, msg)
 
     def test_unknown_and_duplicate_lines(self):
-        with self.assertRaises(cfg.ConfigError):
+        with self.assertRaisesRegex(cfg.ConfigError, "unknown setting QC_AGENT_BUCKET"):
             cfg.parse_env_text("QC_AGENT_BUCKET=x\n")
-        with self.assertRaises(cfg.ConfigError):
+        with self.assertRaisesRegex(cfg.ConfigError, "QC_AGENT_IDLE_MINUTES is set twice"):
             cfg.parse_env_text("QC_AGENT_IDLE_MINUTES=1\nQC_AGENT_IDLE_MINUTES=2\n")
-        with self.assertRaises(cfg.ConfigError):
+        with self.assertRaisesRegex(cfg.ConfigError, "expected NAME=value"):
             cfg.parse_env_text("not a line\n")
 
     def test_environment_does_not_override_the_file(self):
@@ -129,7 +129,7 @@ class Slots(unittest.TestCase):
         self.assertFalse(r.contains("19H") or r.contains("26A") or r.contains("30B"))
         self.assertFalse(r.contains("20A\n"))
         self.assertEqual(r.labels(), ["20A-25H", "30A"])
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "ranges such as 20A-25H"):
             SlotRanges.parse(",".join(["1A"] * 17))
 
 
