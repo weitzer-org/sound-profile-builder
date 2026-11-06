@@ -56,7 +56,7 @@ import time
 from dataclasses import dataclass, field
 
 from . import captures, contract, slots, text
-from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, UnitAbsent, UnitBusy
+from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, PartialListing, UnitAbsent, UnitBusy
 from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
                                control_labels, default_wire, is_internal_param, validate)
 
@@ -863,10 +863,23 @@ class _Push:
                               f"{slot} on the unit to discard the partial grid.", firmware=self.fw, push=self.result)
         back = dev.read_current_preset()  # the listing takes ~15 s: the grid must still be the verified one
         _check_alive(ctx)
-        if back is None or _diff(self.plan, back)[0] or _stomp_problems(self.plan, back):
-            return failed("readback_mismatch", "The grid changed after it was verified (edited on the unit?). "
-                          "Nothing was saved; re-select the slot to discard the edits.",
-                          firmware=self.fw, push=self.result)
+        if back is None:
+            log.warning("pre-save re-read: the read timed out")
+            return failed("device_error", "The re-read just before the save timed out. Nothing was saved; "
+                          "re-select the slot on the unit to discard the edits.", firmware=self.fw, push=self.result)
+        mismatches, diff, problems = _diff(self.plan, back)
+        stomp_problems = _stomp_problems(self.plan, back)
+        if mismatches or stomp_problems:
+            bad = [f"column {d['col']} param {d['param_index']}: expected {d['expected']}, read {d['readback']}"
+                   for d in diff if not d.get("ok")]  # numeric values: ours and the unit's, not device text
+            for pr in (stomp_problems + problems + bad)[:10]:
+                log.warning("pre-save re-read: %s", text.clean(pr, 200))
+            what = ("the footswitch assignments differ" if stomp_problems and not mismatches
+                    else "values or bypass flags differ" if mismatches and not stomp_problems
+                    else "values and footswitch assignments differ")
+            return failed("readback_mismatch", f"The grid changed after it was verified (edited on the unit?): "
+                          f"{what} from the plan in {mismatches + len(stomp_problems)} place(s). Nothing was "
+                          "saved; re-select the slot to discard the edits.", firmware=self.fw, push=self.result)
         if not self.still_open():  # File CREATE saves whatever grid is live: the slot must still be the open one
             return failed("device_error", "Another preset was selected on the unit just before the save. "
                           "Nothing was saved.", firmware=self.fw, push=self.result)
@@ -879,13 +892,19 @@ class _Push:
             # the saved flag; the traceback goes to the log so a bug is still visible
             log.error("could not record the owned slot %s: %s", slot, text.clean(str(e), 200), exc_info=True)
         listed = False
-        for _ in range(SAVE_LIST_POLLS):
+        for n in range(SAVE_LIST_POLLS):
             ctx.sleep(SAVE_LIST_INTERVAL_S)
             _check_alive(ctx)
             try:
                 snap = dev.read_directory()
             except (UnitAbsent, UnitBusy):
                 raise
+            except PartialListing as e:
+                # Inferred, not established: after File CREATE the unit may send a My Presets update carrying only
+                # the changed slot. A short table is never the full one, so this listing doesn't count (and is
+                # never "listed"); the backend already logged what it carried. No merge rule is invented.
+                log.warning("post-save listing %d/%d did not count: %s", n + 1, SAVE_LIST_POLLS, e)
+                continue
             except DeviceError as e:
                 # The save was issued. One incomplete listing (seen on the owner's unit: "My Presets is missing")
                 # says nothing about whether it landed: look again rather than fail a push that may have worked.

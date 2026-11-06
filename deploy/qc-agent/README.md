@@ -269,6 +269,14 @@ them; this guide uses **24H**).
     A push the agent refuses with "scenes with the same source must carry the same values" means the PC is on an
     older clone: pull `main`.
 
+18. **Save confirmation (P6 follow-up F1/F6; normal use).** Pull `main` on the PC first. A push now ends `succeeded`
+    ("Saved ...; read-back matched") instead of failed with "It may still land". If the unit sends a short My Presets
+    table after the save, `agent.log` shows `My Presets listed N entries, not 256: index=... name=...` (at most five
+    entries) and `post-save listing k/6 did not count`; that listing is skipped and never counted as "listed". If the
+    push still ends "may still land", paste those lines. A push that stops with "The grid changed after it was
+    verified" now says which cause (re-read timed out / values or bypass flags differ / footswitch assignments differ),
+    and `agent.log` has `pre-save re-read: ...` lines with the first differences.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.
