@@ -135,7 +135,9 @@ func TestNewLibraryAndStore(t *testing.T) {
 		t.Fatalf("round trip: %+v %v", got, err)
 	}
 	// a stored file of another format is refused, not trusted
-	_ = mem.WriteFile(ctx, "main", LibraryObject, []byte(`{"format":"other/9","captures":[]}`))
+	if err := mem.WriteFile(ctx, "main", LibraryObject, []byte(`{"format":"other/9","captures":[]}`)); err != nil {
+		t.Fatalf("test setup failed: %v", err)
+	}
 	if _, err := s.Library(ctx); err == nil {
 		t.Error("unknown format accepted")
 	}
@@ -155,12 +157,12 @@ func TestAddMics(t *testing.T) {
 	if err != nil || n != 2 {
 		t.Fatalf("%d %v", n, err)
 	}
-	if n, _ := s.AddMics(ctx, map[int][]string{12045: {"ME_110 US PRN C10R_Ribbon 121"}}, at); n != 0 {
-		t.Errorf("a repeat recorded %d", n)
+	if n, err := s.AddMics(ctx, map[int][]string{12045: {"ME_110 US PRN C10R_Ribbon 121"}}, at); err != nil || n != 0 {
+		t.Errorf("a repeat recorded %d, err %v (want 0, nil)", n, err)
 	}
-	n, _ = s.AddMics(ctx, map[int][]string{12045: {"ME_110 US PRN C10R_Condenser 414"}, 12046: {"x"}}, at)
-	m, _ := s.Mics(ctx)
-	if n != 2 || len(m.For(12045)) != 3 || m.Total() != 4 {
+	n, err = s.AddMics(ctx, map[int][]string{12045: {"ME_110 US PRN C10R_Condenser 414"}, 12046: {"x"}}, at)
+	m, merr := s.Mics(ctx)
+	if err != nil || merr != nil || n != 2 || len(m.For(12045)) != 3 || m.Total() != 4 {
 		t.Errorf("union: %d %+v", n, m)
 	}
 	// bounded
@@ -264,12 +266,16 @@ func TestStoredLibraryIsRevalidatedOnRead(t *testing.T) {
 		"bad timestamp":   `{"format":"qc2-device-library/1","synced_at":"later","captures":[]}`,
 		"bad version":     `{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"` + k + `","version":7,"kind":"user","folder":"F","cloud":false}]}`,
 	} {
-		_ = mem.WriteFile(ctx, "main", LibraryObject, []byte(body))
+		if err := mem.WriteFile(ctx, "main", LibraryObject, []byte(body)); err != nil {
+			t.Fatalf("%s: test setup failed: %v", name, err)
+		}
 		if _, err := s.Library(ctx); err == nil {
 			t.Errorf("%s accepted", name)
 		}
 	}
-	_ = mem.WriteFile(ctx, "main", LibraryObject, []byte(`{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"`+k+`","version":0,"kind":"user","folder":"F","cloud":true}]}`))
+	if err := mem.WriteFile(ctx, "main", LibraryObject, []byte(`{"format":"qc2-device-library/1","synced_at":"2026-11-06T12:00:00Z","captures":[{"name":"A","key":"`+k+`","version":0,"kind":"user","folder":"F","cloud":true}]}`)); err != nil {
+		t.Fatalf("test setup failed: %v", err)
+	}
 	if l, err := s.Library(ctx); err != nil || len(l.Captures) != 1 {
 		t.Errorf("a valid list was refused: %v", err)
 	}
