@@ -78,6 +78,8 @@ var goldenCases = []struct{ preset, guitar string }{
 	{"03_British_Invasion", "Gibson ES-339 Humbuckers"},
 	{"05_Clapton", "Gibson ES-339 Humbuckers"},
 	{"pushable_g3", "Gibson ES-339 Humbuckers"},
+	// Faders (owner decision 2026-11-06): a 0..10 amp EQ and a dB graphic EQ, labelled guesses.
+	{"pushable_faders", "Gibson ES-339 Humbuckers"},
 }
 
 // golden is what a golden file holds: the payload plus the readable plan.
@@ -382,7 +384,9 @@ func TestRefusals(t *testing.T) {
 		{"unitless 0..1 with a unit", preset(block("Crying Clyde Wah", prm("Wah", "40%", ""))), "", "only a plain number on its 0..1 scale"},
 		{"unitless 0..1 on another scale", preset(block("Crying Clyde Wah", prm("Wah", "40", ""))), "", "cannot convert"},
 		{"combo box off default", preset(block("Tremolo", prm("Waveform", "Square", ""))), "", "comboBox positions have no known wire mapping"},
-		{"fader", preset(block("Plugin Graphic-9", prm("65Hz", "3 dB", ""))), "", "type \"fader\" has no measured wire mapping"},
+		{"fader with a unit of another dimension", preset(block("Plugin Graphic-9", prm("65Hz", "3 Hz", ""))), "", "the control is in dB"},
+		{"fader out of range", preset(block("Plugin Graphic-9", prm("65Hz", "13 dB", ""))), "", "cannot convert"},
+		{"floatWithLed", preset(block("Reverse Delay (M)", prm("Trig Threshold", "-10 dB", ""))), "", "type \"floatWithLed\" has no measured wire mapping"},
 		{"switch bad name", preset(block("Spring", prm("Trails", "Maybe", ""))), "", "isn't a position"},
 		{"unnamed switch named", preset(block("Jewel", prm("High Cut", "On", ""))), "", "isn't a position"},
 		{"pyquadcortex bound, out of range", preset(block("Parametric-8", prm("1 Gain", "15 dB", ""))), "", "cannot convert"},

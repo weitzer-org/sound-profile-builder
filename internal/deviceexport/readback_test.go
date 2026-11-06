@@ -849,7 +849,8 @@ func TestUnmatchedCaptureNameStaysOutOfRationale(t *testing.T) {
 
 func TestUnconvertedCountIsComplete(t *testing.T) {
 	e := importExporter(t)
-	res := importOf(t, e, rbJSON(t, 3008, nil, nil))
+	// Reverse Delay (M): TRIG THRESHOLD is a floatWithLed, which still has no mapping (faders do).
+	res := importOf(t, e, rbJSON(t, 6013, nil, nil))
 	if res.UnconvertedCount < len(res.Unconverted) || res.UnconvertedCount == 0 {
 		t.Fatalf("count %d, listed %d", res.UnconvertedCount, len(res.Unconverted))
 	}

@@ -466,7 +466,7 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 	if catalog.DiscreteParamTypes[cp.Type] {
 		return im.discrete(lp, rp)
 	}
-	if cp.Type != "float" {
+	if !catalog.ContinuousParamTypes[cp.Type] {
 		return storage.BlockParameter{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
 	}
 	var wire [Scenes]float64
@@ -477,7 +477,7 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 		}
 		wire[s] = w
 	}
-	evidence, why := taperEvidence(cp)
+	evidence, why := paramEvidence(cp) // a fader reads back on the export's rule, labelled FaderEvidence
 	if why != "" {
 		return storage.BlockParameter{}, false, why
 	}
@@ -518,8 +518,8 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 // discrete reads a switch, rotary switch or toggle back with qc-mcp's linear position
 // encoding, wire = (position) / (max - min) (plan 4.1; the same rule the export writes
 // with, labelled "encoding:qc-mcp-linear"). A wire value that is not a whole position is
-// refused, not rounded: the encoding is then wrong for this control. Combo boxes and faders
-// have no known mapping.
+// refused, not rounded: the encoding is then wrong for this control. Combo boxes have no
+// known mapping; faders are not handled here (param reads them like floats).
 func (im *importer) discrete(lp catalog.LabelledParam, rp devicejobs.ReadbackParam) (storage.BlockParameter, bool, string) {
 	cp := lp.Param
 	if !linearSwitchTypes[cp.Type] {

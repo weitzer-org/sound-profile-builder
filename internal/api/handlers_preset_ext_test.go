@@ -743,3 +743,13 @@ func TestHandleUpdateParameter_UnitRoundTrip(t *testing.T) {
 		t.Errorf("Re-rendered field duplicated the unit: %s", html)
 	}
 }
+
+// A preset with only structured data (no legacy_html) shows its effect rationale in the
+// fallback table (#57).
+func TestRenderTweakingWorkspace_StructuredOnlyShowsRationale(t *testing.T) {
+	payload := `{"guitars":{"Tele":[{"id":"b1","type":"Amplifier","model":"Brit 2203","rationale":"Tight low end","parameters":[{"name":"Gain","value":"5"}]}]}}`
+	out := renderTweakingWorkspaceHTML(&storage.Preset{ID: "p1", Name: "Draft Preset", Payload: payload}, false, false)
+	if !strings.Contains(out, "Rationale: Tight low end") {
+		t.Errorf("rationale missing from fallback table: %s", out)
+	}
+}

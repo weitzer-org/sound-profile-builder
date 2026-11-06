@@ -1,0 +1,403 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "dbdda9031a32e3483675b7dc89b0499e876596711f64835fb2bc6ed40e8289f4",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "CA John's 2C Ch1",
+   "model_id": 1139,
+   "params": [
+    {
+     "name": "GAIN",
+     "a": "4",
+     "b": "6"
+    },
+    {
+     "name": "80 Hz",
+     "a": "5",
+     "b": "7.5",
+     "unconfirmed": true
+    },
+    {
+     "name": "240 Hz",
+     "a": "2.5",
+     "unconfirmed": true
+    },
+    {
+     "name": "6600 Hz",
+     "a": "10",
+     "unconfirmed": true
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "model": "Plugin Graphic-9",
+   "model_id": 4006,
+   "params": [
+    {
+     "name": "65Hz",
+     "a": "6 dB",
+     "b": "-4.5 dB",
+     "unconfirmed": true
+    },
+    {
+     "name": "500Hz",
+     "a": "-12 dB",
+     "unconfirmed": true
+    },
+    {
+     "name": "2kHz",
+     "a": "12 dB",
+     "unconfirmed": true
+    },
+    {
+     "name": "8kHz",
+     "a": "0 dB",
+     "b": "3 dB",
+     "unconfirmed": true
+    },
+    {
+     "name": "LPF",
+     "a": "8000 Hz",
+     "unconfirmed": true
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  }
+ ],
+ "unresolved": [],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
+  },
+  "guitar": "Gibson ES-339 Humbuckers",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 1139,
+      "model": "CA John's 2C Ch1",
+      "category": "Guitar Amplifier",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN",
+        "scene_mode": true,
+        "display": [
+         4,
+         6,
+         4,
+         4,
+         4,
+         4,
+         4,
+         4
+        ],
+        "wire": [
+         0.4,
+         0.6,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 10,
+        "label": "80 Hz",
+        "scene_mode": true,
+        "display": [
+         5,
+         7.5,
+         5,
+         5,
+         5,
+         5,
+         5,
+         5
+        ],
+        "wire": [
+         0.5,
+         0.75,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 11,
+        "label": "240 Hz",
+        "scene_mode": false,
+        "display": [
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5
+        ],
+        "wire": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 14,
+        "label": "6600 Hz",
+        "scene_mode": false,
+        "display": [
+         10,
+         10,
+         10,
+         10,
+         10,
+         10,
+         10,
+         10
+        ],
+        "wire": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 1,
+      "model_id": 4006,
+      "model": "Plugin Graphic-9",
+      "category": "Equalizer",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 1,
+        "label": "65Hz",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         6,
+         -4.5,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.75,
+         0.3125,
+         0.75,
+         0.75,
+         0.75,
+         0.75,
+         0.75,
+         0.75
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 4,
+        "label": "500Hz",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -12,
+         -12,
+         -12,
+         -12,
+         -12,
+         -12,
+         -12,
+         -12
+        ],
+        "wire": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 6,
+        "label": "2kHz",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         12,
+         12,
+         12,
+         12,
+         12,
+         12,
+         12,
+         12
+        ],
+        "wire": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 8,
+        "label": "8kHz",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         0,
+         3,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "wire": [
+         0.5,
+         0.625,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "evidence": [
+         "encoding:fader-linear-guess"
+        ]
+       },
+       {
+        "index": 10,
+        "label": "LPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000,
+         8000
+        ],
+        "wire": [
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335,
+         0.5492789415877335
+        ],
+        "evidence": [
+         "taper:device-xml"
+        ]
+       }
+      ],
+      "at_default": []
+     }
+    ]
+   }
+  ],
+  "stomps": [],
+  "unresolved": [],
+  "warnings": []
+ }
+}

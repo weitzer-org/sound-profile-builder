@@ -30,7 +30,7 @@ that bind every device write, in the order they run for a push:
      placed. Then one read: the assignments must be exactly the planned ones (none missing, none extra,
      no secondary, none momentary) and the step-7 diff must still be clean, or the job fails before the
      save. Which physical switch an index lights, and that a switch toggles its block, is UNVERIFIED
-     until the owner checks the first such push on the unit (README step 15);
+     until the owner checks the first such push on the unit (README step 16);
   8. save only if the diff is clean: a second fresh listing still shows the slot empty, then the
      grid is re-read (the listing takes ~15 s) and the same slot is still open; File CREATE; then
      poll the listing (G3: it lags). A save the listing never shows is reported as FAILED, and the

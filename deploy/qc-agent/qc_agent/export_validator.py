@@ -26,8 +26,9 @@ What it checks, per the plan (sections 4 and 5) and the Phase 0 results (7.1/7.2
   differ;
 * each parameter's `evidence` (plan 4.1) names only known sources, and the wire values are the
   ones the catalog gives for those sources: the taper ((d-min)/(max-min))^skew for a float,
-  (d-min)/(max-min) for a switch position ("encoding:qc-mcp-linear"), so a conversion QC-2
-  got wrong is refused here too;
+  (d-min)/(max-min) for a switch position ("encoding:qc-mcp-linear"), and the float taper for a
+  fader ("encoding:fader-linear-guess", an unverified guess), so a conversion QC-2 got wrong
+  is refused here too;
 * eight boolean bypass flags per block; `unresolved` is empty; `warnings` (settings the push
   leaves out on purpose, e.g. a non-default cab mic) is a list of short items and changes nothing;
 * capture blocks (`capture`, model_id 0; plan 4.2): category Neural Capture, index_evidence
@@ -60,7 +61,7 @@ SCENE_SOURCES = ["A", "B"] + ["A"] * (SCENES - 2)  # G6: C-H are written explici
 MAX_STOMPS = 32
 STOMP_SWITCHES = "ABCDEFG"  # H is the owner's manual switch and is never assigned
 # Switch letter -> the transport's stomp_index. qc-mcp documents 0-7 = A-H (vendor/qc_mcp/transport.py:1174, 
-# assign_stomp's docstring); UNVERIFIED on the unit until the owner checks the first push by eye (README step 15).
+# assign_stomp's docstring); UNVERIFIED on the unit until the owner checks the first push by eye (README step 16).
 # H (7) has no entry, so it can never be planned.
 STOMP_INDEX = {s: i for i, s in enumerate(STOMP_SWITCHES)}
 VERIFIED_CLONE_BASES = frozenset({12000})  # catalog.VerifiedCloneBases: the one base G1 checked
@@ -86,7 +87,10 @@ PYQUADCORTEX_BOUNDS = {
 # The evidence labels the exporter writes (internal/deviceexport, plan 4.1).
 EVIDENCE = frozenset({"taper:g4", "taper:device-xml", "taper:pyquadcortex",
                       "bounds:g4", "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear",
-                      "scale:catalog-range"})
+                      "scale:catalog-range", "encoding:fader-linear-guess"})
+# A fader is converted like a float on its catalog range, as a labelled GUESS (owner decision,
+# 2026-11-06; plan 4.1): only a fader may carry FADER_EVIDENCE, and a fader must.
+FADER_EVIDENCE = "encoding:fader-linear-guess"
 LINEAR_SWITCH_TYPES = frozenset({"switch", "rotarySwitch", "toggleButton"})
 WIRE_TOLERANCE = 1e-9
 ROW, IN_PORT, OUT_PORT = 0, 1, 19  # qc-mcp clear_grid default routing; read back exactly in G3
@@ -277,7 +281,7 @@ def _expected_wire(cp, lo, hi, d):
     r = (d - lo) / (hi - lo)
     if cp["type"] in LINEAR_SWITCH_TYPES:
         return r
-    if cp["type"] != "float":
+    if cp["type"] not in ("float", "fader"):  # fader: the float rule, labelled a guess
         raise ExportRefused(f"{cp['name']}: type {cp['type']!r} has no wire mapping the agent can check")
     skew = cp.get("skew", 1.0)
     if isinstance(skew, bool) or not isinstance(skew, (int, float)) or not skew > 0:
@@ -295,6 +299,9 @@ def _check_param_evidence(pw, cp, ev):
     switch = cp["type"] in LINEAR_SWITCH_TYPES
     if switch != ("encoding:qc-mcp-linear" in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter")
+    if (cp["type"] == "fader") != (FADER_EVIDENCE in ev):
+        raise ExportRefused(f"{pw}.evidence {ev} doesn't match a {cp['type']} parameter "
+                            f"({FADER_EVIDENCE} belongs on faders only, and every fader needs it)")
     symbolic = cp.get("min_symbol") is not None or cp.get("max_symbol") is not None
     if not switch and symbolic != any(e.startswith("bounds:") for e in ev):
         raise ExportRefused(f"{pw}.evidence {ev} doesn't match the catalog's bounds")

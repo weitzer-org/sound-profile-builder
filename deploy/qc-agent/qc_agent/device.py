@@ -20,7 +20,7 @@ Read shape (positional, as the unit reports it; plan 7.2 and G6): a preset is
 where i, j and k are array positions (in a read the unit leaves the row/column/index
 fields at 0, so the position is the address). A footswitch assignment carries its own
 row and column (qc-mcp reads them that way; UNVERIFIED on the unit until the first push
-with stomps is checked, README step 15).
+with stomps is checked, README step 16).
 """
 from __future__ import annotations
 
@@ -145,7 +145,7 @@ class DeviceBackend(ABC):
     @abstractmethod
     def assign_stomp(self, row: int, col: int, index: int) -> None:
         """Assign the block at (row, col) to footswitch `index` (0-6 = A-G; never H), primary and latching.
-        Only an armed stomp. Which physical switch an index is stays UNVERIFIED until README step 15."""
+        Only an armed stomp. Which physical switch an index is stays UNVERIFIED until README step 16."""
 
     @abstractmethod
     def save_to_slot(self, position: int, name: str) -> None:

@@ -54,7 +54,7 @@ It reads the grid back and diffs it; controls it didn't write are compared with 
 `stomps`, it then assigns each block's **footswitch** (qc-mcp's `assign_stomp`: primary, latching, never H), with
 the same open-slot and liveness checks before each, reads the grid again and fails the job unless the assignments are
 exactly the planned ones (none missing or extra, none secondary or momentary) and the values still match. Which
-physical switch each index is stays **unverified** until step 15. It saves only if the diff is clean, a second
+physical switch each index is stays **unverified** until step 16. It saves only if the diff is clean, a second
 fresh listing still shows the slot empty (and still resolves every capture to the same file), the grid re-read
 after that listing is still the verified one (footswitches included), and the slot is still open. A save the listing doesn't show within
 six polls (about 2 minutes) is reported **failed** ("may still land: check the slot"), and the slot stays in the
@@ -219,7 +219,18 @@ them; this guide uses **24H**).
       before the cab's values, so a reset would not lose them). If the cab sounds dead or shows no IR, tell me and
       delete the preset.
 
-15. **Footswitches (stomp layout, entry point 1; normal use).** Pull `main` on the PC first. On the first push whose
+15. **Faders (P2d; normal use, no extra session).** A fader (the Graphic-9 and Parallax bands, CA John's 2C tone faders)
+    is pushed with a **linear display-to-wire guess** that nobody has read on the unit: the dry run marks it † and
+    the export labels it `encoding:fader-linear-guess`. It is **UNVERIFIED** until you do this:
+    - Dry-run and push, into an empty slot, a preset with a **Graphic-9 (or Plugin Graphic-9) block whose 65Hz band is
+      +6 dB** (use LPF on the block so the name resolves to the fader model) and a **CA John's 2C Ch1 block whose 80 Hz
+      fader is 8**, both off default.
+    - Expect `succeeded` and `mismatches 0`. Then read both on the unit's screen: the band should show **+6.0 dB** and
+      the CA John's fader **8.0**. Check one more band at a negative value (for example -6 dB) if you like.
+    - Phone: `read_device_preset(import=true)`; the imported values should agree with the dry run.
+    - If a screen value differs, send a photo. The linear rule is then wrong for that fader type; the label stays a guess.
+
+16. **Footswitches (stomp layout, entry point 1; normal use).** Pull `main` on the PC first. On the first push whose
     dry run lists a **Footswitch layout**, expect `succeeded`, `mismatches 0`, and the message "N footswitch(es)
     assigned and read back". Then check **by eye**, with the unit in **Stomp** mode (you switch modes; the bridge never
     does):

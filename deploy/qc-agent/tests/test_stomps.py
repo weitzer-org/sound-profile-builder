@@ -10,7 +10,7 @@ Two levels, like the rest of the suite:
   assignment, a delete, H, or a block the push didn't place and confirm.
 
 Proves the agent's rules offline. Which physical switch an index is, and that a switch toggles its
-block, is UNVERIFIED until README step 15 has been run on the unit.
+block, is UNVERIFIED until README step 16 has been run on the unit.
 """
 import json
 import unittest

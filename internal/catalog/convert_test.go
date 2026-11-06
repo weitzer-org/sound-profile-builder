@@ -176,6 +176,7 @@ func TestConversionsRefuse(t *testing.T) {
 	bad("inverted range", Param{Name: "I", Type: "float", Min: f(5), Max: f(1)}, 0.5, 2, "empty or inverted")
 	bad("empty range", Param{Name: "E", Type: "float", Min: f(5), Max: f(5)}, 0.5, 5, "empty or inverted")
 	bad("switch type", Param{Name: "W", Type: "switch", Min: f(0), Max: f(1), Steps: 2}, 0.5, 1, "no measured wire mapping")
+	bad("floatWithLed type", Param{Name: "L", Type: "floatWithLed", Min: f(0), Max: f(1)}, 0.5, 1, "no measured wire mapping")
 	bad("combo type", Param{Name: "C", Type: "comboBox", Min: f(0), Max: f(3)}, 0.5, 1, "no measured wire mapping")
 	bad("zero skew", Param{Name: "Z", Type: "float", Min: f(0), Max: f(10), Skew: f(0)}, 0.5, 1, "skew")
 	bad("negative skew", Param{Name: "Z", Type: "float", Min: f(0), Max: f(10), Skew: f(-1)}, 0.5, 1, "skew")
@@ -255,5 +256,34 @@ func TestEverySymbolicBoundResolvedOrUnmeasured(t *testing.T) {
 		if _, both := UnmeasuredBounds[s]; both {
 			t.Errorf("%s is in both tables", s)
 		}
+	}
+}
+
+// A fader converts like a float (owner decision, 2026-11-06; deviceexport labels it a guess):
+// linear on its range when it has no skew, with the skew when it has one, and refuses what a float refuses.
+func TestFaderConvertsLikeAFloat(t *testing.T) {
+	db := Param{Name: "65Hz", Type: "fader", Min: f(-12), Max: f(12), Default: f(0), Units: "dB"}
+	for _, c := range []struct{ d, w float64 }{{-12, 0}, {-6, 0.25}, {0, 0.5}, {6, 0.75}, {12, 1}} {
+		if w, err := db.ToWire(c.d); err != nil || math.Abs(w-c.w) > 1e-12 {
+			t.Errorf("ToWire(%g) = %g, %v; want %g", c.d, w, err, c.w)
+		}
+		if d, err := db.ToDisplay(c.w); err != nil || math.Abs(d-c.d) > 1e-12 {
+			t.Errorf("ToDisplay(%g) = %g, %v; want %g", c.w, d, err, c.d)
+		}
+	}
+	for _, d := range []float64{-12.0001, 12.0001, math.NaN(), math.Inf(1)} {
+		if v, err := db.ToWire(d); err == nil {
+			t.Errorf("ToWire(%v) = %v, want a refusal (never clamped)", d, v)
+		} else if !strings.Contains(err.Error(), "outside") && !strings.Contains(err.Error(), "finite") {
+			t.Errorf("ToWire(%v): want an out-of-range or not-finite error, got %v", d, err)
+		}
+	}
+	// A fader that did carry a skew would use it, as qc-mcp's to_norm does for any parameter.
+	sk := Param{Name: "F", Type: "fader", Min: f(0), Max: f(10), Skew: f(2)}
+	if w, err := sk.ToWire(5); err != nil || math.Abs(w-0.25) > 1e-12 {
+		t.Errorf("skewed fader ToWire(5) = %g, %v; want 0.25", w, err)
+	}
+	if d, err := sk.ToDisplay(0.25); err != nil || math.Abs(d-5) > 1e-12 {
+		t.Errorf("skewed fader ToDisplay(0.25) = %g, %v; want 5", d, err)
 	}
 }

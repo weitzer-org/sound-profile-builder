@@ -58,6 +58,11 @@ func IsInternalParam(p Param) bool {
 	return internalParamTypes[p.Type] || internalParamNames[p.Name]
 }
 
+// ContinuousParamTypes are the types converted display <-> wire by range and skew
+// (Param.ToWire/ToDisplay). "fader" is there by owner decision (2026-11-06) as a labelled
+// guess, not a measurement; a type not listed is refused by default.
+var ContinuousParamTypes = map[string]bool{"float": true, "fader": true}
+
 // DiscreteParamTypes are the catalog parameter types with discrete positions.
 var DiscreteParamTypes = map[string]bool{"switch": true, "rotarySwitch": true, "toggleButton": true, "comboBox": true}
 
