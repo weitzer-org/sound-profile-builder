@@ -163,6 +163,12 @@ class Refusals(unittest.TestCase):
         # a clone of a base the unit never confirmed (a stereo cab on 32000) is refused outright
         self.refused(mutate(lambda p: swap(p, 0, 32001, index_evidence="clone-32000-g1")), "never checked")
 
+    def test_index_evidence_picked_by_controls(self):
+        # The exporter labels a same-name model picked by the block's controls (Graphic-9 is 4002 and 4005).
+        validate(mutate(lambda p: swap(p, 0, 4005, index_evidence="plain+picked-by-controls")), catalog(), "4.1.0")
+        # ... but only for a name more than one catalog model carries.
+        self.refused(mutate(lambda p: block(p, 2).update(index_evidence="plain+picked-by-controls")), "index_evidence")
+
     def test_params(self):
         def cab(param):
             return mutate(lambda p: block(p, 2).update(params=[param]))

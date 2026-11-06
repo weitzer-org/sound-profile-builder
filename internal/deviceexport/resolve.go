@@ -106,25 +106,41 @@ func (b *builder) resolveCapture(name string) (c *Capture, isCapture bool, why s
 
 // resolveModel picks the one device model a block name means, or says why it can't.
 func (b *builder) resolveModel(name string) (*catalog.Model, string) {
+	m, why, _ := b.resolveModelFor(name, nil)
+	return m, why
+}
+
+// PickedByControls is appended to a block's index_evidence when its name was ambiguous
+// (several device models, different controls) and the block's own parameters selected one.
+const PickedByControls = "+picked-by-controls"
+
+// resolveModelFor is resolveModel with the block's parameters in hand. For a name whose models
+// differ, it takes the one model whose controls cover every parameter the block writes and every
+// kept_defaults entry; with none or several fitting it stays ambiguous (never by id order).
+// picked reports that choice so the caller can label it.
+func (b *builder) resolveModelFor(name string, blk *storage.EffectBlock) (m *catalog.Model, why string, picked bool) {
 	if name == "" {
-		return nil, "the block has no model name"
+		return nil, "the block has no model name", false
 	}
 	ms := b.e.cat.Resolve(name)
 	if len(ms) == 0 {
-		return nil, "not a block on the device (no catalog model or mono/stereo family has this name)"
+		return nil, "not a block on the device (no catalog model or mono/stereo family has this name)", false
 	}
-	var m *catalog.Model
 	if ms[0].Name == name {
 		if len(ms) > 1 {
 			// Owner decision (2026-11-06): models that share a name and have identical
 			// controls are interchangeable; take the lowest id (Green 808 is 5 and 27, and
 			// G1 read a hand-placed Green 808 back as 5). Different layouts stay ambiguous.
 			if !sameLayout(ms) {
-				ids := make([]string, len(ms))
-				for i, x := range ms {
-					ids[i] = strconv.Itoa(x.ID)
+				if blk != nil {
+					if fit := modelsCovering(ms, blk); len(fit) == 1 {
+						return fit[0], b.modelRefusal(fit[0]), true
+					} else if len(fit) > 1 {
+						return nil, fmt.Sprintf("ambiguous: %d device models share this name with different controls and the block's parameters fit %d of them (ids %s); use a name that picks one", len(ms), len(fit), idList(fit)), false
+					}
+					return nil, fmt.Sprintf("ambiguous: %d device models share this name with different controls (ids %s) and none has every control the block uses; use a name that picks one", len(ms), idList(ms)), false
 				}
-				return nil, fmt.Sprintf("ambiguous: %d device models share this name with different controls (ids %s); use a name that picks one", len(ms), strings.Join(ids, ", "))
+				return nil, fmt.Sprintf("ambiguous: %d device models share this name with different controls (ids %s); use a name that picks one", len(ms), idList(ms)), false
 			}
 			m = ms[0]
 			for _, x := range ms[1:] {
@@ -132,7 +148,7 @@ func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 					m = x
 				}
 			}
-			return m, b.modelRefusal(m)
+			return m, b.modelRefusal(m), false
 		}
 		m = ms[0]
 	} else {
@@ -144,11 +160,51 @@ func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 			}
 		}
 		if len(mono) != 1 {
-			return nil, fmt.Sprintf("family %q has %d mono models; name the model exactly", name, len(mono))
+			return nil, fmt.Sprintf("family %q has %d mono models; name the model exactly", name, len(mono)), false
 		}
 		m = mono[0]
 	}
-	return m, b.modelRefusal(m)
+	return m, b.modelRefusal(m), false
+}
+
+func idList(ms []*catalog.Model) string {
+	ids := make([]string, len(ms))
+	for i, x := range ms {
+		ids[i] = strconv.Itoa(x.ID)
+	}
+	return strings.Join(ids, ", ")
+}
+
+// modelsCovering returns the models that have a control for every parameter the block writes
+// (Bypass excepted) and every kept_defaults entry, matched as block() matches them.
+func modelsCovering(ms []*catalog.Model, blk *storage.EffectBlock) []*catalog.Model {
+	var keys []string
+	for _, bp := range blk.Parameters {
+		if k := catalog.ParamNameKey(bp.Name); k != "BYPASS" {
+			keys = append(keys, k)
+		}
+	}
+	for _, kd := range blk.KeptDefaults {
+		keys = append(keys, catalog.ParamNameKey(kd))
+	}
+	var fit []*catalog.Model
+	for _, m := range ms {
+		byKey := map[string]catalog.LabelledParam{}
+		for _, lp := range catalog.LabelParams(m) {
+			byKey[lp.Key] = lp
+		}
+		ok := true
+		for _, k := range keys {
+			if _, found := lookup(byKey, k); !found {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			fit = append(fit, m)
+		}
+	}
+	return fit
 }
 
 // sameLayout reports whether every model has the same category, parameter count and
@@ -236,13 +292,18 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			modelerType: blk.Type}
 	default:
 		var why string
-		m, why = b.resolveModel(name)
+		var picked bool
+		m, why, picked = b.resolveModelFor(name, blk)
 		if why != "" {
 			b.refuse(ref, "", why)
 			return nil, nil
 		}
+		ev := indexEvidence(m)
+		if picked {
+			ev += PickedByControls
+		}
 		out = &Block{Col: col, ModelID: m.ID, Model: m.Name, Category: m.Category,
-			IndexEvidence: indexEvidence(m), Params: []Param{}, AtDefault: []string{}}
+			IndexEvidence: ev, Params: []Param{}, AtDefault: []string{}}
 		if plugin, gated := m.RequiredPlugin(); gated {
 			out.Plugin = plugin
 		}

@@ -205,9 +205,6 @@ func (im *importer) block(pb devicejobs.ReadbackPlaced, bypass *[Scenes]bool) (*
 		return nil, nil
 	default:
 		blk.Model = im.importName(m)
-		if _, why := (&builder{e: im.e}).resolveModel(m.Name); strings.Contains(why, "ambiguous") {
-			im.note(fmt.Sprintf("%s: several device models share this name with different controls, so re-pushing this draft will be refused as ambiguous", truncate(m.Name, 60)))
-		}
 	}
 	if plugin, gated := m.RequiredPlugin(); gated {
 		if plugin == "" {
@@ -265,6 +262,13 @@ func (im *importer) block(pb devicejobs.ReadbackPlaced, bypass *[Scenes]bool) (*
 	}
 	im.strings(blk, ref, m, byIdx, isCapture)
 	im.addBypass(blk, ref, bypass)
+	if !isCapture {
+		// The export picks among same-named models by the controls the block uses (resolveModelFor);
+		// say so when this draft's block would not come back to this model.
+		if got, why, _ := (&builder{e: im.e}).resolveModelFor(m.Name, blk); strings.Contains(why, "ambiguous") || (why == "" && got != nil && got.ID != m.ID) {
+			im.note(fmt.Sprintf("%s: several device models share this name with different controls and this draft's parameters don't single out this one, so re-pushing it will be refused as ambiguous or pick another model", truncate(m.Name, 60)))
+		}
+	}
 	if len(rationale) > 0 {
 		blk.Rationale = strings.Join(rationale, " ")
 	} else {
