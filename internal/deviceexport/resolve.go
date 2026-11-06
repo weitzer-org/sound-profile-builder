@@ -599,7 +599,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 		p.Wire[s] = wire[sceneIndex(s)]
 	}
 	for s := 0; s < 2; s++ {
-		p.screen[s] = screenPan(cp, wire[s])
+		p.screen[s] = screenPan(cp, p.Wire[s]) // Scenes A and B are p.Wire[0], p.Wire[1] (SceneSources)
 	}
 	return p, false, ""
 }

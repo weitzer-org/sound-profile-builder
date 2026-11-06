@@ -729,7 +729,7 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, stomps
 					grid, model, state = "", "", ""
 				}
 				name := cell(pr.Name)
-				if strings.Contains(pr.A+pr.B, "≈") {
+				if strings.Contains(pr.A, "≈") || strings.Contains(pr.B, "≈") {
 					screenPans = true
 				}
 				if pr.Unconfirmed {
