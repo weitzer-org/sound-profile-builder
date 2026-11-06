@@ -190,7 +190,8 @@ func renderImport(b *strings.Builder, im *deviceImportOut) {
 			}
 			fmt.Fprintf(b, "- %s: %s\n", what, dcell(u.Reason))
 		}
-		if im.Truncated {
+		// Notes can truncate on their own (Truncated is shared), so test this list by its count.
+		if im.UnconvertedCount > len(im.Unconverted) {
 			fmt.Fprintf(b, "- …and %d more (the count above is complete)\n", im.UnconvertedCount-len(im.Unconverted))
 		}
 	}

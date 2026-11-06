@@ -251,3 +251,19 @@ func TestReadDevicePreset_HostileNamesNeverReachOutputOrStorage(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderImportMoreLineOnlyWhenUnconvertedIsCut(t *testing.T) {
+	im := &deviceImportOut{Status: importDone, PresetID: "device-x", Guitar: "g", DeviceName: "n", UnconvertedCount: 1,
+		Unconverted: []devicejobs.Unconverted{{Block: "#1 a", Reason: "r"}}, Truncated: true} // notes were cut, not this list
+	var b strings.Builder
+	renderImport(&b, im)
+	if strings.Contains(b.String(), "more (the count") {
+		t.Errorf("a '…and 0 more' line was printed:\n%s", b.String())
+	}
+	im.UnconvertedCount = 5
+	b.Reset()
+	renderImport(&b, im)
+	if !strings.Contains(b.String(), "…and 4 more") {
+		t.Errorf("missing the more line:\n%s", b.String())
+	}
+}

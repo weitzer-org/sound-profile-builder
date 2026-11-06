@@ -601,9 +601,6 @@ func displayText(x float64, span float64, units string) string {
 	s := strconv.FormatFloat(x, 'g', 5, 64)
 	if strings.ContainsAny(s, "e") {
 		s = strconv.FormatFloat(x, 'f', -1, 64)
-		if f, err := strconv.ParseFloat(s, 64); err == nil && f != x {
-			s = strconv.FormatFloat(x, 'f', 2, 64)
-		}
 	}
 	if units != "" {
 		s += " " + units
