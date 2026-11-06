@@ -564,7 +564,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if catalog.DiscreteParamTypes[cp.Type] {
 		return discrete(lp, vals)
 	}
-	if cp.Type != "float" && cp.Type != "fader" {
+	if !catalog.ContinuousParamTypes[cp.Type] {
 		return Param{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
 	}
 	var disp [2]float64

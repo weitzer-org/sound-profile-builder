@@ -81,7 +81,7 @@ func (p Param) convertible() (lo, hi, skew float64, err error) {
 	// range and skew as a float there. Callers must label the result (deviceexport's
 	// FaderEvidence). Switches, combo boxes, rotary switches and strings map steps to wire
 	// values by a rule nobody has checked on the unit.
-	if p.Type != "float" && p.Type != "fader" {
+	if !ContinuousParamTypes[p.Type] {
 		return 0, 0, 0, fmt.Errorf("param %q: type %q has no measured wire mapping", p.Name, p.Type)
 	}
 	if lo, hi, err = p.Bounds(); err != nil {

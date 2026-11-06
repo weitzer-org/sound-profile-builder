@@ -243,8 +243,12 @@ class Refusals(unittest.TestCase):
               "units": "dB", "evidence": guess}
         dial = {"index": 10, "label": "80 Hz", "scene_mode": False, "display": eight(7.5), "wire": eight(0.75),
                 "evidence": guess}
-        accept = lambda mid, prm: validate(mutate(lambda p: swap(p, 0, mid, params=[prm])), catalog(), "4.1.0")  # noqa: E731
-        refuse = lambda mid, prm, why: self.refused(mutate(lambda p: swap(p, 0, mid, params=[prm])), why)  # noqa: E731
+        def accept(mid, prm):
+            validate(mutate(lambda p: swap(p, 0, mid, params=[prm])), catalog(), "4.1.0")
+
+        def refuse(mid, prm, why):
+            self.refused(mutate(lambda p: swap(p, 0, mid, params=[prm])), why)
+
         accept(4006, db)
         accept(1139, dial)
         # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map

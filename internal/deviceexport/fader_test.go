@@ -204,6 +204,8 @@ func TestEveryFaderConvertsAtItsEnds(t *testing.T) {
 			}
 			if _, err := p.ToWire(*p.Max + 0.01); err == nil {
 				t.Errorf("%d %s %s: out-of-range accepted", m.ID, m.Name, p.Name)
+			} else if !strings.Contains(err.Error(), "outside") {
+				t.Errorf("%d %s %s: want an out-of-range error, got %v", m.ID, m.Name, p.Name, err)
 			}
 		}
 	}

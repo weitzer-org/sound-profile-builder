@@ -466,7 +466,7 @@ func (im *importer) param(lp catalog.LabelledParam, rp devicejobs.ReadbackParam)
 	if catalog.DiscreteParamTypes[cp.Type] {
 		return im.discrete(lp, rp)
 	}
-	if cp.Type != "float" && cp.Type != "fader" {
+	if !catalog.ContinuousParamTypes[cp.Type] {
 		return storage.BlockParameter{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
 	}
 	var wire [Scenes]float64
