@@ -1,9 +1,9 @@
 # Stomp layout: consistent footswitch assignments on the Quad Cortex
 
-*Design, 2026-11-06. Status: proposed, not started.*
+*Design, 2026-11-06. Status: S1 and S2 built and merged (no device involved); S3 (gate G7) no longer gates entry point 1, only entry point 2 (owner decision, section 9). See sections 7 and 8.*
 *Builds on `docs/design/qc-device-bridge-plan.md` (the bridge, its phases and gates) and `docs/design/device-job-contract.md` (jobs between QC-2 and the home agent).*
 
-**Verify-or-label.** Each premise about the device says where it comes from: **owner** (the owner's statement about their unit), **qc-mcp** (read in qc-mcp's source at the pinned commit `f634ecd`, not run on the unit), or **UNVERIFIED**. Gate G7 (section 7) settles the ones the design depends on.
+**Verify-or-label.** Each premise about the device says where it comes from: **owner** (the owner's statement about their unit), **qc-mcp** (read in qc-mcp's source at the pinned commit `f634ecd`, not run on the unit), or **UNVERIFIED**. Gate G7 (section 7) settles them; per the owner's decision it is required only before entry point 2, and entry point 1 ships with these premises still UNVERIFIED until the owner's first push shows them on the unit.
 
 ---
 
@@ -142,6 +142,8 @@ The `stomps` array inside the push export needs no contract change: `export.payl
 
 ## 7. Gate G7: stomps on the unit
 
+**What G7 gates (owner decision, 2026-11-06).** Entry point 1 (pushing a QC-2 preset into a slot this system creates) does not wait for G7. Its premises (a)-(e), (g) and (h) stay **UNVERIFIED** and are first checked by the owner looking at the unit after the first real push: is B where the layout says, does it toggle. The agent's read-back after assigning (S4 step 3) catches an assignment that did not come back as written, but cannot show which physical switch an index is. **Entry point 2 (`apply_stomp_layout` on any loaded preset) stays off until (f) has been run once**, because (f) is the only question whose failure could rewrite a preset the system did not create.
+
 Run on a scratch preset in an **empty** slot (as G3 did), with a spike that is granted `assign_stomp`, `unassign_stomp` and `get_current_preset` only. Stomps are on the spike harness's never-allowed list today (`tools/device-spikes/spike_common.py`).
 
 | # | Question | How |
@@ -159,15 +161,15 @@ Run on a scratch preset in an **empty** slot (as G3 did), with a spike that is g
 
 ## 8. Phasing
 
-| Step | Scope | Device? | Depends on |
-|---|---|---|---|
-| S1 | `internal/stomplayout` + `stomp_layout.json` + tests (classification, every rule in §5, golden plans for the eval presets and for synthetic grids with existing assignments) | no | P1 (done) |
-| S2 | `stomps` in the device export, shown in the `send_preset_to_device` dry run | no | P2, S1 |
-| S3 | G7 spike | **yes** (owner runs) | P0-a harness |
-| S4 | `apply_stomps` job kind: contract, vectors, Go side, `apply_stomp_layout` MCP tool | no (fake agent) | P3, S1, S3 |
-| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S3, S4 |
+| Step | Scope | Device? | Depends on | Status (2026-11-06) |
+|---|---|---|---|---|
+| S1 | `internal/stomplayout` + `stomp_layout.json` + tests (classification, every rule in §5, golden plans for the eval presets and for synthetic grids with existing assignments) | no | P1 (done) | **Done**, PR #138 |
+| S2 | `stomps` in the device export, shown in the `send_preset_to_device` dry run | no | P2, S1 | **Done**, PR #139 |
+| S3 | G7 spike; required only for entry point 2 (f). The other questions are checked by eye on the first real push | **yes** (owner runs) | P0-a harness | Not started; does not block entry point 1 |
+| S4 | `apply_stomps` job kind: contract, vectors, Go side, `apply_stomp_layout` MCP tool | no (fake agent) | P3, S1; S3 (f) for the entry-point-2 tool only | Not started. The `apply_stomps` job and `apply_stomp_layout` tool wait on (f); the push path (entry point 1) does not |
+| S5 | Agent side of S2 and S4 | build no; acceptance **yes** | P4, S4; S3 (f) for entry point 2 | Partly: the agent's export validator checks and carries `stomps` but writes none yet. Writing them on a push no longer waits for G7; applying them to a loaded preset does |
 
-S1 can start now. It touches no device, no auth and no storage.
+S1 and S2 touch no device, no auth and no storage. Everything the code does with switch indexes and assignment behaviour stays UNVERIFIED until it is seen on the unit. Entry point 1 may proceed on that basis; nothing that applies stomps to a preset this system did not create may be built before (f) has run.
 
 ## 9. Decided
 
@@ -180,6 +182,7 @@ All by the owner, 2026-11-06.
 - On presets this system didn't create: apply without saving (option 2).
 - Several blocks of one role share that role's switch (D for drives after the first).
 - A capture in a QC-2 preset takes the modeler's category (§4.1 step 1).
+- G7 gates only entry point 2, via (f). Entry point 1 ships with its device premises labelled UNVERIFIED; the owner checks the unit by eye after the first real push.
 
 ## 10. Defaults chosen here (change any of them)
 
