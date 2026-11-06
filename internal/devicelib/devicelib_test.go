@@ -227,6 +227,8 @@ func TestHarvest(t *testing.T) {
 		"leading space":       eight(" ME_110 US PRN C10R_Ribbon 121"),
 		"scenes that differ":  {ok, "ME_110 US PRN C10R_Dynamic 57", ok, ok, ok, ok, ok, ok},
 		"a number":            eight(0.5),
+		"a trailing note":     eight("ME_110 US PRN C10R_Ribbon 121 (junk)"),
+		"a semicolon":         eight("ME_110 US PRN C10R_Ribbon 121;x"),
 	}
 	for name, v := range bad {
 		seen, ign := h.Harvest(readback(t, cab, sel, v))

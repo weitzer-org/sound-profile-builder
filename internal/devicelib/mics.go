@@ -1,6 +1,7 @@
 package devicelib
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
@@ -82,8 +83,13 @@ func validMic(s string, cabParts map[string]bool) bool {
 			return false
 		}
 	}
-	return cabParts[CabPart(s)] && MicPart(s) != ""
+	return cabParts[CabPart(s)] && micPartRe.MatchString(MicPart(s))
 }
+
+// micPartRe is the shape of every mic name in ModelRepo.xml ("Dynamic 57", "Ribbon 121", "Condenser 414").
+// Anything looser would let a stranger's preset record "Dynamic 57 (junk)", which the export's mic
+// matching (it ignores a trailing note) would then take for "Dynamic 57" and write to the unit verbatim.
+var micPartRe = regexp.MustCompile(`^[A-Za-z]{3,12} [0-9]{1,4}$`)
 
 // Harvest returns, per cab model id, the distinct mic strings in the read-back, and how
 // many string values it looked at and left out.

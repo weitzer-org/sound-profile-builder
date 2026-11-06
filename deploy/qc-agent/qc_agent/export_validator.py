@@ -428,6 +428,7 @@ def _check_block(bi, b, nblocks, catalog) -> PlannedBlock:
 
 
 MIC_EVIDENCE = "seen-on-unit"
+_MIC_PART_RE = re.compile(r"[A-Za-z]{3,12} [0-9]{1,4}")  # every mic name in ModelRepo.xml; see devicelib.micPartRe
 MAX_MIC_VALUE = 128
 
 
@@ -463,7 +464,7 @@ def _check_mics(where, mics, cm) -> list[PlannedMic]:
         v = _printable(m["value"], MAX_MIC_VALUE, w + ".value")
         default = sel.get("default_string") or ""
         if (not v or v != v.strip() or "`" in v or not _cab_part(default) or _cab_part(v) != _cab_part(default)
-                or not v[len(_cab_part(v)) + 1:]):
+                or not _MIC_PART_RE.fullmatch(v[len(_cab_part(v)) + 1:])):
             raise ExportRefused(f"{w}: {v[:40]!r} is not a mic of this cab (it must keep {_cab_part(default)!r} and "
                                 "change only the mic)")
         out.append(PlannedMic(slot, index, v))

@@ -159,6 +159,8 @@ class MicValidation(unittest.TestCase):
         self.refused(cab_export("ME_110 US PRN C10R_"), "not a mic of this cab")
         self.refused(cab_export("ME_110 US PRN C10R"), "not a mic of this cab")
         self.refused(cab_export("ME_110 US PRN C10R_Rib`bon"), "not a mic of this cab")
+        self.refused(cab_export("ME_110 US PRN C10R_Ribbon 121 (junk)"), "not a mic of this cab")
+        self.refused(cab_export("ME_110 US PRN C10R_Ribbon 121;x"), "not a mic of this cab")
 
     def test_wrong_index_slot_or_evidence(self):
         self.refused(cab_export(index=2), "ir selector")
