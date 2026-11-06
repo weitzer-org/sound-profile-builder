@@ -247,14 +247,23 @@ class StompWire(test_qcmcp_backend.Base):
         with self.assertRaises(WireRefused):
             self.raw_assign(0, 0, 2, momentary=True)  # the assignment passes; the momentary message is refused
         self.assertEqual(self.hid.momentary, {})
-        m = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        m = P.message_class("Grid")(action=P.ACTION["UPDATE"], request_id=self.qc.next_request_id())
         m.preset.stomp_is_momentary[6] = False
         self.refused(self.qc.send, "Grid", m)                  # not even "latching" written explicitly
+
+    def test_an_assignment_without_an_explicit_type_is_refused(self):
+        self.armed()
+        self.dev.arm_stomps(self.plan.stomps)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"], request_id=self.qc.next_request_id())
+        a = g.preset.stomp_mode_assignments.add()
+        a.row, a.column, a.stomp_index = 0, 0, 2  # the armed one, but type left unset
+        self.refused(self.qc.send, "Grid", g)
+        self.dev.assign_stomp(0, 0, 2)  # the vendored call sets type and passes
 
     def test_two_assignments_in_one_message_are_refused(self):
         self.armed()
         self.dev.arm_stomps(self.plan.stomps)
-        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"], request_id=self.qc.next_request_id())
         for col, idx in ((0, 2), (4, 6)):
             a = g.preset.stomp_mode_assignments.add()
             a.row, a.column, a.stomp_index, a.type = 0, col, idx, 0
@@ -273,7 +282,7 @@ class StompWire(test_qcmcp_backend.Base):
 
     def test_a_stomp_assignment_never_rides_a_build_message(self):
         self.armed()
-        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"], request_id=self.qc.next_request_id())
         a = g.preset.stomp_mode_assignments.add()
         a.row, a.column, a.stomp_index = 0, 0, 2
         self.refused(self.qc.send, "Grid", g)
@@ -330,6 +339,31 @@ class StompWindow(unittest.TestCase):
                 raise RuntimeError("boom")
         with self.assertRaisesRegex(GuardError, "never allowed"):
             g.assign_stomp
+
+    def test_the_window_is_for_the_opening_thread_only(self):
+        import threading
+        g, seen = Guarded(mock.Mock()), []
+
+        def other():
+            try:
+                g.assign_stomp
+                seen.append("open")
+            except GuardError:
+                seen.append("refused")
+        with g.window("assign_stomp"):
+            t = threading.Thread(target=other)
+            t.start()
+            t.join()
+        self.assertEqual(seen, ["refused"])
+
+    def test_the_open_state_cannot_be_widened_in_place(self):
+        g = Guarded(mock.Mock())
+        with self.assertRaisesRegex(GuardError, "read-only"):
+            g._open = ("send", 0)
+        with g.window("assign_stomp"):
+            for name in ("send", "unassign_stomp", "save_preset"):
+                with self.subTest(name), self.assertRaisesRegex(GuardError, "never allowed"):
+                    getattr(g, name)
 
     def test_the_vendored_method_is_the_one_cited(self):
         # jobs/backend cite vendor/qc_mcp/transport.py:1172 for assign_stomp; pin its signature

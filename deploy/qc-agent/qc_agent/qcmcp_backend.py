@@ -160,25 +160,27 @@ class Guarded:
             raise GuardError(f"grant includes never-allowed methods: {sorted(bad)}")
         object.__setattr__(self, "_qc", qc)
         object.__setattr__(self, "_grant", frozenset(grant))
-        object.__setattr__(self, "_open", set())  # PUSH_STEP_ONLY names open for the call in progress
+        # (name, thread id) of the PUSH_STEP_ONLY method open for the call in progress, or None. Immutable,
+        # replaced only by window(), so nothing can add a name to it in place.
+        object.__setattr__(self, "_open", None)
 
     @contextlib.contextmanager
     def window(self, name):
-        """Open one PUSH_STEP_ONLY method for the duration of the `with` block. Never nested, never
-        anything outside PUSH_STEP_ONLY; it closes again even if the call raises."""
+        """Open one PUSH_STEP_ONLY method for the duration of the `with` block, for the calling thread only.
+        Never nested, never anything outside PUSH_STEP_ONLY; it closes again even if the call raises."""
         if name not in PUSH_STEP_ONLY:
             raise GuardError(f"{name} can't be opened")
-        if self._open:
+        if self._open is not None:
             raise GuardError("a window is already open")
-        self._open.add(name)
+        object.__setattr__(self, "_open", (name, threading.get_ident()))
         try:
             yield
         finally:
-            self._open.clear()
+            object.__setattr__(self, "_open", None)
 
     def __getattr__(self, name):
         if name in NEVER:
-            if name in self._open:
+            if name in PUSH_STEP_ONLY and self._open == (name, threading.get_ident()):
                 return getattr(self._qc, name)
             raise GuardError(f"{name} is never allowed")
         if name in self._grant or name in ATTRS:
@@ -396,8 +398,10 @@ class WireGuard:
         if _names(preset) != {"stomp_mode_assignments"} or len(preset.stomp_mode_assignments) != 1:
             raise WireRefused("Grid: the stomp step allows exactly one footswitch assignment per message")
         a = preset.stomp_mode_assignments[0]
-        if _names(a) - {"row", "column", "stomp_index", "type"}:
-            raise WireRefused("Grid: unexpected footswitch assignment fields")
+        if _names(a) - {"row", "column", "stomp_index", "type"} or "type" not in _names(a):
+            # type must be explicit (the vendored assign_stomp always sets it): how the unit reads an absent one
+            # is unverified, and an all-default entry is the shape a delete would have
+            raise WireRefused("Grid: unexpected or missing footswitch assignment fields")
         if a.type != STOMP_PRIMARY:  # latching on/off only: never the Dual Footswitch secondary function
             raise WireRefused("Grid: only primary footswitch assignments")
         key = (a.row, a.column)
