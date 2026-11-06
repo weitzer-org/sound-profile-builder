@@ -144,65 +144,93 @@ func (p *ReadbackPayload) validate() error {
 	}
 	rows := map[int]bool{}
 	for _, ch := range p.Chains {
-		if ch.Row < 0 || ch.Row >= ReadbackRows || rows[ch.Row] {
-			return errors.New("readback payload: chain rows must be unique values 0-3")
-		}
-		rows[ch.Row] = true
-		if ch.Blocks == nil || len(ch.Blocks) > ReadbackCols {
-			return errors.New("readback payload: a chain needs a blocks array of at most 8")
-		}
-		cols := map[int]bool{}
-		for _, b := range ch.Blocks {
-			if b.Col < 0 || b.Col >= ReadbackCols || cols[b.Col] {
-				return errors.New("readback payload: block columns must be unique values 0-7")
-			}
-			cols[b.Col] = true
-			if b.ModelID < 0 || b.ModelID > MaxReadbackModelID {
-				return errors.New("readback payload: model_id out of range")
-			}
-			if b.Params == nil || len(b.Params) > MaxReadbackParams {
-				return fmt.Errorf("readback payload: a block needs a params array of at most %d", MaxReadbackParams)
-			}
-			idx := map[int]bool{}
-			for _, pr := range b.Params {
-				if pr.Index < 0 || pr.Index >= MaxReadbackParams || idx[pr.Index] {
-					return errors.New("readback payload: parameter indexes must be unique values in range")
-				}
-				idx[pr.Index] = true
-				if len(pr.Values) != ReadbackScenes {
-					return fmt.Errorf("readback payload: a parameter has %d values, want %d (scenes A-H)", len(pr.Values), ReadbackScenes)
-				}
-				for _, v := range pr.Values {
-					switch x := v.(type) {
-					case nil, bool, json.Number:
-					case string:
-						if utf8.RuneCountInString(x) > MaxReadbackStringRn {
-							return errors.New("readback payload: a text value is too long")
-						}
-					default:
-						return errors.New("readback payload: a parameter value must be a number, string, boolean or null")
-					}
-				}
-			}
+		if err := validateChain(ch, rows); err != nil {
+			return err
 		}
 	}
 	if p.Bypass != nil {
-		if len(p.Bypass) != ReadbackRows {
-			return fmt.Errorf("readback payload: bypass has %d rows, want %d", len(p.Bypass), ReadbackRows)
-		}
-		for _, row := range p.Bypass {
-			if len(row) != ReadbackCols {
-				return fmt.Errorf("readback payload: a bypass row has %d columns, want %d", len(row), ReadbackCols)
-			}
-			for _, col := range row {
-				if len(col) != ReadbackScenes {
-					return fmt.Errorf("readback payload: a bypass column has %d scenes, want %d", len(col), ReadbackScenes)
-				}
-			}
+		if err := validateBypass(p.Bypass); err != nil {
+			return err
 		}
 	}
 	if p.Setlist.Folder != "My Presets" && p.Setlist.Folder != "other" {
 		return errors.New(`readback payload: setlist.folder must be "My Presets" or "other"`)
+	}
+	return nil
+}
+
+func validateChain(ch ReadbackChain, rows map[int]bool) error {
+	if ch.Row < 0 || ch.Row >= ReadbackRows || rows[ch.Row] {
+		return errors.New("readback payload: chain rows must be unique values 0-3")
+	}
+	rows[ch.Row] = true
+	if ch.Blocks == nil || len(ch.Blocks) > ReadbackCols {
+		return errors.New("readback payload: a chain needs a blocks array of at most 8")
+	}
+	cols := map[int]bool{}
+	for _, b := range ch.Blocks {
+		if err := validateBlock(b, cols); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateBlock(b ReadbackPlaced, cols map[int]bool) error {
+	if b.Col < 0 || b.Col >= ReadbackCols || cols[b.Col] {
+		return errors.New("readback payload: block columns must be unique values 0-7")
+	}
+	cols[b.Col] = true
+	if b.ModelID < 0 || b.ModelID > MaxReadbackModelID {
+		return errors.New("readback payload: model_id out of range")
+	}
+	if b.Params == nil || len(b.Params) > MaxReadbackParams {
+		return fmt.Errorf("readback payload: a block needs a params array of at most %d", MaxReadbackParams)
+	}
+	idx := map[int]bool{}
+	for _, pr := range b.Params {
+		if err := validateParam(pr, idx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateParam(pr ReadbackParam, idx map[int]bool) error {
+	if pr.Index < 0 || pr.Index >= MaxReadbackParams || idx[pr.Index] {
+		return errors.New("readback payload: parameter indexes must be unique values in range")
+	}
+	idx[pr.Index] = true
+	if len(pr.Values) != ReadbackScenes {
+		return fmt.Errorf("readback payload: a parameter has %d values, want %d (scenes A-H)", len(pr.Values), ReadbackScenes)
+	}
+	for _, v := range pr.Values {
+		switch x := v.(type) {
+		case nil, bool, json.Number:
+		case string:
+			if utf8.RuneCountInString(x) > MaxReadbackStringRn {
+				return errors.New("readback payload: a text value is too long")
+			}
+		default:
+			return errors.New("readback payload: a parameter value must be a number, string, boolean or null")
+		}
+	}
+	return nil
+}
+
+func validateBypass(b [][][]bool) error {
+	if len(b) != ReadbackRows {
+		return fmt.Errorf("readback payload: bypass has %d rows, want %d", len(b), ReadbackRows)
+	}
+	for _, row := range b {
+		if len(row) != ReadbackCols {
+			return fmt.Errorf("readback payload: a bypass row has %d columns, want %d", len(row), ReadbackCols)
+		}
+		for _, col := range row {
+			if len(col) != ReadbackScenes {
+				return fmt.Errorf("readback payload: a bypass column has %d scenes, want %d", len(col), ReadbackScenes)
+			}
+		}
 	}
 	return nil
 }

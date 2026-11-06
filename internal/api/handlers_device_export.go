@@ -37,14 +37,14 @@ func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 // user_captures.json: an exact name, ignoring case and surrounding space. A name in both
 // libraries is the user's own (a downloaded copy of a factory capture still exists on the unit).
 func lookupCapture(deviceName string) (name, source string, ok bool) {
-	want := strings.ToLower(strings.TrimSpace(deviceName))
+	want := strings.TrimSpace(deviceName)
 	if want == "" {
 		return "", "", false
 	}
 	// Map order is random, so the choice must not depend on it: a user entry wins, then the
 	// lexicographically first factory spelling.
 	for n, isCap := range agents.GetValidNativeBlocks() {
-		if !isCap || strings.ToLower(n) != want {
+		if !isCap || !strings.EqualFold(n, want) {
 			continue
 		}
 		if agents.IsUserCaptureName(n) {

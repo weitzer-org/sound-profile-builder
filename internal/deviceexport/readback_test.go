@@ -837,3 +837,23 @@ func TestUnconvertedCountIsComplete(t *testing.T) {
 		t.Fatalf("count %d, listed %d", res.UnconvertedCount, len(res.Unconverted))
 	}
 }
+
+// A library name keeps its own spelling even when it holds characters plainName would strip.
+func TestLibraryNameWithPunctuationStillMatches(t *testing.T) {
+	e, err := NewEmbedded(Options{
+		Sanitize: testSanitize,
+		LookupCapture: func(n string) (string, string, bool) {
+			if n == "Amp_1 [Dirty]! v2" {
+				return n, "user", true
+			}
+			return "", "", false
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rb := rbJSON(t, 14001, map[int][]any{5: {strings.Repeat("ab", 32) + " Amp_1 [Dirty]! v2"}}, nil)
+	if m := importOf(t, e, rb).Preset.Guitars[ReadbackGuitar][0].Model; m != "Amp_1 [Dirty]! v2 (My Capture)" {
+		t.Errorf("model %q", m)
+	}
+}

@@ -339,14 +339,7 @@ func (im *importer) captureName(m *catalog.Model, pb devicejobs.ReadbackPlaced) 
 		}
 	}
 	key, display := splitCaptureFileName(raw)
-	display = plainName(im.san(display, maxCaptureName))
-	if display == "" {
-		short := ""
-		if key != "" {
-			short = " " + strings.ToLower(key[:8])
-		}
-		display = "Unnamed capture" + short
-	}
+	display = im.san(display, maxCaptureName)
 	if im.e.opts.LookupCapture != nil {
 		if canon, source, ok := im.e.opts.LookupCapture(display); ok {
 			canon = im.san(canon, 80)
@@ -356,6 +349,15 @@ func (im *importer) captureName(m *catalog.Model, pb devicejobs.ReadbackPlaced) 
 			}
 			return canon + " (" + label + ")", fmt.Sprintf("Read from the Quad Cortex: a Neural Capture %s block, matched to the %s library entry %q by name.", ver, source, truncate(canon, 60))
 		}
+	}
+	// Only an unmatched name is reduced to plain text; a library match keeps its own spelling.
+	display = plainName(display)
+	if display == "" {
+		short := ""
+		if key != "" {
+			short = " " + strings.ToLower(key[:8])
+		}
+		display = "Unnamed capture" + short
 	}
 	im.note(fmt.Sprintf("capture %q is not in coros_map.json or user_captures.json; it keeps the name the unit shows", truncate(display, 60)))
 	// The unit's name is in the block's model name only, never copied into free text.

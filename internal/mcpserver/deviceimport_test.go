@@ -221,10 +221,10 @@ func TestReadDevicePreset_HostileNamesNeverReachOutputOrStorage(t *testing.T) {
 	stored, _ := json.Marshal(p)
 
 	for where, s := range map[string]string{"text": text, "structured": string(structured), "storage": string(stored)} {
-		for _, bad := range []string{"\u202e", "\\u202e", "\x00", "\\u0000", "```\n", "<script>"} {
+		for _, bad := range []string{"\u202e", "\\u202e", "\x00", "\\u0000", "```\n"} {
 			// The escaped forms matter for JSON: a raw U+202E would be escaped by
 			// json.Marshal, so look for both spellings.
-			if strings.Contains(s, bad) && bad != "<script>" {
+			if strings.Contains(s, bad) {
 				t.Errorf("%s contains %q", where, bad)
 			}
 		}
