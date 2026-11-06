@@ -48,8 +48,9 @@ Then it builds the chain on the live grid in three phases:
 It then reads the grid back and compares every written value in all eight scenes and every bypass flag. Controls the
 preset leaves at default aren't written; any that reads back away from its catalog default is logged as a warning
 (and counted in the success message), never failed. Switches and pans are logged raw because their wire mapping is
-unmeasured. It saves only if the diff is clean: the grid re-read, then a fresh listing and the open position
-immediately before the save. The save is `write_preset_file` (File CREATE), never `save_preset`. The listing can lag
+unmeasured. Before every write it reads which slot is open, and stops if you've selected another preset (writes
+address grid positions, so they would land in whatever is loaded). It saves only if the diff is clean: a fresh
+listing, then, immediately before the save, the grid re-read and the open position. The save is `write_preset_file` (File CREATE), never `save_preset`. The listing can lag
 (G3), so it re-lists up to 6 times, 6 s apart (about 2 minutes, as each listing takes 12-15 s). If the name never
 shows, the job is reported **failed** and the slot stays recorded as the bridge's, in case the save lands late.
 

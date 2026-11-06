@@ -158,39 +158,37 @@ class Push(Base):
     # the unit checks, routing, phase 1 (place every block), phase 2 (one read: model ids and
     # param_count + 1 per block), phase 3 (values: all eight scenes when they vary, else one write;
     # all eight bypass flags through index param_count + 1), the read-back, the save checks
-    # (grid re-read, then a fresh listing and the open position immediately before File CREATE),
-    # then the listing poll. alive() is checked around every write but isn't recorded.
+    # (a fresh listing, then the grid re-read and the open position immediately before File CREATE),
+    # then the listing poll. Every write is preceded by a read of the open position; alive() is
+    # checked around every write but isn't recorded.
+    F8 = [False, False, False, False, False, False, False, False]
     G3_CALLS = [
         ("connect",), ("list_my_presets",), ("setlist_position",), ("read_current_preset",),
-        ("begin_push", 152, "Texas Blues"), ("set_routing", 0, 1, 19),
+        ("begin_push", 152, "Texas Blues"),
+        ("setlist_position",), ("set_routing", 0, 1, 19),
         ("setlist_position",), ("add_block", 0, 0, 1),
         ("setlist_position",), ("add_block", 0, 1, 1001),
         ("setlist_position",), ("add_block", 0, 2, 12045),
         ("setlist_position",), ("add_block", 0, 3, 4003),
         ("setlist_position",), ("add_block", 0, 4, 8006),
         ("read_current_preset",),
-        ("setlist_position",),
-        ("set_param_scenes", 0, 0, 0, [0.2, 0.8, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]),
-        ("set_param", 0, 0, 1, 0.55),
-        ("set_param", 0, 0, 2, 0.6),
-        ("set_block_bypass", 0, 0, [False, False, False, False, False, False, False, False], 4),
-        ("setlist_position",),
-        ("set_param_scenes", 0, 1, 0, [0.45, 0.6, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45]),
-        ("set_param", 0, 1, 6, 0.24999854297459012),
-        ("set_block_bypass", 0, 1, [False, False, False, False, False, False, False, False], 8),
-        ("setlist_position",),
-        ("set_param", 0, 2, 10, 0.010066601212044444),
-        ("set_param", 0, 2, 16, 0.5358867312681466),
-        ("set_param", 0, 2, 17, 0.7507718761305262),
-        ("set_block_bypass", 0, 2, [False, False, False, False, False, False, False, False], 22),
-        ("setlist_position",),
-        ("set_param", 0, 3, 1, 0.25012737345710895),
-        ("set_block_bypass", 0, 3, [False, False, False, False, False, False, False, False], 6),
-        ("setlist_position",),
-        ("set_param_scenes", 0, 4, 0, [0.35, 0.2, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35]),
-        ("set_block_bypass", 0, 4, [False, True, False, False, False, False, False, False], 6),
+        ("setlist_position",), ("set_param_scenes", 0, 0, 0, [0.2, 0.8, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]),
+        ("setlist_position",), ("set_param", 0, 0, 1, 0.55),
+        ("setlist_position",), ("set_param", 0, 0, 2, 0.6),
+        ("setlist_position",), ("set_block_bypass", 0, 0, F8, 4),
+        ("setlist_position",), ("set_param_scenes", 0, 1, 0, [0.45, 0.6, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45]),
+        ("setlist_position",), ("set_param", 0, 1, 6, 0.24999854297459012),
+        ("setlist_position",), ("set_block_bypass", 0, 1, F8, 8),
+        ("setlist_position",), ("set_param", 0, 2, 10, 0.010066601212044444),
+        ("setlist_position",), ("set_param", 0, 2, 16, 0.5358867312681466),
+        ("setlist_position",), ("set_param", 0, 2, 17, 0.7507718761305262),
+        ("setlist_position",), ("set_block_bypass", 0, 2, F8, 22),
+        ("setlist_position",), ("set_param", 0, 3, 1, 0.25012737345710895),
+        ("setlist_position",), ("set_block_bypass", 0, 3, F8, 6),
+        ("setlist_position",), ("set_param_scenes", 0, 4, 0, [0.35, 0.2, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35]),
+        ("setlist_position",), ("set_block_bypass", 0, 4, [False, True, False, False, False, False, False, False], 6),
         ("read_current_preset",),
-        ("read_current_preset",), ("list_my_presets",), ("setlist_position",),
+        ("list_my_presets",), ("read_current_preset",), ("setlist_position",),
         ("save_to_slot", 152, "Texas Blues"),
         ("list_my_presets",),
         ("end_push",), ("disconnect",),
@@ -593,6 +591,31 @@ class Push(Base):
         self.assertIn("went away before the save could be confirmed", r["message"])
         self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
         self.assertTrue(self.agent.stop.is_set())
+
+    def test_switching_presets_during_the_value_writes_stops_at_the_next_write(self):
+        def switch(name):
+            if name == "set_param_scenes":
+                self.dev.open_position = 0   # the owner selects another preset during phase 3
+        self.dev.on_call = switch
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("Another preset was selected", r["message"])
+        writes = [c[0] for c in self.dev.write_calls() if c[0] not in ("set_routing", "add_block")]
+        self.assertEqual(writes, ["set_param_scenes"])   # nothing after the switch reached the unit
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_grid_edited_during_the_save_listing_is_not_saved(self):
+        lists = {"n": 0}
+
+        def edit(name):
+            if name == "list_my_presets":
+                lists["n"] += 1
+                if lists["n"] == 2:   # 1: the unit checks, 2: the listing just before the save
+                    self.dev.grid[1]["params"][0] = [0.9] * 8   # the owner turns GAIN during it
+        self.dev.on_call = edit
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
 
     def test_disconnect_always_called(self):
         self.dev.no_echo_cols = {0}

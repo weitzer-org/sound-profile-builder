@@ -20,9 +20,11 @@ that bind every device write, in the order they run for a push:
      when they vary, else one set_param; G6) and all eight bypass flags;
   7. read back and diff every written value in all eight scenes and every bypass flag; log
      (never fail on) controls that weren't written and read back away from the catalog default;
-  8. save only if the diff is clean: the grid re-read, then a fresh listing and the open
-     position immediately before File CREATE; then poll the listing (G3: it can lag) and report
-     the save failed if it never shows.
+  8. save only if the diff is clean: a fresh listing, then the grid re-read and the open position
+     immediately before File CREATE; then poll the listing (G3: it can lag) and report the save
+     failed if it never shows.
+Before every write the open position is read again (writes address row/column/index, so after the
+owner selects another preset they would land in it).
 """
 from __future__ import annotations
 
@@ -78,6 +80,10 @@ class JobContext:
 
 class _Gone(Exception):
     pass
+
+
+class _SwitchedAway(Exception):
+    """The target slot is no longer the one open on the unit."""
 
 
 def _same_name(listing, pos, name):
@@ -426,6 +432,8 @@ class _Push:
                 if outcome is not None:  # a step stops the push by returning its Outcome
                     return outcome
             return self.save()
+        except _SwitchedAway:
+            return self.switched_away()
         except (_Gone, UnitAbsent):
             if self.saved:
                 return self.unconfirmed("unit_absent", "then the Quad Cortex went away before the save could be "
@@ -504,8 +512,15 @@ class _Push:
                 and not cur.get("is_factory"))
 
     def op(self, fn, *args):
-        """One device write, with the liveness verdict checked before and after (G2: a call can
-        block for seconds while the unit goes away, and a write that reaches nothing raises nothing)."""
+        """One device write. Before it, the target slot must still be the one open on the unit: writes
+        address row/column/index, not a preset, so after the owner selects another preset they would
+        land in that preset's edit buffer. The liveness verdict is checked before and after (G2: a call
+        can block for seconds while the unit goes away, and a write that reaches nothing raises nothing).
+        A single set_param_scenes / set_block_bypass still runs to its end once started (about 17
+        messages); the next write's check stops the build."""
+        _check_alive(self.ctx)
+        if not self.still_open():
+            raise _SwitchedAway()
         _check_alive(self.ctx)
         r = fn(*args)
         _check_alive(self.ctx)
@@ -544,8 +559,6 @@ class _Push:
         dev.begin_push(self.pos, self.name, plan)
         self.op(dev.set_routing, plan.row, plan.in_port, plan.out_port)
         for b in plan.blocks:                                          # phase 1: place
-            if not self.still_open():
-                return self.switched_away()
             out = self.place(b)
             if out:
                 return out
@@ -563,8 +576,6 @@ class _Push:
                           "re-select the slot on the unit to discard the partial grid.",
                           firmware=self.fw, push=self.result)
         for b in plan.blocks:                                          # phase 3: values and bypass
-            if not self.still_open():
-                return self.switched_away()
             for p in b.params:
                 if p.varies:  # G6: unwritten scenes keep their old value, so all eight are written
                     self.op(dev.set_param_scenes, plan.row, b.col, p.index, list(p.wires))
@@ -593,16 +604,18 @@ class _Push:
         return None
 
     def save(self):
-        """Rule 8: the grid is still the verified one, then a fresh listing and the open position
-        immediately before File CREATE, then wait for the listing to show it."""
+        """Rule 8: a fresh listing (12-15 s), then, right before File CREATE, the grid re-read (it must
+        still be the verified one: File CREATE saves whatever is live) and the open position; then wait
+        for the listing to show the save."""
         dev, ctx, slot, pos, name = self.dev, self.ctx, self.slot, self.pos, self.name
+        listing = dev.list_my_presets()
+        _check_alive(ctx)
         back = dev.read_current_preset()
         _check_alive(ctx)
         if back is None or _diff(self.plan, back)[0]:
             return failed("readback_mismatch", "The grid changed after it was verified (edited on the unit?). "
                           "Nothing was saved; re-select the slot to discard the edits.",
                           firmware=self.fw, push=self.result)
-        listing = dev.list_my_presets()
         cur = dev.setlist_position() or {}
         _check_alive(ctx)
         out = self.check_slot(listing, cur)  # also: the slot is still the open one (File CREATE saves the live grid)

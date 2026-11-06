@@ -250,8 +250,10 @@ The agent exposes **no** server, port or UI. Its only inputs are signed jobs.
 - **Liveness (G2):** a watchdog thread samples the reader thread and `write_errors` once a second while the unit is
   open and never calls into the transport; the job checks its verdict around every write. Gone = reader thread dead,
   or `write_errors` rose on two consecutive samples; a verdict older than 5 s also counts as gone.
-- **Save (G3):** the grid re-read, then a fresh listing and the open position immediately before File CREATE; then up
-  to 6 re-lists 6 s apart. A save never seen is reported `failed` (owner decision), and the slot stays in the owned
+- **Open-slot check before every write:** writes address row/column/index, not a preset, so the open position is read
+  (strictly, by request_id) before each one; a single `set_param_scenes`/`set_block_bypass` still runs to its end.
+- **Save (G3):** a fresh listing, then the grid re-read and the open position immediately before File CREATE (the
+  listing takes 12-15 s, so the grid check comes after it); then up to 6 re-lists 6 s apart. A save never seen is reported `failed` (owner decision), and the slot stays in the owned
   ledger in case it lands late.
 - **Plugin models** are placed when they arrive in a signed job; if the unit won't place one, the job fails
   (`device_error`, naming the plugin) and nothing is saved. Scene labels are not written in v1 (they were v2 in
