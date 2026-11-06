@@ -300,7 +300,7 @@ def sync_device_library(ctx, job) -> Outcome:
         return failed("device_error", f"The unit lists {e.args[0]} capture files, more than the {captures.MAX_LIBRARY_CAPTURES} "
                       "the sync carries. Nothing was sent.", firmware=fw)
     rb = {"format": captures.LIBRARY_FORMAT, "payload": lib}
-    if len(json.dumps(rb, separators=(",", ":"), ensure_ascii=False)) > contract.MAX_RESULT_BYTES - 16 * 1024:
+    if len(json.dumps(rb, separators=(",", ":"), ensure_ascii=False).encode("utf-8")) > contract.MAX_RESULT_BYTES - 16 * 1024:
         return failed("device_error", "The capture list is too large to return.", firmware=fw)
     caps = lib["captures"]
     nf = sum(1 for c in caps if c["kind"] == "factory")
