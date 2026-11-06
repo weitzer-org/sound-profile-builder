@@ -125,8 +125,12 @@ class Slots(unittest.TestCase):
 
     def test_ranges(self):
         r = SlotRanges.parse("20a-25h,30A")
-        self.assertTrue(r.contains("20A") and r.contains("25H") and r.contains("30A"))
-        self.assertFalse(r.contains("19H") or r.contains("26A") or r.contains("30B"))
+        for label in ("20A", "25H", "30A"):
+            with self.subTest(inside=label):
+                self.assertTrue(r.contains(label))
+        for label in ("19H", "26A", "30B"):
+            with self.subTest(outside=label):
+                self.assertFalse(r.contains(label))
         self.assertFalse(r.contains("20A\n"))
         self.assertEqual(r.labels(), ["20A-25H", "30A"])
         with self.assertRaisesRegex(ValueError, "ranges such as 20A-25H"):
