@@ -1,6 +1,7 @@
 package deviceexport
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"testing"
@@ -255,41 +256,44 @@ func TestFaderRoundTrip(t *testing.T) {
 		t.Fatalf("unresolved %+v", ex.Unresolved)
 	}
 	for _, f32 := range []bool{false, true} {
-		_, rb := simDevice(t, e, p, f32)
-		res := importOf(t, e, rb)
-		chain := res.Preset.Guitars[ReadbackGuitar]
-		if len(chain) != 2 {
-			t.Fatalf("%d blocks, unconverted %+v", len(chain), res.Unconverted)
-		}
-		want := map[string]map[string][2]float64{
-			"Plugin Graphic-9": {"65HZ": {6, -4.5}, "1KHZ": {-12, -12}},
-			"CA John's 2C Ch1": {"80HZ": {8, 2}, "2200HZ": {0, 0}},
-		}
-		for _, b := range chain {
-			for _, bp := range b.Parameters {
-				w, ok := want[b.Model][catalog.ParamNameKey(bp.Name)]
-				if !ok {
-					continue
-				}
-				a := parseDisplay(t, bp.Value)
-				bb := a
-				if bp.ValueB != "" {
-					bb = parseDisplay(t, bp.ValueB)
-				}
-				if math.Abs(a-w[0]) > 1e-3 || math.Abs(bb-w[1]) > 1e-3 {
-					t.Errorf("f32=%v %s %s = %q/%q, want %g/%g", f32, b.Model, bp.Name, bp.Value, bp.ValueB, w[0], w[1])
-				}
-				if !strings.Contains(bp.Evidence, FaderEvidence) {
-					t.Errorf("%s %s: evidence %q lacks %s", b.Model, bp.Name, bp.Evidence, FaderEvidence)
-				}
-				delete(want[b.Model], catalog.ParamNameKey(bp.Name))
+		t.Run(fmt.Sprintf("f32=%v", f32), func(t *testing.T) {
+			_, rb := simDevice(t, e, p, f32)
+			res := importOf(t, e, rb)
+			chain := res.Preset.Guitars[ReadbackGuitar]
+			if len(chain) != 2 {
+				t.Fatalf("%d blocks, unconverted %+v", len(chain), res.Unconverted)
 			}
-		}
-		for m, left := range want {
-			for k := range left {
-				t.Errorf("f32=%v %s %s not imported", f32, m, k)
+			want := map[string]map[string][2]float64{
+				"Plugin Graphic-9": {"65HZ": {6, -4.5}, "1KHZ": {-12, -12}},
+				"CA John's 2C Ch1": {"80HZ": {8, 2}, "2200HZ": {0, 0}},
 			}
-		}
+			for _, b := range chain {
+				for _, bp := range b.Parameters {
+					w, ok := want[b.Model][catalog.ParamNameKey(bp.Name)]
+					if !ok {
+						continue
+					}
+					a := parseDisplay(t, bp.Value)
+					bb := a
+					if bp.ValueB != "" {
+						bb = parseDisplay(t, bp.ValueB)
+					}
+					if math.Abs(a-w[0]) > 1e-3 || math.Abs(bb-w[1]) > 1e-3 {
+						t.Errorf("f32=%v %s %s = %q/%q, want %g/%g", f32, b.Model, bp.Name, bp.Value, bp.ValueB, w[0], w[1])
+					}
+					if !strings.Contains(bp.Evidence, FaderEvidence) {
+						t.Errorf("%s %s: evidence %q lacks %s", b.Model, bp.Name, bp.Evidence, FaderEvidence)
+					}
+					delete(want[b.Model], catalog.ParamNameKey(bp.Name))
+				}
+			}
+			for m, left := range want {
+				for k := range left {
+					t.Errorf("f32=%v %s %s not imported", f32, m, k)
+				}
+			}
+
+		})
 	}
 }
 

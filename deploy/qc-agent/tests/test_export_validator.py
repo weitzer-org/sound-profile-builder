@@ -253,9 +253,11 @@ class Refusals(unittest.TestCase):
         accept(1139, dial)
         # min, max and the default (-12..12: 0 dB is wire 0.5; 0..10: 5 is wire 0.5), each as the linear map
         for d, w in ((-12, 0), (12, 1), (0, 0.5), (-6, 0.25)):
-            accept(4006, db | {"display": eight(d), "wire": eight(w)})
+            with self.subTest(model=4006, d=d, w=w):
+                accept(4006, db | {"display": eight(d), "wire": eight(w)})
         for d, w in ((0, 0), (10, 1), (5, 0.5), (2.5, 0.25)):
-            accept(1139, dial | {"display": eight(d), "wire": eight(w)})
+            with self.subTest(model=1139, d=d, w=w):
+                accept(1139, dial | {"display": eight(d), "wire": eight(w)})
         # a scene-varying fader: Scene B (index 1) differs, scenes C-H carry Scene A
         accept(4006, db | {"scene_mode": True, "display": [6, -4.5] + [6] * 6, "wire": [0.75, 0.3125] + [0.75] * 6})
         # the wire is recomputed from the catalog
