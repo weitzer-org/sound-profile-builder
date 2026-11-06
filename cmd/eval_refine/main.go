@@ -83,7 +83,7 @@ func main() {
 			},
 		}
 
-		result, _, err := orch.RefineChat(ctx, p, e.Question, true, true)
+		result, _, err := orch.RefineChat(ctx, p, e.Question, true, true, agents.PluginGate{})
 		if err != nil {
 			log.Printf("Refinement failed for %s: %v", e.Name, err)
 			continue

@@ -160,7 +160,8 @@ func TestRefineChatUsesConfiguredArchitectVersionAndPayloadParams(t *testing.T) 
 
 	refine := func(ctx context.Context) string {
 		t.Helper()
-		if _, _, err := orch.RefineChat(ctx, p, "brighter", true, true); err != nil {
+		// Unowned plugins (allow_paid_plugins=false), the production default for most users.
+		if _, _, err := orch.RefineChat(ctx, p, "brighter", true, true, NewPluginGate(false, nil)); err != nil {
 			t.Fatalf("RefineChat: %v", err)
 		}
 		mu.Lock()
@@ -174,9 +175,9 @@ func TestRefineChatUsesConfiguredArchitectVersionAndPayloadParams(t *testing.T) 
 			t.Errorf("v6 refine context is missing %q", want)
 		}
 	}
-	// RefineChat doesn't know which plugins the user owns, so it offers no plugin effects.
+	// With no plugins owned, RefineChat offers no plugin effects.
 	if strings.Contains(v6, "John Mayer Spring Reverb") {
-		t.Error("refine's effects list should offer no plugin effects")
+		t.Error("refine's effects list should offer no plugin effects when none are owned")
 	}
 
 	for name, c := range map[string]context.Context{
@@ -270,5 +271,74 @@ func TestArchitectV6PromptDescribesCatalogSections(t *testing.T) {
 	}
 	if strings.Contains(v4, "Device Block Parameters") {
 		t.Error("v4 must stay unchanged")
+	}
+}
+
+// TestRefineChatPluginGate checks RefineChat gets the same plugin ownership treatment as
+// RunPipeline: the ownership line, and no unowned plugin devices in what it injects.
+func TestRefineChatPluginGate(t *testing.T) {
+	var mu sync.Mutex
+	var lastBody string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		lastBody = string(body)
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(mockGeminiResponse))
+	}))
+	defer srv.Close()
+
+	ctx := context.Background()
+	orch, err := NewOrchestrator(ctx, "fake-key", nil, WithEndpoint(srv.URL), WithHTTPClient(srv.Client()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sp := storage.StructuredPreset{Guitars: map[string][]storage.EffectBlock{"Strat": {
+		{ID: "b1", Type: "Drive", Model: "John Mayer Justa Boost"},
+	}}}
+	payload, _ := json.Marshal(map[string]any{"structured": sp, "legacy_html": map[string]string{"Strat": "<table></table>"}})
+	p := &storage.Preset{Payload: string(payload)}
+	v6 := WithPromptVersions(ctx, map[string]string{"12_architect": "v6"})
+
+	prompt := func(g PluginGate) string {
+		t.Helper()
+		if _, _, err := orch.RefineChat(v6, p, "more reverb", true, true, g); err != nil {
+			t.Fatalf("RefineChat: %v", err)
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		return requestPromptText(t, lastBody)
+	}
+
+	const mayerEffect, mayerBoost = "John Mayer Spring Reverb", "John Mayer Justa Boost [" // boost's parameter header
+	owned := prompt(NewPluginGate(true, []string{"John Mayer"}))
+	if !strings.Contains(owned, mayerEffect) {
+		t.Errorf("owned John Mayer: %q should be offered", mayerEffect)
+	}
+	if !strings.Contains(owned, "AVAILABLE PLUGINS: John Mayer") {
+		t.Error("owned John Mayer: prompt is missing the AVAILABLE PLUGINS line")
+	}
+	if !strings.Contains(owned, mayerBoost) {
+		t.Errorf("owned John Mayer: %q parameters should be given", mayerBoost)
+	}
+
+	for name, g := range map[string]PluginGate{
+		"plugins off":        NewPluginGate(false, []string{"John Mayer"}),
+		"other plugin owned": NewPluginGate(true, []string{"Tim Henson"}),
+	} {
+		got := prompt(g)
+		if strings.Contains(got, mayerEffect) || strings.Contains(got, mayerBoost) {
+			t.Errorf("%s: John Mayer devices must not be offered", name)
+		}
+		if strings.Contains(got, "AVAILABLE PLUGINS: John Mayer") {
+			t.Errorf("%s: John Mayer must not be listed as available", name)
+		}
+	}
+	if got := prompt(NewPluginGate(false, nil)); !strings.Contains(got, "NO PAID PLUGINS") {
+		t.Error("plugins off: prompt is missing the NO PAID PLUGINS line")
+	}
+	if got := prompt(PluginGate{}); strings.Contains(got, "PAID PLUGINS") || strings.Contains(got, "AVAILABLE PLUGINS") {
+		t.Error("inactive gate must add no ownership line")
 	}
 }

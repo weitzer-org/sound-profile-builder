@@ -219,7 +219,7 @@ func TestOrchestrator_RefineChat_Success(t *testing.T) {
 		},
 	}
 
-	res, usage, err := orch.RefineChat(ctx, p, "change it", true, true)
+	res, usage, err := orch.RefineChat(ctx, p, "change it", true, true, PluginGate{})
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
@@ -283,7 +283,7 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 		return reqBody.Contents[0].Parts[0].Text
 	}
 
-	_, _, err := orch.RefineChat(ctx, p, "change it", true, true)
+	_, _, err := orch.RefineChat(ctx, p, "change it", true, true, PluginGate{})
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
@@ -293,7 +293,7 @@ func TestOrchestrator_RefineChat_InjectsSelectedCaptureContext(t *testing.T) {
 
 	// allowFactoryCaptures=false must suppress the capture context entirely, same leak
 	// guard SelectedCaptureContext already enforces for RunPipeline.
-	_, _, err = orch.RefineChat(ctx, p, "change it", false, true)
+	_, _, err = orch.RefineChat(ctx, p, "change it", false, true, PluginGate{})
 	if err != nil {
 		t.Fatalf("Expected RefineChat to succeed, got %v", err)
 	}
@@ -316,7 +316,7 @@ func TestOrchestrator_TimeoutsAndErrors(t *testing.T) {
 		t.Errorf("Expected pipeline to fail on timeout")
 	}
 
-	_, _, err = orch.RefineChat(ctxTimeout, &storage.Preset{}, "test", true, true)
+	_, _, err = orch.RefineChat(ctxTimeout, &storage.Preset{}, "test", true, true, PluginGate{})
 	if err == nil {
 		t.Errorf("Expected refine chat to fail on timeout")
 	}

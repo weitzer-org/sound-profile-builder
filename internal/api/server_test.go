@@ -129,7 +129,7 @@ type badJsonOrchestrator struct{}
 func (m *badJsonOrchestrator) RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(string)) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
-func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *agents.TokenUsage, error) {
+func (m *badJsonOrchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool, _ agents.PluginGate) (string, *agents.TokenUsage, error) {
 	return `{"bad json"}`, nil, nil
 }
 func (m *badJsonOrchestrator) Close() {}
@@ -146,7 +146,7 @@ func (m *mockOrchestratorCapturesConstraints) RunPipeline(ctx context.Context, p
 	m.constraintsCh <- constraints
 	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
 }
-func (m *mockOrchestratorCapturesConstraints) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *agents.TokenUsage, error) {
+func (m *mockOrchestratorCapturesConstraints) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool, _ agents.PluginGate) (string, *agents.TokenUsage, error) {
 	return `{"final_html_payload":{"Gibson ES-339 Humbuckers":"mock"},"agent_impact":[]}`, &agents.TokenUsage{}, nil
 }
 func (m *mockOrchestratorCapturesConstraints) Close() {}
