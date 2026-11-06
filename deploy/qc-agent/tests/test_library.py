@@ -19,7 +19,7 @@ from qc_agent.export_validator import ExportRefused, validate
 from qc_agent.s3 import MemoryStore
 from fake_device import FakeDevice, capture
 
-FIXTURE = json.loads((REPO / "testdata" / "devicejobs" / "library.json").read_text())
+FIXTURE = json.loads((REPO / "testdata" / "devicejobs" / "library.json").read_text(encoding="utf-8"))
 
 
 def setUpModule():
