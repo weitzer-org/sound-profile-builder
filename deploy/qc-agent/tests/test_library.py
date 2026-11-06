@@ -64,15 +64,13 @@ class Payload(unittest.TestCase):
 class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
         self.store = MemoryStore("sound-profile-builder-device-jobs")
         self.dev = FakeDevice()
         self.clock = Clock()
         self.agent = Agent(config(), self.store, self.dev, catalog(), Path(self.tmp.name), now_fn=self.clock,
                            sleep=lambda s: None)
         self.agent.ctx.sleep = lambda s: None
-
-    def tearDown(self):
-        self.tmp.cleanup()
 
     def run_job(self, kind, **kw):
         jid, key, data = job(kind, **kw)
