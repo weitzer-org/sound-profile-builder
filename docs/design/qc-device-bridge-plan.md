@@ -128,7 +128,7 @@ The device capability is exposed as **a few intent-level tools**, not 60 low-lev
 | `sync_device_library` | v2 | `directory_summary`, `search_directory`, `list_favorites` | Uploads the unit's **capture, IR and preset names** to QC-2. The pipeline can then prefer captures the owner actually has; today `user_captures.json` is hand-maintained. This text is device-sourced and untrusted (section 6). |
 | `audition_on_device` | v2 | `recall_preset`, `switch_scene` | Recalls a slot this system created, or switches its scene. |
 | `send_preset_to_device` overwrite | v2 | `save_preset` | Re-push into a slot **this system created**, tracked in the jobs bucket. Never into other slots. |
-| Scene labels, stomps, captures/IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_capture`, `add_ir` | Captures and IRs only if already on the unit (`sync_device_library`). |
+| Scene labels, stomps, captures/IRs on push | v2 | `set_preset_meta`, `assign_stomp`, `add_capture`, `add_ir` | Captures and IRs only if already on the unit (`sync_device_library`). Stomps follow the fixed role layout in `docs/design/qc-stomp-layout.md`. |
 | Level report | v3, maybe | `measure_preset`, `suggest_levels` | **Report-only.** Needs audio loopback through the unit's USB 5/6 channels (qc-mcp `audio_io.py`). This is the measured counterpart to the FOH Optimizer's predictions. |
 | **Never** | — | `set_io_port`, `set_global_eq`, `load_settings_preset`, `set_master_volume`, `switch_mode`, `set_mode_cycle`, `delete_device_preset`, `save_device_preset`, `clear_grid`, `level_*` (writing), `sample_stop` (arbitrary file path), raw transport | These are global, destructive, or outside the product's job. |
 
