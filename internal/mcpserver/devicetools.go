@@ -994,7 +994,7 @@ func renderStomps(t *strings.Builder, s *devicejobs.PlanStomps, blocks []devicej
 
 func bypassVaries(scenes []bool) bool {
 	for _, b := range scenes {
-		if len(scenes) > 0 && b != scenes[0] {
+		if b != scenes[0] {
 			return true
 		}
 	}

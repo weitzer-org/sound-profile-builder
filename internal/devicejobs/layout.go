@@ -68,15 +68,13 @@ func (l SceneLayout) Validate() error {
 		if i > 0 && g.Guitar == l.Guitars[0].Guitar {
 			return errors.New("the second guitar must be a different guitar from the first")
 		}
-		for role, s := range map[string]int{"rhythm": g.Rhythm, "lead": g.Lead} {
-			if s < 0 || s >= len(SceneLetters) {
-				return fmt.Errorf("%s scene %d is not one of A-H", role, s)
-			}
-		}
 		for _, role := range []struct {
 			name string
 			s    int
 		}{{"rhythm", g.Rhythm}, {"lead", g.Lead}} {
+			if role.s < 0 || role.s >= len(SceneLetters) {
+				return fmt.Errorf("%s scene %d is not one of A-H", role.name, role.s)
+			}
 			if prev, dup := used[role.s]; dup {
 				return fmt.Errorf("Scene %s is given to both %s and %s %s: each scene takes one tone", Letter(role.s), prev, g.Guitar, role.name)
 			}

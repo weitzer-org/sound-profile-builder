@@ -613,8 +613,9 @@ func TestOwnedPluginAllowed(t *testing.T) {
 	if len(owned.Unresolved) != 1 || !strings.Contains(owned.Unresolved[0].Reason, "home bridge refuses plugin models") {
 		t.Fatalf("%s owned, bridge refuses plugins: %+v", name, owned.Unresolved)
 	}
+	was := BridgePushesPlugins
 	BridgePushesPlugins = true
-	defer func() { BridgePushesPlugins = false }()
+	t.Cleanup(func() { BridgePushesPlugins = was })
 	_, p := export(t, e, preset(block(name)), "g")
 	if len(p.Unresolved) != 0 || p.Rows[0].Blocks[0].Plugin != "Cory Wong" {
 		t.Fatalf("%s: %+v", name, p)
