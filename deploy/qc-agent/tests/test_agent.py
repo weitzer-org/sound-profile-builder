@@ -443,6 +443,32 @@ class Push(Base):
         self.assertIn("after placing the blocks", r["message"])
         self.no_value_writes()
 
+    def test_block_swapped_on_the_unit_mid_build_stops_before_its_writes(self):
+        def swap(name):
+            if name == "set_param" and self.dev.grid.get(2, {}).get("model_id") == 12045:
+                self.dev.grid[2]["model_id"] = 12046  # the owner picks another cab in column 2
+        self.dev.on_call = swap
+        r = self.push()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("The grid changed on the unit during the build", r["message"])
+        self.assertIn("column 2 holds model 12046", r["message"])
+        writes = [c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")]
+        self.assertTrue(writes and all(c[2] < 2 for c in writes))  # nothing written to the swapped block
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_each_block_is_rechecked_and_confirmed_before_its_writes(self):
+        self.push()
+        names = [c[0] for c in self.dev.calls]
+        confirms = [c for c in self.dev.calls if c[0] == "confirm_layout"]
+        self.assertEqual(confirms, [("confirm_layout", 0, 4), ("confirm_layout", 1, 8), ("confirm_layout", 2, 22),
+                                    ("confirm_layout", 3, 6), ("confirm_layout", 4, 6)])
+        for c in confirms:
+            i = self.dev.calls.index(c)
+            self.assertEqual(names[i - 1], "read_current_preset")
+            first = next(k for k, x in enumerate(self.dev.calls)
+                         if x[0] in ("set_param", "set_param_scenes", "set_block_bypass") and x[2] == c[1])
+            self.assertLess(i, first)
+
     def test_switching_presets_between_value_writes_stops(self):
         def switch(name):
             if name == "set_param":
@@ -512,7 +538,7 @@ class Push(Base):
         def switch(name):
             if name == "read_current_preset":
                 reads["n"] += 1
-                if reads["n"] == 4:  # 1: blank check, 2: layout, 3: read-back, 4: the re-read just before the save
+                if reads["n"] == 9:  # 1: blank check, 2: layout, 3-7: per-block re-check, 8: read-back, 9: before save
                     self.dev.open_position = 0
         self.dev.on_call = switch
         r = self.push()

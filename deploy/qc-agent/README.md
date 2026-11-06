@@ -43,8 +43,10 @@ For a push, before anything is written:
 
 Then it builds the chain on the live grid in three phases: it places every block; reads the grid **once** and
 checks that each column holds the planned model and reports exactly `param_count + 1` parameters (G1), stopping
-before any value is written if not; then writes the values (all eight scenes when A and B differ, G6) and **all
-eight bypass flags on every block**, through the block's bypass control at `param_count + 1`. Before **every**
+before any value is written if not; then, block by block, re-reads that column (the same check, so a block swapped
+on the unit mid-build stops the push; the wire guard allows a block's bypass control only after such a read) and
+writes the values (all eight scenes when A and B differ, G6) and **all eight bypass flags on every block**, through
+the block's bypass control at `param_count + 1`. Before **every**
 write it re-reads which slot is open (a write lands in whatever preset is open) and checks the liveness verdict.
 It reads the grid back and diffs it; controls it didn't write are compared with the catalog default and only
 **logged** (`default differs: ...` in `agent.log`), never failed. It saves only if the diff is clean, a second

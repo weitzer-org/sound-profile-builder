@@ -21,7 +21,8 @@ Three layers keep the transport to the operations the plan allows (section 5):
        models in the plan's columns, set the plan's parameter indexes (always below the
        model's param_count, so never the device's trailing slot) to exactly the plan's
        float values in 0..1, assign to scenes only the plan's scene-varying params and
-       each block's bypass control (index param_count + 1), set routing in 1 -> out 19,
+       each block's bypass control (index param_count + 1, and only once a read of the unit
+       confirmed that block's count: confirm_layout), set routing in 1 -> out 19,
        or set the plan's bypass flags; write each capture block's file_name (index 5)
        exactly once, as the exact string the push resolved from the unit's own listing; and
        Scene UPDATEs (the transport switches scenes to write per-scene values);
@@ -214,15 +215,29 @@ class WireGuard:
                       "scene_params": {(b.col, p.index) for b in plan.blocks for p in b.params if p.scene_wires},
                       # no value or string write at or past param_count (G1: the device's trailing slot)
                       "param_count": {b.col: b.param_count for b in plan.blocks},
-                      # every block gets all eight bypass flags (G6), through its own bypass control,
-                      # param_count + 1; the push confirms the unit's count before any value is written
+                      # every block gets all eight bypass flags (G6), through its own bypass control at
+                      # param_count + 1. That index is NOT allowed until a read of the unit confirms the block
+                      # reports exactly param_count + 1 params (confirm_layout): the guard never trusts the
+                      # catalog alone for it, since on a block with more params it would be a real control.
                       "bypass_cols": {b.col for b in plan.blocks},
-                      "bypass_index": {b.col: b.bypass_index for b in plan.blocks},
+                      "bypass_expected": {b.col: b.bypass_index for b in plan.blocks},
+                      "bypass_index": {},  # col -> confirmed by confirm_layout
                       # the exact values each write may carry (float32 on the wire, so compared within 1e-6)
                       "values": {(b.col, p.index): {p.wire, *(p.scene_wires or ())}
                                  for b in plan.blocks for p in b.params},
                       "flags": {b.col: set(b.bypass_scenes) for b in plan.blocks},
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
+
+    def confirm_layout(self, col, n):
+        """The unit read `n` params for the planned block in `col`: allow its bypass control only if
+        that is the plan's param_count + 1 (G1). Anything else raises and allows nothing."""
+        push = self._push
+        if push is None or col not in push["bypass_expected"]:
+            raise WireRefused(f"no armed block in column {col}")
+        if n != push["bypass_expected"][col]:
+            push["bypass_index"].pop(col, None)
+            raise WireRefused(f"column {col} reads {n} params, not the plan's {push['bypass_expected'][col]}")
+        push["bypass_index"][col] = n
 
     def arm_save(self, folder_key, position, name):
         self._save = (folder_key, position, name)
@@ -348,8 +363,8 @@ class WireGuard:
             # "Assign to Scenes": only for the plan's scene-varying params, or a block's bypass control.
             if (col, p.index) in push["scene_params"]:
                 return
-            if col in push["bypass_cols"] and p.index == push["bypass_index"][col]:
-                return  # the bypass control: param_count + 1, checked against the unit's read (layout check)
+            if col in push["bypass_cols"] and p.index == push["bypass_index"].get(col):
+                return  # the bypass control: param_count + 1, confirmed from the unit's read (confirm_layout)
             raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
         if "index" in qf and not 0 <= p.index < push["param_count"][col]:
             raise WireRefused(f"Grid: column {col} index {p.index} is at or past param_count (the trailing slot)")
@@ -843,6 +858,11 @@ class QcMcpBackend(DeviceBackend):
     def set_param_scenes(self, row, col, index, wires):
         self._call("set_param_scenes", row, col, index, list(wires))
 
+    def confirm_layout(self, col, n):
+        if self._guard is None:
+            raise DeviceError("not connected")
+        self._guard.confirm_layout(col, n)
+
     def set_block_bypass(self, row, col, scenes, bypass_index):
         # Always the per-scene path G6 verified (assign to scenes, then each scene's flag explicitly), on
         # every block, even when all eight agree: unwritten scenes keep their old value. The index is the
@@ -851,7 +871,8 @@ class QcMcpBackend(DeviceBackend):
         if self._guard is None or self._guard._push is None:
             raise DeviceError("not armed")
         if bypass_index != self._guard._push["bypass_index"].get(col):
-            raise DeviceError(f"column {col}: bypass index {bypass_index} is not the armed one")
+            raise DeviceError(f"column {col}: bypass index {bypass_index} is not the armed one "
+                              "(not confirmed from the unit's read)")
         self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=bypass_index)
 
     def save_to_slot(self, position, name):

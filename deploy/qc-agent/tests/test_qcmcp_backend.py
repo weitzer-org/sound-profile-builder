@@ -399,10 +399,17 @@ class Guard(Base):
         self.raw_grid(assign(1))       # DAMPING: a real parameter, not scene-varying in the plan
         self.raw_grid(assign(5))       # the trailing slot
         self.raw_grid(assign(7))
-        for col, idx in ((4, 6), (0, 4), (2, 22)):  # every block's bypass control is armed: param_count + 1
+        self.raw_grid(assign(6))       # the bypass control, but no read of the unit has confirmed it yet
+        with self.assertRaisesRegex(WireRefused, "reads 7 params"):
+            self.dev.confirm_layout(4, 7)  # a block with more params than the catalog: 6 would be a control
+        self.raw_grid(assign(6))
+        for col, idx in ((4, 6), (0, 4), (2, 22)):  # once confirmed: param_count + 1 on every block
+            self.dev.confirm_layout(col, idx)
             g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
             assign(idx, col)(g)
             self.qc.send("Grid", g)
+        with self.assertRaisesRegex(WireRefused, "no armed block in column 6"):
+            self.dev.confirm_layout(6, 1)
 
     def test_no_value_at_or_past_param_count(self):
         self.dev.begin_push(152, "x", self.plan)
@@ -427,6 +434,9 @@ class Guard(Base):
 
     def test_backend_bypass_index_must_be_the_armed_one(self):
         self.dev.begin_push(152, "x", self.plan)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 4, [False] * 8, 6)  # right index, but not confirmed from a read
+        self.dev.confirm_layout(4, 6)
         with self.assertRaisesRegex(DeviceError, "not the armed one"):
             self.dev.set_block_bypass(0, 4, [False] * 8, 5)
         self.dev.end_push()

@@ -17,7 +17,8 @@ that bind every device write, in the order they run for a push:
   6. build in three phases: place every block (a capture block with its capture loaded), then
      ONE read that checks each column's model id and that it reports exactly param_count + 1
      parameters (G1, plan 7.2), so a block whose index layout isn't the catalog's stops the job
-     before any value is written; then each block's parameters (all eight scene values with
+     before any value is written; then, block by block, a re-read of that column (the same check,
+     which also confirms its bypass control to the wire guard) and the block's parameters (all eight scene values with
      set_param_scenes when A and B differ, else one set_param; G6) and all eight bypass flags of
      every block, through its bypass control at param_count + 1;
   7. read back and diff every written value and every bypass flag; controls the push didn't write
@@ -347,7 +348,7 @@ def _row(plan, preset):
     return next((c for c in (preset or {}).get("chains", []) if c.get("row") == plan.row), None)
 
 
-def _check_layout(plan, preset):
+def _check_layout(plan, preset, blocks=None):
     """After placing every block, before writing any value: each column holds the planned model
     (for a capture block, the V1/V2 block the listing resolved) and reports exactly param_count + 1
     parameters (G1: the full list, hidden ones included, plus one trailing slot). Any other count
@@ -357,7 +358,7 @@ def _check_layout(plan, preset):
     if chain is None:
         return "row 0 is missing from the unit's read"
     by_col = {b["col"]: b for b in chain.get("blocks", [])}
-    for b in plan.blocks:
+    for b in plan.blocks if blocks is None else blocks:
         got = by_col.get(b.col)
         if got is None or got.get("model_id") != b.model_id:
             return (f"column {b.col} holds model {None if got is None else got.get('model_id')}, "
@@ -609,6 +610,9 @@ class _Push:
                           "re-select the slot on the unit to discard the partial grid.",
                           firmware=self.fw, push=self.result)
         for b in plan.blocks:                                          # phase 3: values and bypass
+            out = self.recheck(b)
+            if out:
+                return out
             for p in b.params:
                 if p.scene_wires:  # G6: unwritten scenes keep their old value, so all eight are written
                     self.op(dev.set_param_scenes, plan.row, b.col, p.index, list(p.scene_wires))
@@ -616,6 +620,22 @@ class _Push:
                     self.op(dev.set_param, plan.row, b.col, p.index, p.wire)
             # all eight flags on every block (owner decision): a new block starting active is not assumed
             self.op(dev.set_block_bypass, plan.row, b.col, list(b.bypass_scenes), b.bypass_index)
+        return None
+
+    def recheck(self, b):
+        """Before one block's writes: read the grid again and check this column still holds the planned
+        model with param_count + 1 params (the owner could swap a block on the unit during the build,
+        and writes address column and index, not a model). The same read confirms the block's bypass
+        control to the wire guard, which allows it only from a read like this one."""
+        grid = self.dev.read_current_preset()
+        _check_alive(self.ctx)
+        problem = "the unit did not return the grid" if grid is None else _check_layout(self.plan, grid, [b])
+        if problem:
+            log.error("layout re-check before column %d: %s", b.col, problem)
+            return failed("device_error", f"The grid changed on the unit during the build ({text.clean(problem, 160)})."
+                          " Nothing was saved; re-select the slot on the unit to discard the partial grid.",
+                          firmware=self.fw, push=self.result)
+        self.dev.confirm_layout(b.col, b.param_count + 1)
         return None
 
     def verify(self):

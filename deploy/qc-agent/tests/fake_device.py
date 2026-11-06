@@ -196,6 +196,9 @@ class FakeDevice(DeviceBackend):
         self._rec("set_param_scenes", row, col, index, list(wires))
         self.grid[col]["params"][index] = list(wires)
 
+    def confirm_layout(self, col, n):
+        self._rec("confirm_layout", col, n)
+
     def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
         self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
