@@ -741,6 +741,15 @@ class QcMcpBackend(DeviceBackend):
     WATCH_INTERVAL_S = 1.0
     WATCH_STALE_S = 5.0   # the watchdog's own timeout: a verdict older than this counts as gone
 
+    @staticmethod
+    def _reader_thread_dead(qc) -> bool:
+        """The one place that reads the vendored transport's private state: WinHIDTransport._thread, its
+        HID reader (qc.io is our WireGuard; .inner is the transport). Upstream has no public liveness API
+        at f634ecd, and the vendored files can't change without a re-vendoring PR; a test pins this
+        attribute in the vendored source so such a PR can't drop it silently."""
+        thread = getattr(getattr(qc.io, "inner", None), "_thread", None)
+        return thread is not None and not thread.is_alive()
+
     def _watchdog_sample(self):
         """One liveness sample, from attributes only: it never calls into the transport, so it can't
         block on the transport's lock or on the device. Gone when the reader thread is dead, or when the
@@ -749,9 +758,7 @@ class QcMcpBackend(DeviceBackend):
         qc = self._raw
         gone = qc is None
         if not gone:
-            inner = getattr(qc.io, "inner", None)
-            thread = getattr(inner, "_thread", None)
-            if thread is not None and not thread.is_alive():
+            if self._reader_thread_dead(qc):
                 gone = True
             else:
                 self._errs = (self._errs + [qc.write_errors])[-3:]

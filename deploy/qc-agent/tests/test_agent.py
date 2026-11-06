@@ -404,6 +404,16 @@ class Push(Base):
         self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
         self.assertTrue(self.agent.stop.is_set())
 
+    def test_oversized_result_still_records_the_saved_slot(self):
+        from unittest import mock
+        with mock.patch.object(contract, "MAX_RESULT_BYTES", 1500):  # the push result's diff doesn't fit
+            r = self.push()
+        self.assertEqual((r["status"], r["message"]), ("failed", "The result was too large to return."))
+        self.assertTrue(self.agent.owned.owned(152, "Texas Blues"))
+        o = json.loads(contract.open_envelope(self.cfg.keys, contract.TAG_OWNED_SLOTS,
+                                              self.store.objects[contract.OWNED_SLOTS_KEY]))
+        self.assertEqual([(e["slot"], e["name"]) for e in o["slots"]], [("20A", "Texas Blues")])
+
     def no_value_writes(self):
         self.assertEqual([c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")],
                          [])
