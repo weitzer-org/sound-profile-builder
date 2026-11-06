@@ -157,6 +157,8 @@ class Push(Base):
         self.assertIn("Scene labels are not written", r["message"])
         names = [c[0] for c in self.dev.calls]
         # order: checks before any write; save last
+        for n in ("list_my_presets", "setlist_position", "set_routing", "save_to_slot"):
+            self.assertIn(n, names)
         self.assertLess(names.index("list_my_presets"), names.index("set_routing"))
         self.assertLess(names.index("setlist_position"), names.index("set_routing"))
         self.assertEqual(names.count("save_to_slot"), 1)
