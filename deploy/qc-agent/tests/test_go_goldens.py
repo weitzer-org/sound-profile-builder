@@ -28,9 +28,14 @@ class Goldens(unittest.TestCase):
             with self.subTest(name):
                 g = json.loads((GO_GOLDENS / f"{name}.json").read_text())
                 e = go_golden(name)
+                captures = any("capture" in b for b in g["payload"]["rows"][0]["blocks"])
                 if g["unresolved"]:
-                    # The eval presets use captures, switches, unconfirmed tapers: not pushable in v1.
+                    # Some eval presets still have unresolved items (scales, shared names, plugins).
                     with self.assertRaisesRegex(V.ExportRefused, "unresolved item"):
+                        V.validate(e, catalog(), "4.1.0")
+                elif captures:
+                    # Pushable on the QC-2 side, but this bridge can't place captures yet (plan 4.2).
+                    with self.assertRaisesRegex(V.ExportRefused, "can't place captures yet"):
                         V.validate(e, catalog(), "4.1.0")
                 else:
                     V.validate(e, catalog(), "4.1.0")
@@ -61,6 +66,12 @@ class TablesMatchGo(unittest.TestCase):
         go = {m.group(1): float(m.group(2))
               for m in re.finditer(r'"(M(?:IN|AX)_[A-Z0-9_]+)":\s*\{(-?[0-9.]+),\s*EvidenceConfirmed410', FW_CONSTANTS)}
         self.assertEqual(V.CONFIRMED_BOUNDS, go)
+
+    def test_pyquadcortex_bounds(self):
+        # Exactly the bounds Go marks EvidencePyQuadCortex, with the same numbers.
+        go = {m.group(1): float(m.group(2))
+              for m in re.finditer(r'"(M(?:IN|AX)_[A-Z0-9_]+)":\s*\{(-?[0-9.]+),\s*EvidencePyQuadCortex', FW_CONSTANTS)}
+        self.assertEqual(V.PYQUADCORTEX_BOUNDS, go)
 
     def test_verified_clone_bases(self):
         block = re.search(r"var VerifiedCloneBases = map\[int\]string\{(.*?)\n\}", FW_CONSTANTS, re.S).group(1)

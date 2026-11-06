@@ -45,9 +45,11 @@ var SceneSources = [Scenes]string{"A", "B", "A", "A", "A", "A", "A", "A"}
 
 // Options configures an Exporter.
 type Options struct {
-	// IsCapture reports block names coros_map.json or user_captures.json mark as captures.
-	// A capture wins over a catalog model of the same name, as in the pipeline.
-	IsCapture func(name string) bool
+	// CaptureSource reports whether a block name is a capture the user's libraries know:
+	// "factory" (coros_map.json) or "user" (user_captures.json), "ir" for a library entry
+	// that is a cab IR, "" when it isn't one. A capture wins over a catalog model of the
+	// same name, as in the pipeline.
+	CaptureSource func(name string) string
 	// OwnedPlugins holds the plugins the user owns, by catalog.PluginNames spelling
 	// (config.json's available_plugins when allow_paid_plugins is on). Models of any other
 	// plugin are refused.
@@ -117,6 +119,9 @@ type Payload struct {
 	// until gate G7.
 	Stomps     []stomplayout.Stomp     `json:"stomps"`
 	Unresolved []devicejobs.Unresolved `json:"unresolved"`
+	// Warnings are settings the push leaves out on purpose (plan 4.1: a non-default cab
+	// mic keeps the cab's default). They don't block a push.
+	Warnings []devicejobs.Unresolved `json:"warnings"`
 }
 
 // CatalogRef names the catalog the ids and indexes come from.
@@ -147,12 +152,31 @@ type Block struct {
 	// Plugin is the paid plugin the model needs, when it is one (owned, or it would be
 	// unresolved).
 	Plugin string `json:"plugin,omitempty"`
+	// Capture is set on a Neural Capture block (plan 4.2). Its ModelID is 0: the agent picks
+	// 14000 (V1) or 14001 (V2) from the capture's version on the unit, where it also finds
+	// the capture's key. Params use the capture block's own layout (GAIN..VOLUME, 0-4),
+	// which both block types share.
+	Capture *Capture `json:"capture,omitempty"`
+
+	modelerType string // the preset's block type, for the stomp layout of a capture
 	// Bypass is the block's bypass state in scenes A-H (true = bypassed). Always all eight.
 	Bypass [Scenes]bool `json:"bypass"`
 	Params []Param      `json:"params"`
 	// AtDefault lists controls the preset sets to the catalog default in every scene. They
 	// are not written: a block added to an empty slot starts at its defaults.
 	AtDefault []string `json:"at_default"`
+}
+
+// Capture names the capture a Neural Capture block loads.
+type Capture struct {
+	// Name is the capture's name as the preset gives it (the library entry's name).
+	Name string `json:"name"`
+	// Source is "factory" (coros_map.json) or "user" (user_captures.json).
+	Source string `json:"source"`
+	// ResolvedOnUnit is false until the unit's capture list is synced to QC-2 (plan P4b):
+	// the agent then resolves the name against a fresh read of the unit's captures and
+	// fails the job, writing nothing, when it isn't there.
+	ResolvedOnUnit bool `json:"resolved_on_unit"`
 }
 
 // Param is one parameter write.
@@ -164,6 +188,23 @@ type Param struct {
 	SceneMode bool            `json:"scene_mode"`
 	Display   [Scenes]float64 `json:"display"`
 	Wire      [Scenes]float64 `json:"wire"`
+	// Evidence says what the display-to-wire mapping rests on (plan 4.1), e.g.
+	// "taper:g4" (read on the owner's unit), "taper:device-xml" (the device's own skew,
+	// formula confirmed at other exponents), "taper:pyquadcortex", "bounds:g4",
+	// "bounds:pyquadcortex-4.0.1", "encoding:qc-mcp-linear" (switch positions).
+	Evidence []string `json:"evidence"`
+
+	names [2]string // Scene A/B position names of a switch, for the readable plan
+}
+
+// Confirmed reports whether every part of the mapping was read on the owner's unit.
+func (p Param) Confirmed() bool {
+	for _, e := range p.Evidence {
+		if !strings.HasSuffix(e, ":g4") {
+			return false
+		}
+	}
+	return true
 }
 
 // Export builds the export for one guitar. It returns an error only for faults (the guitar
@@ -216,6 +257,10 @@ func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar
 	if p.Unresolved == nil {
 		p.Unresolved = []devicejobs.Unresolved{}
 	}
+	p.Warnings = b.warnings
+	if p.Warnings == nil {
+		p.Warnings = []devicejobs.Unresolved{}
+	}
 	stomps, err := e.planStomps(p.Rows)
 	if err != nil {
 		return nil, err
@@ -225,7 +270,7 @@ func (e *Exporter) Export(_ context.Context, sp storage.StructuredPreset, guitar
 	if err != nil {
 		return nil, err
 	}
-	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Stomps: stomps.view}, nil
+	return &devicejobs.Export{Format: Format, Payload: raw, Summary: summary(p), Unresolved: p.Unresolved, Warnings: p.Warnings, Stomps: stomps.view}, nil
 }
 
 // marshal encodes compactly with Go's default HTML escaping, so preset text such as a
@@ -242,10 +287,13 @@ func summary(p Payload) []devicejobs.PlanBlock {
 		for _, bl := range r.Blocks {
 			pb := devicejobs.PlanBlock{Row: r.Row, Col: bl.Col, Model: bl.Model, ModelID: bl.ModelID,
 				Params: []devicejobs.PlanParam{}, BypassA: bl.Bypass[0], BypassB: bl.Bypass[1], AtDefault: bl.AtDefault}
+			if bl.Capture != nil {
+				pb.Capture = bl.Capture.Name
+			}
 			for _, pr := range bl.Params {
-				pp := devicejobs.PlanParam{Name: pr.Label, A: displayString(pr.Display[0], pr.Units)}
+				pp := devicejobs.PlanParam{Name: pr.Label, A: pr.shown(0), Unconfirmed: !pr.Confirmed()}
 				if pr.Display[1] != pr.Display[0] {
-					pp.B = displayString(pr.Display[1], pr.Units)
+					pp.B = pr.shown(1)
 				}
 				pb.Params = append(pb.Params, pp)
 			}
@@ -253,6 +301,15 @@ func summary(p Payload) []devicejobs.PlanBlock {
 		}
 	}
 	return out
+}
+
+// shown is Scene A's (0) or B's (1) value as the plan shows it: a switch's position name,
+// else the number and unit.
+func (p Param) shown(scene int) string {
+	if p.names[scene] != "" {
+		return p.names[scene]
+	}
+	return displayString(p.Display[scene], p.Units)
 }
 
 // usesBasis reports whether any parameter of the preset carries a basis field. Architect

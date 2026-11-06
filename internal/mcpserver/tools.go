@@ -202,6 +202,7 @@ type deviceExportOutput struct {
 	Blocks     []devicejobs.PlanBlock  `json:"blocks"`
 	Stomps     *devicejobs.PlanStomps  `json:"stomps,omitempty"`
 	Unresolved []devicejobs.Unresolved `json:"unresolved"`
+	Warnings   []devicejobs.Unresolved `json:"warnings"`
 	// Payload is the export itself, the object send_preset_to_device would queue.
 	Payload map[string]any `json:"payload"`
 }
@@ -298,7 +299,7 @@ func deviceExport(ctx context.Context, exp devicejobs.Exporter, sp storage.Struc
 		return nil, "", toolError(getToolName, err)
 	}
 	out := &deviceExportOutput{Guitar: guitar, Format: e.Format, PlanSHA256: sum, CanPush: len(e.Unresolved) == 0,
-		Blocks: e.Summary, Stomps: e.Stomps, Unresolved: e.Unresolved}
+		Blocks: e.Summary, Stomps: e.Stomps, Unresolved: e.Unresolved, Warnings: e.Warnings}
 	if err := json.Unmarshal(e.Payload, &out.Payload); err != nil {
 		return nil, "", toolError(getToolName, fmt.Errorf("device export: %w", err))
 	}
@@ -308,6 +309,9 @@ func deviceExport(ctx context.Context, exp devicejobs.Exporter, sp storage.Struc
 	if out.Unresolved == nil {
 		out.Unresolved = []devicejobs.Unresolved{}
 	}
+	if out.Warnings == nil {
+		out.Warnings = []devicejobs.Unresolved{}
+	}
 	var t strings.Builder
 	fmt.Fprintf(&t, "Device export of guitar %s: %s, plan sha256 `%s`. ", cell(guitar), cell(e.Format), sum)
 	if out.CanPush {
@@ -315,7 +319,7 @@ func deviceExport(ctx context.Context, exp devicejobs.Exporter, sp storage.Struc
 	} else {
 		fmt.Fprintf(&t, "%d item(s) are unresolved, so it cannot be pushed yet.\n\n", len(out.Unresolved))
 	}
-	renderExportTable(&t, out.Blocks, out.Stomps, out.Unresolved)
+	renderExportTable(&t, out.Blocks, out.Stomps, out.Unresolved, out.Warnings)
 	// Compact, because the table above is the readable view and an 8-block export indented
 	// runs to hundreds of lines. JSON escapes newlines inside strings, so the payload is one
 	// line and can't close the fence early; HTML characters arrive as \u003c etc.
