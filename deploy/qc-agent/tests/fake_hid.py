@@ -49,6 +49,8 @@ class FakeHID:
         self.deps_on_save = True             # a saved preset lists its captures' keys as dependencies
         self.preset_deps: dict[int, list[str]] = {}
         self.position_replies = True  # False: SetlistPosition READs go unanswered (a slow or busy unit)
+        self.stomps: dict[tuple[int, int], tuple[int, int]] = {}  # (row, col) -> (stomp_index, type)
+        self.momentary: dict[int, bool] = {}
 
     # -- the HID API the transport uses --
 
@@ -139,6 +141,10 @@ class FakeHID:
             self._grid(m)
 
     def _grid(self, g):
+        for a in g.preset.stomp_mode_assignments:  # qc-mcp: a block holds one primary assignment; again moves it
+            self.stomps[(a.row, a.column)] = (a.stomp_index, a.type)
+        for k, v in g.preset.stomp_is_momentary.items():
+            self.momentary[k] = v
         for ch in g.preset.chains:
             if ch.in_portid or ch.out_portid:
                 self.routing[ch.row] = (ch.in_portid, ch.out_portid)
@@ -203,6 +209,11 @@ class FakeHID:
                                 p.param_values.add().float_value = v
             else:
                 ch.models.add()  # an empty slot keeps the chain non-empty
+        for (r, c), (i, t) in sorted(self.stomps.items()):
+            a = bp.stomp_mode_assignments.add()
+            a.row, a.column, a.stomp_index, a.type = r, c, i, t
+        for k, v in self.momentary.items():
+            bp.stomp_is_momentary[k] = v
         for r in range(4):
             row = bp.bypass.add()
             for col in range(8):

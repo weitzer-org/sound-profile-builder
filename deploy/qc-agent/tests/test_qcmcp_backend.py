@@ -29,6 +29,9 @@ def setUpModule():
         p = mock.patch.object(jobs, name, 0)
         p.start()
         unittest.addModuleCleanup(p.stop)
+    p = mock.patch.object(QcMcpBackend, "STOMP_SETTLE_S", 0)
+    p.start()
+    unittest.addModuleCleanup(p.stop)
 T = fake_hid.M["transport"]
 P = fake_hid.P
 

@@ -233,6 +233,7 @@ Captures are central to the owner's presets. 18 of the 28 eval chains use at lea
   - reads: `read_state("Version")`, `get_setlist_position`, `list_directory`, `get_current_preset`;
   - grid: `clear_grid` (only on a verified-empty slot), `set_routing`, `add_block`, `set_param`, `set_param_scenes`, `set_block_bypass`;
   - scenes: `set_scene_label`;
+  - footswitches: `assign_stomp` (primary, latching), only in a push's stomp step after the read-back and before the save, only for the armed assignments (stomp doc §6.1, entry point 1). It stays on the never-list otherwise, and `unassign_stomp` is never used;
   - saving: `write_preset_file`, the File CREATE save;
   - closing: `close`.
   - **Never:** `save_preset` (RecallPreset SAVE, the documented hang), IOSettings, GlobalEQ, MasterVolume, Mode, ModelPreset, or the raw `send`.

@@ -10,10 +10,10 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 from __future__ import annotations
 
 from qc_agent.captures import CaptureEntry, DirectorySnapshot
-from qc_agent.device import SETLIST_KEY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
+from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
-                         "set_block_bypass", "save_to_slot", "set_mic"})
+                         "set_block_bypass", "save_to_slot", "set_mic", "assign_stomp"})
 
 KEY_V1 = "a1" * 32   # a factory V1 capture
 KEY_V2 = "b2" * 32   # a factory V2 capture
@@ -58,6 +58,11 @@ class FakeDevice(DeviceBackend):
         self.on_listing = None                          # hook(fake, n) before the n-th listing (1-based)
         self.corrupt_file_name = False                  # the read-back's file_name differs
         self.param_count_skew: dict[int, int] = {}      # col -> slots the unit reports beyond param_count + 1
+        self.stomps: dict[tuple[int, int], int] = {}     # (row, col) -> stomp index, as assigned
+        self.extra_stomps: list[dict] = []              # assignments the read-back shows beyond those
+        self.stomp_index_skew = 0                       # the read-back reports each index shifted by this
+        self.momentary: dict[int, bool] = {}            # what the read-back reports in stomp_is_momentary
+        self.omit_stomps = False                        # the read-back carries no assignments field at all
         self._listings = 0
         self._alive_calls = 0
 
@@ -156,7 +161,21 @@ class FakeDevice(DeviceBackend):
         return {"name": "", "chains": [{"row": 0, "in_port": self.routing[0], "out_port": self.routing[1],
                                         "blocks": blocks}] + [{"row": r, "in_port": 0, "out_port": 0, "blocks": []}
                                                               for r in (1, 2, 3)],
-                "bypass": bypass}
+                "bypass": bypass,
+                **({} if self.omit_stomps else {
+                    "stomps": [{"row": r, "col": c, "index": i + self.stomp_index_skew, "type": STOMP_PRIMARY}
+                               for (r, c), i in sorted(self.stomps.items())] + list(self.extra_stomps),
+                    "momentary": dict(self.momentary)})}
+
+    def arm_stomps(self, stomps):
+        self._rec("arm_stomps", [(s.row, s.col, s.switch) for s in stomps])
+
+    def assign_stomp(self, row, col, index):
+        self._need()
+        self._rec("assign_stomp", row, col, index)
+        if col not in self.grid:
+            raise DeviceError(f"fake unit: no block at column {col}")
+        self.stomps[(row, col)] = index  # qc-mcp: assigning a block again moves it
 
     def begin_push(self, position, name, plan):
         self._rec("begin_push", position, name)

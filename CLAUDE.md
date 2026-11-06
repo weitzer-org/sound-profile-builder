@@ -200,6 +200,10 @@ this app's MCP connector. Read these before any device work:
   names must survive `SanitizeText` unchanged, and the agent still re-resolves captures on the unit at push time. With no
   synced list the export is byte-identical to before. The agent side is `qc_agent/captures.library_payload` (one
   directory read, shared with pushes) and `jobs.sync_device_library`; `testdata/devicejobs/library.json` pins both.
+- Stomps on a push (`docs/design/qc-stomp-layout.md` §6.1 entry point 1, S5): after the values read back clean and before the
+  save, the agent assigns the export's `stomps` with the vendored `assign_stomp` (latching, never H) and fails the job unless they
+  read back exactly. `assign_stomp` stays on the never-list outside that step (`Guarded.window`, wire guard `arm_stomps`); the
+  `apply_stomps` job / `apply_stomp_layout` tool (entry point 2) wait on G7 (f). Switch indexes are UNVERIFIED (README step 16).
   The cab mic string write (`set_param_typed`, held to the planned string by the wire guard) is **unverified on the
   unit** until README step 14.
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
