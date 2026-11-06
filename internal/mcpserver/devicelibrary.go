@@ -119,7 +119,10 @@ func (l *DeviceLibrary) storeSlots(ctx context.Context, v *devicejobs.JobView) {
 		log.Printf("device slots: reading the stored listing: %v", err)
 		cur = nil // a malformed record is replaced
 	}
-	if cur != nil && cur.JobID != v.JobID {
+	if cur != nil {
+		if cur.JobID == v.JobID {
+			return // this job's listing is already stored
+		}
 		if old, err := devicejobs.ParseTime(cur.ListedAt); err == nil && old.After(at) {
 			return
 		}

@@ -44,8 +44,12 @@ func NewSlotListing(r *devicejobs.SlotsResult, jobID, listedAt string) *SlotList
 
 // IsOccupied reports whether the listing showed the slot occupied.
 func (l *SlotListing) IsOccupied(slot string) bool {
+	norm, ok := devicejobs.NormalizeSlot(slot)
+	if !ok {
+		return false
+	}
 	for _, s := range l.Occupied {
-		if s == slot {
+		if s == norm {
 			return true
 		}
 	}

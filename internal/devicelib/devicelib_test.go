@@ -303,7 +303,7 @@ func TestSlotListing(t *testing.T) {
 	if got := strings.Join(l.Occupied, ","); got != "1A,20B" {
 		t.Fatalf("occupied = %q", got)
 	}
-	if !l.IsOccupied("20B") || l.IsOccupied("20A") {
+	if !l.IsOccupied("20B") || !l.IsOccupied(" 20b ") || l.IsOccupied("20A") || l.IsOccupied("zz") {
 		t.Fatal("IsOccupied")
 	}
 	if err := l.validate(); err != nil {
