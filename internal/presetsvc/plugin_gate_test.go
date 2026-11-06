@@ -69,6 +69,14 @@ func TestPluginGateFlagsUnownedDevices(t *testing.T) {
 				t.Fatalf("StartRefine: %v", err)
 			}
 			waitComplete(t, h, runID)
+			// The configured gate must reach RefineChat itself (UI and MCP both go
+			// through runRefine), not only the post-run flagging.
+			h.orch.mu.Lock()
+			gate := h.orch.refinePlugins
+			h.orch.mu.Unlock()
+			if !gate.Active || gate.Owned["Tim Henson"] != !tc.wantFlag {
+				t.Errorf("RefineChat got gate %+v, want active with Tim Henson owned=%v", gate, !tc.wantFlag)
+			}
 			got, err := h.store.Get(ctx, p.ID)
 			if err != nil {
 				t.Fatalf("store.Get: %v", err)

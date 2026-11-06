@@ -171,7 +171,7 @@ func (g *gatedOrch) RunPipeline(ctx context.Context, _ string, _ map[string]inte
 	}
 	return string(g.arch), nil, nil
 }
-func (g *gatedOrch) RefineChat(context.Context, *storage.Preset, string, bool, bool) (string, *agents.TokenUsage, error) {
+func (g *gatedOrch) RefineChat(context.Context, *storage.Preset, string, bool, bool, agents.PluginGate) (string, *agents.TokenUsage, error) {
 	return "", nil, nil
 }
 func (g *gatedOrch) Close() {}

@@ -131,6 +131,9 @@ func GetUserCapturesJSON() string {
 type capturedGear struct {
 	Name  string `json:"name"`
 	Color string `json:"color"`
+	// plugin is the coros_map.json required_plugin of a factory capture ("" = none), kept
+	// out of the JSON the Architect sees; SelectedCaptureContextFor uses it to gate.
+	plugin string
 }
 
 var factoryCaptureColors []capturedGear
@@ -153,8 +156,9 @@ func getFactoryCaptureColors() []capturedGear {
 			}
 			equiv, _ := props["coros_equivalent"].(string)
 			archetype, _ := props["tonal_archetype"].(string)
+			plugin, _ := props["required_plugin"].(string)
 			if equiv != "" && archetype != "" {
-				factoryCaptureColors = append(factoryCaptureColors, capturedGear{Name: equiv, Color: archetype})
+				factoryCaptureColors = append(factoryCaptureColors, capturedGear{Name: equiv, Color: archetype, plugin: plugin})
 			}
 		}
 	})
@@ -183,6 +187,13 @@ func getFactoryCaptureColors() []capturedGear {
 // a disabled user capture's private Description could otherwise still reach the Architect's
 // context via a coincidental substring match against unrelated text.
 func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactoryCaptures, allowUserCaptures bool) string {
+	return SelectedCaptureContextFor(librarianResult, navigatorResult, allowFactoryCaptures, allowUserCaptures, PluginGate{})
+}
+
+// SelectedCaptureContextFor is SelectedCaptureContext with plugin gating: with an active
+// gate, a factory capture tagged required_plugin for a plugin the user doesn't own is left
+// out, so its description never steers the Architect toward a device it can't use.
+func SelectedCaptureContextFor(librarianResult, navigatorResult string, allowFactoryCaptures, allowUserCaptures bool, plugins PluginGate) string {
 	haystack := librarianResult + "\n" + navigatorResult
 	var found []capturedGear
 
@@ -196,6 +207,9 @@ func SelectedCaptureContext(librarianResult, navigatorResult string, allowFactor
 
 	if allowFactoryCaptures {
 		for _, c := range getFactoryCaptureColors() {
+			if !plugins.Allows(c.plugin) {
+				continue
+			}
 			if containsAsToken(haystack, c.Name) {
 				found = append(found, c)
 			}

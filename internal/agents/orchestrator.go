@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -128,6 +129,39 @@ func filterEmbeddedCorosMap(raw []byte, allowFactoryCaptures bool, filterPlugins
 		return string(raw)
 	}
 	return string(b)
+}
+
+// pluginOwnershipFlag is the prompt line telling an agent which paid plugins the user owns:
+// "" when the run carries no plugin constraint (or allows plugins but lists none), a
+// NO PAID PLUGINS line when plugins are off, else AVAILABLE PLUGINS. RunPipeline and
+// RefineChat share it so both say the same thing.
+func pluginOwnershipFlag(hasConstraint, allowPaidPlugins bool, available []string) string {
+	if !hasConstraint {
+		return ""
+	}
+	if !allowPaidPlugins {
+		return "[GLOBAL USER CONFIG FLAG: NO PAID PLUGINS. The generated preset MUST NOT use any paid plugins.]\n\n"
+	}
+	if len(available) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(available, ", "))
+}
+
+// refinePluginFlag renders pluginOwnershipFlag from a PluginGate (RefineChat has the gate,
+// not the raw config lists). An inactive gate says nothing; owned names are sorted.
+func refinePluginFlag(g PluginGate) string {
+	if !g.Active {
+		return ""
+	}
+	owned := make([]string, 0, len(g.Owned))
+	for name, ok := range g.Owned {
+		if ok {
+			owned = append(owned, name)
+		}
+	}
+	sort.Strings(owned)
+	return pluginOwnershipFlag(true, g.AllowPaid, owned)
 }
 
 // librarianInputs returns the two gear menus injected into the CorOS Librarian's (Agent 4)
@@ -261,7 +295,7 @@ func (u *TokenUsage) recordAgentUsage(agentRole, model string, inputTokens, outp
 // OrchestratorService defines the methods available on the ADK Orchestrator
 type OrchestratorService interface {
 	RunPipeline(ctx context.Context, prompt string, constraints map[string]interface{}, agentConfig map[string]string, onProgress func(phase string)) (string, *TokenUsage, error)
-	RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error)
+	RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool, plugins PluginGate) (string, *TokenUsage, error)
 	Close()
 }
 
@@ -469,15 +503,8 @@ func (o *Orchestrator) RunPipeline(ctx context.Context, prompt string, constrain
 	// filtering happens -- unchanged from the pre-existing prompt-only behavior.
 	allowPaidPlugins, hasAllowPaidPlugins := constraints["allow_paid_plugins"].(bool)
 	pluginGate := PluginGateFromConstraints(constraints)
-	if hasAllowPaidPlugins && !allowPaidPlugins {
-		prompt = "[GLOBAL USER CONFIG FLAG: NO PAID PLUGINS. The generated preset MUST NOT use any paid plugins.]\n\n" + prompt
-	} else if hasAllowPaidPlugins && allowPaidPlugins {
-		if availablePlugins, ok := constraints["available_plugins"].([]string); ok {
-			if len(availablePlugins) > 0 {
-				prompt = fmt.Sprintf("[GLOBAL USER CONFIG FLAG: AVAILABLE PLUGINS: %s. The generated preset may use these plugins if appropriate.]\n\n", strings.Join(availablePlugins, ", ")) + prompt
-			}
-		}
-	}
+	availablePlugins, _ := constraints["available_plugins"].([]string)
+	prompt = pluginOwnershipFlag(hasAllowPaidPlugins, allowPaidPlugins, availablePlugins) + prompt
 
 	effectiveAllowFactoryCaptures := true
 	if v, ok := constraints["allow_factory_captures"].(bool); ok {
@@ -1275,7 +1302,10 @@ func (o *Orchestrator) Close() {
 // config.json's agent_prompts["12_architect"].
 const refineArchitectPromptVersion = "v6"
 
-func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool) (string, *TokenUsage, error) {
+// plugins says which paid plugin devices the user owns: it adds the ownership line to the
+// prompt and filters the capture context and effect lists, as RunPipeline does for the
+// Librarian. The zero PluginGate (inactive) filters nothing. Flagging afterwards stays.
+func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMessage string, allowFactoryCaptures, allowUserCaptures bool, plugins PluginGate) (string, *TokenUsage, error) {
 	if mockVal, ok := ctx.Value(MockModeKey).(bool); ok && mockVal {
 		if mockOutput, err := readMockFile("testdata/e2e_mocks/architect_refine.json"); err == nil {
 			o.setLastArchitectJSON(mockOutput)
@@ -1294,9 +1324,9 @@ func (o *Orchestrator) RefineChat(ctx context.Context, p *storage.Preset, userMe
 	// no equivalent raw text (it never re-runs those agents), but p.Payload's structured
 	// JSON already names every selected block's real model, which is arguably better data
 	// anyway since it's the actual final selection rather than upstream candidates.
-	captureContext := SelectedCaptureContext(p.Payload, "", allowFactoryCaptures, allowUserCaptures)
+	captureContext := SelectedCaptureContextFor(p.Payload, "", allowFactoryCaptures, allowUserCaptures, plugins)
 
-	refinementPrompt := fmt.Sprintf(`
+	refinementPrompt := refinePluginFlag(plugins) + fmt.Sprintf(`
 You are being called in REFINEMENT mode. The user is asking a question or requesting a change to an existing generated preset.
 
 CRITICAL REFINE INSTRUCTION: If your refinement includes swapping a piece of gear (e.g. changing the Amplifier, Cabinet, or an Effect), you MUST meticulously update the actual "model" field on that block in structured_payload, and its "rationale" field. Do NOT just update the rationale text and leave the old model name in place!
@@ -1328,13 +1358,9 @@ EXISTING STRUCTURED PAYLOAD:
 `, GetQCBlockSchemaJSON(), captureContext, p.Payload)
 
 	if promptUsesCatalogParams(sysPrompt) {
-		// RefineChat isn't told which plugins the user owns (TODO.md). The payload's own
-		// models get their parameters, plugin models included (the zero PluginGate is
-		// inactive; only a plugin_id missing from the plugin table is skipped, which
-		// TestPluginNamesCoverCatalog keeps from happening). They're already chosen, and an
-		// unowned plugin device is flagged after the run. The swap list offers no plugin
-		// effects, so a refinement isn't steered toward one the user may not own.
-		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), PluginGate{}, NewPluginGate(false, nil))
+		// The same gate as generate: an unowned plugin device gets no parameters and is not
+		// offered in the swap list. One already in the payload stays, flagged after the run.
+		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), plugins, plugins)
 	}
 
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"

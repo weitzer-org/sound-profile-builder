@@ -15,6 +15,10 @@ type PluginGate struct {
 	// Active is false when the run carried no allow_paid_plugins constraint at all (older
 	// callers and tests); nothing is filtered then.
 	Active bool
+	// AllowPaid is the allow_paid_plugins setting the gate was built from. It differs from
+	// "Owned is non-empty": allowed with none listed adds no prompt line (RunPipeline), while
+	// not allowed says NO PAID PLUGINS.
+	AllowPaid bool
 	// Owned holds the plugins the user owns, by catalog.PluginNames spelling.
 	Owned map[string]bool
 }
@@ -24,7 +28,7 @@ type PluginGate struct {
 // plugin table doesn't know is kept as written (it can still match a coros_map.json
 // required_plugin spelled the same way) and logged, since it is probably a typo.
 func NewPluginGate(allowPaidPlugins bool, available []string) PluginGate {
-	g := PluginGate{Active: true, Owned: map[string]bool{}}
+	g := PluginGate{Active: true, AllowPaid: allowPaidPlugins, Owned: map[string]bool{}}
 	if !allowPaidPlugins {
 		return g
 	}

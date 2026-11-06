@@ -139,8 +139,10 @@ type fakeOrch struct {
 	gate chan struct{} // nil means never block
 	// refineVersions is the prompt-version map the last RefineChat call's ctx carried.
 	refineVersions map[string]string
-	emitLoop       bool
-	released       bool
+	// refinePlugins is the PluginGate the last RefineChat call received.
+	refinePlugins agents.PluginGate
+	emitLoop      bool
+	released      bool
 }
 
 // hold makes subsequent pipeline calls block until release.
@@ -195,9 +197,10 @@ func (f *fakeOrch) RunPipeline(_ context.Context, _ string, _ map[string]interfa
 	return string(f.gen), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil
 }
 
-func (f *fakeOrch) RefineChat(ctx context.Context, _ *storage.Preset, _ string, _, _ bool) (string, *agents.TokenUsage, error) {
+func (f *fakeOrch) RefineChat(ctx context.Context, _ *storage.Preset, _ string, _, _ bool, plugins agents.PluginGate) (string, *agents.TokenUsage, error) {
 	f.mu.Lock()
 	f.refineVersions = agents.PromptVersionsFrom(ctx)
+	f.refinePlugins = plugins
 	f.mu.Unlock()
 	f.block(nil)
 	return string(f.refine), &agents.TokenUsage{ModelsUsed: map[string]int{}}, nil

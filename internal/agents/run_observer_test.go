@@ -112,7 +112,7 @@ func TestRefineChatMockReplaysThroughObserver(t *testing.T) {
 	defer orch.Close()
 
 	obs := &recObserver{}
-	if _, _, err := orch.RefineChat(mockModeCtx(obs), nil, "warmer", true, true); err != nil {
+	if _, _, err := orch.RefineChat(mockModeCtx(obs), nil, "warmer", true, true, PluginGate{}); err != nil {
 		t.Fatal(err)
 	}
 	if len(obs.dones) != 1 || obs.dones[0].role != "Refinement Architect" {

@@ -127,7 +127,7 @@ func (s *Service) runRefine(ctx context.Context, lr *liveRun, runID, presetID, a
 	}
 
 	// Run the chat refinement loop
-	jsonResponse, _, err := orch.RefineChat(refineCtx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag)
+	jsonResponse, _, err := orch.RefineChat(refineCtx, p, userMessage, allowFactoryCapturesForFlag, allowUserCapturesForFlag, pluginGate)
 	if err != nil {
 		s.fail(lr, ErrKindExec, err.Error())
 		return

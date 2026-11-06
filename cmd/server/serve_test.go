@@ -81,7 +81,7 @@ func (o *blockingOrch) RunPipeline(ctx context.Context, _ string, _ map[string]i
 	return "", nil, errors.New("released by test")
 }
 
-func (o *blockingOrch) RefineChat(context.Context, *storage.Preset, string, bool, bool) (string, *agents.TokenUsage, error) {
+func (o *blockingOrch) RefineChat(context.Context, *storage.Preset, string, bool, bool, agents.PluginGate) (string, *agents.TokenUsage, error) {
 	return "", nil, errors.New("not used")
 }
 
