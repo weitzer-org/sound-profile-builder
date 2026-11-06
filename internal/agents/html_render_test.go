@@ -140,3 +140,18 @@ func TestRenderPresetHTML_LongValuesWrap(t *testing.T) {
 		t.Errorf("short value should stay a plain param:\n%s", out)
 	}
 }
+
+// The fallback table (rendered from structured data when there is no usable legacy_html)
+// carries each block's rationale, escaped, and omits the line when a block has none (#57).
+func TestRenderPresetHTML_RationalePerBlock(t *testing.T) {
+	out := renderPresetHTML([]storage.EffectBlock{
+		{ID: "b1", Type: "Amplifier", Model: "Brit 2203", Rationale: "Tight low end for <palm mutes>"},
+		{ID: "b2", Type: "Reverb", Model: "Spring"},
+	})
+	if !strings.Contains(out, "<em>Rationale: Tight low end for &lt;palm mutes&gt;</em>") {
+		t.Errorf("amp rationale missing or unescaped in %s", out)
+	}
+	if n := strings.Count(out, "Rationale:"); n != 1 {
+		t.Errorf("want exactly one rationale line (the reverb has none), got %d in %s", n, out)
+	}
+}
