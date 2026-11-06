@@ -848,22 +848,6 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 	}
 	matrixContainerHtml := deviceLinksHtml + tabsHtml + contentHtml + tabScript
 
-	refinementSummaryHtml := ""
-	if len(p.ChatHistory) > 0 {
-		lastMsg := p.ChatHistory[len(p.ChatHistory)-1]
-		if lastMsg.Role == "architect" {
-			summaryText := html.EscapeString(lastMsg.Content)
-			summaryText = strings.ReplaceAll(summaryText, "\n", "<br>")
-			summaryText = strings.ReplaceAll(summaryText, "**Impact:**", "<strong style='display:inline-block; margin-top: 0.5rem;'>Impact:</strong>")
-			refinementSummaryHtml = fmt.Sprintf(`
-				<div style="padding: 1rem; background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success); border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #e2e8f0; line-height: 1.5;">
-					<strong style="color: var(--success); display: block; margin-bottom: 0.5rem;">Latest Refinement Result:</strong>
-					%s
-				</div>
-			`, summaryText)
-		}
-	}
-
 	controlPanelHtml := ""
 	if isCopyMode {
 		controlPanelHtml = fmt.Sprintf(`
@@ -887,14 +871,13 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 		controlPanelHtml = fmt.Sprintf(`
 		<div class="card chat-control-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
 			<h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Adjust Preset Instructions</h3>
-			%s
 			<!-- TODO: Display the initial generation prompt (p.Prompt) somewhere in this area to provide context on what was originally requested -->
-			<form hx-post="/api/preset/chat" hx-target="closest .workspace-wrapper" hx-swap="outerHTML" hx-indicator="find .chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #workspace-wrapper-%[2]s .chat-input, #workspace-wrapper-%[2]s .chat-submit-btn">
-				<input type="hidden" name="id" value="%[2]s">
+			<form hx-post="/api/preset/chat" hx-target="closest .workspace-wrapper" hx-swap="outerHTML" hx-indicator="find .chat-submit-btn" style="display: flex; gap: 0.75rem; align-items: flex-end;" autocomplete="off" hx-sync="this:drop" hx-disabled-elt="this, #workspace-wrapper-%[1]s .chat-input, #workspace-wrapper-%[1]s .chat-submit-btn">
+				<input type="hidden" name="id" value="%[1]s">
 				<div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
 					<textarea name="message" class="chat-input" placeholder="e.g., Make the amp darker..." style="resize: none; overflow-y: hidden; min-height: 48px; padding: 0.85rem 1rem; border-radius: 8px; background: rgba(15,23,42,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 0.95rem; line-height: 1.4;" rows="1" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }" required></textarea>
 					<button type="button" class="builder-statement-text" aria-expanded="false" onclick="this.classList.toggle('expanded'); this.setAttribute('aria-expanded', this.classList.contains('expanded'));" style="display: block; width: 100%%; text-align: left; background: none; border: none; margin: 0; padding: 0.25rem 0 0 0; font: inherit; cursor: pointer; font-size: 0.85rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
-						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %s
+						<span style="color: var(--accent); font-weight: 500;">Builder Statement:</span> %[2]s
 					</button>
 				</div>
 				<!-- TODO: Add a button to trigger a full 12-agent "re-run" of the pipeline, passing in the current preset state and chat history as context to completely overhaul the tone from scratch rather than just tweaking it. -->
@@ -905,7 +888,7 @@ func renderTweakingWorkspaceHTML(p *storage.Preset, isCopyMode bool, forceStatic
 				</button>
 			</form>
 		</div>
-		`, refinementSummaryHtml, p.ID, html.EscapeString(p.BuilderStatement))
+		`, p.ID, html.EscapeString(p.BuilderStatement))
 	}
 
 	// View/Edit toggle: unifies the two things a saved preset can show (the
