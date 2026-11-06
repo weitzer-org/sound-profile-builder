@@ -247,7 +247,7 @@ class Push(Base):
         self.dev.slots = {19: " texas BLUES "}
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "validation"))
-        self.assertIn("3D", r["message"])
+        self.assertIn("Slot 3D already has a preset named", r["message"])
         self.assert_no_writes()
 
     def test_unknown_device_type_refused(self):

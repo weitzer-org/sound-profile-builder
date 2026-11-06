@@ -113,7 +113,7 @@ class Strict(unittest.TestCase):
     def test_repr_redacts(self):
         c = cfg.from_mapping(env())
         r = repr(c)
-        for secret in ("secret/EXAMPLE+value0123456789", KEY_HEX, "AKIDEXAMPLE0123456789"):
+        for secret in ("TEST-SECRET-ACCESS-KEY-NOT-REAL", KEY_HEX, "TEST-ACCESS-KEY-ID-NOT-REAL"):
             self.assertNotIn(secret, r)
 
 
