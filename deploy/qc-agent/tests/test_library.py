@@ -35,7 +35,8 @@ def snapshot(s):
         my_presets={}, capture_folders=[tuple(f) for f in s["folders"]],
         captures=[CaptureEntry(name=e["name"], key=e["key"], folder_key="k-" + e["folder"], folder_name=e["folder"],
                                is_factory=e["factory"], is_cloud=e["cloud"], is_favorites=e["favorites"],
-                               version_field=e["version_field"]) for e in s["entries"]])
+                               version_field=e["version_field"], factory_version=e.get("factory_version"))
+                  for e in s["entries"]])
 
 
 class Payload(unittest.TestCase):
@@ -50,6 +51,19 @@ class Payload(unittest.TestCase):
         with self.assertRaises(captures.LibraryTooLarge):
             captures.library_payload(DirectorySnapshot(my_presets={}, captures=entries,
                                                        capture_folders=[("Factory Captures V1", True, len(entries))]))
+
+    def test_worst_case_library_fits_a_sealed_result(self):
+        # the limits were sized together (owner, 2026-11-06): MAX_LIBRARY_CAPTURES entries with 64-character
+        # names, 40-character folders and the escaping the envelope adds must fit MAX_RESULT_BYTES
+        entries = [capture(f"{i:04d}" + "N" * 60, f"{i:064x}", "F" * 40, factory=True, version="",
+                           above=("Factory Captures V1",)) for i in range(captures.MAX_LIBRARY_CAPTURES)]
+        lib = captures.library_payload(DirectorySnapshot(my_presets={}, captures=entries,
+                                                         capture_folders=[("F" * 40, True, len(entries))]))
+        self.assertEqual(len(lib["captures"]), captures.MAX_LIBRARY_CAPTURES)
+        result = {"v": 1, "type": "result", "job_id": "0" * 36, "kind": "sync_device_library", "status": "succeeded",
+                  "message": "x" * 500, "readback": {"format": captures.LIBRARY_FORMAT, "payload": lib}}
+        sealed = contract.seal_payload(b"k" * 32, contract.TAG_RESULT, result)
+        self.assertLess(len(sealed), contract.MAX_RESULT_BYTES)
 
     def test_version_is_the_pushes_own(self):
         # library_payload uses version_of: a push and the sync can never disagree about V1/V2

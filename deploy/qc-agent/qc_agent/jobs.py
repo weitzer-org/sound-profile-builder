@@ -276,7 +276,7 @@ def read_preset(ctx, job) -> Outcome:
     name = text.clean(preset.get("name", ""), NAME_LIMIT)
     rb = {"format": "qc-device-readback/1", "slot": slot, "name": name or None,
           "payload": readback_payload(preset, info)}
-    if len(json.dumps(rb, separators=(",", ":"))) > contract.MAX_RESULT_BYTES - 16 * 1024:
+    if len(json.dumps(rb, separators=(",", ":"))) > contract.MAX_READBACK_BYTES - 16 * 1024:
         return failed("device_error", "The open preset is too large to return.", firmware=fw)
     nblocks = sum(len(c["blocks"]) for c in rb["payload"]["chains"])
     return Outcome("succeeded", "", f"Read the open preset ({nblocks} blocks).", firmware=fw, readback=rb)

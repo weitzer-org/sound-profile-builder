@@ -18,13 +18,18 @@ anything is written):
 * Exactly one key: the same key in several folders counts once; two keys with the
   same name is ambiguous.
 * The version picks the block (V1 -> 14000, V2 -> 14001). A factory capture's
-  version comes from its folder name ("Factory Captures V1" / "... V2", from qc-mcp's
-  DIRECTORY.md on its author's unit; UNVERIFIED on the owner's: if the names differ,
-  every factory capture is refused and the message lists the unit's real folder names). A user capture's comes from ProductData.version, calibrated on
-  every listing against the factory folders: only when every V1 factory entry
-  carries one value and every V2 entry a different one is that value taken to mean
-  V1/V2 for user files too. Otherwise the user capture is refused. That the field
-  means the same for user files is an inference P6 checks.
+  version comes from the nearest folder named "Factory Captures V1" / "... V2" among
+  its own folder and the folders above it (FolderInfo.parent_key). The names are from
+  qc-mcp's DIRECTORY.md on its author's unit. On the owner's unit (CorOS 4.1.0, P6,
+  2026-11-06) the factory captures sit in per-device folders ("Brit 2210", "CA 3Axe",
+  ...) and their ProductData.version is empty, so whether a V1/V2 folder sits above
+  them is UNVERIFIED: if none does, every factory capture is refused and the census
+  in the agent log shows the real tree. A user capture's version is its
+  ProductData.version taken literally, "1" -> V1 and "2" -> V2, anything else
+  refused (owner decision, 2026-11-06: the factory files carry no value to calibrate
+  it against). A capture's author may control that field: a wrong value places the
+  capture in the other block type in a slot this bridge created, which shows on the
+  unit. UNVERIFIED until P6 compares the block type on the screen.
 """
 from __future__ import annotations
 
@@ -35,6 +40,7 @@ from . import text
 from .export_validator import CAPTURE_FILE_NAME_INDEX
 
 FACTORY_FOLDERS = {"Factory Captures V1": 1, "Factory Captures V2": 2}
+USER_VERSIONS = {"1": 1, "2": 2}  # ProductData.version of a user capture, taken literally (seen: "1" and "2")
 FILE_NAME_PARAM = CAPTURE_FILE_NAME_INDEX  # a capture block's file_name index (qc-mcp transport.CAPTURE_FILE_NAME_PARAM)
 _KEY_RE = re.compile(r"[0-9a-fA-F]{64}")
 MAX_NEAR = 3
@@ -50,6 +56,9 @@ class CaptureEntry:
     is_cloud: bool       # the folder or one above it is a cloud folder (or a plugin folder)
     is_favorites: bool   # the folder or one above it is a favorites view
     version_field: str
+    # V1/V2 from the nearest "Factory Captures V1/V2" folder at or above this file's folder (factory_version_of),
+    # filled in by the backend from the listing's folder tree; None when there is none or both.
+    factory_version: int | None = None
 
 
 @dataclass
@@ -58,7 +67,8 @@ class DirectorySnapshot:
     preset_deps: dict[int, frozenset[str]] = field(default_factory=dict)  # position -> dependency hashes (lower case)
     captures: list[CaptureEntry] = field(default_factory=list)
     capture_folders: list[tuple[str, bool, int]] = field(default_factory=list)  # (name, is_factory, file count)
-    _calibration: dict | None = field(default=None, repr=False, compare=False)
+    # One dict per capture folder for the agent log's census (qcmcp_backend._log_census); never used to decide.
+    folder_census: list[dict] = field(default_factory=list, repr=False, compare=False)
 
 
 @dataclass(frozen=True)
@@ -77,28 +87,18 @@ class CaptureRefused(Exception):
     """A capture the bridge won't place. The message is safe to show the user."""
 
 
-def _calibrate(snap: DirectorySnapshot) -> dict[str, int] | None:
-    """ProductData.version value -> 1 or 2, learned from the factory folders, or None."""
-    if snap._calibration is not None:
-        return snap._calibration or None
-    seen: dict[int, set[str]] = {1: set(), 2: set()}
-    for e in snap.captures:
-        v = FACTORY_FOLDERS.get(e.folder_name)
-        if v and e.is_factory:
-            seen[v].add(e.version_field)
-    out: dict[str, int] = {}
-    if (len(seen[1]) == 1 and len(seen[2]) == 1 and seen[1] != seen[2]
-            and "" not in seen[1] and "" not in seen[2]):
-        out = {next(iter(seen[1])): 1, next(iter(seen[2])): 2}
-    snap._calibration = out
-    return out or None
+def factory_version_of(chain_names) -> int | None:
+    """1 or 2 when the folder names from a file's own folder upwards name exactly one of FACTORY_FOLDERS, else None
+    (none of them, or both)."""
+    found = {FACTORY_FOLDERS[n] for n in chain_names if n in FACTORY_FOLDERS}
+    return found.pop() if len(found) == 1 else None
 
 
-def version_of(e: CaptureEntry, snap: DirectorySnapshot) -> int | None:
+def version_of(e: CaptureEntry, snap: DirectorySnapshot | None = None) -> int | None:
+    """The block version a push uses for this file. `snap` is unused and kept so callers need not change."""
     if e.is_factory:
-        return FACTORY_FOLDERS.get(e.folder_name)
-    cal = _calibrate(snap)
-    return cal.get(e.version_field) if cal else None
+        return e.factory_version
+    return USER_VERSIONS.get(e.version_field)
 
 
 def _norm(s: str) -> str:
@@ -151,13 +151,13 @@ def resolve_one(name: str, source: str, col: int, snap: DirectorySnapshot) -> Re
     versions = {version_of(e, snap) for e in entries}
     if want_factory and None in versions:
         bad = next(e for e in entries if version_of(e, snap) is None)
-        raise CaptureRefused(f"Capture {q} is in folder {text.clean(bad.folder_name, 40)!r}, which the bridge doesn't "
-                             f"know as V1 or V2 (it knows {', '.join(repr(k) for k in FACTORY_FOLDERS)}; the unit's "
-                             f"capture folders are: {_folders(snap)}). Nothing was written.")
+        raise CaptureRefused(f"Capture {q} is in folder {text.clean(bad.folder_name, 40)!r}, and no folder at or above "
+                             f"it is one the bridge knows as V1 or V2 ({', '.join(repr(k) for k in FACTORY_FOLDERS)}; "
+                             f"the unit's capture folders include: {_folders(snap)}). The agent log's capture census "
+                             "shows the folder tree. Nothing was written.")
     if None in versions or len(versions) != 1:
-        raise CaptureRefused(f"The bridge can't tell whether capture {q} is a V1 or V2 capture on this unit (the "
-                             "factory library gives no consistent version marker to compare it with), so it won't "
-                             "pick a block type. Nothing was written.")
+        raise CaptureRefused(f"The bridge can't tell whether capture {q} is a V1 or V2 capture on this unit (its version "
+                             "field isn't \"1\" or \"2\"), so it won't pick a block type. Nothing was written.")
     return ResolvedCapture(name=name, source=source, key=key, version=versions.pop())
 
 
@@ -202,7 +202,7 @@ def deps_report(snap: DirectorySnapshot, pos: int, resolved: dict[int, ResolvedC
 
 
 LIBRARY_FORMAT = "qc-device-library/1"
-MAX_LIBRARY_CAPTURES = 1500   # internal/devicejobs.MaxLibraryCaptures
+MAX_LIBRARY_CAPTURES = 5000   # internal/devicejobs.MaxLibraryCaptures
 _LIB_NAME_RE = re.compile(r"[\x20-\x7e]{1,64}")
 
 
@@ -211,12 +211,16 @@ class LibraryTooLarge(Exception):
     truncated list would make a capture that is on the unit look missing."""
 
 
-def _library_folder(name: str) -> str | None:
+UNNAMED_FOLDER = "(unnamed folder)"
+
+
+def _library_folder(name: str) -> str:
     """A folder name for display: printable ASCII (anything else becomes '?'), clean, at most 40
-    characters. Chosen to be a fixed point of QC-2's SanitizeText, which refuses what it would change."""
+    characters. Chosen to be a fixed point of QC-2's SanitizeText, which refuses what it would change.
+    The folder is shown, never matched, so a name that cleans to nothing gets a placeholder rather than
+    losing its captures: on the owner's unit the downloaded captures sit in a folder named '' (P6, 2026-11-06)."""
     ascii_only = "".join(c if 0x20 <= ord(c) <= 0x7E else "?" for c in text.clean(name, 400))
-    out = text.clean(ascii_only, 40).strip()
-    return out or None
+    return text.clean(ascii_only, 40).strip() or UNNAMED_FOLDER
 
 
 def library_payload(snap: DirectorySnapshot) -> dict:
@@ -229,7 +233,7 @@ def library_payload(snap: DirectorySnapshot) -> dict:
     for e in snap.captures:
         folder = _library_folder(e.folder_name)
         if (e.is_favorites or not _LIB_NAME_RE.fullmatch(e.name or "") or e.name != text.clean(e.name, 64)
-                or not _KEY_RE.fullmatch(e.key or "") or folder is None):
+                or not _KEY_RE.fullmatch(e.key or "")):
             skipped += 1
             continue
         out.append({"name": e.name, "key": e.key.lower(), "version": version_of(e, snap),

@@ -38,8 +38,9 @@ For a push, before anything is written:
    verified (G3). The agent never recalls a preset or clears a grid, so it can't disturb what you have loaded;
 5. every capture the preset uses is found on the unit, in the same fresh listing: by exact name, as the same kind
    (factory or user), as a file on the unit (never a cloud-only item; the bridge never downloads captures), one key
-   only, and a known version: V1 or V2 from the factory folder, and for a user capture from the version field,
-   calibrated against the factory folders on every listing. Anything else refuses the push before any write;
+   only, and a known version: for a factory capture V1 or V2 from the nearest `Factory Captures V1`/`V2` folder at or
+   above its own, and for a user capture its version field `1` or `2` taken literally. Anything else refuses the
+   push before any write;
 6. the job hasn't expired (re-checked just before the first write).
 
 Then it builds the chain on the live grid in three phases: it places every block; reads the grid **once** and
@@ -173,11 +174,13 @@ them; this guide uses **24H**).
     never showed it within about 2 minutes: check 24H on the unit and tell me what it shows.
 
 12. **Captures (P4c; normal use, no extra session).**
-    - Before the first capture push, run `list_device_slots` once and send me the `capture folder ...` and
-      `My Presets: ... dependencies` lines from `agent.log`. They show the real folder names, whether the version
-      field calibrates, and whether saved presets carry dependency lists. If the factory folders aren't named
-      `Factory Captures V1`/`V2`, every factory capture is refused (the message lists the real names) until a
-      one-line fix.
+    - Before the first capture push, run `list_device_slots` once and send me the `capture folder ...`,
+      `capture census: ...` and `My Presets: ... dependencies` lines from `agent.log` (logged once per bridge start).
+      Each folder line shows the folders above it, its flags, file count, the version-like fields and the V1/V2 a push
+      would use. First run (2026-11-06, CorOS 4.1.0): the factory captures sit in per-device folders with an empty
+      version field and the downloaded ones in a folder named `''` with version `1`/`2`; whether a `Factory Captures
+      V1`/`V2` folder sits above the factory ones is what the census answers next. If none does, every factory capture
+      is refused until a fix that reads V1/V2 from wherever the census shows it.
     - Push one preset with a **factory V1** capture, one with a **factory V2** capture and one with a capture you
       **downloaded** (already on the unit); include a pedal capture if you can. For each: `succeeded`,
       `mismatches 0`, the message's V1/V2 matches the block on the unit ("Capture" vs "Capture 2"), the capture
@@ -202,9 +205,10 @@ them; this guide uses **24H**).
 14. **Library sync and cab mics (P4b; read-only, then normal use).** Pull `main` on the PC first (the new job kind and the cab mic write are in this bridge; an older bridge ignores `sync_device_library` and the job expires unanswered).
     - **Sync.** Unit on, Cortex Control closed, bridge running. Phone: `sync_device_library`. Expect `succeeded` and a count
       close to what the unit's own capture lists show. Send me the counts (factory/user, V1/V2, "no V1/V2 marker", cloud
-      only, "left out") and the `capture folder ...` lines from `agent.log`. Two things are **unverified** here: that the
-      factory folders are named `Factory Captures V1`/`V2` (otherwise every factory capture shows "no V1/V2 marker"), and
-      that the cloud flags mean what the bridge assumes.
+      only, "left out") and the `capture folder ...` / `capture census: ...` lines from `agent.log`. Two things are
+      **unverified** here: that a `Factory Captures V1`/`V2` folder sits at or above each factory capture's folder
+      (otherwise every factory capture shows "no V1/V2 marker"), and that the cloud flags mean what the bridge assumes.
+      The sync carries at most 5000 captures (the first run refused at 1500 with 2073 on the unit).
     - **Names.** Dry-run a preset that uses a factory capture. If QC-2's library calls a capture something else than
       the unit does (for example a trailing ` 2`), the dry run says "not on your unit". Send me both names: they fill
       the reviewed alias table (`internal/devicelib/capture_aliases.json`), which is empty until you do.

@@ -9,7 +9,7 @@ Proves the agent's guards and job logic. Says nothing about the real unit.
 """
 from __future__ import annotations
 
-from qc_agent.captures import CaptureEntry, DirectorySnapshot
+from qc_agent.captures import CaptureEntry, DirectorySnapshot, factory_version_of
 from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
@@ -20,9 +20,12 @@ KEY_V2 = "b2" * 32   # a factory V2 capture
 KEY_USER = "c3" * 32  # a user capture (version field "1", as the factory V1 entries carry)
 
 
-def capture(name, key, folder="My Captures", factory=False, version="1", cloud=False, favorites=False):
+def capture(name, key, folder="My Captures", factory=False, version="1", cloud=False, favorites=False,
+            above=()):
+    """`above`: names of the folders above `folder`, nearest first (the backend fills factory_version from the chain)."""
+    fver = factory_version_of([folder, *above]) if factory else None
     return CaptureEntry(name=name, key=key, folder_key="k-" + folder, folder_name=folder, is_factory=factory,
-                        is_cloud=cloud, is_favorites=favorites, version_field=version)
+                        is_cloud=cloud, is_favorites=favorites, version_field=version, factory_version=fver)
 
 
 def default_captures():

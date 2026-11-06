@@ -44,30 +44,47 @@ class Resolve(unittest.TestCase):
         self.assertIn("Close names on the unit: \"CA John's\"", msg)
         self.refused("isn't on the unit", "CA  John's", "factory")
 
-    def test_user_capture_version_from_calibration(self):
+    def test_user_capture_version_is_the_field_taken_literally(self):
+        # owner decision 2026-11-06: the owner's factory files carry an empty version, so nothing calibrates it
         r = C.resolve_one("66 AC30 JMP OD", "user", 0, snap())
         self.assertEqual((r.key, r.version), (KEY_USER, 1))
         e = default_captures() + [capture("Klon user", "e5" * 32, version="2")]
         self.assertEqual(C.resolve_one("Klon user", "user", 0, snap(e)).version, 2)
+        # no factory folders at all: still decided, because the field alone decides
+        only_user = [capture("66 AC30 JMP OD", KEY_USER, version="2")]
+        self.assertEqual(C.resolve_one("66 AC30 JMP OD", "user", 0, snap(only_user)).version, 2)
 
-    def test_calibration_fails_closed(self):
-        user = capture("66 AC30 JMP OD", KEY_USER, version="1")
-        cases = {
-            "mixed V1 values": [capture("A", "a1" * 32, "Factory Captures V1", True, "1"),
-                                capture("B", "a2" * 32, "Factory Captures V1", True, "x"),
-                                capture("C", "a3" * 32, "Factory Captures V2", True, "2"), user],
-            "empty values": [capture("A", "a1" * 32, "Factory Captures V1", True, ""),
-                             capture("C", "a3" * 32, "Factory Captures V2", True, "2"), user],
-            "same value in both": [capture("A", "a1" * 32, "Factory Captures V1", True, "1"),
-                                   capture("C", "a3" * 32, "Factory Captures V2", True, "1"), user],
-            "no V2 folder": [capture("A", "a1" * 32, "Factory Captures V1", True, "1"), user],
-            "user value unknown": [capture("A", "a1" * 32, "Factory Captures V1", True, "1"),
-                                   capture("C", "a3" * 32, "Factory Captures V2", True, "2"),
-                                   capture("66 AC30 JMP OD", KEY_USER, version="9")],
-        }
-        for label, entries in cases.items():
+    def test_user_capture_version_fails_closed(self):
+        for value in ("", "0", "3", "v2", "V1", " 1", "1.0", "２"):
+            with self.subTest(value=value):
+                e = default_captures()[:3] + [capture("66 AC30 JMP OD", KEY_USER, version=value)]
+                self.refused("can't tell whether capture", "66 AC30 JMP OD", "user", snap(e))
+
+    def test_factory_version_from_the_folder_above(self):
+        # the owner's unit: per-device factory folders, empty version field (P6, 2026-11-06)
+        e = default_captures() + [
+            capture("Brit 2210 Clean", "b1" * 32, "Brit 2210", True, "", above=("Factory Captures V2",)),
+            capture("CA 3Axe Lead", "b2" * 32, "CA 3Axe", True, "", above=("Amp", "Factory Captures V1"))]
+        self.assertEqual(C.resolve_one("Brit 2210 Clean", "factory", 0, snap(e)).version, 2)
+        self.assertEqual(C.resolve_one("CA 3Axe Lead", "factory", 0, snap(e)).version, 1)
+
+    def test_factory_version_unknown_fails_closed(self):
+        cases = {"no V1/V2 folder above": ("Factory Captures",),
+                 "both above": ("Factory Captures V1", "Factory Captures V2"),
+                 "nothing above": ()}
+        for label, above in cases.items():
             with self.subTest(label):
-                self.refused("can't tell whether capture", "66 AC30 JMP OD", "user", snap(entries))
+                e = default_captures() + [capture("Brit 2210 Clean", "b1" * 32, "Brit 2210", True, "2", above=above)]
+                msg = self.refused("no folder at or above", "Brit 2210 Clean", "factory", snap(e))
+                self.assertIn("'Brit 2210'", msg)
+
+    def test_factory_version_of(self):
+        self.assertEqual(C.factory_version_of(["Brit 2210", "Factory Captures V1"]), 1)
+        self.assertEqual(C.factory_version_of(["Factory Captures V2"]), 2)
+        self.assertIsNone(C.factory_version_of(["Brit 2210", "Factory Captures"]))
+        self.assertIsNone(C.factory_version_of(["Factory Captures V1", "Factory Captures V2"]))
+        self.assertIsNone(C.factory_version_of(["factory captures v1"]))  # exact names only
+        self.assertIsNone(C.factory_version_of([]))
 
     def test_ambiguous(self):
         e = default_captures() + [capture("66 AC30 JMP OD", "f6" * 32, "Downloads", version="1")]
@@ -88,7 +105,7 @@ class Resolve(unittest.TestCase):
 
     def test_unknown_factory_folder(self):
         e = [capture("Odd", "a8" * 32, "Factory Captures V3", True, "3")] + default_captures()
-        msg = self.refused("doesn't know as V1 or V2", "Odd", "factory", snap(e))
+        msg = self.refused("no folder at or above", "Odd", "factory", snap(e))
         self.assertIn("'Factory Captures V3'", msg)
 
     def test_bad_key(self):
