@@ -17,8 +17,13 @@ from qc_agent.agent import Agent
 from qc_agent.s3 import MemoryStore, StoreError
 from fake_device import FakeDevice
 
-jobs.SAVE_LIST_INTERVAL_S = 0
-jobs.PACE_S = 0
+def setUpModule():
+    # Pacing off for this module only; restored afterwards so other modules see the real values.
+    from unittest import mock
+    for name in ("SAVE_LIST_INTERVAL_S", "PACE_S"):
+        p = mock.patch.object(jobs, name, 0)
+        p.start()
+        unittest.addModuleCleanup(p.stop)
 
 
 class Base(unittest.TestCase):

@@ -22,8 +22,13 @@ from qc_agent.qcmcp_backend import GuardError, Guarded, QcMcpBackend, WireRefuse
 from qc_agent.vendor_pins import VENDOR_DIR
 import fake_hid
 
-jobs.SAVE_LIST_INTERVAL_S = 0
-jobs.PACE_S = 0
+def setUpModule():
+    # Pacing off for this module only; restored afterwards so other modules see the real values.
+    from unittest import mock
+    for name in ("SAVE_LIST_INTERVAL_S", "PACE_S"):
+        p = mock.patch.object(jobs, name, 0)
+        p.start()
+        unittest.addModuleCleanup(p.stop)
 T = fake_hid.M["transport"]
 P = fake_hid.P
 
