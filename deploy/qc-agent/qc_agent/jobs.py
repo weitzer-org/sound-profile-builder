@@ -121,6 +121,19 @@ def _same_name(listing, pos, name):
     return None
 
 
+def _open_desc(cur) -> str:
+    """What the unit says is open, for a refusal message (the folder key is device text)."""
+    p = cur.get("position")
+    if cur.get("folder_key") == SETLIST_KEY and not cur.get("is_factory") and isinstance(p, int) \
+            and 0 <= p < slots.SLOT_COUNT:
+        return f"My Presets slot {slots.label(p)}"
+    if cur.get("is_factory"):
+        return "a factory preset"
+    if not cur.get("folder_key"):
+        return "no preset (no position)"
+    return "a preset outside My Presets"
+
+
 def _occupied(listing, pos) -> bool:
     """Only an exactly blank name is an empty slot. A missing position or a name that is just
     spaces counts as occupied: the agent refuses rather than risk overwriting a preset."""
@@ -602,9 +615,15 @@ class _Push:
                            "different name: if the unit stores presets by name, a save could replace it.",
                            firmware=self.fw)
         if cur.get("folder_key") != SETLIST_KEY or cur.get("position") != pos or cur.get("is_factory"):
+            seen = _open_desc(cur)
+            log.warning("push refused, open slot mismatch: wanted %s (position %s); unit reported folder=%r "
+                        "position=%r is_factory=%r", slot, pos, text.clean(str(cur.get("folder_key")), 80),
+                        cur.get("position"), cur.get("is_factory"))
             return refused("unsupported_arg", f"Select slot {slot} (empty) on the Quad Cortex first, then send "
-                           "again. The bridge only builds into the empty slot that is open on the unit, so it "
-                           "never changes what you have loaded.", firmware=self.fw)
+                           f"again. The bridge only builds into the empty slot that is open on the unit, so it "
+                           f"never changes what you have loaded. The unit reports {seen} as open. If {slot} is "
+                           "already selected on the unit's screen, the bridge is misreading the open slot: "
+                           "send the agent.log line starting 'push refused'.", firmware=self.fw)
         return None
 
     def check_unit(self):

@@ -295,6 +295,7 @@ class Push(Base):
         r = self.push()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"))
         self.assertIn("Select slot 20A", r["message"])
+        self.assertIn("reports My Presets slot 1A as open", r["message"])
         self.assert_no_writes()
 
     def test_factory_folder_open_is_refused(self):
