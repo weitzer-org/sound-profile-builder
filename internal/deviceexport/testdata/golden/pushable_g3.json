@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "28e44545a22550fffa1a5d806a2ae4c279ba9b822e326bd6bf6c392ce31fd69f",
+ "plan_sha256": "d2ce2e4d02d6dfda79f8986c1b5e4c82c1331852636759af31d575b55cfc4571",
  "summary": [
   {
    "row": 0,
@@ -115,7 +115,7 @@
   "catalog": {
    "coros": "4.1",
    "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
-   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
   },
   "guitar": "Gibson ES-339 Humbuckers",
   "scene_sources": [
@@ -174,6 +174,9 @@
          0.2,
          0.2,
          0.2
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -199,6 +202,9 @@
          0.55,
          0.55,
          0.55
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -224,6 +230,9 @@
          0.6,
          0.6,
          0.6
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -269,6 +278,9 @@
          0.45,
          0.45,
          0.45
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -295,6 +307,9 @@
          0.24999854297459012,
          0.24999854297459012,
          0.24999854297459012
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -343,6 +358,10 @@
          0.010066601212044444,
          0.010066601212044444,
          0.010066601212044444
+        ],
+        "evidence": [
+         "taper:g4",
+         "bounds:g4"
         ]
        },
        {
@@ -369,6 +388,9 @@
          0.5358867312681466,
          0.5358867312681466,
          0.5358867312681466
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -395,6 +417,9 @@
          0.7507718761305262,
          0.7507718761305262,
          0.7507718761305262
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -444,6 +469,9 @@
          0.25012737345710895,
          0.25012737345710895,
          0.25012737345710895
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -492,6 +520,9 @@
          0.35,
          0.35,
          0.35
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],

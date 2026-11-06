@@ -1,6 +1,6 @@
 {
  "format": "qc2-device-export/1",
- "plan_sha256": "7fc8bb095a157e422384fbb07ec5143a38e69ed3483a420de326a3e400a07a73",
+ "plan_sha256": "e070872afada5ab5405009f278e27b649d72c77d6bac149682e6474ecb2229cd",
  "summary": [
   {
    "row": 0,
@@ -26,6 +26,11 @@
      "name": "VOLUME",
      "a": "5.5",
      "b": "6.5"
+    },
+    {
+     "name": "PICKUP",
+     "a": "HB",
+     "unconfirmed": true
     }
    ],
    "bypass_a": true,
@@ -46,6 +51,12 @@
      "name": "1 Q",
      "a": "0.707",
      "b": "1"
+    },
+    {
+     "name": "4 GAIN",
+     "a": "1.5 dB",
+     "b": "3.5 dB",
+     "unconfirmed": true
     },
     {
      "name": "4 FREQ",
@@ -144,11 +155,17 @@
     {
      "name": "LPF",
      "a": "7500 Hz"
+    },
+    {
+     "name": "OUTPUT VOLUME",
+     "a": "-1.5 dB",
+     "unconfirmed": true
     }
    ],
    "bypass_a": false,
    "bypass_b": false,
    "at_default": [
+    "MIC 1",
     "MIC 1 LEVEL",
     "MIC 2 POSITION"
    ]
@@ -176,6 +193,11 @@
     {
      "name": "HF DAMPING",
      "a": "45 %"
+    },
+    {
+     "name": "LOW PASS",
+     "a": "6000 Hz",
+     "unconfirmed": true
     }
    ],
    "bypass_a": false,
@@ -189,34 +211,9 @@
    "reason": "unitless 0..1 control: its display scale is not verified on the device"
   },
   {
-   "block": "#2 Facial Fuzz",
-   "param": "PICKUP",
-   "reason": "switch positions have no measured wire mapping; only the default (SINGLE) can be taken"
-  },
-  {
-   "block": "#3 Parametric-8",
-   "param": "4 GAIN",
-   "reason": "bound MIN_EQ_DB = -12 is pyquadcortex 4.0.1 measurement (MIT), data only, NOT confirmed on 4.1.0"
-  },
-  {
-   "block": "#5 412 Brit 60B GB 71",
-   "param": "Mic 1",
-   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-  },
-  {
    "block": "#5 412 Brit 60B GB 71",
    "param": "Mic 2",
-   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-  },
-  {
-   "block": "#5 412 Brit 60B GB 71",
-   "param": "OUTPUT VOLUME",
-   "reason": "taper skew 4.93 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-  },
-  {
-   "block": "#6 Vintage Digital",
-   "param": "LOW PASS",
-   "reason": "taper skew 0.39 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
   }
  ],
  "payload": {
@@ -224,7 +221,7 @@
   "catalog": {
    "coros": "4.1",
    "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
-   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+   "sha256": "3f98a080bd02c856db512b9218b673b09e95ea364b1040c5d7bb6bfd72dca63f"
   },
   "guitar": "Gibson ES-339 Humbuckers",
   "scene_sources": [
@@ -302,6 +299,9 @@
          0.6,
          0.6,
          0.6
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -327,6 +327,37 @@
          0.55,
          0.55,
          0.55
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 2,
+        "label": "PICKUP",
+        "scene_mode": false,
+        "display": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "wire": [
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0
+        ],
+        "evidence": [
+         "encoding:qc-mcp-linear"
         ]
        }
       ],
@@ -373,6 +404,9 @@
          0.1833794926459014,
          0.1833794926459014,
          0.1833794926459014
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -398,6 +432,39 @@
          0.06131313131313131,
          0.06131313131313131,
          0.06131313131313131
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 15,
+        "label": "4 GAIN",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         1.5,
+         3.5,
+         1.5,
+         1.5,
+         1.5,
+         1.5,
+         1.5,
+         1.5
+        ],
+        "wire": [
+         0.5625,
+         0.6458333333333334,
+         0.5625,
+         0.5625,
+         0.5625,
+         0.5625,
+         0.5625,
+         0.5625
+        ],
+        "evidence": [
+         "taper:g4",
+         "bounds:pyquadcortex-4.0.1"
         ]
        },
        {
@@ -424,6 +491,9 @@
          0.3627221095904428,
          0.3627221095904428,
          0.3627221095904428
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -449,6 +519,9 @@
          0.11111111111111109,
          0.11111111111111109,
          0.11111111111111109
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -475,6 +548,9 @@
          0.591963770867229,
          0.591963770867229,
          0.591963770867229
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -501,6 +577,9 @@
          0.4375,
          0.4375,
          0.4375
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -548,6 +627,9 @@
          0.65,
          0.65,
          0.65
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -573,6 +655,9 @@
          0.55,
          0.55,
          0.55
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -598,6 +683,9 @@
          0.3,
          0.3,
          0.3
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -623,6 +711,9 @@
          0.65,
          0.65,
          0.65
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -648,6 +739,9 @@
          0.45,
          0.45,
          0.45
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -673,6 +767,9 @@
          0.4,
          0.4,
          0.4
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -699,6 +796,9 @@
          0.5160251852444768,
          0.5160251852444768,
          0.5160251852444768
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        }
       ],
@@ -744,6 +844,9 @@
          0.1,
          0.1,
          0.1
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -769,6 +872,9 @@
          0.25,
          0.25,
          0.25
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -795,6 +901,10 @@
          0.3175013398162005,
          0.3175013398162005,
          0.3175013398162005
+        ],
+        "evidence": [
+         "taper:g4",
+         "bounds:g4"
         ]
        },
        {
@@ -820,6 +930,9 @@
          0.25,
          0.25,
          0.25
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -846,6 +959,9 @@
          0.572988634748082,
          0.572988634748082,
          0.572988634748082
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -872,10 +988,43 @@
          0.7353922159503379,
          0.7353922159503379,
          0.7353922159503379
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 18,
+        "label": "OUTPUT VOLUME",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5,
+         -1.5
+        ],
+        "wire": [
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505,
+         0.5177256730872505
+        ],
+        "evidence": [
+         "taper:device-xml"
         ]
        }
       ],
       "at_default": [
+       "MIC 1",
        "MIC 1 LEVEL",
        "MIC 2 POSITION"
       ]
@@ -921,6 +1070,9 @@
          0.18,
          0.18,
          0.18
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -947,6 +1099,9 @@
          0.075,
          0.075,
          0.075
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -973,6 +1128,9 @@
          0.45,
          0.45,
          0.45
+        ],
+        "evidence": [
+         "taper:g4"
         ]
        },
        {
@@ -999,6 +1157,38 @@
          0.45,
          0.45,
          0.45
+        ],
+        "evidence": [
+         "taper:g4"
+        ]
+       },
+       {
+        "index": 7,
+        "label": "LOW PASS",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         6000,
+         6000,
+         6000,
+         6000,
+         6000,
+         6000,
+         6000,
+         6000
+        ],
+        "wire": [
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607,
+         0.5761769844742607
+        ],
+        "evidence": [
+         "taper:device-xml"
         ]
        }
       ],
@@ -1014,34 +1204,9 @@
     "reason": "unitless 0..1 control: its display scale is not verified on the device"
    },
    {
-    "block": "#2 Facial Fuzz",
-    "param": "PICKUP",
-    "reason": "switch positions have no measured wire mapping; only the default (SINGLE) can be taken"
-   },
-   {
-    "block": "#3 Parametric-8",
-    "param": "4 GAIN",
-    "reason": "bound MIN_EQ_DB = -12 is pyquadcortex 4.0.1 measurement (MIT), data only, NOT confirmed on 4.1.0"
-   },
-   {
-    "block": "#5 412 Brit 60B GB 71",
-    "param": "Mic 1",
-    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-   },
-   {
     "block": "#5 412 Brit 60B GB 71",
     "param": "Mic 2",
-    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
-   },
-   {
-    "block": "#5 412 Brit 60B GB 71",
-    "param": "OUTPUT VOLUME",
-    "reason": "taper skew 4.93 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
-   },
-   {
-    "block": "#6 Vintage Digital",
-    "param": "LOW PASS",
-    "reason": "taper skew 0.39 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+    "reason": "only the cab's default mic (Ribbon 160) can be taken: which other mics this cab offers isn't in the device catalog"
    }
   ]
  }

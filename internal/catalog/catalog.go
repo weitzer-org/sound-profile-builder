@@ -96,7 +96,10 @@ type Param struct {
 	// "LOG_SKEW"), so a measured numeric 0.3 can be told apart from LOG_SKEW's 0.3.
 	SkewSymbol string   `json:"skew_symbol,omitempty"`
 	Default    *float64 `json:"default,omitempty"`
-	Units      string   `json:"units,omitempty"`
+	// DefaultString is a string parameter's default, e.g. a cab mic's IR name
+	// ("ME_110 US PRN C10R_Dynamic 57"). Set only for type "string".
+	DefaultString string `json:"default_string,omitempty"`
+	Units         string `json:"units,omitempty"`
 	// Steps is the number of discrete positions for switch-like parameters.
 	Steps     int      `json:"steps,omitempty"`
 	StepNames []string `json:"step_names,omitempty"`

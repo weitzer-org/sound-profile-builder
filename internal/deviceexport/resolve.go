@@ -63,13 +63,35 @@ var pushableCategories = map[string]bool{
 	"Wah": true, "Filter": true, "Utility": true, "Morph": true, "Synth": true,
 }
 
+// captureBlockID is the catalog model whose parameter layout a capture block uses. The
+// V1 (14000) and V2 (14001) blocks list the same five controls (TestCaptureBlockLayouts).
+const captureBlockID = 14000
+
+// resolveCapture reports whether a block name is a capture, and if so which. A name with
+// the pipeline's "(capture)" annotation but no library entry is refused: there is nothing
+// to look up on the unit.
+func (b *builder) resolveCapture(name string) (c *Capture, isCapture bool, why string) {
+	bare := strings.TrimSpace(captureAnnotation.ReplaceAllString(name, ""))
+	annotated := bare != name
+	src := ""
+	if b.e.opts.CaptureSource != nil {
+		src = b.e.opts.CaptureSource(bare)
+	}
+	switch {
+	case src == "ir":
+		return nil, true, "this library entry is a cab IR, and IR loaders are not pushed in v1"
+	case src != "":
+		return &Capture{Name: bare, Source: src}, true, ""
+	case annotated:
+		return nil, true, "marked as a capture, but it isn't in coros_map.json or user_captures.json"
+	}
+	return nil, false, ""
+}
+
 // resolveModel picks the one device model a block name means, or says why it can't.
 func (b *builder) resolveModel(name string) (*catalog.Model, string) {
 	if name == "" {
 		return nil, "the block has no model name"
-	}
-	if captureAnnotation.MatchString(name) || (b.e.opts.IsCapture != nil && b.e.opts.IsCapture(name)) {
-		return nil, "captures and IRs are not pushed in v1"
 	}
 	ms := b.e.cat.Resolve(name)
 	if len(ms) == 0 {
@@ -106,8 +128,10 @@ func (b *builder) modelRefusal(m *catalog.Model) string {
 	switch {
 	case internalModelIDs[m.ID] || strings.Contains(m.Category, "Internal") || m.Category == "Utility_Deprecated":
 		return "internal device model; never placed"
-	case m.Category == "Neural Capture" || m.Category == "IRLoaders":
-		return "captures and IRs are not pushed in v1"
+	case m.Category == "Neural Capture":
+		return "a Neural Capture block needs a specific capture: name the capture, not the block type"
+	case m.Category == "IRLoaders":
+		return "IR loaders are not pushed in v1"
 	case !pushableCategories[m.Category]:
 		return fmt.Sprintf("%s blocks are not pushed in v1 (routing, I/O or looper blocks)", m.Category)
 	case strings.HasSuffix(m.Name, "(S/C)"):
@@ -155,15 +179,31 @@ func indexEvidence(m *catalog.Model) string {
 // but still takes its column.
 func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, error) {
 	name := strings.TrimSpace(blk.Model)
-	m, why := b.resolveModel(name)
-	if why != "" {
+	var out *Block
+	var m *catalog.Model
+	switch capt, isCapture, why := b.resolveCapture(name); {
+	case why != "":
 		b.refuse(ref, "", why)
 		return nil, nil
-	}
-	out := &Block{Col: col, ModelID: m.ID, Model: m.Name, Category: m.Category,
-		IndexEvidence: indexEvidence(m), Params: []Param{}, AtDefault: []string{}}
-	if plugin, gated := m.RequiredPlugin(); gated {
-		out.Plugin = plugin
+	case isCapture:
+		m = b.captureModel()
+		if m == nil {
+			return nil, fmt.Errorf("catalog fault: no Neural Capture block (id %d)", captureBlockID)
+		}
+		out = &Block{Col: col, ModelID: 0, Model: capt.Name, Category: m.Category,
+			IndexEvidence: "capture-block", Capture: capt, Params: []Param{}, AtDefault: []string{}}
+	default:
+		var why string
+		m, why = b.resolveModel(name)
+		if why != "" {
+			b.refuse(ref, "", why)
+			return nil, nil
+		}
+		out = &Block{Col: col, ModelID: m.ID, Model: m.Name, Category: m.Category,
+			IndexEvidence: indexEvidence(m), Params: []Param{}, AtDefault: []string{}}
+		if plugin, gated := m.RequiredPlugin(); gated {
+			out.Plugin = plugin
+		}
 	}
 	params := catalog.LabelParams(m)
 	byKey := make(map[string]catalog.LabelledParam, len(params))
@@ -189,7 +229,12 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 			b.bypass(ref, bp, &out.Bypass)
 			continue
 		case hasMics && (key == "MIC1" || key == "MIC2"):
-			b.refuse(ref, bp.Name, "the mic choice is the cab's IR-name string parameter; writing it has not been measured")
+			label, why := micChoice(m, key, bp)
+			if why != "" {
+				b.refuse(ref, bp.Name, why)
+			} else {
+				out.AtDefault = append(out.AtDefault, label)
+			}
 			continue
 		case cab && key == "BLEND":
 			b.refuse(ref, bp.Name, "device cabs have no Blend control; set MIC 1 LEVEL and MIC 2 LEVEL instead")
@@ -225,6 +270,74 @@ func (b *builder) block(ref string, blk *storage.EffectBlock, col int) (*Block, 
 	}
 	sort.Slice(out.Params, func(i, j int) bool { return out.Params[i].Index < out.Params[j].Index })
 	return out, nil
+}
+
+// captureModel is the catalog's V1 Neural Capture block, whose controls a capture block
+// exports.
+func (b *builder) captureModel() *catalog.Model {
+	for i := range b.e.cat.Models {
+		if b.e.cat.Models[i].ID == captureBlockID {
+			return &b.e.cat.Models[i]
+		}
+	}
+	return nil
+}
+
+// micChoice checks a cab's "Mic 1"/"Mic 2" against the mic that slot loads by default (the
+// XML's default IR name, "ME_<cab>_<mic>"). Only the default can be taken: which other mics
+// a cab offers isn't in ModelRepo.xml (plan 4.1). The default isn't written.
+func micChoice(m *catalog.Model, key string, bp storage.BlockParameter) (label, why string) {
+	slot := 1
+	if key == "MIC2" {
+		slot = 2
+	}
+	label = fmt.Sprintf("MIC %d", slot)
+	def := ""
+	n := 0
+	for _, p := range m.Params {
+		if p.Name == "ir selector" {
+			n++
+			if n == slot {
+				def = p.DefaultString
+			}
+		}
+	}
+	defMic := def
+	if i := strings.LastIndex(def, "_"); i >= 0 {
+		defMic = def[i+1:]
+	}
+	if defMic == "" {
+		return "", "this cab's default mic isn't known, so the mic choice can't be checked"
+	}
+	for _, v := range sceneStrings(bp) {
+		if micKey(cleanValue(v)) != micKey(defMic) {
+			return "", fmt.Sprintf("only the cab's default mic (%s) can be taken: which other mics this cab offers isn't in the device catalog", defMic)
+		}
+	}
+	return label, ""
+}
+
+// micKey normalizes a mic name: case, spacing, the usual abbreviations ("Dyn 57" =
+// "Dynamic 57"), and trailing placement notes ("Dynamic 57 - Cap Edge", "Ribbon 160 (off-axis)").
+func micKey(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	for _, sep := range []string{" - ", " (", ",", ";"} {
+		if i := strings.Index(s, sep); i > 0 {
+			s = s[:i]
+		}
+	}
+	f := strings.Fields(s)
+	if len(f) > 0 {
+		switch f[0] {
+		case "dyn":
+			f[0] = "dynamic"
+		case "cond":
+			f[0] = "condenser"
+		case "rib":
+			f[0] = "ribbon"
+		}
+	}
+	return strings.Join(f, " ")
 }
 
 func lookup(byKey map[string]catalog.LabelledParam, key string) (catalog.LabelledParam, bool) {
@@ -307,7 +420,7 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 		return Param{}, false, "no value"
 	}
 	if catalog.DiscreteParamTypes[cp.Type] {
-		return discrete(cp, vals)
+		return discrete(lp, vals)
 	}
 	if cp.Type != "float" {
 		return Param{}, false, fmt.Sprintf("parameter type %q has no measured wire mapping", cp.Type)
@@ -323,10 +436,11 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	if cp.Default != nil && sameValue(disp[0], *cp.Default) && sameValue(disp[1], *cp.Default) {
 		return Param{}, true, ""
 	}
-	if why := taperRefusal(cp); why != "" {
+	evidence, why := taperEvidence(cp)
+	if why != "" {
 		return Param{}, false, why
 	}
-	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, SceneMode: disp[0] != disp[1]}
+	p := Param{Index: cp.Index, Label: lp.Label, Units: cp.Units, SceneMode: disp[0] != disp[1], Evidence: evidence}
 	var wire [2]float64
 	for i, x := range disp {
 		w, err := cp.ToWire(x)
@@ -342,35 +456,47 @@ func (b *builder) param(lp catalog.LabelledParam, bp storage.BlockParameter) (Pa
 	return p, false, ""
 }
 
-// taperRefusal checks that the parameter's display-to-wire mapping rests on device
-// evidence: a measured skew and numeric or unit-confirmed bounds.
-func taperRefusal(p catalog.Param) string {
-	if p.SkewSymbol == "LOG_SKEW" {
-		return "LOG_SKEW taper (0.3, pyquadcortex data) is not confirmed on CorOS 4.1.0"
+// taperEvidence says what a float parameter's display-to-wire mapping rests on (plan 4.1),
+// or why it can't be converted at all. Measured on the unit (G4) is labelled ":g4"; the
+// device's own XML skew, pyquadcortex's LOG_SKEW and pyquadcortex's symbolic bounds are
+// allowed and labelled. A bound nobody has measured, or an unknown one, is refused.
+func taperEvidence(p catalog.Param) ([]string, string) {
+	var ev []string
+	switch skew := skewOf(p); {
+	case p.SkewSymbol == "LOG_SKEW":
+		ev = append(ev, "taper:pyquadcortex")
+	case catalog.ConfirmedSkews[skew] != "":
+		ev = append(ev, "taper:g4")
+	default:
+		ev = append(ev, "taper:device-xml")
 	}
-	skew := 1.0
-	if p.Skew != nil {
-		skew = *p.Skew
+	if p.MinSymbol == "" && p.MaxSymbol == "" {
+		return ev, ""
 	}
-	if _, ok := catalog.ConfirmedSkews[skew]; !ok {
-		return fmt.Sprintf("taper skew %s is not confirmed on CorOS 4.1.0 (measured: %s)", fmtNum(skew), confirmedSkewList())
-	}
+	bound := "bounds:g4"
 	for _, sym := range []string{p.MinSymbol, p.MaxSymbol} {
 		if sym == "" {
 			continue
 		}
 		if why, ok := catalog.UnmeasuredBounds[sym]; ok {
-			return fmt.Sprintf("bound %s is %s", sym, why)
+			return nil, fmt.Sprintf("bound %s is %s", sym, why)
 		}
 		fb, ok := catalog.FirmwareBounds[sym]
 		if !ok {
-			return fmt.Sprintf("bound %s is unknown", sym)
+			return nil, fmt.Sprintf("bound %s is unknown", sym)
 		}
 		if fb.Evidence != catalog.EvidenceConfirmed410 {
-			return fmt.Sprintf("bound %s = %s is %s", sym, fmtNum(fb.Value), fb.Evidence)
+			bound = "bounds:pyquadcortex-4.0.1"
 		}
 	}
-	return ""
+	return append(ev, bound), ""
+}
+
+func skewOf(p catalog.Param) float64 {
+	if p.Skew != nil {
+		return *p.Skew
+	}
+	return 1
 }
 
 func confirmedSkewList() string {
@@ -453,24 +579,53 @@ func isCentre(v string) bool {
 	return false
 }
 
-// discrete handles switches, rotary switches, toggles and combo boxes. Their wire mapping
-// has not been measured, so only a value equal to the catalog default in both scenes is
-// accepted (and then not written).
-func discrete(p catalog.Param, vals [2]string) (Param, bool, string) {
-	if p.Default == nil || p.Min == nil {
-		return Param{}, false, fmt.Sprintf("%s positions have no measured wire mapping", p.Type)
+// linearSwitchTypes are the discrete types written with qc-mcp's position encoding,
+// wire = (value - min) / (max - min), where value = min + position (plan 4.1). Combo boxes
+// (and faders) have no such data and are only taken at their default.
+var linearSwitchTypes = map[string]bool{"switch": true, "rotarySwitch": true, "toggleButton": true}
+
+// discrete handles switches, rotary switches, toggles and combo boxes. A value equal to the
+// catalog default in both scenes is not written.
+func discrete(lp catalog.LabelledParam, vals [2]string) (Param, bool, string) {
+	p := lp.Param
+	if p.Min == nil || p.Max == nil || !(*p.Max > *p.Min) {
+		return Param{}, false, fmt.Sprintf("%s has no numeric range", p.Type)
 	}
-	def := int(math.Round(*p.Default - *p.Min))
-	for _, v := range vals {
-		pos, ok := position(p, cleanValue(v))
+	var pos [2]int
+	for i, v := range vals {
+		n, ok := position(p, cleanValue(v))
 		if !ok {
 			return Param{}, false, fmt.Sprintf("%q isn't a position of this control (%s)", truncate(cleanValue(v), 40), positions(p))
 		}
-		if pos != def {
-			return Param{}, false, fmt.Sprintf("%s positions have no measured wire mapping; only the default (%s) can be taken", p.Type, positionName(p, def))
+		pos[i] = n
+	}
+	if p.Default != nil {
+		def := int(math.Round(*p.Default - *p.Min))
+		if pos[0] == def && pos[1] == def {
+			return Param{}, true, ""
 		}
 	}
-	return Param{}, true, ""
+	if !linearSwitchTypes[p.Type] {
+		return Param{}, false, fmt.Sprintf("%s positions have no known wire mapping; only the default can be taken", p.Type)
+	}
+	out := Param{Index: p.Index, Label: lp.Label, Units: p.Units, SceneMode: pos[0] != pos[1],
+		Evidence: []string{"encoding:qc-mcp-linear"}}
+	var disp, wire [2]float64
+	for i, n := range pos {
+		disp[i] = *p.Min + float64(n)
+		wire[i] = (disp[i] - *p.Min) / (*p.Max - *p.Min)
+		if wire[i] < 0 || wire[i] > 1 {
+			return Param{}, false, fmt.Sprintf("position %d is outside %s..%s", n, fmtNum(*p.Min), fmtNum(*p.Max))
+		}
+		if n < len(p.StepNames) {
+			out.names[i] = strings.TrimSpace(p.StepNames[n])
+		}
+	}
+	for s := 0; s < Scenes; s++ {
+		out.Display[s] = disp[sceneIndex(s)]
+		out.Wire[s] = wire[sceneIndex(s)]
+	}
+	return out, false, ""
 }
 
 // position reads a step name, or a whole number in the control's range.
@@ -502,13 +657,6 @@ func positions(p catalog.Param) string {
 		return fmtNum(*p.Min) + ".." + fmtNum(*p.Max)
 	}
 	return "unknown"
-}
-
-func positionName(p catalog.Param, pos int) string {
-	if pos >= 0 && pos < len(p.StepNames) {
-		return strings.TrimSpace(p.StepNames[pos])
-	}
-	return fmtNum(*p.Min + float64(pos))
 }
 
 func sameValue(a, b float64) bool {

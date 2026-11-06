@@ -19,20 +19,14 @@ import (
 
 // DeviceExporter is the device export (plan P2) configured from the app config: the
 // user's plugins come from allow_paid_plugins/available_plugins, and capture names from
-// coros_map.json and user_captures.json. cmd/server shares it with the MCP server and the
+// coros_map.json and user_captures.json (agents.CaptureSource). cmd/server shares it with the MCP server and the
 // device bridge, so all three build the same export.
 func (s *Server) DeviceExporter() (*deviceexport.Exporter, error) {
 	var owned map[string]bool
 	if cfg := s.appConfig; cfg != nil {
 		owned = deviceexport.OwnedPluginSet(cfg.AllowPaidPlugins, cfg.AvailablePlugins)
 	}
-	return deviceexport.NewEmbedded(deviceexport.Options{IsCapture: isCaptureName, OwnedPlugins: owned})
-}
-
-// isCaptureName reports names coros_map.json or user_captures.json mark as captures.
-func isCaptureName(name string) bool {
-	isCap, ok := agents.GetValidNativeBlocks()[name]
-	return ok && isCap
+	return deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: agents.CaptureSource, OwnedPlugins: owned})
 }
 
 // handleDeviceExport serves GET /api/preset/device_export?id=<preset>&guitar=<name>: one

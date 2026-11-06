@@ -155,9 +155,11 @@ this app's MCP connector. Read these before any device work:
   tool inventory, which model does what, and the kickoff prompt for each implementation chat (section 11).
 - `tools/qc-mcp-trial/` — the allowlist proxy and Windows walkthrough used to trial qc-mcp on the owner's unit.
 - `internal/deviceexport` — the device export (plan P2, section 4): one guitar's chain to `qc2-device-export/1` (model ids,
-  param indexes, all eight scene values and bypass flags, row 0). Pure and deterministic; it refuses rather than guesses,
-  and only converts where the unit confirmed the mapping (`catalog.ConfirmedSkews`, `VerifiedCloneBases`, bound evidence
-  in `firmware_constants.go`); add an entry there only with a section 7 measurement. `send_preset_to_device`,
+  param indexes, all eight scene values and bypass flags, row 0, capture blocks by name). Pure and deterministic; it
+  refuses what has no data at all, and labels every conversion with its source in the param's `evidence` (`:g4` = read on
+  the unit; device-XML skews, pyquadcortex bounds and qc-mcp's switch encoding are allowed but labelled, plan 4.1).
+  Clone indexes stay limited to `VerifiedCloneBases`. `go run ./cmd/device_census <eval dir>` shows how many eval chains
+  are pushable and why not. `send_preset_to_device`,
   `get_preset(format=device)` and `/api/preset/device_export` share one exporter (`api.Server.DeviceExporter`). Goldens:
   `go test ./internal/deviceexport -run Golden -update` (rerun after any catalog re-import: the header carries its hash).
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent

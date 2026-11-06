@@ -18,7 +18,12 @@ func newExportSession(t *testing.T, h *svcHarness, withExporter bool) *mcp.Clien
 	t.Helper()
 	var opts []Option
 	if withExporter {
-		exp, err := deviceexport.NewEmbedded(deviceexport.Options{})
+		exp, err := deviceexport.NewEmbedded(deviceexport.Options{CaptureSource: func(n string) string {
+			if n == "CA John's" {
+				return "factory"
+			}
+			return ""
+		}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -143,5 +148,27 @@ func TestGetPresetDeviceHostile(t *testing.T) {
 	}
 	if strings.Count(text, "\n```") != 2 {
 		t.Errorf("want exactly one fenced block")
+	}
+}
+
+// TestGetPresetDeviceCaptureAndUnconfirmed shows a capture block and marks a value whose
+// mapping isn't confirmed on the unit.
+func TestGetPresetDeviceCaptureAndUnconfirmed(t *testing.T) {
+	h := newTestService(t)
+	cs := newExportSession(t, h, true)
+	chain := []storage.EffectBlock{
+		{Model: "CA John's", Parameters: []storage.BlockParameter{{Name: "Gain", Value: "+2 dB", Basis: "estimate"}}},
+		{Model: "Slapback Delay", Parameters: []storage.BlockParameter{{Name: "Delay Time", Value: "120 ms", Basis: "estimate"}}},
+	}
+	seedDevicePreset(t, h, "p-dev5", map[string][]storage.EffectBlock{"Tele": chain})
+	text := okText(t, itCall(t, cs, getToolName, map[string]any{"preset_id": "p-dev5", "format": "device"}))
+	for _, want := range []string{
+		"| row 0 col 0 | CA John's (capture, found on the unit at push time) | GAIN | 2 dB | 2 dB |",
+		"| row 0 col 1 | Slapback Delay (M) (id 6009) | DELAY TIME † | 120 ms |",
+		"† Converted from the device's own data",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("missing %q in:\n%s", want, text)
+		}
 	}
 }

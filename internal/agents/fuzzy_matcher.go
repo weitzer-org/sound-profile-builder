@@ -270,6 +270,25 @@ func IsUserCaptureName(name string) bool {
 	return userCaptureNameSet[name]
 }
 
+// CaptureSource reports where a capture name comes from: "user" for an exact
+// user_captures.json entry, "factory" for a coros_map.json capture, "" when the name isn't
+// a capture. A user entry whose block_type is "cab" is a cab IR, not a Neural Capture, and
+// reports "ir". The device export uses it to tell a capture from a catalog block.
+func CaptureSource(name string) string {
+	if IsUserCaptureName(name) {
+		for _, c := range GetUserCaptures() {
+			if c.Name == name && strings.EqualFold(strings.TrimSpace(c.BlockType), "cab") {
+				return "ir"
+			}
+		}
+		return "user"
+	}
+	if isCap, ok := GetValidNativeBlocks()[name]; ok && isCap {
+		return "factory"
+	}
+	return ""
+}
+
 // GetValidNativeBlocks parses the embedded coros_map.json, user_captures.json and the
 // device catalog (internal/catalog), returning a map of [blockName]isCapture. User
 // captures are always treated as captures since they are, by definition, real Cortex

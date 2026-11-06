@@ -622,12 +622,16 @@ func renderPlan(t *strings.Builder, o devicePushOutput) {
 // renderExportTable renders an export's readable plan and its unresolved items. Every
 // string from the preset or export goes through cell().
 func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unresolved []devicejobs.Unresolved) {
+	unconfirmed := false
 	if len(blocks) > 0 {
 		t.WriteString("| Grid | Block | Parameter | Scene A | Scene B | State A/B |\n|---|---|---|---|---|---|\n")
 		for _, bl := range blocks {
 			state := fmt.Sprintf("%s/%s", activeBypassed(bl.BypassA), activeBypassed(bl.BypassB))
 			grid := fmt.Sprintf("row %d col %d", bl.Row, bl.Col)
 			model := fmt.Sprintf("%s (id %d)", cell(bl.Model), bl.ModelID)
+			if bl.Capture != "" {
+				model = fmt.Sprintf("%s (capture, found on the unit at push time)", cell(bl.Capture))
+			}
 			if len(bl.Params) == 0 {
 				fmt.Fprintf(t, "| %s | %s | (defaults) | | | %s |\n", grid, model, state)
 			}
@@ -639,7 +643,12 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unreso
 				if i > 0 {
 					grid, model, state = "", "", ""
 				}
-				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, cell(pr.Name), cell(pr.A), cell(bval), state)
+				name := cell(pr.Name)
+				if pr.Unconfirmed {
+					name += " †"
+					unconfirmed = true
+				}
+				fmt.Fprintf(t, "| %s | %s | %s | %s | %s | %s |\n", grid, model, name, cell(pr.A), cell(bval), state)
 			}
 			if len(bl.AtDefault) > 0 {
 				names := make([]string, len(bl.AtDefault))
@@ -650,6 +659,9 @@ func renderExportTable(t *strings.Builder, blocks []devicejobs.PlanBlock, unreso
 			}
 		}
 		t.WriteString("\nScenes C-H get Scene A's values and state; all eight scenes are written explicitly.\n")
+		if unconfirmed {
+			t.WriteString("† Converted from the device's own data or a third-party measurement, not yet checked on this unit: compare the unit's screen after the push.\n")
+		}
 	}
 	if len(unresolved) > 0 {
 		t.WriteString("\n**Unresolved, so this cannot be pushed:**\n")

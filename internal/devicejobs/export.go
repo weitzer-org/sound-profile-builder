@@ -47,6 +47,9 @@ type PlanBlock struct {
 	// AtDefault names controls the preset sets to the device default, which are
 	// therefore not written.
 	AtDefault []string `json:"at_default,omitempty"`
+	// Capture is the capture a Neural Capture block loads (ModelID is then 0: the
+	// bridge picks the V1 or V2 block from the capture on the unit).
+	Capture string `json:"capture,omitempty"`
 }
 
 // PlanParam is one parameter write: display values for Scenes A and B.
@@ -54,6 +57,9 @@ type PlanParam struct {
 	Name string `json:"name"`
 	A    string `json:"a"`
 	B    string `json:"b,omitempty"`
+	// Unconfirmed: the display-to-wire mapping comes from the device's own data or a
+	// third-party measurement, not a reading on the owner's unit.
+	Unconfirmed bool `json:"unconfirmed,omitempty"`
 }
 
 // Unresolved is one item the exporter refused to map.

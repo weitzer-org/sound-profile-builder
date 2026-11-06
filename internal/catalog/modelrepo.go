@@ -229,6 +229,8 @@ func convertParam(index int, xp xmlParam) (Param, error) {
 	p.Max, p.MaxSymbol = numberOrSymbol(xp.Max)
 	if v, err := strconv.ParseFloat(strings.TrimSpace(xp.Default), 64); err == nil {
 		p.Default = &v
+	} else if xp.Type == "string" {
+		p.DefaultString = strings.TrimSpace(xp.Default)
 	}
 	if n, err := strconv.Atoi(strings.TrimSpace(xp.Steps)); err == nil {
 		p.Steps = n
