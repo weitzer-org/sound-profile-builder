@@ -169,7 +169,10 @@ them; this guide uses **24H**).
 8. **Idle exit.** Set `QC_AGENT_IDLE_MINUTES=2`, start, wait: it should stop after 2 minutes. Put `30` back.
 9. **Push refusals (works before P2).** These need a push job, which QC-2 can't build until P2. Once P2 is merged:
    - occupied slot: `slot_not_empty`, nothing written;
-   - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first");
+   - an empty slot that isn't open on the unit: `unsupported_arg` ("Select slot ... first"; the message says what the unit
+     reports as open, with the collection name);
+   - an empty slot open in a collection other than My Presets (e.g. your own): the push builds there, not in My Presets.
+     **Unverified on the unit until you run it:** check the preset appears in that collection and My Presets is unchanged;
    - an empty slot outside `QC_AGENT_ALLOWED_SLOTS` (narrow it to `24H` to test): `slot_not_allowed`.
 10. **Before the first real push: are position replies correlated?** The push reads which slot is open several
     times, and the bridge accepts only the SetlistPosition reply that carries its own `request_id` (no fallback to
