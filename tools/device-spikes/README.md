@@ -1,6 +1,6 @@
 # Phase 0 device spikes
 
-Hardware checks for gates G0-G4, G6 and G7 (questions (c) and (f) only) in [`docs/design/qc-device-bridge-plan.md`](../../docs/design/qc-device-bridge-plan.md) section 7. They run on **your Windows PC**, against **your Quad Cortex**, using qc-mcp's transport **as a library** from your existing clone at `C:\Users\bweit\qc-trial\qc-mcp` (commit `f634ecd`).
+Hardware checks for gates G0-G4, G6 and G7 (question (f) only) in [`docs/design/qc-device-bridge-plan.md`](../../docs/design/qc-device-bridge-plan.md) section 7. They run on **your Windows PC**, against **your Quad Cortex**, using qc-mcp's transport **as a library** from your existing clone at `C:\Users\bweit\qc-trial\qc-mcp` (commit `f634ecd`).
 
 No pyquadcortex, no containers, no qc-mcp MCP server, no LLM in the loop. G5 (R2 pricing and token scoping) needs no device and is not here.
 
@@ -10,12 +10,12 @@ No pyquadcortex, no containers, no qc-mcp MCP server, no LLM in the loop. G5 (R2
 |---|---|
 | Only the pinned, unmodified transport | `load_qc_mcp` refuses unless the clone is at `f634ecd` and `git status -- src` is clean |
 | Exclusive direct mode only | `QuadCortex(share=False, bridge=False)`; Cortex Control must be closed (except G2b, which needs it open) |
-| Each script can call only the transport methods it needs | `Guarded` wrapper; everything else raises. Reads for G0/G1/G2. G3 adds routing, add-block, set-param, per-scene set-param and the save. G4 and G6 add live edits only. G7 adds only `assign_stomp` and `unassign_stomp` |
-| Never callable, even if a script asked | `save_preset` (RecallPreset SAVE, the documented hang), `recall`, `clear_grid`, `load_preset`, raw `send`/`request`, global I/O, EQ, volume and mode writes, deletes, captures/IRs, preset meta, and stomps for every spike except G7 (see below) |
+| Each script can call only the transport methods it needs | `Guarded` wrapper; everything else raises. Reads for G0/G1/G2. G3 adds routing, add-block, set-param, per-scene set-param and the save. G4 and G6 add live edits only. G7 adds only `assign_stomp`, `unassign_stomp` and `recall` |
+| Never callable, even if a script asked | `save_preset` (RecallPreset SAVE, the documented hang), `recall`, `clear_grid`, `load_preset`, raw `send`/`request`, global I/O, EQ, volume and mode writes, deletes, captures/IRs, preset meta, and stomps and `recall` for every spike except G7 (see below) |
 | One save, one slot, one script | Only G3 can save, and only into the empty slot **you** pass with `--slot` (no default). Fresh directory listing before the first write and again before the save; typed confirmation; the save needs a clean read-back first |
 | The firmware must match exactly | `--firmware` is required for every write spike |
-| No recalls | The scripts never switch presets. You select the slot on the unit, and they refuse if it isn't the one open (G7 asks you to switch by hand and checks the unit's own pointer) |
-| Stomps only for G7 | `assign_stomp`/`unassign_stomp` stay on the never list. `Guarded` lifts that for exactly one grant, `GRANT_G7` (reads plus those two methods); add anything to it, or add a stomp method to any other grant, and the guard refuses again. G7 has no save, no `write_preset_file`, no delete, no recall |
+| No recalls | The scripts never switch presets. You select the slot on the unit, and they refuse if it isn't the one open (G7 alone recalls, and confirms each switch from the unit's own pointer) |
+| Stomps and recall only for G7 | `assign_stomp`, `unassign_stomp` and `recall` (a preset change; not `save_preset`, which is RecallPreset SAVE) stay on the never list. `Guarded` lifts that for exactly one grant, `GRANT_G7` (reads plus those three); add anything to it, or add one of them to any other grant, and the guard refuses again. G7 has no save, no `write_preset_file`, no delete |
 
 Results go to `C:\Users\bweit\qc-trial\spike-results\` (outside the repo). G1's file also holds the raw preset bytes as hex.
 
@@ -36,7 +36,7 @@ $env:QC_MCP_DIR = "$T\qc-mcp"
 & "$T\venv\Scripts\python.exe" -m unittest discover -s "$T\qc2\tools\device-spikes" -p "test_spikes.py"
 ```
 
-Expect `Ran 112 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
+Expect `Ran 106 tests ... OK`. Don't add `-I` when running the spikes themselves; they import `spike_common.py` from their own folder.
 
 Before every hardware run: quit **Cortex Control** completely (tray too), connect the unit, and keep a Cortex Control local backup from before the trial.
 
@@ -58,7 +58,7 @@ $T = "$HOME\qc-trial"; $PY = "$T\venv\Scripts\python.exe"; $S = "$T\qc2\tools\de
 | G3 | `g3_build_and_save.py` | **one save** | preflight, then `--apply`, then `--apply --save` |
 | G4 | `g4_taper_check.py` | live edits only | after G3 |
 | G6 | `g6_scenes.py` | live edits only | after G3 |
-| G7 (c), (f) | `g7_stomps.py` | live stomp edits only, never a save | on a preset the bridge pushed, see below |
+| G7 (f) | `g7_stomps.py` | live stomp edit + two recalls, never a save | on a preset the bridge pushed, see below |
 
 ### G0: is the preset in 2A?
 
@@ -161,40 +161,29 @@ It makes Myth Drive GAIN and the Spring bypass scene-varying, switches Scene A, 
 
 Afterwards, select another preset **without saving**.
 
-### G7: do stomp assignments move, and does leaving the preset discard them? (c) and (f)
+### G7 (f): is a stomp change discarded by recalling another preset?
 
-Answers only (c) and (f) of gate G7 in [`docs/design/qc-stomp-layout.md`](../../docs/design/qc-stomp-layout.md) section 7. The other G7 questions are checked by eye during your normal pushes (`deploy/qc-agent/README.md` steps 16 and 11) and are not repeated here. **(f) is the only thing that gates entry point 2** (`apply_stomp_layout` on any loaded preset).
+Answers only (f) of gate G7 in [`docs/design/qc-stomp-layout.md`](../../docs/design/qc-stomp-layout.md) section 7: **does a footswitch-assignment change sent over USB stay an unsaved edit that recalling another preset discards, or does it reach the stored preset?** It is the only G7 question that gates entry point 2 (`apply_stomp_layout` on any loaded preset). The rest of G7 is not tested here: (c) doesn't matter because the planner removes before it assigns (`internal/stomplayout/plan.go`, rule 6), and (a), (b), (d), (e), (g), (h) are covered by your normal pushes (`deploy/qc-agent/README.md` steps 16 and 11) or don't affect the design.
 
-- **(c)** Re-assign one already-assigned block to a different free switch (A-G, never H) and read back: **moved** (the old switch is cleared) or **added** (both present).
-- **(f)** Does the change count as an unsaved edit, and does leaving the preset discard it? PASS: after you select another preset and come back, the assignments equal the baseline. FAIL: the change survived (auto-saved or kept); then **entry point 2 stays off**.
-
-It only edits the preset that is open and never saves. **You** switch presets on the unit (no recall is granted); the script confirms each switch from the unit's own pointer.
+Sequence (with `--apply`): read the assignments (baseline); move one assigned block to a free switch among A-G, never H (unassign, then assign), read back and confirm it took; recall `--other-slot`, then recall the original slot, confirming each from the unit's own pointer; read back. **PASS** if the assignments equal the baseline; **FAIL** if the change survived, and then **entry point 2 stays off**. INCONCLUSIVE (a recall didn't complete, a different preset came back, or the read-back matches neither state) is not an answer; entry point 2 also stays off. Nothing is saved: no `write_preset_file`, no `save_preset`, no delete.
 
 What you need first:
 
-1. A preset the bridge pushed, with footswitch assignments on **at least two blocks** (a push with `stomps`, README step 16), and no unsaved edits. Select it on the unit.
-2. **Close the QC bridge window** (the home agent). It and this spike cannot share the USB device. The script checks the agent's lock file and, if the unit cannot be opened, says: close the QC bridge window and retry.
-3. A second, different preset you can visit and leave (any preset; it is only selected). Name it with `--other-slot`.
-
-Ownership check: the open slot must be in the agent's owned-slot ledger (`%LOCALAPPDATA%\qc-agent\owned_slots.jsonl`, read only, never written) and the unit must still show the name the agent saved there. If the bridge pushed the preset from another PC, give `--slot 2A --i-confirm-bridge-created` instead; the open slot must then equal `--slot`.
+1. A preset **the bridge pushed**, with at least one footswitch assignment (a push with `stomps`, README step 16), open on the unit with no unsaved edits. The script requires its slot to be in the agent's owned-slot ledger (`%LOCALAPPDATA%\qc-agent\owned_slots.jsonl`, read only, never written) and the unit to still show the name the agent saved there.
+2. **Close the QC bridge window** (the home agent). It and this spike cannot share the USB device. The script checks the agent's lock file; if the unit can't be opened it says to close the QC bridge window and retry.
+3. A second, **occupied** My Presets slot for `--other-slot` (any preset; it is only loaded). Keep the unit's output down.
 
 ```powershell
 # 1. Preflight: checks everything, prints the plan, writes nothing
 & $PY "$S\g7_stomps.py" --firmware 4.1.0 --other-slot 3C
 
-# 2. For real: one stomp assignment, then you leave and re-enter the preset by hand
+# 2. For real: one stomp move, then recall 3C and the original slot
 & $PY "$S\g7_stomps.py" --firmware 4.1.0 --other-slot 3C --apply
 ```
 
-During `--apply` it prints the baseline, makes the one assignment, prints (c), reads the device's `PresetDirty` flag, and then asks:
+It prints the baseline, the move and its read-back, the two recalls, the verdict and the raw read-backs, and writes them to `g7-<time>.json` in `spike-results` (including the device's `PresetDirty` flag after each step). It never prompts except, on a FAIL, whether to put the block back (a second live edit, still no save). Paste the console output and the JSON.
 
-1. *Does the preset show as edited/unsaved on the unit?* (y/n) Look at the screen.
-2. *Select 3C on the unit, then press Enter.* Do it. If the unit asks whether to save, choose **no / discard**; the script then asks whether it asked (y/n), which is itself a finding.
-3. *Select 2A (the original) on the unit, then press Enter.* It reads back and compares with the baseline.
-
-It prints the verdicts with the raw read-backs and writes them to `g7-<time>.json` in `spike-results`. If (f) FAILS it says so plainly (entry point 2 stays off), prints the original assignments, and offers to put the block back (a second live edit, still no save). An (f) of INCONCLUSIVE (you could not reach the slots, a different preset came back, or the read-back matches neither state) is not an answer: entry point 2 stays off until it has been rerun and PASSED. Paste the console output and the JSON.
-
-**Unverified until you run it:** that the read-back's assignment row/column are the block's array position (the script refuses if an assignment points at an empty cell), that `PresetDirty` reflects a stomp change, and everything in the stomp doc's section 2 about the unit.
+**Unverified until you run it:** that the read-back's assignment row/column are the block's array position (the script refuses if an assignment points at an empty cell), that `unassign_stomp` then `assign_stomp` behaves as qc-mcp's source says, and everything in the stomp doc's section 2 about the unit.
 
 ## If something goes wrong
 
@@ -202,4 +191,4 @@ Stop, power-cycle the unit, and paste the console output. Restoring from the Cor
 
 ## What is *not* proven by the offline tests
 
-`test_spikes.py` runs the real scripts against a fake device built on qc-mcp's protobuf messages. It covers the guards, slot arithmetic, golden taper vectors, report logic, and every refusal path. The G7 tests use a fake unit whose behaviour (move or add, discard or auto-save) I invented to drive each branch; they prove the guards, the ledger check, the stomp-only grant and the verdict logic, **and nothing about what the Quad Cortex does with a stomp assignment**: that is what running G7 on the unit answers. It says nothing about how a real unit answers, how long operations take, or what Windows HID does on power loss. The spikes themselves answer that.
+`test_spikes.py` runs the real scripts against a fake device built on qc-mcp's protobuf messages. It covers the guards, slot arithmetic, golden taper vectors, report logic, and every refusal path. The G7 tests use a fake unit whose behaviour (ignores the change or not, discards on recall or auto-saves) was invented to drive each branch; they prove the guards, the ledger check, the stomp-only grant and the verdict logic, **and nothing about what the Quad Cortex does with a stomp assignment**: that is what running G7 on the unit answers. It says nothing about how a real unit answers, how long operations take, or what Windows HID does on power loss. The spikes themselves answer that.
