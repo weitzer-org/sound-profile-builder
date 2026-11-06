@@ -104,8 +104,9 @@ $Q = "$HOME\qc-trial\qc2"; $A = "$env:LOCALAPPDATA\qc-agent"; $PY = "$A\venv\Scr
    py -3.12 -m venv "$A\venv"
    & $PY -m pip install --require-hashes --only-binary :all: -r "$Q\deploy\qc-agent\requirements.lock.txt"
    ```
-3. `agent.env` already exists (you ran `write_agent_env.py`). Check everything offline, without touching the unit
-   or the network:
+3. Write `agent.env` if you don't have one yet (`py -3 "$Q\deploy\qc-agent\write_agent_env.py"`; its
+   `DEVICE_JOB_KEY` must equal the server's Fly secret). Then check everything offline, without touching the unit
+   or the network (an existing `agent.env` is checked against the current rules too):
    ```powershell
    cd "$Q\deploy\qc-agent"
    & $PY -E -s -m qc_agent check
@@ -135,6 +136,14 @@ A second double-click while it runs says so and exits. If the window shows `conf
 `write_agent_env.py`.
 
 ## Hardware acceptance (after Phase 0 gates G2 and G3)
+
+**Results of the first run (P6, 2026-11-06):** plan section 7.3 has the table. Passed: steps 1-3, 9 (occupied slot),
+11 (the save lands and survives a power cycle, but every push reports `device_error` "may still land": follow-up F1),
+15 (both faders read as pushed) and 16 (C and G as planned, latching, H untouched, kept across a power cycle); step 2
+is G2 (a). Partly: 12 (a downloaded capture only; factory captures wait on F2), 13 (bypass flags and defaults, no
+watchdog run) and 14 (the sync stores the list but drops factory captures: F2). Not run: 4 (slot argument), 5, 6, 7,
+8, 10, the unplug part of 13, and the cab mic write of 14. Load a pushed preset again (another slot, then it) before
+reading its name or running a spike on it: right after a push the live grid reports an empty name.
 
 G3 has passed (plan 7.1). G2 (c) passed for power-off; **G2 (a) (start from a shortcut), G2 (b) (Cortex Control
 holding the unit) and unplug detection have not been run.** Do these in order and paste each window's output.
