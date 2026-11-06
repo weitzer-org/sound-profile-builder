@@ -623,13 +623,13 @@ class Recovery(Base):
         self.poll()
         with open(self.home / "executed_jobs.jsonl", "ab") as f:
             f.write(b'{"event":"taken","job_id":"abc\nnot a torn marker\n')
-        with self.assertRaises(LedgerError):
+        with self.assertRaisesRegex(LedgerError, "is corrupt"):
             self.make_agent()
 
     def test_corrupt_middle_line_stops_start(self):
         from qc_agent.ledger import LedgerError
         (self.home / "executed_jobs.jsonl").write_text('garbage\n{"event":"taken","job_id":"a","kind":"x","at":"t"}\n')
-        with self.assertRaises(LedgerError):
+        with self.assertRaisesRegex(LedgerError, "entry 1 is corrupt"):
             self.make_agent()
 
 

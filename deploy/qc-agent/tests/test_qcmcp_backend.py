@@ -85,7 +85,7 @@ class Session(Base):
                 return self.hid._reply("File", f)
             return orig(name, m)
         self.hid._handle = short
-        with self.assertRaises(DeviceError):
+        with self.assertRaisesRegex(DeviceError, "not 256"):
             self.dev.list_my_presets()
 
     def test_dead_reader_thread_means_gone(self):
@@ -200,7 +200,10 @@ class PendingQueue(Base):
             return orig(name, m)
         self.hid._handle = with_broadcast
         self.dev.connect()
-        self.assertIsNotNone(self.dev._raw.__dict__.get("request"), "the fixed request() is bound per instance")
+        raw = self.dev._raw
+        self.assertIsInstance(raw, T.QuadCortex)
+        self.assertIsNot(type(raw).request, T.QuadCortex.request, "the fixed request() overrides upstream's")
+        self.assertIsNot(type(raw).get_setlist_position, T.QuadCortex.get_setlist_position)
         plan = validate(export(), catalog(), "4.1.0")
         self.dev.begin_push(152, "x", plan)
         self.dev.add_block(0, 0, 1)
@@ -339,17 +342,17 @@ class Guard(Base):
 
     def test_backend_save_must_match_the_push(self):
         self.dev.begin_push(152, "Texas Blues", self.plan)
-        with self.assertRaises(DeviceError):
+        with self.assertRaisesRegex(DeviceError, "save target differs from the armed push"):
             self.dev.save_to_slot(153, "Texas Blues")
 
     def test_save_authorisation_is_single_use_and_ends_with_the_push(self):
         self.dev.begin_push(152, "Texas Blues", self.plan)
         self.dev.save_to_slot(152, "Texas Blues")
-        with self.assertRaises(DeviceError):
+        with self.assertRaisesRegex(DeviceError, "save target differs from the armed push"):
             self.dev.save_to_slot(152, "Texas Blues")
         self.dev.begin_push(152, "Texas Blues", self.plan)
         self.dev.end_push()
-        with self.assertRaises(DeviceError):
+        with self.assertRaisesRegex(DeviceError, "save target differs from the armed push"):
             self.dev.save_to_slot(152, "Texas Blues")
 
     def test_end_push_disarms(self):

@@ -27,9 +27,10 @@ Three layers keep the transport to the operations the plan allows (section 5):
    RecallPreset UPDATE (save_preset), SetlistPosition UPDATE (recall), Grid DELETE,
    File DELETE, and every IOSettings / GlobalEQ / MasterVolume / Mode / ModelPreset write.
 
-The vendored files are not modified. One upstream bug is worked around on our own instance:
-request() never dropped the reply it matched, so its pending queue could double per request
-(_make_request, below). Liveness (G2 c) reads two private attributes
+The vendored files are not modified. One upstream bug is worked around in a subclass
+(_fixed_quad_cortex, below): request() never dropped the reply it matched, so its pending queue
+could double per request (_make_request). The same subclass reads the open slot strictly by
+request_id (_make_setlist_position). Liveness (G2 c) reads two private attributes
 of the vendored Windows transport (its reader thread, its write-error counter), as
 the Phase 0 spikes did; nothing is written to them.
 """
@@ -370,7 +371,7 @@ class WireGuard:
 # ---------------------------------------------------------------- a fix to one transport method
 
 def _make_request(mods):
-    """QuadCortex.request from f634ecd with one fix, bound per instance in connect().
+    """QuadCortex.request from f634ecd with one fix, installed by _fixed_quad_cortex.
 
     Upstream removes the matched reply with `t is not (cmd, obj, raw, pb)`, comparing each
     pending tuple to a NEW tuple, so nothing is ever removed and `keep + _pending` duplicates
@@ -452,6 +453,20 @@ def _make_setlist_position(mods):
     return get_setlist_position
 
 
+def _fixed_quad_cortex(mods):
+    """Upstream's QuadCortex with request() and get_setlist_position() replaced (see above).
+
+    A subclass rather than per-instance patching: the vendored module stays byte-identical, and
+    every method that calls self.request() (scene reads, directory listing, the push writes) gets
+    the fixed one. When the fix lands upstream and is re-vendored, this class goes away.
+    """
+    class FixedQuadCortex(mods["transport"].QuadCortex):
+        request = _make_request(mods)
+        get_setlist_position = _make_setlist_position(mods)
+
+    return FixedQuadCortex
+
+
 # ---------------------------------------------------------------- the backend
 
 def preset_to_plain(bp):
@@ -482,6 +497,7 @@ class QcMcpBackend(DeviceBackend):
         # `mods` lets a caller pass modules load_vendored() already returned; nothing else is accepted
         # as the transport, so the pin check can't be skipped by accident.
         self._mods = mods if mods is not None and mods is _loaded else load_vendored(vendor_dir)
+        self._QC = _fixed_quad_cortex(self._mods)
         self._qc = None
         self._raw = None
         self._guard = None
@@ -502,15 +518,13 @@ class QcMcpBackend(DeviceBackend):
     # -- session --
 
     def connect(self):
-        T, P = self._mods["transport"], self._mods["protocol"]
+        P = self._mods["protocol"]
         try:
-            qc = T.QuadCortex(share=False, bridge=False)  # exclusive direct mode only
+            qc = self._QC(share=False, bridge=False)  # exclusive direct mode only
         except RuntimeError as e:
             raise UnitAbsent(str(e)) from None
         guard = WireGuard(qc.io, P)
         qc.io = guard
-        qc.request = types.MethodType(_make_request(self._mods), qc)  # see _make_request
-        qc.get_setlist_position = types.MethodType(_make_setlist_position(self._mods), qc)
         self._raw, self._guard, self._errs = qc, guard, []
         self._qc = Guarded(qc)
         try:
