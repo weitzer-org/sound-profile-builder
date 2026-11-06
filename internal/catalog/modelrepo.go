@@ -172,6 +172,13 @@ func ParseModelRepo(r io.Reader) ([]Model, error) {
 				PluginID: strings.TrimSpace(xm.PluginID),
 				Params:   []Param{},
 			}
+			if c := strings.TrimSpace(xm.Clones); c != "" {
+				base, err := strconv.Atoi(c)
+				if err != nil {
+					return nil, fmt.Errorf("model %q: bad clones %q", xm.Name, xm.Clones)
+				}
+				m.Clones = base
+			}
 			params, err := effectiveParams(xm, byID, dupIDs, 0)
 			if err != nil {
 				return nil, err
@@ -215,6 +222,9 @@ func convertParam(index int, xp xmlParam) (Param, error) {
 		return Param{}, fmt.Errorf("param %q (index %d): %w", p.Name, index, err)
 	}
 	p.Skew = skew
+	if s := strings.TrimSpace(xp.Skew); s == "LIN_SKEW" || s == "LOG_SKEW" {
+		p.SkewSymbol = s
+	}
 	p.Min, p.MinSymbol = numberOrSymbol(xp.Min)
 	p.Max, p.MaxSymbol = numberOrSymbol(xp.Max)
 	if v, err := strconv.ParseFloat(strings.TrimSpace(xp.Default), 64); err == nil {

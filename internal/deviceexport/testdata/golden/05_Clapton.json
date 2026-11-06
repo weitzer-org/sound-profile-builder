@@ -1,0 +1,1048 @@
+{
+ "format": "qc2-device-export/1",
+ "plan_sha256": "7fc8bb095a157e422384fbb07ec5143a38e69ed3483a420de326a3e400a07a73",
+ "summary": [
+  {
+   "row": 0,
+   "col": 0,
+   "model": "Crying Clyde Wah",
+   "model_id": 9014,
+   "params": [],
+   "bypass_a": true,
+   "bypass_b": true
+  },
+  {
+   "row": 0,
+   "col": 1,
+   "model": "Facial Fuzz",
+   "model_id": 22,
+   "params": [
+    {
+     "name": "FUZZ",
+     "a": "6",
+     "b": "7.5"
+    },
+    {
+     "name": "VOLUME",
+     "a": "5.5",
+     "b": "6.5"
+    }
+   ],
+   "bypass_a": true,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 2,
+   "model": "Parametric-8",
+   "model_id": 4000,
+   "params": [
+    {
+     "name": "1 FREQ",
+     "a": "90 Hz",
+     "b": "120 Hz"
+    },
+    {
+     "name": "1 Q",
+     "a": "0.707",
+     "b": "1"
+    },
+    {
+     "name": "4 FREQ",
+     "a": "700 Hz",
+     "b": "650 Hz"
+    },
+    {
+     "name": "4 Q",
+     "a": "1.2",
+     "b": "1.8"
+    },
+    {
+     "name": "5 FREQ",
+     "a": "3500 Hz",
+     "b": "1200 Hz"
+    },
+    {
+     "name": "OUTPUT",
+     "a": "-2.5 dB"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "at_default": [
+    "8 BYPASS"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 3,
+   "model": "Brit Plexi 100 Patch",
+   "model_id": 1092,
+   "params": [
+    {
+     "name": "GAIN 1",
+     "a": "6.5",
+     "b": "8.5"
+    },
+    {
+     "name": "GAIN 2",
+     "a": "5.5",
+     "b": "7.5"
+    },
+    {
+     "name": "BASS",
+     "a": "3"
+    },
+    {
+     "name": "MID",
+     "a": "6.5"
+    },
+    {
+     "name": "TREBLE",
+     "a": "4.5"
+    },
+    {
+     "name": "PRESENCE",
+     "a": "4",
+     "b": "3.5"
+    },
+    {
+     "name": "OUTPUT",
+     "a": "0.5 dB",
+     "b": "2 dB"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  },
+  {
+   "row": 0,
+   "col": 4,
+   "model": "412 Brit 60B GB 71 (M)",
+   "model_id": 12006,
+   "params": [
+    {
+     "name": "MIC 1 DISTANCE",
+     "a": "1"
+    },
+    {
+     "name": "MIC 1 POSITION",
+     "a": "2.5"
+    },
+    {
+     "name": "MIC 2 LEVEL",
+     "a": "-3.5 dB"
+    },
+    {
+     "name": "MIC 2 DISTANCE",
+     "a": "2.5"
+    },
+    {
+     "name": "HPF",
+     "a": "95 Hz"
+    },
+    {
+     "name": "LPF",
+     "a": "7500 Hz"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false,
+   "at_default": [
+    "MIC 1 LEVEL",
+    "MIC 2 POSITION"
+   ]
+  },
+  {
+   "row": 0,
+   "col": 5,
+   "model": "Vintage Digital",
+   "model_id": 8039,
+   "params": [
+    {
+     "name": "MIX",
+     "a": "18 %",
+     "b": "25 %"
+    },
+    {
+     "name": "PRE DELAY",
+     "a": "15 ms"
+    },
+    {
+     "name": "DECAY",
+     "a": "45 %",
+     "b": "60 %"
+    },
+    {
+     "name": "HF DAMPING",
+     "a": "45 %"
+    }
+   ],
+   "bypass_a": false,
+   "bypass_b": false
+  }
+ ],
+ "unresolved": [
+  {
+   "block": "#1 Crying Clyde Wah",
+   "param": "WAH",
+   "reason": "unitless 0..1 control: its display scale is not verified on the device"
+  },
+  {
+   "block": "#2 Facial Fuzz",
+   "param": "PICKUP",
+   "reason": "switch positions have no measured wire mapping; only the default (SINGLE) can be taken"
+  },
+  {
+   "block": "#3 Parametric-8",
+   "param": "4 GAIN",
+   "reason": "bound MIN_EQ_DB = -12 is pyquadcortex 4.0.1 measurement (MIT), data only, NOT confirmed on 4.1.0"
+  },
+  {
+   "block": "#5 412 Brit 60B GB 71",
+   "param": "Mic 1",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#5 412 Brit 60B GB 71",
+   "param": "Mic 2",
+   "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+  },
+  {
+   "block": "#5 412 Brit 60B GB 71",
+   "param": "OUTPUT VOLUME",
+   "reason": "taper skew 4.93 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  },
+  {
+   "block": "#6 Vintage Digital",
+   "param": "LOW PASS",
+   "reason": "taper skew 0.39 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+  }
+ ],
+ "payload": {
+  "format": "qc2-device-export/1",
+  "catalog": {
+   "coros": "4.1",
+   "origin": "qc-mcp bundled snapshot: github.com/lexasoft123/qc-mcp src/qc_mcp/ModelRepo.xml at commit f634ecd (upstream says 633 devices on CorOS 4.1)",
+   "sha256": "ea31ee1aac7bd496e3ed60fa6bf62ce0a9ecb7f9e9d3e73772d94259c2184b2a"
+  },
+  "guitar": "Gibson ES-339 Humbuckers",
+  "scene_sources": [
+   "A",
+   "B",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A",
+   "A"
+  ],
+  "rows": [
+   {
+    "row": 0,
+    "in_port": 1,
+    "out_port": 19,
+    "blocks": [
+     {
+      "col": 0,
+      "model_id": 9014,
+      "model": "Crying Clyde Wah",
+      "category": "Wah",
+      "index_evidence": "plain",
+      "bypass": [
+       true,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true
+      ],
+      "params": [],
+      "at_default": []
+     },
+     {
+      "col": 1,
+      "model_id": 22,
+      "model": "Facial Fuzz",
+      "category": "Guitar Overdrive",
+      "index_evidence": "plain",
+      "bypass": [
+       true,
+       false,
+       true,
+       true,
+       true,
+       true,
+       true,
+       true
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "FUZZ",
+        "scene_mode": true,
+        "display": [
+         6,
+         7.5,
+         6,
+         6,
+         6,
+         6,
+         6,
+         6
+        ],
+        "wire": [
+         0.6,
+         0.75,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6,
+         0.6
+        ]
+       },
+       {
+        "index": 1,
+        "label": "VOLUME",
+        "scene_mode": true,
+        "display": [
+         5.5,
+         6.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5
+        ],
+        "wire": [
+         0.55,
+         0.65,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 2,
+      "model_id": 4000,
+      "model": "Parametric-8",
+      "category": "Equalizer",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 1,
+        "label": "1 FREQ",
+        "units": "Hz",
+        "scene_mode": true,
+        "display": [
+         90,
+         120,
+         90,
+         90,
+         90,
+         90,
+         90,
+         90
+        ],
+        "wire": [
+         0.1833794926459014,
+         0.204089825726138,
+         0.1833794926459014,
+         0.1833794926459014,
+         0.1833794926459014,
+         0.1833794926459014,
+         0.1833794926459014,
+         0.1833794926459014
+        ]
+       },
+       {
+        "index": 2,
+        "label": "1 Q",
+        "scene_mode": true,
+        "display": [
+         0.707,
+         1,
+         0.707,
+         0.707,
+         0.707,
+         0.707,
+         0.707,
+         0.707
+        ],
+        "wire": [
+         0.06131313131313131,
+         0.09090909090909091,
+         0.06131313131313131,
+         0.06131313131313131,
+         0.06131313131313131,
+         0.06131313131313131,
+         0.06131313131313131,
+         0.06131313131313131
+        ]
+       },
+       {
+        "index": 16,
+        "label": "4 FREQ",
+        "units": "Hz",
+        "scene_mode": true,
+        "display": [
+         700,
+         650,
+         700,
+         700,
+         700,
+         700,
+         700,
+         700
+        ],
+        "wire": [
+         0.3627221095904428,
+         0.35450594259175283,
+         0.3627221095904428,
+         0.3627221095904428,
+         0.3627221095904428,
+         0.3627221095904428,
+         0.3627221095904428,
+         0.3627221095904428
+        ]
+       },
+       {
+        "index": 17,
+        "label": "4 Q",
+        "scene_mode": true,
+        "display": [
+         1.2,
+         1.8,
+         1.2,
+         1.2,
+         1.2,
+         1.2,
+         1.2,
+         1.2
+        ],
+        "wire": [
+         0.11111111111111109,
+         0.1717171717171717,
+         0.11111111111111109,
+         0.11111111111111109,
+         0.11111111111111109,
+         0.11111111111111109,
+         0.11111111111111109,
+         0.11111111111111109
+        ]
+       },
+       {
+        "index": 21,
+        "label": "5 FREQ",
+        "units": "Hz",
+        "scene_mode": true,
+        "display": [
+         3500,
+         1200,
+         3500,
+         3500,
+         3500,
+         3500,
+         3500,
+         3500
+        ],
+        "wire": [
+         0.591963770867229,
+         0.4279430297063078,
+         0.591963770867229,
+         0.591963770867229,
+         0.591963770867229,
+         0.591963770867229,
+         0.591963770867229,
+         0.591963770867229
+        ]
+       },
+       {
+        "index": 40,
+        "label": "OUTPUT",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -2.5,
+         -2.5,
+         -2.5,
+         -2.5,
+         -2.5,
+         -2.5,
+         -2.5,
+         -2.5
+        ],
+        "wire": [
+         0.4375,
+         0.4375,
+         0.4375,
+         0.4375,
+         0.4375,
+         0.4375,
+         0.4375,
+         0.4375
+        ]
+       }
+      ],
+      "at_default": [
+       "8 BYPASS"
+      ]
+     },
+     {
+      "col": 3,
+      "model_id": 1092,
+      "model": "Brit Plexi 100 Patch",
+      "category": "Guitar Amplifier",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "GAIN 1",
+        "scene_mode": true,
+        "display": [
+         6.5,
+         8.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5
+        ],
+        "wire": [
+         0.65,
+         0.85,
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65
+        ]
+       },
+       {
+        "index": 1,
+        "label": "GAIN 2",
+        "scene_mode": true,
+        "display": [
+         5.5,
+         7.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5,
+         5.5
+        ],
+        "wire": [
+         0.55,
+         0.75,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55,
+         0.55
+        ]
+       },
+       {
+        "index": 2,
+        "label": "BASS",
+        "scene_mode": false,
+        "display": [
+         3,
+         3,
+         3,
+         3,
+         3,
+         3,
+         3,
+         3
+        ],
+        "wire": [
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3,
+         0.3
+        ]
+       },
+       {
+        "index": 3,
+        "label": "MID",
+        "scene_mode": false,
+        "display": [
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5,
+         6.5
+        ],
+        "wire": [
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65,
+         0.65
+        ]
+       },
+       {
+        "index": 4,
+        "label": "TREBLE",
+        "scene_mode": false,
+        "display": [
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5,
+         4.5
+        ],
+        "wire": [
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45
+        ]
+       },
+       {
+        "index": 5,
+        "label": "PRESENCE",
+        "scene_mode": true,
+        "display": [
+         4,
+         3.5,
+         4,
+         4,
+         4,
+         4,
+         4,
+         4
+        ],
+        "wire": [
+         0.4,
+         0.35,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4,
+         0.4
+        ]
+       },
+       {
+        "index": 6,
+        "label": "OUTPUT",
+        "units": "dB",
+        "scene_mode": true,
+        "display": [
+         0.5,
+         2,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5,
+         0.5
+        ],
+        "wire": [
+         0.5160251852444768,
+         0.5663801709050319,
+         0.5160251852444768,
+         0.5160251852444768,
+         0.5160251852444768,
+         0.5160251852444768,
+         0.5160251852444768,
+         0.5160251852444768
+        ]
+       }
+      ],
+      "at_default": []
+     },
+     {
+      "col": 4,
+      "model_id": 12006,
+      "model": "412 Brit 60B GB 71 (M)",
+      "category": "Cabsim Guitar (M)",
+      "index_evidence": "clone-12000-g1",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 4,
+        "label": "MIC 1 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1,
+         1
+        ],
+        "wire": [
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1,
+         0.1
+        ]
+       },
+       {
+        "index": 5,
+        "label": "MIC 1 POSITION",
+        "scene_mode": false,
+        "display": [
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5
+        ],
+        "wire": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 10,
+        "label": "MIC 2 LEVEL",
+        "units": "dB",
+        "scene_mode": false,
+        "display": [
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5,
+         -3.5
+        ],
+        "wire": [
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005,
+         0.3175013398162005
+        ]
+       },
+       {
+        "index": 12,
+        "label": "MIC 2 DISTANCE",
+        "scene_mode": false,
+        "display": [
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5,
+         2.5
+        ],
+        "wire": [
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25,
+         0.25
+        ]
+       },
+       {
+        "index": 16,
+        "label": "HPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95,
+         95
+        ],
+        "wire": [
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082,
+         0.572988634748082
+        ]
+       },
+       {
+        "index": 17,
+        "label": "LPF",
+        "units": "Hz",
+        "scene_mode": false,
+        "display": [
+         7500,
+         7500,
+         7500,
+         7500,
+         7500,
+         7500,
+         7500,
+         7500
+        ],
+        "wire": [
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379,
+         0.7353922159503379
+        ]
+       }
+      ],
+      "at_default": [
+       "MIC 1 LEVEL",
+       "MIC 2 POSITION"
+      ]
+     },
+     {
+      "col": 5,
+      "model_id": 8039,
+      "model": "Vintage Digital",
+      "category": "Reverb",
+      "index_evidence": "plain",
+      "bypass": [
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "params": [
+       {
+        "index": 0,
+        "label": "MIX",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         18,
+         25,
+         18,
+         18,
+         18,
+         18,
+         18,
+         18
+        ],
+        "wire": [
+         0.18,
+         0.25,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18,
+         0.18
+        ]
+       },
+       {
+        "index": 2,
+        "label": "PRE DELAY",
+        "units": "ms",
+        "scene_mode": false,
+        "display": [
+         15,
+         15,
+         15,
+         15,
+         15,
+         15,
+         15,
+         15
+        ],
+        "wire": [
+         0.075,
+         0.075,
+         0.075,
+         0.075,
+         0.075,
+         0.075,
+         0.075,
+         0.075
+        ]
+       },
+       {
+        "index": 3,
+        "label": "DECAY",
+        "units": "%",
+        "scene_mode": true,
+        "display": [
+         45,
+         60,
+         45,
+         45,
+         45,
+         45,
+         45,
+         45
+        ],
+        "wire": [
+         0.45,
+         0.6,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45
+        ]
+       },
+       {
+        "index": 4,
+        "label": "HF DAMPING",
+        "units": "%",
+        "scene_mode": false,
+        "display": [
+         45,
+         45,
+         45,
+         45,
+         45,
+         45,
+         45,
+         45
+        ],
+        "wire": [
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45,
+         0.45
+        ]
+       }
+      ],
+      "at_default": []
+     }
+    ]
+   }
+  ],
+  "unresolved": [
+   {
+    "block": "#1 Crying Clyde Wah",
+    "param": "WAH",
+    "reason": "unitless 0..1 control: its display scale is not verified on the device"
+   },
+   {
+    "block": "#2 Facial Fuzz",
+    "param": "PICKUP",
+    "reason": "switch positions have no measured wire mapping; only the default (SINGLE) can be taken"
+   },
+   {
+    "block": "#3 Parametric-8",
+    "param": "4 GAIN",
+    "reason": "bound MIN_EQ_DB = -12 is pyquadcortex 4.0.1 measurement (MIT), data only, NOT confirmed on 4.1.0"
+   },
+   {
+    "block": "#5 412 Brit 60B GB 71",
+    "param": "Mic 1",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#5 412 Brit 60B GB 71",
+    "param": "Mic 2",
+    "reason": "the mic choice is the cab's IR-name string parameter; writing it has not been measured"
+   },
+   {
+    "block": "#5 412 Brit 60B GB 71",
+    "param": "OUTPUT VOLUME",
+    "reason": "taper skew 4.93 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   },
+   {
+    "block": "#6 Vintage Digital",
+    "param": "LOW PASS",
+    "reason": "taper skew 0.39 is not confirmed on CorOS 4.1.0 (measured: 0.3, 1, 3.8018, 4.9594844)"
+   }
+  ]
+ }
+}

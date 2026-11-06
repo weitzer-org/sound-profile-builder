@@ -34,7 +34,8 @@ const readme = "Derived from the Quad Cortex's own device catalog (ModelRepo.xml
 	"min/max are omitted and min_symbol/max_symbol set when the device uses a named bound " +
 	"(e.g. MAX_CABSIM_DB) whose numeric value lives in firmware; internal/catalog/firmware_constants.go " +
 	"resolves them (with the evidence for each), or refuses when one is unmeasured. skew is the display-to-wire " +
-	"taper exponent (LIN_SKEW=1.0, LOG_SKEW=0.3; absent = linear). param_count is the model's full parameter " +
+	"taper exponent (LIN_SKEW=1.0, LOG_SKEW=0.3; absent = linear), and skew_symbol keeps the symbolic name when the " +
+	"XML gave one. clones is the id of the model whose parameter list this one inherits. param_count is the model's full parameter " +
 	"count with clones resolved and hidden params included; the device's own array has one more trailing slot."
 
 func main() {
@@ -159,6 +160,9 @@ func report(prev, next *catalog.Catalog) {
 			}
 			if o.BasedOn != n.BasedOn {
 				fmt.Printf("  ~ %6d  %s: based on %q -> %q\n", id, n.Name, o.BasedOn, n.BasedOn)
+			}
+			if o.Clones != n.Clones {
+				fmt.Printf("  ~ %6d  %s: clones %d -> %d\n", id, n.Name, o.Clones, n.Clones)
 			}
 			if o.PluginID != n.PluginID {
 				fmt.Printf("  ~ %6d  %s: plugin id %q -> %q\n", id, n.Name, o.PluginID, n.PluginID)
