@@ -127,20 +127,29 @@ class Session(Base):
         self.assertFalse(self.dev.alive())
 
     def test_the_watchdog_thread_samples_by_itself(self):
-        import time
         with mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 0.02):
             self.dev.connect()
             t = self.dev._watch_thread
             self.assertTrue(t is not None and t.is_alive() and t.daemon)
             self.hid._thread.running = False  # nobody calls alive() or the transport here
-            deadline = time.monotonic() + 5
-            while not self.dev._gone.is_set() and time.monotonic() < deadline:
-                time.sleep(0.01)
-            self.assertTrue(self.dev._gone.is_set())
+            self.assertTrue(self.dev._gone.wait(5.0), "the watchdog didn't notice the dead reader thread")
             self.assertFalse(self.dev.alive())
         self.dev.disconnect()
         self.assertIsNone(self.dev._watch_thread)
         self.assertFalse(t.is_alive())
+
+    def test_the_vendored_transport_still_has_the_liveness_attributes(self):
+        # The watchdog reads two attributes the vendored transport has no public API for (G2 c; upstream has
+        # no is_alive). A re-vendoring that renames them would make getattr() quietly skip the reader-thread
+        # check, so pin them here: such a re-vendoring fails this test instead.
+        from qc_agent.vendor_pins import verified_bytes
+        win = verified_bytes("qc_mcp/winhid.py", VENDOR_DIR).decode()
+        tr = verified_bytes("qc_mcp/transport.py", VENDOR_DIR).decode()
+        self.assertIn("self._thread = threading.Thread(", win)
+        self.assertIn("self.write_errors += 1", tr)
+        self.dev.connect()
+        self.assertTrue(hasattr(self.dev._raw.io.inner, "_thread"))  # what the watchdog actually reads
+        self.assertIsInstance(self.dev._raw.write_errors, int)
 
     def test_a_stale_verdict_counts_as_gone(self):
         import time
@@ -150,13 +159,10 @@ class Session(Base):
         self.assertFalse(self.dev.alive())
 
     def test_a_broken_sample_is_gone(self):
-        import time
         with mock.patch.object(QcMcpBackend, "WATCH_INTERVAL_S", 0.02):
             self.dev.connect()
             with mock.patch.object(self.dev, "_watchdog_sample", side_effect=RuntimeError("boom")):
-                deadline = time.monotonic() + 5
-                while not self.dev._gone.is_set() and time.monotonic() < deadline:
-                    time.sleep(0.01)
+                self.assertTrue(self.dev._gone.wait(5.0), "a broken sample must count as gone")
             self.assertFalse(self.dev.alive())
 
     def test_the_watchdog_never_waits_for_the_transport(self):
@@ -404,10 +410,11 @@ class Guard(Base):
             self.dev.confirm_layout(4, 7)  # a block with more params than the catalog: 6 would be a control
         self.raw_grid(assign(6))
         for col, idx in ((4, 6), (0, 4), (2, 22)):  # once confirmed: param_count + 1 on every block
-            self.dev.confirm_layout(col, idx)
-            g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
-            assign(idx, col)(g)
-            self.qc.send("Grid", g)
+            with self.subTest(col=col, idx=idx):
+                self.dev.confirm_layout(col, idx)
+                g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+                assign(idx, col)(g)
+                self.qc.send("Grid", g)
         with self.assertRaisesRegex(WireRefused, "no armed block in column 6"):
             self.dev.confirm_layout(6, 1)
 

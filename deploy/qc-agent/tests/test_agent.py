@@ -929,7 +929,8 @@ class DefaultsLog(unittest.TestCase):
         for pr in ({}, {"chains": []}, {"chains": [{"row": 0, "blocks": [{"col": 0, "model_id": 1}]}]},
                    {"chains": [{"row": 0, "blocks": [{"col": 0, "model_id": 1,
                                                        "params": [{"index": 1, "values": ["x", None]}]}]}]}):
-            jobs._log_defaults(plan, pr, catalog())
+            with self.subTest(pr=pr):
+                jobs._log_defaults(plan, pr, catalog())
 
 
 class Captures(Base):
