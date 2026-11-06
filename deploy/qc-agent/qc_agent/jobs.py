@@ -759,7 +759,7 @@ class _Push:
             return None
         dev.arm_stomps(plan.stomps)
         for s in plan.stomps:
-            self.op(dev.assign_stomp, plan.row, s.col, s.index)
+            self.op(dev.assign_stomp, s.row, s.col, s.index)  # the row it was armed on (always 0 in v1)
         self.ctx.sleep(0.5)
         back = dev.read_current_preset()
         _check_alive(self.ctx)
