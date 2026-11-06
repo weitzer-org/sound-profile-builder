@@ -181,7 +181,7 @@ class FakeDeviceCase(unittest.TestCase):
                        mock.patch.object(sc, "open_device", lambda mcp, grant: _open(qc, grant)),
                        mock.patch("time.sleep", lambda *_: None)]
             if stdin is not None:
-                patches.append(mock.patch("builtins.input", side_effect=list(stdin)))
+                patches.append(mock.patch("builtins.input", side_effect=stdin if callable(stdin) else list(stdin)))
             with contextlib.ExitStack() as st, contextlib.redirect_stdout(out):
                 for p in patches:
                     st.enter_context(p)
@@ -789,6 +789,437 @@ class G2Tests(FakeDeviceCase):
         code, _, data = self.run_script("g2_session", ["--check", "c", "--max-wait", "3"], self.fake())
         self.assertEqual(code, sc.EXIT_CHECK_FAILED)
         self.assertEqual(data["verdict"], "FAIL_NOT_DETECTED")
+
+
+# --------------------------------------------------------------------------- G7 (stomps): guards, ledger, verdicts
+
+import g7_stomps as g7  # noqa: E402  (pure parts need no qc-mcp)
+
+
+class G7GuardTests(unittest.TestCase):
+    """The stomp methods are on NEVER for every spike but G7, and G7 gets nothing else that is on NEVER."""
+
+    class Stub(GuardTests.Stub):
+        def assign_stomp(self, *a): return "assigned"
+        def unassign_stomp(self, *a): return "unassigned"
+        def get_current_preset(self): return "bp"
+
+    def test_g7_grant_reaches_exactly_the_stomp_methods(self):
+        g = sc.Guarded(self.Stub(), sc.GRANT_G7)
+        self.assertEqual(g.assign_stomp(0, 0, 1), "assigned")
+        self.assertEqual(g.unassign_stomp(0, 0, 1), "unassigned")
+        self.assertEqual(g.get_current_preset(), "bp")
+        for name in sorted(sc.NEVER - sc.G7_STOMP_EXCEPTION):
+            with self.assertRaises(sc.GuardError, msg=name):
+                getattr(g, name)
+        for name in ("set_param", "set_param_scenes", "set_scene", "set_block_bypass", "add_block", "set_routing",
+                     "write_preset_file"):
+            with self.assertRaises(sc.GuardError, msg=name):
+                getattr(g, name)
+
+    def test_g7_grant_has_no_save_recall_delete_or_value_write(self):
+        for name in ("save_preset", "recall", "write_preset_file", "delete_block", "clear_grid", "set_param",
+                     "set_param_scenes", "load_preset", "send", "request"):
+            self.assertNotIn(name, sc.GRANT_G7)
+        self.assertEqual(sc.GRANT_G7 - sc.READ_METHODS, {"assign_stomp", "unassign_stomp"})
+        self.assertEqual(sc.GRANT_G7 & sc.NEVER, sc.G7_STOMP_EXCEPTION)
+
+    def test_every_other_grant_still_refuses_stomps(self):
+        others = {name: getattr(sc, name) for name in dir(sc) if name.startswith("GRANT_") and name != "GRANT_G7"}
+        self.assertGreaterEqual(len(others), 4)  # READ, G3, G4, G6 today; a new grant is covered automatically
+        for name, grant in others.items():
+            g = sc.Guarded(self.Stub(), grant)
+            for m in sorted(sc.G7_STOMP_EXCEPTION):
+                with self.assertRaises(sc.GuardError, msg=f"{name} reaches {m}"):
+                    getattr(g, m)
+                with self.assertRaises(sc.GuardError, msg=f"{name} + {m} grantable"):
+                    sc.Guarded(self.Stub(), frozenset(grant) | {m})
+
+    def test_the_exception_is_exactly_the_g7_set(self):
+        for variant in (sc.GRANT_G7 | {"set_param"}, sc.GRANT_G7 | {"write_preset_file"}, sc.GRANT_G7 | {"recall"},
+                        sc.GRANT_G7 | {"save_preset"}, sc.GRANT_G7 - {"unassign_stomp"}, sc.GRANT_G7 - {"get_current_preset"} | {"assign_stomp"}):
+            with self.assertRaises(sc.GuardError, msg=sorted(variant)):
+                sc.Guarded(self.Stub(), variant)
+
+    def test_only_the_g7_script_uses_the_g7_grant_or_names_stomp_methods(self):
+        import re
+        for path in sorted(HERE.glob("g[0-9]_*.py")):
+            text = path.read_text(encoding="utf-8")
+            if path.name == "g7_stomps.py":
+                self.assertIn("GRANT_G7", text)
+                # every method the script calls on the device object must be inside the G7 grant
+                called = set(re.findall(r"\bqc\.(\w+)", text))
+                self.assertLessEqual(called, sc.GRANT_G7 | sc.READ_ATTRS, sorted(called - sc.GRANT_G7))
+                self.assertTrue({"assign_stomp", "unassign_stomp"} <= called)
+            else:
+                self.assertNotIn("GRANT_G7", text, path.name)
+                self.assertNotIn("assign_stomp", text, path.name)
+
+
+class G7LogicTests(unittest.TestCase):
+    @staticmethod
+    def snap(*assigns, momentary=None):
+        return {"assignments": [{"row": 0, "col": c, "index": i, "type": t} for c, i, t in assigns],
+                "momentary": momentary or {}}
+
+    def cells(self, snap):
+        return {(a["row"], a["col"]) for a in snap["assignments"]}
+
+    def test_picks_the_first_plain_block_and_the_lowest_free_switch(self):
+        s = self.snap((0, 0, 0), (1, 2, 0), (4, 4, 0))
+        self.assertEqual(g7.pick_move(s, self.cells(s)), g7.Move(0, 0, 0, 1))
+
+    def test_never_targets_or_sources_h(self):
+        s = self.snap((0, 7, 0), (1, 0, 0), (2, 1, 0), (3, 2, 0), (4, 3, 0), (5, 4, 0), (6, 5, 0))  # col 0 is on H
+        mv = g7.pick_move(s, self.cells(s))
+        self.assertEqual((mv.col, mv.old, mv.new), (1, 0, 6))  # skips the H block; G (6) is the last free A-G switch
+        self.assertNotEqual(mv.new, 7)
+
+    def test_all_of_a_to_g_taken_is_refused(self):
+        s = self.snap(*[(c, c, 0) for c in range(7)])
+        with self.assertRaises(sc.SpikeRefused) as cm:
+            g7.pick_move(s, self.cells(s))
+        self.assertIn("no free switch", str(cm.exception))
+
+    def test_needs_two_blocks_with_assignments(self):
+        for s in (self.snap(), self.snap((0, 0, 0)), self.snap((0, 0, 0), (0, 1, 0))):  # the last: one block, two switches
+            with self.assertRaises(sc.SpikeRefused) as cm:
+                g7.pick_move(s, self.cells(s))
+            self.assertIn("at least two", str(cm.exception))
+
+    def test_refuses_when_no_block_qualifies(self):
+        for s in (self.snap((0, 7, 0), (1, 7, 0)),                       # both on H
+                  self.snap((0, 0, 1), (1, 1, 1)),                       # secondary only
+                  self.snap((0, 0, 0), (0, 1, 0), (1, 2, 0), (1, 3, 0)),  # every block has two switches
+                  self.snap((0, 0, 0), (1, 1, 0), momentary={0: True, 1: True})):
+            with self.assertRaises(sc.SpikeRefused, msg=str(s)):
+                g7.pick_move(s, self.cells(s))
+
+    def test_assignment_pointing_at_an_empty_cell_is_refused(self):
+        s = self.snap((0, 0, 0), (1, 1, 0))
+        with self.assertRaises(sc.SpikeRefused) as cm:
+            g7.pick_move(s, {(0, 0)})
+        self.assertIn("hold no block", str(cm.exception))
+
+    def test_verdict_c(self):
+        before = self.snap((0, 0, 0), (1, 2, 0))
+        mv = g7.Move(0, 0, 0, 1)
+        moved = self.snap((0, 1, 0), (1, 2, 0))
+        added = self.snap((0, 0, 0), (0, 1, 0), (1, 2, 0))
+        self.assertEqual(g7.verdict_c(before, moved, mv)["verdict"], "moved")
+        self.assertEqual(g7.verdict_c(before, added, mv)["verdict"], "added")
+        self.assertEqual(g7.verdict_c(before, before, mv)["verdict"], "not_applied")
+        self.assertEqual(g7.verdict_c(before, self.snap((1, 2, 0)), mv)["verdict"], "cleared")
+        self.assertTrue(g7.verdict_c(before, moved, mv)["other_blocks_unchanged"])
+        self.assertFalse(g7.verdict_c(before, self.snap((0, 1, 0), (1, 3, 0)), mv)["other_blocks_unchanged"])
+
+    def test_verdict_f(self):
+        base, changed = self.snap((0, 0, 0), (1, 2, 0)), self.snap((0, 1, 0), (1, 2, 0))
+        self.assertEqual(g7.verdict_f(base, changed, self.snap((0, 0, 0), (1, 2, 0))), "PASS")
+        self.assertEqual(g7.verdict_f(base, changed, self.snap((0, 1, 0), (1, 2, 0))), "FAIL")
+        self.assertEqual(g7.verdict_f(base, changed, self.snap((0, 5, 0))), "INCONCLUSIVE")
+        self.assertEqual(g7.verdict_f(base, changed, None), "INCONCLUSIVE")
+        # a momentary flag that differs is a difference
+        self.assertEqual(g7.verdict_f(base, changed, self.snap((0, 0, 0), (1, 2, 0), momentary={0: True})), "INCONCLUSIVE")
+
+
+class StompQC(FakeQC):
+    """FakeQC with footswitch assignments and the unit's choices about what leaving a preset does.
+
+    ``assign`` is "move" (qc-mcp's claim), "add" or "ignore". ``leave`` is "discard" (the change vanishes when the
+    owner selects another preset), "autosave" or "keep". Invented behaviours to drive the script's logic; they say
+    nothing about the real unit."""
+
+    def __init__(self, case, assign="move", leave="discard", stomps=((0, 0), (1, 2), (2, 4)), **kw):
+        super().__init__(case, **kw)
+        for col, model in ((0, 1), (1, 1001), (2, 12001)):
+            case.put_block(self.bp, 0, col, model)
+        self.bp.name = kw.get("name", "Pushed Preset")
+        self.assign_mode, self.leave_mode = assign, leave
+        for col, idx in stomps:
+            self._add(0, col, idx)
+        self.saved = self._state()
+        self.real_slot = self.open_slot
+
+    def _add(self, row, col, idx):
+        a = self.bp.stomp_mode_assignments.add()
+        a.row, a.column, a.stomp_index, a.type = row, col, idx, 0
+
+    def _state(self):
+        return [(a.row, a.column, a.stomp_index) for a in self.bp.stomp_mode_assignments]
+
+    def _set(self, state):
+        del self.bp.stomp_mode_assignments[:]
+        for r, c, i in state:
+            self._add(r, c, i)
+
+    def assign_stomp(self, row, column, stomp_index, kind="primary", momentary=None, settle_s=1.0):
+        self.calls.append(("assign_stomp", row, column, stomp_index))
+        if self.assign_mode == "ignore":
+            return
+        if self.assign_mode == "move":
+            self._set([t for t in self._state() if t[:2] != (row, column)])
+        if (row, column, stomp_index) not in self._state():
+            self._add(row, column, stomp_index)
+
+    def unassign_stomp(self, row, column, stomp_index, settle_s=1.0):
+        self.calls.append(("unassign_stomp", row, column, stomp_index))
+        self._set([t for t in self._state() if t != (row, column, stomp_index)])
+
+    def select(self, position):
+        if position != self.open_slot and self.open_slot == self.real_slot:  # leaving the preset
+            if self.leave_mode == "autosave":
+                self.saved = self._state()
+            elif self.leave_mode == "discard":
+                self._set(self.saved)
+        elif position == self.real_slot and self.open_slot != self.real_slot:  # coming back: what is stored
+            self._set(self.saved) if self.leave_mode != "keep" else None
+        self.open_slot = position
+
+    def read_state(self, command, timeout_ms=2500):
+        if command == "PresetDirty":
+            return types.SimpleNamespace(is_dirty=self.dirty or self._state() != self.saved)
+        return super().read_state(command, timeout_ms)
+
+
+@unittest.skipUnless(HAVE, "set QC_MCP_DIR to the pinned qc-mcp clone")
+class G7Tests(FakeDeviceCase):
+    OTHER = "3C"
+
+    def home(self, owned=True, name="Pushed Preset", slot="2A"):
+        d = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))
+        if owned:
+            sys.path.insert(0, str(sc.REPO_ROOT / "deploy" / "qc-agent"))
+            from qc_agent.ledger import OwnedSlots
+            OwnedSlots(d / "owned_slots.jsonl").record(slot, sc.parse_slot(slot), name, "job-1", "2026-11-06T00:00:00Z")
+        return d
+
+    def unit(self, **kw):
+        return StompQC(self, **kw)
+
+    def answers(self, qc, *, edited="y", asked="n", restore=None, nav_fail=False):
+        """Stand in for the owner: Enter prompts select a slot on the fake unit; y/n prompts get canned answers."""
+        def respond(prompt):
+            if prompt.strip().startswith("Select"):
+                label = prompt.split("Select ")[1].split(" on the unit")[0]
+                if not nav_fail:
+                    qc.select(sc.parse_slot(label))
+                return ""
+            if "edited/unsaved" in prompt:
+                return edited
+            if "ask whether to save" in prompt:
+                return asked
+            if "Put the block back" in prompt:
+                return restore if restore is not None else "n"
+            raise AssertionError(f"unexpected prompt {prompt!r}")
+        return respond
+
+    def go(self, qc, extra=(), home=None, stdin=None, apply=True):
+        home = home or self.home()
+        argv = ["--firmware", "4.1.0", "--other-slot", self.OTHER, "--agent-home", str(home), *extra]
+        if apply:
+            argv.append("--apply")
+        with mock.patch.object(g7, "NAV_WAIT_S", 0), mock.patch.object(g7, "SETTLE_POLLS", 2):
+            return self.run_script("g7_stomps", argv, qc, stdin=stdin or self.answers(qc)), home
+
+    def writes(self, qc):
+        return [c for c in qc.calls if isinstance(c, tuple) and c[0] not in ("close",)]
+
+    # ---- the three outcomes of (f), with (c) moved
+    def test_pass_when_the_change_is_discarded(self):
+        qc = self.unit()
+        (code, out, data), _ = self.go(qc)
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(data["c"]["verdict"], "moved")
+        self.assertEqual(data["f"]["verdict"], "PASS")
+        self.assertEqual(data["verdict"], "PASS")
+        self.assertEqual(data["planned_move"], "block r0c0: A -> B")
+        self.assertEqual(data["baseline"]["assignments"][0], {"row": 0, "col": 0, "index": 0, "type": 0})
+        self.assertEqual(data["changed"]["assignments"][0], {"row": 0, "col": 0, "index": 1, "type": 0})
+        self.assertEqual(data["back"], data["baseline"])
+        self.assertIs(data["preset_dirty_after_change"], True)
+        self.assertEqual(data["screen_shows_edited"], "y")
+        self.assertEqual(self.writes(qc), [("assign_stomp", 0, 0, 1)])
+        self.assertNotIn("stays OFF", out)
+
+    def test_fail_when_the_change_survives_and_entry_point_2_stays_off(self):
+        for leave in ("autosave", "keep"):
+            qc = self.unit(leave=leave)
+            (code, out, data), _ = self.go(qc)
+            self.assertEqual(code, sc.EXIT_CHECK_FAILED, leave)
+            self.assertEqual(data["f"]["verdict"], "FAIL", leave)
+            self.assertIn("Entry point 2", out)
+            self.assertIn("stays OFF", out)
+            self.assertIn("SURVIVED", out)
+
+    def test_fail_offers_a_restore_that_puts_the_baseline_back(self):
+        qc = self.unit(leave="autosave")
+        (code, out, data), _ = self.go(qc, stdin=self.answers(qc, restore="y"))
+        self.assertEqual(data["f"]["verdict"], "FAIL")
+        self.assertTrue(data["restore"]["equals_baseline"])
+        self.assertEqual(sorted(qc._state()), [(0, 0, 0), (0, 1, 2), (0, 2, 4)])
+        self.assertEqual({c[0] for c in self.writes(qc)}, {"assign_stomp"})  # move semantics: no unassign needed
+
+    def test_restore_unassigns_the_extra_switch_after_an_add(self):
+        qc = self.unit(assign="add", leave="keep")
+        (code, out, data), _ = self.go(qc, stdin=self.answers(qc, restore="y"))
+        self.assertEqual(data["c"]["verdict"], "added")
+        self.assertEqual(data["f"]["verdict"], "FAIL")
+        self.assertTrue(data["restore"]["equals_baseline"])
+        self.assertIn(("unassign_stomp", 0, 0, 1), qc.calls)
+
+    def test_added_is_reported_for_c(self):
+        qc = self.unit(assign="add")
+        (code, out, data), _ = self.go(qc)
+        self.assertEqual(data["c"]["verdict"], "added")
+        self.assertEqual(data["c"]["block_switches_after"], [0, 1])
+        self.assertEqual(data["f"]["verdict"], "PASS")  # discarded all the same
+        self.assertIn("ADDED", out)
+
+    def test_unit_that_ignores_the_assignment_runs_no_f(self):
+        qc = self.unit(assign="ignore")
+        (code, out, data), _ = self.go(qc)
+        self.assertEqual(code, sc.EXIT_CHECK_FAILED)
+        self.assertEqual(data["c"]["verdict"], "not_applied")
+        self.assertEqual(data["f"]["verdict"], "NOT_RUN")
+        self.assertIn("stays OFF", out)
+
+    def test_owner_who_never_reaches_the_other_slot_gets_inconclusive(self):
+        qc = self.unit()
+        (code, out, data), _ = self.go(qc, stdin=self.answers(qc, nav_fail=True))
+        self.assertEqual(code, sc.EXIT_CHECK_FAILED)
+        self.assertEqual(data["f"]["verdict"], "INCONCLUSIVE")
+        self.assertFalse(data["f_navigation"]["other_reached"])
+        self.assertIn("NOT answered", out)
+        self.assertIn("stays OFF", out)
+
+    def test_a_different_preset_coming_back_is_inconclusive(self):
+        qc = self.unit()
+        base = self.answers(qc)
+
+        def respond(prompt):
+            r = base(prompt)
+            if prompt.strip().startswith("Select 2A"):
+                qc.bp.name = "Something else"
+            return r
+        (code, out, data), _ = self.go(qc, stdin=respond)
+        self.assertEqual(data["f"]["verdict"], "INCONCLUSIVE")
+
+    # ---- preflight and refusals: nothing is written
+    def test_preflight_writes_nothing_and_does_not_prompt(self):
+        qc = self.unit()
+        (code, out, data), _ = self.go(qc, apply=False, stdin=[])
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(data["verdict"], "PREFLIGHT_OK")
+        self.assertEqual(self.writes(qc), [])
+        self.assertIn("nothing was written", out)
+
+    def refused(self, qc, extra=(), home=None, needle=None):
+        (code, out, data), _ = self.go(qc, extra=extra, home=home, apply=True, stdin=[])
+        self.assertEqual(code, sc.EXIT_REFUSED, out)
+        self.assertEqual(self.writes(qc), [], out)
+        if needle:
+            self.assertIn(needle, out)
+        return out
+
+    def test_unowned_slot_is_refused(self):
+        self.refused(self.unit(), home=self.home(owned=False), needle="not in the home agent's owned-slot ledger")
+
+    def test_renamed_preset_in_an_owned_slot_is_refused(self):
+        self.refused(self.unit(), home=self.home(name="Pushed Preset v1"), needle="not in the home agent's owned-slot ledger")
+
+    def test_ledger_in_another_slot_is_refused(self):
+        self.refused(self.unit(), home=self.home(slot="2B"), needle="not in the home agent's owned-slot ledger")
+
+    def test_ledger_is_read_only_and_never_created(self):
+        empty = self.home(owned=False)
+        self.refused(self.unit(), home=empty)
+        self.assertFalse((empty / "owned_slots.jsonl").exists())
+        h = self.home()
+        before = (h / "owned_slots.jsonl").read_bytes()
+        self.go(self.unit(), home=h)
+        self.assertEqual((h / "owned_slots.jsonl").read_bytes(), before)
+        self.assertEqual(sorted(p.name for p in h.iterdir()), ["owned_slots.jsonl"])
+
+    def test_corrupt_ledger_is_refused_and_untouched(self):
+        h = self.home(owned=False)
+        (h / "owned_slots.jsonl").write_text('{"slot":"2A"}\n{broken\n{"slot":"2B"}\n', encoding="utf-8")
+        before = (h / "owned_slots.jsonl").read_bytes()
+        self.refused(self.unit(), home=h, needle="ledger is unreadable")
+        self.assertEqual((h / "owned_slots.jsonl").read_bytes(), before)
+
+    def test_explicit_slot_with_confirmation_skips_the_ledger_but_must_match(self):
+        qc = self.unit()
+        (code, out, data), _ = self.go(qc, extra=["--slot", "2A", "--i-confirm-bridge-created"], home=self.home(owned=False))
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertIn("skipped", data["ownership"]["ledger"])
+        self.refused(self.unit(), extra=["--slot", "2B", "--i-confirm-bridge-created"], home=self.home(owned=False),
+                     needle="not --slot 2B")
+
+    def test_confirmation_without_a_slot_is_refused(self):
+        self.refused(self.unit(), extra=["--i-confirm-bridge-created"], needle="needs --slot")
+
+    def test_slot_that_disagrees_with_the_open_one_is_refused_even_when_owned(self):
+        self.refused(self.unit(), extra=["--slot", "2B"], needle="not --slot 2B")
+
+    def test_firmware_mismatch_is_refused(self):
+        self.refused(self.unit(firmware="4.2.0"), needle="firmware mismatch")
+
+    def test_fewer_than_two_assigned_blocks_is_refused(self):
+        self.refused(self.unit(stomps=((0, 0),)), needle="at least two")
+
+    def test_unsaved_edits_are_refused(self):
+        self.refused(self.unit(dirty=True), needle="unsaved edits")
+
+    def test_factory_or_other_folder_is_refused(self):
+        self.refused(self.unit(folder="/media/p4/Presets/Fender Amps"), needle="select a My Presets slot")
+
+    def test_other_slot_must_differ(self):
+        qc = self.unit()
+        (code, out, _), _ = self.go(qc, extra=[], stdin=[])  # baseline OK first
+        argv = ["--firmware", "4.1.0", "--other-slot", "2A", "--agent-home", str(self.home()), "--apply"]
+        code, out, _ = self.run_script("g7_stomps", argv, self.unit(), stdin=[])
+        self.assertEqual(code, sc.EXIT_REFUSED)
+        self.assertIn("different one", out)
+
+    def test_a_running_agent_is_refused_before_the_unit_is_opened(self):
+        sys.path.insert(0, str(sc.REPO_ROOT / "deploy" / "qc-agent"))
+        from qc_agent.lock import InstanceLock
+        h = self.home()
+        qc = self.unit()
+        opened = []
+        with InstanceLock(h / "agent.lock"):
+            with mock.patch.object(sc, "open_device", lambda *a: opened.append(a)):
+                argv = ["x", "--qc-mcp", QC_DIR, "--out", str(h), "--firmware", "4.1.0", "--other-slot", self.OTHER,
+                        "--agent-home", str(h), "--apply"]
+                out = io.StringIO()
+                with mock.patch.object(sys, "argv", argv), contextlib.redirect_stdout(out):
+                    code = sc.run_spike(g7.main, argv[1:])
+        self.assertEqual(code, sc.EXIT_REFUSED)
+        self.assertIn("Close the QC bridge window and retry", out.getvalue())
+        self.assertEqual(opened, [])
+        self.assertEqual(self.writes(qc), [])
+
+    def test_unit_that_cannot_be_opened_says_to_close_the_bridge(self):
+        qc = self.unit(raise_on_open="HID device already open exclusively")
+        out = self.refused(qc, needle="close the QC bridge window and retry")
+        self.assertIn("already open exclusively", out)
+
+    # ---- hygiene
+    def test_h_is_never_written_and_only_stomp_calls_are_made(self):
+        qc = self.unit(stomps=((0, 7), (1, 0), (2, 1)))
+        (code, out, data), _ = self.go(qc)
+        self.assertEqual(code, sc.EXIT_OK, out)
+        self.assertEqual(self.writes(qc), [("assign_stomp", 0, 1, 2)])  # the H block was skipped; C is the lowest free switch
+        self.assertTrue(all(c[3] != 7 for c in self.writes(qc)))
+
+    def test_never_saves_recalls_or_deletes(self):
+        for leave in ("discard", "autosave"):
+            qc = self.unit(leave=leave)
+            self.go(qc, stdin=self.answers(qc, restore="y"))
+            names = {c[0] for c in self.writes(qc)}
+            self.assertLessEqual(names, {"assign_stomp", "unassign_stomp"}, leave)
 
 
 if __name__ == "__main__":
