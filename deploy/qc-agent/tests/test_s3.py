@@ -128,7 +128,10 @@ class Store(unittest.TestCase):
     def test_key_encoding(self):
         st, op = store([(200, b"")])
         st.exists("jobs/done/a b.json")
-        self.assertTrue(op.requests[0].full_url.endswith("/jobs-bucket/jobs/done/a%20b.json"))
+        import urllib.parse
+        u = urllib.parse.urlsplit(op.requests[0].full_url)
+        self.assertEqual((u.scheme, u.netloc, u.path, u.query, u.fragment),
+                         ("https", "acct.r2.cloudflarestorage.com", "/jobs-bucket/jobs/done/a%20b.json", "", ""))
 
 
 if __name__ == "__main__":
