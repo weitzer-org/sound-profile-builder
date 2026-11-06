@@ -334,6 +334,16 @@ class Additions(unittest.TestCase):
         e = cap()
         e["payload"]["unresolved"] = [{"block": "#1 CA John's", "reason": "not on the unit"}]
         self.refused(e, "1 unresolved item(s); a push needs zero")
+        # every key the capture path reads is required by _check_block's exact-key check first, so a
+        # missing one is refused there (ExportRefused), never a KeyError
+        for k in ("model_id", "model", "category", "index_evidence", "bypass", "params", "at_default"):
+            e = cap()
+            block(e["payload"], 0).pop(k)
+            self.refused(e, "block 0 has keys")
+        for k in ("name", "source", "resolved_on_unit"):
+            e = cap()
+            block(e["payload"], 0)["capture"].pop(k)
+            self.refused(e, "block 0.capture has keys")
         # the capture path's bypass gets the same length/type/C-H checks as any block
         self.refused(cap(bypass=[False, False]), "exactly 8 values")
         self.refused(cap(bypass=[False] * 9), "exactly 8 values")

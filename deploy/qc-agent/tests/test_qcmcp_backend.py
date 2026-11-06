@@ -443,6 +443,14 @@ class DirectoryListing(Base):
         self.assertEqual(flags, {"sub": (True, False), "favsub": (False, True), "plug": (True, False),
                                  "loop": (True, False), "mine": (False, False)})
 
+    def test_slot_index_must_match_position(self):
+        msgs = [self.my_presets()]
+        msgs[0].folder.files[5].index = 5  # agrees with its position: fine
+        self.assertEqual(len(qcmcp_backend.directory_snapshot(msgs).my_presets), 256)
+        msgs[0].folder.files[7].index = 9
+        with self.assertRaisesRegex(qcmcp_backend.DeviceError, "disagrees with its position"):
+            qcmcp_backend.directory_snapshot(msgs)
+
     def test_stale_queued_folders_are_dropped(self):
         self.dev.connect()
         stale = self.my_presets()

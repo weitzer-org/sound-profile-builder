@@ -423,9 +423,9 @@ def _make_request(mods):
             if strict and not exp_rid:
                 raise QCError(f"{command}: a strict request needs a request_id")
             self.send(command, proto_message, proto_bytes)
-            deadline = time.time() + timeout_ms / 1000.0
+            deadline = time.monotonic() + timeout_ms / 1000.0
             best = None
-            while time.time() < deadline:
+            while time.monotonic() < deadline:
                 self._collect(0.1)
                 keep = []
                 for i, item in enumerate(self._pending):
@@ -498,10 +498,10 @@ def _make_list_directory_raw(mods):
             cls = P.message_class("File")
             m = cls(action=P.ACTION["READ"], request_id=self.next_request_id())
             self.send("File", m)
-            deadline = time.time() + timeout_ms / 1000.0
-            last = time.time()
+            deadline = time.monotonic() + timeout_ms / 1000.0
+            last = time.monotonic()
             folders, nfiles = [], 0
-            while time.time() < deadline:
+            while time.monotonic() < deadline:
                 self._collect(0.15)
                 got = False
                 keep = []
@@ -517,8 +517,8 @@ def _make_list_directory_raw(mods):
                 if len(folders) > MAX_LISTING_MESSAGES or nfiles > MAX_LISTING_FILES:
                     raise DeviceError("the unit's directory listing is too large")
                 if got:
-                    last = time.time()
-                elif folders and (time.time() - last) * 1000 > quiet_ms:
+                    last = time.monotonic()
+                elif folders and (time.monotonic() - last) * 1000 > quiet_ms:
                     return folders  # the stream went quiet: complete
             # Upstream returns whatever arrived by the deadline; a listing cut off mid-stream could hide a
             # preset or a second capture with the same name, so it is refused here.
@@ -547,7 +547,12 @@ def directory_snapshot(file_msgs):
     # table would make a missing slot look empty, so it is refused rather than guessed at.
     if len(files) != 256:
         raise DeviceError(f"My Presets listed {len(files)} slots, not 256")
-    my = {i: f.name or "" for i, f in enumerate(files)}  # in a READ the array position is the index
+    # In a READ the array position is the slot and the `index` field is left 0 (upstream's
+    # PROTOCOL.md 5, directory._file_dict). A non-zero index that disagrees with the position
+    # would mean that rule doesn't hold on this unit: refuse rather than pick one of the two.
+    if any(f.index not in (0, i) for i, f in enumerate(files)):
+        raise DeviceError("My Presets listed a slot index that disagrees with its position")
+    my = {i: f.name or "" for i, f in enumerate(files)}
     deps = {i: frozenset(d.hash.lower() for d in (*f.factory_dependencies, *f.product_dependencies))
             for i, f in enumerate(files) if f.name}
     entries, folders = [], []
