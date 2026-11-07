@@ -546,6 +546,27 @@ class CopySave(EditBase):
         self.assertFalse(r["edit"]["payload"]["save"]["listed"])
         self.assertTrue(self.agent.owned.owned(self.TPOS, self.NAME))
 
+    def test_losing_the_unit_only_while_reading_which_slot_is_open_keeps_a_confirmed_copy(self):
+        # the open-slot read after the save is evidence for E-G3 only: UnitAbsent / UnitBusy there (both DeviceErrors)
+        # must not turn a copy the listing already confirmed into a failure
+        from qc_agent.device import UnitAbsent, UnitBusy
+        for exc in (UnitAbsent, UnitBusy):
+            with self.subTest(exc.__name__):
+                rig_unit(self.dev)
+                self.dev.calls.clear()
+                self.dev.slots = {152: "Texas Blues"}
+                real = self.dev.setlist_position
+
+                def pos(real=real, exc=exc):
+                    if "save_edit_copy" in self.names():
+                        raise exc("gone while reading the open slot")
+                    return real()
+                self.dev.setlist_position = pos
+                _, r = self.copy(target_slot="2%sA" % ("2" if exc is UnitAbsent else "3"), name="Edit %s" % exc.__name__)
+                self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+                save = r["edit"]["payload"]["save"]
+                self.assertEqual((save["saved"], save["listed"]), (True, True))
+
     def test_a_save_call_that_raises_counts_as_possibly_issued(self):
         def boom(name, args):
             if name == "save_edit_copy":

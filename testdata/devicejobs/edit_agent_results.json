@@ -3154,6 +3154,85 @@
    },
    "snapshot": "11111111-2222-4333-8444-555555555555"
   },
+  "CopySave.test_losing_the_unit_only_while_reading_which_slot_is_open_keeps_a_confirmed_copy": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "copy",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": true,
+    "name": "Edit UnitBusy",
+    "saved": true,
+    "slot": "23A"
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
   "CopySave.test_only_partial_listings_after_the_save_never_count_as_listed": {
    "bypass": [
     {
