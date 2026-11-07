@@ -249,9 +249,8 @@ func readRecords(out string) []evalcheck.RunRecord {
 func doneSet(o opts) map[er.Run]bool {
 	done := map[er.Run]bool{}
 	for _, rec := range readRecords(o.out) {
-		if rec.Success || !o.retryFailed {
-			done[recordOf(rec)] = true
-		}
+		// The latest record decides, as in scoreRuns: a failure after a success is retried with -retry-failed.
+		done[recordOf(rec)] = rec.Success || !o.retryFailed
 	}
 	return done
 }
@@ -429,7 +428,7 @@ func scoreMode(o opts, s *er.Scorer, all []*er.Draft) {
 // costReport prices each arm's recorded calls with evalcost (the same price table
 // cmd/eval_cost and the usage records use). Models with no official price are UNKNOWN, never $0.
 func costReport(w *strings.Builder, o opts, runs []er.RunScore) {
-	fmt.Fprint(w, "\n## Cost of the recorded refine calls (all attempted runs, failed attempts included)\n\n| Arm | Runs | Calls | Input tokens | Output tokens | Thinking tokens | Known USD | Status |\n|---|--:|--:|--:|--:|--:|--:|---|\n")
+	fmt.Fprint(w, "\n## Cost of the recorded refine calls (each run's latest attempt; failed ones included)\n\n| Arm | Runs | Calls | Input tokens | Output tokens | Thinking tokens | Known USD | Status |\n|---|--:|--:|--:|--:|--:|--:|---|\n")
 	recs := map[er.Run]evalcheck.RunRecord{}
 	for _, rec := range readRecords(o.out) {
 		recs[recordOf(rec)] = rec
@@ -472,7 +471,7 @@ func costReport(w *strings.Builder, o opts, runs []er.RunScore) {
 		}
 		fmt.Fprintf(w, "| %s | %d | %d | %d | %d | %d | $%.4f | %s |\n", arm, n, tot.Calls, tot.Input, tot.Output, tot.Thinking, tot.KnownUSD, tot.Status())
 	}
-	fmt.Fprint(w, "\nKnown USD excludes any model with no official price (Status PARTIAL or UNKNOWN then makes it a lower bound). `cmd/usage_report` reads the same spend from the usage records when the run recorded to a bucket; this tool runs with no bucket, so the calls files above are the record.\n")
+	fmt.Fprint(w, "\nA run retried with -retry-failed overwrites its calls file (the path is per run, not per attempt), so an earlier attempt's tokens are not in this table: add them by hand if a retry happened. Known USD excludes any model with no official price (Status PARTIAL or UNKNOWN then makes it a lower bound). `cmd/usage_report` reads the same spend from the usage records when the run recorded to a bucket; this tool runs with no bucket, so the calls files above are the record.\n")
 }
 
 // ---- judge mode ----

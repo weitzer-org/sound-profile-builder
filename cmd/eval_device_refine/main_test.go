@@ -112,3 +112,21 @@ func TestScoreRunsSortRepsNumerically(t *testing.T) {
 		t.Fatalf("rep order = %v, want [1 2 10]", got)
 	}
 }
+
+// GSR, PR 188: the latest record of a run decides whether it is done, as it does in scoreRuns.
+func TestDoneSetLatestRecordWins(t *testing.T) {
+	out := t.TempDir()
+	var lines []string
+	for _, ok := range []bool{true, false} { // a success, then a failure of the same run
+		b, _ := json.Marshal(evalcheck.RunRecord{Scenario: "A", Query: "d/tone", Rep: 1, Success: ok})
+		lines = append(lines, string(b))
+	}
+	os.WriteFile(filepath.Join(out, "runs.jsonl"), []byte(strings.Join(lines, "\n")+"\n"), 0o644)
+	m := er.Matrix([]string{"d"}, []string{"tone"}, []string{"A"}, 1)
+	if got := len(todo(opts{out: out, retryFailed: true}, m)); got != 1 {
+		t.Errorf("with -retry-failed the failed latest attempt should be queued, todo = %d", got)
+	}
+	if got := len(todo(opts{out: out}, m)); got != 0 {
+		t.Errorf("without -retry-failed nothing is rerun, todo = %d", got)
+	}
+}
