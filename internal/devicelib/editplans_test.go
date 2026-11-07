@@ -20,10 +20,16 @@ func TestEditPlanRecord_RoundTripAndTamper(t *testing.T) {
 		t.Fatalf("a good record: %v", err)
 	}
 	for name, mut := range map[string]func(r *EditPlanRecord){
-		"another mode":  func(r *EditPlanRecord) { r.Mode = "sideways" },
-		"hash mismatch": func(r *EditPlanRecord) { r.PlanSHA256 = "0" + r.PlanSHA256[1:] },
-		"another job":   func(r *EditPlanRecord) { r.JobID = "f1111111-2222-4333-8444-555555555555" },
-		"plan changed":  func(r *EditPlanRecord) { r.Plan = r.Plan + " " },
+		"another mode": func(r *EditPlanRecord) { r.Mode = "sideways" },
+		"hash mismatch": func(r *EditPlanRecord) { // never the original first digit (a 1-in-16 flake otherwise)
+			first := "0"
+			if r.PlanSHA256[0] == '0' {
+				first = "1"
+			}
+			r.PlanSHA256 = first + r.PlanSHA256[1:]
+		},
+		"another job":  func(r *EditPlanRecord) { r.JobID = "f1111111-2222-4333-8444-555555555555" },
+		"plan changed": func(r *EditPlanRecord) { r.Plan = r.Plan + " " },
 	} {
 		bad := *good
 		mut(&bad)

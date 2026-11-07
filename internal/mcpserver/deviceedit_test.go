@@ -339,7 +339,7 @@ func TestEditDevicePreset_ConfirmRefusals(t *testing.T) {
 		}
 	}
 	// a different guitar value changes the claims
-	if msg := errText(t, itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": "device-edited", "guitar": "From the unit", "mode": "live", "dry_run": false, "confirm_token": tok[:len(tok)-1] + "0"})); msg == "" {
+	if msg := errText(t, itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": "device-edited", "guitar": "From the unit", "mode": "live", "dry_run": false, "confirm_token": tok[:len(tok)-1] + otherDigit(tok[len(tok)-1])})); msg == "" {
 		t.Error("a token with a changed last digit was accepted")
 	}
 	r.runAgent(t)
@@ -460,4 +460,12 @@ func TestEditDevicePreset_LiveTokenIgnoresCopyOnlyArguments(t *testing.T) {
 	if q.Mode != "queued" {
 		t.Fatalf("a token minted with stray copy arguments must confirm without them: %+v", q)
 	}
+}
+
+// otherDigit is a hex digit different from c, so a "tampered" token can never equal the original by chance.
+func otherDigit(c byte) string {
+	if c == '0' {
+		return "1"
+	}
+	return "0"
 }

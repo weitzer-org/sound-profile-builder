@@ -497,7 +497,7 @@ class Apply(EditBase):
         e = r["edit"]["payload"]
         self.assertEqual((e["rollback"]["state"], e["rollback"]["restored"], e["rollback"]["failed"]), ("partial", 2, 1))
         self.assertIn("WITHOUT saving", r["message"])
-        self.assertEqual(self.agent.ledger.finished and True, True)
+        self.assertTrue(self.agent.ledger.finished)
 
     def test_every_rollback_write_fails(self):
         def boom(name, args):
