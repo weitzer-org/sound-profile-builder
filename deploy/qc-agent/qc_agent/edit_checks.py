@@ -198,7 +198,7 @@ def live_bypass(preset, row, col):
     if not bp or row >= len(bp) or col >= len(bp[row]):
         return None
     flags = bp[row][col]
-    return [bool(x) for x in flags[:8]] if len(flags) >= 8 else None
+    return [bool(x) for x in flags[:8]] if isinstance(flags, list) and len(flags) >= 8 else None
 
 
 def floats_equal(vals, expect) -> bool:

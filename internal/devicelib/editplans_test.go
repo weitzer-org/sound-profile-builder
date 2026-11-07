@@ -2,6 +2,7 @@ package devicelib
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
@@ -26,8 +27,8 @@ func TestEditPlanRecord_RoundTripAndTamper(t *testing.T) {
 	} {
 		bad := *good
 		mut(&bad)
-		if bad.Validate(id) == nil {
-			t.Errorf("%s: a tampered record validated", name)
+		if err := bad.Validate(id); err == nil || !strings.Contains(err.Error(), "malformed") {
+			t.Errorf("%s: a tampered record: err = %v", name, err)
 		}
 	}
 	st := NewStore(devicejobstest.NewMemClient(), "main")

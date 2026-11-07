@@ -622,6 +622,12 @@ class Apply(EditBase):
 class CasFunctionTable(unittest.TestCase):
     """cas_pins and its helpers on plain dicts (no agent)."""
 
+    def test_a_null_bypass_cell_reads_as_no_flags_not_a_crash(self):
+        # GSR #185 round 5: a device payload with a null cell used to raise TypeError in live_bypass
+        for bp in ([[None]], [[None, [False] * 8]], [[5]], [["x"]], None, []):
+            with self.subTest(bp):
+                self.assertIsNone(edit_checks.live_bypass({"bypass": bp}, 0, 0))
+
     def test_floats_must_be_exact_real_floats(self):
         self.assertTrue(edit_checks.floats_equal([0.5] * 8, [0.5] * 8))
         self.assertTrue(edit_checks.floats_equal([0.0] * 8, [0] * 8))

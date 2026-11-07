@@ -83,8 +83,9 @@ func TestConfirmEdit(t *testing.T) {
 		tok, _ := r.bridge.IssueEditToken(claims)
 		bad := request(claims)
 		bad.PlanText = append(append([]byte(nil), text...), ' ')
-		if _, _, err := r.bridge.ConfirmEdit(ctx, bad, tok); err == nil {
-			t.Fatal("a plan that doesn't hash to the claims was queued")
+		_, _, err := r.bridge.ConfirmEdit(ctx, bad, tok)
+		if err == nil || !strings.Contains(err.Error(), "does not match its hash") {
+			t.Fatalf("a plan that doesn't hash to the claims: err = %v", err)
 		}
 	})
 
