@@ -155,10 +155,11 @@ NEVER = frozenset({
 })
 # On the NEVER list, but QcMcpBackend.assign_stomp opens a scoped callable around one call during a push's
 # stomp step (Guarded.window); the wire guard then holds that call to one armed assignment.
-PUSH_STEP_ONLY = frozenset({"assign_stomp"})
+PUSH_STEP_ONLY = frozenset({"assign_stomp", "set_scene"})  # set_scene: only QcMcpBackend.restore_scene, during an armed edit
 GRANT = frozenset({
     "open", "close", "get_current_preset", "get_setlist_position", "list_directory_raw",
     "set_routing", "add_block", "set_param", "set_param_scenes", "set_block_bypass", "write_preset_file",
+    "read_state",  # the wire guard passes only the READs in READABLE (the Scene READ is what an edit uses)
     "set_capture", "set_param_typed",  # typed: only a planned cab mic string passes the wire guard
 })
 ATTRS = frozenset({"firmware", "device_type", "write_errors", "last_write_error", "io"})
@@ -495,6 +496,8 @@ class WireGuard:
                 raise WireRefused("Grid: an edit never takes a control out of scenes")
             op = edit["params"].get((col, p.index))
             if op is not None and op["scene_mode"]:
+                if col not in edit["confirmed"]:
+                    raise WireRefused(f"Grid: column {col} was not confirmed by a read of the unit")
                 self._edit_started(col, p.index, rollback)
                 return
             b = edit["bypass"].get(col)
@@ -1169,6 +1172,27 @@ class QcMcpBackend(DeviceBackend):
         if self._guard is None:
             raise DeviceError("not connected")
         self._guard.enter_rollback()
+
+    def edit_started(self):
+        edit = self._guard._edit if self._guard is not None else None
+        if edit is None:
+            return set()
+        return {("bypass", k[0]) if k[1] == "bypass" else ("param", k[0], k[1]) for k in edit["attempted"]}
+
+    def read_scene(self):
+        obj = self._call("read_state", "Scene", timeout_ms=1500)
+        scene = getattr(obj, "selected_scene", None)
+        return scene if type(scene) is int and 0 <= scene < 8 else None
+
+    def restore_scene(self, scene):
+        if self._guard is None or self._guard._edit is None or self._qc is None:
+            raise DeviceError("not armed")
+        if type(scene) is not int or not 0 <= scene < 8:
+            raise DeviceError("not a scene")
+        # set_scene is on the NEVER list; the window opens it for this one call and the wire guard (armed
+        # edit only) passes a Scene UPDATE A-H. Nothing else uses it.
+        with self._qc.window("set_scene") as select:
+            self._invoke(lambda: select(scene))
 
     def end_push(self):
         self._save_target = None

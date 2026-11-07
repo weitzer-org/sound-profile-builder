@@ -177,3 +177,42 @@ class OwnedSlots:
 
     def current(self) -> list[dict]:
         return [self._latest[p] for p in sorted(self._latest)]
+
+
+class EditLedger:
+    """edits.jsonl: one `edit_started` line before an edit's first write and one `edited` line after its
+    final read (preset-editing E4; design section 6 rule 9). Local and informational, like owned_slots.jsonl:
+    nothing here authorises a write. A crash leaves `edit_started` with no `edited`, which is how recovery
+    names the preset an interrupted edit may have left half-written.
+      {"event": "edit_started", "job_id", "slot", "folder_key", "name", "layout_before", "at"}
+      {"event": "edited", "job_id", "slot", "name", "layout_before", "layout_after", "status", "at"}"""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self.started: dict[str, dict] = {}
+        self.edited: dict[str, dict] = {}
+        entries, self._torn_tail = _read_lines(path)
+        for e in entries:
+            jid = e.get("job_id")
+            if not isinstance(jid, str):
+                raise LedgerError(f"{path}: an entry has no job_id")
+            if e.get("event") == "edit_started":
+                self.started[jid] = e
+            elif e.get("event") == "edited":
+                self.edited[jid] = e
+            else:
+                raise LedgerError(f"{path}: unknown event {e.get('event')!r}")
+
+    def start(self, job_id, slot, folder_key, name, layout_before, at) -> None:
+        e = {"event": "edit_started", "job_id": job_id, "slot": slot, "folder_key": folder_key, "name": name,
+             "layout_before": layout_before, "at": at}
+        _append(self.path, e, self._torn_tail)
+        self._torn_tail = False
+        self.started[job_id] = e
+
+    def finish(self, job_id, slot, name, layout_before, layout_after, status, at) -> None:
+        e = {"event": "edited", "job_id": job_id, "slot": slot, "name": name, "layout_before": layout_before,
+             "layout_after": layout_after, "status": status, "at": at}
+        _append(self.path, e, self._torn_tail)
+        self._torn_tail = False
+        self.edited[job_id] = e

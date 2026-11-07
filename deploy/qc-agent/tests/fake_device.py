@@ -73,6 +73,8 @@ class FakeDevice(DeviceBackend):
         self.preset_name = ""                           # the open preset's name, as the read reports it
         self.extra_rows: dict[int, dict[int, dict]] = {}  # rows 1-3: row -> col -> block (same shape as grid)
         self.active_scene = 0                           # set_param_scenes switches it and puts it back, like the transport
+        self.edit_attempted: set = set()
+        self.armed_edit = False
         self.write_fail = None                          # hook(name, args): raise to make a write fail
         self._listings = 0
         self._alive_calls = 0
@@ -212,11 +214,27 @@ class FakeDevice(DeviceBackend):
 
     def begin_edit(self, plan, checked):
         self._rec("begin_edit", plan["snapshot"])
+        self.edit_attempted = set()
+        self.armed_edit = True
+
+    def edit_started(self):
+        return set(self.edit_attempted)
+
+    def read_scene(self):
+        self._need()
+        self._rec("read_scene")
+        return self.active_scene
+
+    def restore_scene(self, scene):
+        self._need()
+        self._rec("restore_scene", scene)
+        self.active_scene = scene
 
     def enter_rollback(self):
         self._rec("enter_rollback")
 
     def end_push(self):
+        self.armed_edit = False
         self._rec("end_push")
 
     def set_routing(self, row, in_port, out_port):
@@ -249,6 +267,8 @@ class FakeDevice(DeviceBackend):
     def set_param(self, row, col, index, wire):
         self._need()
         self._rec("set_param", row, col, index, wire)
+        if self.armed_edit:
+            self.edit_attempted.add(("param", col, index))
         if self.write_fail:
             self.write_fail("set_param", (row, col, index, wire))
         b = self.grid[col]
@@ -262,10 +282,13 @@ class FakeDevice(DeviceBackend):
     def set_param_scenes(self, row, col, index, wires):
         self._need()
         self._rec("set_param_scenes", row, col, index, list(wires))
+        if self.armed_edit:
+            self.edit_attempted.add(("param", col, index))
         if self.write_fail:
             self.write_fail("set_param_scenes", (row, col, index, list(wires)))
         self.grid[col].setdefault("scene_mode", set()).add(index)
         self.grid[col]["params"][index] = list(wires)
+        self.active_scene = 0  # the transport puts scene A back
 
     def confirm_layout(self, col, n):
         self._rec("confirm_layout", col, n)
@@ -273,11 +296,14 @@ class FakeDevice(DeviceBackend):
     def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
         self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
+        if self.armed_edit:
+            self.edit_attempted.add(("bypass", col))
         if self.write_fail:
             self.write_fail("set_block_bypass", (row, col, list(scenes), bypass_index))
         if bypass_index != self._n_params(col):  # qc-mcp: the bypass control is one past the block's read
             raise DeviceError(f"fake unit: column {col}'s bypass control is {self._n_params(col)}, not {bypass_index}")
         self.grid[col]["bypass"] = list(scenes)
+        self.active_scene = 0
 
     def save_to_slot(self, position, name):
         self._need()

@@ -326,3 +326,39 @@ func TestEditResultFixture(t *testing.T) {
 		t.Errorf("a result exactly at the cap: %v", err)
 	}
 }
+
+// testdata/devicejobs/edit_agent_results.json: every result the Python agent's tests build (E4) parses, and its
+// rollback, CAS and save fields fit the plan-independent rules of contract 9.3. The file is rewritten by
+// deploy/qc-agent's tests (UPDATE_GOLDENS=1), so the agent cannot drift from this parser.
+func TestAgentEditResultsParse(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "devicejobs", "edit_agent_results.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fx struct {
+		Results map[string]json.RawMessage `json:"results"`
+	}
+	if err := json.Unmarshal(raw, &fx); err != nil {
+		t.Fatal(err)
+	}
+	if len(fx.Results) < 25 {
+		t.Fatalf("only %d agent results in the fixture", len(fx.Results))
+	}
+	states := map[string]int{}
+	for name, p := range fx.Results {
+		r, err := devicejobs.ParseEditResultPayload(p)
+		if err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+		if r.Save.Saved {
+			t.Errorf("%s: a live edit result says it saved", name)
+		}
+		states[r.Rollback.State]++
+	}
+	for _, st := range []string{"not_needed", "restored", "partial", "failed"} {
+		if states[st] == 0 {
+			t.Errorf("no agent result with rollback state %q", st)
+		}
+	}
+}

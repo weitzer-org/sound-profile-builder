@@ -14,9 +14,9 @@ import logging
 import threading
 import traceback
 
-from . import AGENT_VERSION, contract, jobs
+from . import AGENT_VERSION, contract, jobs, text
 from .device import SETLIST_NAME
-from .ledger import JobLedger, OwnedSlots
+from .ledger import EditLedger, JobLedger, OwnedSlots
 from .s3 import JobStore, StoreError
 
 log = logging.getLogger("qc_agent")
@@ -51,7 +51,8 @@ class Agent:
         self._sleep = sleep or (lambda s: self.stop.wait(s))
         self.ledger = ledger if ledger is not None else JobLedger(home / "executed_jobs.jsonl")
         self.owned = owned if owned is not None else OwnedSlots(home / "owned_slots.jsonl")
-        self.ctx = jobs.JobContext(config, catalog, device, self.owned, now_fn, sleep=self._job_sleep)
+        self.edits = EditLedger(home / "edits.jsonl")
+        self.ctx = jobs.JobContext(config, catalog, device, self.owned, now_fn, sleep=self._job_sleep, edits=self.edits)
         self.started_at = self.now()
         self.last_activity = self.started_at
         self.state = "idle"
@@ -201,9 +202,14 @@ class Agent:
             log.warning("job %s was interrupted by a crash or a closed window; reporting it, not retrying",
                         job_id[:8])
             at = contract.parse_time(self.ledger.taken[job_id]["at"])
-            self.finish(job_id, kind, jobs.failed(
-                "interrupted", "The bridge stopped in the middle of this job (crash, closed window or power). "
-                "It is not retried. For a push or an edit, check the preset on the unit before sending again."), at)
+            msg = ("The bridge stopped in the middle of this job (crash, closed window or power). "
+                   "It is not retried. For a push or an edit, check the preset on the unit before sending again.")
+            began = self.edits.started.get(job_id)
+            if kind == "edit_preset" and began and job_id not in self.edits.edited:
+                msg = (f"The bridge stopped in the middle of an edit of slot {text.clean(str(began.get('slot')), 4)}. "
+                       "The open preset may be partly edited and was not saved: re-select it on the unit WITHOUT "
+                       "saving to discard the edit. It is not retried.")
+            self.finish(job_id, kind, jobs.failed("interrupted", msg), at)
         # Results whose upload was never confirmed. One whose upload the ledger records is not re-checked:
         # a bucket-token holder deleting it later is the "delete objects" power contract 15 already concedes.
         # Even if a done object is there (a crash after the PUT, or someone else's object), the stored,

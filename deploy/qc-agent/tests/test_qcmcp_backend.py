@@ -794,6 +794,67 @@ class EditGuard(Base):
             self.dev.enter_rollback()
 
 
+class EditOverTheWire(Base):
+    """A whole edit_preset job through the real vendored transport and the wire guard (fake HID below them)."""
+
+    def setUp(self):
+        super().setUp()
+        from edit_fixtures import base_plan, edit_args
+        self.plan = base_plan()
+        self.plan["expect"]["layout"] = [[0, 0, 6], [0, 1, 1011]]   # fake_hid models row 0 only
+        for col, mid in ((0, 6), (1, 1011)):
+            self.hid.grid[col] = {"hash": mid, "params": {}, "scene": set(), "bypass": [False] * 8, "bypass_scene": False}
+        self.hid.grid[0]["params"][0] = list(GAIN_EXPECT)
+        self.hid.grid[1]["params"][1] = [0.0] * 8
+        self.hid.name = "Texas Blues"
+        self.args = edit_args(self.plan)
+
+    def run_job(self):
+        from helpers import T0
+        from qc_agent import contract
+        cfg = config(QC_AGENT_EDIT_MODES="live")
+        ctx = jobs.JobContext(cfg, catalog(), self.dev, OwnedSlots(Path(self.tmp.name) / "o.jsonl"), Clock(), sleep=lambda s: None)
+        job = {"kind": "edit_preset", "job_id": "11111111-2222-4333-8444-666666666666", "args": self.args,
+               "created_at": contract.format_time(T0), "expires_at": contract.format_time(T0.replace(hour=23))}
+        return jobs.run(ctx, job)
+
+    def test_edit_lands_on_the_fake_unit_and_nothing_is_saved(self):
+        out = self.run_job()
+        self.assertEqual((out.status, out.reason_code), ("succeeded", ""), out.message)
+        self.assertEqual(self.dev._guard.refused, [])
+        g0, g1 = self.hid.grid[0], self.hid.grid[1]
+        self.assertEqual(g0["params"][0], [f32(x) for x in GAIN_WIRE])
+        self.assertEqual(g1["params"][1], [1.0] * 8)
+        self.assertEqual(g1["bypass"][:2], [False, True])
+        self.assertEqual(self.hid.slots, {})                     # no File CREATE: nothing saved
+        self.assertNotIn("File", [n for n, o in self.hid.received if getattr(o, "action", None) == P.ACTION["CREATE"]])
+        self.assertEqual(self.hid.scene, 0)
+
+    def test_the_owners_scene_is_put_back_over_the_wire(self):
+        self.hid.scene = 4
+        out = self.run_job()
+        self.assertEqual(out.status, "succeeded", out.message)
+        self.assertEqual(self.hid.scene, 4)
+        self.assertEqual(self.dev._guard.refused, [])
+
+    def test_a_drifting_unit_is_rolled_back_over_the_wire(self):
+        orig = self.hid._grid
+
+        def lossy(g):
+            orig(g)
+            for ch in g.preset.chains:   # the unit loses BOOST's write
+                for m in ch.models:
+                    if m.column == 1 and any(p.index == 1 and p.param_values for p in m.params) and not self.dev._guard._edit["phase"] == "rollback":
+                        self.hid.grid[1]["params"][1] = [0.0] * 8
+        self.hid._grid = lossy
+        out = self.run_job()
+        self.assertEqual((out.status, out.reason_code), ("failed", "readback_mismatch"), out.message)
+        self.assertEqual(out.edit["payload"]["rollback"]["state"], "restored")
+        self.assertEqual(self.hid.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.hid.grid[1]["bypass"], [False] * 8)
+        self.assertEqual(self.dev._guard.refused, [])
+
+
 class CapturesOverTheWire(Base):
     """A capture block through the real vendored set_capture and the wire guard (plan 4.2)."""
 

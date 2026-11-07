@@ -49,13 +49,14 @@ The result carries only contract section 9 fields.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
 import time
 from dataclasses import dataclass, field
 
-from . import captures, contract, edit_checks, slots, text
+from . import captures, contract, edit_checks, edit_diff, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, PartialListing, UnitAbsent, UnitBusy
 from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
                                control_labels, default_wire, is_internal_param, validate)
@@ -99,8 +100,9 @@ def failed(code, msg, **kw):
 
 
 class JobContext:
-    def __init__(self, config, catalog, device, owned, now_fn, sleep=time.sleep):
+    def __init__(self, config, catalog, device, owned, now_fn, sleep=time.sleep, edits=None):
         self.config, self.catalog, self.device, self.owned = config, catalog, device, owned
+        self.edits = edits  # ledger.EditLedger, or None (tests that never edit)
         self.now, self.sleep = now_fn, sleep
         self.firmware_seen = None  # (firmware, when) for the heartbeat
 
@@ -1037,11 +1039,10 @@ class _Edit:
             return out
         self.fw = _fw(self.dev.firmware)
         try:
-            for step in (self.check_unit,):
-                outcome = step()
-                if outcome is not None:
-                    return outcome
-            return self.finish()
+            out = self.check_unit()
+            if out is not None:
+                return out
+            return self.apply()
         except (_Gone, UnitAbsent):
             return self.fail("unit_absent", "The Quad Cortex went away during the edit.", unit_gone=True)
         except DeviceError as e:
@@ -1083,13 +1084,259 @@ class _Edit:
         if _expired(self.ctx, self.job):
             return Outcome("expired", "expired", "The request expired before the bridge got to it; "
                            "nothing was written.", firmware=self.fw, edit=self.edit_block())
-        self.pre = preset
+        self.pre, self.folder_key = preset, key
         return None
 
-    def finish(self) -> Outcome:
-        # Interim (commit 1 of E4): every pre-write check passed and nothing is written yet.
-        return self.refuse("unsupported_kind", "The edit passed every check, but this build doesn't apply edits yet. "
-                           "Nothing was changed.")
+    # -- the writes --
+
+    def still_open(self) -> bool:
+        cur = self.dev.setlist_position() or {}
+        return (cur.get("folder_key") == self.folder_key and cur.get("position") == self.pos
+                and not cur.get("is_factory"))
+
+    def op(self, key, fn, *args):
+        """One device write, like _Push.op: alive and still the open preset before it (writes address row,
+        column and index, not a preset: after the owner selects another preset they would land in it), and
+        again after it (a multi-message write that spans a switch must be noticed). The op counts as
+        attempted from the moment its call starts."""
+        _check_alive(self.ctx)
+        if not self.still_open():
+            raise _SwitchedAway()
+        self.attempted.append(key)
+        fn(*args)
+        _check_alive(self.ctx)
+        if not self.still_open():
+            self.spilled = True
+            raise _SwitchedAway()
+        self.ctx.sleep(PACE_S)
+
+    def recheck(self, col):
+        """Before a column's first write: the grid is read again and the column must still hold the planned
+        model with param_count + 1 params (the owner could swap a block while the edit runs)."""
+        mid, pc = self.checked.cells[col]
+        grid = self.dev.read_current_preset()
+        _check_alive(self.ctx)
+        b = edit_checks.live_block(grid, 0, col) if grid is not None else None
+        if b is None or b.get("model_id") != mid or len(b.get("params") or []) != pc + 1:
+            raise DeviceError(f"column {col} changed on the unit before it was written")
+
+    def write_ops(self):
+        plan, dev = self.plan, self.dev
+        done = set()
+        for op in plan["param_ops"]:
+            col = op["col"]
+            if col not in done:
+                done.add(col)
+                self.recheck(col)
+            key = ("param", col, op["index"])
+            if op["scene_mode"]:   # G6: all eight scene values (the plan carries C-H exactly as the unit had them)
+                self.op(key, dev.set_param_scenes, 0, col, op["index"], list(op["wire"]))
+            else:                  # one plain write replicates to all eight (G1/G6); verify checks all eight
+                self.op(key, dev.set_param, 0, col, op["index"], op["wire"][0])
+        for op in plan["bypass_ops"]:
+            col = op["col"]
+            if col not in done:
+                done.add(col)
+                self.recheck(col)
+            self.op(("bypass", col), dev.set_block_bypass, 0, col, list(op["bypass"]), self.checked.bypass[col]["index"])
+
+    def read_after(self):
+        """A read of the open preset after the writes: once more if the unit didn't answer."""
+        for _ in range(2):
+            self.ctx.sleep(0.5)
+            post = self.dev.read_current_preset()
+            _check_alive(self.ctx)
+            if post is not None:
+                return post
+        return None
+
+    def layout_hash(self, preset):
+        if preset is None:
+            return None
+        return hashlib.sha256(json.dumps(edit_checks.live_layout(preset), separators=(",", ":")).encode()).hexdigest()
+
+    def apply(self) -> Outcome:
+        plan, dev, ctx = self.plan, self.dev, self.ctx
+        dev.begin_edit(plan, self.checked)
+        for col, (mid, pc) in sorted(self.checked.cells.items()):
+            dev.confirm_layout(col, len(edit_checks.live_block(self.pre, 0, col)["params"]))
+        orig_scene = dev.read_scene()
+        before = self.layout_hash(self.pre)
+        if ctx.edits is not None:
+            try:  # before the first write: a crash from here on is reported with the slot (agent.recover)
+                ctx.edits.start(self.job["job_id"], self.slot, self.folder_key, plan["expect"]["name"], before,
+                                contract.format_time(ctx.now()))
+            except Exception as e:  # noqa: BLE001
+                log.error("could not record the edit: %s", text.clean(str(e), 200), exc_info=True)
+                return self.fail("device_error", "The bridge could not write its edit ledger, so it wrote nothing.")
+        self.attempted, self.spilled = [], False
+        cause, gone, switched = None, False, False
+        try:
+            self.write_ops()
+        except _SwitchedAway:
+            switched = True
+        except (_Gone, UnitAbsent):
+            gone = True
+        except DeviceError as e:   # includes the wire guard's refusals
+            cause = text.clean(str(e), 160)
+            log.warning("edit write failed: %s", cause)
+        post = None
+        if not (gone or switched):
+            try:
+                post = self.read_after()
+            except (_Gone, UnitAbsent):
+                gone = True
+            except DeviceError as e:
+                cause = cause or text.clean(str(e), 160)
+        params, bypass, ok = edit_diff.verify_ops(plan, post or {})
+        coll = edit_diff.collateral(self.pre, post, plan) if post is not None else None
+        good = (cause is None and post is not None and ok and coll["mismatches"] == 0
+                and not (gone or switched))
+        if good:
+            note = self.restore_scene(orig_scene)
+            self.record_edited(post, "succeeded")
+            n, m = len(plan["param_ops"]), len(plan["bypass_ops"])
+            return Outcome("succeeded", "", f"Applied {n} parameter change(s) and {m} bypass change(s) to the open "
+                           f"preset {plan['expect']['slot']}; every value read back as planned and nothing else changed. "
+                           f"NOT saved: save it on the unit, or re-select the slot to discard it.{note}",
+                           firmware=self.fw, edit=self.edit_block(params, bypass, coll))
+        return self.rollback(post, params, bypass, coll, cause, gone, switched, orig_scene)
+
+    def restore_scene(self, orig) -> str:
+        """Put the unit's scene back to what it was before the per-scene writes (they leave it on scene A).
+        Returns a sentence for the message; never raises."""
+        try:
+            if orig is None:
+                return " The scene that was active before could not be read, so the unit may be on scene A."
+            cur = self.dev.read_scene()
+            if cur == orig:
+                return ""
+            self.dev.restore_scene(orig)
+            self.ctx.sleep(0.3)
+            if self.dev.read_scene() == orig:
+                return ""
+        except (DeviceError, _Gone, UnitAbsent) as e:
+            log.warning("scene not restored: %s", text.clean(str(e), 120))
+        return f" Check the active scene on the unit: it was {'ABCDEFGH'[orig]} before the edit."
+
+    def record_edited(self, post, status):
+        if self.ctx.edits is None:
+            return
+        try:
+            self.ctx.edits.finish(self.job["job_id"], self.slot, self.plan["expect"]["name"], self.layout_hash(self.pre),
+                                  self.layout_hash(post), status, contract.format_time(self.ctx.now()))
+        except Exception as e:  # noqa: BLE001  informational ledger: never change the outcome
+            log.error("could not record the edit result: %s", text.clean(str(e), 200), exc_info=True)
+
+    def rollback(self, post, params, bypass, coll, cause, gone, switched, orig_scene) -> Outcome:
+        plan, dev = self.plan, self.dev
+        started = dev.edit_started()
+        steps = edit_diff.rollback_plan(plan, [a for a in self.attempted if a in started])
+        restored = failed = 0
+        rb_state = "not_needed"
+        residual = 0
+        post2 = post
+        slot = plan["expect"]["slot"]
+        if steps:
+            if gone or switched or post is None:
+                failed = len(steps)   # nothing is written into a preset we can't see or that isn't the checked one
+            else:
+                restored, failed, residual, post2 = self.undo(steps, post)
+            if failed == 0 and residual == 0:
+                rb_state = "restored"
+            elif restored == 0:
+                rb_state = "failed"
+            else:
+                rb_state = "partial"
+        rollback = {"state": rb_state, "restored": restored, "failed": failed}
+        note = ""
+        if rb_state in ("restored", "not_needed") and not (gone or switched) and post is not None:
+            note = self.restore_scene(orig_scene)
+        self.record_edited(post2 if post2 is not None else post, "failed")
+        block = self.edit_block(params, bypass, coll, rollback)
+        why = (f" ({cause})" if cause else "")
+        if rb_state in ("partial", "failed"):
+            where = ("The preset that is open now may have changed too: " if self.spilled else "")
+            return failed_out("rollback_failed", f"The edit did not verify and the bridge could not put every value back"
+                              f"{why}. {where}The open preset {slot} may be half-edited and was NOT saved: re-select {slot} "
+                              f"on the unit WITHOUT saving to discard it.", self.fw, block, gone)
+        if gone:
+            return failed_out("unit_absent", f"The Quad Cortex went away during the edit{why}. Nothing was saved.", self.fw, block, True)
+        if cause or switched:
+            return failed_out("device_error", ("Another preset was selected on the unit during the edit" if switched
+                              else "A device operation failed during the edit" + why)
+                              + f". The edit was rolled back where it could be and nothing was saved; re-select {slot} "
+                              "on the unit without saving." + note, self.fw, block, False)
+        return failed_out("readback_mismatch", f"The unit's read-back differs from the edit's plan, so the bridge put "
+                          f"the original values back ({restored} change(s)) and checked them. Nothing was saved.{note} "
+                          "Controls assigned to scenes stay assigned (with their original values).", self.fw, block, False)
+
+    def undo(self, steps, post):
+        """Write the rollback steps (the guard is in its rollback phase), read again, count. Returns
+        (restored, failed, residual, the read after)."""
+        plan, dev = self.plan, self.dev
+        dev.enter_rollback()
+        bad_cols = set()
+        for col, (mid, pc) in self.checked.cells.items():   # a column that isn't what the plan says is not written
+            b = edit_checks.live_block(post, 0, col)
+            if b is None or b.get("model_id") != mid or len(b.get("params") or []) != pc + 1:
+                bad_cols.add(col)
+            else:
+                dev.confirm_layout(col, pc + 1)
+        todo = []
+        stop = False
+        for st in steps:
+            if stop or st["col"] in bad_cols:
+                continue
+            try:
+                if st["kind"] == "bypass":
+                    self.op(("rb", "bypass", st["col"]), dev.set_block_bypass, 0, st["col"], list(st["flags"]),
+                            self.checked.bypass[st["col"]]["index"])
+                elif st["scene_mode"]:
+                    self.op(("rb", "param", st["col"], st["index"]), dev.set_param_scenes, 0, st["col"], st["index"],
+                            list(st["wires"]))
+                else:
+                    self.op(("rb", "param", st["col"], st["index"]), dev.set_param, 0, st["col"], st["index"], st["wires"][0])
+                todo.append(st)
+            except _SwitchedAway:
+                stop = True
+            except (_Gone, UnitAbsent):
+                stop = True
+            except DeviceError as e:
+                log.warning("rollback write failed: %s", text.clean(str(e), 160))
+        try:
+            post2 = None if stop else self.read_after()
+        except (_Gone, UnitAbsent, DeviceError):
+            post2 = None
+        if post2 is None:
+            return 0, len(steps), 0, None
+        restored = 0
+        for st in todo:
+            if st["kind"] == "bypass":
+                ok = edit_checks.live_bypass(post2, 0, st["col"]) == list(st["flags"])
+            else:
+                p = edit_checks.live_param(edit_checks.live_block(post2, 0, st["col"]), st["index"])
+                vals = (p or {}).get("values")
+                ok = (isinstance(vals, list) and len(vals) == 8 and all(
+                    type(v) is float and abs(v - w) <= edit_diff.TOL for v, w in zip(vals, st["wires"])))
+            restored += ok
+        failed = len(steps) - restored
+        # Not collateral(pre, post2): a change the edit did not make (the owner touching a control) is reported by the
+        # first collateral check and cannot be undone by writing our ops back. Residual is OUR ops left wrong.
+        residual = 0
+        done = {(s["kind"], s["col"], s.get("index")) for s in steps}
+        for op in plan["param_ops"]:    # planned ops never started: collateral skips them, so check them here
+            if ("param", op["col"], op["index"]) not in done:
+                p = edit_checks.live_param(edit_checks.live_block(post2, 0, op["col"]), op["index"])
+                residual += not edit_checks.floats_equal((p or {}).get("values"), op["expect"])
+        for op in plan["bypass_ops"]:
+            if ("bypass", op["col"], None) not in done:
+                residual += edit_checks.live_bypass(post2, 0, op["col"]) != list(op["expect"])
+        return restored, failed, residual, post2
+
+
+def failed_out(code, msg, fw, block, gone):
+    return Outcome("failed", code, msg, firmware=fw, edit=block, unit_gone=gone)
 
 
 def edit_preset(ctx, job) -> Outcome:

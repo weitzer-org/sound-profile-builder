@@ -3,16 +3,35 @@ sections, the writes. In-memory bucket, fake unit, fixed clock. Proves the agent
 says nothing about the real unit (E-G1 on a QC-2-owned test slot is the first real check)."""
 import copy
 import json
+import os
 import unittest
 from unittest import mock
 
 from fake_device import FakeDevice
-from helpers import T0, catalog, config, job
+from helpers import REPO, T0, catalog, config, job
 from qc_agent import contract, jobs
 from qc_agent import edit_checks
-from qc_agent.device import SETLIST_KEY
+from qc_agent.device import SETLIST_KEY, DeviceError
 from edit_fixtures import GAIN_EXPECT, GAIN_WIRE, OTHER_KEY, SNAP, base_plan, edit_args, find_model, rig_unit
 from test_agent import Base
+
+# The edit payload of every result a test built, by test id. They are pinned in
+# testdata/devicejobs/edit_agent_results.json, which internal/devicejobs parses with ParseEditResultPayload
+# (TestAgentEditResultsParse): the agent's results must pass the parser QC-2 reads them with.
+# Rewrite the file with UPDATE_GOLDENS=1 (a full run of this module).
+RESULTS = {}
+
+
+def tearDownModule():
+    path = REPO / "testdata" / "devicejobs" / "edit_agent_results.json"
+    got = dict(sorted(RESULTS.items()))
+    if os.environ.get("UPDATE_GOLDENS") == "1" and len(got) >= 25:
+        path.write_text(json.dumps({"results": got}, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+        return
+    want = json.loads(path.read_text(encoding="utf-8"))["results"]
+    for name, payload in got.items():
+        assert want.get(name) == payload, f"{name}: the agent's edit result differs from edit_agent_results.json (UPDATE_GOLDENS=1)"
+
 
 def setUpModule():
     for name in ("SAVE_LIST_INTERVAL_S", "PACE_S"):
@@ -37,7 +56,10 @@ class EditBase(Base):
         plan = plan or base_plan()
         jid, key = self.queue("edit_preset", args=edit_args(plan, **kw))
         self.poll()
-        return jid, self.result(jid)
+        r = self.result(jid)
+        if r["edit"] is not None:
+            RESULTS[self.id().split(".", 1)[1]] = r["edit"]["payload"]
+        return jid, r
 
     def refused_before_unit(self, r, code):
         self.assertEqual((r["kind"], r["status"], r["reason_code"]), ("edit_preset", "refused", code))
@@ -222,7 +244,6 @@ class Cas(EditBase):
         self.assertEqual(e["cas"], {"state": "matched", "failed": []})
         self.assertEqual((e["plan_sha256"], e["snapshot"], e["mode"]),
                          (edit_args(base_plan())["plan"]["sha256"], SNAP, "live"))
-        self.assertEqual(self.dev.write_calls(), [])
         self.assertEqual(r["firmware"], "4.1.0")
 
     def test_other_collection(self):
@@ -243,6 +264,8 @@ class Cas(EditBase):
         # same cleaned form, so a raw name with a doubled space still matches and a different one does not.
         self.dev.preset_name = "Texas  Blues"
         self.assertEqual(self.run_and_pins()["edit"]["payload"]["cas"]["state"], "matched")
+        rig_unit(self.dev)   # that edit was applied: put the unit back as the plan expects it
+        self.dev.calls.clear()
         self.dev.preset_name = "Texas Blues\u202e!"
         self.assertPins(self.run_and_pins(), "name")
 
@@ -316,6 +339,259 @@ class Cas(EditBase):
         self.poll()
         self.assertEqual(self.result(jid)["status"], "expired")
         self.assertEqual(self.dev.calls, [])
+
+
+class Apply(EditBase):
+    """A live edit end to end on the fake unit: what it writes, what it reads back, what it undoes."""
+
+    def edit(self, plan=None):
+        return self.run_edit(plan)
+
+    def writes(self):
+        return [c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass")]
+
+    def test_all_pass_writes_exactly_the_plan_and_saves_nothing(self):
+        jid, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""))
+        self.assertEqual(self.writes(), [
+            ("set_param_scenes", 0, 0, 0, GAIN_WIRE),
+            ("set_param", 0, 1, 1, 1.0),
+            ("set_block_bypass", 0, 1, [False, True] + [False] * 6, 7)])
+        names = [c[0] for c in self.dev.calls]
+        self.assertNotIn("save_to_slot", names)
+        self.assertNotIn("place_capture", names)
+        self.assertNotIn("add_block", names)
+        self.assertEqual(self.dev.slots, {152: "Texas Blues"})
+        e = r["edit"]["payload"]
+        self.assertEqual(e["cas"], {"state": "matched", "failed": []})
+        self.assertTrue(all(p["ok"] for p in e["params"]) and all(b["ok"] for b in e["bypass"]))
+        self.assertEqual(e["collateral"]["mismatches"], 0)
+        self.assertEqual(e["rollback"], {"state": "not_needed", "restored": 0, "failed": 0})
+        self.assertEqual(e["save"], {"saved": False, "slot": None, "name": None, "listed": False, "backup": None})
+        self.assertIn("NOT saved", r["message"])
+        # the arming is per plan and ends with the job
+        self.assertEqual([c[0] for c in self.dev.calls if c[0] in ("begin_edit", "enter_rollback")], ["begin_edit"])
+        self.assertEqual(self.dev.calls[-2:], [("end_push",), ("disconnect",)])
+        led = self.agent.edits
+        self.assertEqual(led.started[jid]["slot"], "20A")
+        self.assertEqual(led.edited[jid]["status"], "succeeded")
+        self.assertNotEqual(led.edited[jid]["layout_before"], None)
+        self.assertEqual(led.edited[jid]["layout_before"], led.edited[jid]["layout_after"])
+
+    def test_the_scene_the_owner_had_is_put_back(self):
+        self.dev.active_scene = 3
+        _, r = self.edit()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertEqual(self.dev.active_scene, 3)
+        self.assertIn(("restore_scene", 3), self.dev.calls)
+
+    def test_scene_a_is_left_alone(self):
+        _, r = self.edit()
+        self.assertNotIn("restore_scene", [c[0] for c in self.dev.calls])
+
+    def test_a_scene_that_cannot_be_put_back_is_reported(self):
+        self.dev.active_scene = 3
+        self.dev.restore_scene = lambda n: None   # the unit ignores it
+        _, r = self.edit()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertIn("Check the active scene", r["message"])
+
+    # -- failures --
+
+    def test_a_write_that_does_not_read_back_is_rolled_back(self):
+        # the unit drops the BOOST write: verify fails, the already written GAIN and the bypass are put back
+        orig = self.dev.set_param
+
+        def lost(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        e = r["edit"]["payload"]
+        self.assertEqual(e["rollback"], {"state": "restored", "restored": 3, "failed": 0})
+        self.assertFalse(all(p["ok"] for p in e["params"]))
+        self.assertEqual(self.dev.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.dev.grid[1]["bypass"], [False] * 8)
+        self.assertEqual(self.dev.grid[1]["params"][1], [0.0] * 8)
+        self.assertIn("enter_rollback", [c[0] for c in self.dev.calls])
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_a_collateral_change_on_another_row_is_rolled_back(self):
+        def drift(name, args=None):
+            pass
+        orig = self.dev.set_block_bypass
+
+        def bump(row, col, scenes, idx):
+            orig(row, col, scenes, idx)
+            self.dev.extra_rows[1][0]["params"][2] = [0.99] * 8   # another row changes during the edit
+        self.dev.set_block_bypass = bump
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        e = r["edit"]["payload"]
+        self.assertEqual(e["collateral"]["items"], [{"row": 1, "col": 0, "index": 2, "scene": 0}])
+        self.assertEqual(e["rollback"]["state"], "restored")
+        self.assertTrue(all(p["ok"] for p in e["params"]))   # the planned values read back; the collateral is what failed
+
+    def test_a_collateral_change_on_an_op_cell(self):
+        orig = self.dev.set_param
+
+        def bump(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[1]["params"][2] = [0.9] * 8
+        self.dev.set_param = bump
+        _, r = self.edit()
+        self.assertEqual(r["reason_code"], "readback_mismatch")
+        self.assertEqual(r["edit"]["payload"]["collateral"]["items"][0]["index"], 2)
+
+    def test_a_write_error_midway_rolls_back_what_was_attempted(self):
+        def boom(name, args):
+            if name == "set_param" and ("enter_rollback",) not in self.dev.calls:
+                raise DeviceError("fake: write failed")
+        self.dev.write_fail = boom
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        e = r["edit"]["payload"]
+        # GAIN was written, BOOST was started and failed (it may be half written), the bypass never started
+        self.assertEqual(e["rollback"], {"state": "restored", "restored": 2, "failed": 0})
+        self.assertEqual(self.dev.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.dev.grid[1]["params"][1], [0.0] * 8)
+        self.assertEqual(self.dev.grid[1]["bypass"], [False] * 8)
+        self.assertNotIn(("set_block_bypass", 0, 1, [False, True] + [False] * 6, 7), self.dev.calls)
+
+    def test_a_failure_before_any_write_has_nothing_to_roll_back(self):
+        self.dev.grid[1]["model_id"] = 1011
+        calls = {"n": 0}
+        orig = self.dev.read_current_preset
+
+        def swap_after_cas():
+            calls["n"] += 1
+            r = orig()
+            if calls["n"] >= 2:   # the re-check before column 0's first write
+                r["chains"][0]["blocks"][0]["model_id"] = 7
+            return r
+        self.dev.read_current_preset = swap_after_cas
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertEqual(r["edit"]["payload"]["rollback"], {"state": "not_needed", "restored": 0, "failed": 0})
+        self.assertEqual(self.writes(), [])
+
+    def test_a_rollback_that_does_not_stick_is_rollback_failed(self):
+        orig_scenes = self.dev.set_param_scenes
+        state = {"rollback": False}
+        self.dev.enter_rollback = lambda: state.update(rollback=True)
+
+        def stuck(row, col, index, wires):
+            if state["rollback"]:
+                return   # the unit ignores the write that would put GAIN back
+            orig_scenes(row, col, index, wires)
+        self.dev.set_param_scenes = stuck
+        orig = self.dev.set_param
+
+        def lost(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "rollback_failed"))
+        e = r["edit"]["payload"]
+        self.assertEqual((e["rollback"]["state"], e["rollback"]["restored"], e["rollback"]["failed"]), ("partial", 2, 1))
+        self.assertIn("WITHOUT saving", r["message"])
+        self.assertEqual(self.agent.ledger.finished and True, True)
+
+    def test_every_rollback_write_fails(self):
+        def boom(name, args):
+            if self.dev.calls and ("enter_rollback",) in self.dev.calls:
+                raise DeviceError("fake: no")
+        self.dev.write_fail = boom
+        orig = self.dev.set_param
+
+        def lost(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "rollback_failed"))
+        self.assertEqual(r["edit"]["payload"]["rollback"]["state"], "failed")
+
+    def test_the_owner_selects_another_preset_midway_and_nothing_more_is_written(self):
+        n = {"writes": 0}
+
+        def switch(name):
+            if name in ("set_param", "set_param_scenes", "set_block_bypass"):
+                n["writes"] += 1
+                if n["writes"] == 1:
+                    self.dev.open_position = 160   # after the first write the owner picks another preset
+        self.dev.on_call = switch
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "rollback_failed"))
+        self.assertEqual(len(self.writes()), 1)    # no further write, and NO rollback write, into the other preset
+        self.assertNotIn("enter_rollback", [c[0] for c in self.dev.calls])
+        e = r["edit"]["payload"]
+        self.assertEqual(e["rollback"], {"state": "failed", "restored": 0, "failed": 1})
+        self.assertIn("may have changed too", r["message"])
+
+    def test_the_owner_selects_another_preset_before_the_first_write(self):
+        orig = self.dev.setlist_position
+        n = {"k": 0}
+
+        def pos():
+            p = orig()
+            n["k"] += 1
+            if n["k"] >= 3:   # past the two reads around the compare-and-swap
+                p = {**p, "position": 160}
+            return p
+        self.dev.setlist_position = pos
+        _, r = self.edit()
+        self.assertEqual(r["status"], "failed")
+        self.assertEqual(self.writes(), [])
+        self.assertEqual(r["edit"]["payload"]["rollback"]["state"], "not_needed")
+
+    def test_the_unit_vanishes_during_the_edit(self):
+        self.dev.gone_after = 7
+        _, r = self.edit()
+        self.assertEqual(r["status"], "failed")
+        self.assertIn(r["reason_code"], ("unit_absent", "rollback_failed"))
+        self.assertNotIn("save_to_slot", [c[0] for c in self.dev.calls])
+
+    def test_the_read_after_the_writes_times_out_so_nothing_is_written_blind(self):
+        orig = self.dev.read_current_preset
+        n = {"k": 0}
+
+        def flaky():
+            n["k"] += 1
+            return None if n["k"] >= 3 else orig()   # the CAS read and the re-checks answer, then silence
+        self.dev.read_current_preset = flaky
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "rollback_failed"))
+        self.assertEqual(r["edit"]["payload"]["rollback"]["state"], "failed")
+        self.assertNotIn("enter_rollback", [c[0] for c in self.dev.calls])
+        self.assertIsNone(r["edit"]["payload"]["collateral"])
+
+    def test_a_crash_mid_edit_is_reported_with_the_slot(self):
+        jid, key = self.queue("edit_preset", args=edit_args(base_plan()))
+        self.agent.ledger.take(jid, "edit_preset", contract.format_time(T0))
+        self.agent.edits.start(jid, "20A", SETLIST_KEY, "Texas Blues", "h", contract.format_time(T0))
+        self.agent.recover()
+        r = self.result(jid)
+        self.assertEqual((r["status"], r["reason_code"], r["kind"]), ("failed", "interrupted", "edit_preset"))
+        self.assertIn("20A", r["message"])
+        self.assertIn("WITHOUT saving", r["message"])
+
+    def test_the_edit_ledger_survives_a_restart(self):
+        jid, _ = self.edit()
+        from qc_agent.ledger import EditLedger
+        again = EditLedger(self.home / "edits.jsonl")
+        self.assertIn(jid, again.started)
+        self.assertIn(jid, again.edited)
+
+    def test_an_edit_that_cannot_be_recorded_writes_nothing(self):
+        def broken(*a, **k):
+            raise OSError("disk full")
+        self.agent.edits.start = broken
+        _, r = self.edit()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertEqual(self.writes(), [])
 
 
 class CasFunctionTable(unittest.TestCase):

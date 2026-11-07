@@ -230,7 +230,7 @@
      "items": []
     },
     "rollback": {
-     "state": "failed",
+     "state": "partial",
      "restored": 1,
      "failed": 1
     },
@@ -12886,6 +12886,341 @@
     }
    },
    "error": "exactly its fields"
+  },
+  {
+   "name": "rollback not_needed with counts",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 1,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "rollback counts do not fit"
+  },
+  {
+   "name": "rollback restored with a failure",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "restored",
+     "restored": 1,
+     "failed": 1
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "rollback counts do not fit"
+  },
+  {
+   "name": "rollback failed with a restore",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "failed",
+     "restored": 1,
+     "failed": 1
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "rollback counts do not fit"
+  },
+  {
+   "name": "rollback partial with no failure",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "partial",
+     "restored": 2,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "rollback counts do not fit"
+  },
+  {
+   "name": "rollback partial with no restore",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "partial",
+     "restored": 0,
+     "failed": 2
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "rollback counts do not fit"
   }
  ]
 }
