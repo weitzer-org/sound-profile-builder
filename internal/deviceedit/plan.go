@@ -297,7 +297,7 @@ func (p *Planner) Plan(in Input) (*Plan, *PlanError) {
 		}
 		var gap []int
 		for ci := lo + 1; ci < hi; ci++ {
-			if ci >= 0 && ci < len(xs) && !matchedC[ci] && !m.ambiguousC[ci] {
+			if ci >= 0 && ci < len(xs) && !matchedC[ci] && !m.ambiguousC[ci] && !claimed[ci] {
 				gap = append(gap, ci)
 			}
 		}
@@ -427,7 +427,7 @@ func (b *builder) pair(c deviceexport.Cell, blk *storage.EffectBlock, rb *device
 	lockedSaid := false
 	written := map[int]bool{}
 	var tA, tB bool
-	haveBypass := false
+	haveBypass, bypassErr := false, false
 	for i := range blk.Parameters {
 		bp := blk.Parameters[i]
 		cl := pc.Classify(bp.Name)
@@ -440,6 +440,7 @@ func (b *builder) pair(c deviceexport.Cell, blk *storage.EffectBlock, rb *device
 				b.item(CodeBypassLegacy, ref, bp.Name)
 			case !aok || !bok:
 				b.item(CodeBypassWord, ref, bp.Name)
+				bypassErr = true // an unreadable word is no instruction: leave the unit's bypass alone
 			default:
 				tA, tB, haveBypass = a, bv, true
 			}
@@ -468,8 +469,8 @@ func (b *builder) pair(c deviceexport.Cell, blk *storage.EffectBlock, rb *device
 			if !lockedSaid {
 				lockedSaid = true
 				b.item(CodeLockedClone, ref, "(all controls)")
-				b.out.Untouched.LockedControls++
 			}
+			b.out.Untouched.LockedControls++
 			continue
 		}
 		b.control(c, ref, lp, bp, byIdx)
@@ -483,9 +484,12 @@ func (b *builder) pair(c deviceexport.Cell, blk *storage.EffectBlock, rb *device
 	// Bypass: A and B from the target (active when it has no Bypass entry), C-H from the snapshot.
 	cur := bypassOf(rb, c.Col)
 	if cur == nil {
-		if haveBypass {
+		if haveBypass || bypassErr {
 			b.item(CodeBypassUnreadable, ref, "Bypass")
 		}
+		return
+	}
+	if bypassErr {
 		return
 	}
 	if !haveBypass {

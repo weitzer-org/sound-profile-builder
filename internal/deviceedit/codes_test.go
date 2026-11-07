@@ -375,3 +375,60 @@ func TestLockedControlReasons(t *testing.T) {
 		}
 	}
 }
+
+// GSR #183: an unparseable Bypass word must not be read as "active".
+func TestUnparseableBypassWordChangesNothing(t *testing.T) {
+	e := newExporter(t)
+	f := loadFixture(t, "pushable_g3") // Spring is bypassed in Scene B on the unit
+	tgt := clone(draft(t, e, f))
+	setParam(blockNamed(tgt, "Spring"), "Bypass", "Maybe", "Maybe")
+	p := plan(t, e, f, tgt, true)
+	wantCode(t, p, CodeBypassWord)
+	if len(p.Payload.BypassOps) != 0 {
+		t.Fatalf("an unparseable word produced a bypass op: %+v", p.Payload.BypassOps)
+	}
+	// With the unit's bypass unreadable the same target still says so.
+	f2 := mutateS(t, f, func(m map[string]any) { m["bypass"] = nil })
+	wantCode(t, plan(t, e, f2, tgt, true), CodeBypassUnreadable)
+}
+
+// GSR #183: a gap cell a swap has claimed can't be claimed again.
+func TestClaimedGapCellIsNotReused(t *testing.T) {
+	e := newExporter(t)
+	f := loadFixture(t, "pushable_g3")
+	tgt := clone(draft(t, e, f))
+	tgt[0] = storage.EffectBlock{ID: "b1", Model: "Rage Booster", Type: "Overdrive"}
+	tgt = append([]storage.EffectBlock{tgt[0], {ID: "b9", Model: "Brit Blues", Type: "Overdrive"}}, tgt[1:]...)
+	c := codesOf(plan(t, e, f, tgt, true))
+	if c[CodeModelSwap] != 1 || c[CodeNewBlock] != 1 {
+		t.Fatalf("want one swap and one new block, got %v", c)
+	}
+}
+
+// GSR #183: every control a locked block's target tries to write is counted.
+func TestLockedControlsCountedPerControl(t *testing.T) {
+	e := newExporter(t)
+	cat, _ := catalog.Embedded()
+	for i := range cat.Models {
+		m := &cat.Models[i]
+		if !deviceexport.CloneLocked(m) || m.ID >= 14000 || e.ClassifyName(m.Name) != deviceexport.NameModel || len(cat.Resolve(m.Name)) != 1 {
+			continue
+		}
+		lps := catalog.LabelParams(m)
+		if len(lps) < 2 {
+			continue
+		}
+		tgt := []storage.EffectBlock{{ID: "b1", Model: m.Name, Type: "x", Parameters: []storage.BlockParameter{
+			{Name: lps[0].Label, Value: "1", Basis: "x"}, {Name: lps[1].Label, Value: "1", Basis: "x"}}}}
+		p, perr := New(e).Plan(Input{Snapshot: cellFixture(t, m, -1, nil).snapshot(), Target: tgt, Derived: true})
+		if perr != nil {
+			t.Fatal(perr)
+		}
+		c := codesOf(p)
+		if c[CodeLockedClone] != 1 || p.Untouched.LockedControls != 2 {
+			t.Fatalf("items %v, locked controls %d, want one item and 2", c, p.Untouched.LockedControls)
+		}
+		return
+	}
+	t.Fatal("no clone-locked model with two controls")
+}
