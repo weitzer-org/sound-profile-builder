@@ -25,11 +25,23 @@ func (b *Bridge) IssueEditToken(c EditClaims) (string, time.Time) {
 }
 
 // ConfirmEdit checks the token against the claims and queues the edit job. A repeated confirm names the
-// same job and returns it with existing = true. Only live is queued so far.
+// same job and returns it with existing = true. Live and copy are queued (E5a); overwrite is not available yet.
 func (b *Bridge) ConfirmEdit(ctx context.Context, r EditRequest, token string) (id string, existing bool, err error) {
 	now := b.now()
-	if r.Claims.Mode != EditModeLive {
-		return "", false, userErr("Only live edits can be applied so far; copy and overwrite are not available yet.")
+	var target, copyName *string
+	switch r.Claims.Mode {
+	case EditModeLive:
+	case EditModeCopy:
+		ts, ok := NormalizeSlot(r.Claims.TargetSlot)
+		if !ok || ts != r.Claims.TargetSlot || ts == r.Claims.Slot {
+			return "", false, userErr("A copy needs target_slot: an empty slot other than %s, like 21A.", r.Claims.Slot)
+		}
+		if !ValidCopyName(r.Claims.Name) {
+			return "", false, userErr("A copy needs a name of 1-32 characters: letters, digits, spaces and _ ( ) + , ! ' & # . - only (no leading dot, no '..').")
+		}
+		target, copyName = &r.Claims.TargetSlot, &r.Claims.Name
+	default:
+		return "", false, userErr("Only live and copy edits can be applied so far; overwrite is not available yet.")
 	}
 	if EditPlanSHA256(EditFormat, r.PlanText) != r.Claims.PlanSHA256 {
 		return "", false, errors.New("the edit plan does not match its hash")
@@ -58,6 +70,9 @@ func (b *Bridge) ConfirmEdit(ctx context.Context, r EditRequest, token string) (
 	if !SlotAllowed(r.Claims.Slot, hv.Heartbeat.AllowedSlots) {
 		return "", false, userErr("Not queued: slot %s is outside the slots the bridge may write. Pick a slot in its allowed range (see device_status).", r.Claims.Slot)
 	}
+	if target != nil && !SlotAllowed(*target, hv.Heartbeat.AllowedSlots) {
+		return "", false, userErr("Not queued: slot %s is outside the slots the bridge may write. Pick a target slot in its allowed range (see device_status).", *target)
+	}
 	if err := b.checkQueue(ctx, ""); err != nil {
 		return "", false, err
 	}
@@ -69,14 +84,21 @@ func (b *Bridge) ConfirmEdit(ctx context.Context, r EditRequest, token string) (
 		if j.Kind != KindEditPreset {
 			continue
 		}
-		var a struct { // only the slot: the plan text (up to 256 KiB) is not decoded for every pending job
-			Slot string `json:"slot"`
+		var a struct { // only the slots: the plan text (up to 256 KiB) is not decoded for every pending job
+			Slot       string  `json:"slot"`
+			TargetSlot *string `json:"target_slot"`
 		}
-		if json.Unmarshal(j.Args, &a) == nil && a.Slot == r.Claims.Slot {
+		if json.Unmarshal(j.Args, &a) != nil {
+			continue
+		}
+		if a.Slot == r.Claims.Slot {
 			return "", false, userErr("Not queued: an edit of slot %s is already waiting (job %s). Wait for it with get_device_job.", r.Claims.Slot, j.JobID)
 		}
+		if target != nil && a.TargetSlot != nil && *a.TargetSlot == *target {
+			return "", false, userErr("Not queued: a copy into slot %s is already waiting (job %s). Wait for it with get_device_job.", *target, j.JobID)
+		}
 	}
-	args, err := NewEditArgs(r.Claims.Slot, r.Claims.Mode, nil, nil, r.Source, r.PlanText)
+	args, err := NewEditArgs(r.Claims.Slot, r.Claims.Mode, target, copyName, r.Source, r.PlanText)
 	if err != nil {
 		return "", false, err
 	}

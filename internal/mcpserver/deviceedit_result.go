@@ -26,6 +26,10 @@ type deviceEditResultOut struct {
 	CheckedAgainst  bool           `json:"checked_against_plan"`
 	Applied         bool           `json:"applied"`
 	Saved           bool           `json:"saved"`
+	Verified        bool           `json:"verified_on_open_preset"` // every control read back, nothing else changed, no rollback
+	CopySlot        string         `json:"copy_slot,omitempty"`
+	CopyName        string         `json:"copy_name,omitempty"`
+	CopyListed      bool           `json:"copy_listed,omitempty"`
 	CAS             string         `json:"compare_and_swap"`
 	CASFailed       []string       `json:"compare_and_swap_failed,omitempty"`
 	Ops             []deviceEditOp `json:"ops,omitempty"`
@@ -62,7 +66,7 @@ func editResultOutput(ctx context.Context, lib *DeviceLibrary, v *devicejobs.Job
 		r, err := lib.Store.ReadEditPlan(ctx, v.JobID)
 		if err == nil && r != nil && r.PlanSHA256 == res.PlanSHA256 {
 			if p, perr := devicejobs.ParseEditPayload([]byte(r.Plan)); perr == nil && p.Snapshot == res.Snapshot && r.Mode == res.Mode {
-				rec = &planRecord{p}
+				rec = &planRecord{p: p, target: r.TargetSlot, name: r.Name}
 			}
 		}
 	}
@@ -112,22 +116,48 @@ func editResultOutput(ctx context.Context, lib *DeviceLibrary, v *devicejobs.Job
 		out.Note = "The bridge's result does not fit the plan QC-2 sent (other cells or controls than planned), so it is not trusted. Read the preset on the unit."
 		return out
 	}
+	// A save block must be the copy QC-2 queued, in the slot and under the name it asked for; a live edit has none.
+	if res.Mode == devicejobs.EditModeCopy {
+		if res.Save.Saved && (res.Save.Slot == nil || res.Save.Name == nil || *res.Save.Slot != rec.target || *res.Save.Name != rec.name) {
+			out.CheckedAgainst = false
+			out.Ops = nil
+			out.Note = "The bridge's result says it saved somewhere other than the copy QC-2 asked for, so it is not trusted. Check the unit before doing anything else."
+			return out
+		}
+		if res.Save.Saved {
+			out.CopySlot, out.CopyName, out.CopyListed = rec.target, rec.name, res.Save.Listed
+		}
+	}
 	allOK := res.CAS.State == "matched" && len(out.Ops) > 0
 	for _, o := range out.Ops {
 		allOK = allOK && o.OK
 	}
-	out.Applied = allOK && out.CollateralOK != nil && *out.CollateralOK && res.Rollback.State == "not_needed" &&
-		v.Result.Status == devicejobs.StatusSucceeded && !res.Save.Saved
+	out.Verified = allOK && out.CollateralOK != nil && *out.CollateralOK && res.Rollback.State == "not_needed"
+	switch res.Mode {
+	case devicejobs.EditModeCopy:
+		out.Applied = out.Verified && v.Result.Status == devicejobs.StatusSucceeded && res.Save.Saved && res.Save.Listed
+	default:
+		out.Applied = out.Verified && v.Result.Status == devicejobs.StatusSucceeded && !res.Save.Saved
+	}
 	return out
 }
 
-type planRecord struct{ p *devicejobs.EditPayload }
+type planRecord struct {
+	p            *devicejobs.EditPayload
+	target, name string // a copy's target slot and name, as QC-2 queued them
+}
 
 func renderEditResult(b *strings.Builder, e *deviceEditResultOut) {
 	if e == nil {
 		return
 	}
 	switch {
+	case e.Applied && e.Mode == devicejobs.EditModeCopy:
+		fmt.Fprintf(b, "\n**Edit saved as a copy: slot %s, \"%s\".** Every control read back as planned before the save, nothing else changed, and the bridge saw the copy in a fresh listing. The original slot was never written by the bridge, but the preset still open on the unit holds the edit unsaved: the user re-selects it WITHOUT saving. Saving a copy at a slot other than the open one is **not yet verified on the unit** (gate E-G3): ask the user to open the copy and check it, and which slot is open now.\n", e.CopySlot, dcell(e.CopyName))
+	case e.Mode == devicejobs.EditModeCopy && e.CheckedAgainst && e.Saved:
+		fmt.Fprintf(b, "\n**The copy save to slot %s was issued but not confirmed** (the bridge's listing never showed it, or something else was off). It may still land: the user should check slot %s and the original slot on the unit before using them. Do not say the copy exists.\n", e.CopySlot, e.CopySlot)
+	case e.Mode == devicejobs.EditModeCopy && e.CheckedAgainst && e.Verified:
+		b.WriteString("\n**The edit verified on the open preset, but the copy was NOT saved and the edit was NOT rolled back.** The open preset holds the edit unsaved: tell the user to re-select that slot on the unit WITHOUT saving to discard it. Nothing new exists in any other slot.\n")
 	case e.Applied:
 		b.WriteString("\n**Edit applied to the open preset on the unit, NOT saved.** Every control read back as planned and nothing else changed. The user listens, then saves on the unit, or re-selects the slot to discard the edit.\n")
 	case e.Rollback == "restored":

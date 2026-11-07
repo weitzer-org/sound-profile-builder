@@ -116,6 +116,26 @@ func ValidDeviceName(name string) bool {
 	return true
 }
 
+// ValidCopyName is the name rule the agent applies to a copy (qc_agent.export_validator.check_preset_name): letters,
+// digits, spaces and _ ( ) + , ! ' & # . - only, 1-32 characters, no leading or trailing space, no leading dot, no "..".
+// Stricter than ValidDeviceName, which is the contract's shape check; a name only this rule refuses would be queued
+// and then refused by the agent.
+func ValidCopyName(name string) bool {
+	if !ValidDeviceName(name) || strings.HasPrefix(name, ".") || strings.Contains(name, "..") {
+		return false
+	}
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		switch {
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9':
+		case strings.IndexByte(" _()+,!'&#.-", c) >= 0:
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 // ---- job ----
 
 // Job is the signed job payload (contract §7). Unknown fields are an error.

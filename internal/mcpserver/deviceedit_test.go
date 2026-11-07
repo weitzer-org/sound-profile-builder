@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/deviceedit"
@@ -164,14 +165,17 @@ func TestEditDevicePreset_BackfillsAnOldDraftsSnapshot(t *testing.T) {
 	}
 }
 
-// The copy name is model-supplied printable ASCII: it must not turn the dry run into a link.
+// The copy name is model-supplied text that lands in the dry run: the agent's own name rule keeps brackets and other
+// markup characters out, so it is refused at the tool.
 func TestEditDevicePreset_NameCannotFormMarkdown(t *testing.T) {
 	r, _ := editRig(t)
 	read := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceReadToolName, map[string]any{"wait_seconds": 5, "import": true}))
-	text := okText(t, itCall(t, r.cs, deviceEditToolName, map[string]any{
-		"preset_id": read.Import.PresetID, "mode": "copy", "name": "[x](http://e.co/a)", "target_slot": "20A"}))
-	if strings.Contains(text, "[x](http://e.co/a)") && !strings.Contains(text, `\[x]`) {
-		t.Fatalf("name rendered as a live link:\n%s", text)
+	for _, name := range []string{"[x](http://e.co/a)", "*bold*", "`code`", "<b>x</b>", "a|b"} {
+		msg := errText(t, itCall(t, r.cs, deviceEditToolName, map[string]any{
+			"preset_id": read.Import.PresetID, "mode": "copy", "name": name, "target_slot": "20A"}))
+		if !strings.Contains(msg, "name must be") {
+			t.Errorf("name %q was not refused: %q", name, msg)
+		}
 	}
 }
 
@@ -257,7 +261,13 @@ func TestRenderEdit_NotConfirmableNotes(t *testing.T) {
 // removed (a bypass).
 func pinnedEdit(t *testing.T) (*deviceRig, *devicejobstest.MemClient, deviceEditOutput, string) {
 	t.Helper()
-	r, _, main := editRigMain(t)
+	r, _, main, out, id := pinnedEditStore(t)
+	return r, main, out, id
+}
+
+func pinnedEditStore(t *testing.T) (*deviceRig, *devicelib.Store, *devicejobstest.MemClient, deviceEditOutput, string) {
+	t.Helper()
+	r, st, main := editRigMain(t)
 	ctx := context.Background()
 	r.agent.AllowedSlots = []string{"1A-32H"}
 	r.online(t)
@@ -280,7 +290,17 @@ func pinnedEdit(t *testing.T) (*deviceRig, *devicejobstest.MemClient, deviceEdit
 		t.Fatal(err)
 	}
 	res := itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": "device-edited", "mode": "live"})
-	return r, main, itStructured[deviceEditOutput](t, res), read.JobID
+	return r, st, main, itStructured[deviceEditOutput](t, res), read.JobID
+}
+
+const copyName, copySlot = "Texas Blues Edit", "21A"
+
+func copyArgs(extra map[string]any) map[string]any {
+	a := map[string]any{"preset_id": "device-edited", "mode": "copy", "name": copyName, "target_slot": copySlot}
+	for k, v := range extra {
+		a[k] = v
+	}
+	return a
 }
 
 func confirmArgs(tok string) map[string]any {
@@ -375,10 +395,16 @@ func TestEditDevicePreset_ConfirmRefusals(t *testing.T) {
 func TestEditApplicable_RefusesACaptureBlocksControls(t *testing.T) {
 	plan := &deviceedit.Plan{Pinned: true, Confirmable: true}
 	plan.Payload.ParamOps = []devicejobs.EditParamOp{{ModelID: 14001, Index: 0}}
-	if ok, why := editApplicable(context.Background(), nil, nil, plan, "live"); ok || !strings.Contains(why, "Neural Capture") {
+	if ok, why := editApplicable(context.Background(), nil, nil, plan, "live", "", ""); ok || !strings.Contains(why, "Neural Capture") {
 		t.Fatalf("%v %q", ok, why)
 	}
-	if ok, why := editApplicable(context.Background(), nil, nil, plan, "copy"); ok || !strings.Contains(why, "live") {
+	if ok, why := editApplicable(context.Background(), nil, nil, plan, "copy", "21A", "Copy"); ok || !strings.Contains(why, "Neural Capture") {
+		t.Fatalf("%v %q", ok, why)
+	}
+	if ok, why := editApplicable(context.Background(), nil, nil, plan, "copy", "", "Copy"); ok || !strings.Contains(why, "target_slot") {
+		t.Fatalf("%v %q", ok, why)
+	}
+	if ok, why := editApplicable(context.Background(), nil, nil, plan, "overwrite", "", ""); ok || !strings.Contains(why, "overwrite") {
 		t.Fatalf("%v %q", ok, why)
 	}
 }
@@ -468,4 +494,158 @@ func otherDigit(c byte) string {
 		return "1"
 	}
 	return "0"
+}
+
+// ---- E5a: copy mode ----
+
+func TestEditDevicePreset_CopyDryRunIssuesATokenAndConfirmQueuesTheCopy(t *testing.T) {
+	r, st, _, _, _ := pinnedEditStore(t)
+	res := itCall(t, r.cs, deviceEditToolName, copyArgs(nil))
+	out := itStructured[deviceEditOutput](t, res)
+	text := okText(t, res)
+	if !out.CanApply || !strings.HasPrefix(out.ConfirmToken, "e1.") || !strings.Contains(out.TargetNote, "no slot listing") {
+		t.Fatalf("dry run %+v", out)
+	}
+	for _, want := range []string{"copy edit", "21A", "never written", "not been verified"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("dry run text lacks %q:\n%s", want, text)
+		}
+	}
+	q := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"dry_run": false, "confirm_token": out.ConfirmToken})))
+	if q.Mode != "queued" || q.Existing {
+		t.Fatalf("confirm %+v", q)
+	}
+	r.runAgent(t)
+	itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": q.JobID, "wait_seconds": 10}) // until the agent has answered
+	var args string
+	for _, j := range r.agent.ExecutedJobs() {
+		if j.Kind == devicejobs.KindEditPreset {
+			args = string(j.Args)
+		}
+	}
+	if !strings.Contains(args, `"mode":"copy"`) || !strings.Contains(args, `"target_slot":"21A"`) || !strings.Contains(args, `"name":"`+copyName+`"`) {
+		t.Fatalf("job args %.200s", args)
+	}
+	rec, err := st.ReadEditPlan(context.Background(), q.JobID)
+	if err != nil || rec == nil || rec.Mode != "copy" || rec.TargetSlot != "21A" || rec.Name != copyName {
+		t.Fatalf("stored plan record %+v %v", rec, err)
+	}
+}
+
+func TestEditDevicePreset_CopyNeedsATargetAndAName(t *testing.T) {
+	r, _, _, _ := pinnedEdit(t)
+	for name, args := range map[string]map[string]any{
+		"no name":       {"preset_id": "device-edited", "mode": "copy", "target_slot": copySlot},
+		"no target":     {"preset_id": "device-edited", "mode": "copy", "name": copyName},
+		"the open slot": {"preset_id": "device-edited", "mode": "copy", "name": copyName, "target_slot": "4A"},
+	} {
+		out := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, args))
+		if out.CanApply || out.ConfirmToken != "" {
+			t.Errorf("%s: %+v", name, out)
+		}
+	}
+	// a name the agent's rule refuses is an error at the tool, not a queued job the agent would refuse
+	if msg := errText(t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"name": "a/b"}))); !strings.Contains(msg, "name must be") {
+		t.Errorf("name a/b: %q", msg)
+	}
+	// a copy token is not a live token, and a changed name or target does not confirm
+	out := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(nil)))
+	for name, extra := range map[string]map[string]any{
+		"another name":   {"name": "Other"},
+		"another target": {"target_slot": "22A"},
+		"live":           {"mode": "live"},
+		"overwrite":      {"mode": "overwrite"},
+	} {
+		extra["dry_run"], extra["confirm_token"] = false, out.ConfirmToken
+		if msg := errText(t, itCall(t, r.cs, deviceEditToolName, copyArgs(extra))); msg == "" {
+			t.Errorf("%s: no error", name)
+		}
+	}
+}
+
+func TestEditDevicePreset_CopyDryRunWarnsWhenTheLastListingShowedTheTargetOccupied(t *testing.T) {
+	r, st, _, _, _ := pinnedEditStore(t)
+	now := devicejobs.FormatTime(time.Now())
+	if err := st.SaveSlots(context.Background(), &devicelib.SlotListing{Format: devicelib.SlotsFormat, ListedAt: now, JobID: "j", Occupied: []string{"21A"}}); err != nil {
+		t.Fatal(err)
+	}
+	res := itCall(t, r.cs, deviceEditToolName, copyArgs(nil))
+	out := itStructured[deviceEditOutput](t, res)
+	if !out.CanApply || !strings.Contains(out.TargetNote, "occupied") || !strings.Contains(okText(t, res), "Warning:") {
+		t.Fatalf("a stale-able listing only warns; the bridge decides: %+v", out)
+	}
+	if out2 := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"target_slot": "22A"}))); out2.TargetNote != "" {
+		t.Fatalf("22A was free: %q", out2.TargetNote)
+	}
+}
+
+// What get_device_job says about a copy result: applied only when the save is the copy QC-2 queued and was listed.
+func TestEditDevicePreset_CopyResultRendering(t *testing.T) {
+	slot, name, other := copySlot, copyName, "30A"
+	for _, c := range []struct {
+		name    string
+		mutate  func(res *devicejobs.EditResult, r *devicejobs.Result)
+		applied bool
+		want    []string
+	}{
+		{"saved and listed", func(*devicejobs.EditResult, *devicejobs.Result) {}, true,
+			[]string{"Edit saved as a copy", "21A", "never written by the bridge", "not yet verified"}},
+		{"saved, never listed", func(er *devicejobs.EditResult, r *devicejobs.Result) {
+			er.Save.Listed = false
+			r.Status, r.ReasonCode = devicejobs.StatusFailed, "device_error"
+		}, false, []string{"issued but not confirmed", "Do not say the copy exists"}},
+		{"verified, not saved", func(er *devicejobs.EditResult, r *devicejobs.Result) {
+			er.Save = devicejobs.EditSave{}
+			r.Status, r.ReasonCode = devicejobs.StatusFailed, "slot_not_empty"
+		}, false, []string{"copy was NOT saved", "NOT rolled back"}},
+		{"saved somewhere else", func(er *devicejobs.EditResult, r *devicejobs.Result) { er.Save.Slot = &other }, false,
+			[]string{"somewhere other than the copy QC-2 asked for"}},
+		{"saved under another name", func(er *devicejobs.EditResult, r *devicejobs.Result) { n := "Other"; er.Save.Name = &n }, false,
+			[]string{"somewhere other than the copy"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r, _, _, _, _ := pinnedEditStore(t)
+			out := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(nil)))
+			r.agent.EditResult = func(j *devicejobs.Job, res *devicejobs.Result) {
+				args, err := devicejobs.ParseEditArgs(j.Args)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				er := devicejobs.EditResult{PlanSHA256: out.PlanSHA256, Snapshot: args.Snapshot, Mode: "copy",
+					CAS: devicejobs.EditCAS{State: "matched", Failed: []string{}}, Params: []devicejobs.EditParamRead{}, Bypass: []devicejobs.EditBypassRead{},
+					Collateral: &devicejobs.EditCollateral{ParamsCompared: 10, BypassCompared: 200, LayoutSame: true, Items: []devicejobs.EditCollateralItem{}},
+					Rollback:   devicejobs.EditRollback{State: "not_needed"},
+					Save:       devicejobs.EditSave{Saved: true, Slot: &slot, Name: &name, Listed: true}}
+				for _, op := range args.ParamOps {
+					rb := make([]*float64, 8)
+					for i := range rb {
+						v := op.Wire[i]
+						rb[i] = &v
+					}
+					er.Params = append(er.Params, devicejobs.EditParamRead{Row: op.Row, Col: op.Col, Index: op.Index, Readback: rb, OK: true})
+				}
+				for _, op := range args.BypassOps {
+					fl := op.Bypass[:]
+					er.Bypass = append(er.Bypass, devicejobs.EditBypassRead{Row: op.Row, Col: op.Col, Readback: &fl, OK: true})
+				}
+				res.Status, res.ReasonCode = devicejobs.StatusSucceeded, ""
+				c.mutate(&er, res)
+				payload, _ := json.Marshal(er)
+				res.Edit = &devicejobs.EditBlock{Format: devicejobs.EditResultFormat, Payload: payload}
+			}
+			q := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"dry_run": false, "confirm_token": out.ConfirmToken})))
+			r.runAgent(t)
+			res := itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": q.JobID, "wait_seconds": 10})
+			text, job := okText(t, res), itStructured[deviceJobOutput](t, res)
+			if job.Edit == nil || job.Edit.Applied != c.applied {
+				t.Fatalf("applied=%v want %v\n%+v\n%s", job.Edit != nil && job.Edit.Applied, c.applied, job.Edit, text)
+			}
+			for _, w := range c.want {
+				if !strings.Contains(text, w) {
+					t.Errorf("text lacks %q:\n%s", w, text)
+				}
+			}
+		})
+	}
 }
