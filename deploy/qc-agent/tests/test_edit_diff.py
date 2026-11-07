@@ -87,6 +87,15 @@ class Collateral(unittest.TestCase):
                 self.assertIsNone(c["items"][0]["index"])
                 self.assertIsNone(c["items"][0]["scene"])
 
+    def test_a_cell_without_a_model_id_that_disappears_is_a_layout_change_not_a_crash(self):
+        # GSR #185: a pre-write block with no model_id and a post-write cell that is gone used to raise AttributeError
+        # (None == None skipped the layout branch), aborting the job before any rollback.
+        pre = {"chains": [{"row": 0, "blocks": [{"col": 0, "params": []}]}], "bypass": None}
+        post = {"chains": [{"row": 0, "blocks": []}], "bypass": None}
+        c = edit_diff.collateral(pre, post, base_plan())
+        self.assertFalse(c["layout_same"])
+        self.assertEqual(c["items"][0], {"row": 0, "col": 0, "index": None, "scene": None})
+
     def test_a_missing_param_slot(self):
         del self.post["chains"][1]["blocks"][0]["params"][4]
         c = self.check()

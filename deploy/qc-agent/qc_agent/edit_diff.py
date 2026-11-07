@@ -93,7 +93,7 @@ def collateral(pre: dict, post: dict, plan: dict) -> dict:
     for row in range(ROWS):
         for col in range(COLS):
             ba, bb = a.get((row, col)), b.get((row, col))
-            if (ba or {}).get("model_id") != (bb or {}).get("model_id"):
+            if (ba is None) != (bb is None) or (ba or {}).get("model_id") != (bb or {}).get("model_id"):
                 layout_same = False
                 note(row, col, None, None)
             elif ba is not None:
