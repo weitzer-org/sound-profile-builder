@@ -568,7 +568,7 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 4. **Job expiry** (proposed 15 minutes), **idle exit** (proposed 30 minutes) and **polling interval while running** (proposed 3–5 s), settled after G5.
 6. ~~Start mode~~ **Decided:** desktop shortcut only. No automatic start.
 5. ~~Read-back import~~ **Decided by the P5 brief (owner, 2026-11-06): only when asked.** Reading never stores anything; `read_device_preset(import=true)` (or `get_device_job(import=true)`) stores a draft.
-7. **Editing existing presets: deferred, a future to-do (owner, 2026-11-05).** v1 never overwrites a slot it didn't create. When this is picked up, the proposed guardrails are:
+7. **Editing existing presets: deferred, a future to-do (owner, 2026-11-05).** **Picked up 2026-11-07: design and phasing in `docs/design/qc-preset-editing.md`** (diff-and-patch against a fresh read, not a re-push; save modes live/copy/overwrite). v1 never overwrites a slot it didn't create. When this is picked up, the proposed guardrails are:
    - an automatic read-back backup of the old preset as a QC-2 draft before any overwrite;
    - a dry run that names the preset being replaced, with a confirm token bound to that slot **and** that preset name, so the push is refused if the slot changed in between;
    - an optional list of protected banks the bridge never touches.
