@@ -271,8 +271,8 @@ func ParseEditPayload(text []byte) (*EditPayload, error) {
 	if !utf8.Valid(text) {
 		return nil, errors.New("plan: not valid UTF-8")
 	}
-	if err := checkStrictJSON(text); err != nil {
-		return nil, fmt.Errorf("plan: %v", err)
+	if checkStrictJSON(text) != nil { // its error can quote a key or a number: keep it out
+		return nil, errors.New("plan: not strict JSON (section 5: one value, no duplicate keys, finite numbers, depth 32)")
 	}
 	if hasLoneSurrogate(text) {
 		return nil, errors.New("plan: unpaired surrogate escape")

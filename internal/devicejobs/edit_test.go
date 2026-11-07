@@ -93,6 +93,11 @@ func TestEditPayloadFromGoTypes(t *testing.T) {
 	if _, err := devicejobs.ParseEditPayload([]byte(hostile)); err == nil || strings.Contains(err.Error(), "EVIL") {
 		t.Fatalf("hostile evidence: %v", err)
 	}
+	for _, bad := range []string{`{"EVILKEY":1,"EVILKEY":2}`, `{"a":1e999999}`, string(text) + ` "EVIL"`} {
+		if _, err := devicejobs.ParseEditPayload([]byte(bad)); err == nil || strings.Contains(err.Error(), "EVIL") || strings.Contains(err.Error(), "999") {
+			t.Errorf("strict-JSON error quotes the plan: %v", err)
+		}
+	}
 }
 
 // A job signed under one tag never opens as the other version.
