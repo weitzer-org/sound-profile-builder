@@ -756,6 +756,85 @@
    },
    "snapshot": "11111111-2222-4333-8444-555555555555"
   },
+  "Apply.test_ops_left_wrong_count_as_failed_so_the_result_fits_its_state": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 1,
+    "restored": 2,
+    "state": "partial"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
   "Apply.test_scene_a_is_left_alone": {
    "bypass": [
     {

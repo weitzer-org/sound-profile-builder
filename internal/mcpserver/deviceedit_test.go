@@ -306,6 +306,7 @@ func TestEditDevicePreset_LiveDryRunIssuesATokenAndConfirmQueuesOnce(t *testing.
 		t.Fatalf("repeat %+v", again)
 	}
 	r.runAgent(t)
+	itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": q.JobID, "wait_seconds": 10}) // until the agent has answered
 	var edits []*devicejobs.Job
 	for _, j := range r.agent.ExecutedJobs() {
 		if j.Kind == devicejobs.KindEditPreset {
@@ -444,5 +445,19 @@ func TestEditDevicePreset_ResultIsCheckedAgainstTheSentPlan(t *testing.T) {
 				t.Fatalf("applied=%v want %v (%q)\n%+v\n%s", job.Edit != nil && job.Edit.Applied, c.applied, c.want, job.Edit, text)
 			}
 		})
+	}
+}
+
+// A live confirm ignores a stray name/target_slot (they are only a copy's), so they can neither be bound nor smuggled.
+func TestEditDevicePreset_LiveTokenIgnoresCopyOnlyArguments(t *testing.T) {
+	r, _, out, _ := pinnedEdit(t)
+	res := itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": "device-edited", "mode": "live", "name": "Whatever", "target_slot": "21A"})
+	with := itStructured[deviceEditOutput](t, res)
+	if with.PlanSHA256 != out.PlanSHA256 || !with.CanApply {
+		t.Fatalf("%+v", with)
+	}
+	q := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, confirmArgs(with.ConfirmToken)))
+	if q.Mode != "queued" {
+		t.Fatalf("a token minted with stray copy arguments must confirm without them: %+v", q)
 	}
 }

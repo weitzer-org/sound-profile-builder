@@ -754,11 +754,15 @@ class EditGuard(Base):
         self.arm()
         self.refused(self.qc.set_param, 0, 1, 1, 0.0)           # BOOST's old value, but apply phase: the new one is 1.0
         self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
         self.refused(self.qc.set_param, 0, 1, 1, 0.0)           # old value, but its write was never started
         self.dev.end_push()
         self.arm()
         self.qc.set_param(0, 1, 1, 1.0)                         # started
         self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
         self.refused(self.qc.set_param, 0, 1, 1, 1.0)           # the new value is not allowed any more
         self.qc.set_param(0, 1, 1, 0.0)                         # the old one is
         self.refused(self.qc.set_param_scenes, 0, 0, 0, list(GAIN_EXPECT))  # GAIN was never started
@@ -768,6 +772,8 @@ class EditGuard(Base):
         self.qc.set_param_scenes(0, 0, 0, self.GAIN_WIRE)
         self.qc.set_block_bypass(0, 1, scenes=[False, True] + [False] * 6, bypass_param=7)
         self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
         self.qc.set_param_scenes(0, 0, 0, list(GAIN_EXPECT))
         self.qc.set_block_bypass(0, 1, scenes=[False] * 8, bypass_param=7)
         self.assertEqual(self.hid.grid[0]["params"][0], list(GAIN_EXPECT))
@@ -786,6 +792,22 @@ class EditGuard(Base):
         self.dev.begin_push(152, "x", validate(export(), catalog(), "4.1.0"))
         with self.assertRaisesRegex(WireRefused, "on its own, once"):
             self.dev.begin_edit(self.plan, self.checked)
+
+    def test_a_push_or_save_cannot_be_armed_over_an_edit(self):
+        self.arm()
+        with self.assertRaisesRegex(WireRefused, "while an edit is armed"):
+            self.dev._guard.arm_push(validate(export(), catalog(), "4.1.0"))
+        with self.assertRaisesRegex(WireRefused, "while an edit is armed"):
+            self.dev._guard.arm_save(fake_hid.SETLIST, 152, "x")
+        self.refused(self.qc.write_preset_file, fake_hid.SETLIST, 152, "x")
+
+    def test_rollback_makes_each_column_be_confirmed_again(self):
+        self.arm()
+        self.qc.set_param(0, 1, 1, 1.0)
+        self.dev.enter_rollback()
+        self.refused(self.qc.set_param, 0, 1, 1, 0.0)    # the apply step's confirmation is gone
+        self.dev.confirm_layout(1, 7)
+        self.qc.set_param(0, 1, 1, 0.0)
 
     def test_a_push_arms_nothing_of_an_edit(self):
         self.dev.begin_push(152, "x", validate(export(), catalog(), "4.1.0"))

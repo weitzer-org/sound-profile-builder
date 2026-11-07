@@ -547,6 +547,31 @@ class Apply(EditBase):
         self.assertEqual(self.writes(), [])
         self.assertEqual(r["edit"]["payload"]["rollback"]["state"], "not_needed")
 
+    def test_ops_left_wrong_count_as_failed_so_the_result_fits_its_state(self):
+        # BOOST's write is lost (verify fails and rolls back), then the owner turns an op's control that the edit never
+        # reached: restored > 0, nothing failed to write, but a planned op is wrong afterwards -> partial with failed > 0
+        orig = self.dev.set_param
+
+        def lost(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        orig_b = self.dev.set_block_bypass
+
+        def knob(row, col, scenes, idx):
+            if ("enter_rollback",) in self.dev.calls:
+                orig_b(row, col, scenes, idx)
+                self.dev.grid[1]["bypass"] = [True] * 8   # the bypass op's control is touched during the rollback
+                return
+            orig_b(row, col, scenes, idx)
+        self.dev.set_block_bypass = knob
+        _, r = self.edit()
+        e = r["edit"]["payload"]
+        rb = e["rollback"]
+        self.assertEqual(r["reason_code"], "rollback_failed")
+        self.assertEqual(rb["state"], "partial")
+        self.assertTrue(rb["restored"] > 0 and rb["failed"] > 0, rb)
+
     def test_the_unit_vanishes_during_the_edit(self):
         self.dev.gone_after = 7
         _, r = self.edit()

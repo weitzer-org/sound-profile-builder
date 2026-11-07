@@ -1282,7 +1282,7 @@ class _Edit:
             if b is None or b.get("model_id") != mid or len(b.get("params") or []) != pc + 1:
                 bad_cols.add(col)
             else:
-                dev.confirm_layout(col, pc + 1)
+                dev.confirm_layout(col, len(b.get("params") or []))   # the measured count
         todo = []
         stop = False
         for st in steps:
@@ -1332,6 +1332,8 @@ class _Edit:
         for op in plan["bypass_ops"]:
             if ("bypass", op["col"], None) not in done:
                 residual += edit_checks.live_bypass(post2, 0, op["col"]) != list(op["expect"])
+        if residual and not failed:
+            failed = residual   # ops left wrong count as failed, so the counts fit the state (contract 9.3)
         return restored, failed, residual, post2
 
 

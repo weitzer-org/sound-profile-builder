@@ -230,7 +230,7 @@ func editDeviceTool(svc *presetsvc.Service, b *devicejobs.Bridge, lib *DeviceLib
 		}
 		claims := devicejobs.EditClaims{PresetID: in.PresetID, Guitar: guitar, Mode: mode, Slot: plan.Payload.Expect.Slot,
 			TargetSlot: slot, Name: name, DeviceName: plan.Payload.Expect.Name, Snapshot: snap.JobID, PlanSHA256: plan.SHA256}
-		if mode != "live" {
+		if mode != "copy" { // only a copy has a target slot and a name; they must not be bound (or ignored) for the others
 			claims.TargetSlot, claims.Name = "", ""
 		}
 		out.CanApply, out.ApplyNote = editApplicable(ctx, b, snap, plan, mode)

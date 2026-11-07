@@ -252,6 +252,8 @@ class WireGuard:
     # -- arming --
 
     def arm_push(self, plan):
+        if self._edit is not None:
+            raise WireRefused("a push can't be armed while an edit is armed")
         for b in plan.blocks:
             if b.model_id == 0 or (b.capture is not None and b.capture.file_name is None):
                 raise DeviceError(f"column {b.col}: a capture block is not resolved")
@@ -307,6 +309,7 @@ class WireGuard:
         if self._edit is None:
             raise WireRefused("no armed edit")
         self._edit["phase"] = "rollback"
+        self._edit["confirmed"].clear()   # the rollback re-confirms each column from the read taken after the writes
 
     def confirmed_bypass_index(self, col):
         """The bypass control index of `col` once a read confirmed its layout (push or edit), else None."""
@@ -343,7 +346,7 @@ class WireGuard:
         index 0-6 (H = 7 is the owner's switch), one switch per block. Once entered, the build is over:
         the guard passes no further value, bypass, routing or scene write for this push."""
         push = self._push
-        if push is None or self._stomps is not None or self._save is not None:
+        if push is None or self._edit is not None or self._stomps is not None or self._save is not None:
             raise WireRefused("stomps can only be armed once, during a push, before the save")
         armed = {}
         for row, col, index in stomps:
@@ -360,6 +363,8 @@ class WireGuard:
         return self._stomps is not None and self._stomps.get((row, col)) == index
 
     def arm_save(self, folder_key, position, name):
+        if self._edit is not None:
+            raise WireRefused("a save can't be armed while an edit is armed")
         self._save = (folder_key, position, name)
 
     def disarm(self):
