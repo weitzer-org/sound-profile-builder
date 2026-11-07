@@ -100,13 +100,20 @@ class Opt_in(EditBase):
         jid, r = self.run_edit()
         self.refused_before_unit(r, "edit_not_enabled")
 
-    def test_copy_and_overwrite_are_not_honoured_even_when_listed(self):
+    def test_overwrite_is_not_honoured_even_when_listed(self):
         self.set_modes("live,copy,overwrite")
-        _, r = self.run_edit(mode="copy", target_slot="21A", name="Copy")
-        self.refused_before_unit(r, "unsupported_arg")
-        self.dev.calls.clear()
         _, r = self.run_edit(mode="overwrite")
         self.refused_before_unit(r, "unsupported_arg")
+
+    def test_copy_must_be_listed_too(self):
+        self.set_modes("live")
+        _, r = self.run_edit(mode="copy", target_slot="21A", name="Copy")
+        self.refused_before_unit(r, "edit_not_enabled")
+        self.assertIn("copy", r["message"].lower())
+        self.set_modes("copy")   # and listing copy alone does not switch live on
+        self.dev.calls.clear()
+        _, r = self.run_edit()
+        self.refused_before_unit(r, "edit_not_enabled")
 
     def test_slot_outside_the_allowed_range(self):
         self.set_modes("live", QC_AGENT_ALLOWED_SLOTS="1A-8H")
@@ -118,6 +125,132 @@ class Opt_in(EditBase):
         _, r = self.run_edit()
         self.refused_before_unit(r, "slot_not_allowed")
         self.assertIn("protected", r["message"])
+
+
+class CopyPreChecks(EditBase):
+    """Copy mode (E5a), commit 1: every refusal happens before the first write and before any save. The save itself
+    is wired in a later commit; until then a copy that passes every check stops with "cannot be saved yet"."""
+    EDIT_MODES = "live,copy"
+    TARGET = "21A"          # position 160
+    NAME = "Texas Blues Edit"
+
+    def copy(self, plan=None, **kw):
+        kw.setdefault("target_slot", self.TARGET)
+        kw.setdefault("name", self.NAME)
+        return self.run_edit(plan, mode="copy", **kw)
+
+    def assertNoWrites(self, r):
+        self.assertEqual(self.dev.write_calls(), [])
+        self.assertNotIn("begin_edit", [c[0] for c in self.dev.calls])
+        self.assertEqual(self.agent.edits.started, {})
+
+    def passes_the_checks(self, r):
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"), r["message"])
+        self.assertIn("cannot be saved yet", r["message"])
+        self.assertNoWrites(r)
+        self.assertEqual(r["edit"]["payload"]["cas"], {"state": "matched", "failed": []})
+
+    def refused_on_unit(self, r, code, needle):
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", code), r["message"])
+        self.assertIn(needle, r["message"])
+        self.assertNoWrites(r)
+        self.assertEqual(r["edit"]["payload"]["save"],
+                         {"saved": False, "slot": None, "name": None, "listed": False, "backup": None})
+
+    # -- before the unit is opened --
+
+    def test_an_empty_target_passes_every_check(self):
+        _, r = self.copy()
+        self.passes_the_checks(r)
+        self.assertEqual(r["edit"]["payload"]["mode"], "copy")
+
+    def test_target_outside_the_allowed_slots(self):
+        self.set_modes("live,copy", QC_AGENT_ALLOWED_SLOTS="1A-8H,20A")
+        _, r = self.copy()
+        self.refused_before_unit(r, "slot_not_allowed")
+        self.assertIn("Target slot 21A", r["message"])
+
+    def test_target_in_a_protected_range(self):
+        self.set_modes("live,copy", QC_AGENT_PROTECTED_SLOTS="21A-21H")
+        _, r = self.copy()
+        self.refused_before_unit(r, "slot_not_allowed")
+        self.assertIn("Target slot 21A is protected", r["message"])
+
+    def test_the_open_slot_being_protected_also_stops_a_copy(self):
+        self.set_modes("live,copy", QC_AGENT_PROTECTED_SLOTS="20A")
+        _, r = self.copy()
+        self.refused_before_unit(r, "slot_not_allowed")
+        self.assertIn("Slot 20A is protected", r["message"])
+
+    def test_names_the_unit_rule_refuses(self):
+        for bad in ("a/b", ".hidden", "a..b", "Copy:1"):
+            with self.subTest(bad):
+                self.dev.calls.clear()
+                _, r = self.copy(name=bad)
+                self.refused_before_unit(r, "validation")
+                self.assertIn("copy's name", r["message"])
+
+    def test_the_same_slot_as_the_original_is_refused_even_past_the_parser(self):
+        # contract.parse_job refuses this (no result is ever written), so call the check the way run() does
+        args = edit_args(base_plan(), mode="copy", target_slot="20A", name=self.NAME)
+        out = jobs.edit_precheck(self.agent.ctx, {"job_id": "x", "kind": "edit_preset", "args": args})
+        self.assertEqual((out.status, out.reason_code), ("refused", "validation"))
+        self.assertEqual(self.dev.calls, [])
+
+    # -- on the unit, still before any write --
+
+    def test_target_filled(self):
+        self.dev.slots[160] = "Somebody's preset"
+        _, r = self.copy()
+        self.refused_on_unit(r, "slot_not_empty", "Slot 21A")
+        self.assertIn("Somebody's preset", r["message"])
+
+    def test_target_name_is_only_spaces_counts_as_filled(self):
+        self.dev.slots[160] = "  "
+        _, r = self.copy()
+        self.refused_on_unit(r, "slot_not_empty", "Slot 21A")
+
+    def test_the_name_is_taken_by_another_slot(self):
+        self.dev.slots[200] = "texas blues edit "   # case and surrounding spaces ignored, as for a push
+        _, r = self.copy()
+        self.refused_on_unit(r, "validation", "already has a preset named")
+        self.assertIn("Slot 26A", r["message"])
+
+    def test_the_name_is_the_originals(self):
+        _, r = self.copy(name="Texas Blues")
+        self.refused_on_unit(r, "validation", "already has a preset named")
+        self.assertIn("Slot 20A", r["message"])
+
+    def test_the_other_collections_listing_decides_not_my_presets(self):
+        plan = base_plan()
+        plan["expect"]["folder_key"] = OTHER_KEY
+        self.dev.open_folder = OTHER_KEY
+        self.dev.collections = {OTHER_KEY: ("Sounds profiles", {152: "Texas Blues"})}
+        self.dev.slots[160] = "Occupied in My Presets only"
+        _, r = self.copy(plan)
+        self.passes_the_checks(r)
+        self.dev.calls.clear()
+        self.dev.collections[OTHER_KEY][1][160] = "Occupied here"
+        _, r = self.copy(plan)
+        self.refused_on_unit(r, "slot_not_empty", "Sounds profiles")
+
+    def test_the_cas_still_comes_first(self):
+        self.dev.open_position = 153
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "preset_changed"))
+        self.assertNoWrites(r)
+
+    def test_a_factory_preset_or_an_unlisted_collection_is_not_copied_from(self):
+        self.dev.is_factory = True
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"))
+        self.assertNotIn("cannot be saved yet", r["message"])
+        self.assertNoWrites(r)
+
+    def test_live_mode_has_no_target_to_check(self):
+        self.dev.slots[160] = "Occupied"
+        _, r = self.run_edit()
+        self.assertEqual(r["status"], "succeeded")
 
 
 class CatalogRefusals(EditBase):

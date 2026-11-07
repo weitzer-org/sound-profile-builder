@@ -983,6 +983,11 @@ class _Edit:
         self.sha = a["plan"]["sha256"]
         self.plan = _edit_job_plan(job)
         self.pos = slots.position(self.slot)
+        # copy (E5a): the empty slot and the name the edited grid is saved under (None in live mode). The contract
+        # parser guarantees both for copy, and neither for live and overwrite.
+        self.target_slot = a.get("target_slot") if self.mode == "copy" else None
+        self.copy_name = a.get("name") if self.mode == "copy" else None
+        self.target_pos = slots.position(self.target_slot) if self.target_slot else None
         self.checked = None
         self.fw = None
         self.cas = {"state": "not_reached", "failed": []}
@@ -1010,18 +1015,28 @@ class _Edit:
         if not cfg.edit_modes:
             return refused("edit_not_enabled", "Editing presets on the unit is switched off on this PC "
                            "(QC_AGENT_EDIT_MODES in agent.env is empty). Nothing was changed.")
-        if self.mode != "live":
-            return refused("unsupported_arg", f"This bridge only edits in live mode so far; {self.mode} is not "
+        if self.mode not in ("live", "copy"):
+            return refused("unsupported_arg", f"This bridge only edits in live or copy mode so far; {self.mode} is not "
                            "supported. Nothing was changed.")
-        if "live" not in cfg.edit_modes:
-            return refused("edit_not_enabled", "Live edits are not switched on on this PC "
-                           "(QC_AGENT_EDIT_MODES in agent.env does not list live). Nothing was changed.")
-        if not cfg.allowed_slots.contains(self.slot):
-            return refused("slot_not_allowed", f"Slot {self.slot} is outside the bridge's allowed slots "
-                           f"({', '.join(cfg.allowed_slots.labels())}).")
-        if cfg.protected_slots is not None and cfg.protected_slots.contains(self.slot):
-            return refused("slot_not_allowed", f"Slot {self.slot} is protected on this PC "
-                           "(QC_AGENT_PROTECTED_SLOTS): the bridge never edits it.")
+        if self.mode not in cfg.edit_modes:
+            return refused("edit_not_enabled", f"{self.mode.capitalize()} edits are not switched on on this PC "
+                           f"(QC_AGENT_EDIT_MODES in agent.env does not list {self.mode}). Nothing was changed.")
+        for label, slot in (("Slot", self.slot), ("Target slot", self.target_slot)):
+            if slot is None:
+                continue
+            if not cfg.allowed_slots.contains(slot):
+                return refused("slot_not_allowed", f"{label} {slot} is outside the bridge's allowed slots "
+                               f"({', '.join(cfg.allowed_slots.labels())}).")
+            if cfg.protected_slots is not None and cfg.protected_slots.contains(slot):
+                return refused("slot_not_allowed", f"{label} {slot} is protected on this PC "
+                               "(QC_AGENT_PROTECTED_SLOTS): the bridge never writes it.")
+        if self.mode == "copy":
+            if self.target_slot == self.slot:   # the contract parser refuses this too; a copy never writes the original's slot
+                return refused("validation", "A copy needs a different slot than the preset it is made from.")
+            try:
+                check_preset_name(self.copy_name)
+            except ExportRefused as e:
+                return refused("validation", "The copy's name failed the bridge's own checks: " + text.clean(str(e), 400))
         try:
             self.checked = edit_checks.catalog_check(self.plan, self.ctx.catalog, cfg.expected_firmware)
         except edit_checks.EditRefused as e:
@@ -1042,6 +1057,9 @@ class _Edit:
             out = self.check_unit()
             if out is not None:
                 return out
+            if self.mode == "copy":   # every pre-write check passed; the save itself is wired in the next commit
+                return self.refuse("unsupported_arg", "Copy edits pass the bridge's checks but cannot be saved yet. "
+                                   "Nothing was changed.")
             return self.apply()
         except (_Gone, UnitAbsent):
             return self.fail("unit_absent", "The Quad Cortex went away during the edit.", unit_gone=True)
@@ -1081,10 +1099,39 @@ class _Edit:
             log.error("edit refused, layout check: %s", problem)
             return self.refuse("validation", "The blocks on the unit don't match the bridge's catalog: "
                                + text.clean(problem, 200) + ". Nothing was changed.")
+        out = self.check_target(snap, key)
+        if out is not None:
+            return out
         if _expired(self.ctx, self.job):
             return Outcome("expired", "expired", "The request expired before the bridge got to it; "
                            "nothing was written.", firmware=self.fw, edit=self.edit_block())
         self.pre, self.folder_key = preset, key
+        return None
+
+    def check_target(self, snap, key) -> Outcome | None:
+        """Copy mode (E5a): the target slot must be EMPTY in a fresh listing of the OPEN collection, and no other slot
+        there may carry the copy's name (the original's slot included: if the unit stores presets by name, a save
+        could replace it). Run before the first write, and again just before the save. A refusal here writes nothing.
+        `key` is the open collection, already checked to be a complete 256-slot table (check_unit). Live mode has no
+        target."""
+        if self.target_pos is None:
+            return None
+        view = _folder_view(snap, key)
+        if view is None:
+            return self.refuse("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
+                               "listed as a complete 256-slot preset collection, so the bridge can't tell whether "
+                               f"{self.target_slot} is empty there. Nothing was changed.")
+        folder, tslot = _folder_label(snap, key), self.target_slot
+        if self.target_pos == self.pos or _occupied(view.my_presets, self.target_pos):
+            return self.refuse("slot_not_empty", f"Slot {tslot} in {folder!r} is not empty on the unit (it holds "
+                               f"{text.clean(str(view.my_presets.get(self.target_pos)), NAME_LIMIT)!r}). A copy only "
+                               "goes into an empty slot and the bridge never overwrites a preset; pick an empty slot. "
+                               "Nothing was changed.")
+        dup = _same_name(view.my_presets, self.target_pos, self.copy_name)
+        if dup is not None:
+            return self.refuse("validation", f"Slot {slots.label(dup)} in {folder!r} already has a preset named "
+                               f"{self.copy_name!r}. Pick a different name for the copy: if the unit stores presets by "
+                               "name, a save could replace it. Nothing was changed.")
         return None
 
     # -- the writes --
