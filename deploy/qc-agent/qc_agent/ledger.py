@@ -203,16 +203,18 @@ class EditLedger:
             else:
                 raise LedgerError(f"{path}: unknown event {e.get('event')!r}")
 
-    def start(self, job_id, slot, folder_key, name, layout_before, at) -> None:
+    def start(self, job_id, slot, folder_key, name, layout_before, at, **extra) -> None:
+        """`extra`: optional informational keys (copy mode: mode, target_slot). Readers ignore unknown keys."""
         e = {"event": "edit_started", "job_id": job_id, "slot": slot, "folder_key": folder_key, "name": name,
-             "layout_before": layout_before, "at": at}
+             "layout_before": layout_before, "at": at, **extra}
         _append(self.path, e, self._torn_tail)
         self._torn_tail = False
         self.started[job_id] = e
 
-    def finish(self, job_id, slot, name, layout_before, layout_after, status, at) -> None:
+    def finish(self, job_id, slot, name, layout_before, layout_after, status, at, **extra) -> None:
+        """`extra`: optional informational keys (copy mode: mode, target_slot, saved, listed)."""
         e = {"event": "edited", "job_id": job_id, "slot": slot, "name": name, "layout_before": layout_before,
-             "layout_after": layout_after, "status": status, "at": at}
+             "layout_after": layout_after, "status": status, "at": at, **extra}
         _append(self.path, e, self._torn_tail)
         self._torn_tail = False
         self.edited[job_id] = e

@@ -43,8 +43,12 @@ Three layers keep the transport to the operations the plan allows (section 5):
        blocks the plan names, and the planned bypass flags; no routing, add, delete, string, stomp, name
        or any other field; and Scene UPDATEs. Two phases: "apply" allows exactly the plan's new values
        and flags, and the one-way "rollback" phase exactly the values the plan expected (the old ones),
-       only for ops whose write was started. An armed edit allows no File CREATE: the save path stays
-       closed because nothing arms it.
+       only for ops whose write was started. An armed edit allows no File CREATE unless it was armed
+       WITH a save (copy mode only, E5a): then exactly one File CREATE in the armed collection, at the
+       armed position, with the armed name and no payload, and only after the agent has reported the
+       verify and the collateral check clean (open_edit_save) with every planned op written and no
+       rollback; once that save is open the guard passes no further value, bypass or scene write. A live
+       edit is armed without one, so its File CREATE is refused.
    Messages with unknown fields, compressed payloads, or empty model entries (the shape
    of a delete) are refused too. Everything else raises WireRefused before a byte reaches the unit, including any
    RecallPreset UPDATE (save_preset), SetlistPosition UPDATE (recall), Grid DELETE,
@@ -281,11 +285,24 @@ class WireGuard:
                       "flags": {b.col: set(b.bypass_scenes) for b in plan.blocks},
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
 
-    def arm_edit(self, plan, checked):
+    def arm_edit(self, plan, checked, save=None):
         """Arm an edit (E4): `plan` is the parsed edit plan, `checked` the CheckedPlan edit_checks made of it.
-        Nothing else is allowed for the session until disarm(): not with a push armed, not twice."""
+        Nothing else is allowed for the session until disarm(): not with a push armed, not twice.
+        `save` is None for a live edit. A copy (E5a) passes (folder_key, position, name): the one File CREATE it
+        may later send. It stays closed until open_edit_save()."""
         if self._push is not None or self._edit is not None or self._save is not None:
             raise WireRefused("an edit can only be armed on its own, once")
+        save_target = None
+        if save is not None:
+            folder_key, position, sname = save
+            if (not isinstance(folder_key, str) or not folder_key or type(position) is not int
+                    or not 0 <= position < 256 or not isinstance(sname, str) or not sname):
+                raise WireRefused("the edit's save target is malformed")
+            e = plan["expect"]
+            if position == e["position"] or folder_key != e["folder_key"]:
+                # a copy never saves over the preset it was made from, and only into the collection that is open
+                raise WireRefused("the edit's save must be a different slot of the plan's own collection")
+            save_target = {"folder_key": folder_key, "position": position, "name": sname, "state": "armed"}
         ops = {}
         for op in plan["param_ops"]:
             k = (op["col"], op["index"])
@@ -302,7 +319,32 @@ class WireGuard:
             byp[op["col"]] = {"index": c["index"], "flags": frozenset(bool(x) for x in op["bypass"]),
                               "expect": frozenset(bool(x) for x in op["expect"])}
         self._edit = {"params": ops, "bypass": byp, "cells": dict(checked.cells), "confirmed": {},
-                      "phase": "apply", "attempted": set()}
+                      "phase": "apply", "attempted": set(), "save": save_target,
+                      # what "every planned op was written" means, for open_edit_save
+                      "planned": {(c, i) for c, i in ops} | {(c, "bypass") for c in byp}}
+
+    def open_edit_save(self):
+        """The agent's verify and collateral check are clean: allow the ONE File CREATE this edit was armed with.
+        Refused when the edit has no save (live), after a rollback, when an op was never written (the verify can't
+        have passed), and when it was already opened. From here on the edit passes no more value, bypass or scene
+        write."""
+        edit = self._edit
+        if edit is None:
+            raise WireRefused("no armed edit")
+        sv = edit["save"]
+        if sv is None:
+            raise WireRefused("this edit has no save armed (only a copy saves)")
+        if edit["phase"] != "apply":
+            raise WireRefused("the save can't be opened after a rollback")
+        if sv["state"] != "armed":
+            raise WireRefused("the save was already opened")
+        if not edit["planned"] <= edit["attempted"]:
+            raise WireRefused("the save can't be opened before every planned op was written")
+        sv["state"] = "open"
+
+    def _edit_writes_closed(self):
+        sv = self._edit["save"] if self._edit is not None else None
+        return sv is not None and sv["state"] != "armed"
 
     def enter_rollback(self):
         """One way: from now on only the old values of ops that were started may be written."""
@@ -432,9 +474,15 @@ class WireGuard:
             raise WireRefused("Version: only the read and the client-version announce")
         if name in READABLE and action == A["READ"] and fields <= {"action", "request_id"}:
             return
+        if name == "File" and self._edit is not None and action == A["CREATE"]:
+            return self._check_edit_save(msg, fields)
         if name == "Grid" and self._edit is not None and action == A["UPDATE"]:
+            if self._edit_writes_closed():
+                raise WireRefused("Grid: no edit write once the save is open")
             return self._check_edit_grid(msg, fields)
         if name == "Scene" and self._edit is not None and action == A["UPDATE"]:
+            if self._edit_writes_closed():
+                raise WireRefused("Scene: no scene switch once the save is open")
             if fields <= {"action", "request_id", "selected_scene"} and 0 <= msg.selected_scene < 8:
                 return  # the transport switches scenes to write per-scene values
             raise WireRefused("Scene: only a scene switch A-H")
@@ -557,6 +605,27 @@ class WireGuard:
         if bool(sb.bypass) not in (op["expect"] if rollback else op["flags"]):
             raise WireRefused(f"Grid: bypass {sb.bypass} on column {cb.column} is not the plan's")
         self._edit_started(cb.column, "bypass", rollback)
+
+    def _check_edit_save(self, msg, fields):
+        """A copy's one File CREATE (E5a): only once opened, only in the armed collection, at the armed position,
+        under the armed name, with no payload."""
+        sv = self._edit["save"]
+        if sv is None:
+            raise WireRefused("File CREATE: this edit has no save armed")
+        if self._edit["phase"] != "apply":
+            raise WireRefused("File CREATE: never after a rollback")
+        if sv["state"] != "open":
+            raise WireRefused("File CREATE: the edit's save is not open" if sv["state"] == "armed"
+                              else "File CREATE: the edit's one save was already sent")
+        if not fields <= {"action", "request_id", "folder"}:
+            raise WireRefused(f"File CREATE: unexpected fields {sorted(fields)}")
+        f = msg.folder
+        if _names(f) - {"key", "files"} or f.key != sv["folder_key"] or len(f.files) != 1:
+            raise WireRefused("File CREATE: only one file, in the armed folder")
+        fi = f.files[0]
+        if _names(fi) - {"index", "name"} or fi.index != sv["position"] or fi.name != sv["name"]:
+            raise WireRefused("File CREATE: position or name differs from the armed save")
+        sv["state"] = "sent"   # one save per arming
 
     def _check_stomp(self, msg, fields):
         """The stomp step: one armed PRIMARY assignment per message, each once (arm_stomps)."""
@@ -1166,12 +1235,31 @@ class QcMcpBackend(DeviceBackend):
         self._save_target = (position, name)
         self._save_folder = folder_key
 
-    def begin_edit(self, plan, checked):
-        """Arm the wire guard for one edit (preset-editing E4). No save is armed: an edit never saves."""
+    def begin_edit(self, plan, checked, save=None):
+        """Arm the wire guard for one edit (preset-editing E4). `save` is None for a live edit, which never saves;
+        a copy (E5a) passes (folder_key, position, name), the one File CREATE it may send after edit_verified()."""
         if self._guard is None:
             raise DeviceError("not connected")
         self._save_target = None
-        self._guard.arm_edit(plan, checked)
+        self._guard.arm_edit(plan, checked, save)
+
+    def edit_verified(self):
+        """The agent's verify and collateral check came back clean: open the copy's one save."""
+        if self._guard is None:
+            raise DeviceError("not connected")
+        self._guard.open_edit_save()
+
+    def save_edit_copy(self, position, name):
+        """Send the copy's one File CREATE: the live (edited) grid is committed to `position` in the collection the
+        edit was armed with, under `name`. The guard holds the message to exactly the armed save, once."""
+        edit = self._guard._edit if self._guard is not None else None
+        sv = edit["save"] if edit is not None else None
+        if sv is None or sv["state"] != "open" or (position, name) != (sv["position"], sv["name"]):
+            raise DeviceError("save target differs from the armed edit")
+        try:
+            self._call("write_preset_file", sv["folder_key"], position, name)
+        finally:
+            sv["state"] = "sent"   # whether or not the call finished, this arming never saves again
 
     def enter_rollback(self):
         if self._guard is None:

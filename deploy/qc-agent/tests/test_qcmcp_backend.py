@@ -816,6 +816,293 @@ class EditGuard(Base):
             self.dev.enter_rollback()
 
 
+class EditSaveGuard(Base):
+    """A copy's one File CREATE (E5a): armed with the edit, closed until the agent reports the verify clean,
+    exactly the armed collection, position and name, once, never after a rollback, never for a live edit."""
+
+    FOLDER = fake_hid.SETLIST
+    POS, NAME = 160, "Texas Blues Edit"
+
+    def setUp(self):
+        super().setUp()
+        from edit_fixtures import base_plan
+        from qc_agent import edit_checks
+        self.dev.connect()
+        self.qc = self.dev._raw
+        self.plan = base_plan()
+        self.checked = edit_checks.catalog_check(self.plan, catalog(), "4.1.0")
+        for col, mid in ((0, 6), (1, 1011)):
+            self.hid.grid[col] = {"hash": mid, "params": {}, "scene": set(), "bypass": [False] * 8, "bypass_scene": False}
+        self.hid.grid[0]["params"][0] = list(GAIN_EXPECT)
+        self.hid.grid[1]["params"][1] = [0.0] * 8
+
+    def arm(self, save=True, confirm=True):
+        self.dev.begin_edit(self.plan, self.checked, (self.FOLDER, self.POS, self.NAME) if save else None)
+        if confirm:
+            self.dev.confirm_layout(0, 5)
+            self.dev.confirm_layout(1, 7)
+
+    def write_plan(self):
+        self.qc.set_param_scenes(0, 0, 0, GAIN_WIRE)
+        self.qc.set_param(0, 1, 1, 1.0)
+        self.qc.set_block_bypass(0, 1, scenes=[False, True] + [False] * 6, bypass_param=7)
+
+    def creates(self):
+        return [o for n, o in self.hid.received if n == "File" and o.action == P.ACTION["CREATE"]]
+
+    def refused(self, fn, *a, **kw):
+        n = len(self.hid.received)
+        with self.assertRaises((WireRefused, GuardError, DeviceError)):
+            fn(*a, **kw)
+        self.assertEqual(len(self.hid.received), n, "nothing reached the device")
+
+    def file_create(self, folder=None, position=None, name=None, files=1, **extra):
+        f = P.message_class("File")(action=P.ACTION["CREATE"], **extra)
+        f.folder.key = self.FOLDER if folder is None else folder
+        for _ in range(files):
+            fi = f.folder.files.add()
+            fi.index = self.POS if position is None else position
+            fi.name = self.NAME if name is None else name
+        return f
+
+    def raw_refused(self, msg):
+        full = P.encode_message("File", msg.SerializeToString())
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            for r in P.message_to_reports(full):
+                self.dev._guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
+        self.assertEqual(len(self.hid.received), n)
+
+    def open_save(self):
+        self.write_plan()
+        self.dev.edit_verified()
+
+    # -- the one save that passes --
+
+    def test_the_verified_copy_sends_exactly_one_create_at_the_armed_target(self):
+        self.arm()
+        self.open_save()
+        self.dev.save_edit_copy(self.POS, self.NAME)
+        c = self.creates()
+        self.assertEqual(len(c), 1)
+        self.assertEqual((c[0].folder.key, [(f.index, f.name) for f in c[0].folder.files]),
+                         (self.FOLDER, [(self.POS, self.NAME)]))
+        self.assertFalse(c[0].HasField("preset_payload"))
+        self.assertEqual(self.hid.slots, {self.POS: self.NAME})
+        self.assertEqual(self.dev._guard.refused, [])
+
+    def test_never_twice(self):
+        self.arm()
+        self.open_save()
+        self.dev.save_edit_copy(self.POS, self.NAME)
+        with self.assertRaisesRegex(DeviceError, "save target differs"):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.refused(self.dev.edit_verified)
+        self.assertEqual(len(self.creates()), 1)
+
+    def test_a_raw_second_create_is_refused_by_the_guard(self):
+        self.arm()
+        self.open_save()
+        self.dev.save_edit_copy(self.POS, self.NAME)
+        self.raw_refused(self.file_create())
+        self.assertIn("already sent", self.dev._guard.refused[-1])
+
+    def test_a_failed_call_still_spends_the_arming(self):
+        self.arm()
+        self.open_save()
+        with mock.patch.object(self.dev, "_call", side_effect=DeviceError("boom")), self.assertRaises(DeviceError):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+        with self.assertRaisesRegex(DeviceError, "save target differs"):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+        self.assertEqual(self.creates(), [])
+
+    # -- never before the verify --
+
+    def test_closed_until_the_agent_reports_the_verify(self):
+        self.arm()
+        self.write_plan()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.assertIn("not open", self.dev._guard.refused[-1])
+        with self.assertRaisesRegex(DeviceError, "save target differs"):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+        self.assertEqual(self.creates(), [])
+
+    def test_it_cannot_be_opened_before_every_planned_op_was_written(self):
+        self.arm()
+        self.qc.set_param(0, 1, 1, 1.0)
+        with self.assertRaisesRegex(WireRefused, "before every planned op"):
+            self.dev.edit_verified()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+
+    def test_opening_twice_is_refused(self):
+        self.arm()
+        self.open_save()
+        with self.assertRaisesRegex(WireRefused, "already opened"):
+            self.dev.edit_verified()
+
+    # -- never for a live edit, never after a rollback --
+
+    def test_a_live_edit_has_no_save_to_open_and_no_create_passes(self):
+        self.arm(save=False)
+        self.write_plan()
+        with self.assertRaisesRegex(WireRefused, "no save armed"):
+            self.dev.edit_verified()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.assertIn("no save armed", self.dev._guard.refused[-1])
+        self.raw_refused(self.file_create())
+        with self.assertRaisesRegex(DeviceError, "save target differs"):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+        self.assertEqual(self.creates(), [])
+
+    def test_nothing_unarmed_saves(self):
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        with self.assertRaises(DeviceError):
+            self.dev.edit_verified()
+
+    def test_after_a_rollback_the_save_cannot_be_opened_or_sent(self):
+        self.arm()
+        self.write_plan()
+        self.dev.enter_rollback()
+        with self.assertRaisesRegex(WireRefused, "after a rollback"):
+            self.dev.edit_verified()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.assertEqual(self.creates(), [])
+
+    def test_a_rollback_after_the_save_is_open_cannot_leave_it_open(self):
+        # opened, then (hypothetically) rolled back: the guard's phase flips and the CREATE is still refused only if
+        # the state machine says so. The agent never does this; the test pins that the open save is not a loophole
+        # for writes: values are refused once it is open
+        self.arm()
+        self.open_save()
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)
+
+    def test_a_rollback_entered_after_the_save_opened_closes_the_create(self):
+        self.arm()
+        self.open_save()
+        self.dev.enter_rollback()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.assertIn("after a rollback", self.dev._guard.refused[-1])
+        self.assertEqual(self.creates(), [])
+
+    # -- exactly the armed target --
+
+    def test_other_position_name_folder_or_count_are_refused(self):
+        self.arm()
+        self.open_save()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS + 1, self.NAME)
+        self.refused(self.qc.write_preset_file, self.FOLDER, 152, self.NAME)            # the original's slot
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, "Texas Blues")    # the original's name
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME + " ")
+        self.refused(self.qc.write_preset_file, "/media/p4/Presets/Sounds profiles", self.POS, self.NAME)
+        self.refused(self.qc.write_preset_file, "", self.POS, self.NAME)
+        self.raw_refused(self.file_create(files=2))
+        self.assertEqual(self.creates(), [])
+        self.dev.save_edit_copy(self.POS, self.NAME)   # the armed target is still available after the refusals
+        self.assertEqual(len(self.creates()), 1)
+
+    def test_the_backend_holds_the_target_too(self):
+        self.arm()
+        self.open_save()
+        for pos, name in ((self.POS + 1, self.NAME), (152, self.NAME), (self.POS, "Other")):
+            with self.assertRaisesRegex(DeviceError, "save target differs"):
+                self.dev.save_edit_copy(pos, name)
+        self.assertEqual(self.creates(), [])
+
+    def test_position_zero_is_a_position_not_an_absent_field(self):
+        self.POS = 0
+        self.arm()
+        self.open_save()
+        self.refused(self.qc.write_preset_file, self.FOLDER, 8, self.NAME)
+        self.dev.save_edit_copy(0, self.NAME)
+        self.assertEqual(self.hid.slots, {0: self.NAME})
+
+    def test_a_create_with_anything_extra_is_refused(self):
+        self.arm()
+        self.open_save()
+        self.raw_refused(self.file_create(type=2))
+        pp = self.file_create()
+        pp.preset_payload.SetInParent()
+        self.raw_refused(pp)
+        ir = self.file_create()
+        ir.ir_payload = b"\x01"
+        self.raw_refused(ir)
+        to = self.file_create()
+        to.to_folder.key = self.FOLDER
+        self.raw_refused(to)
+        bulk = self.file_create(total_bulk_create_count=5)
+        self.raw_refused(bulk)
+        extra = self.file_create()
+        extra.folder.files[0].author = "x"
+        self.raw_refused(extra)
+        self.assertEqual(self.creates(), [])
+
+    def test_other_file_actions_never_pass_even_when_open(self):
+        self.arm()
+        self.open_save()
+        for action in ("DELETE", "UPDATE"):
+            f = self.file_create()
+            f.action = P.ACTION[action]
+            self.raw_refused(f)
+        self.refused(self.qc.send, "File", P.message_class("File")(action=P.ACTION["DELETE"]))
+
+    # -- once open, the edit is finished --
+
+    def test_no_value_bypass_or_scene_write_passes_once_the_save_is_open(self):
+        self.arm()
+        self.open_save()
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)
+        self.refused(self.qc.set_param_scenes, 0, 0, 0, GAIN_WIRE)
+        self.refused(self.qc.set_block_bypass, 0, 1, scenes=[False, True] + [False] * 6, bypass_param=7)
+        self.refused(self.qc.set_scene, 2)
+        self.assertIn("once the save is open", self.dev._guard.refused[-1])
+
+    def test_before_the_save_is_open_edits_pass_as_before(self):
+        self.arm()
+        self.write_plan()
+        self.qc.set_scene(2)   # the agent puts the owner's scene back before the save
+        self.assertEqual(self.dev._guard.refused, [])
+
+    def test_end_push_disarms_the_save(self):
+        self.arm()
+        self.open_save()
+        self.dev.end_push()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        with self.assertRaises(DeviceError):
+            self.dev.save_edit_copy(self.POS, self.NAME)
+
+    # -- arming --
+
+    def test_a_malformed_save_target_arms_nothing(self):
+        for bad in (("", 160, "x"), (None, 160, "x"), (self.FOLDER, -1, "x"), (self.FOLDER, 256, "x"),
+                    (self.FOLDER, True, "x"), (self.FOLDER, 160.0, "x"), (self.FOLDER, 160, ""), (self.FOLDER, 160, None)):
+            with self.subTest(bad), self.assertRaisesRegex(WireRefused, "malformed"):
+                self.dev.begin_edit(self.plan, self.checked, bad)
+            self.assertIsNone(self.dev._guard._edit)
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)
+
+    def test_a_save_at_the_originals_position_or_in_another_collection_cannot_be_armed(self):
+        for target in ((self.FOLDER, 152, "Copy"), ("/media/p4/Presets/Sounds profiles", self.POS, "Copy")):
+            with self.subTest(target), self.assertRaisesRegex(WireRefused, "different slot of the plan's own collection"):
+                self.dev.begin_edit(self.plan, self.checked, target)
+            self.assertIsNone(self.dev._guard._edit)
+
+    def test_the_old_save_path_is_still_closed_during_an_edit(self):
+        self.arm()
+        with self.assertRaisesRegex(WireRefused, "while an edit is armed"):
+            self.dev._guard.arm_save(self.FOLDER, self.POS, self.NAME)
+        self.assertIsNone(self.dev._guard._save)
+        with self.assertRaisesRegex(DeviceError, "save target differs from the armed push"):
+            self.dev.save_to_slot(self.POS, self.NAME)
+
+    def test_a_push_never_has_an_edit_save(self):
+        self.dev.begin_push(152, "x", validate(export(), catalog(), "4.1.0"))
+        with self.assertRaisesRegex(WireRefused, "no armed edit"):
+            self.dev._guard.open_edit_save()
+        with self.assertRaisesRegex(DeviceError, "save target differs from the armed edit"):
+            self.dev.save_edit_copy(160, "x")
+
+
 class EditOverTheWire(Base):
     """A whole edit_preset job through the real vendored transport and the wire guard (fake HID below them)."""
 

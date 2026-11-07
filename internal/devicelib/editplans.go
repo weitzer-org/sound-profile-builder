@@ -21,10 +21,14 @@ const (
 
 // EditPlanRecord is one stored plan.
 type EditPlanRecord struct {
-	Format     string `json:"format"`
-	JobID      string `json:"job_id"`
-	Mode       string `json:"mode"`
-	Slot       string `json:"slot"`
+	Format string `json:"format"`
+	JobID  string `json:"job_id"`
+	Mode   string `json:"mode"`
+	Slot   string `json:"slot"`
+	// TargetSlot and Name are a copy's (E5a); empty for live and overwrite. get_device_job checks the agent's
+	// save block against them.
+	TargetSlot string `json:"target_slot,omitempty"`
+	Name       string `json:"name,omitempty"`
 	PlanSHA256 string `json:"plan_sha256"`
 	Plan       string `json:"plan"` // the plan's exact JSON text
 	QueuedAt   string `json:"queued_at"`
@@ -39,6 +43,13 @@ func (r *EditPlanRecord) Validate(wantJobID string) error {
 		return bad
 	}
 	if r.Mode != devicejobs.EditModeLive && r.Mode != devicejobs.EditModeCopy && r.Mode != devicejobs.EditModeOverwrite {
+		return bad
+	}
+	if r.Mode == devicejobs.EditModeCopy {
+		if n, ok := devicejobs.NormalizeSlot(r.TargetSlot); !ok || n != r.TargetSlot || !devicejobs.ValidDeviceName(r.Name) {
+			return bad
+		}
+	} else if r.TargetSlot != "" || r.Name != "" {
 		return bad
 	}
 	if devicejobs.EditPlanSHA256(devicejobs.EditFormat, []byte(r.Plan)) != r.PlanSHA256 {

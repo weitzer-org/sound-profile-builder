@@ -2,6 +2,7 @@ package devicejobs_test
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -51,7 +52,14 @@ func TestConfirmEdit(t *testing.T) {
 		{"a push token", func(r *rig, c *devicejobs.EditClaims, tok *string) {
 			*tok, _ = r.bridge.Keys.IssueConfirm(devicejobs.ConfirmClaims{PresetID: "p-1"}, *r.clock)
 		}, "not valid"},
-		{"copy is not available", func(r *rig, c *devicejobs.EditClaims, tok *string) { c.Mode = devicejobs.EditModeCopy }, "Only live"},
+		{"overwrite is not available", func(r *rig, c *devicejobs.EditClaims, tok *string) { c.Mode = devicejobs.EditModeOverwrite }, "overwrite is not available"},
+		{"a copy without a target", func(r *rig, c *devicejobs.EditClaims, tok *string) { c.Mode = devicejobs.EditModeCopy; c.Name = "Copy" }, "needs target_slot"},
+		{"a copy onto the open slot", func(r *rig, c *devicejobs.EditClaims, tok *string) {
+			c.Mode, c.TargetSlot, c.Name = devicejobs.EditModeCopy, "4A", "Copy"
+		}, "needs target_slot"},
+		{"a copy with a name the agent would refuse", func(r *rig, c *devicejobs.EditClaims, tok *string) {
+			c.Mode, c.TargetSlot, c.Name = devicejobs.EditModeCopy, "21A", "a/b"
+		}, "needs a name"},
 		{"bridge offline", func(r *rig, c *devicejobs.EditClaims, tok *string) { *r.clock = r.clock.Add(time.Hour) }, ""},
 		{"slot outside the allowed range", func(r *rig, c *devicejobs.EditClaims, tok *string) {}, "outside the slots"},
 	}
@@ -75,6 +83,87 @@ func TestConfirmEdit(t *testing.T) {
 			}
 		})
 	}
+
+	copyClaims := claims
+	copyClaims.Mode, copyClaims.TargetSlot, copyClaims.Name = devicejobs.EditModeCopy, "21A", "Texas Blues Edit"
+
+	t.Run("a copy queues with its target slot and name", func(t *testing.T) {
+		r := newRig(t)
+		r.agent.AllowedSlots = []string{"1A-32H"}
+		r.online(t)
+		tok, _ := r.bridge.IssueEditToken(copyClaims)
+		if _, _, err := r.bridge.ConfirmEdit(ctx, request(copyClaims), tok); err != nil {
+			t.Fatal(err)
+		}
+		if n, _ := r.agent.RunOnce(); n != 1 {
+			t.Fatalf("the agent ran %d jobs", n)
+		}
+		var found bool
+		for _, j := range r.agent.ExecutedJobs() {
+			if j.Kind != devicejobs.KindEditPreset {
+				continue
+			}
+			var a struct {
+				Mode       string `json:"mode"`
+				TargetSlot string `json:"target_slot"`
+				Name       string `json:"name"`
+			}
+			if err := json.Unmarshal(j.Args, &a); err != nil {
+				t.Fatal(err)
+			}
+			found = a.Mode == "copy" && a.TargetSlot == "21A" && a.Name == "Texas Blues Edit"
+		}
+		if !found {
+			t.Fatal("the executed edit job does not carry the copy's mode, target_slot and name")
+		}
+	})
+
+	t.Run("a copy token binds the target and the name", func(t *testing.T) {
+		r := newRig(t)
+		r.agent.AllowedSlots = []string{"1A-32H"}
+		r.online(t)
+		tok, _ := r.bridge.IssueEditToken(copyClaims)
+		for name, mut := range map[string]func(c *devicejobs.EditClaims){
+			"another target": func(c *devicejobs.EditClaims) { c.TargetSlot = "22A" },
+			"another name":   func(c *devicejobs.EditClaims) { c.Name = "Other" },
+		} {
+			c := copyClaims
+			mut(&c)
+			if _, _, err := r.bridge.ConfirmEdit(ctx, request(c), tok); err == nil || !strings.Contains(userMsg(t, err), "does not match") {
+				t.Errorf("%s: err = %v", name, err)
+			}
+		}
+		if n, _ := r.agent.RunOnce(); n != 0 {
+			t.Fatalf("a refused confirm queued %d job(s)", n)
+		}
+	})
+
+	t.Run("a copy target outside the allowed slots", func(t *testing.T) {
+		r := newRig(t)
+		r.agent.AllowedSlots = []string{"1A-8H", "4A"}
+		r.online(t)
+		tok, _ := r.bridge.IssueEditToken(copyClaims)
+		_, _, err := r.bridge.ConfirmEdit(ctx, request(copyClaims), tok)
+		if err == nil || !strings.Contains(userMsg(t, err), "outside the slots") {
+			t.Fatalf("err = %v", err)
+		}
+	})
+
+	t.Run("two copies into one target do not queue together", func(t *testing.T) {
+		r := newRig(t)
+		r.agent.AllowedSlots = []string{"1A-32H"}
+		r.online(t)
+		tok, _ := r.bridge.IssueEditToken(copyClaims)
+		if _, _, err := r.bridge.ConfirmEdit(ctx, request(copyClaims), tok); err != nil {
+			t.Fatal(err)
+		}
+		other := copyClaims
+		other.Slot = "5A"
+		tok2, _ := r.bridge.IssueEditToken(other)
+		if _, _, err := r.bridge.ConfirmEdit(ctx, request(other), tok2); err == nil || !strings.Contains(userMsg(t, err), "already waiting") {
+			t.Fatalf("err = %v", err)
+		}
+	})
 
 	t.Run("a plan that does not match its hash", func(t *testing.T) {
 		r := newRig(t)
@@ -105,4 +194,19 @@ func TestConfirmEdit(t *testing.T) {
 			t.Fatalf("err = %v", err)
 		}
 	})
+}
+
+// ValidCopyName is the agent's own name rule (qc_agent.export_validator.check_preset_name): the bridge refuses
+// what the agent would, including a leading or trailing space and a leading dot or "..".
+func TestValidCopyName(t *testing.T) {
+	for name, want := range map[string]bool{
+		"Texas Blues Edit": true, "a_b (2) + c, d! e' f& g# h.i-j": true, "x  y": true,
+		" x": false, "x ": false, " ": false, "": false, ".hidden": false, "a..b": false, "a/b": false,
+		"[x](http://e.co)": false, "`x`": false, "a|b": false, "caf\u00e9": false, "tab\tx": false,
+		"123456789012345678901234567890123": false,
+	} {
+		if got := devicejobs.ValidCopyName(name); got != want {
+			t.Errorf("ValidCopyName(%q) = %v, want %v", name, got, want)
+		}
+	}
 }

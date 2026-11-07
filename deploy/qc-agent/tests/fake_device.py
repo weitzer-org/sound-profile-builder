@@ -13,7 +13,7 @@ from qc_agent.captures import CaptureEntry, DirectorySnapshot, factory_version_o
 from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, PartialListing, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
-                         "set_block_bypass", "save_to_slot", "set_mic", "assign_stomp"})
+                         "set_block_bypass", "save_to_slot", "save_edit_copy", "set_mic", "assign_stomp"})
 
 KEY_V1 = "a1" * 32   # a factory V1 capture
 KEY_V2 = "b2" * 32   # a factory V2 capture
@@ -75,6 +75,10 @@ class FakeDevice(DeviceBackend):
         self.active_scene = 0                           # set_param_scenes switches it and puts it back, like the transport
         self.edit_attempted: set = set()
         self.armed_edit = False
+        self.edit_save = None                           # begin_edit(save=...): {"target": (folder, pos, name), "state"}
+        self.entered_rollback = False
+        self.open_after_save = None                     # "target": the copy's slot becomes the open one
+        self.save_lands_at_open = False                 # the copy's File CREATE replaced the open slot instead
         self.write_fail = None                          # hook(name, args): raise to make a write fail
         self._listings = 0
         self._alive_calls = 0
@@ -129,7 +133,7 @@ class FakeDevice(DeviceBackend):
         out = {p: "" for p in range(256)}
         out.update(self.slots)
         deps = dict(self.preset_deps)
-        if self.listing_lag and self._pending_save is not None:
+        if self.listing_lag and self._pending_save is not None and self.open_folder == SETLIST_KEY:
             self.listing_lag -= 1
             out[self._pending_save[0]] = ""
             deps.pop(self._pending_save[0], None)
@@ -139,7 +143,11 @@ class FakeDevice(DeviceBackend):
             folders[e.folder_name] = (n, f, c + 1)
         pf = {SETLIST_KEY: ("My Presets", out, deps)}
         for key, (cname, cslots) in self.collections.items():
-            pf[key] = (cname, {p: cslots.get(p, "") for p in range(256)}, {})
+            table = {p: cslots.get(p, "") for p in range(256)}
+            if self.listing_lag and self._pending_save is not None and key == self.open_folder:
+                self.listing_lag -= 1
+                table[self._pending_save[0]] = ""
+            pf[key] = (cname, table, {})
         return DirectorySnapshot(my_presets=out, preset_deps=deps, captures=list(self.captures),
                                  capture_folders=list(folders.values()), preset_folders=pf)
 
@@ -212,10 +220,47 @@ class FakeDevice(DeviceBackend):
         self._rec("begin_push", position, name)
         self.push_folder = folder_key
 
-    def begin_edit(self, plan, checked):
+    def begin_edit(self, plan, checked, save=None):
         self._rec("begin_edit", plan["snapshot"])
         self.edit_attempted = set()
         self.armed_edit = True
+        self.edit_save = None if save is None else {"target": tuple(save), "state": "armed"}   # mirrors the wire guard
+        if save is not None and (save[1] == self.open_position or save[0] != self.open_folder):
+            raise DeviceError("fake unit: the edit's save must be a different slot of the open collection")
+
+    def edit_verified(self):
+        self._rec("edit_verified")
+        if self.edit_save is None:
+            raise DeviceError("fake unit: this edit has no save armed")
+        if self.entered_rollback or self.edit_save["state"] != "armed":
+            raise DeviceError("fake unit: the save can't be opened")
+        self.edit_save["state"] = "open"
+
+    def save_edit_copy(self, position, name):
+        self._need()
+        self._rec("save_edit_copy", position, name)
+        sv = self.edit_save
+        if sv is None or sv["state"] != "open" or sv["target"][1:] != (position, name):
+            raise DeviceError("fake unit: save target differs from the armed edit")
+        sv["state"] = "sent"
+        if self.write_fail:
+            self.write_fail("save_edit_copy", (position, name))
+        if self.save_lands_at_open:   # E-G3 tripwire: the save replaced the open slot's entry instead
+            position = self.open_position
+        if self.open_after_save == "target":
+            self.open_position = position
+        folder = sv["target"][0]
+        if folder in self.collections:
+            self.collections[folder][1][position] = name
+            self._pending_save = (position, name)
+            return
+        self.slots[position] = name
+        self._pending_save = (position, name)
+        self.preset_deps[position] = frozenset()
+
+    def _no_writes_once_open(self):   # mirrors the wire guard: nothing but the one File CREATE once the save is open
+        if self.edit_save is not None and self.edit_save["state"] != "armed":
+            raise DeviceError("fake unit: no edit write once the save is open")
 
     def edit_started(self):
         return set(self.edit_attempted)
@@ -227,11 +272,13 @@ class FakeDevice(DeviceBackend):
 
     def restore_scene(self, scene):
         self._need()
+        self._no_writes_once_open()
         self._rec("restore_scene", scene)
         self.active_scene = scene
 
     def enter_rollback(self):
         self._rec("enter_rollback")
+        self.entered_rollback = True
 
     def end_push(self):
         self.armed_edit = False
@@ -266,6 +313,7 @@ class FakeDevice(DeviceBackend):
 
     def set_param(self, row, col, index, wire):
         self._need()
+        self._no_writes_once_open()
         self._rec("set_param", row, col, index, wire)
         if self.armed_edit:
             self.edit_attempted.add(("param", col, index))
@@ -281,6 +329,7 @@ class FakeDevice(DeviceBackend):
 
     def set_param_scenes(self, row, col, index, wires):
         self._need()
+        self._no_writes_once_open()
         self._rec("set_param_scenes", row, col, index, list(wires))
         if self.armed_edit:
             self.edit_attempted.add(("param", col, index))
@@ -295,6 +344,7 @@ class FakeDevice(DeviceBackend):
 
     def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
+        self._no_writes_once_open()
         self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
         if self.armed_edit:
             self.edit_attempted.add(("bypass", col))

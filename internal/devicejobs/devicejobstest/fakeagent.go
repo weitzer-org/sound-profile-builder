@@ -198,6 +198,11 @@ func FixtureExport() *devicejobs.Export {
 // reference check (devicejobs.CheckPendingJob), keeps a ledger, writes signed
 // results and heartbeats, and deletes processed jobs.
 type FakeAgent struct {
+	// runMu makes a RunOnce pass atomic. Tests that start the agent loop more than once (a rig helper starts one and a
+	// test starts another) would otherwise race: the second pass sees the first pass's job as a replay and deletes the
+	// pending object before the first has written its result, and the job is briefly "not_found".
+	runMu sync.Mutex
+
 	// EditResult, when set, fills in the result of an edit_preset job (status, reason, Edit block).
 	EditResult func(j *devicejobs.Job, r *devicejobs.Result)
 
@@ -288,6 +293,8 @@ func (a *FakeAgent) writeSigned(key, tag string, v any) error {
 // RunOnce processes every pending job once, in key order, and returns how
 // many it executed.
 func (a *FakeAgent) RunOnce() (int, error) {
+	a.runMu.Lock()
+	defer a.runMu.Unlock()
 	ctx := context.Background()
 	names, err := a.Client.ListFiles(ctx, a.Bucket, devicejobs.PendingPrefix)
 	if err != nil {
