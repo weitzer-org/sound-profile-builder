@@ -1159,7 +1159,8 @@ class _Edit:
         plan, dev, ctx = self.plan, self.dev, self.ctx
         dev.begin_edit(plan, self.checked)
         for col, (mid, pc) in sorted(self.checked.cells.items()):
-            dev.confirm_layout(col, len(edit_checks.live_block(self.pre, 0, col)["params"]))
+            b = edit_checks.live_block(self.pre, 0, col) or {}   # unit_layout_problem passed, so it exists; stay defensive
+            dev.confirm_layout(col, len(b.get("params") or []))
         orig_scene = dev.read_scene()
         before = self.layout_hash(self.pre)
         if ctx.edits is not None:
