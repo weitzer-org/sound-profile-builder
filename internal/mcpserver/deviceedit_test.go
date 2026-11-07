@@ -171,3 +171,18 @@ func TestEditDevicePreset_NameCannotFormMarkdown(t *testing.T) {
 		t.Fatalf("name rendered as a live link:\n%s", text)
 	}
 }
+
+// GSR #183: a failed cache write must not discard a snapshot that was read fine.
+func TestEditDevicePreset_BackfillSurvivesAStorageWriteError(t *testing.T) {
+	r, _ := editRig(t)
+	ctx := context.Background()
+	read := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceReadToolName, map[string]any{"wait_seconds": 5, "import": true}))
+	main := devicejobstest.NewMemClient()
+	main.SetFailWrite(true)
+	lib := &DeviceLibrary{Store: devicelib.NewStore(main, "other")}
+	h := editDeviceTool(r.h.svc, r.bridge, lib, deviceedit.New(importerForTest(t)))
+	_, out, err := h(ctx, nil, deviceEditInput{PresetID: read.Import.PresetID})
+	if err != nil || out.SnapshotJob != read.JobID {
+		t.Fatalf("%v %+v", err, out)
+	}
+}

@@ -6,6 +6,7 @@ package devicejobstest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -25,6 +26,7 @@ type MemClient struct {
 	objs      map[string]map[string][]byte
 	failList  bool
 	failRead  bool
+	failWrite bool
 	failNextN int
 	limited   int
 }
@@ -52,6 +54,13 @@ func (c *MemClient) SetFailList(fail bool) {
 	c.failList = fail
 }
 
+// SetFailWrite makes every later WriteFile call fail (storage-error tests).
+func (c *MemClient) SetFailWrite(fail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.failWrite = fail
+}
+
 // NewMemClient returns an empty client.
 func NewMemClient() *MemClient { return &MemClient{objs: map[string]map[string][]byte{}} }
 
@@ -73,6 +82,12 @@ func (c *MemClient) ReadFile(_ context.Context, bucket, object string) ([]byte, 
 }
 
 func (c *MemClient) WriteFile(_ context.Context, bucket, object string, data []byte) error {
+	c.mu.Lock()
+	failing := c.failWrite
+	c.mu.Unlock()
+	if failing {
+		return errors.New("memclient: write failed")
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.objs[bucket] == nil {

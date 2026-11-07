@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -115,9 +116,11 @@ func loadSnapshot(ctx context.Context, b *devicejobs.Bridge, lib *DeviceLibrary,
 	v, err := b.Job(ctx, jobID)
 	if err == nil && v != nil {
 		if s2, nerr := devicelib.NewReadSnapshot(v); nerr == nil {
-			if _, serr := lib.Store.SaveSnapshot(ctx, s2); serr == nil {
-				return s2, nil
+			// Storing it is only a cache for the next call: a storage error must not discard a read that is valid now.
+			if _, serr := lib.Store.SaveSnapshot(ctx, s2); serr != nil {
+				log.Printf("device snapshot: backfill not stored: %v", serr)
 			}
+			return s2, nil
 		}
 	}
 	return nil, errors.New("There is no stored read of the unit for that job_id. Read the preset again with read_device_preset, then retry.")

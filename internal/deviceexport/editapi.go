@@ -329,6 +329,9 @@ func (e *Exporter) ReadControl(lp catalog.LabelledParam, rp devicejobs.ReadbackP
 		r.Wire[s] = w
 	}
 	if catalog.DiscreteParamTypes[cp.Type] {
+		if cp.Min == nil || cp.Max == nil {
+			return nil, LockNoWireMapping // im.discrete already refuses this; kept so the dereference below stands alone
+		}
 		r.Discrete = true
 		span := *cp.Max - *cp.Min
 		for s := 0; s < 2; s++ {
