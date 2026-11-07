@@ -85,6 +85,7 @@ class Outcome:
     slots: dict | None = None
     readback: dict | None = None
     library: dict | None = None
+    edit: dict | None = None    # edit_preset (contract section 9.3); always None until phase E4
     unit_gone: bool = False     # the agent exits after this job
     extra: dict = field(default_factory=dict)
 
@@ -200,7 +201,11 @@ def run(ctx, job) -> Outcome:
     kind = job["kind"]
     executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
                 "sync_device_library": sync_device_library}.get(kind)
-    if executor is None:  # parse_job only admits the four kinds; keep the code anyway
+    if executor is None:
+        # edit_preset (contract v2) parses, but this bridge doesn't run edits yet (preset-editing phase E4):
+        # it is refused before any device contact. parse_job admits no other kind; keep the code anyway.
+        if kind == "edit_preset":
+            return refused("unsupported_kind", "This bridge can't edit presets on the unit yet. Nothing was changed.")
         return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
     try:
         return executor(ctx, job)

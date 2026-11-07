@@ -116,6 +116,20 @@ class ListAndRead(Base):
                                                    "position": 24, "is_factory": False})
         self.assertEqual(self.dev.write_calls(), [])
 
+    def test_edit_preset_is_refused_before_any_device_contact(self):
+        # Contract v2: a signed, valid edit_preset job parses, is taken, and is refused (unsupported_kind)
+        # until phase E4. The unit is never opened, and the result's edit block is null.
+        self.dev.calls.clear()
+        jid, key = self.queue("edit_preset")
+        self.poll()
+        r = self.result(jid)
+        self.assertEqual((r["kind"], r["status"], r["reason_code"]), ("edit_preset", "refused", "unsupported_kind"))
+        self.assertIsNone(r["edit"])
+        self.assertIsNone(r["firmware"])
+        self.assertEqual(self.dev.calls, [])
+        self.assertNotIn(key, self.store.objects)
+        self.assertTrue(self.agent.ledger.contains(jid))
+
     def test_preset_switched_during_read(self):
         def switch(name):
             if name == "read_current_preset":
@@ -825,6 +839,15 @@ class Recovery(Base):
         self.assertEqual((r["status"], r["reason_code"], r["kind"]), ("failed", "interrupted", "push_preset"))
         self.assertNotIn(key, self.store.objects)
         self.assertEqual(self.dev.calls, [])
+
+    def test_an_interrupted_edit_is_reported_as_an_edit(self):
+        # Before contract v2, recovery turned any kind it didn't know into push_preset.
+        jid, key = self.queue("edit_preset")
+        self.agent.ledger.take(jid, "edit_preset", contract.format_time(T0))
+        self.make_agent().recover()
+        r = self.result(jid)
+        self.assertEqual((r["status"], r["reason_code"], r["kind"]), ("failed", "interrupted", "edit_preset"))
+        self.assertIsNone(r["edit"])
 
     def test_finished_without_done_reuploads_stored_bytes(self):
         jid, key = self.queue("list_slots")

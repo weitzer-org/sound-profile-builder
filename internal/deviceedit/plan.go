@@ -1,8 +1,6 @@
 package deviceedit
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -17,7 +15,7 @@ import (
 )
 
 // Format is the payload schema this package writes.
-const Format = "qc2-device-edit/1"
+const Format = devicejobs.EditFormat
 
 const (
 	scenes       = deviceexport.Scenes
@@ -28,61 +26,23 @@ const (
 
 // ---- the payload: everything that reaches the unit, and the only part that is hashed ----
 
-// Payload is the qc2-device-edit/1 document. Structs only, fields in this order, so the bytes
-// and the hash are deterministic.
-type Payload struct {
-	Format    string     `json:"format"`
-	Catalog   CatalogRef `json:"catalog"`
-	Snapshot  string     `json:"snapshot"` // the read job's id
-	Expect    Expect     `json:"expect"`
-	ParamOps  []ParamOp  `json:"param_ops"`
-	BypassOps []BypassOp `json:"bypass_ops"`
-}
-
-// CatalogRef names the catalog the ids and indexes come from.
-type CatalogRef struct {
-	CorOS  string `json:"coros"`
-	SHA256 string `json:"sha256"`
-}
-
-// Expect is what the agent must find on the unit before the first write.
-type Expect struct {
-	// FolderKey is the open collection's key as the unit reports it (qc-device-readback/2,
-	// device text that passed devicejobs.ValidFolderKey). It is "" for a read in the older /1
-	// format, which only said "My Presets" or "other": such a plan is shown but not
-	// confirmable (Plan.Confirmable), and the contract's parser refuses an empty key.
-	FolderKey string `json:"folder_key"`
-	Position  int    `json:"position"`
-	// Slot is the position's label (devicejobs.SlotLabel), e.g. "4A".
-	Slot string `json:"slot"`
-	// Name is the preset's name on the unit: device text, compared and never written.
-	Name string `json:"name"`
-	// Layout is [row, col, model_id] for every block on every row, sorted.
-	Layout [][3]int `json:"layout"`
-}
-
-// ParamOp sets one control's eight scene values. Expect is what the snapshot has (compare-and-swap).
-type ParamOp struct {
-	Row       int             `json:"row"`
-	Col       int             `json:"col"`
-	ModelID   int             `json:"model_id"`
-	Index     int             `json:"index"`
-	Label     string          `json:"label"`
-	Evidence  []string        `json:"evidence"`
-	SceneMode bool            `json:"scene_mode"`
-	Expect    [scenes]float64 `json:"expect"`
-	Wire      [scenes]float64 `json:"wire"`
-}
-
-// BypassOp sets a block's bypass flag in all eight scenes. Why is "target" or "removed".
-type BypassOp struct {
-	Row     int          `json:"row"`
-	Col     int          `json:"col"`
-	ModelID int          `json:"model_id"`
-	Why     string       `json:"why"`
-	Expect  [scenes]bool `json:"expect"`
-	Bypass  [scenes]bool `json:"bypass"`
-}
+// The payload types are the contract's (internal/devicejobs, contract section 7.2): type aliases,
+// so what this package emits and what the agent's parser accepts can't drift. Fields in their
+// declared order, so the bytes and the hash are deterministic.
+type (
+	// Payload is the qc2-device-edit/1 document.
+	Payload = devicejobs.EditPayload
+	// CatalogRef names the catalog the ids and indexes come from.
+	CatalogRef = devicejobs.EditCatalogRef
+	// Expect is what the agent must find on the unit before the first write: the collection key
+	// ("" for a plan from a /1 read, which is never confirmable), position, slot, the preset's
+	// name (device text, compared and never written) and the full layout.
+	Expect = devicejobs.EditExpect
+	// ParamOp sets one control's eight scene values; Expect is the snapshot's (compare-and-swap).
+	ParamOp = devicejobs.EditParamOp
+	// BypassOp sets a block's bypass flag in all eight scenes. Why is "target" or "removed".
+	BypassOp = devicejobs.EditBypassOp
+)
 
 // ---- everything else: shown to the user, not hashed ----
 
@@ -130,9 +90,15 @@ type Plan struct {
 	View            []ViewRow
 	// Matched counts target blocks matched to a cell.
 	Matched int
-	// Confirmable is false when the plan can't be applied even once E4 exists: the read is in
-	// the older read-back format, so the collection it came from can't be pinned. Read again.
+	// Confirmable is false when the plan could never be applied: it has no ops, the read is in the
+	// older read-back format (so its collection can't be pinned), or the plan fails the contract's
+	// strict parse (devicejobs.ParseEditPayload, which the agent runs too).
 	Confirmable bool
+	// Pinned is true when the read names its collection (qc-device-readback/2): false for a
+	// /1 read, which is never confirmable.
+	Pinned bool
+	// Text is the plan's exact JSON text, the bytes SHA256 covers and an edit job carries.
+	Text []byte
 }
 
 // Ops is the number of writes in the plan.
@@ -213,7 +179,7 @@ func (p *Planner) Plan(in Input) (*Plan, *PlanError) {
 	if slot == "" {
 		return nil, planErr(ErrNoPosition, "the read gave a slot position outside the collection, so the edit can't be pinned to it")
 	}
-	out := &Plan{NotApplied: []NotApplied{}, Confirmable: folderKey != "" && snap.Name != ""}
+	out := &Plan{NotApplied: []NotApplied{}}
 	out.Payload = Payload{
 		Format: Format, Catalog: CatalogRef{CorOS: coros, SHA256: sha}, Snapshot: snap.JobID,
 		Expect:   Expect{FolderKey: folderKey, Position: *rb.Setlist.Position, Slot: slot, Name: snap.Name, Layout: layoutOf(rb)},
@@ -364,14 +330,17 @@ func (p *Planner) Plan(in Input) (*Plan, *PlanError) {
 	if err != nil {
 		return nil, planErr(ErrPlanTooLarge, "the plan could not be encoded")
 	}
-	if len(raw) > devicejobs.MaxExportBytes {
-		return nil, planErr(ErrPlanTooLarge, fmt.Sprintf("the plan is %d bytes, over the %d limit", len(raw), devicejobs.MaxExportBytes))
+	if len(raw) > devicejobs.MaxEditPlanBytes || len(out.Payload.ParamOps) > devicejobs.MaxEditParamOps {
+		return nil, planErr(ErrPlanTooLarge, fmt.Sprintf("the plan is %d bytes with %d parameter changes, over the %d-byte or %d-change limit",
+			len(raw), len(out.Payload.ParamOps), devicejobs.MaxEditPlanBytes, devicejobs.MaxEditParamOps))
 	}
-	h := sha256.New()
-	h.Write([]byte(Format))
-	h.Write([]byte{'\n'})
-	h.Write(raw)
-	out.SHA256 = hex.EncodeToString(h.Sum(nil))
+	out.Text = raw
+	out.Pinned = folderKey != ""
+	out.SHA256 = devicejobs.EditPlanSHA256(Format, raw)
+	if out.Ops() > 0 && folderKey != "" {
+		_, perr := devicejobs.ParseEditPayload(raw)
+		out.Confirmable = perr == nil
+	}
 	return out, nil
 }
 

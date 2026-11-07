@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -193,6 +194,25 @@ func str(raw json.RawMessage, field string) (string, error) {
 // args valid for the kind. It does not check bindings, replay or time against
 // a clock; CheckPendingJob does.
 func ParseJob(payload []byte) (*Job, error) {
+	return parseJob(payload, PayloadVersion)
+}
+
+// ParseJobV2 is ParseJob for a payload verified under TagJobV2: v must be the integer 2 and the
+// kind edit_preset (contract section 7.1). The kind sets of the two versions are disjoint, so a
+// payload is valid under at most one tag.
+func ParseJobV2(payload []byte) (*Job, error) {
+	return parseJob(payload, PayloadVersionEdit)
+}
+
+// ParseJobVersion parses a payload of the given job version (1 or 2).
+func ParseJobVersion(payload []byte, v int) (*Job, error) {
+	if v != PayloadVersion && v != PayloadVersionEdit {
+		return nil, fail(OutcomeBadPayload, "unknown job version")
+	}
+	return parseJob(payload, v)
+}
+
+func parseJob(payload []byte, version int) (*Job, error) {
 	if err := checkStrictJSON(payload); err != nil {
 		return nil, fail(OutcomeBadPayload, "%v", err)
 	}
@@ -203,10 +223,10 @@ func ParseJob(payload []byte) (*Job, error) {
 	if err != nil {
 		return nil, fail(OutcomeBadPayload, "%v", err)
 	}
-	if string(m["v"]) != "1" {
-		return nil, fail(OutcomeBadPayload, "v must be the integer 1")
+	if string(m["v"]) != strconv.Itoa(version) {
+		return nil, fail(OutcomeBadPayload, "v must be the integer %d", version)
 	}
-	j := Job{V: 1, Args: m["args"]}
+	j := Job{V: version, Args: m["args"]}
 	for _, f := range []struct {
 		name string
 		dst  *string
@@ -228,6 +248,9 @@ func ParseJob(payload []byte) (*Job, error) {
 	}
 	if _, err := ParseTime(j.ExpiresAt); err != nil {
 		return nil, fail(OutcomeBadPayload, "expires_at: %v", err)
+	}
+	if (version == PayloadVersionEdit) != (j.Kind == KindEditPreset) {
+		return nil, fail(OutcomeBadPayload, "kind %q is not a version %d kind", truncate(j.Kind, 40), version)
 	}
 	if err := checkArgs(j.Kind, j.Args); err != nil {
 		return nil, fail(OutcomeBadPayload, "args: %v", err)
@@ -297,6 +320,9 @@ func checkArgs(kind string, args json.RawMessage) error {
 		if p := bytes.TrimSpace(exp["payload"]); len(p) == 0 || p[0] != '{' {
 			return errors.New("export.payload must be a JSON object")
 		}
+	case KindEditPreset:
+		_, err := ParseEditArgs(args)
+		return err
 	default:
 		return fmt.Errorf("unknown kind %q", truncate(kind, 40))
 	}
@@ -332,6 +358,14 @@ type Result struct {
 	Readback     *ReadbackBlock `json:"readback"`
 	// Library is a sync_device_library answer (contract section 9.2). Opaque here; ParseLibraryPayload checks it.
 	Library *LibraryBlock `json:"library"`
+	// Edit is an edit_preset answer (contract section 9.3). Opaque here; ParseEditResultPayload checks it.
+	Edit *EditBlock `json:"edit"`
+}
+
+// EditBlock is an edit_preset answer. Payload is checked by ParseEditResultPayload.
+type EditBlock struct {
+	Format  string          `json:"format"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 // PushResult reports a push's read-back comparison.
@@ -382,12 +416,14 @@ type LibraryBlock struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-// Reason codes an agent may put in a result.
+// Reason codes an agent may put in a result. preset_changed, edit_not_enabled and
+// rollback_failed are contract v2's (edit_preset, section 9.3).
 var ReasonCodes = map[string]bool{
 	"": true, "firmware_mismatch": true, "unit_absent": true, "unit_busy": true,
 	"slot_not_allowed": true, "slot_not_empty": true, "validation": true,
 	"unsupported_kind": true, "unsupported_arg": true, "device_error": true,
 	"readback_mismatch": true, "interrupted": true, "expired": true,
+	"preset_changed": true, "edit_not_enabled": true, "rollback_failed": true,
 }
 
 // ---- heartbeat ----

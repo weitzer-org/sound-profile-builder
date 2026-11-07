@@ -51,6 +51,7 @@ type deviceEditOutput struct {
 	SnapshotSlot  string                  `json:"snapshot_slot,omitempty"`
 	SnapshotName  string                  `json:"snapshot_name,omitempty"`
 	Collection    string                  `json:"snapshot_collection,omitempty"`
+	Pinned        bool                    `json:"pinned"`
 	Confirmable   bool                    `json:"confirmable"`
 	SnapshotAge   string                  `json:"snapshot_age,omitempty"`
 	ReadAt        string                  `json:"read_at,omitempty"`
@@ -205,7 +206,7 @@ func editDeviceTool(svc *presetsvc.Service, b *devicejobs.Bridge, lib *DeviceLib
 			PlanFormat: deviceedit.Format, PlanSHA256: plan.SHA256,
 			ParamOps: len(plan.Payload.ParamOps), BypassOps: len(plan.Payload.BypassOps), Matched: plan.Matched,
 			Rows: sanitizeRows(plan.View), NotApplied: plan.NotApplied, NotAppliedAll: plan.NotAppliedCount,
-			Untouched: plan.Untouched, Derived: derived, Confirmable: plan.Confirmable,
+			Untouched: plan.Untouched, Derived: derived, Confirmable: plan.Confirmable, Pinned: plan.Pinned,
 			Collection: dtext(plan.Payload.Expect.FolderKey),
 		}
 		if at, err := devicejobs.ParseTime(snap.ReadAt); err == nil {
@@ -243,8 +244,11 @@ func renderEdit(t *strings.Builder, o deviceEditOutput) {
 		fmt.Fprintf(t, ", read %s", o.SnapshotAge)
 	}
 	t.WriteString("). If you changed anything on the unit since, read it again first.\n\n")
-	if !o.Confirmable {
-		t.WriteString("This read can't be pinned to its collection (it came from an older bridge, or the preset has no name), so this plan could never be applied: read the preset again with read_device_preset first.\n\n")
+	switch {
+	case !o.Pinned:
+		t.WriteString("This read can't be pinned to its collection (it came from an older bridge), so this plan could never be applied: read the preset again with read_device_preset first.\n\n")
+	case !o.Confirmable && o.ParamOps+o.BypassOps > 0:
+		t.WriteString("This plan doesn't pass the bridge's strict checks (for example the preset has no name on the unit, or a value the unit holds is outside the range an edit can carry), so it could never be applied as it is.\n\n")
 	}
 	fmt.Fprintf(t, "Save mode: %s\n\n", o.SaveMode)
 	if len(o.Rows) == 0 {

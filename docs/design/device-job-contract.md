@@ -1,6 +1,6 @@
 # Device job contract: QC-2 ⇄ home agent
 
-*Contract version `qc2-device-job-contract/1`, 2026-11-05. Status: proposed (lands before any agent code).*
+*Contract version `qc2-device-job-contract/2`, 2026-11-07 (v1: 2026-11-05). Status: v1 in use; v2 (`edit_preset`) specified, parsed by both sides, and refused by the agent until preset-editing phase E4.*
 *Parent design: `docs/design/qc-device-bridge-plan.md` (sections 2, 5, 6 and 8).*
 *References, both stdlib-only and checked against the same vectors:*
 - *Go: `internal/devicejobs`;*
@@ -25,6 +25,16 @@ Words in **MUST**/**MUST NOT** are requirements. Every premise about an external
   - the payload `v` changes with any job field change;
   - the domain tags end in `/v1` and change together with the payload `v`.
 - **Change policy.** Any change to a vector, a tag, a field, or the check order is a contract change: bump the version, regenerate the vectors, and land it in one PR that touches both sides.
+- **Revision 2026-11-07 (contract v2, preset-editing E3): the job kind `edit_preset`.** It is the first new job **field** set, so per the rules above it has its own payload `v` (**2**) and its own job tag (**`qc2-device-job/v2`**). The v1 kinds are unchanged, byte for byte: still `v` 1 under `qc2-device-job/v1`, and the 82 v1 vectors are pinned (Go `TestV1VectorsUnchanged`). The envelope `v`, the result, heartbeat and owned-slots tags are unchanged. What it adds:
+  - section 5: the two job tags and how the verifier picks one;
+  - sections 7.1 and 7.2: `edit_preset`'s args and its plan, `qc2-device-edit/1`, carried as an exact string with its hash;
+  - section 8: steps 3-6 for two tags;
+  - section 9: a result field `edit`, three reason codes, and the edit result payload (9.3);
+  - section 9.1: read-back format `/2`, which carries the collection key an edit pins;
+  - section 12: the edit confirm token;
+  - section 15: the threat notes for edits.
+
+  **What runs where in E3.** Both sides parse everything above. QC-2 can build, sign and queue an edit job (`devicejobs.NewEditArgs`, `Store.Enqueue`) but no tool does yet; `edit_device_preset` stays a dry run. A v2 agent takes a valid `edit_preset` job (ledger step 10) and answers `refused`/`unsupported_kind` before any device contact; applying an edit is phase E4 (`docs/design/qc-preset-editing.md` section 6). **An agent from before this revision** finds no v1 tag that verifies an edit job, so it sees `bad_signature`: it deletes the job and writes no result, and QC-2 reports `expired_unclaimed` after 15 minutes. That is read from the old `reference_check.py`, not run against an old agent. Pull `main` on the PC.
 - **Revision 2026-11-06 (P4b): a fourth job kind, `sync_device_library`.** It adds a kind value, a result field (`library`, section 9) and a result payload (section 9.2). It adds **no job field**, so the job payload `v` and every domain tag stay as they were, and the vectors only gained entries (`pending_jobs`). An agent from before this revision reads the new kind as `bad_payload` (step 6) and answers nothing, so QC-2 reports the job as `expired_unclaimed` after its 15 minutes; pull `main` on the PC to get the new kind. (That is read from `parse_job`'s kind check in the old agent, not run against an old agent.) Both references, the Go `internal/devicejobs` and the Python `reference_check.py` and `qc_agent/contract.py`, change together in the same PR.
 
 ## 2. Who writes what
@@ -108,7 +118,8 @@ The payload is carried as an **exact string**, so nobody ever re-serializes JSON
 
 | Message | Tag |
 |---|---|
-| job | `qc2-device-job/v1` |
+| job, v1 kinds | `qc2-device-job/v1` |
+| job, `edit_preset` (contract v2) | `qc2-device-job/v2` |
 | result | `qc2-device-result/v1` |
 | heartbeat | `qc2-device-heartbeat/v1` |
 | owned slots (reserved) | `qc2-device-owned-slots/v1` |
@@ -135,6 +146,8 @@ Step 4's escaping doesn't matter. Go writes `<` inside the payload string as a s
 5. Only now parse `payload` as JSON (section 7 for jobs).
 
 The verifier supplies the tag for the message it **expects**; the envelope never says what it is. A job signature therefore never verifies as a result or a heartbeat.
+
+**Jobs have two tags (contract v2).** The agent can't know a job's version before verifying it, so for a job it computes the HMAC under **both** job tags and compares **both** in constant time (no early exit). The tag that verifies decides the payload version for step 6: `qc2-device-job/v1` → `v` must be `1` and the kind one of the v1 kinds; `qc2-device-job/v2` → `v` must be `2` and the kind `edit_preset`. Neither verifying is `bad_signature`. Domain separation means at most one can verify. A v1 payload under the v2 tag, a v2 payload under the v1 tag, or a kind of the other version are all `bad_payload`. Go: `Keyring.OpenJob`; Python: `open_job`.
 
 **Strict JSON.** Every signed document (envelopes, and job payloads in section 7) is parsed with these rules. They exist so Go and Python never disagree about what a signed document says.
 - **Nesting** at most **32** levels (the outermost object or array is level 1).
@@ -166,11 +179,11 @@ Signed with `qc2-device-job/v1`. The agent parses it **strictly** (the section 5
 
 | Field | Type and constraint |
 |---|---|
-| `v` | integer `1` |
+| `v` | integer `1`; `2` for `edit_preset` (section 7.1) |
 | `type` | `"qc2-device-job"` |
 | `job_id` | lowercase canonical UUID; **MUST** equal the UUID in the object key |
 | `bucket` | the jobs bucket name; **MUST** equal the agent's configured bucket |
-| `kind` | `"push_preset"` \| `"list_slots"` \| `"read_preset"` \| `"sync_device_library"` |
+| `kind` | `v` 1: `"push_preset"` \| `"list_slots"` \| `"read_preset"` \| `"sync_device_library"`. `v` 2: `"edit_preset"` |
 | `created_at` | timestamp |
 | `expires_at` | timestamp; QC-2 sets `created_at + 15 min` |
 | `args` | object, by `kind` (below) |
@@ -196,6 +209,75 @@ Signed with `qc2-device-job/v1`. The agent parses it **strictly** (the section 5
   - `export.format`: `^[a-z0-9][a-z0-9.-]{0,40}/[0-9]{1,4}$`. The agent **MUST** refuse a format it doesn't implement (`refused`, `unsupported_arg`).
   - `export.payload`: a JSON object. Its schema belongs to the device export (plan §4, P2). The agent re-validates every operation in it against its own catalog copy before touching the unit (plan §5).
 
+## 7.1. `edit_preset` args (contract v2)
+
+Payload `v` **2**, signed with `qc2-device-job/v2` (section 5). Every other job field is as in section 7.
+
+```json
+{"slot": "4A", "mode": "copy", "target_slot": "20A", "name": "Texas Blues edit",
+ "source": {"preset_id": "device-1", "guitar": "From the unit"},
+ "plan": {"format": "qc2-device-edit/1", "sha256": "<64 lowercase hex>", "payload": "<the plan's exact JSON text>"}}
+```
+
+| Field | Type and constraint |
+|---|---|
+| `slot` | the open slot, as for a push (`^(?:[1-9]\|[12][0-9]\|3[0-2])[A-H]$`). **MUST** equal the plan's `expect.slot`. |
+| `mode` | `"live"` \| `"copy"` \| `"overwrite"` (`docs/design/qc-preset-editing.md` section 5). |
+| `target_slot` | `copy`: a slot string other than `slot`. `live` and `overwrite`: `null`. |
+| `name` | `copy`: the copy's name, the push name rule (1-32 printable ASCII, no leading or trailing space). `live` and `overwrite`: `null`. An overwrite never takes a name from a job; it keeps the unit's own. |
+| `source` | `{"preset_id": string, "guitar": string}`, informational, as for a push. The agent never acts on it. |
+| `plan.format` | exactly `"qc2-device-edit/1"`. Any other format is `bad_payload` (unlike a push's export, the plan's schema is part of this contract). |
+| `plan.sha256` | `^[0-9a-f]{64}$`: lowercase hex SHA-256 of `UTF-8(format) ‖ 0x0A ‖ UTF-8(payload)`. **MUST** match. |
+| `plan.payload` | a **string**: the plan's exact JSON text, at most 256 KiB of UTF-8. It is hashed as given, then parsed with the section 5 strict-JSON rules and section 7.2's schema. |
+
+- **Why a string.** QC-2 hashes the bytes `json.Marshal` wrote, and the agent must check the same bytes. Re-serialising JSON doesn't reproduce them: a Go/Python comparison over 40,007 numbers found 883 written differently (`1` vs `1.0`, `1e-07` vs `1e-7`; Go also escapes `<`, `&` and U+2028), with **no** value differing once parsed (run by the E3 planner in a scratch directory, not committed). So the hash covers the text, and the numbers the agent reads are bit-exact.
+- **Size.** The plan text is escaped once inside the args and again inside the envelope, so QC-2 checks the **sealed** object against the 512 KiB job cap before writing it (`Store.Enqueue`), and the agent's step 2 does as usual.
+- **The snapshot id** (the read the plan was computed against) is inside the hashed plan (`snapshot`), so it is signed and bound by the confirm token; it is not repeated as an arg.
+
+## 7.2. The plan: `qc2-device-edit/1`
+
+The plan QC-2's edit planner (`internal/deviceedit`) emits; the Go types are `devicejobs.EditPayload` and friends, which `deviceedit` uses through type aliases. Exact, case-sensitive key sets at every level; any violation is `bad_payload`.
+
+```json
+{"format": "qc2-device-edit/1",
+ "catalog": {"coros": "4.1", "sha256": "<qc_catalog.json hash>"},
+ "snapshot": "<the read_preset job id>",
+ "expect": {"folder_key": "/media/p4/Presets/Sounds profiles", "position": 24, "slot": "4A", "name": "Texas Blues",
+            "layout": [[0, 0, 1120], [0, 1, 12045], [0, 2, 8006], [1, 0, 5]]},
+ "param_ops": [{"row": 0, "col": 0, "model_id": 1120, "index": 0, "label": "GAIN", "evidence": ["taper:g4"], "scene_mode": true,
+                "expect": [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45], "wire": [0.5, 0.62, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45]}],
+ "bypass_ops": [{"row": 0, "col": 2, "model_id": 8006, "why": "target",
+                 "expect": [false, false, false, false, false, false, false, false], "bypass": [false, true, false, false, false, false, false, false]}]}
+```
+
+An **integer** below is a JSON number with no fraction and no exponent (`24`, not `24.0` or `2.4e1`; not a boolean). A **text** is 1-64 code points, none of them in U+0000-001F or U+007F-009F, and not U+2028 or U+2029 (code-point ranges only, so the two languages can't disagree).
+
+| Field | Type and constraint |
+|---|---|
+| `format` | `"qc2-device-edit/1"` |
+| `catalog` | `{"coros": ^[0-9]{1,3}(\.[0-9]{1,3}){0,3}$, "sha256": ^[0-9a-f]{64}$}`. The agent (E4) refuses a catalog hash other than its own copy's, as for a push. |
+| `snapshot` | lowercase UUID: the `read_preset` job the plan was computed against |
+| `expect.folder_key` | the collection key, the read-back `/2` rule (section 9.1). Never empty: a plan from a `/1` read has none and can't be sent. |
+| `expect.position` | integer 0-255 |
+| `expect.slot` | the position's label: bank `position/8 + 1`, letter `A`-`H` |
+| `expect.name` | text: the preset's name on the unit as the read reported it. Compared, never written. |
+| `expect.layout` | 1-32 entries `[row 0-3, col 0-7, model_id 0..2^31-1]`, integers, strictly ascending by (row, col): every block on every row |
+| `param_ops` | at most 512 objects `{row, col, model_id, index, label, evidence, scene_mode, expect, wire}` |
+| `param_ops[].row` | integer `0` (decision D7: an edit writes row 0 only) |
+| `param_ops[].col`, `model_id` | integers 0-7 and 0..2^31-1; `[row, col, model_id]` **MUST** be in `expect.layout` |
+| `param_ops[].index` | integer 0-255 |
+| `param_ops[].label` | text (display only; the catalog's label) |
+| `param_ops[].evidence` | 0-8 strings matching `^[a-z0-9][a-z0-9.:+-]{0,63}$` (display only) |
+| `param_ops[].scene_mode` | boolean. `false` means all eight `wire` values are equal. |
+| `param_ops[].expect`, `wire` | exactly 8 numbers each, scenes A-H, each in [0, 1]: the snapshot's wire values (compare-and-swap) and the values to write. `wire` **MUST** differ from `expect` in at least one scene. |
+| `bypass_ops` | at most 8 objects `{row, col, model_id, why, expect, bypass}`, row 0, on a layout cell as above |
+| `bypass_ops[].why` | `"target"` or `"removed"`. `removed` means all eight `bypass` flags are `true` (decision D4). |
+| `bypass_ops[].expect`, `bypass` | exactly 8 booleans each (`true` = bypassed); `bypass` **MUST** differ from `expect` |
+
+Cross-field rules, all `bad_payload`: `param_ops` strictly ascending by (col, index), so no control twice; `bypass_ops` strictly ascending by col; at least one op in total.
+
+**Not expressible without the catalog or the unit (the agent's E4 checks, `refused` with a reason code, never `bad_payload`):** the catalog hash is the agent's; each `model_id` is a catalog model; each `index` is below the model's `param_count`, is not hidden, internal or a string, and has a writable type; a switch's wire value is a whole position; the label matches the catalog; the cell isn't locked (an unverified clone, a capture, an IR, routing); the collection is a regular 256-slot one and not the backup collection; the slot is allowed and not protected; `target_slot` is empty in a fresh listing; the copy's name isn't a duplicate; and the compare-and-swap against a fresh read (section 15).
+
 ## 8. Agent check order for a pending job
 
 Normative. The agent runs these steps for every object under `jobs/pending/`, in this order. The first failure decides the outcome, and the outcome decides the action. `internal/devicejobs.CheckPendingJob` is the Go reference for steps 1–9; the `pending_jobs` vectors pin it.
@@ -204,8 +286,8 @@ Normative. The agent runs these steps for every object under `jobs/pending/`, in
 |---|---|---|---|
 | 1 | Object key matches `^jobs/pending/(<lowercase uuid>)\.json$`. Use the regex, not `uuid.UUID()`, which accepts braces and upper case. | `bad_object_key` | Skip; log once. No result. |
 | 2 | Size ≤ 512 KiB, taken from the listing **before** reading (section 3) | `too_large` | Delete; log. No result. |
-| 3–5 | Envelope, kid, HMAC (section 5) under the **job** tag | `bad_envelope` / `unknown_kid` / `bad_signature` | Delete; log locally. **No result**: the agent never answers a forgery. |
-| 6 | Strict payload (section 7) | `bad_payload` | Delete; log. No result. |
+| 3–5 | Envelope, kid, HMAC (section 5) under **both** job tags, each compared in constant time | `bad_envelope` / `unknown_kid` / `bad_signature` | Delete; log locally. **No result**: the agent never answers a forgery. |
+| 6 | Strict payload (section 7) at the verifying tag's version: `v` 1 and a v1 kind under `qc2-device-job/v1`; `v` 2 and `edit_preset` under `qc2-device-job/v2`, with its args and plan (sections 7.1, 7.2) | `bad_payload` | Delete; log. No result. |
 | 7 | `job_id` equals the key's UUID; `bucket` equals the agent's bucket | `misrouted` | Delete; log. No result. |
 | 8 | Not already taken: the id is not in the local ledger **and** `jobs/done/<id>.json` doesn't exist | `replay` | Delete the pending object. No new result. |
 | 9a | `created_at < expires_at`; `expires_at − created_at ≤ 24 h`; `created_at ≤ now + 5 min` | `bad_payload` | Delete; log. No result. |
@@ -231,9 +313,9 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 | Field | Type and constraint |
 |---|---|
 | `v`, `type` | `1`, `"qc2-device-result"` |
-| `job_id`, `bucket`, `kind` | echo the job; QC-2 rejects a result whose `job_id` or `bucket` don't match the object |
+| `job_id`, `bucket`, `kind` | echo the job; QC-2 rejects a result whose `job_id` or `bucket` don't match the object, or whose `kind` isn't one of the five kinds. The result payload's own `v` stays `1` for every kind. |
 | `status` | `"succeeded"` \| `"failed"` \| `"refused"` \| `"expired"` |
-| `reason_code` | `""` or one of `firmware_mismatch`, `unit_absent`, `unit_busy` (Cortex Control holds the unit), `slot_not_allowed`, `slot_not_empty`, `validation`, `unsupported_kind`, `unsupported_arg`, `device_error`, `readback_mismatch`, `interrupted`, `expired` |
+| `reason_code` | `""` or one of `firmware_mismatch`, `unit_absent`, `unit_busy` (Cortex Control holds the unit), `slot_not_allowed`, `slot_not_empty`, `validation`, `unsupported_kind`, `unsupported_arg`, `device_error`, `readback_mismatch`, `interrupted`, `expired`; contract v2 adds `preset_changed` (an edit's compare-and-swap failed: refused, nothing written), `edit_not_enabled` (the PC hasn't switched this mode on: refused) and `rollback_failed` (an edit failed verification and the rollback didn't restore every value: failed, the open preset may be half-edited and is not saved). A QC-2 from before v2 shows an unknown code as `unknown`. |
 | `message` | string, ≤ 500 characters, for the user |
 | `started_at`, `finished_at` | timestamps |
 | `agent_version` | `^[0-9A-Za-z.+-]{1,32}$` |
@@ -242,6 +324,7 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 | `slots` | `null`, or for `list_slots`: `{"setlist": "My Presets", "slots": [≤256 × {"slot", "state": "empty"\|"occupied", "name": string≤64\|null, "owned": bool}]}` |
 | `readback` | `null`, or for `read_preset`: `{"format": "qc-device-readback/1", "slot": string\|null, "name": string\|null, "payload": object}`. `payload` is the object defined in section 9.1. |
 | `library` | `null`, or for `sync_device_library`: `{"format": "qc-device-library/1", "payload": object}`. `payload` is the object defined in section 9.2. Present as `null` on every other result. |
+| `edit` | `null`, or for `edit_preset` once it runs (E4): `{"format": "qc-device-edit-result/1", "payload": object}`, section 9.3. `null` when the agent refused the job before reaching the unit, which is every edit until E4. Present as `null` on every other result. (A QC-2 from before v2 ignores it: results are read leniently.) |
 
 **Why results are signed.** The agent already holds the key, so signing costs one function call. It turns "a leaked agent bucket token can forge results, heartbeats and LLM-visible text" into "it can only delete or spam objects". QC-2 shows a result that fails verification as state `unverified` and withholds all of its text.
 
@@ -318,6 +401,34 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 - **Cab mic strings are not part of this job.** Whether a stored preset can be read without loading it on the unit is **UNVERIFIED**, so the agent never reads one for the sync. QC-2 collects the cab mic strings (the `ir selector` values) from the `read_preset` payloads of presets the user asked to read (section 9.1), keeps only a string that is a variation of the cab's own catalog default (same `<prefix>_<cab>`, different mic), and a push may then write such a string exactly (the export's `mics`, `qc2-device-export/1`). **Residual, accepted:** the agent cannot check that a mic string was really seen on the unit, only that it keeps the catalog's own `<prefix>_<cab>` and has a `Name 123` mic part; someone who can write QC-2's main bucket could add a plausible-looking but nonexistent mic (the unit's reaction to a nonexistent IR name is **UNVERIFIED**). That writer can already store presets, so it adds no new authority; making the agent record the strings itself is the follow-up if it matters.
 - **Shared fixtures.** `testdata/devicejobs/library.json` holds fake directory listings in the agent's positional form with the payload `qc_agent.captures.library_payload` must produce (hostile names, a cloud item, a favorites view, an over-long and a non-ASCII folder), and 19 invalid payloads with the error each must produce. `deploy/qc-agent/tests/test_library.py` checks the first; the Go tests parse every expected payload and every invalid one.
 
+## 9.3. The `edit_preset` result: `qc-device-edit-result/1` (contract v2)
+
+What an edit job did on the unit. **E3 specifies and parses it; nothing produces it until E4.**
+
+```json
+{"plan_sha256": "<the job's plan.sha256>", "snapshot": "<the plan's snapshot>", "mode": "live",
+ "cas": {"state": "matched", "failed": []},
+ "params": [{"row": 0, "col": 0, "index": 0, "readback": [0.5, 0.62, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45], "ok": true}],
+ "bypass": [{"row": 0, "col": 2, "readback": [false, true, false, false, false, false, false, false], "ok": true}],
+ "collateral": {"params_compared": 118, "bypass_compared": 248, "layout_same": true, "mismatches": 0, "items": []},
+ "rollback": {"state": "not_needed", "restored": 0, "failed": 0},
+ "save": {"saved": false, "slot": null, "name": null, "listed": false, "backup": null}}
+```
+
+| Field | Type and constraint |
+|---|---|
+| `plan_sha256`, `snapshot` | echo the job's plan hash and the plan's snapshot id |
+| `mode` | the job's mode |
+| `cas` | `{"state": "matched"\|"mismatch"\|"not_reached", "failed": [...]}`: the compare-and-swap against a fresh read **before the first write**. `failed` lists the distinct pins that differed, from `folder_key`, `position`, `name`, `layout`, `param_expect`, `bypass_expect`, and is non-empty exactly when `state` is `mismatch`. `not_reached`: the job stopped before the check. A mismatch writes nothing: status `refused`, `reason_code: "preset_changed"`. |
+| `params` | at most 512 `{"row": 0, "col": 0-7, "index": 0-255, "readback": [8 × number\|null], "ok": bool}`: each param op's value after the write (`null` for a value that isn't a finite number), and whether it equals the op's `wire` |
+| `bypass` | at most 8 `{"row": 0, "col", "readback": [8 × bool]\|null, "ok"}`: each bypass op's flags after the write (`null` if the unit sent none) |
+| `collateral` | `null` (not reached) or the check that **nothing outside the plan changed**, on **all four rows**, against the pre-write read: `params_compared` (0-8192: parameters not written by an op, each compared on all eight scenes), `bypass_compared` (0-256: bypass flags, except the eight of a bypass-op cell), `layout_same` (every cell's model unchanged), `mismatches` (the complete count; a changed layout counts), `items` (at most 64 and no more than `mismatches`: `{"row", "col", "index": int\|null, "scene": int\|null}`, `index` `null` = a bypass flag, `scene` `null` = the cell's model changed). Equality is exact (`null` equals `null`). |
+| `rollback` | `{"state": "not_needed"\|"restored"\|"partial"\|"failed", "restored": 0-520, "failed": 0-520}`. After a failed read-back or collateral check the agent writes the pre-write values back for the ops it applied and verifies again. `restored`: status `failed`, `readback_mismatch`. `partial`/`failed`: `rollback_failed`. |
+| `save` | `{"saved": bool, "slot": slot\|null, "name": string\|null, "listed": bool, "backup": null\|{"slot", "collection"}}`. `saved` needs a slot and a name (the push name rule), and never happens in `live` mode or after a rollback. `listed`: the save was seen in a fresh listing. `backup` is phase E5's (an overwrite's original): a slot and a clean collection name of at most 40 characters. |
+
+- **Strict parse (QC-2).** `devicejobs.ParseEditResultPayload`: at most 256 KiB, the section 5 strict-JSON rules, exact key sets (missing, unknown or case-variant keys are refused), the bounds and enums above, and the cross-field rules. The errors are fixed text and never quote the payload. Matching each entry to the plan QC-2 sent (the same cells and indexes) is E4's.
+- **Shared fixture.** `testdata/devicejobs/edit_result.json`: 8 valid results (applied, CAS refused, collateral rolled back, rollback failed, copy saved, overwrite with backup, layout changed, bypass unreadable) and 41 invalid ones with the error each must produce. The agent's E4 results must pass the same parser.
+
 ## 10. Heartbeat
 
 Signed with `qc2-device-heartbeat/v1`, written to `agent/heartbeat.json`:
@@ -371,10 +482,17 @@ The agent never sees this, but it explains where push job ids come from.
 - **Confirm.** The arguments must match the claims. QC-2 rebuilds the export, which must still have zero unresolved items and the **same** `plan_sha256`; otherwise the preset changed since the dry run and the user must dry-run again.
 - **Push job id.** The id is a UUID (version 8) taken from SHA-256(`"qc2-job-id/v1\n"` ‖ token). Repeating a confirm therefore names the same job. QC-2 doesn't queue it twice, and the agent's ledger (step 8) runs it at most once even if two QC-2 machines race.
 - **Read job ids** are random v4 UUIDs.
+- **Edit tokens (contract v2).** `edit_device_preset`'s dry run will return `confirm_token = "e1.<exp_unix>.<mac>"` (E4; E3 only issues and checks them in `internal/devicejobs`, and the tool still answers "not available yet"):
+  - `K_e` = HMAC-SHA256(key, `"qc2-edit-confirm-key/v1"`); `mac` = the first 32 hex characters of HMAC-SHA256(`K_e`, `claims`);
+  - `claims` = the JSON array `["e1", preset_id, guitar, mode, slot, target_slot, name, device_name, snapshot, plan_sha256, exp_unix]`, where `slot` is the plan's `expect.slot`, `target_slot` and `name` are the copy's (empty otherwise), `device_name` is the plan's `expect.name` and `snapshot` its read job id;
+  - the same 10-minute life, canonical form and rotation rules as a push token;
+  - the edit job id is a version 8 UUID from SHA-256(`"qc2-edit-job-id/v1\n"` ‖ token).
+
+  The prefix, the derived key and the job-id tag all differ from a push's, so a push token never confirms an edit and the reverse (tested both ways, `TestEditConfirmToken`).
 
 ## 13. Test vectors
 
-`testdata/devicejobs/vectors.json` (82 entries) is **generated by `gen_vectors.py`**, written from this document, not from the Go code. Two references must reach every `expect`:
+`testdata/devicejobs/vectors.json` (186 entries; the first 82 are v1's, byte for byte as in contract v1, pinned by `TestV1VectorsUnchanged`) is **generated by `gen_vectors.py`**, written from this document, not from the Go code. Two references must reach every `expect`:
 - Go, via `go test ./internal/devicejobs`;
 - Python, via `python3 -I testdata/devicejobs/reference_check.py testdata/devicejobs/vectors.json`.
 
@@ -417,6 +535,14 @@ Python isn't in CI, so run the Python check by hand whenever the vectors change.
     - `1e400` and a 400-digit integer in the export;
     - nesting at exactly 32 levels (ok) and 33 (rejected);
     - a padded read slot.
+
+- **`pending_jobs`, contract v2 (104 entries, appended):** `edit_preset` jobs through the full check order:
+  - valid jobs in each mode, with only a param op or only a bypass op, non-ASCII text and `<` (hashed as UTF-8), a plan text with escapes and whitespace (hashed as given), integer wire values, a plan of exactly 256 KiB and one of 512 param ops, and rotation;
+  - tag and version binding: an edit under the v1 tag, `v` 1 under either tag, a v1 kind under the v2 tag or with `v` 2, `v` 2.0, the result tag, a swapped payload;
+  - the plan record: a hash that doesn't match (including over a re-serialised text), an upper-case hash, another format, an object instead of a string, an extra key; a plan text that isn't JSON, has trailing data, a duplicate key, NaN, `1e400`, an unpaired surrogate escape, or is over 256 KiB;
+  - mode, slots and names: copy without or onto its own slot, without a name or with a 33-character one; `live` or `overwrite` with a name or target slot; an unknown or case-variant mode; args and plan naming different slots;
+  - `expect`: slot and position disagreeing, position 256, `24.0` or a string; an empty (from a `/1` read), backticked or null `folder_key`; a name empty, 65 characters, with a control character or U+2028 (64 non-ASCII characters is fine); layouts empty, unsorted, duplicated, with a fourth number, row 4 or a negative model id;
+  - hostile ops the contract can express: an op on a cell outside the layout, with another model, or on row 1; a duplicate or unsorted op; an op that changes nothing; 7 or 9 values; values 1.5, -0.1, a string or `true`; index 256; `col` written `0.0` or `0e0`; scene mode off with differing values; bad evidence or label; 513 ops; a removed block not bypassed everywhere; numeric bypass flags; two bypass ops on one cell; no ops at all; a missing or extra top-level key.
 
 The vectors don't cover:
 - invalid UTF-8 bytes (JSON can't carry them in a string field), and a 512 KiB run of `[`. The Go tests cover both;
@@ -471,6 +597,12 @@ Treat them as **search-sourced, page-unread** until the owner confirms them in t
 4. Set `DEVICE_JOBS_BUCKET`, `DEVICE_JOB_KEY` (and later `DEVICE_JOB_KEY_NEXT`) with `fly secrets set`. The same key goes in the agent's `agent.env`.
 
 ## 15. Threats this contract handles, and what it doesn't
+
+**Edits (contract v2).** An edit changes a preset the owner may have made, so the bound is tighter than a push's:
+- **The signed job is not enough authority.** The PC opt-in (`QC_AGENT_EDIT_MODES`, empty by default; `QC_AGENT_OVERWRITE_USER` for a slot QC-2 didn't create; `QC_AGENT_PROTECTED_SLOTS`; the reserved backup collection) is checked by the agent before anything else (`docs/design/qc-preset-editing.md` section 6, E4). A leaked `agent.env` can then reach at most the modes the owner switched on locally, plus the existing push bound.
+- **A stored snapshot is validated but not signed.** QC-2 keeps every read as `device/snapshots/<job_id>.json` in its main bucket, strictly re-parsed on load, but anyone who can write that bucket could plant a different "read". E4's compare-and-swap is what makes a forged one harmless: before the first write the agent re-reads the open preset and requires the collection key, position, name, the whole layout on all rows, and every op's `expect` values to match exactly. A forged snapshot that differs from the unit fails it (`preset_changed`), and one that matches is as good as a real read. Recommended E4 hardening (QC-2 side, not a contract rule): when issuing an edit token, re-open the signed `jobs/done/<snapshot>.json` and require its read-back to equal the stored snapshot.
+- **What the agent can't check from the job alone** (the catalog and the unit) is listed at the end of section 7.2; each is a refusal with a reason code, never a write.
+- **Plan size.** A plan near its 256 KiB cap could grow past the 512 KiB job cap once escaped twice; QC-2 refuses to write such a job, and the agent's step 2 refuses to read one.
 
 | Who has what | What they can do |
 |---|---|

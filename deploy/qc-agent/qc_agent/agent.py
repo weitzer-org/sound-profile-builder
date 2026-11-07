@@ -140,6 +140,7 @@ class Agent:
             "started_at": contract.format_time(started), "finished_at": contract.format_time(finished),
             "agent_version": AGENT_VERSION, "firmware": outcome.firmware,
             "push": outcome.push, "slots": outcome.slots, "readback": outcome.readback, "library": outcome.library,
+            "edit": outcome.edit,
         }
 
     # ---- results ----
@@ -195,14 +196,14 @@ class Agent:
     def recover(self):
         for job_id in self.ledger.unfinished():
             kind = self.ledger.taken[job_id].get("kind", "")
-            if kind not in ("push_preset", "list_slots", "read_preset", "sync_device_library"):
+            if kind not in ("push_preset", "list_slots", "read_preset", "sync_device_library", "edit_preset"):
                 kind = "push_preset"  # cannot happen: only parsed jobs are taken
             log.warning("job %s was interrupted by a crash or a closed window; reporting it, not retrying",
                         job_id[:8])
             at = contract.parse_time(self.ledger.taken[job_id]["at"])
             self.finish(job_id, kind, jobs.failed(
                 "interrupted", "The bridge stopped in the middle of this job (crash, closed window or power). "
-                "It is not retried. For a push, check the slot on the unit before sending again."), at)
+                "It is not retried. For a push or an edit, check the preset on the unit before sending again."), at)
         # Results whose upload was never confirmed. One whose upload the ledger records is not re-checked:
         # a bucket-token holder deleting it later is the "delete objects" power contract 15 already concedes.
         # Even if a done object is there (a crash after the PUT, or someone else's object), the stored,

@@ -80,18 +80,27 @@ def export():
     return copy.deepcopy(go_golden("pushable_g3"))
 
 
+def edit_args():
+    """A valid edit_preset job's args (contract v2): those of the shared vector "valid edit_preset: copy"."""
+    v = json.loads(VECTORS.read_text(encoding="utf-8"))
+    case = next(c for c in v["pending_jobs"] if c["name"] == "valid edit_preset: copy")
+    return json.loads(json.loads(case["envelope"])["payload"])["args"]
+
+
 def job(kind="list_slots", args=None, job_id=None, created=T0, ttl_s=900, bucket=BUCKET, key_hex=KEY_HEX):
     jid = job_id or str(uuid.uuid4())
     if args is None:
-        args = {"list_slots": {}, "sync_device_library": {}, "read_preset": {"slot": None},
-                "push_preset": {"slot": "20A", "name": "Texas Blues",
-                                "source": {"preset_id": "p-123", "guitar": "Telecaster"},
-                                "export": export()}}[kind]
-    payload = {"v": 1, "type": "qc2-device-job", "job_id": jid, "bucket": bucket, "kind": kind,
+        args = edit_args() if kind == "edit_preset" else {
+            "list_slots": {}, "sync_device_library": {}, "read_preset": {"slot": None},
+            "push_preset": {"slot": "20A", "name": "Texas Blues",
+                            "source": {"preset_id": "p-123", "guitar": "Telecaster"},
+                            "export": export()}}[kind]
+    v2 = kind == "edit_preset"  # contract v2: payload v 2 under its own tag
+    payload = {"v": 2 if v2 else 1, "type": "qc2-device-job", "job_id": jid, "bucket": bucket, "kind": kind,
                "created_at": contract.format_time(created),
                "expires_at": contract.format_time(created + dt.timedelta(seconds=ttl_s)),
                "args": copy.deepcopy(args)}
-    data = contract.seal(bytes.fromhex(key_hex), contract.TAG_JOB, json.dumps(payload))
+    data = contract.seal(bytes.fromhex(key_hex), contract.TAG_JOB_V2 if v2 else contract.TAG_JOB, json.dumps(payload))
     return jid, f"jobs/pending/{jid}.json", data
 
 

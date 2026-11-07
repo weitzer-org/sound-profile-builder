@@ -24,13 +24,8 @@ func CheckPendingJob(kr *Keyring, objectKey, agentBucket string, now time.Time, 
 	if len(data) > MaxJobBytes {
 		return nil, fail(OutcomeTooLarge, "%d bytes", len(data))
 	}
-	// 3-5. Envelope, kid, MAC.
-	payload, err := kr.Open(TagJob, data)
-	if err != nil {
-		return nil, err
-	}
-	// 6. Strict payload.
-	j, err := ParseJob(payload)
+	// 3-5. Envelope, kid, MAC under either job tag; 6. strict payload of the matching version.
+	j, err := kr.OpenJob(data)
 	if err != nil {
 		return nil, err
 	}

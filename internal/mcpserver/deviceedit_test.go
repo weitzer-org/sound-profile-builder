@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/deviceedit"
@@ -107,7 +108,12 @@ func TestEditDevicePreset_SnapshotStoredWithoutImportAndDryRunShowsChanges(t *te
 	_ = storage.OriginDeviceReadback
 
 	// A confirm attempt is refused, and nothing is queued.
+	// E3 can mint edit tokens, but the tool still never takes one (applying an edit is phase E4).
+	kr, _ := devicejobs.NewKeyring(strings.Repeat("ab", 32), "")
+	etok, _ := kr.IssueEditConfirm(devicejobs.EditClaims{PresetID: "device-edited", Mode: "live", PlanSHA256: out.PlanSHA256}, time.Now())
 	for _, args := range []map[string]any{
+		{"preset_id": "device-edited", "dry_run": false, "confirm_token": etok},
+		{"preset_id": "device-edited", "mode": "live", "confirm_token": etok},
 		{"preset_id": "device-edited", "dry_run": false, "confirm_token": "x"},
 		{"preset_id": "device-edited", "confirm_token": "x"},
 		{"preset_id": "device-edited", "dry_run": false},
@@ -189,8 +195,8 @@ func TestEditDevicePreset_BackfillSurvivesAStorageWriteError(t *testing.T) {
 }
 
 // A qc-device-readback/2 read in one of the owner's own collections: the snapshot keeps its
-// format, the dry run names the collection, and the plan is confirmable (it pins the key). A /1
-// read gets the "can't be pinned" note instead.
+// format, the dry run names the collection, and the plan pins the key. A /1 read gets the
+// "can't be pinned" note instead.
 func TestEditDevicePreset_ReadbackV2PinsTheCollection(t *testing.T) {
 	r, st := editRig(t)
 	ctx := context.Background()
@@ -219,7 +225,7 @@ func TestEditDevicePreset_ReadbackV2PinsTheCollection(t *testing.T) {
 	res := itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": imp2.Import.PresetID})
 	text := okText(t, res)
 	out := itStructured[deviceEditOutput](t, res)
-	if !out.Confirmable || out.Collection != "/media/p4/Presets/Sounds profiles" || strings.Contains(text, "can't be pinned") ||
+	if !out.Pinned || out.Collection != "/media/p4/Presets/Sounds profiles" || strings.Contains(text, "can't be pinned") ||
 		!strings.Contains(text, "collection `/media/p4/Presets/Sounds profiles`") {
 		t.Fatalf("out %+v\n%s", out, text)
 	}

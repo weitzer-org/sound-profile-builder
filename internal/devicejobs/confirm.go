@@ -116,10 +116,103 @@ func (k *Keyring) CheckConfirm(token string, c ConfirmClaims, now time.Time) err
 // confirm names the same job: a UUID (version 8, RFC 9562 variant)
 // from SHA-256("qc2-job-id/v1\n" || token).
 func JobIDFromToken(token string) string {
-	h := sha256.Sum256([]byte(jobIDTag + token))
+	return uuid8(jobIDTag + token)
+}
+
+func uuid8(s string) string {
+	h := sha256.Sum256([]byte(s))
 	b := h[:16]
 	b[6] = (b[6] & 0x0f) | 0x80
 	b[8] = (b[8] & 0x3f) | 0x80
 	x := hex.EncodeToString(b)
 	return x[0:8] + "-" + x[8:12] + "-" + x[12:16] + "-" + x[16:20] + "-" + x[20:32]
+}
+
+// ---- edit confirm tokens (contract section 12, revision E3) ----
+//
+// An edit token is "e1.<exp_unix>.<32 hex>", minted under its own derived key and claims tag, so a
+// push token is never an edit token and the reverse. It binds what the user saw in the dry run:
+// the target preset and guitar, the save mode, the open slot, the copy's slot and name, the
+// preset's name on the unit, the read it was planned against, and the plan's hash. Phase E3
+// only issues and checks it: edit_device_preset does not call these until E4.
+
+const (
+	editConfirmPrefix = "e1"
+	editConfirmKeyTag = "qc2-edit-confirm-key/v1"
+	editJobIDTag      = "qc2-edit-job-id/v1\n"
+)
+
+// EditClaims are what an edit confirm token binds.
+type EditClaims struct {
+	PresetID   string
+	Guitar     string
+	Mode       string
+	Slot       string // the open slot (the plan's expect.slot)
+	TargetSlot string // copy only; "" otherwise
+	Name       string // copy only; "" otherwise
+	DeviceName string // the preset's name on the unit (the plan's expect.name)
+	Snapshot   string // the read job's id
+	PlanSHA256 string
+}
+
+func editConfirmMAC(key []byte, c EditClaims, exp int64) []byte {
+	claims, _ := json.Marshal([]string{editConfirmPrefix, c.PresetID, c.Guitar, c.Mode, c.Slot, c.TargetSlot, c.Name,
+		c.DeviceName, c.Snapshot, c.PlanSHA256, strconv.FormatInt(exp, 10)})
+	m := hmac.New(sha256.New, derivedKey(key, editConfirmKeyTag))
+	m.Write(claims)
+	return m.Sum(nil)[:16]
+}
+
+func derivedKey(key []byte, tag string) []byte {
+	m := hmac.New(sha256.New, key)
+	m.Write([]byte(tag))
+	return m.Sum(nil)
+}
+
+// IssueEditConfirm mints an edit token valid for ConfirmTTL.
+func (k *Keyring) IssueEditConfirm(c EditClaims, now time.Time) (string, time.Time) {
+	exp := now.Add(ConfirmTTL).Truncate(time.Second)
+	return fmt.Sprintf("%s.%d.%s", editConfirmPrefix, exp.Unix(), hex.EncodeToString(editConfirmMAC(k.cur.key, c, exp.Unix()))), exp
+}
+
+// CheckEditConfirm verifies an edit token against the claims under the current or next key, with
+// the same rules as CheckConfirm (canonical form only, expiry, no exp further out than a fresh
+// token's). A push token is ErrConfirmInvalid here.
+func (k *Keyring) CheckEditConfirm(token string, c EditClaims, now time.Time) error {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 || parts[0] != editConfirmPrefix || !expRe.MatchString(parts[1]) || !macRe.MatchString(parts[2]) {
+		return ErrConfirmInvalid
+	}
+	exp, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return ErrConfirmInvalid
+	}
+	got, err := hex.DecodeString(parts[2])
+	if err != nil {
+		return ErrConfirmInvalid
+	}
+	ok := 0
+	for _, key := range k.keys() {
+		if hmac.Equal(editConfirmMAC(key, c, exp), got) {
+			ok = 1
+		}
+	}
+	if ok == 0 {
+		return ErrConfirmMismatch
+	}
+	expT := time.Unix(exp, 0)
+	if !now.Before(expT) {
+		return ErrConfirmExpired
+	}
+	if expT.After(now.Add(ConfirmTTL + confirmSkew)) {
+		return ErrConfirmInvalid
+	}
+	return nil
+}
+
+// EditJobIDFromToken derives an edit job's id from its (checked, canonical) token under its own
+// tag, so an edit and a push never share an id: a UUID (version 8, RFC 9562 variant) from
+// SHA-256("qc2-edit-job-id/v1\n" || token).
+func EditJobIDFromToken(token string) string {
+	return uuid8(editJobIDTag + token)
 }

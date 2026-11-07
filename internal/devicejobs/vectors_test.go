@@ -2,6 +2,8 @@ package devicejobs
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -49,7 +51,7 @@ func loadVectors(t *testing.T) *vectorFile {
 	if err := json.Unmarshal(raw, &v); err != nil {
 		t.Fatal(err)
 	}
-	if v.Contract != "qc2-device-job-contract/1" {
+	if v.Contract != "qc2-device-job-contract/2" {
 		t.Fatalf("contract = %q", v.Contract)
 	}
 	return &v
@@ -263,5 +265,39 @@ func TestNextKeyKIDCollision(t *testing.T) {
 	kr.cur.kid = KID(other) // simulate the collision
 	if err := kr.setNext(other); err == nil || !strings.Contains(err.Error(), "collides") {
 		t.Fatalf("colliding NEXT accepted: %v", err)
+	}
+}
+
+// Contract v2 only appended vectors: the 82 v1 entries (4 signatures, 21 envelopes and the first 57
+// pending jobs) are byte for byte what they were in qc2-device-job-contract/1. The digest is over
+// each entry's raw JSON text, as gen_vectors.py writes it, in file order.
+func TestV1VectorsUnchanged(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "devicejobs", "vectors.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	var sigs, envs, pend []json.RawMessage
+	for k, dst := range map[string]*[]json.RawMessage{"signatures": &sigs, "envelopes": &envs, "pending_jobs": &pend} {
+		if err := json.Unmarshal(m[k], dst); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(sigs) != 4 || len(envs) != 21 || len(pend) < 57 {
+		t.Fatalf("v1 sections changed size: %d %d %d", len(sigs), len(envs), len(pend))
+	}
+	h := sha256.New()
+	for _, sec := range [][]json.RawMessage{sigs, envs, pend[:57]} {
+		for _, e := range sec {
+			h.Write(e)
+			h.Write([]byte{0})
+		}
+	}
+	const want = "e877ca5c1d4277a342f29fcea464aceec0a101d1ebf3f561ff56bbe6631dc9ba"
+	if got := hex.EncodeToString(h.Sum(nil)); got != want {
+		t.Fatalf("a v1 vector changed (digest %s): that is a contract change for v1 kinds", got)
 	}
 }
