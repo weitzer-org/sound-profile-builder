@@ -69,7 +69,9 @@ func (b *Bridge) ConfirmEdit(ctx context.Context, r EditRequest, token string) (
 		if j.Kind != KindEditPreset {
 			continue
 		}
-		var a EditArgs
+		var a struct { // only the slot: the plan text (up to 256 KiB) is not decoded for every pending job
+			Slot string `json:"slot"`
+		}
 		if json.Unmarshal(j.Args, &a) == nil && a.Slot == r.Claims.Slot {
 			return "", false, userErr("Not queued: an edit of slot %s is already waiting (job %s). Wait for it with get_device_job.", r.Claims.Slot, j.JobID)
 		}
