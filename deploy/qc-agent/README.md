@@ -291,7 +291,7 @@ them; this guide uses **24H**).
     branch on the PC first (the agent, the catalog and the vendored transport must be the same checkout QC-2 built its plan
     from) and restart the bridge. **Editing is off until you switch it on:** add `QC_AGENT_EDIT_MODES=live` to `agent.env`
     (and optionally `QC_AGENT_PROTECTED_SLOTS=1A-8H` for banks no edit may touch). Do **not** play while an edit runs: it
-    switches scenes A-H and puts back the one you had. An edit is never saved by the bridge.
+    switches scenes A-H and puts back the one you had. A live edit is never saved by the bridge (a copy is: step 22).
     - *a. Refused when off.* With `QC_AGENT_EDIT_MODES` empty, an applied edit ends `refused` / `edit_not_enabled` and the
       window never opens the unit.
     - *b. Pick the test slot.* Push any small preset of yours to an empty owned slot (for example 24H) as in step 11,
@@ -313,6 +313,39 @@ them; this guide uses **24H**).
       `rollback_failed`, re-select the slot WITHOUT saving.
     Report each of a-g as pass/fail. Only after a-d pass on the test slot, try a preset of yours with captures or rows 1-3
     (the plan must say they are left untouched) and check them afterwards. Until then treat `live` as unproven on the unit.
+
+22. **Copy edits, gate E-G3 (preset-editing E5a; first use on a QC-2-owned test slot).** **Saving the edited working grid
+    into a slot other than the open one is UNVERIFIED on the unit until you run this.** The only save the bridge has ever
+    done on your unit is a File CREATE into the open, empty slot after a push. A copy does the same message at another,
+    empty position with the edited grid of the preset you have open. If the unit does something else with it, this step
+    is how we find out; the bridge only ever sends that one message, only into an empty slot that a fresh listing shows
+    empty, never into the open slot. Pull `main` on the PC, restart the bridge, and add `copy` to the modes in `agent.env`
+    (`QC_AGENT_EDIT_MODES=live,copy`; `live` stays what step 21 proved). Do not play while it runs.
+    - *a. Prepare.* Pick a **QC-2-owned test preset** (one you pushed, as in step 11) and select it on the unit so it is
+      open. Pick an **empty** slot for the copy (list_device_slots shows which) and a name not used by any slot, for example
+      `Edit copy 1` (letters, digits, spaces and `_ ( ) + , ! ' & # . -` only). Write down what the unit shows now: the open
+      slot, the preset's name, and its footswitch layout.
+    - *b. Dry run, then apply.* `read_device_preset(import=true)`, change one value (`refine_preset`, or edit the draft),
+      `edit_device_preset(preset_id, mode=copy, name=..., target_slot=...)`. If the last listing shows the target occupied
+      the dry run warns; the bridge decides on a fresh one. Say yes to a small change only, then
+      `dry_run=false, confirm_token=...` with the **same** arguments and `get_device_job`. Expect `succeeded`, "Saved the edit
+      as ..." and the copy listed. The result says "not yet verified" on purpose.
+    - *c. Check the copy on the unit* (this is the gate): **(1)** the copy holds the change and **everything else** the
+      original has: rows 1-3, IR, splits, footswitch assignments, captures (open each capture block), scene names;
+      **(2)** the scene values (A and B and C-H) are the ones you expect; **(3)** the copy's name is the one you gave.
+    - *d. The original.* **(1)** The original slot still holds the original preset, unchanged by the copy (compare with what
+      you wrote down). **(2)** The edit was applied to what was open, so the original's *open* copy on the unit is dirty:
+      re-select it **without saving**. If the unit instead already shows it clean or saved, say what it shows.
+    - *e. Which slot is open afterwards?* Right after `get_device_job` says done, before you touch anything, read the slot
+      the unit shows as open and write it down (the agent log also has a line starting `copy: after the save`). Then
+      power-cycle the unit and check that the copy is still there with its contents (a power cycle keeps it).
+    - *f. Refusals (cheap).* Ask for a copy into an **occupied** slot: expect `refused` / `slot_not_empty`, nothing changed.
+      Ask for a name already used by another slot: expect `refused` / `validation`. With `copy` removed from
+      `QC_AGENT_EDIT_MODES`: expect `refused` / `edit_not_enabled` and the window never opens the unit.
+    Report a-f as pass/fail, in particular anything in c-e that is missing or different. **Until you do, E-G3 is
+    unverified and `copy` is unproven on the unit**; do not copy a preset you cannot recreate. If the result is
+    `failed` with the save "issued but not confirmed", the slot may still show the copy later: check it before reusing that
+    slot (the bridge keeps it in its owned list).
 
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
