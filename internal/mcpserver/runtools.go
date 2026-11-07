@@ -383,7 +383,7 @@ func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord)
 				b.WriteString("\n")
 			}
 			b.WriteString(dataNotice + "\n\n" + md)
-			if rec.Kind == runs.KindRefine && deviceDraftHint != "" {
+			if rec.Kind == runs.KindRefine {
 				if p, perr := svc.GetPreset(ctx, rec.PresetID); perr == nil && p.Origin != nil && p.Origin.Kind == storage.OriginDeviceReadback {
 					b.WriteString("\n\n" + deviceDraftHint)
 				}
