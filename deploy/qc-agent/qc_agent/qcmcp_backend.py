@@ -298,6 +298,10 @@ class WireGuard:
             if (not isinstance(folder_key, str) or not folder_key or type(position) is not int
                     or not 0 <= position < 256 or not isinstance(sname, str) or not sname):
                 raise WireRefused("the edit's save target is malformed")
+            e = plan["expect"]
+            if position == e["position"] or folder_key != e["folder_key"]:
+                # a copy never saves over the preset it was made from, and only into the collection that is open
+                raise WireRefused("the edit's save must be a different slot of the plan's own collection")
             save_target = {"folder_key": folder_key, "position": position, "name": sname, "state": "armed"}
         ops = {}
         for op in plan["param_ops"]:

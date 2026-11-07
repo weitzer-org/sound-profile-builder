@@ -345,16 +345,23 @@ func TestAgentEditResultsParse(t *testing.T) {
 		t.Fatalf("only %d agent results in the fixture", len(fx.Results))
 	}
 	states := map[string]int{}
+	savedCopies := 0
 	for name, p := range fx.Results {
 		r, err := devicejobs.ParseEditResultPayload(p)
 		if err != nil {
 			t.Errorf("%s: %v", name, err)
 			continue
 		}
+		if r.Save.Saved && r.Mode != devicejobs.EditModeCopy {
+			t.Errorf("%s: a %s edit result says it saved", name, r.Mode)
+		}
 		if r.Save.Saved {
-			t.Errorf("%s: a live edit result says it saved", name)
+			savedCopies++
 		}
 		states[r.Rollback.State]++
+	}
+	if savedCopies == 0 {
+		t.Error("the fixture has no saved copy result")
 	}
 	for _, st := range []string{"not_needed", "restored", "partial", "failed"} {
 		if states[st] == 0 {

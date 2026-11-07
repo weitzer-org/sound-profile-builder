@@ -994,12 +994,12 @@ class _Edit:
 
     # -- the result block (contract 9.3) --
 
-    def edit_block(self, params=None, bypass=None, collateral=None, rollback=None, saved=False):
+    def edit_block(self, params=None, bypass=None, collateral=None, rollback=None, save=None):
         payload = {"plan_sha256": self.sha, "snapshot": self.plan["snapshot"], "mode": self.mode,
                    "cas": {"state": self.cas["state"], "failed": list(self.cas["failed"])},
                    "params": params or [], "bypass": bypass or [], "collateral": collateral,
                    "rollback": rollback or {"state": "not_needed", "restored": 0, "failed": 0},
-                   "save": {"saved": saved, "slot": None, "name": None, "listed": False, "backup": None}}
+                   "save": save or {"saved": False, "slot": None, "name": None, "listed": False, "backup": None}}
         return {"format": EDIT_RESULT_FORMAT, "payload": payload}
 
     def refuse(self, code, msg, **kw):
@@ -1057,9 +1057,6 @@ class _Edit:
             out = self.check_unit()
             if out is not None:
                 return out
-            if self.mode == "copy":   # every pre-write check passed; the save itself is wired in the next commit
-                return self.refuse("unsupported_arg", "Copy edits pass the bridge's checks but cannot be saved yet. "
-                                   "Nothing was changed.")
             return self.apply()
         except (_Gone, UnitAbsent):
             return self.fail("unit_absent", "The Quad Cortex went away during the edit.", unit_gone=True)
@@ -1105,33 +1102,36 @@ class _Edit:
         if _expired(self.ctx, self.job):
             return Outcome("expired", "expired", "The request expired before the bridge got to it; "
                            "nothing was written.", firmware=self.fw, edit=self.edit_block())
-        self.pre, self.folder_key = preset, key
+        self.pre, self.folder_key, self.folder_label = preset, key, _folder_label(snap, key)
         return None
 
     def check_target(self, snap, key) -> Outcome | None:
+        """Before the first write: see target_problem. A refusal here writes nothing."""
+        prob = self.target_problem(snap, key)
+        return None if prob is None else self.refuse(prob[0], prob[1] + " Nothing was changed.")
+
+    def target_problem(self, snap, key):
         """Copy mode (E5a): the target slot must be EMPTY in a fresh listing of the OPEN collection, and no other slot
         there may carry the copy's name (the original's slot included: if the unit stores presets by name, a save
-        could replace it). Run before the first write, and again just before the save. A refusal here writes nothing.
-        `key` is the open collection, already checked to be a complete 256-slot table (check_unit). Live mode has no
-        target."""
+        could replace it). Run before the first write, and again just before the save. Returns (reason_code, message)
+        or None. `key` is the open collection. Live mode has no target."""
         if self.target_pos is None:
             return None
         view = _folder_view(snap, key)
         if view is None:
-            return self.refuse("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
-                               "listed as a complete 256-slot preset collection, so the bridge can't tell whether "
-                               f"{self.target_slot} is empty there. Nothing was changed.")
+            return ("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
+                    "listed as a complete 256-slot preset collection, so the bridge can't tell whether "
+                    f"{self.target_slot} is empty there.")
         folder, tslot = _folder_label(snap, key), self.target_slot
         if self.target_pos == self.pos or _occupied(view.my_presets, self.target_pos):
-            return self.refuse("slot_not_empty", f"Slot {tslot} in {folder!r} is not empty on the unit (it holds "
-                               f"{text.clean(str(view.my_presets.get(self.target_pos)), NAME_LIMIT)!r}). A copy only "
-                               "goes into an empty slot and the bridge never overwrites a preset; pick an empty slot. "
-                               "Nothing was changed.")
+            return ("slot_not_empty", f"Slot {tslot} in {folder!r} is not empty on the unit (it holds "
+                    f"{text.clean(str(view.my_presets.get(self.target_pos)), NAME_LIMIT)!r}). A copy only "
+                    "goes into an empty slot and the bridge never overwrites a preset; pick an empty slot.")
         dup = _same_name(view.my_presets, self.target_pos, self.copy_name)
         if dup is not None:
-            return self.refuse("validation", f"Slot {slots.label(dup)} in {folder!r} already has a preset named "
-                               f"{self.copy_name!r}. Pick a different name for the copy: if the unit stores presets by "
-                               "name, a save could replace it. Nothing was changed.")
+            return ("validation", f"Slot {slots.label(dup)} in {folder!r} already has a preset named "
+                    f"{self.copy_name!r}. Pick a different name for the copy: if the unit stores presets by "
+                    "name, a save could replace it.")
         return None
 
     # -- the writes --
@@ -1204,7 +1204,8 @@ class _Edit:
 
     def apply(self) -> Outcome:
         plan, dev, ctx = self.plan, self.dev, self.ctx
-        dev.begin_edit(plan, self.checked)
+        copy = self.mode == "copy"
+        dev.begin_edit(plan, self.checked, (self.folder_key, self.target_pos, self.copy_name) if copy else None)
         for col, (mid, pc) in sorted(self.checked.cells.items()):
             b = edit_checks.live_block(self.pre, 0, col) or {}   # unit_layout_problem passed, so it exists; stay defensive
             dev.confirm_layout(col, len(b.get("params") or []))
@@ -1213,7 +1214,8 @@ class _Edit:
         if ctx.edits is not None:
             try:  # before the first write: a crash from here on is reported with the slot (agent.recover)
                 ctx.edits.start(self.job["job_id"], self.slot, self.folder_key, plan["expect"]["name"], before,
-                                contract.format_time(ctx.now()))
+                                contract.format_time(ctx.now()),
+                                **({"mode": "copy", "target_slot": self.target_slot} if copy else {}))
             except Exception as e:  # noqa: BLE001
                 log.error("could not record the edit: %s", text.clean(str(e), 200), exc_info=True)
                 return self.fail("device_error", "The bridge could not write its edit ledger, so it wrote nothing.")
@@ -1240,6 +1242,8 @@ class _Edit:
         coll = edit_diff.collateral(self.pre, post, plan) if post is not None else None
         good = (cause is None and post is not None and ok and coll["mismatches"] == 0
                 and not (gone or switched))
+        if good and copy:
+            return self.save_copy(post, params, bypass, coll, orig_scene)
         if good:
             note = self.restore_scene(orig_scene)
             self.record_edited(post, "succeeded")
@@ -1249,6 +1253,125 @@ class _Edit:
                            f"NOT saved: save it on the unit, or re-select the slot to discard it.{note}",
                            firmware=self.fw, edit=self.edit_block(params, bypass, coll))
         return self.rollback(post, params, bypass, coll, cause, gone, switched, orig_scene)
+
+    def save_copy(self, post, params, bypass, coll, orig_scene) -> Outcome:
+        """Copy mode (E5a), after a clean verify: the edited live grid is File-CREATEd into the checked-empty target.
+        Steps: put the owner's scene back (the guard passes no scene write once the save is open); open the one save;
+        a fresh listing and position (the target still empty, the name still unique, the same preset still open);
+        one more read of the grid (still the verified one); still_open; ONE File CREATE; the owned ledger BEFORE the
+        listing polls (a late save is still ours); poll the listing. Any failure before the save leaves the edit
+        applied, unsaved and NOT rolled back (the guard no longer takes writes, and a rollback would write into a grid
+        that may have just changed). A failure after the save was issued is unconfirmed: the slot may still land.
+        Saving the live grid at a position other than the open one is UNVERIFIED (gate E-G3)."""
+        dev, ctx, plan = self.dev, self.ctx, self.plan
+        slot, tslot, name, tpos = plan["expect"]["slot"], self.target_slot, self.copy_name, self.target_pos
+        folder = self.folder_label
+        st = {"params": params, "bypass": bypass, "coll": coll, "latest": post}
+        note = self.restore_scene(orig_scene)
+
+        def unsaved(code, why, gone=False):
+            self.record_edited(st["latest"], "failed")
+            return failed_out(code, f"The edit was applied to {slot} and verified, but the copy was NOT saved and the "
+                              f"edit was NOT rolled back. {why} Re-select {slot} on the unit WITHOUT saving to discard "
+                              f"it.{note}", self.fw, self.edit_block(st["params"], st["bypass"], st["coll"]), gone)
+        try:
+            dev.edit_verified()
+            snap = dev.read_directory()
+            cur = dev.setlist_position() or {}
+            _check_alive(ctx)
+            if (cur.get("folder_key") != self.folder_key or cur.get("position") != self.pos
+                    or cur.get("is_factory")):
+                return unsaved("device_error", "The selected preset changed on the unit just before the save.")
+            prob = self.target_problem(snap, self.folder_key)
+            if prob:
+                return unsaved(prob[0], "The unit changed while the edit was applied: " + prob[1])
+            orig_entry = _folder_view(snap, self.folder_key).my_presets.get(self.pos)
+            back = dev.read_current_preset()   # the listing takes ~15 s: the grid must still be the verified one
+            _check_alive(ctx)
+            if back is None:
+                return unsaved("device_error", "The re-read just before the save timed out.")
+            st["latest"] = back
+            st["params"], st["bypass"], ok = edit_diff.verify_ops(plan, back)
+            st["coll"] = edit_diff.collateral(self.pre, back, plan)
+            if (not ok or st["coll"]["mismatches"]
+                    or text.clean(back.get("name", "") or "", NAME_LIMIT) != plan["expect"]["name"]):
+                return unsaved("readback_mismatch", "The grid changed after it was verified (edited on the unit?).")
+            if not self.still_open():   # File CREATE commits whatever grid is live: the last check
+                return unsaved("device_error", "Another preset was selected on the unit just before the save.")
+        except (_Gone, UnitAbsent):
+            return unsaved("unit_absent", "The Quad Cortex went away.", gone=True)
+        except DeviceError as e:
+            log.warning("copy: pre-save step failed: %s", text.clean(str(e), 160))
+            return unsaved("device_error", "A device operation failed before the save.")
+        params, bypass, coll = st["params"], st["bypass"], st["coll"]
+
+        gone = False
+        try:
+            dev.save_edit_copy(tpos, name)
+        except (_Gone, UnitAbsent):
+            gone = True
+        except DeviceError as e:   # the bytes may have gone out before the transport failed: possibly issued
+            log.warning("copy: the save call raised: %s", text.clean(str(e), 160))
+        try:  # before the polls: a save that lands late is still the bridge's own slot
+            ctx.owned.record(tslot, tpos, name, self.job["job_id"], contract.format_time(ctx.now()))
+        except Exception as e:  # noqa: BLE001  the save was issued; a local ledger problem mustn't change the outcome
+            log.error("could not record the owned slot %s: %s", tslot, text.clean(str(e), 200), exc_info=True)
+        listed, tripwire, opened = False, False, ""
+        if not gone:
+            try:
+                for n in range(SAVE_LIST_POLLS):
+                    ctx.sleep(SAVE_LIST_INTERVAL_S)
+                    _check_alive(ctx)
+                    try:
+                        snap = dev.read_directory()
+                    except (UnitAbsent, UnitBusy):
+                        raise
+                    except PartialListing as e:
+                        log.warning("post-save listing %d/%d did not count: %s", n + 1, SAVE_LIST_POLLS, e)
+                        continue
+                    except DeviceError as e:
+                        log.warning("listing after the save was incomplete (%s); will look again", text.clean(str(e), 120))
+                        continue
+                    view = _folder_view(snap, self.folder_key)
+                    if view is not None and view.my_presets.get(tpos) == name:
+                        listed = True
+                        # E-G3 tripwire: the save must not have landed on the open (original) slot
+                        tripwire = view.my_presets.get(self.pos) != orig_entry
+                        break
+                try:   # evidence for E-G3: which slot is open after the save
+                    opened = _open_desc(dev.setlist_position() or {}, snap)
+                    log.info("copy: after the save the unit reports %s open", opened)
+                except (DeviceError, _Gone):
+                    pass
+            except (_Gone, UnitAbsent, UnitBusy):
+                gone = True
+        save = {"saved": True, "slot": tslot, "name": name, "listed": listed, "backup": None}
+        block = self.edit_block(params, bypass, coll, None, save)
+        extra = {"saved": True}
+        where = f" The unit reports {opened} open now." if opened else ""
+        keep = f" If {slot} is still open it holds the edit unsaved: re-select it WITHOUT saving."
+        if gone:
+            self.record_edited(st["latest"], "failed", saved=True, listed=False)
+            return Outcome("failed", "unit_absent", f"The save of the copy to {tslot} in {folder!r} was issued after a "
+                           f"clean read-back, but the Quad Cortex went away before it could be confirmed. It may still "
+                           f"land: check {tslot} before using that slot.{keep}", firmware=self.fw, edit=block,
+                           unit_gone=True, extra=extra)
+        if not listed:
+            self.record_edited(st["latest"], "failed", saved=True, listed=False)
+            return Outcome("failed", "device_error", f"The copy save to {tslot} in {folder!r} was issued after a clean "
+                           f"read-back, but the listing didn't show {name!r} after {SAVE_LIST_POLLS} checks (about 2 "
+                           f"minutes). It may still land: check {tslot} before using that slot. {slot} was not saved "
+                           f"over by the bridge.{keep}{where}", firmware=self.fw, edit=block, extra=extra)
+        if tripwire:
+            self.record_edited(st["latest"], "failed", saved=True, listed=True)
+            return Outcome("failed", "device_error", f"The copy is listed at {tslot}, but the entry for {slot} changed "
+                           f"too: check BOTH {slot} and {tslot} on the unit.{where}", firmware=self.fw, edit=block,
+                           extra=extra)
+        self.record_edited(st["latest"], "succeeded", saved=True, listed=True)
+        return Outcome("succeeded", "", f"Saved the edit as {name!r} to {tslot} in {folder!r}; it read back as planned "
+                       f"before the save. {slot} itself was not saved over.{where}{keep}"
+                       " (Saving at a slot other than the open one is unverified: check the copy on the unit.)",
+                       firmware=self.fw, edit=block, extra=extra)
 
     def restore_scene(self, orig) -> str:
         """Put the unit's scene back to what it was before the per-scene writes (they leave it on scene A).
@@ -1267,12 +1390,14 @@ class _Edit:
             log.warning("scene not restored: %s", text.clean(str(e), 120))
         return f" Check the active scene on the unit: it was {'ABCDEFGH'[orig]} before the edit."
 
-    def record_edited(self, post, status):
+    def record_edited(self, post, status, **extra):
         if self.ctx.edits is None:
             return
+        if self.mode == "copy":
+            extra = {"mode": "copy", "target_slot": self.target_slot, "saved": False, "listed": False, **extra}
         try:
             self.ctx.edits.finish(self.job["job_id"], self.slot, self.plan["expect"]["name"], self.layout_hash(self.pre),
-                                  self.layout_hash(post), status, contract.format_time(self.ctx.now()))
+                                  self.layout_hash(post), status, contract.format_time(self.ctx.now()), **extra)
         except Exception as e:  # noqa: BLE001  informational ledger: never change the outcome
             log.error("could not record the edit result: %s", text.clean(str(e), 200), exc_info=True)
 

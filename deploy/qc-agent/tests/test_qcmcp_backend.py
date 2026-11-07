@@ -1073,6 +1073,12 @@ class EditSaveGuard(Base):
             self.assertIsNone(self.dev._guard._edit)
         self.refused(self.qc.set_param, 0, 1, 1, 1.0)
 
+    def test_a_save_at_the_originals_position_or_in_another_collection_cannot_be_armed(self):
+        for target in ((self.FOLDER, 152, "Copy"), ("/media/p4/Presets/Sounds profiles", self.POS, "Copy")):
+            with self.subTest(target), self.assertRaisesRegex(WireRefused, "different slot of the plan's own collection"):
+                self.dev.begin_edit(self.plan, self.checked, target)
+            self.assertIsNone(self.dev._guard._edit)
+
     def test_the_old_save_path_is_still_closed_during_an_edit(self):
         self.arm()
         with self.assertRaisesRegex(WireRefused, "while an edit is armed"):

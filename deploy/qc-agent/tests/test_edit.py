@@ -128,8 +128,7 @@ class Opt_in(EditBase):
 
 
 class CopyPreChecks(EditBase):
-    """Copy mode (E5a), commit 1: every refusal happens before the first write and before any save. The save itself
-    is wired in a later commit; until then a copy that passes every check stops with "cannot be saved yet"."""
+    """Copy mode (E5a): every refusal happens before the first write and before any save."""
     EDIT_MODES = "live,copy"
     TARGET = "21A"          # position 160
     NAME = "Texas Blues Edit"
@@ -145,9 +144,7 @@ class CopyPreChecks(EditBase):
         self.assertEqual(self.agent.edits.started, {})
 
     def passes_the_checks(self, r):
-        self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"), r["message"])
-        self.assertIn("cannot be saved yet", r["message"])
-        self.assertNoWrites(r)
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
         self.assertEqual(r["edit"]["payload"]["cas"], {"state": "matched", "failed": []})
 
     def refused_on_unit(self, r, code, needle):
@@ -230,7 +227,10 @@ class CopyPreChecks(EditBase):
         _, r = self.copy(plan)
         self.passes_the_checks(r)
         self.dev.calls.clear()
+        rig_unit(self.dev)
+        self.dev.open_folder = OTHER_KEY
         self.dev.collections[OTHER_KEY][1][160] = "Occupied here"
+        self.agent.edits.started.clear()
         _, r = self.copy(plan)
         self.refused_on_unit(r, "slot_not_empty", "Sounds profiles")
 
@@ -244,13 +244,341 @@ class CopyPreChecks(EditBase):
         self.dev.is_factory = True
         _, r = self.copy()
         self.assertEqual((r["status"], r["reason_code"]), ("refused", "unsupported_arg"))
-        self.assertNotIn("cannot be saved yet", r["message"])
         self.assertNoWrites(r)
 
     def test_live_mode_has_no_target_to_check(self):
         self.dev.slots[160] = "Occupied"
         _, r = self.run_edit()
         self.assertEqual(r["status"], "succeeded")
+
+
+class CopySave(EditBase):
+    """Copy mode (E5a) end to end on the fake unit: apply, verify, collateral, re-check, ONE File CREATE into the
+    empty target, listing, ledgers. Proves the agent's logic; whether the unit saves the edited grid at a position
+    other than the open one is UNVERIFIED (gate E-G3)."""
+    EDIT_MODES = "live,copy"
+    TARGET, TPOS, NAME = "21A", 160, "Texas Blues Edit"
+
+    def copy(self, plan=None, **kw):
+        kw.setdefault("target_slot", self.TARGET)
+        kw.setdefault("name", self.NAME)
+        return self.run_edit(plan, mode="copy", **kw)
+
+    def names(self):
+        return [c[0] for c in self.dev.calls]
+
+    def saves(self):
+        return [c for c in self.dev.calls if c[0] == "save_edit_copy"]
+
+    NOT_SAVED = {"saved": False, "slot": None, "name": None, "listed": False, "backup": None}
+
+    def assertNotSaved(self, r, others=None):
+        self.assertEqual(self.saves(), [])
+        self.assertEqual(r["edit"]["payload"]["save"], self.NOT_SAVED)
+        self.assertEqual(self.dev.slots, {152: "Texas Blues", **(others or {})})
+        self.assertNotIn("save_to_slot", self.names())
+
+    def test_all_pass_writes_the_plan_then_exactly_one_create(self):
+        jid, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("succeeded", ""), r["message"])
+        writes = [c for c in self.dev.calls if c[0] in ("set_param", "set_param_scenes", "set_block_bypass", "save_edit_copy")]
+        self.assertEqual(writes, [("set_param_scenes", 0, 0, 0, GAIN_WIRE), ("set_param", 0, 1, 1, 1.0),
+                                  ("set_block_bypass", 0, 1, [False, True] + [False] * 6, 7),
+                                  ("save_edit_copy", self.TPOS, self.NAME)])
+        n = self.names()
+        self.assertLess(max(i for i, x in enumerate(n) if x == "set_block_bypass"), n.index("edit_verified"))
+        self.assertLess(n.index("edit_verified"), n.index("save_edit_copy"))
+        self.assertEqual(n.count("edit_verified"), 1)
+        self.assertNotIn("enter_rollback", n)
+        self.assertNotIn("save_to_slot", n)
+        e = r["edit"]["payload"]
+        self.assertEqual(e["mode"], "copy")
+        self.assertEqual(e["save"], {"saved": True, "slot": self.TARGET, "name": self.NAME, "listed": True, "backup": None})
+        self.assertEqual(e["rollback"], {"state": "not_needed", "restored": 0, "failed": 0})
+        self.assertEqual(e["collateral"]["mismatches"], 0)
+        self.assertTrue(all(p["ok"] for p in e["params"]) and all(b["ok"] for b in e["bypass"]))
+        self.assertIn("UNVERIFIED".lower(), r["message"].lower())   # E-G3 is labelled in the result
+        self.assertIn("itself was not saved over", r["message"])
+        # the copy is the bridge's own; the original is untouched
+        self.assertEqual(self.dev.slots, {152: "Texas Blues", self.TPOS: self.NAME})
+        self.assertEqual(self.dev.preset_name, "Texas Blues")
+        self.assertTrue(self.agent.owned.owned(self.TPOS, self.NAME))
+        self.assertFalse(self.agent.owned.owned(152, "Texas Blues"))
+        led = self.agent.edits
+        self.assertEqual((led.started[jid]["mode"], led.started[jid]["target_slot"]), ("copy", self.TARGET))
+        got = led.edited[jid]
+        self.assertEqual((got["status"], got["saved"], got["listed"], got["target_slot"]), ("succeeded", True, True, self.TARGET))
+        self.assertIn("jobs/owned_slots.json", self.store.objects)   # the informational bucket copy was refreshed
+
+    def test_the_original_slot_is_never_written(self):
+        self.copy()
+        for c in self.dev.calls:
+            if c[0] == "save_edit_copy":
+                self.assertNotEqual(c[1], 152)
+        self.assertEqual(self.dev.slots[152], "Texas Blues")
+
+    def test_the_owners_scene_is_put_back_before_the_save_opens(self):
+        self.dev.active_scene = 3
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+        n = self.names()
+        self.assertLess(n.index("restore_scene"), n.index("edit_verified"))
+        self.assertEqual(self.dev.active_scene, 3)
+
+    def test_the_next_open_slot_is_reported_as_evidence(self):
+        self.dev.open_after_save = "target"
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertIn("21A", r["message"])
+        self.assertIn("open now", r["message"])
+
+    def test_live_mode_never_arms_or_opens_a_save(self):
+        _, r = self.run_edit()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertNotIn("edit_verified", self.names())
+        self.assertNotIn("save_edit_copy", self.names())
+        self.assertIsNone(self.dev.edit_save)
+
+    # -- verify fails: rolled back, never saved --
+
+    def test_a_write_that_does_not_read_back_is_rolled_back_and_not_saved(self):
+        orig = self.dev.set_param
+
+        def lost(row, col, index, wire):
+            orig(row, col, index, wire)
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        jid, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertEqual(r["edit"]["payload"]["rollback"]["state"], "restored")
+        self.assertNotSaved(r)
+        self.assertNotIn("edit_verified", self.names())
+        self.assertEqual(self.dev.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.agent.edits.edited[jid]["saved"], False)
+        self.assertFalse(self.agent.owned.owned(self.TPOS, self.NAME))
+
+    def test_a_collateral_change_is_rolled_back_and_not_saved(self):
+        orig = self.dev.set_block_bypass
+
+        def bump(row, col, scenes, idx):
+            orig(row, col, scenes, idx)
+            self.dev.extra_rows[1][0]["params"][2] = [0.99] * 8
+        self.dev.set_block_bypass = bump
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "readback_mismatch"))
+        self.assertNotSaved(r)
+        self.assertNotIn("edit_verified", self.names())
+
+    def test_a_failed_rollback_is_rollback_failed_and_not_saved(self):
+        def lost(row, col, index, wire):
+            self.dev.grid[col]["params"][index] = [0.0] * 8
+        self.dev.set_param = lost
+        self.dev.set_param_scenes = lambda row, col, index, wires: None
+        self.dev.set_block_bypass = lambda *a: None
+        _, r = self.copy()
+        self.assertEqual(r["status"], "failed")
+        self.assertNotSaved(r)
+
+    def test_a_write_error_midway_is_not_saved(self):
+        left = [1]
+
+        def boom(name, args):
+            if name == "set_param" and left:
+                left.pop()
+                raise DeviceError("boom")
+        self.dev.write_fail = boom
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertNotSaved(r)
+
+    # -- changes between the checks and the save: edit kept, not rolled back, not saved --
+
+    def unsaved(self, r, code, others=None):
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", code), r["message"])
+        self.assertNotSaved(r, others)
+        self.assertIn("NOT saved", r["message"])
+        self.assertIn("NOT rolled back", r["message"])
+        self.assertEqual(r["edit"]["payload"]["rollback"], {"state": "not_needed", "restored": 0, "failed": 0})
+        self.assertNotIn("enter_rollback", self.names())
+        self.assertFalse(self.agent.owned.owned(self.TPOS, self.NAME))
+
+    def test_the_target_is_filled_between_the_checks_and_the_save(self):
+        def fill(fake, n):
+            if n == 2:   # the listing just before the save
+                fake.slots[self.TPOS] = "Filled meanwhile"
+        self.dev.on_listing = fill
+        jid, r = self.copy()
+        self.unsaved(r, "slot_not_empty", {self.TPOS: "Filled meanwhile"})
+        self.assertEqual(self.agent.edits.edited[jid]["status"], "failed")
+        self.assertFalse(self.agent.edits.edited[jid]["saved"])
+
+    def test_the_name_is_taken_between_the_checks_and_the_save(self):
+        def take(fake, n):
+            if n == 2:
+                fake.slots[200] = self.NAME
+        self.dev.on_listing = take
+        _, r = self.copy()
+        self.unsaved(r, "validation", {200: self.NAME})
+
+    def test_another_preset_is_selected_before_the_save(self):
+        def switch(name):
+            if name == "edit_verified":
+                self.dev.open_position = 153
+        self.dev.on_call = switch
+        _, r = self.copy()
+        self.unsaved(r, "device_error")
+
+    def test_the_grid_is_edited_on_the_unit_after_the_verify(self):
+        n = []
+
+        def drift(name):
+            if name == "edit_verified":
+                self.dev.grid[0]["params"][2] = [0.9] * 8   # the owner touches a control of an op cell
+        self.dev.on_call = drift
+        _, r = self.copy()
+        self.unsaved(r, "readback_mismatch")
+        self.assertEqual(r["edit"]["payload"]["collateral"]["mismatches"], 1)
+
+    def test_the_pre_save_reread_times_out(self):
+        reads = []
+
+        def none_on_last(name):
+            pass
+        orig = self.dev.read_current_preset
+
+        def rd():
+            reads.append(1)
+            return None if self.dev.calls and self.names().count("edit_verified") else orig()
+        self.dev.read_current_preset = rd
+        _, r = self.copy()
+        self.unsaved(r, "device_error")
+
+    def test_the_pre_save_listing_fails(self):
+        from qc_agent.device import PartialListing
+
+        def fail(fake, n):
+            if n == 2:
+                raise PartialListing(1)
+        self.dev.on_listing = fail
+        _, r = self.copy()
+        self.unsaved(r, "device_error")
+
+    def test_the_unit_goes_away_before_the_save(self):
+        def gone(fake, n):
+            if n == 2:
+                fake.gone_after = fake._alive_calls
+        self.dev.on_listing = gone
+        _, r = self.copy()
+        self.unsaved(r, "unit_absent")
+
+    def test_the_guard_refusing_to_open_the_save_saves_nothing(self):
+        def refuse():
+            raise DeviceError("guard says no")
+        self.dev.edit_verified = refuse
+        _, r = self.copy()
+        self.unsaved(r, "device_error")
+
+    def test_expiry_is_not_rechecked_before_the_save(self):
+        # contract step 11: expiry is re-checked immediately before the first device write only
+        orig = self.dev.set_block_bypass
+
+        def slow(*a):
+            orig(*a)
+            self.clock.advance(7200)
+        self.dev.set_block_bypass = slow
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+
+    # -- the save was issued --
+
+    def test_a_save_that_is_never_listed_is_failed_and_the_slot_stays_owned(self):
+        self.dev.listing_lag = 99
+        jid, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertEqual(r["edit"]["payload"]["save"],
+                         {"saved": True, "slot": self.TARGET, "name": self.NAME, "listed": False, "backup": None})
+        self.assertIn("may still land", r["message"])
+        self.assertTrue(self.agent.owned.owned(self.TPOS, self.NAME))
+        self.assertEqual(len(self.saves()), 1)
+        self.assertEqual(self.agent.edits.edited[jid]["saved"], True)
+        self.assertEqual(self.agent.edits.edited[jid]["listed"], False)
+        self.assertIn("jobs/owned_slots.json", self.store.objects)
+
+    def test_a_laggy_listing_still_shows_the_copy(self):
+        self.dev.listing_lag = 2
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+        self.assertTrue(r["edit"]["payload"]["save"]["listed"])
+
+    def test_partial_listings_after_the_save_do_not_count(self):
+        self.dev.short_after_save = 2
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+
+    def test_only_partial_listings_after_the_save_never_count_as_listed(self):
+        self.dev.short_after_save = 99
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["edit"]["payload"]["save"]["saved"], r["edit"]["payload"]["save"]["listed"]),
+                         ("failed", True, False))
+
+    def test_a_device_error_in_the_polls_keeps_looking(self):
+        def flaky(fake, n):
+            if n == 3:
+                raise DeviceError("My Presets is missing")
+        self.dev.on_listing = flaky
+        _, r = self.copy()
+        self.assertEqual(r["status"], "succeeded")
+
+    def test_the_unit_going_away_after_the_save_is_unconfirmed(self):
+        self.dev.listing_lag = 99   # never shows the copy, so the polls go on until the unit vanishes
+
+        def gone(fake, n):
+            if n == 4:
+                fake.gone_after = fake._alive_calls
+        self.dev.on_listing = gone
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "unit_absent"))
+        self.assertEqual(r["edit"]["payload"]["save"]["saved"], True)
+        self.assertFalse(r["edit"]["payload"]["save"]["listed"])
+        self.assertTrue(self.agent.owned.owned(self.TPOS, self.NAME))
+
+    def test_a_save_call_that_raises_counts_as_possibly_issued(self):
+        def boom(name, args):
+            if name == "save_edit_copy":
+                raise DeviceError("transport died after sending")
+        self.dev.write_fail = boom
+        _, r = self.copy()
+        # the fake did write the slot before raising; the point: the job reports a save as issued and keeps it owned
+        self.assertEqual(r["edit"]["payload"]["save"]["saved"], True)
+        self.assertTrue(self.agent.owned.owned(self.TPOS, self.NAME))
+        self.assertEqual(len(self.saves()), 1)
+
+    def test_a_save_that_lands_on_the_original_slot_is_flagged(self):
+        self.dev.save_lands_at_open = True
+        _, r = self.copy()
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+
+    def test_the_copy_in_another_collection_lists_there(self):
+        plan = base_plan()
+        plan["expect"]["folder_key"] = OTHER_KEY
+        self.dev.open_folder = OTHER_KEY
+        self.dev.collections = {OTHER_KEY: ("Sounds profiles", {152: "Texas Blues"})}
+        _, r = self.copy(plan)
+        self.assertEqual(r["status"], "succeeded", r["message"])
+        self.assertEqual(self.dev.collections[OTHER_KEY][1][self.TPOS], self.NAME)
+        self.assertNotIn(self.TPOS, self.dev.slots)
+
+    def test_a_crash_mid_copy_names_both_slots(self):
+        jid, key = self.queue("edit_preset", args=edit_args(base_plan(), mode="copy", target_slot=self.TARGET, name=self.NAME))
+        self.agent.ledger.take(jid, "edit_preset", contract.format_time(T0))
+        self.agent.edits.start(jid, "20A", SETLIST_KEY, "Texas Blues", "h", contract.format_time(T0),
+                               mode="copy", target_slot=self.TARGET)
+        self.agent.recover()
+        r = self.result(jid)
+        self.assertEqual((r["status"], r["reason_code"]), ("failed", "interrupted"))
+        self.assertIn("20A", r["message"])
+        self.assertIn("21A", r["message"])
+        self.assertIn("WITHOUT saving", r["message"])
 
 
 class CatalogRefusals(EditBase):

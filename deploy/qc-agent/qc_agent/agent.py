@@ -205,7 +205,12 @@ class Agent:
             msg = ("The bridge stopped in the middle of this job (crash, closed window or power). "
                    "It is not retried. For a push or an edit, check the preset on the unit before sending again.")
             began = self.edits.started.get(job_id)
-            if kind == "edit_preset" and began and job_id not in self.edits.edited:
+            if kind == "edit_preset" and began and began.get("mode") == "copy" and job_id not in self.edits.edited:
+                msg = (f"The bridge stopped in the middle of a copy edit of slot {text.clean(str(began.get('slot')), 4)} "
+                       f"into {text.clean(str(began.get('target_slot')), 4)}. The open preset may be partly edited: "
+                       "re-select it on the unit WITHOUT saving to discard the edit. A copy may also have been saved "
+                       "to the target slot: check it before using that slot. It is not retried.")
+            elif kind == "edit_preset" and began and job_id not in self.edits.edited:
                 msg = (f"The bridge stopped in the middle of an edit of slot {text.clean(str(began.get('slot')), 4)}. "
                        "The open preset may be partly edited and was not saved: re-select it on the unit WITHOUT "
                        "saving to discard the edit. It is not retried.")
@@ -318,7 +323,7 @@ class Agent:
             log.info("  %s", outcome.message)
         self.state, self.current_job = "idle", None
         self.last_activity = self.now()
-        if kind == "push_preset" and (outcome.extra or {}).get("saved"):  # a save was issued, confirmed or not
+        if kind in ("push_preset", "edit_preset") and (outcome.extra or {}).get("saved"):  # a save was issued, confirmed or not
             self.write_owned_slots()
         if outcome.unit_gone:
             self.unit_present = False
