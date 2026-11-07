@@ -1203,9 +1203,15 @@ class MethodAllowlist(unittest.TestCase):
     def test_unlisted_methods_raise(self):
         # Real vendored methods on neither list (load_model_preset, used here before, is on the
         # never-list, so this test never reached the "not granted" branch).
-        for name in ("read_state", "read_global_eq", "assign_param_to_scenes", "detect_version"):
+        for name in ("read_global_eq", "assign_param_to_scenes", "detect_version"):  # read_state is granted since E4 (scene read; the wire guard allows READs only)
             with self.subTest(name), self.assertRaisesRegex(GuardError, "is not granted"):
                 getattr(Guarded(object()), name)
+
+    def test_set_scene_is_never_granted_only_windowed(self):
+        self.assertIn("set_scene", qcmcp_backend.NEVER)
+        self.assertNotIn("set_scene", qcmcp_backend.GRANT)
+        with self.assertRaisesRegex(GuardError, "never allowed"):
+            Guarded(object()).set_scene
 
     def test_read_only(self):
         with self.assertRaisesRegex(GuardError, "read-only"):
