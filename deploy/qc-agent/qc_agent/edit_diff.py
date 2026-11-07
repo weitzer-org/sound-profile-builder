@@ -33,7 +33,14 @@ def _num(v):
 
 
 def _same(a, b) -> bool:
-    return type(a) is type(b) and a == b
+    """Exact equality of two read values. A NaN the unit holds in a control the edit never touched reads the same
+    before and after (contract 9.3: a non-finite value is a null in the result, and null equals null); NaN against a
+    number, or a bool/int against a float, is a difference."""
+    if type(a) is not type(b):
+        return False
+    if type(a) is float and math.isnan(a) and math.isnan(b):
+        return True
+    return a == b
 
 
 def _cells(preset):

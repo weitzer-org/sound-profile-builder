@@ -121,6 +121,14 @@ class Collateral(unittest.TestCase):
         self.assertEqual(c["mismatches"], 5 + 64)
         self.assertLessEqual(len(c["items"]), c["mismatches"])
 
+    def test_a_nan_that_was_already_there_is_not_collateral(self):
+        # GSR #185 round 7: a NaN in an untouched control, before and after, is no change
+        self.pre["chains"][1]["blocks"][0]["params"][0]["values"][3] = float("nan")
+        self.post["chains"][1]["blocks"][0]["params"][0]["values"][3] = float("nan")
+        self.assertEqual(self.check()["mismatches"], 0)
+        self.post["chains"][1]["blocks"][0]["params"][0]["values"][3] = 0.5   # but NaN -> a number is a change
+        self.assertEqual(self.check()["mismatches"], 1)
+
     def test_a_non_finite_or_other_type_value_is_a_difference(self):
         self.post["chains"][1]["blocks"][0]["params"][0]["values"][0] = float("nan")
         self.assertEqual(self.check()["mismatches"], 1)
