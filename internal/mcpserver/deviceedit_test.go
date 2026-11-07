@@ -517,14 +517,20 @@ func TestEditDevicePreset_CopyDryRunIssuesATokenAndConfirmQueuesTheCopy(t *testi
 	}
 	r.runAgent(t)
 	itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": q.JobID, "wait_seconds": 10}) // until the agent has answered
-	var args string
+	var args struct {
+		Mode       string `json:"mode"`
+		TargetSlot string `json:"target_slot"`
+		Name       string `json:"name"`
+	}
 	for _, j := range r.agent.ExecutedJobs() {
 		if j.Kind == devicejobs.KindEditPreset {
-			args = string(j.Args)
+			if err := json.Unmarshal(j.Args, &args); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
-	if !strings.Contains(args, `"mode":"copy"`) || !strings.Contains(args, `"target_slot":"21A"`) || !strings.Contains(args, `"name":"`+copyName+`"`) {
-		t.Fatalf("job args %.200s", args)
+	if args.Mode != "copy" || args.TargetSlot != "21A" || args.Name != copyName {
+		t.Fatalf("job args %+v", args)
 	}
 	rec, err := st.ReadEditPlan(context.Background(), q.JobID)
 	if err != nil || rec == nil || rec.Mode != "copy" || rec.TargetSlot != "21A" || rec.Name != copyName {

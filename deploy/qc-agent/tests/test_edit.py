@@ -296,8 +296,11 @@ class CopySave(EditBase):
         self.assertEqual(e["save"], {"saved": True, "slot": self.TARGET, "name": self.NAME, "listed": True, "backup": None})
         self.assertEqual(e["rollback"], {"state": "not_needed", "restored": 0, "failed": 0})
         self.assertEqual(e["collateral"]["mismatches"], 0)
-        self.assertTrue(all(p["ok"] for p in e["params"]) and all(b["ok"] for b in e["bypass"]))
-        self.assertIn("UNVERIFIED".lower(), r["message"].lower())   # E-G3 is labelled in the result
+        for p in e["params"]:
+            self.assertTrue(p["ok"], f"param not ok: {p}")
+        for b in e["bypass"]:
+            self.assertTrue(b["ok"], f"bypass not ok: {b}")
+        self.assertIn("unverified", r["message"].lower())   # E-G3 is labelled in the result
         self.assertIn("itself was not saved over", r["message"])
         # the copy is the bridge's own; the original is untouched
         self.assertEqual(self.dev.slots, {152: "Texas Blues", self.TPOS: self.NAME})

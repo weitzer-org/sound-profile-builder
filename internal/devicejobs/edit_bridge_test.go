@@ -2,6 +2,7 @@ package devicejobs_test
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -99,10 +100,18 @@ func TestConfirmEdit(t *testing.T) {
 		}
 		var found bool
 		for _, j := range r.agent.ExecutedJobs() {
-			if j.Kind == devicejobs.KindEditPreset {
-				found = strings.Contains(string(j.Args), `"mode":"copy"`) && strings.Contains(string(j.Args), `"target_slot":"21A"`) &&
-					strings.Contains(string(j.Args), `"name":"Texas Blues Edit"`)
+			if j.Kind != devicejobs.KindEditPreset {
+				continue
 			}
+			var a struct {
+				Mode       string `json:"mode"`
+				TargetSlot string `json:"target_slot"`
+				Name       string `json:"name"`
+			}
+			if err := json.Unmarshal(j.Args, &a); err != nil {
+				t.Fatal(err)
+			}
+			found = a.Mode == "copy" && a.TargetSlot == "21A" && a.Name == "Texas Blues Edit"
 		}
 		if !found {
 			t.Fatal("the executed edit job does not carry the copy's mode, target_slot and name")
@@ -185,4 +194,19 @@ func TestConfirmEdit(t *testing.T) {
 			t.Fatalf("err = %v", err)
 		}
 	})
+}
+
+// ValidCopyName is the agent's own name rule (qc_agent.export_validator.check_preset_name): the bridge refuses
+// what the agent would, including a leading or trailing space and a leading dot or "..".
+func TestValidCopyName(t *testing.T) {
+	for name, want := range map[string]bool{
+		"Texas Blues Edit": true, "a_b (2) + c, d! e' f& g# h.i-j": true, "x  y": true,
+		" x": false, "x ": false, " ": false, "": false, ".hidden": false, "a..b": false, "a/b": false,
+		"[x](http://e.co)": false, "`x`": false, "a|b": false, "caf\u00e9": false, "tab\tx": false,
+		"123456789012345678901234567890123": false,
+	} {
+		if got := devicejobs.ValidCopyName(name); got != want {
+			t.Errorf("ValidCopyName(%q) = %v, want %v", name, got, want)
+		}
+	}
 }
