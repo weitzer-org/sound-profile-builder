@@ -413,7 +413,7 @@ def parse_job(payload, version=1):
         raise Reject("bad_payload", "key set")
     if type(j["v"]) is not int or j["v"] != version or j["type"] != "qc2-device-job":
         raise Reject("bad_payload", "version/type")
-    if j["kind"] not in EDIT_KINDS[version]:
+    if not (isinstance(j["kind"], str) and j["kind"] in EDIT_KINDS[version]):  # a list or dict kind is unhashable
         raise Reject("bad_payload", "kind is not a version %d kind" % version)
     if not (isinstance(j["job_id"], str) and UUID_RE.fullmatch(j["job_id"])
             and isinstance(j["bucket"], str) and BUCKET_RE.fullmatch(j["bucket"])

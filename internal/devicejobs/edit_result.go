@@ -148,87 +148,116 @@ func ParseEditResultPayload(raw json.RawMessage) (*EditResult, error) {
 	return &r, nil
 }
 
-// requireKeys: the struct decoder accepts missing keys (zero values) and matches keys without
-// regard to case, so check that every object has exactly its keys, spelled exactly. A missing or
-// case-variant key is as wrong as an unknown one.
+// requireKeys: the struct decoder accepts missing keys (zero values), matches keys without regard
+// to case, and decodes null into a non-pointer field as its zero value (a null bypass flag would
+// read as "not bypassed"). So check every object's exact key set, spelled exactly, and that only
+// the keys the contract lets be null are null. A missing, case-variant or wrongly null key is as
+// wrong as an unknown one.
 func requireKeys(raw json.RawMessage) error {
-	var m map[string]json.RawMessage
-	if json.Unmarshal(raw, &m) != nil {
-		return errors.New("edit result is not an object")
+	bad := func(where string) error {
+		return fmt.Errorf("edit result: %s must have exactly its fields, non-null where required", where)
 	}
-	need := func(obj map[string]json.RawMessage, where string, keys ...string) error {
-		if len(obj) != len(keys) {
-			return fmt.Errorf("edit result: %s must have exactly its fields", where)
+	isNull := func(v json.RawMessage) bool { return string(bytes.TrimSpace(v)) == "null" }
+	// obj decodes v as an object with exactly keys; keys not in nullable must not be null.
+	obj := func(v json.RawMessage, where string, nullable []string, keys ...string) (map[string]json.RawMessage, error) {
+		var o map[string]json.RawMessage
+		if json.Unmarshal(v, &o) != nil || o == nil || len(o) != len(keys) {
+			return nil, bad(where)
 		}
 		for _, k := range keys {
-			if _, ok := obj[k]; !ok {
-				return fmt.Errorf("edit result: %s must have exactly its fields", where)
+			val, ok := o[k]
+			if !ok {
+				return nil, bad(where)
+			}
+			if isNull(val) {
+				canBeNull := false
+				for _, n := range nullable {
+					canBeNull = canBeNull || n == k
+				}
+				if !canBeNull {
+					return nil, bad(where)
+				}
 			}
 		}
-		return nil
+		return o, nil
 	}
-	if err := need(m, "the payload", "plan_sha256", "snapshot", "mode", "cas", "params", "bypass", "collateral", "rollback", "save"); err != nil {
+	// list decodes v as an array (never null) whose elements are non-null unless elemNullable.
+	list := func(v json.RawMessage, where string, elemNullable bool) ([]json.RawMessage, error) {
+		var a []json.RawMessage
+		if isNull(v) || json.Unmarshal(v, &a) != nil {
+			return nil, bad(where)
+		}
+		for _, e := range a {
+			if !elemNullable && isNull(e) {
+				return nil, bad(where)
+			}
+		}
+		return a, nil
+	}
+	top, err := obj(raw, "the payload", []string{"collateral"},
+		"plan_sha256", "snapshot", "mode", "cas", "params", "bypass", "collateral", "rollback", "save")
+	if err != nil {
 		return err
 	}
-	sub := func(k string) map[string]json.RawMessage {
-		var o map[string]json.RawMessage
-		_ = json.Unmarshal(m[k], &o)
-		return o
+	cas, err := obj(top["cas"], "cas", nil, "state", "failed")
+	if err != nil {
+		return err
 	}
-	checks := []struct {
-		where string
-		obj   map[string]json.RawMessage
-		keys  []string
-	}{
-		{"cas", sub("cas"), []string{"state", "failed"}},
-		{"rollback", sub("rollback"), []string{"state", "restored", "failed"}},
-		{"save", sub("save"), []string{"saved", "slot", "name", "listed", "backup"}},
+	if _, err := list(cas["failed"], "cas.failed", false); err != nil {
+		return err
 	}
-	if string(bytes.TrimSpace(m["collateral"])) != "null" {
-		checks = append(checks, struct {
-			where string
-			obj   map[string]json.RawMessage
-			keys  []string
-		}{"collateral", sub("collateral"), []string{"params_compared", "bypass_compared", "layout_same", "mismatches", "items"}})
-		var col struct {
-			Items []map[string]json.RawMessage `json:"items"`
+	params, err := list(top["params"], "params", false)
+	if err != nil {
+		return err
+	}
+	for _, e := range params {
+		p, err := obj(e, "a param read-back", nil, "row", "col", "index", "readback", "ok")
+		if err != nil {
+			return err
 		}
-		_ = json.Unmarshal(m["collateral"], &col)
-		for _, it := range col.Items {
-			if err := need(it, "a collateral item", "row", "col", "index", "scene"); err != nil {
+		if _, err := list(p["readback"], "a param read-back", true); err != nil { // a value may be null
+			return err
+		}
+	}
+	bypass, err := list(top["bypass"], "bypass", false)
+	if err != nil {
+		return err
+	}
+	for _, e := range bypass {
+		b, err := obj(e, "a bypass read-back", []string{"readback"}, "row", "col", "readback", "ok")
+		if err != nil {
+			return err
+		}
+		if !isNull(b["readback"]) {
+			if _, err := list(b["readback"], "a bypass read-back", false); err != nil { // a flag is never null
 				return err
 			}
 		}
 	}
-	for _, c := range checks {
-		if c.obj == nil {
-			return fmt.Errorf("edit result: %s must be an object", c.where)
-		}
-		if err := need(c.obj, c.where, c.keys...); err != nil {
+	if !isNull(top["collateral"]) {
+		c, err := obj(top["collateral"], "collateral", nil, "params_compared", "bypass_compared", "layout_same", "mismatches", "items")
+		if err != nil {
 			return err
 		}
-	}
-	var lists struct {
-		Params []map[string]json.RawMessage `json:"params"`
-		Bypass []map[string]json.RawMessage `json:"bypass"`
-	}
-	_ = json.Unmarshal(raw, &lists)
-	for _, p := range lists.Params {
-		if err := need(p, "a param read-back", "row", "col", "index", "readback", "ok"); err != nil {
+		items, err := list(c["items"], "collateral.items", false)
+		if err != nil {
 			return err
 		}
-	}
-	for _, b := range lists.Bypass {
-		if err := need(b, "a bypass read-back", "row", "col", "readback", "ok"); err != nil {
-			return err
+		for _, e := range items {
+			if _, err := obj(e, "a collateral item", []string{"index", "scene"}, "row", "col", "index", "scene"); err != nil {
+				return err
+			}
 		}
 	}
-	var save struct {
-		Backup map[string]json.RawMessage `json:"backup"`
+	if _, err := obj(top["rollback"], "rollback", nil, "state", "restored", "failed"); err != nil {
+		return err
 	}
-	_ = json.Unmarshal(m["save"], &save)
-	if save.Backup != nil {
-		if err := need(save.Backup, "save.backup", "slot", "collection"); err != nil {
+	save, err := obj(top["save"], "save", []string{"slot", "name", "backup"}, "saved", "slot", "name", "listed", "backup")
+	if err != nil {
+		return err
+	}
+	if !isNull(save["backup"]) {
+		if _, err := obj(save["backup"], "save.backup", nil, "slot", "collection"); err != nil {
 			return err
 		}
 	}

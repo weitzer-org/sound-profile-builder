@@ -196,6 +196,10 @@ edits = [
  pj("edit_preset envelope with the v1 payload swapped in", env(K0, JOB2, compact(ejob()), payload=compact(dict(ejob(), v=1))), "bad_signature", object_key=EK),
  pj("edit_preset with v 2.0", env(K0, JOB2, compact(ejob()).replace('"v":2,', '"v":2.0,', 1)), "bad_payload", object_key=EK),
  ej("edit_preset with a case-variant kind", dict(ejob(), kind="Edit_Preset"), "bad_payload"),
+ ej("kind as a list under the v2 tag", dict(ejob(), kind=["edit_preset"]), "bad_payload"),
+ ej("kind as an object under the v2 tag", dict(ejob(), kind={}), "bad_payload"),
+ pj("kind as a list under the v1 tag", sj(job(kind=["list_slots"])), "bad_payload"),
+ pj("kind as an object under the v1 tag", sj(job(kind={})), "bad_payload"),
  # The plan record and its hash.
  ej("plan hash does not match the text", ejob(digest=sha(OK_TEXT + " ")), "bad_payload"),
  ej("plan hash in upper case", ejob(digest=sha(OK_TEXT).upper()), "bad_payload"),

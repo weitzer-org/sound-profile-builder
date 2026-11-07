@@ -1,6 +1,6 @@
 {
  "format": "qc-device-edit-result/1",
- "note": "Hand-written from contract section 9.3. Go's ParseEditResultPayload must accept every valid payload and refuse every invalid one with an error containing `error` and never quoting the payload. The agent (phase E4) builds its results to pass the same parser. A payload of null in invalid means `raw` holds the exact text. Changing an entry is a contract change.",
+ "note": "Hand-written from contract section 9.3. Go's ParseEditResultPayload must accept every valid payload and refuse every invalid one with an error containing `error` and never quoting the payload. The agent (phase E4) builds its results to pass the same parser. A payload of null in invalid means `raw` holds the exact text. Keys the contract doesn't let be null are refused when null (Go would read them as zero values). Changing an entry is a contract change.",
  "valid": [
   {
    "name": "live edit applied and verified",
@@ -497,6 +497,72 @@
     "rollback": {
      "state": "restored",
      "restored": 2,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   }
+  },
+  {
+   "name": "param read-back with null values (non-finite on the unit)",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
      "failed": 0
     },
     "save": {
@@ -1763,7 +1829,7 @@
      "backup": null
     }
    },
-   "error": "params"
+   "error": "non-null"
   },
   {
    "name": "513 param read-backs",
@@ -11696,6 +11762,1130 @@
    "name": "NaN read-back value",
    "error": "strict JSON",
    "raw": "{\"plan_sha256\":\"c0ffee0000000000000000000000000000000000000000000000000000000000\",\"snapshot\":\"3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02\",\"mode\":\"live\",\"cas\":{\"state\":\"matched\",\"failed\":[]},\"params\":[{\"row\":0,\"col\":0,\"index\":0,\"readback\":[0.5,NaN,0.45,0.45,0.45,0.45,0.45,0.45],\"ok\":true}],\"bypass\":[{\"row\":0,\"col\":2,\"readback\":[false,true,false,false,false,false,false,false],\"ok\":true}],\"collateral\":{\"params_compared\":118,\"bypass_compared\":248,\"layout_same\":true,\"mismatches\":0,\"items\":[]},\"rollback\":{\"state\":\"not_needed\",\"restored\":0,\"failed\":0},\"save\":{\"saved\":false,\"slot\":null,\"name\":null,\"listed\":false,\"backup\":null}}"
+  },
+  {
+   "name": "bypass read-back flags null (would read as active)",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null,
+       null
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "bypass ok null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": null
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "param ok null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": null
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "param row null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": null,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "param readback null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": null,
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "params null element",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     null
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "save.saved null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": null,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "save.listed null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": null,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "rollback.restored null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": null,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "rollback.state null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": null,
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "cas null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": null,
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "cas.failed null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": null
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "cas.failed null element",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "mismatch",
+     "failed": [
+      null
+     ]
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "collateral.layout_same null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": null,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "collateral item row null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 1,
+     "bypass_compared": 1,
+     "layout_same": true,
+     "mismatches": 1,
+     "items": [
+      {
+       "row": null,
+       "col": 0,
+       "index": 0,
+       "scene": 0
+      }
+     ]
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "plan_sha256 null",
+   "payload": {
+    "plan_sha256": null,
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": null
+    }
+   },
+   "error": "exactly its fields"
+  },
+  {
+   "name": "save.backup.slot null",
+   "payload": {
+    "plan_sha256": "c0ffee0000000000000000000000000000000000000000000000000000000000",
+    "snapshot": "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02",
+    "mode": "live",
+    "cas": {
+     "state": "matched",
+     "failed": []
+    },
+    "params": [
+     {
+      "row": 0,
+      "col": 0,
+      "index": 0,
+      "readback": [
+       0.5,
+       0.62,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45,
+       0.45
+      ],
+      "ok": true
+     }
+    ],
+    "bypass": [
+     {
+      "row": 0,
+      "col": 2,
+      "readback": [
+       false,
+       true,
+       false,
+       false,
+       false,
+       false,
+       false,
+       false
+      ],
+      "ok": true
+     }
+    ],
+    "collateral": {
+     "params_compared": 118,
+     "bypass_compared": 248,
+     "layout_same": true,
+     "mismatches": 0,
+     "items": []
+    },
+    "rollback": {
+     "state": "not_needed",
+     "restored": 0,
+     "failed": 0
+    },
+    "save": {
+     "saved": false,
+     "slot": null,
+     "name": null,
+     "listed": false,
+     "backup": {
+      "slot": null,
+      "collection": "x"
+     }
+    }
+   },
+   "error": "exactly its fields"
   }
  ]
 }

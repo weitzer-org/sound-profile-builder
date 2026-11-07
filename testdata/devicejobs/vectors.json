@@ -980,6 +980,46 @@
    "expect": "bad_payload"
   },
   {
+   "name": "kind as a list under the v2 tag",
+   "keyring": "current",
+   "object_key": "jobs/pending/7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":2,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":[\\\"edit_preset\\\"],\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"4A\\\",\\\"mode\\\":\\\"copy\\\",\\\"target_slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues edit\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"device-1\\\",\\\"guitar\\\":\\\"From the unit\\\"},\\\"plan\\\":{\\\"format\\\":\\\"qc2-device-edit/1\\\",\\\"sha256\\\":\\\"988211c909cc59b18555309f73f3ff4f677ec319bff7731cb62eca5398a695fc\\\",\\\"payload\\\":\\\"{\\\\\\\"format\\\\\\\":\\\\\\\"qc2-device-edit/1\\\\\\\",\\\\\\\"catalog\\\\\\\":{\\\\\\\"coros\\\\\\\":\\\\\\\"4.1\\\\\\\",\\\\\\\"sha256\\\\\\\":\\\\\\\"abababababababababababababababababababababababababababababababab\\\\\\\"},\\\\\\\"snapshot\\\\\\\":\\\\\\\"3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02\\\\\\\",\\\\\\\"expect\\\\\\\":{\\\\\\\"folder_key\\\\\\\":\\\\\\\"/media/p4/Presets/Sounds profiles\\\\\\\",\\\\\\\"position\\\\\\\":24,\\\\\\\"slot\\\\\\\":\\\\\\\"4A\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"Texas Blues\\\\\\\",\\\\\\\"layout\\\\\\\":[[0,0,1120],[0,1,12045],[0,2,8006],[1,0,5]]},\\\\\\\"param_ops\\\\\\\":[{\\\\\\\"row\\\\\\\":0,\\\\\\\"col\\\\\\\":0,\\\\\\\"model_id\\\\\\\":1120,\\\\\\\"index\\\\\\\":0,\\\\\\\"label\\\\\\\":\\\\\\\"GAIN\\\\\\\",\\\\\\\"evidence\\\\\\\":[\\\\\\\"taper:g4\\\\\\\"],\\\\\\\"scene_mode\\\\\\\":true,\\\\\\\"expect\\\\\\\":[0.45,0.45,0.45,0.45,0.45,0.45,0.45,0.45],\\\\\\\"wire\\\\\\\":[0.5,0.62,0.45,0.45,0.45,0.45,0.45,0.45]}],\\\\\\\"bypass_ops\\\\\\\":[{\\\\\\\"row\\\\\\\":0,\\\\\\\"col\\\\\\\":2,\\\\\\\"model_id\\\\\\\":8006,\\\\\\\"why\\\\\\\":\\\\\\\"target\\\\\\\",\\\\\\\"expect\\\\\\\":[false,false,false,false,false,false,false,false],\\\\\\\"bypass\\\\\\\":[false,true,false,false,false,false,false,false]}]}\\\"}}}\",\"sig\":\"02d7568b93fd29bf5de4813f85d616d4b07e86ee7bb7054112c9135087a64ef2\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "kind as an object under the v2 tag",
+   "keyring": "current",
+   "object_key": "jobs/pending/7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":2,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":{},\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{\\\"slot\\\":\\\"4A\\\",\\\"mode\\\":\\\"copy\\\",\\\"target_slot\\\":\\\"20A\\\",\\\"name\\\":\\\"Texas Blues edit\\\",\\\"source\\\":{\\\"preset_id\\\":\\\"device-1\\\",\\\"guitar\\\":\\\"From the unit\\\"},\\\"plan\\\":{\\\"format\\\":\\\"qc2-device-edit/1\\\",\\\"sha256\\\":\\\"988211c909cc59b18555309f73f3ff4f677ec319bff7731cb62eca5398a695fc\\\",\\\"payload\\\":\\\"{\\\\\\\"format\\\\\\\":\\\\\\\"qc2-device-edit/1\\\\\\\",\\\\\\\"catalog\\\\\\\":{\\\\\\\"coros\\\\\\\":\\\\\\\"4.1\\\\\\\",\\\\\\\"sha256\\\\\\\":\\\\\\\"abababababababababababababababababababababababababababababababab\\\\\\\"},\\\\\\\"snapshot\\\\\\\":\\\\\\\"3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02\\\\\\\",\\\\\\\"expect\\\\\\\":{\\\\\\\"folder_key\\\\\\\":\\\\\\\"/media/p4/Presets/Sounds profiles\\\\\\\",\\\\\\\"position\\\\\\\":24,\\\\\\\"slot\\\\\\\":\\\\\\\"4A\\\\\\\",\\\\\\\"name\\\\\\\":\\\\\\\"Texas Blues\\\\\\\",\\\\\\\"layout\\\\\\\":[[0,0,1120],[0,1,12045],[0,2,8006],[1,0,5]]},\\\\\\\"param_ops\\\\\\\":[{\\\\\\\"row\\\\\\\":0,\\\\\\\"col\\\\\\\":0,\\\\\\\"model_id\\\\\\\":1120,\\\\\\\"index\\\\\\\":0,\\\\\\\"label\\\\\\\":\\\\\\\"GAIN\\\\\\\",\\\\\\\"evidence\\\\\\\":[\\\\\\\"taper:g4\\\\\\\"],\\\\\\\"scene_mode\\\\\\\":true,\\\\\\\"expect\\\\\\\":[0.45,0.45,0.45,0.45,0.45,0.45,0.45,0.45],\\\\\\\"wire\\\\\\\":[0.5,0.62,0.45,0.45,0.45,0.45,0.45,0.45]}],\\\\\\\"bypass_ops\\\\\\\":[{\\\\\\\"row\\\\\\\":0,\\\\\\\"col\\\\\\\":2,\\\\\\\"model_id\\\\\\\":8006,\\\\\\\"why\\\\\\\":\\\\\\\"target\\\\\\\",\\\\\\\"expect\\\\\\\":[false,false,false,false,false,false,false,false],\\\\\\\"bypass\\\\\\\":[false,true,false,false,false,false,false,false]}]}\\\"}}}\",\"sig\":\"022c76d62a9ef4e336e1d94e2a4ea5804c0e3d78953f57be3eea1159c175e467\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "kind as a list under the v1 tag",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":[\\\"list_slots\\\"],\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"e478c91697c111a9f0916fb24edddd10611182a2d423b082b0c261d756d3a927\"}",
+   "expect": "bad_payload"
+  },
+  {
+   "name": "kind as an object under the v1 tag",
+   "keyring": "current",
+   "object_key": "jobs/pending/6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01.json",
+   "agent_bucket": "qc2-device-jobs-test",
+   "now": "2026-11-05T12:05:00Z",
+   "ledger": [],
+   "envelope": "{\"v\":1,\"kid\":\"72eb33c6\",\"payload\":\"{\\\"v\\\":1,\\\"type\\\":\\\"qc2-device-job\\\",\\\"job_id\\\":\\\"6f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e01\\\",\\\"bucket\\\":\\\"qc2-device-jobs-test\\\",\\\"kind\\\":{},\\\"created_at\\\":\\\"2026-11-05T12:00:00Z\\\",\\\"expires_at\\\":\\\"2026-11-05T12:15:00Z\\\",\\\"args\\\":{}}\",\"sig\":\"9fcca7d3d7e0011006da2d4ab03e9644793d379d02345608dad0b67164b14f3d\"}",
+   "expect": "bad_payload"
+  },
+  {
    "name": "plan hash does not match the text",
    "keyring": "current",
    "object_key": "jobs/pending/7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d.json",
