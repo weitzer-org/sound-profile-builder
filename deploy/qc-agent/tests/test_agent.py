@@ -118,8 +118,8 @@ class ListAndRead(Base):
 
     def test_edit_preset_is_refused_before_any_device_contact(self):
         # Contract v2: a signed, valid edit_preset job parses, is taken, and is refused (unsupported_kind)
-        # until phase E4. The unit is never opened, and the result's edit block is null.
-        self.dev.calls.clear()
+        # until phase E4. The unit is never opened (not even end_push/disconnect), and the result's edit
+        # block is null.
         jid, key = self.queue("edit_preset")
         self.poll()
         r = self.result(jid)

@@ -316,7 +316,13 @@ func TestEditResultFixture(t *testing.T) {
 			}
 		})
 	}
-	if _, err := devicejobs.ParseEditResultPayload(json.RawMessage(strings.Repeat(" ", devicejobs.MaxEditResultBytes+1))); err == nil {
-		t.Error("oversized result accepted")
+	// Over the cap: refused for its size, before any decoding (a valid result padded with whitespace).
+	valid := string(fx.Valid[0].Payload)
+	big := valid + strings.Repeat(" ", devicejobs.MaxEditResultBytes+1-len(valid))
+	if _, err := devicejobs.ParseEditResultPayload(json.RawMessage(big)); err == nil || !strings.Contains(err.Error(), "larger than") {
+		t.Errorf("oversized result: %v", err)
+	}
+	if _, err := devicejobs.ParseEditResultPayload(json.RawMessage(big[:devicejobs.MaxEditResultBytes])); err != nil {
+		t.Errorf("a result exactly at the cap: %v", err)
 	}
 }

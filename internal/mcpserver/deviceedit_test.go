@@ -230,3 +230,27 @@ func TestEditDevicePreset_ReadbackV2PinsTheCollection(t *testing.T) {
 		t.Fatalf("out %+v\n%s", out, text)
 	}
 }
+
+// renderEdit's three states for a plan that can't be applied: not pinned (a /1 read), pinned with
+// ops but failing the contract's strict checks, and no ops (nothing to say).
+func TestRenderEdit_NotConfirmableNotes(t *testing.T) {
+	const pinNote, strictNote = "can't be pinned to its collection", "doesn't pass the bridge's strict checks"
+	for _, c := range []struct {
+		name      string
+		out       deviceEditOutput
+		pin, strk bool
+	}{
+		{"a /1 read", deviceEditOutput{Pinned: false, ParamOps: 1}, true, false},
+		{"pinned, ops, fails the strict parse", deviceEditOutput{Pinned: true, Confirmable: false, ParamOps: 1, BypassOps: 1}, false, true},
+		{"pinned, no ops", deviceEditOutput{Pinned: true, Confirmable: false}, false, false},
+		{"confirmable", deviceEditOutput{Pinned: true, Confirmable: true, ParamOps: 2}, false, false},
+	} {
+		var b strings.Builder
+		renderEdit(&b, c.out)
+		text := b.String()
+		if strings.Contains(text, pinNote) != c.pin || strings.Contains(text, strictNote) != c.strk {
+			t.Errorf("%s: pin note %v (want %v), strict note %v (want %v)\n%s", c.name,
+				strings.Contains(text, pinNote), c.pin, strings.Contains(text, strictNote), c.strk, text)
+		}
+	}
+}

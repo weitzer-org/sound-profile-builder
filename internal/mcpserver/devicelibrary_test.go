@@ -332,3 +332,22 @@ func TestDryRun_WarnsWhenTheLastListingShowedTheSlotOccupied(t *testing.T) {
 		t.Fatalf("warned for an empty slot:\n%s", text)
 	}
 }
+
+// The mic harvest reads both read-back formats: a qc-device-readback/2 read records its cab mic too.
+func TestReadDevicePreset_RecordsCabMicsFromReadbackV2(t *testing.T) {
+	r := newLibRig(t)
+	r.online(t)
+	r.runAgent(t)
+	seen := "ME_110 US PRN C10R_Ribbon 121"
+	vals := `["` + strings.Repeat(seen+`","`, 7) + seen + `"]`
+	r.agent.ReadbackFormat = devicejobs.ReadbackFormatV2
+	r.agent.ReadbackPayload = json.RawMessage(`{"setlist":{"folder":"other","folder_key":"/media/p4/Presets/Sounds profiles","position":24,"is_factory":false},` +
+		`"chains":[{"row":0,"in_port":1,"out_port":19,"blocks":[{"col":0,"model_id":12045,"params":[{"index":1,"scene_mode":false,"values":` + vals + `}]}]}],"bypass":null}`)
+	jo := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceReadToolName, map[string]any{"wait_seconds": 10}))
+	if jo.Mics == nil || jo.Mics.NewlyRecorded != 1 {
+		t.Fatalf("mics from a /2 read: %+v", jo.Mics)
+	}
+	if m, err := r.store.Mics(context.Background()); err != nil || m == nil || len(m.For(12045)) != 1 || m.For(12045)[0] != seen {
+		t.Fatalf("stored mics %+v %v", m, err)
+	}
+}

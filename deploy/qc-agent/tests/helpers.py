@@ -83,7 +83,9 @@ def export():
 def edit_args():
     """A valid edit_preset job's args (contract v2): those of the shared vector "valid edit_preset: copy"."""
     v = json.loads(VECTORS.read_text(encoding="utf-8"))
-    case = next(c for c in v["pending_jobs"] if c["name"] == "valid edit_preset: copy")
+    case = next((c for c in v["pending_jobs"] if c["name"] == "valid edit_preset: copy"), None)
+    if case is None:
+        raise AssertionError('vectors.json has no "valid edit_preset: copy" entry (regenerate with gen_vectors.py)')
     return json.loads(json.loads(case["envelope"])["payload"])["args"]
 
 

@@ -197,15 +197,21 @@ def _check_alive(ctx):
         raise _Gone()
 
 
+# Kinds that parse but that this bridge refuses outright, with the message for each. They are answered
+# here, before the executor path, because that path's `finally` calls end_push() and disconnect() on the
+# device: a refused kind never touches it. edit_preset (contract v2) moves to EXECUTORS in preset-editing E4.
+REFUSED_KINDS = {
+    "edit_preset": "This bridge can't edit presets on the unit yet. Nothing was changed.",
+}
+
+
 def run(ctx, job) -> Outcome:
     kind = job["kind"]
+    if kind in REFUSED_KINDS:
+        return refused("unsupported_kind", REFUSED_KINDS[kind])
     executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
                 "sync_device_library": sync_device_library}.get(kind)
-    if executor is None:
-        # edit_preset (contract v2) parses, but this bridge doesn't run edits yet (preset-editing phase E4):
-        # it is refused before any device contact. parse_job admits no other kind; keep the code anyway.
-        if kind == "edit_preset":
-            return refused("unsupported_kind", "This bridge can't edit presets on the unit yet. Nothing was changed.")
+    if executor is None:  # parse_job admits no other kind; keep the code anyway
         return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
     try:
         return executor(ctx, job)
