@@ -279,3 +279,23 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 > Read `docs/design/qc-preset-editing.md` sections 5-7, the contract v2 section and `deploy/qc-agent/qc_agent/jobs.py`/`qcmcp_backend.py`. Branch from main as `claude/qc-agent-edit-live`. Run the `planner` agent on the job state machine first. Build `edit_preset` in `live` mode only, following section 6 (PC opt-in, CAS, per-op wire guard, collateral check, rollback, `edited` ledger), offline tests on the fake backend for every refusal and a hostile plan, and enable QC-2's confirm path for `live`. Run `/security-review`, the `security-reviewer` agent and `/code-review high`; open the PR with `deep-review`. Then give me the README steps for E-G1 on an owned test slot.
 
 **After that:** E5 (Opus 5.5, one PR per mode, each enabled only after its gate passes and `opus-verifier` has read the result), then E6.
+
+---
+
+## 12. E1 status (built, branch `claude/device-edit-plan-whbfke`)
+
+Built: snapshots, `internal/deviceedit` and `edit_device_preset` (dry run only). Where it differs from sections 3-4:
+
+- **Snapshots** (`internal/devicelib/snapshots.go`): `device/snapshots/<job_id>.json`, stored for every succeeded `read_preset` (with or without `import`), **raw** (not sanitized: the compare-and-swap on the preset name needs the exact string; every output is sanitized). Write-once, strictly re-parsed on load. A draft imported before this PR has no snapshot; the tool backfills it once from the signed job result.
+- **Folder:** the read-back only says `"My Presets"` or `"other"`, so `expect.folder` pins that much. A real collection key needs a contract field (E3).
+- **Tools:** `edit_device_preset(preset_id, guitar?, from_read?, mode?, name?, target_slot?)`; registered only with the device tools, a library and the planner. `dry_run=false` and `confirm_token` answer "not available yet".
+- **Matching:** block id (`b<col+1>`, unique, same model) first, then the unique maximum order-preserving alignment between those anchors; a tie matches nothing in its segment (`match_ambiguous`). A block matched by id that sits out of order is a **move**: `reorder` is reported, but its parameter edits still apply to the cell it is matched with (owner, 2026-11-07).
+- **Removal -> bypass** only when the target is a draft of this very read (`Origin.JobID` equals the snapshot's). Any other target leaves blocks it doesn't mention alone (`cell_not_in_target`).
+- **Locked cells** (unknown ids, routing, loopers, internal models) are never matched, removed or written.
+- **No-op test:** a continuous control is unchanged when the target is within `H = max(range * 5e-5, 0.5 * 10^(floor(log10 |value|) - 4))` of the unit's display value (`deviceexport.ToleranceH`). The catalog's `steps` field is not used (only 1,402 of 4,687 float/fader controls have it). The second term keeps the import's five-significant-figure text inside H (a simulation found 241 failures without it; `TestToleranceHoldsForEveryContinuousControl` checks ~190,000 catalog samples in Go). Switches compare whole positions.
+- **Scenes:** A and B from the target (a scene already equal keeps the unit's exact value); C-H exactly as the snapshot has them; `scene_mode` is never turned off by a plan. A removed block is the one exception: bypassed in all eight scenes (D4), and the dry run says so.
+- **kept_defaults never writes** (owner discussion 2026-11-07; the planner had proposed resetting). Controls the target omits are never written. To reset a control, set it in `parameters`.
+- **Mic strings** are never written by an edit (`mic_not_written` unless equal).
+- **Not-applied codes** are a fixed list (`internal/deviceedit/reasons.go`), each with fixed text and a test case; `locked_unmeasured_bound` has no case because no exposed model has an unmeasured bound in the shipped catalog.
+- **Plan hash:** SHA-256 of `qc2-device-edit/1 \n` plus the compact payload (format, catalog hash, snapshot id, `expect`, `param_ops`, `bypass_ops`). The table, the not-applied list and the untouched counts are not hashed.
+- **Census:** `internal/deviceedit/testdata/census.golden.txt`.

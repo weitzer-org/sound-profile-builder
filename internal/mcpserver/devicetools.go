@@ -517,6 +517,7 @@ func applyLibrary(ctx context.Context, lib *DeviceLibrary, v *devicejobs.JobView
 	out.Library = lib.storeSync(ctx, v)
 	out.Mics = lib.recordMics(ctx, v)
 	lib.storeSlots(ctx, v)
+	lib.storeSnapshot(ctx, v)
 }
 
 // applyImport imports a finished read into out. A job that isn't finished yet gets no

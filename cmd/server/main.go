@@ -12,6 +12,8 @@ import (
 	"github.com/weitzer-org/sound-builder/internal/api"
 	"github.com/weitzer-org/sound-builder/internal/catalog"
 	"github.com/weitzer-org/sound-builder/internal/config"
+	"github.com/weitzer-org/sound-builder/internal/deviceedit"
+	"github.com/weitzer-org/sound-builder/internal/deviceexport"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
 	"github.com/weitzer-org/sound-builder/internal/devicelib"
 	"github.com/weitzer-org/sound-builder/internal/mcpserver"
@@ -158,10 +160,11 @@ func main() {
 	// download describe the same operations.
 	var mcpOpts []mcpserver.Option
 	var exporter devicejobs.Exporter = devicejobs.UnavailableExporter{}
+	var devExporter *deviceexport.Exporter
 	if exp, err := server.DeviceExporter(); err != nil {
 		log.Printf("Device export unavailable: %v", err)
 	} else {
-		exporter = exp
+		exporter, devExporter = exp, exp
 		mcpOpts = append(mcpOpts, mcpserver.WithExporter(exp), mcpserver.WithImporter(exp))
 	}
 	switch dcfg, err := devicejobs.ConfigFromEnv(bucket); {
@@ -177,6 +180,9 @@ func main() {
 			mcpOpts = append(mcpOpts, mcpserver.WithDeviceLibrary(&mcpserver.DeviceLibrary{
 				Store: devicelib.NewStore(storeClient, bucket), Harvester: devicelib.NewHarvester(cat),
 			}))
+			if devExporter != nil {
+				mcpOpts = append(mcpOpts, mcpserver.WithDeviceEditor(deviceedit.New(devExporter)))
+			}
 		}
 		log.Println("Device tools enabled (jobs bucket configured)")
 	}

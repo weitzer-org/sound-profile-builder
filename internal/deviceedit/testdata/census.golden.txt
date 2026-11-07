@@ -1,0 +1,62 @@
+fixture | target | param ops | bypass ops | not applied
+01_SRV_Clean | QC-2 original, not derived | 0 | 0 | mic_not_written=1, new_block=1
+01_SRV_Clean | draft, unchanged | 0 | 0 | -
+01_SRV_Clean | nudge one value per block | 4 | 0 | -
+01_SRV_Clean | bypass the first block in A and B | 0 | 0 | -
+01_SRV_Clean | drop the last block (draft of this read) | 0 | 1 | -
+01_SRV_Clean | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+01_SRV_Clean | append a new block | 0 | 0 | new_block=1
+01_SRV_Clean | swap the first block's model | 0 | 0 | model_swap=1
+01_SRV_Clean | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+01_SRV_Clean | move the first block to the end, ids dropped | 0 | 0 | reorder=1
+03_British_Invasion | QC-2 original, not derived | 0 | 0 | mic_not_written=2
+03_British_Invasion | draft, unchanged | 0 | 0 | -
+03_British_Invasion | nudge one value per block | 7 | 0 | -
+03_British_Invasion | bypass the first block in A and B | 0 | 1 | -
+03_British_Invasion | drop the last block (draft of this read) | 0 | 1 | -
+03_British_Invasion | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+03_British_Invasion | append a new block | 0 | 0 | new_block=1
+03_British_Invasion | swap the first block's model | 0 | 0 | model_swap=1
+03_British_Invasion | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+03_British_Invasion | move the first block to the end, ids dropped | 0 | 0 | reorder=1
+05_Clapton | QC-2 original, not derived | 0 | 0 | mic_not_written=1
+05_Clapton | draft, unchanged | 0 | 0 | -
+05_Clapton | nudge one value per block | 4 | 0 | -
+05_Clapton | bypass the first block in A and B | 0 | 0 | -
+05_Clapton | drop the last block (draft of this read) | 0 | 1 | -
+05_Clapton | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+05_Clapton | append a new block | 0 | 0 | new_block=1
+05_Clapton | swap the first block's model | 0 | 0 | model_swap=1
+05_Clapton | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+05_Clapton | move the first block to the end, ids dropped | 0 | 0 | reorder=1
+pushable_g3 | QC-2 original, not derived | 0 | 0 | -
+pushable_g3 | draft, unchanged | 0 | 0 | -
+pushable_g3 | nudge one value per block | 4 | 0 | -
+pushable_g3 | bypass the first block in A and B | 0 | 1 | -
+pushable_g3 | drop the last block (draft of this read) | 0 | 1 | -
+pushable_g3 | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+pushable_g3 | append a new block | 0 | 0 | new_block=1
+pushable_g3 | swap the first block's model | 0 | 0 | model_swap=1
+pushable_g3 | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+pushable_g3 | move the first block to the end, ids dropped | 0 | 0 | reorder=1
+pushable_faders | QC-2 original, not derived | 0 | 0 | -
+pushable_faders | draft, unchanged | 0 | 0 | -
+pushable_faders | nudge one value per block | 2 | 0 | -
+pushable_faders | bypass the first block in A and B | 0 | 1 | -
+pushable_faders | drop the last block (draft of this read) | 0 | 1 | -
+pushable_faders | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+pushable_faders | append a new block | 0 | 0 | new_block=1
+pushable_faders | swap the first block's model | 0 | 0 | model_swap=1
+pushable_faders | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+pushable_faders | move the first block to the end, ids dropped | 0 | 0 | match_ambiguous=2
+pushable_plugin | QC-2 original, not derived | 0 | 0 | -
+pushable_plugin | draft, unchanged | 0 | 0 | -
+pushable_plugin | nudge one value per block | 3 | 0 | -
+pushable_plugin | bypass the first block in A and B | 0 | 1 | -
+pushable_plugin | drop the last block (draft of this read) | 0 | 1 | -
+pushable_plugin | drop the last block (another preset) | 0 | 0 | cell_not_in_target=1
+pushable_plugin | append a new block | 0 | 0 | new_block=1
+pushable_plugin | swap the first block's model | 0 | 0 | model_swap=1
+pushable_plugin | move the first block to the end (ids kept) | 0 | 0 | reorder=1
+pushable_plugin | move the first block to the end, ids dropped | 0 | 0 | reorder=1
+total | | | 34 ops | 36 not applied
