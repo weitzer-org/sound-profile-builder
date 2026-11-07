@@ -132,3 +132,28 @@ func TestJudgeVerdictMapsBackToArms(t *testing.T) {
 		t.Error("score 3 must be refused")
 	}
 }
+
+// GSR, PR 188: 0.85-0.80 is 0.04999999999999993 in float64, which is still the 5-point margin.
+func TestApplicableShareMarginIsNotLostToFloatRounding(t *testing.T) {
+	pair := func(opsA, naA, opsB, naB int) []Pair {
+		a, b := rs("A", "d", "r", 1, ok(opsA, naA, 3, 3)), rs("B", "d", "r", 1, ok(opsB, naB, 3, 3))
+		return []Pair{{Triple: a.Triple, A: a, B: b}}
+	}
+	share := func(cs []Criterion) bool {
+		for _, c := range cs {
+			if c.Metric == "Applicable share" {
+				return c.Pass
+			}
+		}
+		t.Fatal("no applicable share row")
+		return false
+	}
+	// A 80% (80/100), B 85% (85/100): exactly 5 points above, and above the 80% target.
+	if !share(Criteria(pair(80, 20, 85, 15))) {
+		t.Error("an exact 5-point margin must pass")
+	}
+	// 4.9 points does not.
+	if share(Criteria(pair(801, 199, 850, 150))) {
+		t.Error("4.9 points must not pass")
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/weitzer-org/sound-builder/internal/agents"
 	"github.com/weitzer-org/sound-builder/internal/deviceexport"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
@@ -201,4 +202,47 @@ func TestPreserved(t *testing.T) {
 			t.Errorf("preserved(%q, %q) = %d, want %d", tc.draft, tc.out, got, tc.want)
 		}
 	}
+}
+
+func TestRenderChainFormat(t *testing.T) {
+	chain := []storage.EffectBlock{{ID: "b1", Model: "Green 808", Parameters: []storage.BlockParameter{
+		{Name: "Gain", Value: "5.0", ValueB: "7.0"}, {Name: "Tone", Value: "6.0", ValueB: "6.0"}, {Name: "Level", Value: "4"}}}}
+	want := "- b1 | Green 808 | Gain=5.0 (scene B 7.0) | Tone=6.0 | Level=4\n"
+	if got := RenderChain(chain); got != want {
+		t.Errorf("RenderChain = %q, want %q", got, want)
+	}
+}
+
+// lookupCapture mirrors api.lookupCapture's rule: an exact name ignoring case and space, a user entry
+// wins, empty never matches.
+func TestLookupCapture(t *testing.T) {
+	if _, _, ok := lookupCapture("   "); ok {
+		t.Error("a blank name must not match")
+	}
+	if _, _, ok := lookupCapture("No Such Capture Anywhere"); ok {
+		t.Error("an unknown name must not match")
+	}
+	checked, users := 0, 0
+	for n, isCap := range agents.GetValidNativeBlocks() {
+		if !isCap {
+			continue
+		}
+		name, source, ok := lookupCapture("  " + strings.ToUpper(n) + " ")
+		if !ok || !strings.EqualFold(name, n) {
+			t.Fatalf("lookupCapture(%q) = %q, %q, %v", n, name, source, ok)
+		}
+		if agents.IsUserCaptureName(n) {
+			users++
+			if source != "user" {
+				t.Errorf("%q is a user capture but came back as %q", n, source)
+			}
+		}
+		if checked++; checked >= 200 {
+			break
+		}
+	}
+	if checked == 0 {
+		t.Fatal("no captures to check")
+	}
+	_ = users
 }

@@ -185,14 +185,14 @@ func chainOf(sp storage.StructuredPreset) ([]storage.EffectBlock, error) {
 // preserved is the number of draft blocks that appear in out with the same id and model, in
 // the same relative order: the longest common subsequence of (id, model) pairs.
 func preserved(draft, out []storage.EffectBlock) int {
-	key := func(b storage.EffectBlock) string { return b.ID + "\x00" + b.Model }
+	same := func(a, b storage.EffectBlock) bool { return a.ID == b.ID && a.Model == b.Model }
 	n, m := len(draft), len(out)
 	prev := make([]int, m+1)
 	cur := make([]int, m+1)
 	for i := 1; i <= n; i++ {
 		for j := 1; j <= m; j++ {
 			switch {
-			case key(draft[i-1]) == key(out[j-1]):
+			case same(draft[i-1], out[j-1]):
 				cur[j] = prev[j-1] + 1
 			case prev[j] >= cur[j-1]:
 				cur[j] = prev[j]

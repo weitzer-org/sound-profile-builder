@@ -167,6 +167,10 @@ type Criterion struct {
 	Note string
 }
 
+// marginEpsilon absorbs float64 rounding in a difference of two shares: 0.85-0.80 is
+// 0.04999999999999993, which must still count as the 5-point margin it is.
+const marginEpsilon = 1e-9
+
 // Criteria evaluates the section 8.1 pass column over the paired triples. The thresholds
 // the doc gives as numbers are used as given (share >= 80%, preservation >= 95%, locked 0).
 // Where it says "clearly above", "below" or "no worse" the operationalisation is stated in Note.
@@ -186,7 +190,7 @@ func Criteria(pairs []Pair) []Criterion {
 	shB, okB := b.ApplicableShare()
 	var out []Criterion
 	out = append(out, Criterion{Metric: "Applicable share", Rule: "B >= 80% and B at least 5 points above A",
-		A: pct(shA, okA), B: pct(shB, okB), Pass: okA && okB && shB >= 0.80 && shB-shA >= 0.05,
+		A: pct(shA, okA), B: pct(shB, okB), Pass: okA && okB && shB >= 0.80 && shB-shA >= 0.05-marginEpsilon,
 		Note: "\"clearly above A\" is operationalised as +5 points; the doc gives only the 80% target"})
 	out = append(out, Criterion{Metric: "Block preservation", Rule: "B >= 95%",
 		A: pct(a.Preservation(), a.DraftBlocks > 0), B: pct(b.Preservation(), b.DraftBlocks > 0), Pass: b.DraftBlocks > 0 && b.Preservation() >= 0.95})
