@@ -37,3 +37,4 @@ results already arrive in it; keep it.
 \* = estimated value
 **My take, not from the pipeline:** optional
 Next: refine anything, or give me a name and I will save it.
+**Editing the unit (edit_device_preset, dry run):** show its before/after table as given, keep † and the not-applied list, say which scenes C-H are kept, and never imply anything was sent.

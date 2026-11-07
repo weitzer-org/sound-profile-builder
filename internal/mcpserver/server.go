@@ -9,6 +9,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/weitzer-org/sound-builder/internal/deviceedit"
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 )
@@ -30,6 +31,7 @@ type options struct {
 	exporter devicejobs.Exporter
 	importer devicejobs.ReadbackImporter
 	library  *DeviceLibrary
+	editor   *deviceedit.Planner
 }
 
 // WithDeviceLibrary enables sync_device_library and the cab mic record kept by
@@ -68,12 +70,18 @@ func NewServer(svc *presetsvc.Service, opts ...Option) *mcp.Server {
 	instr := instructions
 	if o.device != nil {
 		instr += deviceInstructions
+		if o.library != nil && o.library.Store != nil && o.editor != nil {
+			instr += editInstructions
+		}
 	}
 	s := mcp.NewServer(&mcp.Implementation{Name: "qc2-modeler", Title: "QC-2 Modeler", Version: "0.1.0"},
 		&mcp.ServerOptions{Instructions: instr})
 	registerTools(s, svc, o.exporter)
 	if o.device != nil {
 		registerDeviceTools(s, svc, o.device, o.importer, o.library)
+		if o.library != nil && o.library.Store != nil && o.editor != nil {
+			registerEditTool(s, svc, o.device, o.library, o.editor)
+		}
 	}
 	registerResources(s, svc)
 	registerPrompts(s)

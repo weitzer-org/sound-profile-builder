@@ -132,6 +132,23 @@ func (l *DeviceLibrary) storeSlots(ctx context.Context, v *devicejobs.JobView) {
 	}
 }
 
+// storeSnapshot keeps the raw read of a succeeded read_preset job (preset-editing plan E1,
+// section 3.1), whether or not the user asked to import it. Best effort: a failure is
+// logged and changes nothing the user sees. It never replaces a stored snapshot.
+func (l *DeviceLibrary) storeSnapshot(ctx context.Context, v *devicejobs.JobView) {
+	if l == nil || l.Store == nil || v == nil || v.Result == nil || v.Result.Kind != devicejobs.KindReadPreset || v.State != devicejobs.StatusSucceeded {
+		return
+	}
+	snap, err := devicelib.NewReadSnapshot(v)
+	if err != nil {
+		log.Printf("device snapshot: not stored: %v", err)
+		return
+	}
+	if _, err := l.Store.SaveSnapshot(ctx, snap); err != nil {
+		log.Printf("device snapshot: storing: %v", err)
+	}
+}
+
 // slotOccupiedNote is the dry run's warning when the last stored listing showed the slot occupied, or "".
 // It never blocks the confirm token: the listing can be stale, and the bridge decides.
 func (l *DeviceLibrary) slotOccupiedNote(ctx context.Context, slot string) string {
