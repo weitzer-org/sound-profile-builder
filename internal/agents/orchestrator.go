@@ -1363,6 +1363,14 @@ EXISTING STRUCTURED PAYLOAD:
 		refinementPrompt += catalogArchitectSections(payloadBlockModels(p.Payload), GetValidNativeBlocks(), plugins, plugins)
 	}
 
+	// A draft read back from the unit gets the edit-aware section, when the run's prompt
+	// versions turn it on. Every other preset's context is untouched.
+	section, err := deviceEditContext(ctx, p)
+	if err != nil {
+		return "", o.Usage, err
+	}
+	refinementPrompt += section
+
 	historyText := "\n\nCHAT HISTORY (Most recent last):\n"
 	for _, msg := range p.ChatHistory {
 		if msg.Role == "user" {

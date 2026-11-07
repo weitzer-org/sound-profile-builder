@@ -14,6 +14,7 @@ import (
 
 	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 	"github.com/weitzer-org/sound-builder/internal/runs"
+	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
 const (
@@ -352,6 +353,10 @@ func validText(field, s string, maxRunes int) (string, error) {
 	return s, nil
 }
 
+// deviceDraftHint follows a refine of a draft read from the unit. Nothing has changed on the
+// unit; edit_device_preset shows what applying the refined draft would do.
+const deviceDraftHint = "This draft came from the user's Quad Cortex and nothing on the unit has changed. To see what these changes would do there, call edit_device_preset with this preset_id (a dry run)."
+
 // finishRun renders the result of generate_preset / refine_preset after the wait.
 func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord) (*mcp.CallToolResult, runOutput) {
 	out := runOutput{statusOutput: baseStatus(rec)}
@@ -378,6 +383,11 @@ func finishRun(ctx context.Context, svc *presetsvc.Service, rec *runs.RunRecord)
 				b.WriteString("\n")
 			}
 			b.WriteString(dataNotice + "\n\n" + md)
+			if rec.Kind == runs.KindRefine {
+				if p, perr := svc.GetPreset(ctx, rec.PresetID); perr == nil && p.Origin != nil && p.Origin.Kind == storage.OriginDeviceReadback {
+					b.WriteString("\n\n" + deviceDraftHint)
+				}
+			}
 			if rec.Kind == runs.KindGenerate {
 				fmt.Fprintf(&b, "\n\nThis is an unsaved draft (preset_id `%s`). Show it to the user; call save_preset only once they approve a name.", rec.PresetID)
 			}
@@ -433,9 +443,36 @@ func waitError(tool, runID string, err error) error {
 
 type refineInput struct {
 	PresetID    string `json:"preset_id" jsonschema:"ID of the preset to change, from list_presets or generate_preset"`
-	Message     string `json:"message" jsonschema:"what to change, in the user's words (e.g. 'less gain on the rhythm tone')"`
+	Message     string `json:"message,omitempty" jsonschema:"what to change, in the user's words (e.g. 'less gain on the rhythm tone'). Give this or review_goal, not both"`
+	ReviewGoal  string `json:"review_goal,omitempty" jsonschema:"for a draft read from the unit (read_device_preset import=true) only: review it for this goal (e.g. 'a cleaner blues rhythm'). Asks for minimal edits: parameter and bypass changes, every block kept. Use instead of message"`
 	WaitSeconds *int   `json:"wait_seconds,omitempty" jsonschema:"how long to wait for the run to finish, 0-200 (default 200)"`
 	Mock        bool   `json:"mock,omitempty" jsonschema:"use canned test data instead of the AI pipeline (no cost); only for testing"`
+}
+
+// maxReviewGoalRunes bounds review_goal: it is a short goal, not a brief.
+const maxReviewGoalRunes = 300
+
+// refineMessage picks the request: message as given, or the canned review for review_goal,
+// which is only for a draft read from the unit.
+func refineMessage(ctx context.Context, svc *presetsvc.Service, in refineInput) (string, error) {
+	if strings.TrimSpace(in.ReviewGoal) == "" {
+		return validText("message", in.Message, maxMessageRunes)
+	}
+	if strings.TrimSpace(in.Message) != "" {
+		return "", errors.New("Give message or review_goal, not both.")
+	}
+	goal, err := validText("review_goal", in.ReviewGoal, maxReviewGoalRunes)
+	if err != nil {
+		return "", err
+	}
+	p, err := svc.GetPreset(ctx, in.PresetID)
+	if err != nil {
+		return "", toolError(refineToolName, err)
+	}
+	if p.Origin == nil || p.Origin.Kind != storage.OriginDeviceReadback {
+		return "", errors.New("review_goal is only for a draft read from the unit (read_device_preset with import=true). For this preset, use message.")
+	}
+	return presetsvc.ReviewMessage(goal), nil
 }
 
 func refinePreset(svc *presetsvc.Service) mcp.ToolHandlerFor[refineInput, runOutput] {
@@ -443,7 +480,7 @@ func refinePreset(svc *presetsvc.Service) mcp.ToolHandlerFor[refineInput, runOut
 		if err := validPresetID(in.PresetID); err != nil {
 			return nil, runOutput{}, err
 		}
-		msg, err := validText("message", in.Message, maxMessageRunes)
+		msg, err := refineMessage(ctx, svc, in)
 		if err != nil {
 			return nil, runOutput{}, err
 		}
