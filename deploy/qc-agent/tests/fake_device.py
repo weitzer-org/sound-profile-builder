@@ -13,7 +13,7 @@ from qc_agent.captures import CaptureEntry, DirectorySnapshot, factory_version_o
 from qc_agent.device import SETLIST_KEY, STOMP_PRIMARY, DeviceBackend, DeviceError, PartialListing, Presence, UnitAbsent, UnitBusy
 
 WRITE_CALLS = frozenset({"set_routing", "add_block", "place_capture", "set_param", "set_param_scenes",
-                         "set_block_bypass", "save_to_slot", "set_mic", "assign_stomp"})
+                         "set_block_bypass", "save_to_slot", "save_edit_copy", "set_mic", "assign_stomp"})
 
 KEY_V1 = "a1" * 32   # a factory V1 capture
 KEY_V2 = "b2" * 32   # a factory V2 capture
@@ -75,6 +75,8 @@ class FakeDevice(DeviceBackend):
         self.active_scene = 0                           # set_param_scenes switches it and puts it back, like the transport
         self.edit_attempted: set = set()
         self.armed_edit = False
+        self.edit_save = None                           # begin_edit(save=...): {"target": (folder, pos, name), "state"}
+        self.entered_rollback = False
         self.write_fail = None                          # hook(name, args): raise to make a write fail
         self._listings = 0
         self._alive_calls = 0
@@ -212,10 +214,36 @@ class FakeDevice(DeviceBackend):
         self._rec("begin_push", position, name)
         self.push_folder = folder_key
 
-    def begin_edit(self, plan, checked):
+    def begin_edit(self, plan, checked, save=None):
         self._rec("begin_edit", plan["snapshot"])
         self.edit_attempted = set()
         self.armed_edit = True
+        self.edit_save = None if save is None else {"target": tuple(save), "state": "armed"}   # mirrors the wire guard
+
+    def edit_verified(self):
+        self._rec("edit_verified")
+        if self.edit_save is None:
+            raise DeviceError("fake unit: this edit has no save armed")
+        if self.entered_rollback or self.edit_save["state"] != "armed":
+            raise DeviceError("fake unit: the save can't be opened")
+        self.edit_save["state"] = "open"
+
+    def save_edit_copy(self, position, name):
+        self._need()
+        self._rec("save_edit_copy", position, name)
+        sv = self.edit_save
+        if sv is None or sv["state"] != "open" or sv["target"][1:] != (position, name):
+            raise DeviceError("fake unit: save target differs from the armed edit")
+        sv["state"] = "sent"
+        if self.write_fail:
+            self.write_fail("save_edit_copy", (position, name))
+        folder = sv["target"][0]
+        if folder in self.collections:
+            self.collections[folder][1][position] = name
+            return
+        self.slots[position] = name
+        self._pending_save = (position, name)
+        self.preset_deps[position] = frozenset()
 
     def edit_started(self):
         return set(self.edit_attempted)
@@ -232,6 +260,7 @@ class FakeDevice(DeviceBackend):
 
     def enter_rollback(self):
         self._rec("enter_rollback")
+        self.entered_rollback = True
 
     def end_push(self):
         self.armed_edit = False

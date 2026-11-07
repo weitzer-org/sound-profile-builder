@@ -112,9 +112,21 @@ class DeviceBackend(ABC):
         folder (collection) open on the unit that the final save goes into."""
 
     @abstractmethod
-    def begin_edit(self, plan: dict, checked) -> None:
+    def begin_edit(self, plan: dict, checked, save: tuple | None = None) -> None:
         """Arm the writes for this one edit plan (edit_checks.CheckedPlan): only its (column, index) values,
-        scene assignments and bypass flags pass, in the "apply" phase. Never a save."""
+        scene assignments and bypass flags pass, in the "apply" phase. `save` is None for a live edit, which
+        never saves; a copy passes (folder_key, position, name): the one File CREATE it may send after
+        edit_verified() (E5a)."""
+
+    @abstractmethod
+    def edit_verified(self) -> None:
+        """The verify and the collateral check of the armed edit came back clean: open its one save. Raises if the
+        edit was armed without a save (live), after a rollback, or before every planned op was written."""
+
+    @abstractmethod
+    def save_edit_copy(self, position: int, name: str) -> None:
+        """Commit the edited live grid to `position` under `name` in the collection the edit was armed with (one File
+        CREATE, once). Raises unless edit_verified() opened it and the target is the armed one."""
 
     @abstractmethod
     def enter_rollback(self) -> None:
