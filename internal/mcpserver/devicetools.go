@@ -151,6 +151,7 @@ type deviceJobOutput struct {
 	Import       *deviceImportOut       `json:"import,omitempty"`
 	Library      *deviceLibraryOut      `json:"library,omitempty"`
 	Mics         *deviceMicsOut         `json:"mics,omitempty"`
+	Edit         *deviceEditResultOut   `json:"edit,omitempty"`
 	StateMeaning string                 `json:"state_meaning"`
 }
 
@@ -277,6 +278,7 @@ func renderJob(b *strings.Builder, o deviceJobOutput) {
 	}
 	renderLibrary(b, o.Library)
 	renderMics(b, o.Mics)
+	renderEditResult(b, o.Edit)
 	if r := o.Readback; r != nil {
 		fmt.Fprintf(b, "\nPreset on the unit: %s (slot %s), format %s.\n", dcell(r.Name), dcell(r.Slot), dcell(r.Format))
 		if o.Import != nil {
@@ -418,6 +420,7 @@ func getDeviceJob(b *devicejobs.Bridge, di *deviceImporter, lib *DeviceLibrary) 
 			applyImport(ctx, di, v, &out)
 		}
 		applyLibrary(ctx, lib, v, &out)
+		out.Edit = editResultOutput(ctx, lib, v)
 		var t strings.Builder
 		t.WriteString(deviceDataNotice + "\n\n")
 		renderJob(&t, out)

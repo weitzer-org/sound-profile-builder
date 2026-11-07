@@ -135,7 +135,7 @@ func TestOpenJobBindsTagAndVersion(t *testing.T) {
 }
 
 // QC-2 queues an edit job under the v2 tag, sees it as pending, and reads the agent's answer
-// (refused/unsupported_kind until E4) instead of dropping an unknown kind.
+// (refused/edit_not_enabled) instead of dropping an unknown kind.
 func TestEditJobQueuedAndAnswered(t *testing.T) {
 	ctx := context.Background()
 	r := newRig(t)
@@ -161,7 +161,7 @@ func TestEditJobQueuedAndAnswered(t *testing.T) {
 	}
 	v, err := r.bridge.Job(ctx, id)
 	if err != nil || v.State != devicejobs.StatusRefused || v.Result == nil || v.Result.Kind != devicejobs.KindEditPreset ||
-		v.Result.ReasonCode != "unsupported_kind" || v.Result.Edit != nil {
+		v.Result.ReasonCode != "edit_not_enabled" || v.Result.Edit != nil {
 		t.Fatalf("%+v %v", v, err)
 	}
 	if o := r.agent.Outcomes[devicejobs.PendingKey(id)]; o != devicejobs.OutcomeOK {

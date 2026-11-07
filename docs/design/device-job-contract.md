@@ -482,7 +482,7 @@ The agent never sees this, but it explains where push job ids come from.
 - **Confirm.** The arguments must match the claims. QC-2 rebuilds the export, which must still have zero unresolved items and the **same** `plan_sha256`; otherwise the preset changed since the dry run and the user must dry-run again.
 - **Push job id.** The id is a UUID (version 8) taken from SHA-256(`"qc2-job-id/v1\n"` ‖ token). Repeating a confirm therefore names the same job. QC-2 doesn't queue it twice, and the agent's ledger (step 8) runs it at most once even if two QC-2 machines race.
 - **Read job ids** are random v4 UUIDs.
-- **Edit tokens (contract v2).** `edit_device_preset`'s dry run will return `confirm_token = "e1.<exp_unix>.<mac>"` (E4; E3 only issues and checks them in `internal/devicejobs`, and the tool still answers "not available yet"):
+- **Edit tokens (contract v2).** `edit_device_preset`'s dry run returns `confirm_token = "e1.<exp_unix>.<mac>"` for a confirmable live edit (E4), and `dry_run=false` with it queues the job (`Bridge.ConfirmEdit`):
   - `K_e` = HMAC-SHA256(key, `"qc2-edit-confirm-key/v1"`); `mac` = the first 32 hex characters of HMAC-SHA256(`K_e`, `claims`);
   - `claims` = the JSON array `["e1", preset_id, guitar, mode, slot, target_slot, name, device_name, snapshot, plan_sha256, exp_unix]`, where `slot` is the plan's `expect.slot`, `target_slot` and `name` are the copy's (empty otherwise), `device_name` is the plan's `expect.name` and `snapshot` its read job id;
   - the same 10-minute life, canonical form and rotation rules as a push token;
