@@ -278,7 +278,8 @@ def edit_text_ok(s):
 
 def parse_edit_plan(text):
     """Strict parse of a qc2-device-edit/1 plan text (contract section 7.2). Returns the plan dict
-    or raises BadPlan."""
+    or raises BadPlan. Split like Go's walker: the top level here, then _edit_expect, _edit_param_ops
+    and _edit_bypass_ops for the domain rules."""
     _need(len(text.encode("utf-8")) <= MAX_EDIT_PLAN_BYTES, "plan too large")
     try:
         p = strict_loads(text)
@@ -290,7 +291,14 @@ def parse_edit_plan(text):
     _need(_exact(c, "coros", "sha256") and isinstance(c["coros"], str) and COROS_RE.fullmatch(c["coros"])
           and isinstance(c["sha256"], str) and SHA256_RE.fullmatch(c["sha256"]), "catalog")
     _need(isinstance(p["snapshot"], str) and UUID_RE.fullmatch(p["snapshot"]), "snapshot")
-    e = p["expect"]
+    cells = _edit_expect(p["expect"])
+    n = _edit_param_ops(p["param_ops"], cells) + _edit_bypass_ops(p["bypass_ops"], cells)
+    _need(n >= 1, "no ops")
+    return p
+
+
+def _edit_expect(e):
+    """expect: the pins. Returns the layout as {(row, col): model_id}."""
     _need(_exact(e, "folder_key", "position", "slot", "name", "layout"), "expect keys")
     _need(valid_folder_key(e["folder_key"]), "folder_key")
     _need(_int(e["position"], 0, 255) and e["slot"] == slot_label(e["position"]), "position/slot")
@@ -305,18 +313,23 @@ def parse_edit_plan(text):
         _need(k > prev, "layout order")
         prev = k
         cells[(t[0], t[1])] = t[2]
+    return cells
 
-    def on_cell(op):
-        _need(_int(op["row"], 0, 0) and _int(op["col"], 0, 7) and _int(op["model_id"], 0, MAX_MODEL_ID)
-              and cells.get((op["row"], op["col"])) == op["model_id"], "op cell")
 
-    ops = p["param_ops"]
+def _edit_on_cell(op, cells):
+    """An op writes row 0, on a cell of the pinned layout, with that cell's model."""
+    _need(_int(op["row"], 0, 0) and _int(op["col"], 0, 7) and _int(op["model_id"], 0, MAX_MODEL_ID)
+          and cells.get((op["row"], op["col"])) == op["model_id"], "op cell")
+
+
+def _edit_param_ops(ops, cells):
+    """param_ops: returns how many."""
     _need(isinstance(ops, list) and len(ops) <= MAX_EDIT_PARAM_OPS, "param_ops")
     prev = -1
     for op in ops:
         _need(_exact(op, "row", "col", "model_id", "index", "label", "evidence", "scene_mode", "expect", "wire"),
               "param op keys")
-        on_cell(op)
+        _edit_on_cell(op, cells)
         _need(_int(op["index"], 0, 255), "index")
         k = op["col"] * 256 + op["index"]
         _need(k > prev, "param op order")
@@ -331,12 +344,16 @@ def parse_edit_plan(text):
               and all(_unit(x) for x in ex + wi), "values")
         _need(ex != wi, "op changes nothing")
         _need(op["scene_mode"] or all(x == wi[0] for x in wi), "scene_mode false needs one value")
-    bops = p["bypass_ops"]
+    return len(ops)
+
+
+def _edit_bypass_ops(bops, cells):
+    """bypass_ops: returns how many."""
     _need(isinstance(bops, list) and len(bops) <= MAX_EDIT_BYPASS_OPS, "bypass_ops")
     prev = -1
     for op in bops:
         _need(_exact(op, "row", "col", "model_id", "why", "expect", "bypass"), "bypass op keys")
-        on_cell(op)
+        _edit_on_cell(op, cells)
         _need(op["col"] > prev, "bypass op order")
         prev = op["col"]
         _need(op["why"] in ("target", "removed"), "why")
@@ -345,8 +362,7 @@ def parse_edit_plan(text):
               and all(type(x) is bool for x in ex + by), "flags")
         _need(ex != by, "op changes nothing")
         _need(op["why"] != "removed" or all(by), "removed means bypassed everywhere")
-    _need(len(ops) + len(bops) >= 1, "no ops")
-    return p
+    return len(bops)
 
 
 def plan_sha256(fmt, text):
