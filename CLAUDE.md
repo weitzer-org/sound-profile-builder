@@ -213,6 +213,8 @@ this app's MCP connector. Read these before any device work:
   `apply_stomps` job / `apply_stomp_layout` tool (entry point 2) wait on G7 (f). Switch indexes are UNVERIFIED (README step 16).
   The cab mic string write (`set_param_typed`, held to the planned string by the wire guard) is **unverified on the
   unit** until README step 14.
+- `docs/design/qc-preset-editing.md` — editing presets on the unit, QC-2's own and the owner's (design only, nothing built): a
+  compare-and-swap patch against a fresh read, never a rebuild; save modes `live`/`copy`/`overwrite`; phases E1-E6.
 - `docs/design/device-job-contract.md` — the signed job/result/heartbeat contract between QC-2 and the home agent
   (`internal/devicejobs` is the Go reference). `testdata/devicejobs/vectors.json` is shared with the Python agent: changing
   a vector, tag, field or check step is a contract change for both sides.
