@@ -1333,10 +1333,16 @@ class _Edit:
                         log.warning("listing after the save was incomplete (%s); will look again", text.clean(str(e), 120))
                         continue
                     view = _folder_view(snap, self.folder_key)
-                    if view is not None and view.my_presets.get(tpos) == name:
+                    if view is None:
+                        continue
+                    # E-G3 tripwire, on EVERY complete listing: the save must not have landed on the open (original)
+                    # slot. If it did, the copy never lists, so this can't wait for the copy to show up.
+                    if view.my_presets.get(self.pos) != orig_entry:
+                        tripwire = True
+                        listed = view.my_presets.get(tpos) == name
+                        break
+                    if view.my_presets.get(tpos) == name:
                         listed = True
-                        # E-G3 tripwire: the save must not have landed on the open (original) slot
-                        tripwire = view.my_presets.get(self.pos) != orig_entry
                         break
                 try:   # evidence for E-G3: which slot is open after the save
                     opened = _open_desc(dev.setlist_position() or {}, snap)
@@ -1356,16 +1362,18 @@ class _Edit:
                            f"clean read-back, but the Quad Cortex went away before it could be confirmed. It may still "
                            f"land: check {tslot} before using that slot.{keep}", firmware=self.fw, edit=block,
                            unit_gone=True, extra=extra)
+        if tripwire:   # before "not listed": a save that landed on the original never lists at the target
+            self.record_edited(st["latest"], "failed", saved=True, listed=listed)
+            return Outcome("failed", "device_error", f"The listing shows the entry for {slot} CHANGED after the copy "
+                           f"save{' (the copy is listed at ' + tslot + ' too)' if listed else f' and {tslot} not showing the copy'}"
+                           f": check BOTH {slot} and {tslot} on the unit before doing anything else.{where}",
+                           firmware=self.fw, edit=block, extra=extra)
         if not listed:
             self.record_edited(st["latest"], "failed", saved=True, listed=False)
             return Outcome("failed", "device_error", f"The copy save to {tslot} in {folder!r} was issued after a clean "
                            f"read-back, but the listing didn't show {name!r} after {SAVE_LIST_POLLS} checks (about 2 "
-                           f"minutes). It may still land: check {tslot} before using that slot. {slot} was not saved "
-                           f"over by the bridge.{keep}{where}", firmware=self.fw, edit=block, extra=extra)
-        if tripwire:
-            self.record_edited(st["latest"], "failed", saved=True, listed=True)
-            return Outcome("failed", "device_error", f"The copy is listed at {tslot}, but the entry for {slot} changed "
-                           f"too: check BOTH {slot} and {tslot} on the unit.{where}", firmware=self.fw, edit=block,
+                           f"minutes). It may still land: check {tslot} before using that slot. The listing showed "
+                           f"{slot} unchanged, but a listing can lag.{keep}{where}", firmware=self.fw, edit=block,
                            extra=extra)
         self.record_edited(st["latest"], "succeeded", saved=True, listed=True)
         return Outcome("succeeded", "", f"Saved the edit as {name!r} to {tslot} in {folder!r}; it read back as planned "

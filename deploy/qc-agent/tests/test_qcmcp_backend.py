@@ -977,6 +977,14 @@ class EditSaveGuard(Base):
         self.open_save()
         self.refused(self.qc.set_param, 0, 1, 1, 1.0)
 
+    def test_a_rollback_entered_after_the_save_opened_closes_the_create(self):
+        self.arm()
+        self.open_save()
+        self.dev.enter_rollback()
+        self.refused(self.qc.write_preset_file, self.FOLDER, self.POS, self.NAME)
+        self.assertIn("after a rollback", self.dev._guard.refused[-1])
+        self.assertEqual(self.creates(), [])
+
     # -- exactly the armed target --
 
     def test_other_position_name_folder_or_count_are_refused(self):

@@ -494,6 +494,7 @@ class CopySave(EditBase):
     def test_a_save_that_is_never_listed_is_failed_and_the_slot_stays_owned(self):
         self.dev.listing_lag = 99
         jid, r = self.copy()
+        self.assertNotIn("not saved over", r["message"])   # a lagging listing proves nothing about the original
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
         self.assertEqual(r["edit"]["payload"]["save"],
                          {"saved": True, "slot": self.TARGET, "name": self.NAME, "listed": False, "backup": None})
@@ -557,6 +558,11 @@ class CopySave(EditBase):
         self.dev.save_lands_at_open = True
         _, r = self.copy()
         self.assertEqual((r["status"], r["reason_code"]), ("failed", "device_error"))
+        self.assertIn("CHANGED", r["message"])
+        self.assertIn("BOTH 20A and 21A", r["message"])
+        self.assertNotIn("not saved over", r["message"])
+        self.assertTrue(r["edit"]["payload"]["save"]["saved"])
+        self.assertFalse(r["edit"]["payload"]["save"]["listed"])   # the copy never listed at the target
 
     def test_the_copy_in_another_collection_lists_there(self):
         plan = base_plan()

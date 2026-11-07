@@ -612,6 +612,8 @@ class WireGuard:
         sv = self._edit["save"]
         if sv is None:
             raise WireRefused("File CREATE: this edit has no save armed")
+        if self._edit["phase"] != "apply":
+            raise WireRefused("File CREATE: never after a rollback")
         if sv["state"] != "open":
             raise WireRefused("File CREATE: the edit's save is not open" if sv["state"] == "armed"
                               else "File CREATE: the edit's one save was already sent")
