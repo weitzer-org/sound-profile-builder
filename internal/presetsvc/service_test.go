@@ -517,6 +517,30 @@ func TestRefinePassesConfiguredPromptVersions(t *testing.T) {
 	}
 }
 
+// The edit-aware section is switched by agent_prompts like any other prompt version: the run
+// hands RefineChat the key, and a draft from the unit is just a preset with an Origin.
+func TestRefinePassesDeviceEditVersionForDeviceDrafts(t *testing.T) {
+	h := newHarnessWithConfig(t, &config.AppConfig{AgentPrompts: map[string]string{"12_architect": "v6", agents.DeviceEditPromptKey: "v1"}})
+	ctx := context.Background()
+	p := &storage.Preset{Name: "Draft", Origin: &storage.PresetOrigin{Kind: storage.OriginDeviceReadback, JobID: "j"}}
+	if err := h.store.Save(ctx, p); err != nil {
+		t.Fatalf("store.Save: %v", err)
+	}
+	runID, err := h.svc.StartRefine(ctx, p.ID, "less fizz", true)
+	if err != nil {
+		t.Fatalf("StartRefine: %v", err)
+	}
+	if _, err := h.svc.WaitRun(ctx, runID, 10*time.Second); err != nil {
+		t.Fatalf("WaitRun: %v", err)
+	}
+	h.orch.mu.Lock()
+	got := h.orch.refineVersions[agents.DeviceEditPromptKey]
+	h.orch.mu.Unlock()
+	if got != "v1" {
+		t.Errorf("RefineChat saw %s = %q, want v1", agents.DeviceEditPromptKey, got)
+	}
+}
+
 func TestRefineUnknownPresetIsLookupError(t *testing.T) {
 	h := newHarness(t)
 
