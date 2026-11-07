@@ -86,3 +86,29 @@ func TestScoreModeOverSavedOutputs(t *testing.T) {
 		t.Errorf("with -retry-failed todo = %d, want scene A and scene B", got)
 	}
 }
+
+// Runs sort by draft, request, then rep as a NUMBER (GSR, PR 188: a string compare put rep 10 before rep 2).
+func TestScoreRunsSortRepsNumerically(t *testing.T) {
+	e, err := er.NewExporter(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := t.TempDir()
+	var lines []string
+	for _, rep := range []int{10, 2, 1} {
+		rec, _ := json.Marshal(evalcheck.RunRecord{Scenario: "A", Query: "01_SRV_Clean/tone", Rep: rep, Success: false})
+		lines = append(lines, string(rec))
+	}
+	os.WriteFile(filepath.Join(out, "runs.jsonl"), []byte(strings.Join(lines, "\n")+"\n"), 0o644)
+	all, err := er.LoadCorpus(context.Background(), []string{"../../testdata/devicejobs/readback_roundtrip"}, e)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []int
+	for _, r := range scoreRuns(opts{out: out}, er.NewScorer(e), all) {
+		got = append(got, r.Rep)
+	}
+	if len(got) != 3 || got[0] != 1 || got[1] != 2 || got[2] != 10 {
+		t.Fatalf("rep order = %v, want [1 2 10]", got)
+	}
+}

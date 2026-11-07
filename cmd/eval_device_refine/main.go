@@ -374,8 +374,14 @@ func scoreRuns(o opts, s *er.Scorer, all []*er.Draft) []er.RunScore {
 	}
 	sort.Slice(runs, func(i, j int) bool {
 		a, b := runs[i], runs[j]
-		if a.Draft != b.Draft || a.Request != b.Request || a.Rep != b.Rep {
-			return a.Triple.Key()+fmt.Sprint(a.Rep) < b.Triple.Key()+fmt.Sprint(b.Rep)
+		if a.Draft != b.Draft {
+			return a.Draft < b.Draft
+		}
+		if a.Request != b.Request {
+			return a.Request < b.Request
+		}
+		if a.Rep != b.Rep {
+			return a.Rep < b.Rep // numeric: rep 10 sorts after rep 2
 		}
 		return a.Arm < b.Arm
 	})
