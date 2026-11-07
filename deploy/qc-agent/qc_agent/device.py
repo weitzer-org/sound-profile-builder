@@ -112,6 +112,28 @@ class DeviceBackend(ABC):
         folder (collection) open on the unit that the final save goes into."""
 
     @abstractmethod
+    def begin_edit(self, plan: dict, checked) -> None:
+        """Arm the writes for this one edit plan (edit_checks.CheckedPlan): only its (column, index) values,
+        scene assignments and bypass flags pass, in the "apply" phase. Never a save."""
+
+    @abstractmethod
+    def enter_rollback(self) -> None:
+        """One way: from now on only the plan's old values of ops whose write was started may be written."""
+
+    @abstractmethod
+    def edit_started(self) -> set:
+        """Ops of the armed edit whose first message the wire guard passed: ("param", col, index) and
+        ("bypass", col). Only these may be rolled back."""
+
+    @abstractmethod
+    def read_scene(self) -> int | None:
+        """The unit's active scene 0-7 (a Scene READ), or None if it didn't answer."""
+
+    @abstractmethod
+    def restore_scene(self, scene: int) -> None:
+        """Select scene 0-7 again, only while an edit is armed (per-scene writes leave the unit on scene A)."""
+
+    @abstractmethod
     def end_push(self) -> None:
         """Disarm. Idempotent."""
 

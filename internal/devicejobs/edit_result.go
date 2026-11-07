@@ -346,6 +346,13 @@ func (r *EditResult) validate() error {
 	if !inRange(r.Rollback.Restored, 0, maxRollbackOps) || !inRange(r.Rollback.Failed, 0, maxRollbackOps) {
 		return errors.New("a rollback count is out of range")
 	}
+	rb := r.Rollback
+	if !((rb.State == "not_needed" && rb.Restored == 0 && rb.Failed == 0) ||
+		(rb.State == "restored" && rb.Failed == 0) ||
+		(rb.State == "failed" && rb.Restored == 0 && rb.Failed > 0) ||
+		(rb.State == "partial" && rb.Restored > 0 && rb.Failed > 0)) {
+		return errors.New("rollback counts do not fit its state")
+	}
 	s := r.Save
 	if s.Slot != nil && !slotRe.MatchString(*s.Slot) {
 		return errors.New("save.slot is not a slot")

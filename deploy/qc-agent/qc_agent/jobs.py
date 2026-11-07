@@ -49,13 +49,14 @@ The result carries only contract section 9 fields.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
 import time
 from dataclasses import dataclass, field
 
-from . import captures, contract, slots, text
+from . import captures, contract, edit_checks, edit_diff, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, PartialListing, UnitAbsent, UnitBusy
 from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
                                control_labels, default_wire, is_internal_param, validate)
@@ -85,7 +86,7 @@ class Outcome:
     slots: dict | None = None
     readback: dict | None = None
     library: dict | None = None
-    edit: dict | None = None    # edit_preset (contract section 9.3); always None until phase E4
+    edit: dict | None = None    # edit_preset (contract section 9.3); None when the job was refused before the unit
     unit_gone: bool = False     # the agent exits after this job
     extra: dict = field(default_factory=dict)
 
@@ -99,8 +100,9 @@ def failed(code, msg, **kw):
 
 
 class JobContext:
-    def __init__(self, config, catalog, device, owned, now_fn, sleep=time.sleep):
+    def __init__(self, config, catalog, device, owned, now_fn, sleep=time.sleep, edits=None):
         self.config, self.catalog, self.device, self.owned = config, catalog, device, owned
+        self.edits = edits  # ledger.EditLedger, or None (tests that never edit)
         self.now, self.sleep = now_fn, sleep
         self.firmware_seen = None  # (firmware, when) for the heartbeat
 
@@ -199,29 +201,8 @@ def _check_alive(ctx):
 
 # Kinds that parse but that this bridge refuses outright, with the message for each. They are answered
 # here, before the executor path, because that path's `finally` calls end_push() and disconnect() on the
-# device: a refused kind never touches it. edit_preset (contract v2) moves to EXECUTORS in preset-editing E4.
-REFUSED_KINDS = {
-    "edit_preset": "This bridge can't edit presets on the unit yet. Nothing was changed.",
-}
-
-
-def run(ctx, job) -> Outcome:
-    kind = job["kind"]
-    if kind in REFUSED_KINDS:
-        return refused("unsupported_kind", REFUSED_KINDS[kind])
-    executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
-                "sync_device_library": sync_device_library}.get(kind)
-    if executor is None:  # parse_job admits no other kind; keep the code anyway
-        return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
-    try:
-        return executor(ctx, job)
-    finally:
-        try:
-            ctx.device.end_push()
-        except Exception:  # noqa: BLE001
-            log.exception("end_push failed")
-        ctx.device.disconnect()
-
+# device: a refused kind never touches it. Empty since preset-editing E4 moved edit_preset to EXECUTORS.
+REFUSED_KINDS = {}
 
 # ---- list_slots ----
 
@@ -971,3 +952,427 @@ class _Push:
 
 def push_preset(ctx, job) -> Outcome:
     return _Push(ctx, job).run()
+
+
+# ---- edit_preset (preset-editing plan E4; contract sections 7.1, 7.2, 9.3) ----
+
+PIN_WORDS = {"folder_key": "the collection", "position": "the slot", "name": "the preset's name",
+             "layout": "the blocks on the grid", "param_expect": "a control's value", "bypass_expect": "a block's bypass"}
+EDIT_RESULT_FORMAT = "qc-device-edit-result/1"
+
+
+def _edit_job_plan(job):
+    return contract.parse_edit_plan(job["args"]["plan"]["payload"])
+
+
+def edit_precheck(ctx, job) -> Outcome | None:
+    """Everything an edit can be refused for without opening the unit, in the order the design lists it:
+    the PC's opt-in, the mode this build honours, the slot, then the catalog checks. A refusal here has no
+    `edit` block (contract 9: null when the agent refused the job before reaching the unit)."""
+    return _Edit(ctx, job).precheck()
+
+
+class _Edit:
+    """One edit_preset job. Commit order in the module docstring of qc_agent.edit_checks; the writes are
+    armed per operation in the wire guard (qcmcp_backend.WireGuard.arm_edit)."""
+
+    def __init__(self, ctx, job):
+        self.ctx, self.job, self.dev = ctx, job, ctx.device
+        a = job["args"]
+        self.args, self.slot, self.mode = a, a["slot"], a["mode"]
+        self.sha = a["plan"]["sha256"]
+        self.plan = _edit_job_plan(job)
+        self.pos = slots.position(self.slot)
+        self.checked = None
+        self.fw = None
+        self.cas = {"state": "not_reached", "failed": []}
+
+    # -- the result block (contract 9.3) --
+
+    def edit_block(self, params=None, bypass=None, collateral=None, rollback=None, saved=False):
+        payload = {"plan_sha256": self.sha, "snapshot": self.plan["snapshot"], "mode": self.mode,
+                   "cas": {"state": self.cas["state"], "failed": list(self.cas["failed"])},
+                   "params": params or [], "bypass": bypass or [], "collateral": collateral,
+                   "rollback": rollback or {"state": "not_needed", "restored": 0, "failed": 0},
+                   "save": {"saved": saved, "slot": None, "name": None, "listed": False, "backup": None}}
+        return {"format": EDIT_RESULT_FORMAT, "payload": payload}
+
+    def refuse(self, code, msg, **kw):
+        return refused(code, msg, firmware=self.fw, edit=self.edit_block(), **kw)
+
+    def fail(self, code, msg, **kw):
+        return failed(code, msg, firmware=self.fw, edit=self.edit_block(), **kw)
+
+    # -- before any device contact --
+
+    def precheck(self) -> Outcome | None:
+        cfg = self.ctx.config
+        if not cfg.edit_modes:
+            return refused("edit_not_enabled", "Editing presets on the unit is switched off on this PC "
+                           "(QC_AGENT_EDIT_MODES in agent.env is empty). Nothing was changed.")
+        if self.mode != "live":
+            return refused("unsupported_arg", f"This bridge only edits in live mode so far; {self.mode} is not "
+                           "supported. Nothing was changed.")
+        if "live" not in cfg.edit_modes:
+            return refused("edit_not_enabled", "Live edits are not switched on on this PC "
+                           "(QC_AGENT_EDIT_MODES in agent.env does not list live). Nothing was changed.")
+        if not cfg.allowed_slots.contains(self.slot):
+            return refused("slot_not_allowed", f"Slot {self.slot} is outside the bridge's allowed slots "
+                           f"({', '.join(cfg.allowed_slots.labels())}).")
+        if cfg.protected_slots is not None and cfg.protected_slots.contains(self.slot):
+            return refused("slot_not_allowed", f"Slot {self.slot} is protected on this PC "
+                           "(QC_AGENT_PROTECTED_SLOTS): the bridge never edits it.")
+        try:
+            self.checked = edit_checks.catalog_check(self.plan, self.ctx.catalog, cfg.expected_firmware)
+        except edit_checks.EditRefused as e:
+            return refused("validation", "The edit failed the bridge's own checks: " + text.clean(str(e), 400))
+        return None
+
+    # -- on the unit --
+
+    def run(self) -> Outcome:
+        out = self.precheck()                 # again: executor() may be called without run()'s precheck
+        if out:
+            return out
+        out = _connect_checked(self.ctx)
+        if out:
+            return out
+        self.fw = _fw(self.dev.firmware)
+        try:
+            out = self.check_unit()
+            if out is not None:
+                return out
+            return self.apply()
+        except (_Gone, UnitAbsent):
+            return self.fail("unit_absent", "The Quad Cortex went away during the edit.", unit_gone=True)
+        except DeviceError as e:
+            log.warning("edit failed: %s", text.clean(str(e), 200))
+            return self.fail("device_error", "A device operation failed. Nothing was saved.")
+
+    def check_unit(self) -> Outcome | None:
+        """Open slot only (never recall), a regular collection, one fresh read and the compare-and-swap."""
+        snap = self.dev.read_directory()
+        _check_alive(self.ctx)
+        before = self.dev.setlist_position() or {}
+        preset = self.dev.read_current_preset()
+        after = self.dev.setlist_position() or {}
+        _check_alive(self.ctx)
+        if preset is None:
+            return self.fail("device_error", "The unit did not return the open preset in time.")
+        if after != before:
+            return self.fail("device_error", "The selected preset changed during the read; read again.")
+        key = before.get("folder_key")
+        if before.get("is_factory") or not key:
+            return self.refuse("unsupported_arg", f"Select the preset to edit on the Quad Cortex first. The bridge only "
+                               f"edits the open preset and never recalls one. The unit reports {_open_desc(before, snap)}.")
+        if _folder_view(snap, key) is None:
+            return self.refuse("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
+                               "listed as a complete 256-slot preset collection, so the bridge won't edit in it.")
+        pins = edit_checks.cas_pins(self.plan, before, preset)
+        if pins:
+            self.cas = {"state": "mismatch", "failed": pins}
+            log.warning("edit refused, compare-and-swap differs: %s", ", ".join(pins))
+            return self.refuse("preset_changed", "The preset on the unit is not the one that was read ("
+                               + ", ".join(PIN_WORDS[p] for p in pins) + " differ). Nothing was changed. "
+                               "Read it again with read_device_preset and plan the edit again.")
+        self.cas = {"state": "matched", "failed": []}
+        problem = edit_checks.unit_layout_problem(self.plan, self.checked, preset)
+        if problem:
+            log.error("edit refused, layout check: %s", problem)
+            return self.refuse("validation", "The blocks on the unit don't match the bridge's catalog: "
+                               + text.clean(problem, 200) + ". Nothing was changed.")
+        if _expired(self.ctx, self.job):
+            return Outcome("expired", "expired", "The request expired before the bridge got to it; "
+                           "nothing was written.", firmware=self.fw, edit=self.edit_block())
+        self.pre, self.folder_key = preset, key
+        return None
+
+    # -- the writes --
+
+    def still_open(self) -> bool:
+        cur = self.dev.setlist_position() or {}
+        return (cur.get("folder_key") == self.folder_key and cur.get("position") == self.pos
+                and not cur.get("is_factory"))
+
+    def op(self, key, fn, *args):
+        """One device write, like _Push.op: alive and still the open preset before it (writes address row,
+        column and index, not a preset: after the owner selects another preset they would land in it), and
+        again after it (a multi-message write that spans a switch must be noticed). The op counts as
+        attempted from the moment its call starts."""
+        _check_alive(self.ctx)
+        if not self.still_open():
+            raise _SwitchedAway()
+        self.attempted.append(key)
+        fn(*args)
+        _check_alive(self.ctx)
+        if not self.still_open():
+            self.spilled = True
+            raise _SwitchedAway()
+        self.ctx.sleep(PACE_S)
+
+    def recheck(self, col):
+        """Before a column's first write: the grid is read again and the column must still hold the planned
+        model with param_count + 1 params (the owner could swap a block while the edit runs)."""
+        mid, pc = self.checked.cells[col]
+        grid = self.dev.read_current_preset()
+        _check_alive(self.ctx)
+        b = edit_checks.live_block(grid, 0, col) if grid is not None else None
+        if b is None or b.get("model_id") != mid or len(b.get("params") or []) != pc + 1:
+            raise DeviceError(f"column {col} changed on the unit before it was written")
+
+    def write_ops(self):
+        plan, dev = self.plan, self.dev
+        done = set()
+        for op in plan["param_ops"]:
+            col = op["col"]
+            if col not in done:
+                done.add(col)
+                self.recheck(col)
+            key = ("param", col, op["index"])
+            if op["scene_mode"]:   # G6: all eight scene values (the plan carries C-H exactly as the unit had them)
+                self.op(key, dev.set_param_scenes, 0, col, op["index"], list(op["wire"]))
+            else:                  # one plain write replicates to all eight (G1/G6); verify checks all eight
+                self.op(key, dev.set_param, 0, col, op["index"], op["wire"][0])
+        for op in plan["bypass_ops"]:
+            col = op["col"]
+            if col not in done:
+                done.add(col)
+                self.recheck(col)
+            self.op(("bypass", col), dev.set_block_bypass, 0, col, list(op["bypass"]), self.checked.bypass[col]["index"])
+
+    def read_after(self):
+        """A read of the open preset after the writes: once more if the unit didn't answer."""
+        for _ in range(2):
+            self.ctx.sleep(0.5)
+            post = self.dev.read_current_preset()
+            _check_alive(self.ctx)
+            if post is not None:
+                return post
+        return None
+
+    def layout_hash(self, preset):
+        if preset is None:
+            return None
+        return hashlib.sha256(json.dumps(edit_checks.live_layout(preset), separators=(",", ":")).encode()).hexdigest()
+
+    def apply(self) -> Outcome:
+        plan, dev, ctx = self.plan, self.dev, self.ctx
+        dev.begin_edit(plan, self.checked)
+        for col, (mid, pc) in sorted(self.checked.cells.items()):
+            b = edit_checks.live_block(self.pre, 0, col) or {}   # unit_layout_problem passed, so it exists; stay defensive
+            dev.confirm_layout(col, len(b.get("params") or []))
+        orig_scene = dev.read_scene()
+        before = self.layout_hash(self.pre)
+        if ctx.edits is not None:
+            try:  # before the first write: a crash from here on is reported with the slot (agent.recover)
+                ctx.edits.start(self.job["job_id"], self.slot, self.folder_key, plan["expect"]["name"], before,
+                                contract.format_time(ctx.now()))
+            except Exception as e:  # noqa: BLE001
+                log.error("could not record the edit: %s", text.clean(str(e), 200), exc_info=True)
+                return self.fail("device_error", "The bridge could not write its edit ledger, so it wrote nothing.")
+        self.attempted, self.spilled = [], False
+        cause, gone, switched = None, False, False
+        try:
+            self.write_ops()
+        except _SwitchedAway:
+            switched = True
+        except (_Gone, UnitAbsent):
+            gone = True
+        except DeviceError as e:   # includes the wire guard's refusals
+            cause = text.clean(str(e), 160)
+            log.warning("edit write failed: %s", cause)
+        post = None
+        if not (gone or switched):
+            try:
+                post = self.read_after()
+            except (_Gone, UnitAbsent):
+                gone = True
+            except DeviceError as e:
+                cause = cause or text.clean(str(e), 160)
+        params, bypass, ok = edit_diff.verify_ops(plan, post or {})
+        coll = edit_diff.collateral(self.pre, post, plan) if post is not None else None
+        good = (cause is None and post is not None and ok and coll["mismatches"] == 0
+                and not (gone or switched))
+        if good:
+            note = self.restore_scene(orig_scene)
+            self.record_edited(post, "succeeded")
+            n, m = len(plan["param_ops"]), len(plan["bypass_ops"])
+            return Outcome("succeeded", "", f"Applied {n} parameter change(s) and {m} bypass change(s) to the open "
+                           f"preset {plan['expect']['slot']}; every value read back as planned and nothing else changed. "
+                           f"NOT saved: save it on the unit, or re-select the slot to discard it.{note}",
+                           firmware=self.fw, edit=self.edit_block(params, bypass, coll))
+        return self.rollback(post, params, bypass, coll, cause, gone, switched, orig_scene)
+
+    def restore_scene(self, orig) -> str:
+        """Put the unit's scene back to what it was before the per-scene writes (they leave it on scene A).
+        Returns a sentence for the message; never raises."""
+        try:
+            if orig is None:
+                return " The scene that was active before could not be read, so the unit may be on scene A."
+            cur = self.dev.read_scene()
+            if cur == orig:
+                return ""
+            self.dev.restore_scene(orig)
+            self.ctx.sleep(0.3)
+            if self.dev.read_scene() == orig:
+                return ""
+        except (DeviceError, _Gone, UnitAbsent) as e:
+            log.warning("scene not restored: %s", text.clean(str(e), 120))
+        return f" Check the active scene on the unit: it was {'ABCDEFGH'[orig]} before the edit."
+
+    def record_edited(self, post, status):
+        if self.ctx.edits is None:
+            return
+        try:
+            self.ctx.edits.finish(self.job["job_id"], self.slot, self.plan["expect"]["name"], self.layout_hash(self.pre),
+                                  self.layout_hash(post), status, contract.format_time(self.ctx.now()))
+        except Exception as e:  # noqa: BLE001  informational ledger: never change the outcome
+            log.error("could not record the edit result: %s", text.clean(str(e), 200), exc_info=True)
+
+    def rollback(self, post, params, bypass, coll, cause, gone, switched, orig_scene) -> Outcome:
+        plan, dev = self.plan, self.dev
+        started = dev.edit_started()
+        steps = edit_diff.rollback_plan(plan, [a for a in self.attempted if a in started])
+        restored = failed = 0
+        rb_state = "not_needed"
+        residual = 0
+        post2 = post
+        slot = plan["expect"]["slot"]
+        if steps:
+            if gone or switched or post is None:
+                failed = len(steps)   # nothing is written into a preset we can't see or that isn't the checked one
+            else:
+                restored, failed, residual, post2 = self.undo(steps, post)
+            if failed == 0 and residual == 0:
+                rb_state = "restored"
+            elif restored == 0:
+                rb_state = "failed"
+            else:
+                rb_state = "partial"
+        rollback = {"state": rb_state, "restored": restored, "failed": failed}
+        note = ""
+        if rb_state in ("restored", "not_needed") and not (gone or switched) and post is not None:
+            note = self.restore_scene(orig_scene)
+        self.record_edited(post2 if post2 is not None else post, "failed")
+        block = self.edit_block(params, bypass, coll, rollback)
+        why = (f" ({cause})" if cause else "")
+        if rb_state in ("partial", "failed"):
+            where = ("The preset that is open now may have changed too: " if self.spilled else "")
+            return failed_out("rollback_failed", f"The edit did not verify and the bridge could not put every value back"
+                              f"{why}. {where}The open preset {slot} may be half-edited and was NOT saved: re-select {slot} "
+                              f"on the unit WITHOUT saving to discard it.", self.fw, block, gone)
+        if gone:
+            return failed_out("unit_absent", f"The Quad Cortex went away during the edit{why}. Nothing was saved.", self.fw, block, True)
+        if cause or switched:
+            return failed_out("device_error", ("Another preset was selected on the unit during the edit" if switched
+                              else "A device operation failed during the edit" + why)
+                              + f". The edit was rolled back where it could be and nothing was saved; re-select {slot} "
+                              "on the unit without saving." + note, self.fw, block, False)
+        return failed_out("readback_mismatch", f"The unit's read-back differs from the edit's plan, so the bridge put "
+                          f"the original values back ({restored} change(s)) and checked them. Nothing was saved.{note} "
+                          "Controls assigned to scenes stay assigned (with their original values).", self.fw, block, False)
+
+    def undo(self, steps, post):
+        """Write the rollback steps (the guard is in its rollback phase), read again, count. Returns
+        (restored, failed, residual, the read after)."""
+        plan, dev = self.plan, self.dev
+        dev.enter_rollback()
+        bad_cols = set()
+        for col, (mid, pc) in self.checked.cells.items():   # a column that isn't what the plan says is not written
+            b = edit_checks.live_block(post, 0, col)
+            if b is None or b.get("model_id") != mid or len(b.get("params") or []) != pc + 1:
+                bad_cols.add(col)
+            else:
+                dev.confirm_layout(col, len(b.get("params") or []))   # the measured count
+        todo = []
+        stop = False
+        for st in steps:
+            if stop or st["col"] in bad_cols:
+                continue
+            try:
+                if st["kind"] == "bypass":
+                    self.op(("rb", "bypass", st["col"]), dev.set_block_bypass, 0, st["col"], list(st["flags"]),
+                            self.checked.bypass[st["col"]]["index"])
+                elif st["scene_mode"]:
+                    self.op(("rb", "param", st["col"], st["index"]), dev.set_param_scenes, 0, st["col"], st["index"],
+                            list(st["wires"]))
+                else:
+                    self.op(("rb", "param", st["col"], st["index"]), dev.set_param, 0, st["col"], st["index"], st["wires"][0])
+                todo.append(st)
+            except _SwitchedAway:
+                stop = True
+            except (_Gone, UnitAbsent):
+                stop = True
+            except DeviceError as e:
+                log.warning("rollback write failed: %s", text.clean(str(e), 160))
+        try:
+            post2 = None if stop else self.read_after()
+        except (_Gone, UnitAbsent, DeviceError):
+            post2 = None
+        if post2 is None:
+            return 0, len(steps), 0, None
+        restored = 0
+        for st in todo:
+            if st["kind"] == "bypass":
+                ok = edit_checks.live_bypass(post2, 0, st["col"]) == list(st["flags"])
+            else:
+                p = edit_checks.live_param(edit_checks.live_block(post2, 0, st["col"]), st["index"])
+                vals = (p or {}).get("values")
+                ok = (isinstance(vals, list) and len(vals) == 8 and all(
+                    type(v) is float and abs(v - w) <= edit_diff.TOL for v, w in zip(vals, st["wires"])))
+            restored += ok
+        failed = len(steps) - restored
+        # Not collateral(pre, post2): a change the edit did not make (the owner touching a control) is reported by the
+        # first collateral check and cannot be undone by writing our ops back. Residual is OUR ops left wrong.
+        residual = 0
+        done = {(s["kind"], s["col"], s.get("index")) for s in steps}
+        for op in plan["param_ops"]:    # planned ops never started: collateral skips them, so check them here
+            if ("param", op["col"], op["index"]) not in done:
+                p = edit_checks.live_param(edit_checks.live_block(post2, 0, op["col"]), op["index"])
+                residual += not edit_checks.floats_equal((p or {}).get("values"), op["expect"])
+        for op in plan["bypass_ops"]:
+            if ("bypass", op["col"], None) not in done:
+                residual += edit_checks.live_bypass(post2, 0, op["col"]) != list(op["expect"])
+        if residual and not failed:
+            failed = residual   # ops left wrong count as failed, so the counts fit the state (contract 9.3)
+        return restored, failed, residual, post2
+
+
+def failed_out(code, msg, fw, block, gone):
+    return Outcome("failed", code, msg, firmware=fw, edit=block, unit_gone=gone)
+
+
+def edit_preset(ctx, job) -> Outcome:
+    return _Edit(ctx, job).run()
+
+
+# ---- the kinds that run, and how (below every executor so the tables can name them) ----
+
+# The kinds that run on the unit. A literal table, like REFUSED_KINDS.
+EXECUTORS = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
+             "sync_device_library": sync_device_library, "edit_preset": edit_preset}
+# Checks a kind makes BEFORE any device contact, with the same early return as REFUSED_KINDS: a refusal here
+# never opens, arms or disconnects the unit (an edit the PC hasn't switched on must not even connect).
+PRECHECKS = {"edit_preset": edit_precheck}
+
+
+def run(ctx, job) -> Outcome:
+    kind = job["kind"]
+    if kind in REFUSED_KINDS:
+        return refused("unsupported_kind", REFUSED_KINDS[kind])
+    executor = EXECUTORS.get(kind)
+    if executor is None:  # parse_job admits no other kind; keep the code anyway
+        return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
+    check = PRECHECKS.get(kind)
+    if check is not None:
+        bad = check(ctx, job)
+        if bad is not None:
+            return bad
+    try:
+        return executor(ctx, job)
+    finally:
+        try:
+            ctx.device.end_push()
+        except Exception:  # noqa: BLE001
+            log.exception("end_push failed")
+        ctx.device.disconnect()

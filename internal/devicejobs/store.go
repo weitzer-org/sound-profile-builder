@@ -270,29 +270,28 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 	// A result. Oversized is permanent: unverified. Any other read error may
 	// be transient, so it is returned (Wait keeps polling) instead of being
 	// turned into a terminal state.
-	data, found, err := s.readLimited(ctx, DoneKey(id), MaxResultBytes)
-	switch {
-	case errors.Is(err, errTooLarge):
-		v.State = StateUnverified
-		return v, nil
-	case err != nil:
+	if done, err := s.doneView(ctx, id, v); err != nil {
 		return nil, err
-	case found:
-		r, ok := s.openResult(data, id)
-		if !ok {
-			v.State = StateUnverified
-			return v, nil
-		}
-		v.State, v.Result = r.Status, r
+	} else if done {
 		return v, nil
 	}
 
 	// Still pending? Same error rule; an object that isn't a job QC-2 wrote
 	// (oversized, unsigned, mismatched) counts as no job: the agent deletes it
 	// unanswered.
-	data, found, err = s.readLimited(ctx, PendingKey(id), MaxJobBytes)
+	data, found, err := s.readLimited(ctx, PendingKey(id), MaxJobBytes)
 	switch {
-	case errors.Is(err, errTooLarge), err == nil && !found:
+	case err == nil && !found:
+		// The agent writes jobs/done/<id> and then deletes jobs/pending/<id>: a result that landed between the two
+		// reads above is not "no such job". Look once more before saying so.
+		if done, derr := s.doneView(ctx, id, v); derr != nil {
+			return nil, derr
+		} else if done {
+			return v, nil
+		}
+		v.State = StateNotFound
+		return v, nil
+	case errors.Is(err, errTooLarge):
 		v.State = StateNotFound
 		return v, nil
 	case err != nil:
@@ -313,6 +312,28 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 		v.State = StateQueued
 	}
 	return v, nil
+}
+
+// doneView fills v from jobs/done/<id> when it exists and reports whether it did. A read error is returned (the
+// caller's Wait keeps polling); an oversized or unverifiable result is the "unverified" state.
+func (s *Store) doneView(ctx context.Context, id string, v *JobView) (bool, error) {
+	data, found, err := s.readLimited(ctx, DoneKey(id), MaxResultBytes)
+	switch {
+	case errors.Is(err, errTooLarge):
+		v.State = StateUnverified
+		return true, nil
+	case err != nil:
+		return false, err
+	case !found:
+		return false, nil
+	}
+	r, ok := s.openResult(data, id)
+	if !ok {
+		v.State = StateUnverified
+		return true, nil
+	}
+	v.State, v.Result = r.Status, r
+	return true, nil
 }
 
 // ownJob returns the job in data if it is one QC-2 signed for this id.

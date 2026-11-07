@@ -117,13 +117,14 @@ class ListAndRead(Base):
         self.assertEqual(self.dev.write_calls(), [])
 
     def test_edit_preset_is_refused_before_any_device_contact(self):
-        # Contract v2: a signed, valid edit_preset job parses, is taken, and is refused (unsupported_kind)
-        # until phase E4. The unit is never opened (not even end_push/disconnect), and the result's edit
-        # block is null.
+        # Contract v2 / preset-editing E4: a signed, valid edit_preset job parses and is taken, and with the
+        # default agent.env (QC_AGENT_EDIT_MODES empty) it is refused edit_not_enabled. The unit is never
+        # opened (not even end_push/disconnect), and the result's edit block is null. (tests/test_edit.py
+        # covers the rest of the edit path.)
         jid, key = self.queue("edit_preset")
         self.poll()
         r = self.result(jid)
-        self.assertEqual((r["kind"], r["status"], r["reason_code"]), ("edit_preset", "refused", "unsupported_kind"))
+        self.assertEqual((r["kind"], r["status"], r["reason_code"]), ("edit_preset", "refused", "edit_not_enabled"))
         self.assertIsNone(r["edit"])
         self.assertIsNone(r["firmware"])
         self.assertEqual(self.dev.calls, [])

@@ -43,6 +43,7 @@ class FakeDevice(DeviceBackend):
         self.slots = dict(slots or {})                  # position -> name
         self.open_position = open_position              # the slot open on the unit (152 = 20A)
         self.open_folder = SETLIST_KEY
+        self.is_factory = False                         # setlist_position reports a factory preset
         self.collections: dict[str, tuple[str, dict[int, str]]] = {}  # other non-factory collections: key -> (name, {pos: name})
         self.push_folder = None                         # the folder begin_push was armed for
         self.grid: dict[int, dict] = {}                 # col -> {"model_id", "params": {idx: [8]}, "bypass": [8]}
@@ -69,6 +70,12 @@ class FakeDevice(DeviceBackend):
         self.momentary: dict[int, bool] = {}            # what the read-back reports in stomp_is_momentary
         self.omit_stomps = False                        # the read-back carries no assignments field at all
         self.short_after_save = 0                       # listings after the save that carry only the changed slot
+        self.preset_name = ""                           # the open preset's name, as the read reports it
+        self.extra_rows: dict[int, dict[int, dict]] = {}  # rows 1-3: row -> col -> block (same shape as grid)
+        self.active_scene = 0                           # set_param_scenes switches it and puts it back, like the transport
+        self.edit_attempted: set = set()
+        self.armed_edit = False
+        self.write_fail = None                          # hook(name, args): raise to make a write fail
         self._listings = 0
         self._alive_calls = 0
 
@@ -141,7 +148,7 @@ class FakeDevice(DeviceBackend):
     def setlist_position(self):
         self._need()
         self._rec("setlist_position")
-        return {"folder_key": self.open_folder, "position": self.open_position, "is_factory": False}
+        return {"folder_key": self.open_folder, "position": self.open_position, "is_factory": self.is_factory}
 
     def _n_params(self, col):
         # Fixed per model, like the unit (G1: N = param_count + 1), not derived from what was written.
@@ -157,7 +164,8 @@ class FakeDevice(DeviceBackend):
         for col in sorted(self.grid):
             b = self.grid[col]
             n = self._n_params(col)
-            params = [{"index": i, "values": list(b["params"].get(i, [0.0] * 8)), "scene_mode": False}
+            sm = b.get("scene_mode", ())
+            params = [{"index": i, "values": list(b["params"].get(i, [0.0] * 8)), "scene_mode": i in sm}
                       for i in range(n)]
             if self.corrupt_readback and params:
                 params[0]["values"] = [0.999] * 8
@@ -170,9 +178,20 @@ class FakeDevice(DeviceBackend):
         bypass = [[[False] * 8 for _ in range(8)] for _ in range(4)]
         for col, b in self.grid.items():
             bypass[0][col] = list(b["bypass"])
-        return {"name": "", "chains": [{"row": 0, "in_port": self.routing[0], "out_port": self.routing[1],
-                                        "blocks": blocks}] + [{"row": r, "in_port": 0, "out_port": 0, "blocks": []}
-                                                              for r in (1, 2, 3)],
+        others = []
+        for r in (1, 2, 3):
+            rb = []
+            for col in sorted(self.extra_rows.get(r, {})):
+                b = self.extra_rows[r][col]
+                sm = b.get("scene_mode", ())
+                n = len(b["params"]) if b.get("n_params") is None else b["n_params"]
+                rb.append({"col": col, "model_id": b["model_id"],
+                           "params": [{"index": i, "values": list(b["params"].get(i, [0.0] * 8)), "scene_mode": i in sm}
+                                      for i in range(n)]})
+                bypass[r][col] = list(b["bypass"])
+            others.append({"row": r, "in_port": 0, "out_port": 0, "blocks": rb})
+        return {"name": self.preset_name, "chains": [{"row": 0, "in_port": self.routing[0], "out_port": self.routing[1],
+                                                      "blocks": blocks}] + others,
                 "bypass": bypass,
                 **({} if self.omit_stomps else {
                     "stomps": [{"row": r, "col": c, "index": i + self.stomp_index_skew, "type": STOMP_PRIMARY}
@@ -193,7 +212,29 @@ class FakeDevice(DeviceBackend):
         self._rec("begin_push", position, name)
         self.push_folder = folder_key
 
+    def begin_edit(self, plan, checked):
+        self._rec("begin_edit", plan["snapshot"])
+        self.edit_attempted = set()
+        self.armed_edit = True
+
+    def edit_started(self):
+        return set(self.edit_attempted)
+
+    def read_scene(self):
+        self._need()
+        self._rec("read_scene")
+        return self.active_scene
+
+    def restore_scene(self, scene):
+        self._need()
+        self._rec("restore_scene", scene)
+        self.active_scene = scene
+
+    def enter_rollback(self):
+        self._rec("enter_rollback")
+
     def end_push(self):
+        self.armed_edit = False
         self._rec("end_push")
 
     def set_routing(self, row, in_port, out_port):
@@ -226,12 +267,28 @@ class FakeDevice(DeviceBackend):
     def set_param(self, row, col, index, wire):
         self._need()
         self._rec("set_param", row, col, index, wire)
-        self.grid[col]["params"][index] = [wire] * 8
+        if self.armed_edit:
+            self.edit_attempted.add(("param", col, index))
+        if self.write_fail:
+            self.write_fail("set_param", (row, col, index, wire))
+        b = self.grid[col]
+        if index in b.get("scene_mode", ()):  # the transport: a plain write on an assigned control lands on the active scene
+            vals = list(b["params"].get(index, [0.0] * 8))
+            vals[self.active_scene] = wire
+            b["params"][index] = vals
+        else:
+            b["params"][index] = [wire] * 8
 
     def set_param_scenes(self, row, col, index, wires):
         self._need()
         self._rec("set_param_scenes", row, col, index, list(wires))
+        if self.armed_edit:
+            self.edit_attempted.add(("param", col, index))
+        if self.write_fail:
+            self.write_fail("set_param_scenes", (row, col, index, list(wires)))
+        self.grid[col].setdefault("scene_mode", set()).add(index)
         self.grid[col]["params"][index] = list(wires)
+        self.active_scene = 0  # the transport puts scene A back
 
     def confirm_layout(self, col, n):
         self._rec("confirm_layout", col, n)
@@ -239,9 +296,14 @@ class FakeDevice(DeviceBackend):
     def set_block_bypass(self, row, col, scenes, bypass_index):
         self._need()
         self._rec("set_block_bypass", row, col, list(scenes), bypass_index)
+        if self.armed_edit:
+            self.edit_attempted.add(("bypass", col))
+        if self.write_fail:
+            self.write_fail("set_block_bypass", (row, col, list(scenes), bypass_index))
         if bypass_index != self._n_params(col):  # qc-mcp: the bypass control is one past the block's read
             raise DeviceError(f"fake unit: column {col}'s bypass control is {self._n_params(col)}, not {bypass_index}")
         self.grid[col]["bypass"] = list(scenes)
+        self.active_scene = 0
 
     def save_to_slot(self, position, name):
         self._need()

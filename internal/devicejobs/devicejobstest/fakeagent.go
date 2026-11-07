@@ -198,6 +198,9 @@ func FixtureExport() *devicejobs.Export {
 // reference check (devicejobs.CheckPendingJob), keeps a ledger, writes signed
 // results and heartbeats, and deletes processed jobs.
 type FakeAgent struct {
+	// EditResult, when set, fills in the result of an edit_preset job (status, reason, Edit block).
+	EditResult func(j *devicejobs.Job, r *devicejobs.Result)
+
 	Client *MemClient
 	Bucket string
 	Keys   *devicejobs.Keyring
@@ -352,9 +355,13 @@ func (a *FakeAgent) result(j *devicejobs.Job, now time.Time) devicejobs.Result {
 	r := a.base(j, now, devicejobs.StatusSucceeded)
 	switch j.Kind {
 	case devicejobs.KindEditPreset:
-		// As the real agent until phase E4: parsed, taken, refused before any device contact.
-		r.Status, r.ReasonCode, r.Firmware = devicejobs.StatusRefused, "unsupported_kind", nil
-		r.Message = a.text("This bridge can't edit presets on the unit yet. Nothing was changed.")
+		// Unless a test sets EditResult: refused before any device contact, as an agent whose PC has not
+		// switched editing on answers (edit_not_enabled).
+		r.Status, r.ReasonCode, r.Firmware = devicejobs.StatusRefused, "edit_not_enabled", nil
+		r.Message = a.text("Editing presets on the unit is switched off on this PC. Nothing was changed.")
+		if a.EditResult != nil {
+			a.EditResult(j, &r)
+		}
 	case devicejobs.KindPushPreset:
 		var args devicejobs.PushArgs
 		_ = json.Unmarshal(j.Args, &args)

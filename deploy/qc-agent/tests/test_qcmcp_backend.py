@@ -21,6 +21,7 @@ from qc_agent.ledger import OwnedSlots
 from qc_agent.qcmcp_backend import GuardError, Guarded, QcMcpBackend, WireRefused
 from qc_agent.vendor_pins import VENDOR_DIR
 import fake_hid
+from edit_fixtures import GAIN_EXPECT, GAIN_WIRE, f32
 
 def setUpModule():
     # Pacing off for this module only; restored afterwards so other modules see the real values.
@@ -555,6 +556,327 @@ class Guard(Base):
         self.refused(self.qc.set_param, 0, 0, 1, 0.3)
 
 
+class EditGuard(Base):
+    """The wire guard of an armed edit (preset-editing E4): only the plan's (column, index) values, scene
+    assignments and bypass flags, in two phases, and nothing else that exists on the wire."""
+
+    def setUp(self):
+        super().setUp()
+        from edit_fixtures import base_plan
+        from qc_agent import edit_checks
+        self.GAIN_WIRE = GAIN_WIRE
+        self.dev.connect()
+        self.qc = self.dev._raw
+        self.plan = base_plan()
+        self.checked = edit_checks.catalog_check(self.plan, catalog(), "4.1.0")
+        for col, mid in ((0, 6), (1, 1011)):
+            self.hid.grid[col] = {"hash": mid, "params": {}, "scene": set(), "bypass": [False] * 8, "bypass_scene": False}
+        self.hid.grid[0]["params"][0] = list(GAIN_EXPECT)
+        self.hid.grid[1]["params"][1] = [0.0] * 8
+
+    def arm(self, confirm=True):
+        self.dev.begin_edit(self.plan, self.checked)
+        if confirm:
+            self.dev.confirm_layout(0, 5)   # Exotic: param_count 4, the unit reads 5
+            self.dev.confirm_layout(1, 7)   # UK C30 TopBoost: param_count 6, the unit reads 7
+
+    def refused(self, fn, *a, **kw):
+        n = len(self.hid.received)
+        with self.assertRaises((WireRefused, GuardError, DeviceError)):
+            fn(*a, **kw)
+        self.assertEqual(len(self.hid.received), n, "nothing reached the device")
+
+    def raw(self, build, extra=b""):
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        build(g)
+        full = P.encode_message("Grid", g.SerializeToString() + extra)
+        n = len(self.hid.received)
+        with self.assertRaises(WireRefused):
+            for r in P.message_to_reports(full):
+                self.dev._guard.set_report(P.REPORT_HOST_TO_QC, r[1:], include_id=True)
+        self.assertEqual(len(self.hid.received), n)
+
+    def test_nothing_passes_unarmed(self):
+        self.refused(self.qc.set_param, 0, 0, 0, 0.5)
+        self.refused(self.qc.set_scene, 1)
+
+    def test_the_plans_writes_pass_and_land(self):
+        self.arm()
+        self.qc.set_param(0, 1, 1, 1.0)                              # BOOST, a plain write
+        self.qc.set_param_scenes(0, 0, 0, self.GAIN_WIRE)           # GAIN: assign to scenes, then each scene's value
+        self.qc.set_block_bypass(0, 1, scenes=[False, True] + [False] * 6, bypass_param=7)
+        g0, g1 = self.hid.grid[0], self.hid.grid[1]
+        self.assertEqual(g0["params"][0], [f32(x) for x in self.GAIN_WIRE])   # float32 on the wire
+        self.assertEqual(g1["params"][1], [1.0] * 8)
+        self.assertEqual(g1["bypass"][:2], [False, True])
+        self.assertEqual(self.dev._guard.refused, [])
+
+    def test_off_plan_writes_are_refused(self):
+        self.arm()
+        self.refused(self.qc.set_param, 0, 1, 1, 0.7)                # a value the plan doesn't carry
+        self.refused(self.qc.set_param, 0, 1, 0, 1.0)                # index 0 of column 1 is not in the plan
+        self.refused(self.qc.set_param, 0, 0, 1, 0.5)                # nor index 1 of column 0
+        self.refused(self.qc.set_param, 0, 2, 0, 0.5)                # a column the plan doesn't name
+        self.refused(self.qc.set_param, 1, 0, 0, 0.5)                # row 1
+        self.refused(self.qc.set_param, 0, 0, 4, 0.5)                # the trailing slot of the Exotic
+        self.refused(self.qc.set_param, 0, 1, 1, 1.5)                # outside 0..1
+        self.refused(self.qc.set_param, 0, 0, 0, 0.9)                # GAIN: not one of the plan's scene values
+        self.qc.set_param(0, 1, 1, 1.0)
+
+    def test_nothing_that_places_deletes_or_saves_passes(self):
+        self.arm()
+        self.refused(self.qc.add_block, 6, row=0, column=0)
+        self.refused(self.qc.add_block, 6, row=0, column=5)
+        self.refused(self.qc.delete_block, 0, 0)
+        self.refused(self.qc.set_routing, 0, in_portid=1, out_portid=19)
+        self.refused(self.qc.set_param_typed, 0, 0, 0, [[None, None, "x"]])
+        self.refused(self.qc.set_capture, 0, 3, "a" * 64, "x")
+        self.refused(self.qc.set_ir, 0, 3, "CIR_x")
+        self.refused(self.qc.recall, fake_hid.SETLIST, 3)
+        self.refused(self.qc.save_preset)
+        self.refused(self.qc.write_preset_file, fake_hid.SETLIST, 152, "Texas Blues")
+        self.refused(self.qc.set_mode, 1)
+        self.refused(self.qc.set_scene_label, 0, "x")
+        self.refused(self.qc.assign_stomp, 0, 0, 1)
+        f = P.message_class("File")(action=P.ACTION["DELETE"])
+        f.folder.key = fake_hid.SETLIST
+        self.refused(self.qc.send, "File", f)
+
+    def test_the_backend_cannot_arm_a_save_during_an_edit(self):
+        self.arm()
+        with self.assertRaisesRegex(DeviceError, "save target differs"):
+            self.dev.save_to_slot(152, "Texas Blues")
+        self.assertEqual(self.dev._guard._save, None)
+
+    def test_raw_messages_with_fields_an_edit_never_sends(self):
+        self.arm()
+
+        def chain(g):
+            return g.preset.chains.add()
+
+        def one(g, col=1, idx=1, value=1.0):
+            ch = chain(g)
+            m = ch.models.add()
+            m.column = col
+            p = m.params.add()
+            p.index = idx
+            p.param_values.add().float_value = value
+            return ch, m, p
+        self.raw(lambda g: setattr(one(g)[0], "in_portid", 3))                   # routing
+        self.raw(lambda g: setattr(one(g)[1], "hash", 1011))                     # places a model
+        self.raw(lambda g: one(g)[1].params.add())                               # two params in one message
+        self.raw(lambda g: (one(g), chain(g)))                                   # two chains
+        self.raw(lambda g: chain(g).models.add())                                # the shape of a delete
+        self.raw(lambda g: chain(g))                                             # an empty chain
+        self.raw(lambda g: setattr(g.preset, "name", "Hacked"))                  # a preset field
+        self.raw(lambda g: g.preset.stomp_mode_assignments.add())                # a stomp
+        self.raw(lambda g: one(g), extra=bytes([0xF8, 0xFF, 0x03, 0x01]))        # an unknown field
+
+        def string(g):
+            _, m, p = one(g, idx=1)
+            p.param_values[0].string_value = "x"
+        self.raw(string)                                                          # a string where a float belongs
+
+        def two_values(g):
+            one(g)[2].param_values.add().float_value = 1.0
+        self.raw(two_values)
+
+    def test_scene_assignment_only_where_the_plan_has_it(self):
+        self.arm()
+
+        def assign(col, idx, on=True):
+            def build(g):
+                m = g.preset.chains.add().models.add()
+                m.column = col
+                p = m.params.add()
+                p.index, p.scene_mode = idx, on
+            return build
+        self.raw(assign(1, 1))                  # BOOST: the plan writes it plainly, not per scene
+        self.raw(assign(0, 1))                  # a control the plan doesn't name
+        self.raw(assign(0, 0, on=False))        # taking GAIN out of scenes
+        self.raw(assign(0, 4))                  # the trailing slot / bypass slot of the Exotic (no bypass op there)
+        self.raw(assign(1, 6))                  # the TopBoost's trailing slot is not its bypass control (7 is)
+        self.dev._guard._edit["confirmed"].pop(1)
+        self.raw(assign(1, 7))                  # the bypass control, but no read confirmed the layout
+        self.dev.confirm_layout(1, 7)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        assign(1, 7)(g)
+        self.qc.send("Grid", g)                 # confirmed: passes
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        assign(0, 0)(g)
+        self.qc.send("Grid", g)                 # GAIN is scene-varying in the plan: passes
+
+    def test_a_layout_the_unit_does_not_confirm_blocks_the_column(self):
+        self.arm(confirm=False)
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)           # not confirmed yet
+        with self.assertRaisesRegex(WireRefused, "reads 8 params"):
+            self.dev.confirm_layout(1, 8)                      # a block with more params than the catalog
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)
+        with self.assertRaisesRegex(WireRefused, "no armed block in column 5"):
+            self.dev.confirm_layout(5, 7)
+        self.dev.confirm_layout(1, 7)
+        self.qc.set_param(0, 1, 1, 1.0)
+
+    def test_bypass_writes_need_a_planned_cell_and_a_confirmed_index(self):
+        self.arm(confirm=False)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 1, [False] * 8, 7)    # right index, nothing confirmed it
+        self.dev.confirm_layout(1, 7)
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 1, [False] * 8, 6)    # the wrong index
+        with self.assertRaisesRegex(DeviceError, "not the armed one"):
+            self.dev.set_block_bypass(0, 0, [False] * 8, 5)    # a column with no bypass op
+        n = len(self.hid.received)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        cb = g.preset.bypass.add().colBypass.add()
+        cb.column = 0                                          # a flag on a cell the plan doesn't bypass
+        cb.sceneBypass.add().bypass = True
+        with self.assertRaises(WireRefused):
+            self.qc.send("Grid", g)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        b = g.preset.bypass.add()
+        b.row = 1                                              # another row
+        cb = b.colBypass.add()
+        cb.column = 1
+        cb.sceneBypass.add().bypass = True
+        with self.assertRaises(WireRefused):
+            self.qc.send("Grid", g)
+        g = P.message_class("Grid")(action=P.ACTION["UPDATE"])
+        cb = g.preset.bypass.add().colBypass.add()
+        cb.column = 1
+        cb.sceneBypass.add().bypass = True                     # two flags in one message
+        cb.sceneBypass.add().bypass = False
+        with self.assertRaises(WireRefused):
+            self.qc.send("Grid", g)
+        self.assertEqual(len(self.hid.received), n)
+
+    def test_rollback_allows_only_old_values_of_ops_that_were_started(self):
+        self.arm()
+        self.refused(self.qc.set_param, 0, 1, 1, 0.0)           # BOOST's old value, but apply phase: the new one is 1.0
+        self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
+        self.refused(self.qc.set_param, 0, 1, 1, 0.0)           # old value, but its write was never started
+        self.dev.end_push()
+        self.arm()
+        self.qc.set_param(0, 1, 1, 1.0)                         # started
+        self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)           # the new value is not allowed any more
+        self.qc.set_param(0, 1, 1, 0.0)                         # the old one is
+        self.refused(self.qc.set_param_scenes, 0, 0, 0, list(GAIN_EXPECT))  # GAIN was never started
+
+    def test_rollback_restores_a_scene_varying_control_and_a_bypass(self):
+        self.arm()
+        self.qc.set_param_scenes(0, 0, 0, self.GAIN_WIRE)
+        self.qc.set_block_bypass(0, 1, scenes=[False, True] + [False] * 6, bypass_param=7)
+        self.dev.enter_rollback()
+        self.dev.confirm_layout(0, 5)   # the rollback re-confirms each column from its own read
+        self.dev.confirm_layout(1, 7)
+        self.qc.set_param_scenes(0, 0, 0, list(GAIN_EXPECT))
+        self.qc.set_block_bypass(0, 1, scenes=[False] * 8, bypass_param=7)
+        self.assertEqual(self.hid.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.hid.grid[1]["bypass"], [False] * 8)
+
+    def test_end_push_disarms_an_edit(self):
+        self.arm()
+        self.dev.end_push()
+        self.refused(self.qc.set_param, 0, 1, 1, 1.0)
+
+    def test_an_edit_cannot_be_armed_twice_or_over_a_push(self):
+        self.arm()
+        with self.assertRaisesRegex(WireRefused, "on its own, once"):
+            self.dev.begin_edit(self.plan, self.checked)
+        self.dev.end_push()
+        self.dev.begin_push(152, "x", validate(export(), catalog(), "4.1.0"))
+        with self.assertRaisesRegex(WireRefused, "on its own, once"):
+            self.dev.begin_edit(self.plan, self.checked)
+
+    def test_a_push_or_save_cannot_be_armed_over_an_edit(self):
+        self.arm()
+        with self.assertRaisesRegex(WireRefused, "while an edit is armed"):
+            self.dev._guard.arm_push(validate(export(), catalog(), "4.1.0"))
+        with self.assertRaisesRegex(WireRefused, "while an edit is armed"):
+            self.dev._guard.arm_save(fake_hid.SETLIST, 152, "x")
+        self.refused(self.qc.write_preset_file, fake_hid.SETLIST, 152, "x")
+
+    def test_rollback_makes_each_column_be_confirmed_again(self):
+        self.arm()
+        self.qc.set_param(0, 1, 1, 1.0)
+        self.dev.enter_rollback()
+        self.refused(self.qc.set_param, 0, 1, 1, 0.0)    # the apply step's confirmation is gone
+        self.dev.confirm_layout(1, 7)
+        self.qc.set_param(0, 1, 1, 0.0)
+
+    def test_a_push_arms_nothing_of_an_edit(self):
+        self.dev.begin_push(152, "x", validate(export(), catalog(), "4.1.0"))
+        self.assertIsNone(self.dev._guard._edit)
+        with self.assertRaisesRegex(WireRefused, "no armed edit"):
+            self.dev.enter_rollback()
+
+
+class EditOverTheWire(Base):
+    """A whole edit_preset job through the real vendored transport and the wire guard (fake HID below them)."""
+
+    def setUp(self):
+        super().setUp()
+        from edit_fixtures import base_plan, edit_args
+        self.plan = base_plan()
+        self.plan["expect"]["layout"] = [[0, 0, 6], [0, 1, 1011]]   # fake_hid models row 0 only
+        for col, mid in ((0, 6), (1, 1011)):
+            self.hid.grid[col] = {"hash": mid, "params": {}, "scene": set(), "bypass": [False] * 8, "bypass_scene": False}
+        self.hid.grid[0]["params"][0] = list(GAIN_EXPECT)
+        self.hid.grid[1]["params"][1] = [0.0] * 8
+        self.hid.name = "Texas Blues"
+        self.args = edit_args(self.plan)
+
+    def run_job(self):
+        from helpers import T0
+        from qc_agent import contract
+        cfg = config(QC_AGENT_EDIT_MODES="live")
+        ctx = jobs.JobContext(cfg, catalog(), self.dev, OwnedSlots(Path(self.tmp.name) / "o.jsonl"), Clock(), sleep=lambda s: None)
+        job = {"kind": "edit_preset", "job_id": "11111111-2222-4333-8444-666666666666", "args": self.args,
+               "created_at": contract.format_time(T0), "expires_at": contract.format_time(T0.replace(hour=23))}
+        return jobs.run(ctx, job)
+
+    def test_edit_lands_on_the_fake_unit_and_nothing_is_saved(self):
+        out = self.run_job()
+        self.assertEqual((out.status, out.reason_code), ("succeeded", ""), out.message)
+        self.assertEqual(self.dev._guard.refused, [])
+        g0, g1 = self.hid.grid[0], self.hid.grid[1]
+        self.assertEqual(g0["params"][0], [f32(x) for x in GAIN_WIRE])
+        self.assertEqual(g1["params"][1], [1.0] * 8)
+        self.assertEqual(g1["bypass"][:2], [False, True])
+        self.assertEqual(self.hid.slots, {})                     # no File CREATE: nothing saved
+        self.assertNotIn("File", [n for n, o in self.hid.received if getattr(o, "action", None) == P.ACTION["CREATE"]])
+        self.assertEqual(self.hid.scene, 0)
+
+    def test_the_owners_scene_is_put_back_over_the_wire(self):
+        self.hid.scene = 4
+        out = self.run_job()
+        self.assertEqual(out.status, "succeeded", out.message)
+        self.assertEqual(self.hid.scene, 4)
+        self.assertEqual(self.dev._guard.refused, [])
+
+    def test_a_drifting_unit_is_rolled_back_over_the_wire(self):
+        orig = self.hid._grid
+
+        def lossy(g):
+            orig(g)
+            for ch in g.preset.chains:   # the unit loses BOOST's write
+                for m in ch.models:
+                    if m.column == 1 and any(p.index == 1 and p.param_values for p in m.params) and not self.dev._guard._edit["phase"] == "rollback":
+                        self.hid.grid[1]["params"][1] = [0.0] * 8
+        self.hid._grid = lossy
+        out = self.run_job()
+        self.assertEqual((out.status, out.reason_code), ("failed", "readback_mismatch"), out.message)
+        self.assertEqual(out.edit["payload"]["rollback"]["state"], "restored")
+        self.assertEqual(self.hid.grid[0]["params"][0], list(GAIN_EXPECT))
+        self.assertEqual(self.hid.grid[1]["bypass"], [False] * 8)
+        self.assertEqual(self.dev._guard.refused, [])
+
+
 class CapturesOverTheWire(Base):
     """A capture block through the real vendored set_capture and the wire guard (plan 4.2)."""
 
@@ -903,9 +1225,15 @@ class MethodAllowlist(unittest.TestCase):
     def test_unlisted_methods_raise(self):
         # Real vendored methods on neither list (load_model_preset, used here before, is on the
         # never-list, so this test never reached the "not granted" branch).
-        for name in ("read_state", "read_global_eq", "assign_param_to_scenes", "detect_version"):
+        for name in ("read_global_eq", "assign_param_to_scenes", "detect_version"):  # read_state is granted since E4 (scene read; the wire guard allows READs only)
             with self.subTest(name), self.assertRaisesRegex(GuardError, "is not granted"):
                 getattr(Guarded(object()), name)
+
+    def test_set_scene_is_never_granted_only_windowed(self):
+        self.assertIn("set_scene", qcmcp_backend.NEVER)
+        self.assertNotIn("set_scene", qcmcp_backend.GRANT)
+        with self.assertRaisesRegex(GuardError, "never allowed"):
+            Guarded(object()).set_scene
 
     def test_read_only(self):
         with self.assertRaisesRegex(GuardError, "read-only"):

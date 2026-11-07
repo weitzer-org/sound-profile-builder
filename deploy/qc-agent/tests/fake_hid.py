@@ -48,6 +48,7 @@ class FakeHID:
         self.captures = default_captures()  # type-2 folders in the directory stream
         self.deps_on_save = True             # a saved preset lists its captures' keys as dependencies
         self.preset_deps: dict[int, list[str]] = {}
+        self.name = ""               # the open preset's name in a RecallPreset read
         self.position_replies = True  # False: SetlistPosition READs go unanswered (a slow or busy unit)
         self.stomps: dict[tuple[int, int], tuple[int, int]] = {}  # (row, col) -> (stomp_index, type)
         self.momentary: dict[int, bool] = {}
@@ -189,6 +190,7 @@ class FakeHID:
                     b["bypass"] = [flag] * 8
 
     def _fill_preset(self, bp):
+        bp.name = self.name
         for r in range(4):
             ch = bp.chains.add()
             ins, outs = self.routing.get(r, (0, 0))

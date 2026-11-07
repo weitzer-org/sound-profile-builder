@@ -1,0 +1,1796 @@
+{
+ "results": {
+  "Apply.test_a_collateral_change_on_an_op_cell": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [
+     {
+      "col": 1,
+      "index": 2,
+      "row": 0,
+      "scene": 0
+     }
+    ],
+    "layout_same": true,
+    "mismatches": 1,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 3,
+    "state": "restored"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_collateral_change_on_another_row_is_rolled_back": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [
+     {
+      "col": 0,
+      "index": 2,
+      "row": 1,
+      "scene": 0
+     }
+    ],
+    "layout_same": true,
+    "mismatches": 1,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 3,
+    "state": "restored"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_failure_before_any_write_has_nothing_to_roll_back": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [
+     {
+      "col": 0,
+      "index": null,
+      "row": 0,
+      "scene": null
+     }
+    ],
+    "layout_same": false,
+    "mismatches": 1,
+    "params_compared": 11
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": false,
+     "readback": [
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_rollback_that_does_not_stick_is_rollback_failed": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 1,
+    "restored": 2,
+    "state": "partial"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_scene_that_cannot_be_put_back_is_reported": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_write_error_midway_rolls_back_what_was_attempted": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 2,
+    "state": "restored"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_a_write_that_does_not_read_back_is_rolled_back": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 3,
+    "state": "restored"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_all_pass_writes_exactly_the_plan_and_saves_nothing": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_an_edit_that_cannot_be_recorded_writes_nothing": {
+   "bypass": [],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_every_rollback_write_fails": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 3,
+    "restored": 0,
+    "state": "failed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_ops_left_wrong_count_as_failed_so_the_result_fits_its_state": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 1,
+    "restored": 2,
+    "state": "partial"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_scene_a_is_left_alone": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_edit_ledger_survives_a_restart": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_owner_selects_another_preset_before_the_first_write": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": null,
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_owner_selects_another_preset_midway_and_nothing_more_is_written": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": null,
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 1,
+    "restored": 0,
+    "state": "failed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_read_after_the_writes_times_out_so_nothing_is_written_blind": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": null,
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 1,
+    "restored": 0,
+    "state": "failed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_scene_the_owner_had_is_put_back": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Apply.test_the_unit_vanishes_during_the_edit": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": false,
+     "readback": null,
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": false,
+     "readback": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 2,
+    "restored": 0,
+    "state": "failed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_block_added_on_another_row": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "layout"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_block_changed_model": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "layout"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_block_removed": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "layout"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_bypass_flag_differs": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "bypass_expect"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_collection_that_is_not_a_listed_256_slot_table": {
+   "bypass": [],
+   "cas": {
+    "failed": [],
+    "state": "not_reached"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_factory_preset_is_never_edited": {
+   "bypass": [],
+   "cas": {
+    "failed": [],
+    "state": "not_reached"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_plain_control_is_scene_assigned_on_the_unit": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "param_expect"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_a_planned_value_differs_in_one_scene": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "param_expect"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_everything_matches": {
+   "bypass": [
+    {
+     "col": 1,
+     "ok": true,
+     "readback": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "row": 0
+    }
+   ],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": {
+    "bypass_compared": 248,
+    "items": [],
+    "layout_same": true,
+    "mismatches": 0,
+    "params_compared": 15
+   },
+   "mode": "live",
+   "params": [
+    {
+     "col": 0,
+     "index": 0,
+     "ok": true,
+     "readback": [
+      0.5,
+      0.62,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104,
+      0.44999998807907104
+     ],
+     "row": 0
+    },
+    {
+     "col": 1,
+     "index": 1,
+     "ok": true,
+     "readback": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "row": 0
+    }
+   ],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_name_is_compared_after_cleaning": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "name"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_other_collection": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "folder_key"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_other_name": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "name"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_other_position": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "position"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_several_pins_at_once_in_the_contract_order": {
+   "bypass": [],
+   "cas": {
+    "failed": [
+     "position",
+     "name",
+     "param_expect",
+     "bypass_expect"
+    ],
+    "state": "mismatch"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_the_selected_preset_changes_during_the_read": {
+   "bypass": [],
+   "cas": {
+    "failed": [],
+    "state": "not_reached"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  },
+  "Cas.test_the_unit_reports_another_parameter_layout_than_the_catalog": {
+   "bypass": [],
+   "cas": {
+    "failed": [],
+    "state": "matched"
+   },
+   "collateral": null,
+   "mode": "live",
+   "params": [],
+   "plan_sha256": "59b34cd60f791c4dbe7e37b9c808d6eca0d769aa8cbe0aab77d828989aa05674",
+   "rollback": {
+    "failed": 0,
+    "restored": 0,
+    "state": "not_needed"
+   },
+   "save": {
+    "backup": null,
+    "listed": false,
+    "name": null,
+    "saved": false,
+    "slot": null
+   },
+   "snapshot": "11111111-2222-4333-8444-555555555555"
+  }
+ }
+}

@@ -37,4 +37,4 @@ results already arrive in it; keep it.
 \* = estimated value
 **My take, not from the pipeline:** optional
 Next: refine anything, or give me a name and I will save it.
-**Editing the unit (edit_device_preset, dry run):** show its before/after table as given, keep † and the not-applied list, say which scenes C-H are kept, and never imply anything was sent.
+**Editing the unit (edit_device_preset):** show the dry run's before/after table as given (keep † and the not-applied list; scenes C-H are kept) and never imply anything was sent. Apply only after the user's explicit yes to that table. A live edit is unsaved: they save on the unit or re-select the slot to discard it. Say it was made only when get_device_job shows it applied and verified.
