@@ -678,3 +678,21 @@ func TestEditDevicePreset_CopyRefusedAfterTheCASIsNotDistrusted(t *testing.T) {
 		t.Fatalf("%+v\n%s", job.Edit, okText(t, res))
 	}
 }
+
+// The tool normalizes target_slot before it builds the claims, in the dry run and in the confirm alike, so a messy
+// but valid spelling confirms with the same arguments; text that is not a slot is refused up front.
+func TestEditDevicePreset_CopyTargetSlotIsNormalizedInBothPhases(t *testing.T) {
+	r, _, _, _, _ := pinnedEditStore(t)
+	for _, raw := range []string{"21a", " 21A "} {
+		out := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"target_slot": raw})))
+		q := itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"target_slot": raw, "dry_run": false, "confirm_token": out.ConfirmToken}))
+		if !out.CanApply || q.IsError {
+			t.Errorf("%q: can_apply=%v confirm error=%v", raw, out.CanApply, q.IsError)
+		}
+	}
+	for _, raw := range []string{"021a", "21 A", "33A", "21I"} {
+		if res := itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"target_slot": raw})); !res.IsError {
+			t.Errorf("%q was accepted", raw)
+		}
+	}
+}
