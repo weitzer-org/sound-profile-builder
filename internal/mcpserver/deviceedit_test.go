@@ -649,3 +649,26 @@ func TestEditDevicePreset_CopyResultRendering(t *testing.T) {
 		})
 	}
 }
+
+// A copy refused after the compare-and-swap (the target is not empty) wrote nothing: it is shown as the clean
+// refusal it is, not as a result that "does not fit the plan".
+func TestEditDevicePreset_CopyRefusedAfterTheCASIsNotDistrusted(t *testing.T) {
+	r, _, _, _, _ := pinnedEditStore(t)
+	out := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(nil)))
+	r.agent.EditResult = func(j *devicejobs.Job, res *devicejobs.Result) {
+		args, _ := devicejobs.ParseEditArgs(j.Args)
+		er := devicejobs.EditResult{PlanSHA256: out.PlanSHA256, Snapshot: args.Snapshot, Mode: "copy",
+			CAS: devicejobs.EditCAS{State: "matched", Failed: []string{}}, Params: []devicejobs.EditParamRead{}, Bypass: []devicejobs.EditBypassRead{},
+			Rollback: devicejobs.EditRollback{State: "not_needed"}}
+		payload, _ := json.Marshal(er)
+		res.Status, res.ReasonCode = devicejobs.StatusRefused, "slot_not_empty"
+		res.Edit = &devicejobs.EditBlock{Format: devicejobs.EditResultFormat, Payload: payload}
+	}
+	q := itStructured[deviceEditOutput](t, itCall(t, r.cs, deviceEditToolName, copyArgs(map[string]any{"dry_run": false, "confirm_token": out.ConfirmToken})))
+	r.runAgent(t)
+	res := itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": q.JobID, "wait_seconds": 10})
+	job := itStructured[deviceJobOutput](t, res)
+	if job.Edit == nil || job.Edit.Applied || job.Edit.Note != "" || !job.Edit.CheckedAgainst {
+		t.Fatalf("%+v\n%s", job.Edit, okText(t, res))
+	}
+}

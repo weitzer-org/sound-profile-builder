@@ -77,8 +77,10 @@ func editResultOutput(ctx context.Context, lib *DeviceLibrary, v *devicejobs.Job
 	out.CheckedAgainst = true
 	p := rec.p
 	fits := true
-	if res.CAS.State != "matched" {
-		fits = len(res.Params) == 0 && len(res.Bypass) == 0 // nothing was written, so nothing is read back
+	if res.CAS.State != "matched" || v.Result.Status == devicejobs.StatusRefused {
+		// nothing was written (a mismatch, or a refusal after the compare-and-swap such as a copy target that is not
+		// empty), so nothing is read back
+		fits = len(res.Params) == 0 && len(res.Bypass) == 0
 	} else {
 		if len(res.Params) != len(p.ParamOps) || len(res.Bypass) != len(p.BypassOps) {
 			fits = false
