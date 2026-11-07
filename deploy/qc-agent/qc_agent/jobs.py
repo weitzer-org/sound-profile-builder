@@ -55,7 +55,7 @@ import math
 import time
 from dataclasses import dataclass, field
 
-from . import captures, contract, slots, text
+from . import captures, contract, edit_checks, slots, text
 from .device import SETLIST_KEY, SETLIST_NAME, STOMP_PRIMARY, DeviceError, PartialListing, UnitAbsent, UnitBusy
 from .export_validator import (CAPTURE_BLOCK_IDS, SUPPORTED_FORMATS, ExportRefused, check_preset_name,
                                control_labels, default_wire, is_internal_param, validate)
@@ -85,7 +85,7 @@ class Outcome:
     slots: dict | None = None
     readback: dict | None = None
     library: dict | None = None
-    edit: dict | None = None    # edit_preset (contract section 9.3); always None until phase E4
+    edit: dict | None = None    # edit_preset (contract section 9.3); None when the job was refused before the unit
     unit_gone: bool = False     # the agent exits after this job
     extra: dict = field(default_factory=dict)
 
@@ -199,29 +199,8 @@ def _check_alive(ctx):
 
 # Kinds that parse but that this bridge refuses outright, with the message for each. They are answered
 # here, before the executor path, because that path's `finally` calls end_push() and disconnect() on the
-# device: a refused kind never touches it. edit_preset (contract v2) moves to EXECUTORS in preset-editing E4.
-REFUSED_KINDS = {
-    "edit_preset": "This bridge can't edit presets on the unit yet. Nothing was changed.",
-}
-
-
-def run(ctx, job) -> Outcome:
-    kind = job["kind"]
-    if kind in REFUSED_KINDS:
-        return refused("unsupported_kind", REFUSED_KINDS[kind])
-    executor = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
-                "sync_device_library": sync_device_library}.get(kind)
-    if executor is None:  # parse_job admits no other kind; keep the code anyway
-        return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
-    try:
-        return executor(ctx, job)
-    finally:
-        try:
-            ctx.device.end_push()
-        except Exception:  # noqa: BLE001
-            log.exception("end_push failed")
-        ctx.device.disconnect()
-
+# device: a refused kind never touches it. Empty since preset-editing E4 moved edit_preset to EXECUTORS.
+REFUSED_KINDS = {}
 
 # ---- list_slots ----
 
@@ -971,3 +950,179 @@ class _Push:
 
 def push_preset(ctx, job) -> Outcome:
     return _Push(ctx, job).run()
+
+
+# ---- edit_preset (preset-editing plan E4; contract sections 7.1, 7.2, 9.3) ----
+
+PIN_WORDS = {"folder_key": "the collection", "position": "the slot", "name": "the preset's name",
+             "layout": "the blocks on the grid", "param_expect": "a control's value", "bypass_expect": "a block's bypass"}
+EDIT_RESULT_FORMAT = "qc-device-edit-result/1"
+
+
+def _edit_job_plan(job):
+    return contract.parse_edit_plan(job["args"]["plan"]["payload"])
+
+
+def edit_precheck(ctx, job) -> Outcome | None:
+    """Everything an edit can be refused for without opening the unit, in the order the design lists it:
+    the PC's opt-in, the mode this build honours, the slot, then the catalog checks. A refusal here has no
+    `edit` block (contract 9: null when the agent refused the job before reaching the unit)."""
+    return _Edit(ctx, job).precheck()
+
+
+class _Edit:
+    """One edit_preset job. Commit order in the module docstring of qc_agent.edit_checks; the writes are
+    armed per operation in the wire guard (qcmcp_backend.WireGuard.arm_edit)."""
+
+    def __init__(self, ctx, job):
+        self.ctx, self.job, self.dev = ctx, job, ctx.device
+        a = job["args"]
+        self.args, self.slot, self.mode = a, a["slot"], a["mode"]
+        self.sha = a["plan"]["sha256"]
+        self.plan = _edit_job_plan(job)
+        self.pos = slots.position(self.slot)
+        self.checked = None
+        self.fw = None
+        self.cas = {"state": "not_reached", "failed": []}
+
+    # -- the result block (contract 9.3) --
+
+    def edit_block(self, params=None, bypass=None, collateral=None, rollback=None, saved=False):
+        payload = {"plan_sha256": self.sha, "snapshot": self.plan["snapshot"], "mode": self.mode,
+                   "cas": {"state": self.cas["state"], "failed": list(self.cas["failed"])},
+                   "params": params or [], "bypass": bypass or [], "collateral": collateral,
+                   "rollback": rollback or {"state": "not_needed", "restored": 0, "failed": 0},
+                   "save": {"saved": saved, "slot": None, "name": None, "listed": False, "backup": None}}
+        return {"format": EDIT_RESULT_FORMAT, "payload": payload}
+
+    def refuse(self, code, msg, **kw):
+        return refused(code, msg, firmware=self.fw, edit=self.edit_block(), **kw)
+
+    def fail(self, code, msg, **kw):
+        return failed(code, msg, firmware=self.fw, edit=self.edit_block(), **kw)
+
+    # -- before any device contact --
+
+    def precheck(self) -> Outcome | None:
+        cfg = self.ctx.config
+        if not cfg.edit_modes:
+            return refused("edit_not_enabled", "Editing presets on the unit is switched off on this PC "
+                           "(QC_AGENT_EDIT_MODES in agent.env is empty). Nothing was changed.")
+        if self.mode != "live":
+            return refused("unsupported_arg", f"This bridge only edits in live mode so far; {self.mode} is not "
+                           "supported. Nothing was changed.")
+        if "live" not in cfg.edit_modes:
+            return refused("edit_not_enabled", "Live edits are not switched on on this PC "
+                           "(QC_AGENT_EDIT_MODES in agent.env does not list live). Nothing was changed.")
+        if not cfg.allowed_slots.contains(self.slot):
+            return refused("slot_not_allowed", f"Slot {self.slot} is outside the bridge's allowed slots "
+                           f"({', '.join(cfg.allowed_slots.labels())}).")
+        if cfg.protected_slots is not None and cfg.protected_slots.contains(self.slot):
+            return refused("slot_not_allowed", f"Slot {self.slot} is protected on this PC "
+                           "(QC_AGENT_PROTECTED_SLOTS): the bridge never edits it.")
+        try:
+            self.checked = edit_checks.catalog_check(self.plan, self.ctx.catalog, cfg.expected_firmware)
+        except edit_checks.EditRefused as e:
+            return refused("validation", "The edit failed the bridge's own checks: " + text.clean(str(e), 400))
+        return None
+
+    # -- on the unit --
+
+    def run(self) -> Outcome:
+        out = self.precheck()                 # again: executor() may be called without run()'s precheck
+        if out:
+            return out
+        out = _connect_checked(self.ctx)
+        if out:
+            return out
+        self.fw = _fw(self.dev.firmware)
+        try:
+            for step in (self.check_unit,):
+                outcome = step()
+                if outcome is not None:
+                    return outcome
+            return self.finish()
+        except (_Gone, UnitAbsent):
+            return self.fail("unit_absent", "The Quad Cortex went away during the edit.", unit_gone=True)
+        except DeviceError as e:
+            log.warning("edit failed: %s", text.clean(str(e), 200))
+            return self.fail("device_error", "A device operation failed. Nothing was saved.")
+
+    def check_unit(self) -> Outcome | None:
+        """Open slot only (never recall), a regular collection, one fresh read and the compare-and-swap."""
+        snap = self.dev.read_directory()
+        _check_alive(self.ctx)
+        before = self.dev.setlist_position() or {}
+        preset = self.dev.read_current_preset()
+        after = self.dev.setlist_position() or {}
+        _check_alive(self.ctx)
+        if preset is None:
+            return self.fail("device_error", "The unit did not return the open preset in time.")
+        if after != before:
+            return self.fail("device_error", "The selected preset changed during the read; read again.")
+        key = before.get("folder_key")
+        if before.get("is_factory") or not key:
+            return self.refuse("unsupported_arg", f"Select the preset to edit on the Quad Cortex first. The bridge only "
+                               f"edits the open preset and never recalls one. The unit reports {_open_desc(before, snap)}.")
+        if _folder_view(snap, key) is None:
+            return self.refuse("unsupported_arg", f"The collection open on the unit ({_folder_label(snap, key)!r}) isn't "
+                               "listed as a complete 256-slot preset collection, so the bridge won't edit in it.")
+        pins = edit_checks.cas_pins(self.plan, before, preset)
+        if pins:
+            self.cas = {"state": "mismatch", "failed": pins}
+            log.warning("edit refused, compare-and-swap differs: %s", ", ".join(pins))
+            return self.refuse("preset_changed", "The preset on the unit is not the one that was read ("
+                               + ", ".join(PIN_WORDS[p] for p in pins) + " differ). Nothing was changed. "
+                               "Read it again with read_device_preset and plan the edit again.")
+        self.cas = {"state": "matched", "failed": []}
+        problem = edit_checks.unit_layout_problem(self.plan, self.checked, preset)
+        if problem:
+            log.error("edit refused, layout check: %s", problem)
+            return self.refuse("validation", "The blocks on the unit don't match the bridge's catalog: "
+                               + text.clean(problem, 200) + ". Nothing was changed.")
+        if _expired(self.ctx, self.job):
+            return Outcome("expired", "expired", "The request expired before the bridge got to it; "
+                           "nothing was written.", firmware=self.fw, edit=self.edit_block())
+        self.pre = preset
+        return None
+
+    def finish(self) -> Outcome:
+        # Interim (commit 1 of E4): every pre-write check passed and nothing is written yet.
+        return self.refuse("unsupported_kind", "The edit passed every check, but this build doesn't apply edits yet. "
+                           "Nothing was changed.")
+
+
+def edit_preset(ctx, job) -> Outcome:
+    return _Edit(ctx, job).run()
+
+
+# ---- the kinds that run, and how (below every executor so the tables can name them) ----
+
+# The kinds that run on the unit. A literal table, like REFUSED_KINDS.
+EXECUTORS = {"list_slots": list_slots, "read_preset": read_preset, "push_preset": push_preset,
+             "sync_device_library": sync_device_library, "edit_preset": edit_preset}
+# Checks a kind makes BEFORE any device contact, with the same early return as REFUSED_KINDS: a refusal here
+# never opens, arms or disconnects the unit (an edit the PC hasn't switched on must not even connect).
+PRECHECKS = {"edit_preset": edit_precheck}
+
+
+def run(ctx, job) -> Outcome:
+    kind = job["kind"]
+    if kind in REFUSED_KINDS:
+        return refused("unsupported_kind", REFUSED_KINDS[kind])
+    executor = EXECUTORS.get(kind)
+    if executor is None:  # parse_job admits no other kind; keep the code anyway
+        return refused("unsupported_kind", "This bridge doesn't run that kind of job.")
+    check = PRECHECKS.get(kind)
+    if check is not None:
+        bad = check(ctx, job)
+        if bad is not None:
+            return bad
+    try:
+        return executor(ctx, job)
+    finally:
+        try:
+            ctx.device.end_push()
+        except Exception:  # noqa: BLE001
+            log.exception("end_push failed")
+        ctx.device.disconnect()

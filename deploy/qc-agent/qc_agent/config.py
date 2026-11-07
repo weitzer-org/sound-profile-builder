@@ -21,7 +21,11 @@ REQUIRED = (
     "DEVICE_JOB_KEY",
     "QC_AGENT_ALLOWED_SLOTS", "QC_AGENT_EXPECTED_FIRMWARE", "QC_AGENT_IDLE_MINUTES",
 )
-OPTIONAL = ("DEVICE_JOB_KEY_NEXT",)
+OPTIONAL = ("DEVICE_JOB_KEY_NEXT", "QC_AGENT_EDIT_MODES", "QC_AGENT_PROTECTED_SLOTS")
+# Preset editing (docs/design/qc-preset-editing.md section 6). Both settings live on this PC so a signed job
+# alone can never switch editing on: QC_AGENT_EDIT_MODES lists the save modes the owner allows (empty = every
+# edit is refused), QC_AGENT_PROTECTED_SLOTS the slots no edit ever touches.
+EDIT_MODES = ("live", "copy", "overwrite")
 KNOWN = frozenset(REQUIRED + OPTIONAL)
 
 _LINE_RE = re.compile(r"([A-Z][A-Z0-9_]*)=(.*)")
@@ -52,6 +56,8 @@ class Config:
     allowed_slots: SlotRanges
     expected_firmware: str
     idle_minutes: int
+    edit_modes: frozenset = frozenset()          # QC_AGENT_EDIT_MODES; empty = edit_preset is refused
+    protected_slots: SlotRanges | None = None    # QC_AGENT_PROTECTED_SLOTS; None = no slot is protected
 
     @property
     def signing_key(self) -> bytes:
@@ -61,7 +67,8 @@ class Config:
         return (f"Config(endpoint={self.endpoint!r}, bucket={self.bucket!r}, "
                 f"access_key_id=<{len(self.access_key_id)} chars>, current_kid={self.current_kid!r}, "
                 f"allowed_slots={self.allowed_slots}, expected_firmware={self.expected_firmware!r}, "
-                f"idle_minutes={self.idle_minutes})")
+                f"idle_minutes={self.idle_minutes}, edit_modes={sorted(self.edit_modes)}, "
+                f"protected_slots={self.protected_slots})")
 
 
 def parse_env_text(text: str) -> dict[str, str]:
@@ -82,6 +89,26 @@ def parse_env_text(text: str) -> dict[str, str]:
             raise ConfigError(f"agent.env line {n}: {name} is set twice")
         out[name] = value
     return out
+
+
+def _parse_edit_modes(value) -> frozenset:
+    """QC_AGENT_EDIT_MODES: a comma-separated subset of live, copy, overwrite. Unset or empty = none (every
+    edit refused). A typo is an error, never a silently narrower or wider list."""
+    parts = [p.strip() for p in (value or "").split(",") if p.strip()]
+    bad = [p for p in parts if p not in EDIT_MODES]
+    if bad:
+        raise ConfigError("QC_AGENT_EDIT_MODES lists only " + ", ".join(EDIT_MODES) + " (comma-separated); "
+                          "leave it empty to refuse every edit")
+    return frozenset(parts)
+
+
+def _parse_protected(value) -> SlotRanges | None:
+    if not (value or "").strip():
+        return None
+    try:
+        return SlotRanges.parse(value.strip())
+    except ValueError as e:
+        raise ConfigError(f"QC_AGENT_PROTECTED_SLOTS: {e}") from None
 
 
 def from_mapping(env: dict[str, str]) -> Config:
@@ -117,11 +144,14 @@ def from_mapping(env: dict[str, str]) -> Config:
     idle = env["QC_AGENT_IDLE_MINUTES"]
     if not re.fullmatch(r"[0-9]{1,3}", idle) or not 1 <= int(idle) <= 240:
         raise ConfigError("QC_AGENT_IDLE_MINUTES must be a whole number of minutes, 1-240")
+    modes = _parse_edit_modes(env.get("QC_AGENT_EDIT_MODES"))
+    protected = _parse_protected(env.get("QC_AGENT_PROTECTED_SLOTS"))
     return Config(endpoint=endpoint, bucket=bucket,
                   access_key_id=env["QC_AGENT_R2_ACCESS_KEY_ID"],
                   secret_access_key=env["QC_AGENT_R2_SECRET_ACCESS_KEY"],
                   keys=keys, current_kid=current_kid, allowed_slots=slots,
-                  expected_firmware=firmware, idle_minutes=int(idle))
+                  expected_firmware=firmware, idle_minutes=int(idle),
+                  edit_modes=modes, protected_slots=protected)
 
 
 def load(path: Path) -> Config:

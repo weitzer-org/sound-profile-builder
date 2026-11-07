@@ -46,6 +46,8 @@ class Names(unittest.TestCase):
             "QC_AGENT_ALLOWED_SLOTS=1A-32H",
             "QC_AGENT_EXPECTED_FIRMWARE=4.1.0",
             "QC_AGENT_IDLE_MINUTES=30",
+            "# QC_AGENT_EDIT_MODES=live   (edits of presets on the unit are refused unless you list a mode here)",
+            "# QC_AGENT_PROTECTED_SLOTS=1A-8H   (slots no edit ever touches)",
             "",
         ]
         with tempfile.TemporaryDirectory() as d:

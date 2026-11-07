@@ -170,6 +170,8 @@ def main():
         f"QC_AGENT_ALLOWED_SLOTS={slots}",
         f"QC_AGENT_EXPECTED_FIRMWARE={firmware}",
         f"QC_AGENT_IDLE_MINUTES={idle}",
+        "# QC_AGENT_EDIT_MODES=live   (edits of presets on the unit are refused unless you list a mode here)",
+        "# QC_AGENT_PROTECTED_SLOTS=1A-8H   (slots no edit ever touches)",
         "",
     ]
     os.makedirs(folder, exist_ok=True)
