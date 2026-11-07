@@ -95,9 +95,25 @@ class ListAndRead(Base):
         r = self.result(jid)
         self.assertEqual(r["status"], "succeeded")
         rb = r["readback"]
-        self.assertEqual((rb["format"], rb["slot"]), ("qc-device-readback/1", "20A"))
+        self.assertEqual((rb["format"], rb["slot"]), ("qc-device-readback/2", "20A"))
+        self.assertEqual(rb["payload"]["setlist"], {"folder": "My Presets", "folder_key": "/media/p4/Presets/My Presets",
+                                                   "position": 19 * 8, "is_factory": False})
         self.assertEqual(rb["payload"]["chains"][0]["blocks"][0]["model_id"], 1)
         self.assertEqual(rb["payload"]["chains"][0]["blocks"][0]["params"][0]["values"], [0.4] * 8)
+        self.assertEqual(self.dev.write_calls(), [])
+
+    def test_read_in_another_collection_reports_its_key_and_slot(self):
+        # qc-device-readback/2: a preset open in one of the owner's own collections is pinned by its key and
+        # position (before /2 the read said only "other", with no position, so it could not be edited).
+        self.dev.open_folder, self.dev.open_position = "/media/p4/Presets/Sounds profiles", 24
+        jid, _ = self.queue("read_preset")
+        self.poll()
+        r = self.result(jid)
+        self.assertEqual(r["status"], "succeeded")
+        rb = r["readback"]
+        self.assertEqual(rb["slot"], "4A")
+        self.assertEqual(rb["payload"]["setlist"], {"folder": "other", "folder_key": "/media/p4/Presets/Sounds profiles",
+                                                   "position": 24, "is_factory": False})
         self.assertEqual(self.dev.write_calls(), [])
 
     def test_preset_switched_during_read(self):

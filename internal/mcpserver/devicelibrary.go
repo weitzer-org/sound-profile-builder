@@ -175,10 +175,10 @@ func (l *DeviceLibrary) slotOccupiedNote(ctx context.Context, slot string) strin
 func (l *DeviceLibrary) recordMics(ctx context.Context, v *devicejobs.JobView) *deviceMicsOut {
 	r := v.Result
 	if r == nil || r.Kind != devicejobs.KindReadPreset || r.Status != devicejobs.StatusSucceeded || r.Readback == nil ||
-		r.Readback.Format != devicejobs.ReadbackFormat {
+		!devicejobs.IsReadbackFormat(r.Readback.Format) {
 		return nil
 	}
-	p, err := devicejobs.ParseReadbackPayload(r.Readback.Payload)
+	p, err := devicejobs.ParseReadback(r.Readback.Format, r.Readback.Payload)
 	if err != nil {
 		return nil // the read-back itself is reported as unusable elsewhere
 	}

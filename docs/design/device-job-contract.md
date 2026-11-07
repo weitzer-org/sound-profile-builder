@@ -260,7 +260,7 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 
 | Field | Type and constraint |
 |---|---|
-| `setlist` | `{"folder": "My Presets"\|"other", "position": int\|null}`. `position` is the 0-based slot index and is non-null only in My Presets. |
+| `setlist` | `/1`: `{"folder": "My Presets"\|"other", "position": int\|null}`. `position` is the 0-based slot index and is non-null only in My Presets. `/2`: see "Format /2" below. |
 | `chains` | at most 4 objects, `row` 0-3, unique. Every grid row the unit reports, empty ones included (ports 0). |
 | `chains[].in_port`, `out_port` | int or `null`. Row 0 of a preset built by the bridge reads 1 and 19. |
 | `chains[].blocks` | at most 8, `col` 0-7, unique, ascending. A cell with no model hash is not sent. |
@@ -269,6 +269,25 @@ Signed with `qc2-device-result/v1`, written to `jobs/done/<job_id>.json`. QC-2 r
 | `params[].values` | **exactly 8** entries, scenes A-H (G1, G6: a parameter that is not scene-assigned repeats one value). Each is a finite JSON number (the wire value, 0..1 for a float parameter), a string, a boolean or `null`. A non-finite number (the unit can store NaN) is sent as `null`. |
 | `params[].scene_mode` | boolean: the unit has this parameter scene-assigned. |
 | `bypass` | `null` when the unit sent none, else exactly `bypass[row][col][scene]`, 4 rows x 8 columns x 8 scenes (G6: position is the array index; `true` = bypassed). |
+
+**Format `/2` (revision 2026-11-07, preset editing E3).** `readback.format` is `"qc-device-readback/2"`. Everything is as in `/1` except `setlist`, which has exactly four keys:
+
+```json
+{"setlist": {"folder": "other", "folder_key": "/media/p4/Presets/Sounds profiles", "position": 24, "is_factory": false}, "...": "chains and bypass as in /1"}
+```
+
+| Field | Type and constraint |
+|---|---|
+| `folder` | `"My Presets"` when `folder_key` is My Presets' key (`/media/p4/Presets/My Presets`) and the preset isn't a factory one, else `"other"` (as in `/1`; display only). |
+| `folder_key` | the open collection's key exactly as the unit's `SetlistPosition` reply gives it, or `null`. A key is sent only if it is 1-128 printable ASCII characters (0x20-0x7E), with no backtick, no leading or trailing space and no double space: such a key is unchanged by the section 11 clean-up, so QC-2 can compare it byte for byte. Any other key is sent as `null`. |
+| `position` | the 0-based slot index (0-255), or `null`. Non-null **only** for a non-factory preset whose `folder_key` was sent, in **any** collection (not only My Presets). |
+| `is_factory` | boolean: the reply's factory flag. A reply without a boolean flag counts as factory (so no position is sent). |
+
+- `readback.slot` is the position's label (bank `position/8 + 1`, letter `A`-`H`), `null` when `position` is.
+- **Why.** An edit (`edit_preset`, section 7.2) pins the collection it was planned against. `/1` could only say "My Presets" or "other", and sent no position outside My Presets, so a preset in one of the owner's own collections could not be edited at all.
+- **What is verified.** The agent reads `folder_key` from the same reply a push already pins its collection with (`qc_agent/jobs.py`, `PushJob.check_slot`), and a push into slot 4A of "Sounds profiles" built and saved there on the owner's unit (CorOS 4.1.0, bridge plan "As built in P4", 2026-11-06). That other collections' keys are always ASCII and at most 128 characters is **UNVERIFIED**: only My Presets' key is written down. A key that isn't is sent as `null`, so an edit of that preset is refused (fail closed); the first `/2` reads will show it.
+- **Compatibility.** QC-2 parses `/1` and `/2` (`devicejobs.ParseReadback(format, payload)`): stored snapshots and agents from before this revision keep working. A plan computed from a `/1` read has no collection key, so it is shown but can never be confirmed ("read it again"). The `/2` setlist key set is exact: a `/1` payload with `/2` keys, or a `/2` payload missing one, is refused.
+- **Shared fixture.** `testdata/devicejobs/readback_setlist.json`: SetlistPosition replies with the setlist the agent must send (`qc_agent.jobs.setlist_info`, checked by `test_readback.py`), and invalid `/2` payloads Go must refuse (`TestReadbackSetlistFixture`).
 
 - **Text.** Every string (preset `name`, string values) is untrusted device text (section 11). The agent applies the section 11 clean-up and cuts a **string value at 192 characters** (`VALUE_STRING_LIMIT`; Go: `MaxReadbackStringRn`) and the preset `name` at 64. The old 64 would have cut a Neural Capture's `file_name`, which is the capture's 64-hex key followed by its name (plan 4.2), down to the key alone.
 - **Strict parse (QC-2).** `devicejobs.ParseReadbackPayload` rejects a payload over 512 KiB (`MaxReadbackBytes`; the agent caps its whole result below that), unknown fields, trailing data, wrong types, counts or indexes outside the geometry above, and a text value over 192 runes. A rejected payload is reported to the user as "not imported" with the reason; nothing is stored. A new field therefore needs a new format version, not a silent addition.

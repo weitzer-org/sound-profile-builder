@@ -275,6 +275,35 @@ def readback_payload(preset, position_info):
             "bypass": [[[bool(x) for x in col[:8]] for col in row[:8]] for row in bypass[:4]] if bypass else None}
 
 
+READBACK_FORMAT = "qc-device-readback/2"
+FOLDER_KEY_LIMIT = 128
+
+
+def valid_folder_key(k) -> bool:
+    """Contract section 9.1 (/2): 1-128 printable ASCII characters, no backtick, no leading or trailing
+    space, no double space. Such a key is unchanged by text.clean, so QC-2 can pin it byte for byte."""
+    return (isinstance(k, str) and 1 <= len(k) <= FOLDER_KEY_LIMIT and k[0] != " " and k[-1] != " "
+            and "  " not in k and all(0x20 <= ord(c) <= 0x7E and c != "`" for c in k))
+
+
+def setlist_info(pos) -> dict:
+    """The read-back's setlist (qc-device-readback/2) from the unit's SetlistPosition reply.
+
+    folder_key is the open collection's key exactly as the unit reports it, or None when it isn't a key
+    the contract can carry. position is set only for a non-factory preset in a collection whose key was
+    sent, so an edit plan can always pin both or neither. A reply without a boolean is_factory counts as
+    factory (no position: fail closed)."""
+    pos = pos if isinstance(pos, dict) else {}
+    key = pos.get("folder_key")
+    key = key if valid_folder_key(key) else None
+    factory = pos.get("is_factory")
+    factory = factory if isinstance(factory, bool) else True
+    p = pos.get("position")
+    position = p if (key is not None and not factory and type(p) is int and 0 <= p < slots.SLOT_COUNT) else None
+    folder = SETLIST_NAME if key == SETLIST_KEY and not factory else "other"
+    return {"folder": folder, "folder_key": key, "position": position, "is_factory": factory}
+
+
 def read_preset(ctx, job) -> Outcome:
     if job["args"]["slot"] is not None:
         # Recalling a slot changes what the unit is playing (contract section 7).
@@ -298,15 +327,10 @@ def read_preset(ctx, job) -> Outcome:
         return failed("device_error", "Reading the current preset failed.", firmware=fw)
     if preset is None:
         return failed("device_error", "The unit did not return the current preset in time.", firmware=fw)
-    slot = None
-    p = pos.get("position")
-    if (pos.get("folder_key") == SETLIST_KEY and not pos.get("is_factory")
-            and isinstance(p, int) and 0 <= p < slots.SLOT_COUNT):
-        slot = slots.label(p)
-    info = {"folder": SETLIST_NAME if pos.get("folder_key") == SETLIST_KEY and not pos.get("is_factory") else "other",
-            "position": p if slot else None}
+    info = setlist_info(pos)
+    slot = slots.label(info["position"]) if info["position"] is not None else None
     name = text.clean(preset.get("name", ""), NAME_LIMIT)
-    rb = {"format": "qc-device-readback/1", "slot": slot, "name": name or None,
+    rb = {"format": READBACK_FORMAT, "slot": slot, "name": name or None,
           "payload": readback_payload(preset, info)}
     if len(json.dumps(rb, separators=(",", ":"))) > contract.MAX_READBACK_BYTES - 16 * 1024:
         return failed("device_error", "The open preset is too large to return.", firmware=fw)

@@ -218,6 +218,8 @@ type FakeAgent struct {
 	// with (defaults "Clean Verb" and "1A"); Hostile still wins for the name.
 	ReadbackName string
 	ReadbackSlot string
+	// ReadbackFormat overrides the read-back format (default qc-device-readback/1).
+	ReadbackFormat string
 	// LibraryPayload, when set, is the qc-device-library/1 payload every sync_device_library
 	// answers with (default: one valid V2 factory capture).
 	LibraryPayload json.RawMessage
@@ -384,7 +386,11 @@ func (a *FakeAgent) result(j *devicejobs.Job, now time.Time) devicejobs.Result {
 		if payload == nil {
 			payload = json.RawMessage(fmt.Sprintf(`{"rows":[{"row":0,"blocks":[{"col":0,"model_id":5011,"label":%q}]}]}`, a.text("Jewel")))
 		}
-		r.Readback = &devicejobs.ReadbackBlock{Format: devicejobs.ReadbackFormat, Slot: &slot, Name: &name, Payload: payload}
+		format := devicejobs.ReadbackFormat
+		if a.ReadbackFormat != "" {
+			format = a.ReadbackFormat
+		}
+		r.Readback = &devicejobs.ReadbackBlock{Format: format, Slot: &slot, Name: &name, Payload: payload}
 	}
 	return r
 }

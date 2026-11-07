@@ -12,7 +12,7 @@ import unittest
 
 from helpers import REPO
 
-from qc_agent import jobs
+from qc_agent import jobs, slots, text
 
 FIXTURES = REPO / "testdata" / "devicejobs"
 
@@ -72,9 +72,9 @@ class SharedFixtures(unittest.TestCase):
         preset = {"chains": [{"row": 0, "in_port": 1, "out_port": 19, "blocks": [
             {"col": 0, "model_id": 1, "params": [{"index": 0, "values": [0.5] * 8, "scene_mode": False}]}]}],
             "bypass": [[[False] * 8 for _ in range(8)] for _ in range(4)]}
-        got = jobs.readback_payload(preset, {"folder": "other", "position": None})
+        got = jobs.readback_payload(preset, jobs.setlist_info({"folder_key": "k", "position": 1, "is_factory": False}))
         self.assertEqual(set(got), {"setlist", "chains", "bypass"})
-        self.assertEqual(set(got["setlist"]), {"folder", "position"})
+        self.assertEqual(set(got["setlist"]), {"folder", "folder_key", "position", "is_factory"})
         self.assertEqual(set(got["chains"][0]), {"row", "in_port", "out_port", "blocks"})
         self.assertEqual(set(got["chains"][0]["blocks"][0]), {"col", "model_id", "params"})
         self.assertEqual(set(got["chains"][0]["blocks"][0]["params"][0]), {"index", "scene_mode", "values"})
@@ -82,3 +82,26 @@ class SharedFixtures(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SetlistV2(unittest.TestCase):
+    """testdata/devicejobs/readback_setlist.json, shared with Go's TestReadbackSetlistFixture: the unit's
+    SetlistPosition reply becomes exactly the /2 setlist, and the read's slot is its position's label."""
+
+    def test_every_reply_gives_the_expected_setlist(self):
+        fx = _load(FIXTURES / "readback_setlist.json")
+        self.assertEqual(fx["format"], jobs.READBACK_FORMAT)
+        self.assertGreaterEqual(len(fx["cases"]), 20)
+        for case in fx["cases"]:
+            with self.subTest(case["name"]):
+                got = jobs.setlist_info(case["reply"])
+                self.assertEqual(got, case["expect"])
+                slot = slots.label(got["position"]) if got["position"] is not None else None
+                self.assertEqual(slot, case["slot"])
+                # A key the contract carries is already what the agent's clean-up would leave.
+                if got["folder_key"] is not None:
+                    self.assertEqual(text.clean(got["folder_key"], 200), got["folder_key"])
+
+    def test_not_a_dict(self):
+        self.assertEqual(jobs.setlist_info(None),
+                         {"folder": "other", "folder_key": None, "position": None, "is_factory": True})

@@ -2,6 +2,7 @@ package mcpserver
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -184,5 +185,42 @@ func TestEditDevicePreset_BackfillSurvivesAStorageWriteError(t *testing.T) {
 	_, out, err := h(ctx, nil, deviceEditInput{PresetID: read.Import.PresetID})
 	if err != nil || out.SnapshotJob != read.JobID {
 		t.Fatalf("%v %+v", err, out)
+	}
+}
+
+// A qc-device-readback/2 read in one of the owner's own collections: the snapshot keeps its
+// format, the dry run names the collection, and the plan is confirmable (it pins the key). A /1
+// read gets the "can't be pinned" note instead.
+func TestEditDevicePreset_ReadbackV2PinsTheCollection(t *testing.T) {
+	r, st := editRig(t)
+	ctx := context.Background()
+	old := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceReadToolName, map[string]any{"wait_seconds": 5}))
+	imp := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": old.JobID, "import": true}))
+	oldText := okText(t, itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": imp.Import.PresetID}))
+	if !strings.Contains(oldText, "can't be pinned to its collection") {
+		t.Fatalf("a /1 read lacks the pin note:\n%s", oldText)
+	}
+
+	var m map[string]any
+	_ = json.Unmarshal(r.agent.ReadbackPayload, &m)
+	m["setlist"] = map[string]any{"folder": "other", "folder_key": "/media/p4/Presets/Sounds profiles", "position": 24, "is_factory": false}
+	r.agent.ReadbackPayload, _ = json.Marshal(m)
+	r.agent.ReadbackFormat = devicejobs.ReadbackFormatV2
+	r.agent.ReadbackSlot = "4A"
+	read := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceReadToolName, map[string]any{"wait_seconds": 5}))
+	snap, err := st.ReadSnapshot(ctx, read.JobID)
+	if err != nil || snap == nil || snap.ReadbackFormat != devicejobs.ReadbackFormatV2 {
+		t.Fatalf("snapshot %+v err %v", snap, err)
+	}
+	imp2 := itStructured[deviceJobOutput](t, itCall(t, r.cs, deviceJobToolName, map[string]any{"job_id": read.JobID, "import": true}))
+	if imp2.Import == nil || imp2.Import.PresetID == "" {
+		t.Fatalf("import of a /2 read: %+v", imp2)
+	}
+	res := itCall(t, r.cs, deviceEditToolName, map[string]any{"preset_id": imp2.Import.PresetID})
+	text := okText(t, res)
+	out := itStructured[deviceEditOutput](t, res)
+	if !out.Confirmable || out.Collection != "/media/p4/Presets/Sounds profiles" || strings.Contains(text, "can't be pinned") ||
+		!strings.Contains(text, "collection `/media/p4/Presets/Sounds profiles`") {
+		t.Fatalf("out %+v\n%s", out, text)
 	}
 }

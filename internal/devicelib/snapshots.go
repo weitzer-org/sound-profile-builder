@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/weitzer-org/sound-builder/internal/devicejobs"
@@ -34,7 +33,7 @@ type ReadSnapshot struct {
 	Name     string `json:"name"`     // preset name as the agent reported it, untrusted
 	Firmware string `json:"firmware"` // "" when none
 	ReadAt   string `json:"read_at"`  // contract timestamp of the result's finish
-	// ReadbackFormat is the payload's format string (always devicejobs.ReadbackFormat here).
+	// ReadbackFormat is the payload's format string: qc-device-readback/1 or /2.
 	ReadbackFormat string          `json:"readback_format"`
 	Payload        json.RawMessage `json:"payload"`
 }
@@ -43,7 +42,7 @@ type ReadSnapshot struct {
 func SnapshotObject(jobID string) string { return SnapshotPrefix + jobID + ".json" }
 
 // NewReadSnapshot builds a snapshot from a succeeded read_preset result. It checks the
-// payload with ParseReadbackPayload, so only a payload this server can read again is
+// payload with ParseReadback, so only a payload this server can read again is
 // stored.
 func NewReadSnapshot(v *devicejobs.JobView) (*ReadSnapshot, error) {
 	if v == nil || v.Result == nil || v.State != devicejobs.StatusSucceeded {
@@ -56,10 +55,10 @@ func NewReadSnapshot(v *devicejobs.JobView) (*ReadSnapshot, error) {
 	if !devicejobs.ValidJobID(v.JobID) || r.JobID != v.JobID {
 		return nil, errors.New("the result does not belong to this job")
 	}
-	if r.Readback.Format != devicejobs.ReadbackFormat {
-		return nil, fmt.Errorf("read-back format is not %s", devicejobs.ReadbackFormat)
+	if !devicejobs.IsReadbackFormat(r.Readback.Format) {
+		return nil, errors.New("unknown read-back format")
 	}
-	if _, err := devicejobs.ParseReadbackPayload(r.Readback.Payload); err != nil {
+	if _, err := devicejobs.ParseReadback(r.Readback.Format, r.Readback.Payload); err != nil {
 		return nil, err
 	}
 	if _, err := devicejobs.ParseTime(r.FinishedAt); err != nil {
@@ -85,7 +84,7 @@ func NewReadSnapshot(v *devicejobs.JobView) (*ReadSnapshot, error) {
 // have altered): format, job id, time, and the payload's strict shape.
 func (s *ReadSnapshot) Validate(wantJobID string) error {
 	bad := errors.New("the stored snapshot is malformed")
-	if s.Format != SnapshotFormat || s.JobID != wantJobID || !devicejobs.ValidJobID(s.JobID) || s.ReadbackFormat != devicejobs.ReadbackFormat {
+	if s.Format != SnapshotFormat || s.JobID != wantJobID || !devicejobs.ValidJobID(s.JobID) || !devicejobs.IsReadbackFormat(s.ReadbackFormat) {
 		return bad
 	}
 	if _, err := devicejobs.ParseTime(s.ReadAt); err != nil {
@@ -94,7 +93,7 @@ func (s *ReadSnapshot) Validate(wantJobID string) error {
 	if len(s.Slot) > 8 || len([]rune(s.Name)) > 128 || len([]rune(s.Firmware)) > 64 {
 		return bad
 	}
-	if _, err := devicejobs.ParseReadbackPayload(s.Payload); err != nil {
+	if _, err := devicejobs.ParseReadback(s.ReadbackFormat, s.Payload); err != nil {
 		return bad
 	}
 	return nil
@@ -102,7 +101,7 @@ func (s *ReadSnapshot) Validate(wantJobID string) error {
 
 // Readback decodes the stored payload.
 func (s *ReadSnapshot) Readback() (*devicejobs.ReadbackPayload, error) {
-	return devicejobs.ParseReadbackPayload(s.Payload)
+	return devicejobs.ParseReadback(s.ReadbackFormat, s.Payload)
 }
 
 // SaveSnapshot stores a snapshot unless one already exists for the job. A job id names one

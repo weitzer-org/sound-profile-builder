@@ -47,11 +47,13 @@ type CatalogRef struct {
 
 // Expect is what the agent must find on the unit before the first write.
 type Expect struct {
-	// Folder is "My Presets" or "other": all the read-back says (a real collection key needs a
-	// contract field, phase E3).
-	Folder   string `json:"folder"`
-	Position int    `json:"position"`
-	// Slot is the slot the bridge reported ("" if none).
+	// FolderKey is the open collection's key as the unit reports it (qc-device-readback/2,
+	// device text that passed devicejobs.ValidFolderKey). It is "" for a read in the older /1
+	// format, which only said "My Presets" or "other": such a plan is shown but not
+	// confirmable (Plan.Confirmable), and the contract's parser refuses an empty key.
+	FolderKey string `json:"folder_key"`
+	Position  int    `json:"position"`
+	// Slot is the position's label (devicejobs.SlotLabel), e.g. "4A".
 	Slot string `json:"slot"`
 	// Name is the preset's name on the unit: device text, compared and never written.
 	Name string `json:"name"`
@@ -128,6 +130,9 @@ type Plan struct {
 	View            []ViewRow
 	// Matched counts target blocks matched to a cell.
 	Matched int
+	// Confirmable is false when the plan can't be applied even once E4 exists: the read is in
+	// the older read-back format, so the collection it came from can't be pinned. Read again.
+	Confirmable bool
 }
 
 // Ops is the number of writes in the plan.
@@ -200,10 +205,18 @@ func (p *Planner) Plan(in Input) (*Plan, *PlanError) {
 		return nil, planErr(ErrFirmwareMismatch, "the read came from firmware that doesn't match this server's device catalog")
 	}
 
-	out := &Plan{NotApplied: []NotApplied{}}
+	folderKey := ""
+	if rb.Setlist.FolderKey != nil {
+		folderKey = *rb.Setlist.FolderKey
+	}
+	slot := devicejobs.SlotLabel(*rb.Setlist.Position)
+	if slot == "" {
+		return nil, planErr(ErrNoPosition, "the read gave a slot position outside the collection, so the edit can't be pinned to it")
+	}
+	out := &Plan{NotApplied: []NotApplied{}, Confirmable: folderKey != "" && snap.Name != ""}
 	out.Payload = Payload{
 		Format: Format, Catalog: CatalogRef{CorOS: coros, SHA256: sha}, Snapshot: snap.JobID,
-		Expect:   Expect{Folder: rb.Setlist.Folder, Position: *rb.Setlist.Position, Slot: snap.Slot, Name: snap.Name, Layout: layoutOf(rb)},
+		Expect:   Expect{FolderKey: folderKey, Position: *rb.Setlist.Position, Slot: slot, Name: snap.Name, Layout: layoutOf(rb)},
 		ParamOps: []ParamOp{}, BypassOps: []BypassOp{},
 	}
 	b := &builder{p: p, in: in, out: out}
