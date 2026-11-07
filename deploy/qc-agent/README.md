@@ -287,6 +287,33 @@ them; this guide uses **24H**).
     dry run. If the push fails with `readback_mismatch` ("expected model 8034, found ..."), the unit did not take the plugin
     block: paste the `read-back:` lines from `agent.log`; nothing was saved. Plugin cabs are still refused.
 
+21. **Live edits, gate E-G1 (preset-editing E4; first use on a QC-2-owned test slot, then on a preset of yours).** Pull the
+    branch on the PC first (the agent, the catalog and the vendored transport must be the same checkout QC-2 built its plan
+    from) and restart the bridge. **Editing is off until you switch it on:** add `QC_AGENT_EDIT_MODES=live` to `agent.env`
+    (and optionally `QC_AGENT_PROTECTED_SLOTS=1A-8H` for banks no edit may touch). Do **not** play while an edit runs: it
+    switches scenes A-H and puts back the one you had. An edit is never saved by the bridge.
+    - *a. Refused when off.* With `QC_AGENT_EDIT_MODES` empty, an applied edit ends `refused` / `edit_not_enabled` and the
+      window never opens the unit.
+    - *b. Pick the test slot.* Push any small preset of yours to an empty owned slot (for example 24H) as in step 11,
+      select it on the unit, then phone: `read_device_preset(import=true)`, `refine_preset` (or change one value), and
+      `edit_device_preset(preset_id, mode=live)`. Read the table. Say yes only to a small change (one control, one bypass).
+    - *c. Apply.* `edit_device_preset(..., dry_run=false, confirm_token=...)`, then `get_device_job`. Expect `succeeded`,
+      "applied and verified", "NOT saved". On the unit check: **(1)** the controls changed exactly as the table says;
+      **(2)** nothing else moved (open the other blocks and rows); **(3)** the preset shows as edited/unsaved
+      (PresetDirty); **(4)** the scene is the one you had; **(5)** scenes C-H of the changed controls keep their old values.
+    - *d. Discard.* Re-select the slot on the unit **without saving**. Expect the original preset back, unsaved edit gone.
+      This is the premise "re-selecting discards a live edit": if it does not, say so and do not use `live` again.
+    - *e. Changed since the read.* Change a knob on the unit, then confirm the old plan. Expect `refused` /
+      `preset_changed` with the pin named, nothing written.
+    - *f. Selected another preset mid-edit* (hard to time; skip if you cannot). Expect `failed`; nothing written into the
+      other preset. Check that preset's values.
+    - *g. Protected slot.* Put the slot in `QC_AGENT_PROTECTED_SLOTS`, restart, confirm a plan for it: `slot_not_allowed`.
+    - *h. Rollback (optional, needs a trick).* Not reproducible on demand; if a job ever ends `failed` / `readback_mismatch`
+      or `rollback_failed`, paste its `get_device_job` text and the `agent.log` lines starting `edit`. For
+      `rollback_failed`, re-select the slot WITHOUT saving.
+    Report each of a-g as pass/fail. Only after a-d pass on the test slot, try a preset of yours with captures or rows 1-3
+    (the plan must say they are left untouched) and check them afterwards. Until then treat `live` as unproven on the unit.
+
 If anything looks wrong: close the window (that stops the bridge), power-cycle the unit if it's unresponsive, and
 send me the window's output and `%LOCALAPPDATA%\qc-agent\logs\agent.log`. The log has no secrets, but read it before
 you paste it: it names your presets.
