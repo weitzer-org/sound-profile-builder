@@ -35,7 +35,8 @@ def load_reference():
 
 class VectorCounts(unittest.TestCase):
     def test_vector_file_has_entries(self):
-        self.assertGreaterEqual(len(V["signatures"]) + len(V["envelopes"]) + len(V["pending_jobs"]), 79)
+        self.assertGreaterEqual(len(V["signatures"]) + len(V["envelopes"]) + len(V["pending_jobs"]), 190)
+        self.assertEqual(V["contract"], "qc2-device-job-contract/2")
 
 
 class Signatures(unittest.TestCase):

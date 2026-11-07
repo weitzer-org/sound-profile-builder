@@ -109,8 +109,12 @@ func (s *Store) NewJob(id, kind string, args any, now time.Time) (*Job, error) {
 		return nil, err
 	}
 	now = now.UTC().Truncate(time.Second)
+	v := PayloadVersion
+	if kind == KindEditPreset {
+		v = PayloadVersionEdit
+	}
 	return &Job{
-		V: PayloadVersion, Type: TypeJob, JobID: id, Bucket: s.bucket, Kind: kind,
+		V: v, Type: TypeJob, JobID: id, Bucket: s.bucket, Kind: kind,
 		CreatedAt: FormatTime(now), ExpiresAt: FormatTime(now.Add(DefaultJobTTL)), Args: raw,
 	}, nil
 }
@@ -125,7 +129,7 @@ func (s *Store) Enqueue(ctx context.Context, j *Job) error {
 		return err
 	}
 	// Self-check: QC-2 must never write a job its own agent check rejects.
-	if _, err := ParseJob(payload); err != nil {
+	if _, err := ParseJobVersion(payload, j.V); err != nil {
 		return fmt.Errorf("refusing to enqueue an invalid job: %w", err)
 	}
 	if len(payload) > MaxJobBytes-1024 {
@@ -140,9 +144,14 @@ func (s *Store) Enqueue(ctx context.Context, j *Job) error {
 			return ErrJobExists
 		}
 	}
-	env, err := s.keys.Seal(TagJob, payload)
+	env, err := s.keys.Seal(JobTag(j.V), payload)
 	if err != nil {
 		return err
+	}
+	// The sealed object is what the agent measures (step 2). An edit plan is escaped twice (a
+	// string in the args, then in the envelope), so check the bytes actually written.
+	if len(env) > MaxJobBytes {
+		return fmt.Errorf("sealed job is %d bytes, over the %d limit", len(env), MaxJobBytes)
 	}
 	return s.client.WriteFile(ctx, s.bucket, PendingKey(j.JobID), env)
 }
@@ -174,11 +183,7 @@ func (s *Store) PendingJobs(ctx context.Context, now time.Time) ([]*Job, error) 
 		if err != nil || !found {
 			continue
 		}
-		payload, err := s.keys.Open(TagJob, data)
-		if err != nil {
-			continue
-		}
-		j, err := ParseJob(payload)
+		j, err := s.keys.OpenJob(data)
 		if err != nil || j.JobID != m[1] || j.Bucket != s.bucket {
 			continue
 		}
@@ -312,11 +317,7 @@ func (s *Store) JobState(ctx context.Context, id string, hb *Heartbeat, now time
 
 // ownJob returns the job in data if it is one QC-2 signed for this id.
 func (s *Store) ownJob(data []byte, id string) *Job {
-	payload, err := s.keys.Open(TagJob, data)
-	if err != nil {
-		return nil
-	}
-	j, err := ParseJob(payload)
+	j, err := s.keys.OpenJob(data)
 	if err != nil || j.JobID != id {
 		return nil
 	}
@@ -336,7 +337,7 @@ func (s *Store) openResult(data []byte, id string) (*Result, bool) {
 		return nil, false
 	}
 	switch r.Kind { // shown to the model: only the contract's values
-	case KindPushPreset, KindListSlots, KindReadPreset, KindSyncLibrary:
+	case KindPushPreset, KindListSlots, KindReadPreset, KindSyncLibrary, KindEditPreset:
 	default:
 		return nil, false
 	}

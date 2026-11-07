@@ -50,6 +50,9 @@ type deviceEditOutput struct {
 	SnapshotJob   string                  `json:"snapshot_job"`
 	SnapshotSlot  string                  `json:"snapshot_slot,omitempty"`
 	SnapshotName  string                  `json:"snapshot_name,omitempty"`
+	Collection    string                  `json:"snapshot_collection,omitempty"`
+	Pinned        bool                    `json:"pinned"`
+	Confirmable   bool                    `json:"confirmable"`
 	SnapshotAge   string                  `json:"snapshot_age,omitempty"`
 	ReadAt        string                  `json:"read_at,omitempty"`
 	PlanFormat    string                  `json:"plan_format"`
@@ -203,7 +206,8 @@ func editDeviceTool(svc *presetsvc.Service, b *devicejobs.Bridge, lib *DeviceLib
 			PlanFormat: deviceedit.Format, PlanSHA256: plan.SHA256,
 			ParamOps: len(plan.Payload.ParamOps), BypassOps: len(plan.Payload.BypassOps), Matched: plan.Matched,
 			Rows: sanitizeRows(plan.View), NotApplied: plan.NotApplied, NotAppliedAll: plan.NotAppliedCount,
-			Untouched: plan.Untouched, Derived: derived,
+			Untouched: plan.Untouched, Derived: derived, Confirmable: plan.Confirmable, Pinned: plan.Pinned,
+			Collection: dtext(plan.Payload.Expect.FolderKey),
 		}
 		if at, err := devicejobs.ParseTime(snap.ReadAt); err == nil {
 			out.SnapshotAge = humanAge(lib.now().Sub(at))
@@ -233,10 +237,19 @@ func tcell(s string) string { return dcell(strings.ReplaceAll(dtext(s), "|", "¦
 func renderEdit(t *strings.Builder, o deviceEditOutput) {
 	t.WriteString("**Dry run, nothing was sent.** This shows what an edit of the preset on your Quad Cortex would change. Applying an edit is not available yet.\n\n")
 	fmt.Fprintf(t, "Compared against the read `%s` (slot %s, preset %s", o.SnapshotJob, dcell(o.SnapshotSlot), dcell(o.SnapshotName))
+	if o.Collection != "" {
+		fmt.Fprintf(t, ", collection %s", dcell(o.Collection))
+	}
 	if o.SnapshotAge != "" {
 		fmt.Fprintf(t, ", read %s", o.SnapshotAge)
 	}
 	t.WriteString("). If you changed anything on the unit since, read it again first.\n\n")
+	switch {
+	case !o.Pinned:
+		t.WriteString("This read can't be pinned to its collection (it came from an older bridge), so this plan could never be applied: read the preset again with read_device_preset first.\n\n")
+	case !o.Confirmable && o.ParamOps+o.BypassOps > 0:
+		t.WriteString("This plan doesn't pass the bridge's strict checks (for example the preset has no name on the unit, or a value the unit holds is outside the range an edit can carry), so it could never be applied as it is.\n\n")
+	}
 	fmt.Fprintf(t, "Save mode: %s\n\n", o.SaveMode)
 	if len(o.Rows) == 0 {
 		t.WriteString("No changes: the target matches what is on the unit.\n")

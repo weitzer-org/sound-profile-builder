@@ -1,0 +1,571 @@
+{
+ "format": "qc-device-readback/2",
+ "note": "Shared by Go (internal/devicejobs, ParseReadback) and the agent (deploy/qc-agent/tests/test_readback.py, qc_agent.jobs.setlist_info). Hand-written from contract section 9.1. cases: the unit's SetlistPosition reply (reply), the setlist the agent must send (expect) and the readback slot label (slot); Go parses each expect inside a /2 payload. invalid: /2 payloads Go must refuse, with a substring of the error. Changing an entry is a contract change.",
+ "cases": [
+  {
+   "name": "My Presets, slot 2A",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 8,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 8,
+    "is_factory": false
+   },
+   "slot": "2A"
+  },
+  {
+   "name": "another regular collection (Sounds profiles, 4A)",
+   "reply": {
+    "folder_key": "/media/p4/Presets/Sounds profiles",
+    "position": 24,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/Sounds profiles",
+    "position": 24,
+    "is_factory": false
+   },
+   "slot": "4A"
+  },
+  {
+   "name": "first and last slots",
+   "reply": {
+    "folder_key": "/media/p4/Presets/Sounds profiles",
+    "position": 255,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/Sounds profiles",
+    "position": 255,
+    "is_factory": false
+   },
+   "slot": "32H"
+  },
+  {
+   "name": "position 0",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 0,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 0,
+    "is_factory": false
+   },
+   "slot": "1A"
+  },
+  {
+   "name": "factory collection: key kept, no position",
+   "reply": {
+    "folder_key": "/media/p4/Presets/Factory Presets",
+    "position": 3,
+    "is_factory": true
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/Factory Presets",
+    "position": null,
+    "is_factory": true
+   },
+   "slot": null
+  },
+  {
+   "name": "My Presets key flagged factory is not My Presets",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 3,
+    "is_factory": true
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": true
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a backtick",
+   "reply": {
+    "folder_key": "/media/p4/Presets/a`b",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a control character",
+   "reply": {
+    "folder_key": "/media/p4/Presets/a\u0007b",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a line break",
+   "reply": {
+    "folder_key": "/media/p4/Presets/a\nb",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "non-ASCII key",
+   "reply": {
+    "folder_key": "/media/p4/Presets/Caf\u00e9",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a double space",
+   "reply": {
+    "folder_key": "/media/p4/Presets/a  b",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a trailing space",
+   "reply": {
+    "folder_key": "/media/p4/Presets/ab ",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key with a leading space",
+   "reply": {
+    "folder_key": " /media/p4/Presets/ab",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "empty key",
+   "reply": {
+    "folder_key": "",
+    "position": 3,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key of exactly 128 characters",
+   "reply": {
+    "folder_key": "/media/p4/Presets/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "position": 5,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "position": 5,
+    "is_factory": false
+   },
+   "slot": "1F"
+  },
+  {
+   "name": "key of 129 characters",
+   "reply": {
+    "folder_key": "/media/p4/Presets/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy",
+    "position": 5,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "key not a string",
+   "reply": {
+    "folder_key": 7,
+    "position": 5,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "position 256",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 256,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "position -1",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": -1,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "position a boolean",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": true,
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "position missing",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "is_factory": false
+   },
+   "expect": {
+    "folder": "My Presets",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": false
+   },
+   "slot": null
+  },
+  {
+   "name": "is_factory missing counts as factory",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 8
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": true
+   },
+   "slot": null
+  },
+  {
+   "name": "is_factory not a boolean counts as factory",
+   "reply": {
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": 8,
+    "is_factory": 0
+   },
+   "expect": {
+    "folder": "other",
+    "folder_key": "/media/p4/Presets/My Presets",
+    "position": null,
+    "is_factory": true
+   },
+   "slot": null
+  },
+  {
+   "name": "empty reply",
+   "reply": {},
+   "expect": {
+    "folder": "other",
+    "folder_key": null,
+    "position": null,
+    "is_factory": true
+   },
+   "slot": null
+  }
+ ],
+ "invalid": [
+  {
+   "name": "is_factory missing",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": null,
+     "position": null
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "exactly the keys"
+  },
+  {
+   "name": "folder_key missing",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "position": null,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "exactly the keys"
+  },
+  {
+   "name": "extra setlist key",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": null,
+     "position": null,
+     "is_factory": false,
+     "collection": "x"
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "unknown or malformed field"
+  },
+  {
+   "name": "is_factory null",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": null,
+     "position": null,
+     "is_factory": null
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "is_factory must be a boolean"
+  },
+  {
+   "name": "is_factory a string",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": null,
+     "position": null,
+     "is_factory": "no"
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "wrong type"
+  },
+  {
+   "name": "folder_key a number",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": 7,
+     "position": null,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "wrong type"
+  },
+  {
+   "name": "folder_key with a backtick",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "a`b",
+     "position": null,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "not a valid collection key"
+  },
+  {
+   "name": "folder_key empty",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "",
+     "position": null,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "not a valid collection key"
+  },
+  {
+   "name": "folder_key of 129 characters",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "/media/p4/Presets/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy",
+     "position": null,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "not a valid collection key"
+  },
+  {
+   "name": "position without a key",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": null,
+     "position": 3,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "must be null"
+  },
+  {
+   "name": "position on a factory preset",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "/media/p4/Presets/My Presets",
+     "position": 3,
+     "is_factory": true
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "must be null"
+  },
+  {
+   "name": "position 256",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "/media/p4/Presets/My Presets",
+     "position": 256,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "0-255"
+  },
+  {
+   "name": "position -1",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "/media/p4/Presets/My Presets",
+     "position": -1,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "0-255"
+  },
+  {
+   "name": "position a float",
+   "payload": {
+    "setlist": {
+     "folder": "other",
+     "folder_key": "/media/p4/Presets/My Presets",
+     "position": 3.5,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "wrong type"
+  },
+  {
+   "name": "unknown folder",
+   "payload": {
+    "setlist": {
+     "folder": "Sounds profiles",
+     "folder_key": "/media/p4/Presets/Sounds profiles",
+     "position": 3,
+     "is_factory": false
+    },
+    "chains": [],
+    "bypass": null
+   },
+   "error": "setlist.folder"
+  }
+ ]
+}

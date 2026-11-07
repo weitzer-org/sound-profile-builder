@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/weitzer-org/sound-builder/internal/storage"
@@ -20,8 +22,38 @@ import (
 // Everything in it is untrusted device text and numbers. ParseReadbackPayload checks the
 // shape only (types, counts, ranges); what the numbers mean is the importer's job.
 
-// ReadbackFormat is the format string the agent writes in Result.Readback.Format.
+// ReadbackFormat is the first read-back format: its setlist says only "My Presets" or "other".
+// QC-2 keeps parsing it (stored snapshots and agents from before contract revision 2).
 const ReadbackFormat = "qc-device-readback/1"
+
+// ReadbackFormatV2 adds the open collection's key and factory flag to the setlist, and a
+// position in any regular collection (contract section 9.1, revision 2026-11-07). Its shape is
+// otherwise identical to /1.
+const ReadbackFormatV2 = "qc-device-readback/2"
+
+// IsReadbackFormat reports whether format is a read-back format this server parses.
+func IsReadbackFormat(format string) bool {
+	return format == ReadbackFormat || format == ReadbackFormatV2
+}
+
+// MaxFolderKeyLen bounds a collection key in a /2 read-back.
+const MaxFolderKeyLen = 128
+
+// ValidFolderKey reports whether k is a collection key a /2 read-back may carry: 1-128
+// printable ASCII characters (0x20-0x7E), no backtick, no leading or trailing space, no double
+// space. Such a key is already unchanged by SanitizeText (contract section 11), so it can be
+// compared byte for byte with what the unit reports. Anything else is sent as null by the agent.
+func ValidFolderKey(k string) bool {
+	if k == "" || len(k) > MaxFolderKeyLen || k[0] == ' ' || k[len(k)-1] == ' ' || strings.Contains(k, "  ") {
+		return false
+	}
+	for i := 0; i < len(k); i++ {
+		if c := k[i]; c < 0x20 || c > 0x7E || c == '`' {
+			return false
+		}
+	}
+	return true
+}
 
 // Limits of the payload, from the device's own geometry (4 rows of 8 columns, 8 scenes) and
 // the agent's text bound. Anything beyond them is refused, not truncated.
@@ -49,9 +81,13 @@ type ReadbackPayload struct {
 }
 
 // ReadbackSetlist says where the open preset sits: Folder is "My Presets" or "other".
+// FolderKey and IsFactory are only in a /2 read-back (nil in /1); FolderKey is also nil in /2
+// when the unit's key did not pass ValidFolderKey.
 type ReadbackSetlist struct {
-	Folder   string `json:"folder"`
-	Position *int   `json:"position"`
+	Folder    string  `json:"folder"`
+	FolderKey *string `json:"folder_key,omitempty"`
+	Position  *int    `json:"position"`
+	IsFactory *bool   `json:"is_factory,omitempty"`
 }
 
 // ReadbackChain is one grid row.
@@ -104,11 +140,20 @@ func (p ReadbackParam) Text(s int) (string, bool) {
 	return t, ok
 }
 
-// ParseReadbackPayload decodes and shape-checks a read_preset payload. It rejects unknown
-// fields (a new agent field means a new format version), trailing data, wrong types, and
-// counts or indexes outside the device's geometry. The error text is for logs and the
-// tool's refusal message and never echoes payload text.
+// ParseReadbackPayload parses a qc-device-readback/1 payload (ParseReadback with ReadbackFormat).
 func ParseReadbackPayload(raw json.RawMessage) (*ReadbackPayload, error) {
+	return ParseReadback(ReadbackFormat, raw)
+}
+
+// ParseReadback decodes and shape-checks a read_preset payload of the given format. It rejects
+// an unknown format, unknown fields (a new agent field means a new format version), a setlist
+// whose key set is not exactly the format's, trailing data, wrong types, and counts or indexes
+// outside the device's geometry. The error text is for logs and the tool's refusal message and
+// never echoes payload text.
+func ParseReadback(format string, raw json.RawMessage) (*ReadbackPayload, error) {
+	if !IsReadbackFormat(format) {
+		return nil, errors.New("unknown read-back format")
+	}
 	if len(raw) == 0 {
 		return nil, errors.New("readback payload is empty")
 	}
@@ -120,15 +165,42 @@ func ParseReadbackPayload(raw json.RawMessage) (*ReadbackPayload, error) {
 	dec.UseNumber() // for the []any values; typed ints below still decode as ints
 	var p ReadbackPayload
 	if err := dec.Decode(&p); err != nil {
-		return nil, fmt.Errorf("readback payload does not match %s: %s", ReadbackFormat, shortErr(err))
+		return nil, fmt.Errorf("readback payload does not match %s: %s", format, shortErr(err))
 	}
 	if _, err := dec.Token(); err != io.EOF {
 		return nil, errors.New("readback payload has data after the object")
 	}
-	if err := p.validate(); err != nil {
+	if err := checkSetlistKeys(format, raw); err != nil {
+		return nil, err
+	}
+	if err := p.validate(format); err != nil {
 		return nil, err
 	}
 	return &p, nil
+}
+
+// checkSetlistKeys requires the setlist's exact key set for the format: the struct decoder
+// accepts any subset, and /2's keys must not appear in a /1 payload (or be missing from a /2).
+func checkSetlistKeys(format string, raw json.RawMessage) error {
+	var top struct {
+		Setlist map[string]json.RawMessage `json:"setlist"`
+	}
+	if err := json.Unmarshal(raw, &top); err != nil || top.Setlist == nil {
+		return errors.New("readback payload: setlist must be an object")
+	}
+	want := []string{"folder", "position"}
+	if format == ReadbackFormatV2 {
+		want = append(want, "folder_key", "is_factory")
+	}
+	if len(top.Setlist) != len(want) {
+		return fmt.Errorf("readback payload: setlist must have exactly the keys %v", want)
+	}
+	for _, k := range want {
+		if _, ok := top.Setlist[k]; !ok {
+			return fmt.Errorf("readback payload: setlist must have exactly the keys %v", want)
+		}
+	}
+	return nil
 }
 
 // shortErr drops the offending value some decoder errors quote.
@@ -144,7 +216,7 @@ func shortErr(err error) string {
 	return "unknown or malformed field"
 }
 
-func (p *ReadbackPayload) validate() error {
+func (p *ReadbackPayload) validate(format string) error {
 	if p.Chains == nil {
 		return errors.New("readback payload: chains is missing")
 	}
@@ -165,7 +237,42 @@ func (p *ReadbackPayload) validate() error {
 	if p.Setlist.Folder != "My Presets" && p.Setlist.Folder != "other" {
 		return errors.New(`readback payload: setlist.folder must be "My Presets" or "other"`)
 	}
+	if format == ReadbackFormatV2 {
+		return validateSetlistV2(p.Setlist)
+	}
 	return nil
+}
+
+// validateSetlistV2: is_factory is a boolean; folder_key is null or a ValidFolderKey; position
+// is null or 0-255, and non-null only for a non-factory preset whose collection key was sent.
+func validateSetlistV2(s ReadbackSetlist) error {
+	if s.IsFactory == nil {
+		return errors.New("readback payload: setlist.is_factory must be a boolean")
+	}
+	if s.FolderKey != nil && !ValidFolderKey(*s.FolderKey) {
+		return errors.New("readback payload: setlist.folder_key is not a valid collection key")
+	}
+	if s.Position != nil {
+		if *s.Position < 0 || *s.Position >= SlotCount {
+			return errors.New("readback payload: setlist.position must be 0-255")
+		}
+		if *s.IsFactory || s.FolderKey == nil {
+			return errors.New("readback payload: setlist.position must be null for a factory preset or an unknown collection")
+		}
+	}
+	return nil
+}
+
+// SlotCount is the number of slots in a regular preset collection (32 banks x A-H).
+const SlotCount = 256
+
+// SlotLabel names a 0-based position the way the unit shows it: bank p/8+1, letter A-H
+// ("" when p is out of range). The inverse of slotIndex.
+func SlotLabel(p int) string {
+	if p < 0 || p >= SlotCount {
+		return ""
+	}
+	return strconv.Itoa(p/8+1) + string(rune('A'+p%8))
 }
 
 func validateChain(ch ReadbackChain, rows map[int]bool) error {

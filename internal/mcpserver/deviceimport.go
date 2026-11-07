@@ -79,11 +79,11 @@ func (di *deviceImporter) run(ctx context.Context, v *devicejobs.JobView) *devic
 	if !devicejobs.ValidJobID(v.JobID) || r.JobID != v.JobID {
 		return notImported("the result does not belong to this job")
 	}
-	if r.Readback.Format != devicejobs.ReadbackFormat {
-		return notImported(fmt.Sprintf("the bridge answered in read-back format %s, which this server cannot import (it reads %s)",
-			dcell(sanitizeDeviceText(r.Readback.Format, 40)), devicejobs.ReadbackFormat))
+	if !devicejobs.IsReadbackFormat(r.Readback.Format) {
+		return notImported(fmt.Sprintf("the bridge answered in read-back format %s, which this server cannot import (it reads %s and %s)",
+			dcell(sanitizeDeviceText(r.Readback.Format, 40)), devicejobs.ReadbackFormat, devicejobs.ReadbackFormatV2))
 	}
-	rb, err := devicejobs.ParseReadbackPayload(r.Readback.Payload)
+	rb, err := devicejobs.ParseReadback(r.Readback.Format, r.Readback.Payload)
 	if err != nil {
 		return notImported(sanitizeDeviceText(err.Error(), 300))
 	}
@@ -98,7 +98,7 @@ func (di *deviceImporter) run(ctx context.Context, v *devicejobs.JobView) *devic
 	origin := storage.PresetOrigin{
 		Kind: storage.OriginDeviceReadback, JobID: v.JobID, Slot: sanitizeDeviceText(meta.Slot, 8),
 		DeviceName: sanitizeDeviceText(imp.Name, 64), Firmware: meta.Firmware,
-		Format: devicejobs.ReadbackFormat, Unconverted: imp.UnconvertedCount,
+		Format: r.Readback.Format, Unconverted: imp.UnconvertedCount,
 	}
 	if _, perr := devicejobs.ParseTime(r.FinishedAt); perr == nil {
 		origin.ReadAt = r.FinishedAt

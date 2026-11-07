@@ -18,7 +18,10 @@ import (
 // Domain tags. Each message type is signed under its own tag, so a valid
 // signature for one type never verifies as another (contract §5).
 const (
-	TagJob        = "qc2-device-job/v1"
+	TagJob = "qc2-device-job/v1"
+	// TagJobV2 signs a version 2 job (edit_preset, contract section 7.1). The v1 kinds stay under
+	// TagJob, byte for byte.
+	TagJobV2      = "qc2-device-job/v2"
 	TagResult     = "qc2-device-result/v1"
 	TagHeartbeat  = "qc2-device-heartbeat/v1"
 	TagOwnedSlots = "qc2-device-owned-slots/v1" // reserved for the agent's informational copy
@@ -139,6 +142,39 @@ func (k *Keyring) Open(tag string, data []byte) ([]byte, error) {
 		return nil, fail(OutcomeBadSignature, "")
 	}
 	return []byte(env.Payload), nil
+}
+
+// OpenJob verifies a job envelope and strictly parses its payload (contract section 8, steps
+// 3-6). The MAC is computed under both job tags and both are compared in constant time; the tag
+// that verifies decides the payload version (TagJob: v 1, the v1 kinds; TagJobV2: v 2,
+// edit_preset). Neither verifying is bad_signature. Domain separation means at most one can.
+func (k *Keyring) OpenJob(data []byte) (*Job, error) {
+	env, err := parseEnvelope(data)
+	if err != nil {
+		return nil, err
+	}
+	key, ok := k.lookup(env.KID)
+	if !ok {
+		return nil, fail(OutcomeUnknownKID, "kid %s is not DEVICE_JOB_KEY or DEVICE_JOB_KEY_NEXT", env.KID)
+	}
+	got, _ := hex.DecodeString(env.Sig)
+	v1 := hmac.Equal(mac(key, TagJob, []byte(env.Payload)), got)
+	v2 := hmac.Equal(mac(key, TagJobV2, []byte(env.Payload)), got)
+	switch {
+	case v1:
+		return ParseJob([]byte(env.Payload))
+	case v2:
+		return ParseJobV2([]byte(env.Payload))
+	}
+	return nil, fail(OutcomeBadSignature, "")
+}
+
+// JobTag is the tag a job of version v is signed under.
+func JobTag(v int) string {
+	if v == PayloadVersionEdit {
+		return TagJobV2
+	}
+	return TagJob
 }
 
 // parseEnvelope enforces the strict envelope rules: valid UTF-8, one JSON

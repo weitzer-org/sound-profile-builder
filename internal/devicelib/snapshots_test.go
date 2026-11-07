@@ -100,3 +100,42 @@ func TestStoredSnapshotIsRevalidated(t *testing.T) {
 		}
 	}
 }
+
+// A qc-device-readback/2 read is stored and loaded with its format; a payload whose shape is the
+// other format's is refused either way.
+func TestSnapshotReadbackV2(t *testing.T) {
+	ctx := context.Background()
+	st := NewStore(devicejobstest.NewMemClient(), "main")
+	v2 := `{"setlist":{"folder":"other","folder_key":"/media/p4/Presets/Sounds profiles","position":24,"is_factory":false},"chains":[],"bypass":null}`
+	view := snapView(v2)
+	view.Result.Readback.Format = devicejobs.ReadbackFormatV2
+	snap, err := NewReadSnapshot(view)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.SaveSnapshot(ctx, snap); err != nil {
+		t.Fatal(err)
+	}
+	got, err := st.ReadSnapshot(ctx, snapJob)
+	if err != nil || got.ReadbackFormat != devicejobs.ReadbackFormatV2 {
+		t.Fatalf("loaded %+v %v", got, err)
+	}
+	rb, err := got.Readback()
+	if err != nil || rb.Setlist.FolderKey == nil || *rb.Setlist.FolderKey != "/media/p4/Presets/Sounds profiles" {
+		t.Fatalf("readback %+v %v", rb, err)
+	}
+	mixed := snapView(v2) // a /2 shape labelled /1
+	if _, err := NewReadSnapshot(mixed); err == nil {
+		t.Error("a /2 payload labelled /1 was accepted")
+	}
+	mixed = snapView(snapPayload)
+	mixed.Result.Readback.Format = devicejobs.ReadbackFormatV2
+	if _, err := NewReadSnapshot(mixed); err == nil {
+		t.Error("a /1 payload labelled /2 was accepted")
+	}
+	mixed = snapView(snapPayload)
+	mixed.Result.Readback.Format = "qc-device-readback/3"
+	if _, err := NewReadSnapshot(mixed); err == nil {
+		t.Error("an unknown format was accepted")
+	}
+}

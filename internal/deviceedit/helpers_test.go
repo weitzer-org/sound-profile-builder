@@ -56,6 +56,7 @@ var fixtures = []struct{ name, guitar string }{
 type fixture struct {
 	payload json.RawMessage
 	rb      *devicejobs.ReadbackPayload
+	format  string // "" = qc-device-readback/1
 }
 
 func loadFixture(t *testing.T, name string) fixture {
@@ -80,8 +81,28 @@ func loadFixture(t *testing.T, name string) fixture {
 const testJob = "11111111-1111-4111-8111-111111111111"
 
 func (f fixture) snapshot() *devicelib.ReadSnapshot {
+	format := f.format
+	if format == "" {
+		format = devicejobs.ReadbackFormat
+	}
 	return &devicelib.ReadSnapshot{Format: devicelib.SnapshotFormat, JobID: testJob, Slot: "1A", Name: "Round trip",
-		Firmware: "4.1.0", ReadAt: "2026-11-07T10:00:00Z", ReadbackFormat: devicejobs.ReadbackFormat, Payload: f.payload}
+		Firmware: "4.1.0", ReadAt: "2026-11-07T10:00:00Z", ReadbackFormat: format, Payload: f.payload}
+}
+
+// v2 rewrites a fixture as a qc-device-readback/2 read of the given collection and position.
+func v2(t *testing.T, f fixture, key string, pos int) fixture {
+	t.Helper()
+	var m map[string]any
+	if err := json.Unmarshal(f.payload, &m); err != nil {
+		t.Fatal(err)
+	}
+	m["setlist"] = map[string]any{"folder": "other", "folder_key": key, "position": pos, "is_factory": false}
+	raw, _ := json.Marshal(m)
+	rb, err := devicejobs.ParseReadback(devicejobs.ReadbackFormatV2, raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fixture{payload: raw, rb: rb, format: devicejobs.ReadbackFormatV2}
 }
 
 // draft imports the fixture the way read_device_preset(import=true) would and returns its chain.

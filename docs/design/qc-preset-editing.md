@@ -51,6 +51,8 @@ The same path serves all three goals. **Provenance doesn't matter for correctnes
 
 ### 3.2 The edit plan: `qc2-device-edit/1` (new package `internal/deviceedit`)
 
+*As built, the plan's exact shape and parse rules are in the contract, `docs/design/device-job-contract.md` section 7.2 (E3): ops are split into `param_ops` and `bypass_ops`, `expect` pins `folder_key`, and `not_applied`/`untouched` are dry-run output, never part of the plan. The example below is the E0 sketch.*
+
 Pure and deterministic, like `internal/deviceexport`, and built on its tables (`resolve.go`, `LabelParams`, `ToWire`, evidence labels), so a conversion rule can't drift between push and edit.
 
 ```json
@@ -287,7 +289,7 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 Built: snapshots, `internal/deviceedit` and `edit_device_preset` (dry run only). Where it differs from sections 3-4:
 
 - **Snapshots** (`internal/devicelib/snapshots.go`): `device/snapshots/<job_id>.json`, stored for every succeeded `read_preset` (with or without `import`), **raw** (not sanitized: the compare-and-swap on the preset name needs the exact string; every output is sanitized). Write-once, strictly re-parsed on load. A draft imported before this PR has no snapshot; the tool backfills it once from the signed job result.
-- **Folder:** the read-back only says `"My Presets"` or `"other"`, so `expect.folder` pins that much. A real collection key needs a contract field (E3).
+- **Folder:** the read-back only says `"My Presets"` or `"other"`, so `expect.folder` pins that much. A real collection key needs a contract field (E3). *Superseded by E3 (section 13): `expect.folder_key`.*
 - **Tools:** `edit_device_preset(preset_id, guitar?, from_read?, mode?, name?, target_slot?)`; registered only with the device tools, a library and the planner. `dry_run=false` and `confirm_token` answer "not available yet".
 - **Matching:** block id (`b<col+1>`, unique, same model) first, then the unique maximum order-preserving alignment between those anchors; a tie matches nothing in its segment (`match_ambiguous`). A block matched by id that sits out of order is a **move**: `reorder` is reported, but its parameter edits still apply to the cell it is matched with (owner, 2026-11-07).
 - **Removal -> bypass** only when the target is a draft of this very read (`Origin.JobID` equals the snapshot's). Any other target leaves blocks it doesn't mention alone (`cell_not_in_target`).
@@ -299,3 +301,19 @@ Built: snapshots, `internal/deviceedit` and `edit_device_preset` (dry run only).
 - **Not-applied codes** are a fixed list (`internal/deviceedit/reasons.go`), each with fixed text and a test case; `locked_unmeasured_bound` has no case because no exposed model has an unmeasured bound in the shipped catalog.
 - **Plan hash:** SHA-256 of `qc2-device-edit/1 \n` plus the compact payload (format, catalog hash, snapshot id, `expect`, `param_ops`, `bypass_ops`). The table, the not-applied list and the untouched counts are not hashed.
 - **Census:** `internal/deviceedit/testdata/census.golden.txt`.
+
+## 13. E3 status (built, branch `claude/device-edit-contract-rkcy59`)
+
+Contract v2 (`docs/design/device-job-contract.md`, revision 2026-11-07). No agent edit behaviour, no MCP apply path, no device. Where it differs from sections 3-6 and the E1 status:
+
+- **Collection key (E1's weak pin, fixed).** The agent already read the open collection's key (`SetlistPosition.folder_key`, the key a push pins). The read-back drops it and sent no position outside My Presets, so a preset in one of the owner's own collections couldn't be planned at all (`ErrNoPosition`). Read-back format `qc-device-readback/2` (contract 9.1) carries `folder_key`, `is_factory` and a position in any regular collection; the agent change is read-only (`jobs.setlist_info`). `Expect.folder` became `folder_key`, and the slot comes from the position. A plan from a `/1` read (every snapshot stored before this) is shown but can't be confirmed: "read it again". That collection keys other than My Presets' are ASCII and at most 128 characters is **UNVERIFIED**; a key that isn't is sent as `null`, so its preset can't be edited (fail closed).
+- **Snapshot id.** Inside the hashed plan (`snapshot`) and the edit token, not repeated as a job arg. The proof that the agent edits the preset that was read is E4's compare-and-swap against a fresh read (collection key, position, name, full layout, every op's `expect`), which is also what makes a forged stored snapshot harmless (contract section 15). Recommended E4 hardening: QC-2 checks the stored snapshot against the signed `jobs/done/<snapshot>.json` before issuing a token.
+- **Job.** `edit_preset` is payload `v` 2 under its own tag `qc2-device-job/v2`; the agent verifies under both job tags in constant time and the tag decides the version. The plan travels as its exact JSON text plus SHA-256 (contract 7.1). `copy` needs `target_slot` and `name`; `live` and `overwrite` must have neither, so an overwrite never takes a name from a job.
+- **What the parser refuses** (contract 7.2): any op outside row 0, off the pinned layout or on another model; duplicate or unsorted ops; an op that changes nothing; values outside [0, 1]; scene mode off with differing scene values; a removed block not bypassed in all eight scenes; no ops; more than 512 param ops or a plan over 256 KiB. What needs the catalog or the unit is listed for E4 at the end of contract 7.2.
+- **Confirmable.** `deviceedit.Plan` now carries `Pinned` (the read named its collection), `Confirmable` (pinned, at least one op, and the plan passes `devicejobs.ParseEditPayload`), and `Text` (the exact bytes the hash covers). Every census plan with ops passes the parser (`TestCensusPlansPassTheContractParser`).
+- **Result.** `edit: null | {format: "qc-device-edit-result/1", payload}` (contract 9.3): CAS outcome, per-op read-back, the collateral check on all rows, rollback, save. New reason codes `preset_changed`, `edit_not_enabled`, `rollback_failed`. QC-2 parses it strictly (`ParseEditResultPayload`, shared fixture `testdata/devicejobs/edit_result.json`); nothing produces it until E4.
+- **Agent.** Parses `edit_preset` with the shared vectors, takes it (ledger), and answers `refused`/`unsupported_kind` before any device contact. Crash recovery reports an interrupted edit as `edit_preset` (it used to fall back to `push_preset` for any kind it didn't list).
+- **QC-2 fixes found on the way.** QC-2 now reads its own v2 jobs (pending count, job state) and keeps an `edit_preset` result instead of dropping an unknown kind; `Store.Enqueue` checks the **sealed** size, since the plan text is escaped twice.
+- **Edit confirm token.** `e1.<exp>.<mac>`, its own derived key and job-id tag; binds preset, guitar, mode, slot, target slot, copy name, the name on the unit, snapshot id and plan hash (contract section 12). Issue and check only: `edit_device_preset` still answers "not available yet".
+- **Not tested here (carried over from E1):** `locked_unmeasured_bound` and `plan_too_large` still have no test case.
+

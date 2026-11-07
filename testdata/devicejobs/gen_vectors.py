@@ -1,6 +1,7 @@
 """Generates testdata/devicejobs/vectors.json (stdlib only).
 
 Written independently of the Go code, from docs/design/device-job-contract.md.
+Contract v2 (edit_preset) only appends entries: the v1 ones are unchanged.
 The expected outcomes are the contract's; internal/devicejobs (Go) and
 reference_check.py (Python) must both reach every one of them.
 
@@ -140,8 +141,160 @@ pend = [
  pj("read_preset with a slot (shape-valid, agent refuses later)", sj(job(kind="read_preset", args={"slot":"20A"})), "ok"),
 ]
 
+# ---- contract v2: edit_preset (sections 7.1, 7.2 and 8). Appended only: every v1 entry above is
+# unchanged, byte for byte (Go's TestV1VectorsUnchanged pins them).
+JOB2 = "qc2-device-job/v2"
+EID = "7a2d9c41-5e6f-4a1b-8c3d-9e0f1a2b3c4d"
+EK = "jobs/pending/%s.json" % EID
+SNAP = "3f1c2e1a-3b7d-4c55-9a0e-2f4b8d9c1e02"
+def plan(**over):
+    p = {"format":"qc2-device-edit/1","catalog":{"coros":"4.1","sha256":"ab"*32},"snapshot":SNAP,
+         "expect":{"folder_key":"/media/p4/Presets/Sounds profiles","position":24,"slot":"4A","name":"Texas Blues",
+                   "layout":[[0,0,1120],[0,1,12045],[0,2,8006],[1,0,5]]},
+         "param_ops":[{"row":0,"col":0,"model_id":1120,"index":0,"label":"GAIN","evidence":["taper:g4"],"scene_mode":True,
+                       "expect":[0.45]*8,"wire":[0.5,0.62,0.45,0.45,0.45,0.45,0.45,0.45]}],
+         "bypass_ops":[{"row":0,"col":2,"model_id":8006,"why":"target","expect":[False]*8,"bypass":[False,True]+[False]*6}]}
+    p.update(over); return p
+def expect(**over):
+    e = dict(plan()["expect"]); e.update(over); return e
+def pop(**over):
+    o = dict(plan()["param_ops"][0]); o.update(over); return o
+def bop(**over):
+    o = dict(plan()["bypass_ops"][0]); o.update(over); return o
+def sha(t, fmt="qc2-device-edit/1"): return hashlib.sha256(fmt.encode() + b"\n" + t.encode("utf-8")).hexdigest()
+def ejob(p=None, text=None, digest=None, **args_over):
+    """An edit_preset job. text overrides the plan text (default: compact(p)); digest overrides the hash."""
+    t = text if text is not None else compact(p if p is not None else plan())
+    a = {"slot":"4A","mode":"copy","target_slot":"20A","name":"Texas Blues edit",
+         "source":{"preset_id":"device-1","guitar":"From the unit"},
+         "plan":{"format":"qc2-device-edit/1","sha256":digest if digest is not None else sha(t),"payload":t}}
+    a.update(args_over)
+    return job(v=2, job_id=EID, kind="edit_preset", args=a)
+def ej(name, j, expect, tag=JOB2, key=K0, keyring="current"):
+    return pj(name, env(key, tag, compact(j)), expect, object_key=EK, keyring=keyring)
+OK_TEXT = compact(plan())
+edits = [
+ ej("valid edit_preset: copy", ejob(), "ok"),
+ ej("valid edit_preset: live", ejob(mode="live", target_slot=None, name=None), "ok"),
+ ej("valid edit_preset: overwrite", ejob(mode="overwrite", target_slot=None, name=None), "ok"),
+ ej("valid edit_preset: only a param op", ejob(plan(bypass_ops=[])), "ok"),
+ ej("valid edit_preset: only a bypass op (removed, all eight)", ejob(plan(param_ops=[], bypass_ops=[bop(why="removed", bypass=[True]*8)])), "ok"),
+ ej("valid edit_preset: non-ASCII name and label, '<' (hash over UTF-8)", ejob(plan(expect=expect(name="Caf\u00e9 <Lead>"), param_ops=[pop(label="\u00d8 SHIFT <")])), "ok"),
+ ej("valid edit_preset: plan text with escapes and whitespace (hashed as given)",
+    ejob(text=OK_TEXT.replace('{"format":', ' {"format" : ', 1).replace("Texas Blues", "Texas \\u0042lues").replace("GAIN", "G\\u0041IN") + "\n"), "ok"),
+ ej("valid edit_preset: integer wire values 0 and 1", ejob(plan(param_ops=[pop(wire=[1,0,0.45,0.45,0.45,0.45,0.45,0.45])])), "ok"),
+ ej("valid edit_preset: scene_mode false with one value", ejob(plan(param_ops=[pop(scene_mode=False, wire=[0.5]*8)])), "ok"),
+ ej("valid edit_preset: signed with the next key during rotation", ejob(), "ok", key=K1, keyring="current+next"),
+ # Version and tag binding.
+ ej("edit_preset (v 2) signed under the v1 tag", ejob(), "bad_payload", tag=JOB),
+ ej("edit_preset with v 1 under the v2 tag", dict(ejob(), v=1), "bad_payload"),
+ ej("edit_preset with v 1 under the v1 tag", dict(ejob(), v=1), "bad_payload", tag=JOB),
+ pj("list_slots (v 1) signed under the v2 tag", env(K0, JOB2, P1), "bad_payload"),
+ pj("list_slots with v 2 under the v2 tag", env(K0, JOB2, compact(job(v=2))), "bad_payload"),
+ pj("push_preset with v 2 under the v2 tag", env(K0, JOB2, compact(dict(push, v=2))), "bad_payload", object_key=PK),
+ ej("edit_preset signed under the result tag", ejob(), "bad_signature", tag=RES),
+ pj("edit_preset envelope with the v1 payload swapped in", env(K0, JOB2, compact(ejob()), payload=compact(dict(ejob(), v=1))), "bad_signature", object_key=EK),
+ pj("edit_preset with v 2.0", env(K0, JOB2, compact(ejob()).replace('"v":2,', '"v":2.0,', 1)), "bad_payload", object_key=EK),
+ ej("edit_preset with a case-variant kind", dict(ejob(), kind="Edit_Preset"), "bad_payload"),
+ ej("kind as a list under the v2 tag", dict(ejob(), kind=["edit_preset"]), "bad_payload"),
+ ej("kind as an object under the v2 tag", dict(ejob(), kind={}), "bad_payload"),
+ pj("kind as a list under the v1 tag", sj(job(kind=["list_slots"])), "bad_payload"),
+ pj("kind as an object under the v1 tag", sj(job(kind={})), "bad_payload"),
+ # The plan record and its hash.
+ ej("plan hash does not match the text", ejob(digest=sha(OK_TEXT + " ")), "bad_payload"),
+ ej("plan hash in upper case", ejob(digest=sha(OK_TEXT).upper()), "bad_payload"),
+ ej("plan hash over a re-serialised text", ejob(text=OK_TEXT.replace(",", ", "), digest=sha(OK_TEXT)), "bad_payload"),
+ ej("plan format is qc2-device-edit/2", dict(ejob(), args=dict(ejob()["args"], plan={"format":"qc2-device-edit/2","sha256":sha(OK_TEXT,"qc2-device-edit/2"),"payload":OK_TEXT})), "bad_payload"),
+ ej("plan payload is an object, not a string", dict(ejob(), args=dict(ejob()["args"], plan={"format":"qc2-device-edit/1","sha256":sha(OK_TEXT),"payload":plan()})), "bad_payload"),
+ ej("plan record has an extra key", dict(ejob(), args=dict(ejob()["args"], plan=dict(ejob()["args"]["plan"], v=1))), "bad_payload"),
+ ej("plan text is not JSON", ejob(text="{not json"), "bad_payload"),
+ ej("plan text has trailing data", ejob(text=OK_TEXT + " {}"), "bad_payload"),
+ ej("plan text has a duplicate key", ejob(text=OK_TEXT.replace('{"format":"qc2-device-edit/1"', '{"format":"x","format":"qc2-device-edit/1"', 1)), "bad_payload"),
+ ej("plan text has NaN", ejob(text=OK_TEXT.replace("0.62", "NaN", 1)), "bad_payload"),
+ ej("plan text has 1e400", ejob(text=OK_TEXT.replace("0.62", "1e400", 1)), "bad_payload"),
+ ej("plan text has an unpaired surrogate escape", ejob(text=OK_TEXT.replace('"GAIN"', '"G\\ud800"', 1)), "bad_payload"),
+ ej("plan text over 256 KiB (whitespace)", ejob(text=OK_TEXT + " " * (262144 - len(OK_TEXT) + 1)), "bad_payload"),
+ ej("plan text exactly 256 KiB (whitespace)", ejob(text=OK_TEXT + " " * (262144 - len(OK_TEXT))), "ok"),
+ # Mode, slots and name.
+ ej("copy without target_slot", ejob(target_slot=None), "bad_payload"),
+ ej("copy to the open slot", ejob(target_slot="4A"), "bad_payload"),
+ ej("copy with a lowercase target_slot", ejob(target_slot="20a"), "bad_payload"),
+ ej("copy without a name", ejob(name=None), "bad_payload"),
+ ej("copy with a 33-character name", ejob(name="x" * 33), "bad_payload"),
+ ej("live with a name", ejob(mode="live", target_slot=None), "bad_payload"),
+ ej("live with a target_slot", ejob(mode="live", name=None), "bad_payload"),
+ ej("overwrite with a name (an overwrite never takes a name from a job)", ejob(mode="overwrite", target_slot=None, name="Texas Blues"), "bad_payload"),
+ ej("mode is Live", ejob(mode="Live", target_slot=None, name=None), "bad_payload"),
+ ej("mode is delete", ejob(mode="delete", target_slot=None, name=None), "bad_payload"),
+ ej("args slot differs from the plan's", ejob(slot="4B"), "bad_payload"),
+ ej("args missing source", dict(ejob(), args={k: v for k, v in ejob()["args"].items() if k != "source"}), "bad_payload"),
+ ej("args with an extra key", ejob(snapshot=SNAP), "bad_payload"),
+ # expect.
+ ej("plan slot is not its position's label", ejob(plan(expect=expect(position=25))), "bad_payload"),
+ ej("plan position 256", ejob(plan(expect=expect(position=256, slot="33A")), slot="4A"), "bad_payload"),
+ ej("plan position 24.0", ejob(text=OK_TEXT.replace('"position":24', '"position":24.0')), "bad_payload"),
+ ej("plan position as a string", ejob(plan(expect=expect(position="24"))), "bad_payload"),
+ ej("folder_key empty (a plan from a /1 read)", ejob(plan(expect=expect(folder_key=""))), "bad_payload"),
+ ej("folder_key with a backtick", ejob(plan(expect=expect(folder_key="/media/p4/a`b"))), "bad_payload"),
+ ej("folder_key null", ejob(plan(expect=expect(folder_key=None))), "bad_payload"),
+ ej("expect.name empty", ejob(plan(expect=expect(name=""))), "bad_payload"),
+ ej("expect.name with a control character", ejob(plan(expect=expect(name="Texas\u0007Blues"))), "bad_payload"),
+ ej("expect.name with U+2028", ejob(plan(expect=expect(name="Texas\u2028Blues"))), "bad_payload"),
+ ej("expect.name of 65 characters", ejob(plan(expect=expect(name="x" * 65))), "bad_payload"),
+ ej("expect.name of 64 characters", ejob(plan(expect=expect(name="\u00e9" * 64))), "ok"),
+ ej("expect has an extra key (folder)", ejob(plan(expect=expect(folder="other"))), "bad_payload"),
+ ej("layout empty", ejob(plan(expect=expect(layout=[]))), "bad_payload"),
+ ej("layout out of order", ejob(plan(expect=expect(layout=[[0,1,12045],[0,0,1120],[0,2,8006]]))), "bad_payload"),
+ ej("layout with a duplicate cell", ejob(plan(expect=expect(layout=[[0,0,1120],[0,0,1120],[0,1,12045],[0,2,8006]]))), "bad_payload"),
+ ej("layout entry of four numbers", ejob(plan(expect=expect(layout=[[0,0,1120,1],[0,1,12045],[0,2,8006]]))), "bad_payload"),
+ ej("layout row 4", ejob(plan(expect=expect(layout=[[0,0,1120],[0,1,12045],[0,2,8006],[4,0,5]]))), "bad_payload"),
+ ej("layout model_id negative", ejob(plan(expect=expect(layout=[[0,0,1120],[0,1,12045],[0,2,8006],[1,0,-5]]))), "bad_payload"),
+ ej("catalog coros not a version", ejob(plan(catalog={"coros":"v4","sha256":"ab"*32})), "bad_payload"),
+ ej("snapshot in upper case", ejob(plan(snapshot=SNAP.upper())), "bad_payload"),
+ # Ops: the hostile plans the contract can express.
+ ej("param op on a cell not in the layout", ejob(plan(param_ops=[pop(col=5)])), "bad_payload"),
+ ej("param op with another model than the layout's", ejob(plan(param_ops=[pop(model_id=1121)])), "bad_payload"),
+ ej("param op on row 1 (a cell the layout has)", ejob(plan(param_ops=[pop(row=1, model_id=5)])), "bad_payload"),
+ ej("bypass op on row 1", ejob(plan(bypass_ops=[bop(row=1, col=0, model_id=5)])), "bad_payload"),
+ ej("the same param op twice", ejob(plan(param_ops=[pop(), pop()])), "bad_payload"),
+ ej("param ops out of order", ejob(plan(param_ops=[pop(index=3), pop(index=1)])), "bad_payload"),
+ ej("param op that changes nothing", ejob(plan(param_ops=[pop(wire=[0.45]*8)])), "bad_payload"),
+ ej("param op with nine values", ejob(plan(param_ops=[pop(wire=[0.5]*9)])), "bad_payload"),
+ ej("param op with seven expect values", ejob(plan(param_ops=[pop(expect=[0.45]*7)])), "bad_payload"),
+ ej("param op value 1.5", ejob(plan(param_ops=[pop(wire=[1.5]+[0.45]*7)])), "bad_payload"),
+ ej("param op value -0.1", ejob(plan(param_ops=[pop(wire=[-0.1]+[0.45]*7)])), "bad_payload"),
+ ej("param op value as a string", ejob(plan(param_ops=[pop(wire=["0.5"]+[0.45]*7)])), "bad_payload"),
+ ej("param op value true", ejob(plan(param_ops=[pop(wire=[True]+[0.45]*7)])), "bad_payload"),
+ ej("param op index 256", ejob(plan(param_ops=[pop(index=256)])), "bad_payload"),
+ ej("param op col 0.0", ejob(text=OK_TEXT.replace('"col":0,"model_id":1120', '"col":0.0,"model_id":1120')), "bad_payload"),
+ ej("param op col 0e0", ejob(text=OK_TEXT.replace('"col":0,"model_id":1120', '"col":0e0,"model_id":1120')), "bad_payload"),
+ ej("param op value 1e-400 (underflows to 0 in both languages)", ejob(text=OK_TEXT.replace("0.62", "1e-400", 1)), "ok"),
+ ej("param op value -0.0", ejob(text=OK_TEXT.replace("0.62", "-0.0", 1)), "ok"),
+ ej("param op col -0 (an integer token)", ejob(text=OK_TEXT.replace('"col":0,"model_id":1120', '"col":-0,"model_id":1120')), "ok"),
+ ej("scene_mode false with different values", ejob(plan(param_ops=[pop(scene_mode=False)])), "bad_payload"),
+ ej("scene_mode as 1", ejob(plan(param_ops=[pop(scene_mode=1)])), "bad_payload"),
+ ej("param op label empty", ejob(plan(param_ops=[pop(label="")])), "bad_payload"),
+ ej("param op evidence in upper case", ejob(plan(param_ops=[pop(evidence=["Taper:G4"])])), "bad_payload"),
+ ej("param op evidence with a space", ejob(plan(param_ops=[pop(evidence=["taper g4"])])), "bad_payload"),
+ ej("param op with nine evidence entries", ejob(plan(param_ops=[pop(evidence=["a"] * 9)])), "bad_payload"),
+ ej("param op with an extra key", ejob(plan(param_ops=[dict(pop(), string="x")])), "bad_payload"),
+ ej("513 param ops", ejob(plan(expect=expect(layout=[[0, c, 1120] for c in range(8)]), bypass_ops=[],
+                             param_ops=[pop(col=i // 65, index=i % 65) for i in range(513)])), "bad_payload"),
+ ej("512 param ops", ejob(plan(expect=expect(layout=[[0, c, 1120] for c in range(8)]), bypass_ops=[],
+                             param_ops=[pop(col=i // 64, index=i % 64) for i in range(512)])), "ok"),
+ ej("bypass op why moved", ejob(plan(bypass_ops=[bop(why="moved")])), "bad_payload"),
+ ej("removed block not bypassed in every scene", ejob(plan(bypass_ops=[bop(why="removed")])), "bad_payload"),
+ ej("bypass op that changes nothing", ejob(plan(bypass_ops=[bop(bypass=[False]*8)])), "bad_payload"),
+ ej("bypass flags as numbers", ejob(plan(bypass_ops=[bop(bypass=[0,1,0,0,0,0,0,0])])), "bad_payload"),
+ ej("two bypass ops on one cell", ejob(plan(bypass_ops=[bop(), bop()])), "bad_payload"),
+ ej("no ops", ejob(plan(param_ops=[], bypass_ops=[])), "bad_payload"),
+ ej("plan missing bypass_ops", ejob({k: v for k, v in plan().items() if k != "bypass_ops"}), "bad_payload"),
+ ej("plan with an extra top-level key (not_applied)", ejob(plan(not_applied=[])), "bad_payload"),
+]
+pend += edits
+
 out = {
- "contract":"qc2-device-job-contract/1",
+ "contract":"qc2-device-job-contract/2",
  "note":"Shared by internal/devicejobs (Go) and the home agent (Python). Changing any vector is a contract change.",
  "keys":{"current_hex":K0.hex(),"current_kid":kid(K0),"next_hex":K1.hex(),"next_kid":kid(K1)},
  "keyrings":{"current":{"current":"current_hex"},"current+next":{"current":"current_hex","next":"next_hex"},
