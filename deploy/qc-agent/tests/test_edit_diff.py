@@ -4,7 +4,7 @@ import unittest
 
 from fake_device import FakeDevice
 from qc_agent import edit_diff
-from test_edit import GAIN_WIRE, base_plan, rig_unit
+from edit_fixtures import GAIN_EXPECT, GAIN_WIRE, base_plan, rig_unit
 
 
 def read(mutate=None):
@@ -164,7 +164,7 @@ class Rollback(unittest.TestCase):
         self.assertEqual([s["kind"] for s in steps], ["bypass", "param", "param"])
         self.assertEqual(steps[0], {"kind": "bypass", "col": 1, "flags": [False] * 8})
         self.assertEqual(steps[1], {"kind": "param", "col": 1, "index": 1, "wires": [0.0] * 8, "scene_mode": False})
-        self.assertEqual(steps[2], {"kind": "param", "col": 0, "index": 0, "wires": [0.45] * 8, "scene_mode": True})
+        self.assertEqual(steps[2], {"kind": "param", "col": 0, "index": 0, "wires": list(GAIN_EXPECT), "scene_mode": True})
 
     def test_only_what_was_attempted(self):
         self.assertEqual(edit_diff.rollback_plan(self.plan, []), [])

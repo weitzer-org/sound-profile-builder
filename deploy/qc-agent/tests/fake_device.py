@@ -210,6 +210,12 @@ class FakeDevice(DeviceBackend):
         self._rec("begin_push", position, name)
         self.push_folder = folder_key
 
+    def begin_edit(self, plan, checked):
+        self._rec("begin_edit", plan["snapshot"])
+
+    def enter_rollback(self):
+        self._rec("enter_rollback")
+
     def end_push(self):
         self._rec("end_push")
 

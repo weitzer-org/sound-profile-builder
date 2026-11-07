@@ -37,7 +37,14 @@ Three layers keep the transport to the operations the plan allows (section 5):
        once. No momentary flag, no secondary assignment, no delete. From then on no value, bypass,
        routing or scene write passes for the rest of the push;
      * while a save is armed: one File CREATE of My Presets at the armed position
-       with the armed name and nothing else (no payload).
+       with the armed name and nothing else (no payload);
+     * while an EDIT is armed (arm_edit, preset-editing E4): Grid UPDATEs on row 0 that carry only the
+       planned (column, index) float values, the planned "assign to scenes" and bypass-control writes of
+       blocks the plan names, and the planned bypass flags; no routing, add, delete, string, stomp, name
+       or any other field; and Scene UPDATEs. Two phases: "apply" allows exactly the plan's new values
+       and flags, and the one-way "rollback" phase exactly the values the plan expected (the old ones),
+       only for ops whose write was started. An armed edit allows no File CREATE: the save path stays
+       closed because nothing arms it.
    Messages with unknown fields, compressed payloads, or empty model entries (the shape
    of a delete) are refused too. Everything else raises WireRefused before a byte reaches the unit, including any
    RecallPreset UPDATE (save_preset), SetlistPosition UPDATE (recall), Grid DELETE,
@@ -225,6 +232,7 @@ class WireGuard:
         self._push = None   # the armed plan, see arm_push
         self._save = None   # (folder_key, position, name)
         self._stomps = None  # the push's stomp step, see arm_stomps: {(row, col): stomp_index} not yet sent
+        self._edit = None   # the armed edit, see arm_edit
         self.refused: list[str] = []
 
     @property
@@ -270,9 +278,56 @@ class WireGuard:
                       "flags": {b.col: set(b.bypass_scenes) for b in plan.blocks},
                       "row": plan.row, "in": plan.in_port, "out": plan.out_port}
 
+    def arm_edit(self, plan, checked):
+        """Arm an edit (E4): `plan` is the parsed edit plan, `checked` the CheckedPlan edit_checks made of it.
+        Nothing else is allowed for the session until disarm(): not with a push armed, not twice."""
+        if self._push is not None or self._edit is not None or self._save is not None:
+            raise WireRefused("an edit can only be armed on its own, once")
+        ops = {}
+        for op in plan["param_ops"]:
+            k = (op["col"], op["index"])
+            c = checked.params.get(k)
+            if c is None or op["row"] != 0:
+                raise WireRefused(f"column {op['col']} index {op['index']}: the op was not checked")
+            ops[k] = {"wires": tuple(float(x) for x in op["wire"]), "expect": tuple(float(x) for x in op["expect"]),
+                      "scene_mode": bool(op["scene_mode"]), "param_count": c["param_count"]}
+        byp = {}
+        for op in plan["bypass_ops"]:
+            c = checked.bypass.get(op["col"])
+            if c is None or op["row"] != 0:
+                raise WireRefused(f"column {op['col']}: the bypass op was not checked")
+            byp[op["col"]] = {"index": c["index"], "flags": frozenset(bool(x) for x in op["bypass"]),
+                              "expect": frozenset(bool(x) for x in op["expect"])}
+        self._edit = {"params": ops, "bypass": byp, "cells": dict(checked.cells), "confirmed": {},
+                      "phase": "apply", "attempted": set()}
+
+    def enter_rollback(self):
+        """One way: from now on only the old values of ops that were started may be written."""
+        if self._edit is None:
+            raise WireRefused("no armed edit")
+        self._edit["phase"] = "rollback"
+
+    def confirmed_bypass_index(self, col):
+        """The bypass control index of `col` once a read confirmed its layout (push or edit), else None."""
+        if self._edit is not None:
+            return self._edit["confirmed"].get(col) if col in self._edit["bypass"] else None
+        if self._push is not None:
+            return self._push["bypass_index"].get(col)
+        return None
+
     def confirm_layout(self, col, n):
         """The unit read `n` params for the planned block in `col`: allow its bypass control only if
         that is the plan's param_count + 1 (G1). Anything else raises and allows nothing."""
+        edit = self._edit
+        if edit is not None:
+            if col not in edit["cells"]:
+                raise WireRefused(f"no armed block in column {col}")
+            want = edit["cells"][col][1] + 1
+            if n != want:
+                edit["confirmed"].pop(col, None)
+                raise WireRefused(f"column {col} reads {n} params, not the plan's {want}")
+            edit["confirmed"][col] = n
+            return
         push = self._push
         if push is None or col not in push["bypass_expected"]:
             raise WireRefused(f"no armed block in column {col}")
@@ -310,6 +365,7 @@ class WireGuard:
         self._push = None
         self._save = None
         self._stomps = None
+        self._edit = None
 
     # -- the gate --
 
@@ -370,6 +426,12 @@ class WireGuard:
             raise WireRefused("Version: only the read and the client-version announce")
         if name in READABLE and action == A["READ"] and fields <= {"action", "request_id"}:
             return
+        if name == "Grid" and self._edit is not None and action == A["UPDATE"]:
+            return self._check_edit_grid(msg, fields)
+        if name == "Scene" and self._edit is not None and action == A["UPDATE"]:
+            if fields <= {"action", "request_id", "selected_scene"} and 0 <= msg.selected_scene < 8:
+                return  # the transport switches scenes to write per-scene values
+            raise WireRefused("Scene: only a scene switch A-H")
         if name == "Grid" and self._push is not None and action == A["UPDATE"] and self._stomps is not None:
             return self._check_stomp(msg, fields)
         if name == "Grid" and self._push is not None and action == A["UPDATE"]:
@@ -393,6 +455,100 @@ class WireGuard:
             self._check_chain(ch)
         for b in preset.bypass:
             self._check_bypass(b)
+
+    def _check_edit_grid(self, msg, fields):
+        """An armed edit's Grid UPDATE: only planned values, planned scene assignments, planned flags."""
+        if "preset" not in fields or not fields <= {"action", "request_id", "preset"}:
+            raise WireRefused(f"Grid: unexpected fields {sorted(fields)} in an edit")
+        preset = msg.preset
+        pf = _names(preset)
+        if not pf or not pf <= {"chains", "bypass"}:
+            raise WireRefused(f"Grid: preset fields {sorted(pf)} not allowed in an edit")
+        if len(preset.chains) > 1 or len(preset.bypass) > 1:
+            raise WireRefused("Grid: one row of values or flags per message in an edit")
+        for ch in preset.chains:
+            cf = _names(ch)
+            if not cf <= {"row", "models"} or ch.row != 0 or len(ch.models) != 1:
+                raise WireRefused(f"Grid: an edit writes one block on row 0 only (chain fields {sorted(cf)})")
+            self._check_edit_model(ch.models[0])
+        for b in preset.bypass:
+            self._check_edit_bypass(b)
+
+    def _edit_value_ok(self, v, allowed):
+        return 0.0 <= v <= 1.0 and any(abs(v - a) <= 1e-6 for a in allowed)
+
+    def _check_edit_model(self, m):
+        edit = self._edit
+        mf = _names(m)
+        if not mf <= {"column", "params"} or "params" not in mf or len(m.params) != 1:
+            # "hash" would place or delete a block; an entry with no params is the shape of a delete
+            raise WireRefused(f"Grid: an edit writes one parameter of one block (model fields {sorted(mf)})")
+        col = m.column
+        p = m.params[0]
+        if col not in edit["cells"]:
+            raise WireRefused(f"Grid: column {col} is not in the plan")
+        qf = _names(p)
+        rollback = edit["phase"] == "rollback"
+        if qf == {"scene_mode"} or qf == {"index", "scene_mode"}:
+            # "Assign to Scenes", and only ever on: a scene-varying op's control, or a bypass op's bypass control
+            if not p.scene_mode:
+                raise WireRefused("Grid: an edit never takes a control out of scenes")
+            op = edit["params"].get((col, p.index))
+            if op is not None and op["scene_mode"]:
+                self._edit_started(col, p.index, rollback)
+                return
+            b = edit["bypass"].get(col)
+            if b is not None and p.index == edit["confirmed"].get(col) == b["index"]:
+                self._edit_started(col, "bypass", rollback)
+                return
+            raise WireRefused(f"Grid: assigning column {col} index {p.index} to scenes is not the plan")
+        if not qf <= {"index", "param_values"} or "param_values" not in qf:
+            raise WireRefused(f"Grid: parameter fields {sorted(qf)} not allowed in an edit")
+        op = edit["params"].get((col, p.index))
+        if op is None:
+            raise WireRefused(f"Grid: writing column {col} index {p.index} is not the plan")
+        if col not in edit["confirmed"]:
+            raise WireRefused(f"Grid: column {col} was not confirmed by a read of the unit")
+        if not 0 <= p.index < op["param_count"]:
+            raise WireRefused(f"Grid: column {col} index {p.index} is at or past param_count (the trailing slot)")
+        if len(p.param_values) != 1 or p.param_values[0].WhichOneof("value") != "float_value":
+            raise WireRefused("Grid: parameter writes must be one float")
+        v = p.param_values[0].float_value
+        if not 0.0 <= v <= 1.0:
+            raise WireRefused(f"Grid: wire value {v} outside 0..1")
+        if not self._edit_value_ok(v, op["expect"] if rollback else op["wires"]):
+            raise WireRefused(f"Grid: column {col} index {p.index} value {v} is not the plan's"
+                              + (" old value" if rollback else ""))
+        self._edit_started(col, p.index, rollback)
+
+    def _edit_started(self, col, what, rollback):
+        """Record that a write of this op began (apply), or require that it had (rollback)."""
+        edit = self._edit
+        if rollback:
+            if (col, what) not in edit["attempted"]:
+                raise WireRefused(f"Grid: column {col} {what} was never written, so there is nothing to roll back")
+        else:
+            edit["attempted"].add((col, what))
+
+    def _check_edit_bypass(self, b):
+        edit = self._edit
+        if _names(b) - {"row", "colBypass"} or b.row != 0 or len(b.colBypass) != 1:
+            raise WireRefused("Grid: an edit writes one bypass cell on row 0")
+        cb = b.colBypass[0]
+        if _names(cb) - {"column", "sceneBypass"} or len(cb.sceneBypass) != 1:
+            raise WireRefused("Grid: unexpected bypass fields")
+        op = edit["bypass"].get(cb.column)
+        if op is None:
+            raise WireRefused(f"Grid: bypass of column {cb.column} is not the plan")
+        if cb.column not in edit["confirmed"]:
+            raise WireRefused(f"Grid: column {cb.column} was not confirmed by a read of the unit")
+        sb = cb.sceneBypass[0]
+        if _names(sb) - {"bypass"}:
+            raise WireRefused("Grid: unexpected bypass fields")
+        rollback = edit["phase"] == "rollback"
+        if bool(sb.bypass) not in (op["expect"] if rollback else op["flags"]):
+            raise WireRefused(f"Grid: bypass {sb.bypass} on column {cb.column} is not the plan's")
+        self._edit_started(cb.column, "bypass", rollback)
 
     def _check_stomp(self, msg, fields):
         """The stomp step: one armed PRIMARY assignment per message, each once (arm_stomps)."""
@@ -1002,6 +1158,18 @@ class QcMcpBackend(DeviceBackend):
         self._save_target = (position, name)
         self._save_folder = folder_key
 
+    def begin_edit(self, plan, checked):
+        """Arm the wire guard for one edit (preset-editing E4). No save is armed: an edit never saves."""
+        if self._guard is None:
+            raise DeviceError("not connected")
+        self._save_target = None
+        self._guard.arm_edit(plan, checked)
+
+    def enter_rollback(self):
+        if self._guard is None:
+            raise DeviceError("not connected")
+        self._guard.enter_rollback()
+
     def end_push(self):
         self._save_target = None
         if self._guard is not None:
@@ -1045,9 +1213,9 @@ class QcMcpBackend(DeviceBackend):
         # every block, even when all eight agree: unwritten scenes keep their old value. The index is the
         # block's bypass control, param_count + 1: the push's layout check read param_count + 1 slots for
         # this block on the unit before any value was written, and the guard armed exactly this index.
-        if self._guard is None or self._guard._push is None:
+        if self._guard is None or (self._guard._push is None and self._guard._edit is None):
             raise DeviceError("not armed")
-        if bypass_index != self._guard._push["bypass_index"].get(col):
+        if bypass_index != self._guard.confirmed_bypass_index(col):
             raise DeviceError(f"column {col}: bypass index {bypass_index} is not the armed one "
                               "(not confirmed from the unit's read)")
         self._call("set_block_bypass", row, col, scenes=[bool(x) for x in scenes], bypass_param=bypass_index)
