@@ -1,6 +1,6 @@
 # Editing presets on the Quad Cortex
 
-*Design and implementation plan, 2026-11-07. Status: proposed, nothing built. Owner decisions D1, D2, D4, D6 and the eval question taken 2026-11-07 (section 10).*
+*Design and implementation plan, 2026-11-07. Status: proposed, nothing built. Owner decisions D1-D4, D6 and the eval question taken 2026-11-07 (section 10).*
 *Parent: `docs/design/qc-device-bridge-plan.md` (decision 7 in section 10 deferred this work). Contract: `docs/design/device-job-contract.md`.*
 
 **Verify-or-label.** Every premise about the unit is either cited (a gate result in the bridge plan's section 7, or code in this repo) or marked **UNVERIFIED**. Section 7 lists the checks that settle the UNVERIFIED ones, all taken in normal use.
@@ -90,11 +90,9 @@ Rules:
   - this preset lives on a device with fixed cells, so keep every block's `id`, model and order, and prefer parameter and bypass changes;
   - add a block only if the request needs it;
   - the unconverted controls and blocks (listed by the import) exist on the unit but are locked, so don't mention or change them.
-- This is a **prompt change**, but **no paid eval** (owner, 2026-11-07: the work changes what is pushed to the device, not how presets are generated). What replaces it:
-  - a test that the Architect's context is **byte-identical** for every preset whose origin isn't `device-readback`, so generation and ordinary refines can't change;
-  - mock replay of the device-draft path;
-  - E1's census on hand-edited targets;
-  - the owner's first real reviews of unit presets, read through the dry run before anything is applied.
+- This is a **prompt change**, so it gets an **A/B eval before it becomes production** (owner, 2026-11-07; section 8.1). Two guards apply:
+  - **Every preset whose origin isn't `device-readback`:** a test that the Architect's context is **byte-identical** to today's. Generation and ordinary refines can't change, so the eval doesn't need to cover them.
+  - **Device drafts:** the eval compares today's refine with the edit-aware one.
   The section is gated on the origin, the same way catalog features are gated on the prompt text.
 - A convenience entry point, `refine_preset` with a canned "review this unit preset for <goal>; minimal edits" message, so the phone flow is one call: read, import, refine, then the edit dry run.
 - **Locked controls are an advantage, not a gap.** What the import couldn't convert never reaches the Architect, so the patch can't write it, and it survives on the unit untouched. The lossy import is safe *because* editing is a patch.
@@ -124,10 +122,19 @@ Tool annotations: `edit_device_preset` is `DestructiveHint: true` (it can overwr
 
 **Recommended default for a preset QC-2 didn't create: `copy`.** The original is never at risk, and deleting it afterwards is the owner's own action on the unit. `live` is the zero-risk way to try an edit first.
 
-**Backup before an overwrite of a user preset** (decision 7's guardrail, made concrete). A QC-2 draft can't restore a user preset because it's lossy, so it is not a backup. The backup is the unit's own copy:
+**Backup before an overwrite of a user preset** (decision 7's guardrail, made concrete). A QC-2 draft can't restore a user preset because it's lossy, so it is not a backup. The backup is the unit's own copy, in a **dedicated backup collection** the owner creates on the unit (D3):
 
-1. Before patching, the agent saves the **unmodified** live preset to a free slot in `QC_AGENT_BACKUP_SLOTS` (copy mode's mechanism) and checks that the listing shows it.
-2. Only then does it patch and overwrite.
+- **Config.** `QC_AGENT_BACKUP_COLLECTION` in `agent.env` holds the collection's exact name. The agent resolves it from a fresh listing by exact name. It must:
+  - be listed exactly once, as a regular 256-slot collection;
+  - be a different collection from the one being edited.
+
+  Otherwise an `overwrite` is refused before any write.
+- **Order.** Before patching, the agent saves the **unmodified** live preset into the backup collection's first empty slot and checks that the listing shows it there. Only then does it patch and overwrite the original.
+  - The backup's name is the original's, cut to fit the name rules. The collection itself records that it is a backup.
+  - A full backup collection refuses the overwrite ("backup collection full: clear some backups on the unit").
+- **Reserved.** The backup collection is never a push or edit target: `push_preset` and `edit_preset` refuse a slot in it. The agent never deletes from it; clearing old backups is the owner's job on the unit.
+- **Recorded.** The job result and the `edited` ledger name the backup slot, so `get_device_job` can say where the original went.
+- **Unit premise.** Saving into a collection that is **not the open one** has never been done: every push so far saved into the open collection (bridge plan 5, "As built in P4"). **UNVERIFIED** (E-G5).
 
 Recommended in addition: a Cortex Control backup before the first overwrite ever.
 
@@ -135,7 +142,7 @@ Recommended in addition: a Cortex Control backup before the first overwrite ever
 
 Replaces rules 3-4 of a push *for this kind only*; `push_preset` is unchanged.
 
-1. **PC-side opt-in.** `QC_AGENT_EDIT_MODES` in `agent.env` (default empty, so edits are refused) lists the allowed modes, e.g. `live,copy`. `overwrite` of a slot the agent doesn't own additionally needs `QC_AGENT_OVERWRITE_USER=1`. `QC_AGENT_PROTECTED_SLOTS` lists banks never edited. **Why on the PC:** a leaked `DEVICE_JOB_KEY` or a compromised QC-2 can then reach at most what the owner switched on locally. The signed job alone is not enough authority to change a preset the owner made.
+1. **PC-side opt-in.** `QC_AGENT_EDIT_MODES` in `agent.env` (default empty, so edits are refused) lists the allowed modes, e.g. `live,copy`. `overwrite` of a slot the agent doesn't own additionally needs `QC_AGENT_OVERWRITE_USER=1`. `QC_AGENT_PROTECTED_SLOTS` lists banks never edited. `QC_AGENT_BACKUP_COLLECTION` names the backup collection (section 5), which is never edited or pushed to. **Why on the PC:** a leaked `DEVICE_JOB_KEY` or a compromised QC-2 can then reach at most what the owner switched on locally. The signed job alone is not enough authority to change a preset the owner made.
 2. Signature, expiry, firmware and allowed-slot checks as today.
 3. **Open slot only.** The slot in the job must be the open one, in a regular 256-slot collection. The agent never recalls a preset for an edit.
 4. **Compare-and-swap before the first write.** A fresh read of the live preset must match `expect` exactly: name, position, folder and the full layout (all rows). Every op's `expect` values must also match. Any difference refuses the job: "the preset changed since it was read; read it again".
@@ -157,6 +164,7 @@ Each mode ships only after its first real use passes. Do each first on a **QC-2-
 | **E-G2** | Does File CREATE at the open occupied position with the same name replace in place? Check a raw read-back before and after (all rows, strings, bypass, stomps), the listing (same position, no duplicate), and a power cycle. | first `overwrite` of an owned slot (E5) |
 | **E-G3** | Does File CREATE at another, empty position save the edited working grid there, completely? Which slot is open afterwards? | first `copy` (E5) |
 | **E-G4** | Does `delete_block` + `add_block` on a loaded preset swap a model cleanly? Do the cell's stomp and expression assignments survive? | first model swap (E6) |
+| **E-G5** | Does File CREATE into a collection other than the open one (the backup collection) save the live grid there, completely, without changing what's open? | first `overwrite` of a user preset (E5); on a test preset first |
 
 **What the raw read-back can't see:** scene names, expression assignments and MIDI settings are not in `qc-device-readback/1`. E-G2 and E-G3 are only checked for them by looking at the unit's screen. That is labelled in the results, not assumed.
 
@@ -168,13 +176,49 @@ Each step is its own PR, merged before the next one that depends on it. E1-E3 ne
 |---|---|---|---|---|
 | **E0** | This document, plus the owner decisions in section 10 | no | — | — |
 | **E1** | Snapshot storage (3.1); `internal/deviceedit` (3.2) with `set_param`/`set_bypass` ops, block matching, not-applied reasons and plan hash; a dry-run renderer; `edit_device_preset` **dry run only** (the confirm path returns "not available yet"). Goldens from `testdata/devicejobs/readback_roundtrip/*.json` and the eval presets: unchanged target → zero ops; scene C-H preservation; every not-applied reason. A census: for each round-trip fixture plus a few hand-edited targets, how many changes become ops. | no | medium (mapping rules) | E0 |
-| **E2** | Pipeline: the edit-aware Architect context for device drafts (3.3), plus the "review" entry point. No paid eval (section 10): a byte-identical-context test for non-device presets, mock replay, and E1's census. Ops applicable vs not applied and block-id preservation are read from the owner's first real reviews. | no | medium (prompt) | E1 (uses its census as the metric) |
+| **E2** | Pipeline: the edit-aware Architect context for device drafts (3.3), plus the "review" entry point; a byte-identical-context test for non-device presets; mock replay; then the **A/B eval in 8.1** (pilot, then the full run, each with the owner's go). The prompt section becomes production only if the eval passes. | no | medium (prompt; paid eval) | E1 (its plan builder is the eval's scorer); the owner's corpus reads (8.1) |
 | **E3** | Contract **v2**: job kind `edit_preset`, its args (slot, mode, `target_slot`, name, the edit payload), result fields (per-op read-back, collateral check, rollback, saved). New payload `v` and domain tags per contract section 1; v1 kinds unchanged. Go reference, vectors, Python parse. Contract-only PR, like P3's first. | no | **high** (contract/auth) | E0 decisions |
 | **E4** | Agent: `edit_preset` in **`live` mode only**. PC opt-in, CAS, per-op wire guard, collateral check, rollback, `edited` ledger. QC-2's confirm path is enabled for `live`. Offline tests on the fake backend: every refusal, a hostile plan (an op outside the armed set, a CAS mismatch, a collateral change, a rollback). Then E-G1 in normal use. | build no; acceptance **yes** | **high** (writes to presets the owner made, unsaved) | E1, E3 |
 | **E5** | Save modes: `copy` (E-G3) first, then `overwrite` of owned slots (E-G2), then `overwrite` of user slots with the backup copy (only if D2 says yes). Plus `undo_device_edit`. | yes | **highest** (overwrites stored presets) | E4 |
 | **E6** | Structural edits: add block into a free cell, capture swap, model swap (E-G4), real delete (if wanted); scenes C-H in the import; `set_preset_values` (3.4); read by slot (recall; decision D5). | mixed | medium-high | E5 |
 
 **First useful milestone: E1 + E2 + E3 + E4.** "Read my open preset, review it for X, show me the changes, apply them live." The owner hears the result and saves on the unit by hand. No stored preset can be lost at that stage.
+
+### 8.1 The E2 eval (owner, 2026-11-07: changing the pipeline gets an eval)
+
+**Question.** On presets read from the unit, does the edit-aware refine produce suggestions the bridge can apply, without losing tone quality, compared with today's refine?
+
+**Corpus.** About 8 imported drafts:
+- the round-trip fixtures (`testdata/devicejobs/readback_roundtrip/`), which are QC-2-shaped;
+- **4-5 of the owner's own presets**, read with `read_device_preset(import=true)`. This is the one owner step, and it is read-only. Choose some with captures, some with blocks or rows the import leaves out, and at least one factory-derived preset.
+
+**Requests.** 4 per draft:
+- a tone tweak ("less fizz on the lead");
+- a scene request ("more gain and level in scene B");
+- an open review ("review this for a cleaner blues rhythm");
+- one that tempts a structural change ("make it sound like a Plexi"), to see whether a swap is proposed and correctly comes out as not applied.
+
+**Arms and size.**
+- **A:** today's refine context. **B:** the edit-aware context.
+- 2 repetitions each: about 8 × 4 × 2 × 2 = **128 refine runs**.
+- **Pilot first:** 2 drafts × 4 requests × 2 arms × 1 rep = 16 runs. Its cost is read with `cmd/usage_report`/`cmd/eval_cost` and shown to the owner before the full run. The full run's cost isn't estimated here, because the cost per refine run is not measured for this prompt (**UNVERIFIED**).
+
+**Harness.** A new `cmd/eval_device_refine`, modelled on `cmd/eval_refine` (refine calls) and `cmd/eval_device_checks` (re-scoring saved outputs with no Gemini calls). Outputs are saved, so scoring can be rerun without new runs.
+
+**Metrics.** Deterministic first; every one is computed by E1's plan builder against the draft's snapshot:
+
+| Metric | What it measures | Pass for arm B |
+|---|---|---|
+| Applicable share | ops ÷ (ops + not-applied changes) | clearly above A (target ≥ 80%) |
+| Block preservation | blocks kept with the same `id`, model and order | ≥ 95% |
+| Locked violations | changes aimed at controls or blocks the import left out | 0 |
+| Unasked structural changes | swaps, adds or removes the request didn't ask for | below A |
+| Mechanical checks | `RunMechanicalQualityChecks` counts (as `cmd/eval_device_checks` scores them) | no worse than A |
+| Request addressed | an LLM judge (`cmd/judge`), blind to the arm: did the change address the request, and is the tone reasonable? | no worse than A |
+
+**Reading the result.** The comparison is valid only over the (draft, request, rep) triples that parsed in **both** arms, the same rule `cmd/eval_device_checks` uses. `opus-verifier` checks the comparison before the prompt section is switched on (a measurement across runs is a verifier trigger).
+
+**Follow-up.** The owner's first real reviews after release are read the same way, from the dry runs.
 
 ## 9. Which model does what
 
@@ -184,7 +228,8 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 |---|---|---|
 | E1 matching and no-op rules (block alignment, scene C-H, wire tolerance) | `planner` (**Opus**, high) before coding | Same class as P2's mapping: easy to get subtly wrong, and every edit depends on it. |
 | E1 implementation | **Sonnet 5.5**, main session | Well-specified Go on top of `deviceexport`'s tested tables, golden-tested. |
-| E2 prompt section | **Sonnet 5.5** | Prompt plumbing follows the existing origin/prompt gating. No paid eval (section 10). |
+| E2 prompt section and eval harness | **Sonnet 5.5**; the owner approves the pilot and then the full run (Gemini spend) | Prompt plumbing follows the existing origin/prompt gating; the harness reuses `cmd/eval_refine` and `cmd/eval_device_checks`. |
+| E2 eval reading | `opus-verifier` (**Opus**) | Comparing measurements across runs is a verifier trigger. |
 | E3 contract v2 | **Opus 5.5**, main session; `security-reviewer` (**Opus**) and `/security-review`; GSR `deep-review` label | Auth/contract class (CLAUDE.md "large/risky"). Both sides must agree byte for byte. |
 | E4 agent `live` mode | **Opus 5.5**, main session; `planner` first on the job state machine (CAS → arm → apply → verify → rollback); `security-reviewer`; `/code-review high` (effort stated) since it writes to the owner's own presets | The highest-consequence code in the project so far. The stronger model pays for itself in fewer review rounds. |
 | E5 save modes and undo | **Opus 5.5**; `opus-verifier` on each gate result **before** the mode is enabled (load-bearing device premises) | A wrong reading of E-G2 could cost the owner a preset. |
@@ -204,13 +249,13 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 | D2 | Is `overwrite` of a user (non-owned) preset ever allowed? | **Yes, but later:** after E-G2 passes on owned slots, with a unit-side backup copy first and `QC_AGENT_OVERWRITE_USER=1` on the PC. |
 | D4 | Is "remove a block" a bypass in all scenes, or a real delete? | **Bypass** in all eight scenes (reversible). Delete waits for E6. |
 | D6 | May the pipeline swap models (amp, cab) in a device edit? | **In E6.** Until then a swap is "not applied", with "push as a new preset instead" offered (the existing rebuild path into an empty slot). |
-| — | Paid eval for this work? | **No.** It changes what is pushed to the device, not how presets are generated. E2's prompt section is gated on the device-readback origin, with a byte-identical-context test for every other preset (section 3.3). |
+| D3 | Where backups go (D2) | **A dedicated backup collection** the owner creates on the unit (`QC_AGENT_BACKUP_COLLECTION`), never pushed to or edited (section 5). Saving into a collection other than the open one is E-G5. |
+| — | Eval for this work? | **Yes, for E2**, because it changes the pipeline: the A/B eval in 8.1, pilot first, owner's go before each paid run. Pushing and the agent (E1, E3-E6) don't change the pipeline. |
 
 **Still open (recommendation shown; the step that needs it in brackets)**
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D3 | Backup slots for D2 (E5) | A dedicated range, e.g. `32A-32H`, refused if full. |
 | D5 | May an edit read **recall** a slot, changing what's playing? (E6) | **No in v1:** select the preset on the unit, as for a push. |
 | D7 | Scope of the edit (E1) | Row 0 for v1 (all the import covers); other rows untouched and verified unchanged. |
 | D8 | The first use of each mode (E4, E5) | On a QC-2-owned test slot, in normal use (consistent with decision 8). |
@@ -227,7 +272,7 @@ Follows `.claude/rules/claude-config/agent-routing.md` and CLAUDE.md's cost poli
 
 **Chat E2: edit-aware refine** (Sonnet 5.5; after E1)
 
-> Read `docs/design/qc-preset-editing.md` section 3.3 and the E1 code. Branch from main as `claude/device-edit-refine`. Add the edit-aware Architect context for drafts with `Origin.Kind == device-readback`, gated on the origin so other presets' prompts are byte-identical (add a test for that), and the "review" entry point. Test with mock replay and E1's census. Don't run a paid eval (owner decision, section 10).
+> Read `docs/design/qc-preset-editing.md` section 3.3 and the E1 code. Branch from main as `claude/device-edit-refine`. Add the edit-aware Architect context for drafts with `Origin.Kind == device-readback`, gated on the origin so other presets' prompts are byte-identical (add a test for that), and the "review" entry point. Test with mock replay, then build `cmd/eval_device_refine` per section 8.1. Ask me before the pilot and again before the full run; get `opus-verifier` to check the comparison before the prompt section becomes production.
 
 **Chat E4: agent live edits** (Opus 5.5; after E1 and E3 merge)
 
