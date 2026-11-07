@@ -452,14 +452,6 @@ type refineInput struct {
 // maxReviewGoalRunes bounds review_goal: it is a short goal, not a brief.
 const maxReviewGoalRunes = 300
 
-// reviewMessage is the canned request review_goal stands for. The goal is untrusted text
-// that lands in an LLM prompt, like message; it is length-bounded and trimmed by validText.
-func reviewMessage(goal string) string {
-	return "Review this preset from the Quad Cortex for: " + goal + ". Make minimal edits: change parameter values and bypass flags only, " +
-		"keep every block's id, model and order, and leave alone anything the goal does not need. " +
-		"Say what you changed and what you left as it is."
-}
-
 // refineMessage picks the request: message as given, or the canned review for review_goal,
 // which is only for a draft read from the unit.
 func refineMessage(ctx context.Context, svc *presetsvc.Service, in refineInput) (string, error) {
@@ -480,7 +472,7 @@ func refineMessage(ctx context.Context, svc *presetsvc.Service, in refineInput) 
 	if p.Origin == nil || p.Origin.Kind != storage.OriginDeviceReadback {
 		return "", errors.New("review_goal is only for a draft read from the unit (read_device_preset with import=true). For this preset, use message.")
 	}
-	return reviewMessage(goal), nil
+	return presetsvc.ReviewMessage(goal), nil
 }
 
 func refinePreset(svc *presetsvc.Service) mcp.ToolHandlerFor[refineInput, runOutput] {

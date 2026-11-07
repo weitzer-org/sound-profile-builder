@@ -19,6 +19,15 @@ type presetPayload struct {
 	LegacyHTML map[string]string        `json:"legacy_html"`
 }
 
+// ReviewMessage is the canned request behind refine_preset's review_goal and the E2 eval's
+// open-review request: a review of a preset read from the unit, as minimal edits. goal is
+// untrusted text (the caller bounds it); it only lands in the message.
+func ReviewMessage(goal string) string {
+	return "Review this preset from the Quad Cortex for: " + goal + ". Make minimal edits: change parameter values and bypass flags only, " +
+		"keep every block's id, model and order, and leave alone anything the goal does not need. " +
+		"Say what you changed and what you left as it is."
+}
+
 // StartRefine loads the preset, creates a run record and launches the
 // refinement in a detached goroutine, returning the run ID immediately.
 // Errors: *LookupError (preset not found), *CredentialsError, ErrBusy.

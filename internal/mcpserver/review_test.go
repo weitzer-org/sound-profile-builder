@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/weitzer-org/sound-builder/internal/presetsvc"
 	"github.com/weitzer-org/sound-builder/internal/storage"
 )
 
@@ -40,7 +41,7 @@ func TestRefinePresetReviewGoal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(p.ChatHistory) == 0 || p.ChatHistory[0].Content != reviewMessage("a cleaner blues rhythm") {
+	if len(p.ChatHistory) == 0 || p.ChatHistory[0].Content != presetsvc.ReviewMessage("a cleaner blues rhythm") {
 		t.Errorf("chat history = %+v, want the canned review request first", p.ChatHistory)
 	}
 	for _, want := range []string{"a cleaner blues rhythm", "minimal edits", "id, model and order"} {
