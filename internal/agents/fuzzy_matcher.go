@@ -26,8 +26,9 @@ var validNativeBlocks = make(map[string]bool)
 var validBlocksRunes = make(map[string][]rune)
 
 type snapCandidate struct {
-	name  string
-	runes []rune
+	name    string
+	runes   []rune
+	capture bool // a Neural Capture (factory or user library), not a native device block
 }
 
 var snapPool []snapCandidate
@@ -346,7 +347,7 @@ func GetValidNativeBlocks() map[string]bool {
 		addCatalogBlocks()
 		snapPool = make([]snapCandidate, 0, len(validBlocksRunes))
 		for name, r := range validBlocksRunes {
-			snapPool = append(snapPool, snapCandidate{name: name, runes: r})
+			snapPool = append(snapPool, snapCandidate{name: name, runes: r, capture: validNativeBlocks[name]})
 		}
 		sort.Slice(snapPool, func(i, j int) bool { return snapPool[i].name < snapPool[j].name })
 	})
@@ -516,7 +517,7 @@ func resolveBlockName(rawName, category string, validBlocks map[string]bool) str
 		return name
 	}
 
-	snapped := SnapToClosestBlock(name, validBlocks)
+	snapped := SnapToClosestBlockForCategory(name, validBlocks, category)
 
 	// Comma-ok is required here: a missing key and a known-but-non-capture entry both
 	// zero-value to `false` on a plain map read, which previously let a name that snapped
@@ -1016,7 +1017,20 @@ func isSkippableValue(s string) bool {
 }
 
 // SnapToClosestBlock checks if the input is a valid block, else returns the closest equivalent.
+// It doesn't know the block's category, so captures are fuzzy targets; callers that do
+// know it should use SnapToClosestBlockForCategory.
 func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
+	return SnapToClosestBlockForCategory(input, validBlocks, "")
+}
+
+// SnapToClosestBlockForCategory is SnapToClosestBlock for a block of a known category
+// (lowercase block type, e.g. "amplifier", "reverb"). Neural Captures are only fuzzy-snap
+// targets for gear categories (captureEligibleBlockTypes) or an unknown ("") category: a
+// capture named like a real amp ("Pro Reverb", "Twin Reverb") must not absorb a near-miss
+// name in a reverb, delay or other native block ("Spring Reverb" -> "Pro Reverb"). An exact
+// (case-insensitive) match still resolves in every category.
+func SnapToClosestBlockForCategory(input string, validBlocks map[string]bool, category string) string {
+	allowCaptureTargets := category == "" || captureEligibleBlockTypes[strings.ToLower(strings.TrimSpace(category))]
 	inputStr := strings.TrimSpace(input)
 
 	if isSkippableValue(inputStr) {
@@ -1044,6 +1058,9 @@ func SnapToClosestBlock(input string, validBlocks map[string]bool) string {
 		v, vRunes := cand.name, cand.runes
 		if strings.EqualFold(inputStr, v) {
 			return v // Perfect case-insensitive match
+		}
+		if cand.capture && !allowCaptureTargets {
+			continue
 		}
 
 		// Length pruning: if the length difference is already >= bestDistance, it can't be better.

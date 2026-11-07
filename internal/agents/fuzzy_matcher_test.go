@@ -513,8 +513,8 @@ func TestSnapToClosestBlock_PluginNamesExactOnly(t *testing.T) {
 		{"Spring Reverb", "Spring Reverb"}, // 3 edits from "Plini Reverb": not snapped
 		{"Plini Reverbb", "Plini Reverbb"}, // near miss of a plugin name: not snapped
 	} {
-		if got := SnapToClosestBlock(tc.in, nil); got != tc.want {
-			t.Errorf("SnapToClosestBlock(%q) = %q, want %q", tc.in, got, tc.want)
+		if got := SnapToClosestBlockForCategory(tc.in, nil, "reverb"); got != tc.want {
+			t.Errorf("SnapToClosestBlockForCategory(%q, reverb) = %q, want %q", tc.in, got, tc.want)
 		}
 	}
 	// Ungated names stay normal fuzzy candidates. ("Exotic Z Boost" is the only valid
@@ -786,6 +786,24 @@ func TestFlagUnverifiedStructuredBlocks_UnownedPluginEffect(t *testing.T) {
 		}
 		if want := map[bool]int{true: 1, false: 0}[tc.wantFlagged]; n != want {
 			t.Errorf("owned %v: flagged %d blocks, want %d", tc.owned, n, want)
+		}
+	}
+}
+
+// Captures named like real amps ("Pro Reverb", "Twin Reverb") must not absorb near-miss
+// names in non-gear blocks, but stay normal targets (and exact matches) for gear blocks.
+func TestSnapToClosestBlock_CapturesNotTargetsForNativeBlocks(t *testing.T) {
+	_ = GetValidNativeBlocks()
+	for _, tc := range []struct{ in, cat, want string }{
+		{"Spring Reverb", "reverb", "Spring Reverb"},
+		{"Plini Reverbb", "reverb", "Plini Reverbb"},
+		{"Twin Reverb", "reverb", "Twin Reverb"},   // exact still resolves anywhere
+		{"Pro Reverb", "amplifier", "Pro Reverb"},  // the capture itself
+		{"Pro Reverbb", "amplifier", "Pro Reverb"}, // typo in a gear block still snaps
+		{"Pro Reverbb", "reverb", "Pro Reverbb"},   // same typo in a reverb block does not
+	} {
+		if got := SnapToClosestBlockForCategory(tc.in, nil, tc.cat); got != tc.want {
+			t.Errorf("SnapToClosestBlockForCategory(%q, %q) = %q, want %q", tc.in, tc.cat, got, tc.want)
 		}
 	}
 }
